@@ -806,6 +806,20 @@ object SyntaxTest extends TestSuite{
             |}
           """.stripMargin
         )
+        * - check(
+          """object ContravariantCoyonedaUsage {
+            |  (schwartzian[Vector[String], ccord.I]
+            |      (unstructuredData)(v => ccord.k(v(i)))(ccord.fi))
+            |}
+          """.stripMargin
+        )
+        * - check(
+          """object MapTest{
+            |  forAll { a: Int ==>> Int =>
+            |  }
+            |}
+          """.stripMargin
+        )
       }
       'neg{
         * - checkNeg(
@@ -872,7 +886,13 @@ object SyntaxTest extends TestSuite{
 
     'scalaParser - checkDir("src")
     'scalaJs - checkDir("scala-js")
-    'scalaz - checkDir("scalaz")
+    'scalaz - {
+      val blacklist = Seq(
+        //XML literals
+        "project/build.scala"
+      )
+      checkDir("scalaz", f => blacklist.exists(f.contains))
+    }
     'shapeless - checkDir("shapeless")
     'akka - {
       val blacklist = Seq(

@@ -164,7 +164,7 @@ class ScalaSyntax(val input: ParserInput) extends Parser with Basic with Identif
     rule{
       (
         Bindings |
-        optional(`implicit`) ~ Id ~ optional(":" ~ CompoundType) |
+        optional(`implicit`) ~ Id ~ optional(":" ~ InfixType) |
         `_` ~ optional(Ascription)
       ) ~
       `=>`
@@ -252,7 +252,7 @@ class ScalaSyntax(val input: ParserInput) extends Parser with Basic with Identif
     }
     rule {
       SimpleExpr1 ~
-      zeroOrMore('.' ~ Id | TypeArgs | NotNewline ~ ArgumentExprs) ~
+      zeroOrMore('.' ~ Id | TypeArgs | Check0 ~ ArgumentExprs) ~
       optional(Check0  ~ `_`)
     }
   }
