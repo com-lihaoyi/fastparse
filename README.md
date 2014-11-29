@@ -15,6 +15,8 @@ scala-parser currently has a small unit test suite to prevent regressions of alr
 - https://github.com/scala/scala
 - https://github.com/scala-js/scala-js
 - https://github.com/akka/akka
+- https://github.com/scalaz/scalaz
+- https://github.com/milessabin/shapeless
 
 It parses everything in all of these projects, modulo a blacklist which you can see in the test code which mainly excludes unsupported functionality (mentioned above) and broken Scala files (scripts, negative-tests, etc.)
 

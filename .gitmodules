@@ -7,3 +7,9 @@
 [submodule "scala-js"]
 	path = scala-js
 	url = https://github.com/scala-js/scala-js
+[submodule "scalaz"]
+	path = scalaz
+	url = https://github.com/scalaz/scalaz
+[submodule "shapeless"]
+	path = shapeless
+	url = https://github.com/milessabin/shapeless

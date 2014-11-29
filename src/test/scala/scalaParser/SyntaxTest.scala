@@ -800,6 +800,12 @@ object SyntaxTest extends TestSuite{
             |}
           """.stripMargin
         )
+        * - check(
+          """trait LensFunctions {
+            |  type T = A @> B
+            |}
+          """.stripMargin
+        )
       }
       'neg{
         * - checkNeg(
@@ -866,6 +872,8 @@ object SyntaxTest extends TestSuite{
 
     'scalaParser - checkDir("src")
     'scalaJs - checkDir("scala-js")
+    'scalaz - checkDir("scalaz")
+    'shapeless - checkDir("shapeless")
     'akka - {
       val blacklist = Seq(
         //XML literals

@@ -366,7 +366,7 @@ class ScalaSyntax(val input: ParserInput) extends Parser with Basic with Identif
     rule { (K.W("private") | K.W("protected")) ~ optional(AccessQualifier) }
   }
 
-  def Annotation: R0 = rule {  '@' ~  SimpleType ~  zeroOrMore(ArgumentExprs)  }
+  def Annotation: R0 = rule {  '@' ~ !Identifiers.Operator ~ SimpleType ~  zeroOrMore(ArgumentExprs)  }
 
   def TemplateBody: R0 = rule {
     '{' ~
