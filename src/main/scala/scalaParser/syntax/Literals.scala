@@ -37,7 +37,7 @@ trait Literals { self: Parser with Basic with Identifiers =>
       (Key.W("null") ~ !(Basic.Letter | Basic.Digit))
     }
 
-    def EscapedChars = rule { '\\' ~ anyOf("btnfr'\\\"") }
+    def EscapedChars = rule { '\\' ~ anyOf("0btnfr'\\\"") }
 
     // Note that symbols can take on the same values as keywords!
     def SymbolLiteral = rule { ''' ~ (Identifiers.PlainId | Identifiers.Keywords) }
