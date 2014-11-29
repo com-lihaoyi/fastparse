@@ -31,3 +31,5 @@ sbt test
 scala-parser currently only parses code to identify it and does not construct any AST of any sort. However, doing so wouldn't be difficult to implement on top of the existing relatively-straightforward parser implementation.
 
 scala-parser is still a work-in-progress: performance has not been measured, refactorings can still be done, and it still can be made to do more useful things than it currently does (e.g. constructing an AST). However, the fact that it is able to parse all the supported files in the above repositories speaks for its completeness and correctness.
+
+scala-parser originally was a fork of https://github.com/rcano/sps, but has changed so much that it is completely unrecognizable.
