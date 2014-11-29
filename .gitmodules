@@ -1,0 +1,9 @@
+[submodule "scala"]
+	path = scala
+	url = https://github.com/scala/scala
+[submodule "akka"]
+	path = akka
+	url = https://github.com/akka/akka
+[submodule "scala-js"]
+	path = scala-js
+	url = https://github.com/scala-js/scala-js
