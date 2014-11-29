@@ -280,7 +280,7 @@ class ScalaSyntax(val input: ParserInput) extends Parser with Basic with Identif
 
   def Block: R0 = {
     def BlockEnd: R0 = rule{ optional(Semis) ~ &("}" | `case`) }
-    def ResultExpr: R0 = Expr0(true)
+    def ResultExpr: R0 = rule{ Expr0(true) | LambdaHead ~ Block}
     rule {
       zeroOrMore(LambdaHead) ~
       optional(Semis) ~
