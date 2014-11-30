@@ -28,10 +28,10 @@ abstract class Core extends Parser with syntax.Basic with syntax.Literals with s
    * By default, all strings and characters greedily
    * capture all whitespace immediately before the token.
    */
-  implicit def wspStr(s: String): R0 = {
+  private[this] implicit def wspStr(s: String): R0 = {
     rule( WL ~ str(s) )
   }
-  implicit def wspCh(s: Char): R0 = {
+  private[this] implicit def wspCh(s: Char): R0 = {
     rule( WL ~ ch(s) )
   }
 

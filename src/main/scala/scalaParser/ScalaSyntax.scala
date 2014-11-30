@@ -13,6 +13,13 @@ class ScalaSyntax (val input: ParserInput)
   import KeyWordOperators._
   import KeyWordOperators.`_`
 
+  private[this] implicit def wspStr(s: String): R0 = {
+    rule( WL ~ str(s) )
+  }
+  private[this] implicit def wspCh(s: Char): R0 = {
+    rule( WL ~ ch(s) )
+  }
+
   def Type: R0 = {
     def FunctionArgTypes = rule('(' ~ opt(rep1Sep(ParamType, ',')) ~ ')' )
     def ArrowType = rule( FunctionArgTypes ~ `=>` ~ Type )
@@ -93,8 +100,9 @@ class ScalaSyntax (val input: ParserInput)
     def Path: R0 = rule( rep(Id ~ '.') ~ `this` ~ rep('.' ~ Id) | StableId )
     def Check0 = if (G) NotNewline else MATCH
     def New = rule( `new` ~ (ClassTemplate | TemplateBody) )
-    def SimpleExpr1 = rule( New | BlockExpr | Literal | Path | `_` | '(' ~ opt(Exprs) ~ ")" )
-    rule( SimpleExpr1 ~ rep('.' ~ Id | TypeArgs | Check0 ~ ArgumentExprs) ~ opt(Check0  ~ `_`) | Xml.XmlExpr)
+    def Parened = rule ( '(' ~ opt(Exprs) ~ ")"  )
+    def SimpleExpr1 = rule( Xml.XmlExpr | New | BlockExpr | Literal | Path | `_` | Parened)
+    rule( SimpleExpr1 ~ rep('.' ~ Id | TypeArgs | Check0 ~ ArgumentExprs) ~ opt(Check0  ~ `_`))
   }
 
   def Exprs: R0 = rule( rep1Sep(Expr, ',') )
@@ -137,7 +145,7 @@ class ScalaSyntax (val input: ParserInput)
     def Extractor = rule( StableId ~ opt('(' ~ ExtractorArgs ~ ')') )
     def TupleEx = rule( '(' ~ opt(ExtractorArgs) ~ ')' )
     def Thingy = rule( `_` ~ opt(`:` ~ TypePat) ~ !"*" )
-    rule( Thingy | Literal | TupleEx | Extractor | VarId | Xml.XmlPattern)
+    rule( Xml.XmlPattern | Thingy | Literal | TupleEx | Extractor | VarId)
   }
 
   def TypeParamClause: R0 = {

@@ -845,10 +845,86 @@ object SyntaxTest extends TestSuite{
         )
         * - check(
           """object X{
-            |  <div id="Hello" />
+            |  <div />
             |}
           """.stripMargin
         )
+        * - check(
+          """object X{
+            |  <div id="hello" />
+            |}
+          """.stripMargin
+        )
+        * - check(
+          """object X{
+            |  <url>https://github.com/lihaoyi/scalatags</url>
+            |}
+          """.stripMargin
+        )
+        * - check(
+          """object X{
+            |  <url>{ ;;;1 + 1 }</url>
+            |}
+          """.stripMargin
+        )
+        * - check(
+          """class HtmlPage {
+            |  <meta http-equiv="content-type" content={ 1 }/>
+            |}
+          """.stripMargin
+        )
+        * - check(
+          """object K{
+            |  <script> {{</script>
+            |}
+          """.stripMargin
+        )
+        * - check(
+          """object O{
+            |  e match { case <title>{ _* }</title> => }
+            |}
+            |
+          """.stripMargin
+        )
+        * - check(
+          """object Publish {
+            |  val x =
+            |    <inceptionYear>2009</inceptionYear>
+            |
+            |
+            |
+            |      <scm>
+            |        <url>git://github.com/akka/akka.git</url>
+            |        <connection>scm:git:git@github.com:akka/akka.git</connection>
+            |      </scm>
+            |}
+          """.stripMargin
+        )
+        * - check(
+          """object X{
+            |   pomExtra :=
+            |      <url>https://github.com/lihaoyi/scalatags</url>
+            |        <licenses>
+            |          <license>
+            |            <name>MIT license</name>
+            |            <url>http://www.opensource.org/licenses/mit-license.php</url>
+            |          </license>
+            |        </licenses>
+            |        <scm>
+            |          <url>git://github.com/lihaoyi/scalatags.git</url>
+            |          <connection>scm:git://github.com/lihaoyi/scalatags.git</connection>
+            |        </scm>
+            |        <developers>
+            |          <developer>
+            |            <id>lihaoyi</id>
+            |            <name>Li Haoyi</name>
+            |            <url>https://github.com/lihaoyi</url>
+            |          </developer>
+            |        </developers>
+            |}
+          """.stripMargin
+        )
+
       }
       'neg{
         * - checkNeg(
@@ -915,33 +991,16 @@ object SyntaxTest extends TestSuite{
 
     'scalaParser - checkDir("src")
     'scalaJs - checkDir("scala-js")
-    'scalaz - {
-      val blacklist = Seq(
-        //XML literals
-        "project/build.scala"
-      )
-      checkDir("scalaz", f => blacklist.exists(f.contains))
-    }
+    'scalaz - checkDir("scalaz")
     'shapeless - checkDir("shapeless")
-    'akka - {
-      val blacklist = Seq(
-        //XML literals
-        "camel/Introduction.scala",
-        "project/Publish.scala"
-      )
-      checkDir("akka", f => blacklist.exists(f.contains))
-    }
+    'akka - checkDir("akka")
+
     'scala{
       // Things that we won't bother parsing, mainly because they use XML literals
       val blacklist = Seq(
         // Not real Scala files
         "dbuild-meta-json-gen.scala",
         "genprod.scala",
-        // XML Literals
-        "doc/html/HtmlPage.scala",
-        "scalacheck/HtmlFactoryTest.scala",
-        "scala/src/scaladoc/scala/tools/nsc/doc/html",
-        "jvm/interpreter.scala",
         "disabled", // don't bother parsing disabled tests
         "neg", // or neg tests
         "deprecate-early-type-defs.scala", // or deprecated tests
