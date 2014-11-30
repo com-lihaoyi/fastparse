@@ -31,7 +31,7 @@ trait Literals { self: Parser with Basic with Identifiers =>
     def Symbol = rule( ''' ~ (Identifiers.PlainId | Identifiers.Keywords) )
 
     def Char = rule {
-      ''' ~ (UnicodeExcape | EscapedChars | !'\\' ~ CharPredicate.from(isPrintableChar)) ~ '''
+      ''' ~ (UnicodeEscape | EscapedChars | !'\\' ~ CharPredicate.from(isPrintableChar)) ~ '''
     }
 
 

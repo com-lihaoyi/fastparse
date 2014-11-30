@@ -5,7 +5,7 @@ import org.parboiled2._
 
 trait Basic { self: Parser =>
   object Basic{
-    def UnicodeExcape = rule( "\\u" ~ 4.times(HexDigit) )
+    def UnicodeEscape = rule( "\\u" ~ 4.times(HexDigit) )
 
     //Numbers and digits
     def HexDigit = rule( Digit | "a" - "f" | "A" - "Z" )
@@ -17,7 +17,7 @@ trait Basic { self: Parser =>
 
     def WSChar = rule( "\u0020" | "\u0009" )
     def Newline = rule( "\r\n" | "\n" )
-    def Semi = rule( ';' | oneOrMore(Newline) )
+    def Semi = rule( ";" | oneOrMore(Newline) )
     def OpChar = rule {
       anyOf("""!#$%&*+-/:<=>?@\^|~""") |
       CharPredicate.from(_.getType match {
