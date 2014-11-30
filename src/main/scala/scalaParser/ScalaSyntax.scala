@@ -8,7 +8,7 @@ import macros.Macros._
  * Parser for Scala syntax.
  */
 class ScalaSyntax (val input: ParserInput)
-  extends Core {
+  extends Core with Xml{
 
   import KeyWordOperators._
   import KeyWordOperators.`_`
@@ -94,7 +94,7 @@ class ScalaSyntax (val input: ParserInput)
     def Check0 = if (G) NotNewline else MATCH
     def New = rule( `new` ~ (ClassTemplate | TemplateBody) )
     def SimpleExpr1 = rule( New | BlockExpr | Literal | Path | `_` | '(' ~ opt(Exprs) ~ ")" )
-    rule( SimpleExpr1 ~ rep('.' ~ Id | TypeArgs | Check0 ~ ArgumentExprs) ~ opt(Check0  ~ `_`) )
+    rule( SimpleExpr1 ~ rep('.' ~ Id | TypeArgs | Check0 ~ ArgumentExprs) ~ opt(Check0  ~ `_`) | Xml.XmlExpr)
   }
 
   def Exprs: R0 = rule( rep1Sep(Expr, ',') )
@@ -124,6 +124,7 @@ class ScalaSyntax (val input: ParserInput)
   }
 
   def Guard(G: Boolean = false): R0 = rule( `if` ~ PostfixExpr(G) )
+  def Patterns: R0 = rule( rep1Sep(Pattern, ",") )
   def Pattern: R0 = rule( rep1Sep(Pattern1, '|') )
   def Pattern1: R0 = rule( `_` ~ `:` ~ TypePat | VarId ~ `:` ~ TypePat | Pattern2 )
   def Pattern2: R0 = {
@@ -136,7 +137,7 @@ class ScalaSyntax (val input: ParserInput)
     def Extractor = rule( StableId ~ opt('(' ~ ExtractorArgs ~ ')') )
     def TupleEx = rule( '(' ~ opt(ExtractorArgs) ~ ')' )
     def Thingy = rule( `_` ~ opt(`:` ~ TypePat) ~ !"*" )
-    rule( Thingy | Literal | TupleEx | Extractor | VarId )
+    rule( Thingy | Literal | TupleEx | Extractor | VarId | Xml.XmlPattern)
   }
 
   def TypeParamClause: R0 = {

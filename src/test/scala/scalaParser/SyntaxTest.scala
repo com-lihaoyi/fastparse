@@ -843,13 +843,12 @@ object SyntaxTest extends TestSuite{
             |}
           """.stripMargin
         )
-      }
-      type T = Seq[Int] forSome {
-        ;;;;
-        type Seq[A] <: ASeq[A]
-        ;;;
-        type ASeq[A] <: scala.Seq[A]
-        ;;;
+        * - check(
+          """object X{
+            |  <div id="Hello" />
+            |}
+          """.stripMargin
+        )
       }
       'neg{
         * - checkNeg(
