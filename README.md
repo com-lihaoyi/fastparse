@@ -6,7 +6,6 @@ scala-parser is a [parboiled2](https://github.com/sirthias/parboiled2) parser fo
 scala-parser currently parses the vast majority of Scala code. Not supported syntax includes:
 
 - Unicode Escapes
-- XML Literals
 
 However, due to the nature of the parboiled2 library, adding support for either of these things would be pretty straightforward, if tedious.
 
