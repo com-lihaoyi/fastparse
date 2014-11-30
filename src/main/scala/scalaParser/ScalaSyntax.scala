@@ -53,43 +53,31 @@ class ScalaSyntax (val input: ParserInput)
   def Expr = Expr0()
 
   def Expr0(G: Boolean = false): R0 = {
-    def IfCFlow = {
+    def If = {
       def Else = rule( opt(Semi) ~ `else` ~ Expr0(G) )
       rule( `if` ~ '(' ~ Expr ~ ')' ~ Expr0(G) ~ opt(Else) )
     }
-    def WhileCFlow = rule( `while` ~ '(' ~ Expr ~ ')' ~ Expr0(G) )
-    def TryCFlow = {
+    def While = rule( `while` ~ '(' ~ Expr ~ ')' ~ Expr0(G) )
+    def Try = {
       def Catch = rule( `catch` ~ Expr0(G) )
       def Finally = rule( `finally` ~ Expr0(G) )
       rule( `try` ~ Expr0(G) ~ opt(Catch) ~ opt(Finally) )
     }
-    def DoWhileCFlow = rule( `do` ~ Expr0(G) ~ opt(Semi) ~ `while` ~ '(' ~ Expr ~ ")" )
-    def Enumerators(G: Boolean = false) = {
+    def DoWhile = rule( `do` ~ Expr0(G) ~ opt(Semi) ~ `while` ~ '(' ~ Expr ~ ")" )
+
+    def For = {
       def Generator = rule( Pattern1 ~ `<-` ~ Expr0(G) ~ opt(Guard(G)) )
       def Enumerator = rule( Generator | Guard(G) | Pattern1 ~ `=` ~ Expr0(G) )
-      rule( Generator ~ rep(Semis ~ Enumerator) ~ WL )
+      def Enumerators = rule( Generator ~ rep(Semis ~ Enumerator) ~ WL )
+      def Body = rule( '(' ~ Enumerators ~ ')' | '{' ~ Enumerators ~ '}' )
+      rule( `for` ~ Body ~ opt(`yield`) ~ Expr0(G) )
     }
-    def ForCFlow = {
-      rule {
-        `for` ~
-        ('(' ~ Enumerators() ~ ')' | '{' ~ Enumerators(true) ~ '}') ~
-        opt(`yield`) ~
-        Expr0(G)
-      }
-    }
-    rule {
-      rep(LambdaHead) ~ (
-        IfCFlow |
-        WhileCFlow |
-        TryCFlow |
-        DoWhileCFlow |
-        ForCFlow |
-        `throw` ~ Expr0(G) |
-        `return` ~ opt(Expr0(G)) |
-        SimpleExpr() ~ `=` ~ Expr0(G) |
-        PostfixExpr(G) ~ opt(`match` ~ '{' ~ CaseClauses ~ "}" | Ascription)
-      )
-    }
+    def Throw = rule( `throw` ~ Expr0(G) )
+    def Return = rule( `return` ~ opt(Expr0(G)) )
+    def Assign = rule( SimpleExpr() ~ `=` ~ Expr0(G) )
+    def SmallerExpr = rule( PostfixExpr(G) ~ opt(`match` ~ '{' ~ CaseClauses ~ "}" | Ascription) )
+    def Body = rule( If | While | Try | DoWhile | For | Throw | Return | Assign | SmallerExpr )
+    rule( rep(LambdaHead) ~ Body )
   }
 
   def PostfixExpr(G: Boolean = false): R0 = {
