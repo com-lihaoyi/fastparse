@@ -9,10 +9,10 @@ trait Identifiers { self: Parser with Basic =>
     def Operator = rule{!Keywords ~ oneOrMore(OperatorChar)}
 
     def VarId = VarId0(true)
-    def VarId0(dollar: Boolean) = rule { !Keywords ~ Lower ~ IdRest(dollar) }
-    def PlainId = rule { !Keywords ~ Upper ~ IdRest(true) | VarId | Operator }
-    def PlainIdNoDollar = rule { !Keywords ~ Upper ~ IdRest(false) | VarId0(false) | Operator }
-    def Id = rule { !Keywords ~ PlainId | ("`" ~ oneOrMore(noneOf("`")) ~ "`") }
+    def VarId0(dollar: Boolean) = rule( !Keywords ~ Lower ~ IdRest(dollar) )
+    def PlainId = rule( !Keywords ~ Upper ~ IdRest(true) | VarId | Operator )
+    def PlainIdNoDollar = rule( !Keywords ~ Upper ~ IdRest(false) | VarId0(false) | Operator )
+    def Id = rule( !Keywords ~ PlainId | ("`" ~ oneOrMore(noneOf("`")) ~ "`") )
     def IdRest(dollar: Boolean) = {
       if (!dollar) rule {
         zeroOrMore(zeroOrMore("_") ~ oneOrMore(!anyOf("_$") ~ Letter | Digit)) ~

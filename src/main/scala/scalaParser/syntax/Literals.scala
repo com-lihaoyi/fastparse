@@ -18,11 +18,11 @@ trait Literals { self: Parser with Basic with Identifiers =>
       )
     }
 
-    def IntegerLiteral = rule { (HexNumeral | DecimalNumeral) ~ optional(anyOf("Ll")) }
+    def IntegerLiteral = rule( (HexNumeral | DecimalNumeral) ~ optional(anyOf("Ll")) )
 
-    def BooleanLiteral = rule { Key.W("true") | Key.W("false")  }
+    def BooleanLiteral = rule( Key.W("true") | Key.W("false")  )
 
-    def MultilineComment: Rule0 = rule { "/*" ~ zeroOrMore(MultilineComment | !"*/" ~ ANY) ~ "*/" }
+    def MultilineComment: Rule0 = rule( "/*" ~ zeroOrMore(MultilineComment | !"*/" ~ ANY) ~ "*/" )
     def Comment: Rule0 = rule {
       MultilineComment |
       "//" ~ zeroOrMore(!Basic.Newline ~ ANY) ~ &(Basic.Newline | EOI)
@@ -37,10 +37,10 @@ trait Literals { self: Parser with Basic with Identifiers =>
       (Key.W("null") ~ !(Basic.Letter | Basic.Digit))
     }
 
-    def EscapedChars = rule { '\\' ~ anyOf("btnfr'\\\"") }
+    def EscapedChars = rule( '\\' ~ anyOf("btnfr'\\\"") )
 
     // Note that symbols can take on the same values as keywords!
-    def SymbolLiteral = rule { ''' ~ (Identifiers.PlainId | Identifiers.Keywords) }
+    def SymbolLiteral = rule( ''' ~ (Identifiers.PlainId | Identifiers.Keywords) )
 
     def CharacterLiteral = rule {
       ''' ~ (UnicodeExcape | EscapedChars | !'\\' ~ CharPredicate.from(isPrintableChar)) ~ '''
@@ -49,7 +49,7 @@ trait Literals { self: Parser with Basic with Identifiers =>
     def MultiLineChars = rule {
       zeroOrMore(Interpolation | optional('"') ~ optional('"') ~ noneOf("\""))
     }
-    def pr(s: String) = rule { run(println(s"LOGGING $cursor: $s")) }
+    def pr(s: String) = rule( run(println(s"LOGGING $cursor: $s")) )
     def Interpolation = rule{
       "$" ~ Identifiers.PlainIdNoDollar | "${" ~ Block ~ WL ~ "}" | "$$"
     }
