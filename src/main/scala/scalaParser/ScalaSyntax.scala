@@ -64,24 +64,25 @@ class ScalaSyntax (val input: ParserInput)
       rule( `try` ~ Expr0(G) ~ opt(Catch) ~ opt(Finally) )
     }
     def DoWhile = rule( `do` ~ Expr0(G) ~ opt(Semi) ~ `while` ~ '(' ~ Expr ~ ")" )
-
-    def For = {
+    def Enumerators(G: Boolean) = {
       def Generator = rule( Pattern1 ~ `<-` ~ Expr0(G) ~ opt(Guard(G)) )
       def Enumerator = rule( Generator | Guard(G) | Pattern1 ~ `=` ~ Expr0(G) )
-      def Enumerators = rule( Generator ~ rep(Semis ~ Enumerator) ~ WL )
-      def Body = rule( '(' ~ Enumerators ~ ')' | '{' ~ Enumerators ~ '}' )
+      rule( Generator ~ rep(Semis ~ Enumerator) ~ WL )
+    }
+    def For = {
+      def Body = rule( '(' ~ Enumerators(false) ~ ')' | '{' ~ Enumerators(true) ~ '}' )
       rule( `for` ~ Body ~ opt(`yield`) ~ Expr0(G) )
     }
     def Throw = rule( `throw` ~ Expr0(G) )
     def Return = rule( `return` ~ opt(Expr0(G)) )
     def Assign = rule( SimpleExpr() ~ `=` ~ Expr0(G) )
     def SmallerExpr = rule( PostfixExpr(G) ~ opt(`match` ~ '{' ~ CaseClauses ~ "}" | Ascription) )
-    def Body = rule( If | While | Try | DoWhile | For | Throw | Return | Assign | SmallerExpr )
-    rule( rep(LambdaHead) ~ Body )
+    def LambdaBody = rule( If | While | Try | DoWhile | For | Throw | Return | Assign | SmallerExpr )
+    rule( rep(LambdaHead) ~ LambdaBody )
   }
 
   def PostfixExpr(G: Boolean = false): R0 = {
-    def PrefixExpr = rule( opt(WL ~ anyOf("-+~!") ~ WS ~ !Basic.OperatorChar) ~  SimpleExpr(G) )
+    def PrefixExpr = rule( opt(WL ~ anyOf("-+~!") ~ WS ~ !Basic.OpChar) ~  SimpleExpr(G) )
     def Check = if (G) OneNLMax else MATCH
     def Check0 = if (G) NotNewline else MATCH
     def InfixExpr = rule( PrefixExpr ~ rep( Check0 ~ Id ~ opt(TypeArgs) ~ Check ~ PrefixExpr) )
@@ -104,7 +105,7 @@ class ScalaSyntax (val input: ParserInput)
   def BlockExpr: R0 = rule( '{' ~ (CaseClauses | Block) ~ `}` )
 
   def BlockStats: R0 = {
-    def Prelude: R0 = rule( rep(Annotation) ~ opt(`implicit`) ~ opt(`lazy`) ~ rep(LocalModifier) )
+    def Prelude = rule( rep(Annotation) ~ opt(`implicit`) ~ opt(`lazy`) ~ rep(LocalModifier) )
     def Template: R0 = rule( Prelude ~ (Def | TmplDef) )
     def BlockStat: R0 = rule( Import | Template | Expr0(true) )
     rule( rep1Sep(BlockStat, Semis) )

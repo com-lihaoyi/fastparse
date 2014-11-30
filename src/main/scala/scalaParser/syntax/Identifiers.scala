@@ -2,26 +2,21 @@ package scalaParser
 package syntax
 import acyclic.file
 import org.parboiled2._
-
+import macros.Macros._
 trait Identifiers { self: Parser with Basic =>
   object Identifiers{
     import Basic._
-    def Operator = rule{!Keywords ~ oneOrMore(OperatorChar)}
+    def Operator = rule{!Keywords ~ rep1(OpChar)}
 
     def VarId = VarId0(true)
     def VarId0(dollar: Boolean) = rule( !Keywords ~ Lower ~ IdRest(dollar) )
     def PlainId = rule( !Keywords ~ Upper ~ IdRest(true) | VarId | Operator )
     def PlainIdNoDollar = rule( !Keywords ~ Upper ~ IdRest(false) | VarId0(false) | Operator )
-    def Id = rule( !Keywords ~ PlainId | ("`" ~ oneOrMore(noneOf("`")) ~ "`") )
-    def IdRest(dollar: Boolean) = {
-      if (!dollar) rule {
-        zeroOrMore(zeroOrMore("_") ~ oneOrMore(!anyOf("_$") ~ Letter | Digit)) ~
-        optional(oneOrMore("_") ~ zeroOrMore(OperatorChar))
-      } else rule{
-        zeroOrMore(zeroOrMore("_") ~ oneOrMore(!"_" ~ Letter | Digit)) ~
-        optional(oneOrMore("_") ~ zeroOrMore(OperatorChar))
-      }
-    }
+    def Id = rule( !Keywords ~ PlainId | ("`" ~ rep1(noneOf("`")) ~ "`") )
+    def SkipChar(dollar: Boolean) = if(dollar) rule("_") else rule(anyOf("_$"))
+    def IdRest(dollar: Boolean) = rule(
+      rep(rep("_") ~ rep1(!SkipChar(dollar) ~ Letter | Digit)) ~ opt(rep1("_") ~ rep(OpChar))
+    )
 
     def AlphabetKeywords = rule {
       (
@@ -33,12 +28,8 @@ trait Identifiers { self: Parser with Basic =>
     def SymbolicKeywords = rule{
       (
         ":" | ";" | "=>" | "=" | "<-" | "<:" | "<%" | ">:" | "#" | "@" | "\u21d2" | "\u2190"
-      )  ~ !OperatorChar
+      )  ~ !OpChar
     }
-    def Keywords = rule {
-      AlphabetKeywords | SymbolicKeywords
-
-    }
-
+    def Keywords = rule( AlphabetKeywords | SymbolicKeywords )
   }
 }

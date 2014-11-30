@@ -15,13 +15,13 @@ abstract class Core extends Parser with syntax.Basic with syntax.Literals with s
    * really useful in e.g. {} blocks, where we want to avoid
    * capturing newlines so semicolon-inference would work
    */
-  def WS = rule( rep(Basic.WhitespaceChar | Literals.Comment) )
+  def WS = rule( rep(Basic.WSChar | Literals.Comment) )
 
   /**
    * Parses whitespace, including newlines.
    * This is the default for most things
    */
-  def WL = rule( rep(Basic.WhitespaceChar | Literals.Comment | Basic.Newline) )
+  def WL = rule( rep(Basic.WSChar | Literals.Comment | Basic.Newline) )
 
 
   /**
@@ -117,7 +117,7 @@ abstract class Core extends Parser with syntax.Basic with syntax.Literals with s
 
   def NotNewline: R0 = rule( &( WS ~ !Basic.Newline ) )
   def OneNLMax: R0 = {
-    def WSChar = rule( rep(Basic.WhitespaceChar) )
+    def WSChar = rule( rep(Basic.WSChar) )
     def ConsumeComments = rule( rep(WSChar ~ Literals.Comment ~ WSChar ~ Basic.Newline) )
     rule( WS ~ opt(Basic.Newline) ~ ConsumeComments ~ NotNewline )
   }

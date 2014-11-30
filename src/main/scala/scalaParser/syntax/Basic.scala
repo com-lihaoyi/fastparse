@@ -9,20 +9,16 @@ trait Basic { self: Parser =>
 
     //Numbers and digits
     def HexDigit = rule( Digit | "a" - "f" | "A" - "Z" )
-    def Digit = rule( "0" | NonZeroDigit )
-    def NonZeroDigit = rule( "1" - "9" )
-    def HexNumeral = rule( "0x" ~ oneOrMore(HexDigit) )
-    def DecimalNumeral = rule(oneOrMore(Digit))
-    def ExponentPart = rule( anyOf("Ee") ~ optional(anyOf("+-")) ~ oneOrMore(Digit) )
+    def Digit = rule( "0" - "9" )
+    def HexNum = rule( "0x" ~ oneOrMore(HexDigit) )
+    def DecNum = rule(oneOrMore(Digit))
+    def Exp = rule( anyOf("Ee") ~ optional(anyOf("+-")) ~ oneOrMore(Digit) )
     def FloatType = rule( anyOf("FfDd") )
 
-    def Parentheses = rule( "(" | ")" | "[" | "]" | "{" | "}" )
-    def DelimiterChar = rule( "'" | "\"" | "." | ";" | "," )
-
-    def WhitespaceChar = rule( "\u0020" | "\u0009" )
+    def WSChar = rule( "\u0020" | "\u0009" )
     def Newline = rule( "\r\n" | "\n" )
     def Semi = rule( ';' | oneOrMore(Newline) )
-    def OperatorChar = rule {
+    def OpChar = rule {
       anyOf("""!#$%&*+-/:<=>?@\^|~""") |
       CharPredicate.from(_.getType match {
         case Character.OTHER_SYMBOL | Character.MATH_SYMBOL => true; case _ => false
@@ -40,7 +36,6 @@ trait Basic { self: Parser =>
    */
   object Key {
     def W(s: String) = rule( str(s) ~ !(Basic.Letter | Basic.Digit) )
-
-    def O(s: String) = rule( str(s) ~ !Basic.OperatorChar )
+    def O(s: String) = rule( str(s) ~ !Basic.OpChar )
   }
 }

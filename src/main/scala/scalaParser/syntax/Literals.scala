@@ -2,62 +2,56 @@ package scalaParser
 package syntax
 import acyclic.file
 import org.parboiled2._
-
+import macros.Macros._
 trait Literals { self: Parser with Basic with Identifiers =>
   def Block: Rule0
   def WL: Rule0
   object Literals{
     import Basic._
-    def FloatingPointLiteral = rule {
+    def Float = {
+      def Thing = rule( rep1(Digit) ~ opt(Exp) ~ opt(FloatType) )
+      def Thing2 = rule( "." ~ Thing | Exp ~ opt(FloatType) | opt(Exp) ~ FloatType )
+      rule( "." ~ Thing | rep1(Digit) ~ Thing2 )
+    } 
 
-      "." ~ oneOrMore(Digit) ~ optional(ExponentPart) ~ optional(FloatType) |
-      oneOrMore(Digit) ~ (
-        "." ~ oneOrMore(Digit) ~ optional(ExponentPart) ~ optional(FloatType) |
-        ExponentPart ~ optional(FloatType) |
-        optional(ExponentPart) ~ FloatType
-      )
-    }
+    def Int = rule( (HexNum | DecNum) ~ opt(anyOf("Ll")) )
 
-    def IntegerLiteral = rule( (HexNumeral | DecimalNumeral) ~ optional(anyOf("Ll")) )
+    def Bool = rule( Key.W("true") | Key.W("false")  )
 
-    def BooleanLiteral = rule( Key.W("true") | Key.W("false")  )
-
-    def MultilineComment: Rule0 = rule( "/*" ~ zeroOrMore(MultilineComment | !"*/" ~ ANY) ~ "*/" )
-    def Comment: Rule0 = rule {
-      MultilineComment |
-      "//" ~ zeroOrMore(!Basic.Newline ~ ANY) ~ &(Basic.Newline | EOI)
-    }
-
-    def Literal = rule {
-      (optional("-") ~ (FloatingPointLiteral | IntegerLiteral)) |
-      BooleanLiteral |
-      CharacterLiteral |
-      StringLiteral |
-      SymbolLiteral |
-      (Key.W("null") ~ !(Basic.Letter | Basic.Digit))
-    }
+    def MultilineComment: Rule0 = rule( "/*" ~ rep(MultilineComment | !"*/" ~ ANY) ~ "*/" )
+    def Comment: Rule0 = rule(
+      MultilineComment | "//" ~ rep(!Basic.Newline ~ ANY) ~ &(Basic.Newline | EOI)
+    )
+    def Null = Key.W("null")
+    def Literal = rule( (opt("-") ~ (Float | Int)) | Bool | Char | String | Symbol | Null )
 
     def EscapedChars = rule( '\\' ~ anyOf("btnfr'\\\"") )
 
     // Note that symbols can take on the same values as keywords!
-    def SymbolLiteral = rule( ''' ~ (Identifiers.PlainId | Identifiers.Keywords) )
+    def Symbol = rule( ''' ~ (Identifiers.PlainId | Identifiers.Keywords) )
 
-    def CharacterLiteral = rule {
+    def Char = rule {
       ''' ~ (UnicodeExcape | EscapedChars | !'\\' ~ CharPredicate.from(isPrintableChar)) ~ '''
     }
 
-    def MultiLineChars = rule {
-      zeroOrMore(Interpolation | optional('"') ~ optional('"') ~ noneOf("\""))
-    }
+
     def pr(s: String) = rule( run(println(s"LOGGING $cursor: $s")) )
-    def Interpolation = rule{
+    def Interp = rule{
       "$" ~ Identifiers.PlainIdNoDollar | "${" ~ Block ~ WL ~ "}" | "$$"
     }
-    def StringLiteral = rule {
-      (Identifiers.Id ~ "\"\"\"" ~ MultiLineChars ~ ("\"\"\"" ~ zeroOrMore('"'))) |
-      (Identifiers.Id ~ '"' ~ zeroOrMore(Interpolation | "\\\"" | "\\\\" | noneOf("\n\"")) ~ '"') |
-      ("\"\"\"" ~ MultiLineChars ~ ("\"\"\"" ~ zeroOrMore('"'))) |
-      ('"' ~ zeroOrMore("\\\"" | "\\\\" | noneOf("\n\"")) ~ '"')
+    def String = {
+      import Identifiers.Id
+      def InterpIf(b: Boolean) = if(b) rule(Interp) else rule(MISMATCH0)
+      def TQ = rule( "\"\"\"" )
+      def TripleChars(b: Boolean) = rule( rep(InterpIf(b) | opt('"') ~ opt('"') ~ noneOf("\"")) )
+      def TripleTail = rule( TQ ~ rep('"') )
+      def SingleChars(b: Boolean) = rule( rep(InterpIf(b) | "\\\"" | "\\\\" | noneOf("\n\"")) )
+      rule {
+        (Id ~ TQ ~ TripleChars(b = true) ~ TripleTail) |
+        (Id ~ '"' ~ SingleChars(b = true) ~ '"') |
+        (TQ ~ TripleChars(b = false) ~ TripleTail) |
+        ('"' ~ SingleChars(b = false) ~ '"')
+      }
     }
 
     def isPrintableChar(c: Char): Boolean = {
