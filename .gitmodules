@@ -13,3 +13,6 @@
 [submodule "shapeless"]
 	path = shapeless
 	url = https://github.com/milessabin/shapeless
+[submodule "framework"]
+	path = framework
+	url = https://github.com/lift/framework

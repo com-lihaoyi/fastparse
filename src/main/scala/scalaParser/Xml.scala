@@ -78,8 +78,8 @@ trait Xml extends Core {
     def Attribute = rule( Name ~ Eq ~ AttValue )
 
     def AttValue = rule(
-      '"' ~ rep(CharQ | CharRef) ~ '"' |
-      "'" ~ rep(CharA | CharRef) ~ "'" |
+      '"' ~ rep(CharQ | Reference) ~ '"' |
+      "'" ~ rep(CharA | Reference) ~ "'" |
       ScalaExpr
     )
 

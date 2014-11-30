@@ -868,6 +868,15 @@ object SyntaxTest extends TestSuite{
           """.stripMargin
         )
         * - check(
+          """object UserAgentCalculator extends Factory {
+            |    for {
+            |      userAgent <- userAgent
+            |      findResult = ieMatch.find if findResult
+            |    } yield ver
+            |}
+          """.stripMargin
+        )
+        * - check(
           """class HtmlPage {
             |  <meta http-equiv="content-type" content={ 1 }/>
             |}
@@ -897,6 +906,12 @@ object SyntaxTest extends TestSuite{
             |        <url>git://github.com/akka/akka.git</url>
             |        <connection>scm:git:git@github.com:akka/akka.git</connection>
             |      </scm>
+            |}
+          """.stripMargin
+        )
+        * - check(
+          """object K{
+            |    <foo baz="&amp;dog"/>
             |}
           """.stripMargin
         )
@@ -994,7 +1009,13 @@ object SyntaxTest extends TestSuite{
     'scalaz - checkDir("scalaz")
     'shapeless - checkDir("shapeless")
     'akka - checkDir("akka")
-
+    'lift - {
+      val blacklist = Seq(
+        // octal literals are deprecated
+        "framework/core/util/src/main/scala/net/liftweb/util/CombParserHelpers.scala"
+      )
+      checkDir("framework", f => blacklist.exists(f.contains))
+    }
     'scala{
       // Things that we won't bother parsing, mainly because they use XML literals
       val blacklist = Seq(
