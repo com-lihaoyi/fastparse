@@ -831,6 +831,25 @@ object SyntaxTest extends TestSuite{
             |}
           """.stripMargin
         )
+        * - check(
+          """object X{
+            |  type T = {
+            |    ;;;
+            |    type x = Int
+            |    ;;;
+            |    type y = Int
+            |    ;;;
+            |  }
+            |}
+          """.stripMargin
+        )
+      }
+      type T = Seq[Int] forSome {
+        ;;;;
+        type Seq[A] <: ASeq[A]
+        ;;;
+        type ASeq[A] <: scala.Seq[A]
+        ;;;
       }
       'neg{
         * - checkNeg(
