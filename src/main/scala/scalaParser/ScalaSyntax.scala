@@ -73,7 +73,7 @@ class ScalaSyntax (val input: ParserInput)
     def DoWhile = rule( `do` ~ Expr0(G) ~ opt(Semi) ~ `while` ~ '(' ~ Expr ~ ")" )
     def Enumerators(G: Boolean) = {
       def Generator = rule( Pattern1 ~ `<-` ~ Expr0(G) ~ opt(Guard(G)) )
-      def Enumerator = rule( Semis ~ Generator | Guard(G) | Semis ~ Pattern1 ~ `=` ~ Expr0(G) )
+      def Enumerator = rule( Semis ~ Generator | optional(Semis) ~ Guard(G) | Semis ~ Pattern1 ~ `=` ~ Expr0(G) )
       rule( Generator ~ rep(Enumerator) ~ WL )
     }
     def For = {
