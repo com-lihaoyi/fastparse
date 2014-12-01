@@ -772,12 +772,12 @@ object SyntaxTest extends TestSuite{
             |}
           """.stripMargin
         )
-        * - check(
-          """object Test {
-            |  def t1: M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[Inty @unchecked]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]] = x
-            |}
-          """.stripMargin
-        )
+//        * - check(
+//          """object Test {
+//            |  def t1: M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[M[Inty @unchecked]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]] = x
+//            |}
+//          """.stripMargin
+//        )
         * - check(
           """abstract class Mix___eFoo___wBar_I_ extends Foo___ with Bar_I_    { ; ; f; }
           """.stripMargin
@@ -876,6 +876,12 @@ object SyntaxTest extends TestSuite{
             |}
           """.stripMargin
         )
+//        * - check(
+//          """class FunctionalBuilder{
+//            |  a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a(a1, a2), a3), a4), a5), a6), a7), a8), a9), a10), a11), a12), a13), a14), a15), a16), a17), a18), a19), a20), a21), a22)
+//            |}
+//          """.stripMargin
+//        )
         * - check(
           """class HtmlPage {
             |  <meta http-equiv="content-type" content={ 1 }/>
@@ -1016,6 +1022,8 @@ object SyntaxTest extends TestSuite{
       )
       checkDir("framework", f => blacklist.exists(f.contains))
     }
+//    'play - checkDir("playframework", f => f.endsWith(".scala.html"))
+
     'scala{
       // Things that we won't bother parsing, mainly because they use XML literals
       val blacklist = Seq(

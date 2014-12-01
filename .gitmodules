@@ -16,3 +16,6 @@
 [submodule "framework"]
 	path = framework
 	url = https://github.com/lift/framework
+[submodule "playframework"]
+	path = playframework
+	url = https://github.com/playframework/playframework
