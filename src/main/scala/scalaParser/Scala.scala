@@ -18,9 +18,7 @@ class Scala (val input: ParserInput)
   def TmplBody: R0 = {
     def Prelude = rule( (Annot ~ OneNLMax).* ~ Mod.* )
     def TmplStat = rule( Import | Prelude ~ (Def | Dcl) | Expr0(true) )
-    def ThisType = rule( `this` ~ `:` ~ InfixType ~ `=>` )
-    def OtherType = rule( (Id | `_`) ~ (`:` ~ InfixType).? ~ `=>` )
-    def SelfType = rule( ThisType | OtherType)
+    def SelfType = rule( (`this` | Id | `_`) ~ (`:` ~ InfixType).? ~ `=>` )
     rule( '{' ~ SelfType.? ~ Semis.? ~ TmplStat.*.sep(Semis) ~ `}` )
   }
 
