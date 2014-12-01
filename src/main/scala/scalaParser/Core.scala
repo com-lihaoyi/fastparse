@@ -27,13 +27,8 @@ abstract class Core extends Parser with syntax.Basic with syntax.Literals with s
    * By default, all strings and characters greedily
    * capture all whitespace immediately before the token.
    */
-  private[this] implicit def wspStr(s: String): R0 = {
-    rule( WL ~ str(s) )
-  }
-  private[this] implicit def wspCh(s: Char): R0 = {
-    rule( WL ~ ch(s) )
-  }
-
+  private implicit def wspStr(s: String) = rule( WL ~ str(s) )
+  private implicit def wspCh(s: Char) = rule( WL ~ ch(s) )
   /**
    * Most keywords don't just require the correct characters to match,
    * they have to ensure that subsequent characters *don't* match in
@@ -126,10 +121,4 @@ abstract class Core extends Parser with syntax.Basic with syntax.Literals with s
     rule( rep(Id ~ '.') ~ ThisSuper ~ rep('.' ~ Id) | Id ~ rep('.' ~ Id) )
   }
 
-  def Mod: R0 = rule( LocalMod | AccessMod | `override` )
-  def LocalMod: R0 = rule( `abstract` | `final` | `sealed` | `implicit` | `lazy` )
-  def AccessMod: R0 = {
-    def AccessQualifier = rule( '[' ~ (`this` | Id) ~ ']' )
-    rule( (`private` | `protected`) ~ opt(AccessQualifier) )
-  }
 }

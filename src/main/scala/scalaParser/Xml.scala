@@ -7,7 +7,11 @@ import scala.language.implicitConversions
 import macros.Macros._
 
 trait Xml extends Core {
-  object Xml{
+  def Patterns: Rule0
+  def XmlExpr = rule( WL ~ Xml.XmlContent ~ rep(WL ~ Xml.Element) )
+  def XmlPattern = rule( WL ~ Xml.ElemPattern )
+
+  private[this] object Xml{
     def BaseChar = rule(
       ("\u0041"-"\u005A") | ("\u0061"-"\u007A") | ("\u00C0"-"\u00D6") | ("\u00D8"-"\u00F6") |
       ("\u00F8"-"\u00FF") | ("\u0100"-"\u0131") | ("\u0134"-"\u013E") | ("\u0141"-"\u0148") |
@@ -58,7 +62,7 @@ trait Xml extends Core {
     )
     def Ideographic = rule( "\u4E00"-"\u9FA5" | "\u3007" | "\u3021"-"\u3029" )
     def Eq = rule (opt(WL) ~ '=' ~ opt(WL))
-    def XmlExpr = rule( WL ~ XmlContent ~ rep(WL ~ Element) )
+
 
     def Element = rule( EmptyElemTag | STag ~ Content ~ ETag )
 
@@ -115,8 +119,6 @@ trait Xml extends Core {
     def ContentP = rule( opt(CharData) ~ rep((ElemPattern | ScalaPatterns) ~ opt(CharData)) )
     def ContentP1 = rule( ElemPattern | Reference | CDSect | PI | Comment | ScalaPatterns )
     def ScalaPatterns = rule( "{" ~ Patterns ~ WL ~ "}" )
-    def XmlPattern = rule( WL ~ ElemPattern )
 
   }
-  def Patterns: Rule0
 }

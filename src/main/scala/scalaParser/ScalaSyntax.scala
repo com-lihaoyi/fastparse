@@ -8,44 +8,15 @@ import macros.Macros._
  * Parser for Scala syntax.
  */
 class ScalaSyntax (val input: ParserInput)
-  extends Core with Xml{
+  extends Core with Types with Xml{
 
   import KeyWordOperators._
   import KeyWordOperators.`_`
+  private implicit def wspStr(s: String) = rule( WL ~ str(s) )
+  private implicit def wspCh(s: Char) = rule( WL ~ ch(s) )
 
-  private[this] implicit def wspStr(s: String): R0 = rule( WL ~ str(s) )
-
-  private[this] implicit def wspCh(s: Char): R0 = rule( WL ~ ch(s) )
-
-  def Type: R0 = {
-    def FunctionArgTypes = rule('(' ~ opt(rep1Sep(ParamType, ',')) ~ ')' )
-    def ArrowType = rule( FunctionArgTypes ~ `=>` ~ Type )
-    def ExistentialClause = rule( `forSome` ~ `{` ~ rep1Sep(TypeDcl | ValDcl, Semis) ~ `}` )
-    def PostfixType = rule( InfixType ~ (`=>` ~ Type | opt(ExistentialClause)) )
-    def Unbounded = rule( `_` | ArrowType | PostfixType )
-    rule( Unbounded ~ TypeBounds )
-  }
-
-  def InfixType = rule( CompoundType ~ rep(NotNewline ~ Id ~ OneNLMax ~ CompoundType) )
-
-  def CompoundType = {
-    def RefineStat = rule( TypeDef | Dcl  )
-    def Refinement = rule( OneNLMax ~ `{` ~ repSep(RefineStat, Semis) ~ `}` )
-    rule( rep1Sep(AnnotType, `with`) ~ opt(Refinement) | Refinement )
-  }
-  def AnnotType = rule(SimpleType ~ opt(NotNewline ~ rep1(NotNewline ~ Annot)) )
-
-  def SimpleType: R0 = {
-    def BasicType = rule( '(' ~ Types ~ ')'  | StableId ~ '.' ~ `type` | StableId )
-    rule( BasicType ~ rep(TypeArgs | `#` ~ Id) )
-  }
-
-  def TypeArgs = rule( '[' ~ Types ~ "]" )
-  def Types = rule( rep1Sep(Type, ',') )
   def TypePat = rule( CompoundType )
   def Ascription = rule( `:` ~ (`_*` |  Type | rep1(Annot)) )
-
-  def ParamType = rule( `=>` ~ Type | Type ~ "*" | Type )
 
   def LambdaHead: R0 = {
     def Binding = rule( (Id | `_`) ~ opt(`:` ~ Type) )
@@ -98,11 +69,10 @@ class ScalaSyntax (val input: ParserInput)
     def Check0 = if (G) NotNewline else MATCH
     def New = rule( `new` ~ (ClsTmpl | TmplBody) )
     def Parened = rule ( '(' ~ opt(Exprs) ~ ")"  )
-    def SimpleExpr1 = rule( Xml.XmlExpr | New | BlockExpr | Literal | Path | `_` | Parened)
+    def SimpleExpr1 = rule( XmlExpr | New | BlockExpr | Literal | Path | `_` | Parened)
     rule( SimpleExpr1 ~ rep('.' ~ Id | TypeArgs | Check0 ~ ArgList) ~ opt(Check0  ~ `_`))
   }
 
-  def Exprs: R0 = rule( rep1Sep(Expr, ',') )
   def ArgList: R0 = rule( '(' ~ opt(Exprs ~ opt(`:` ~ `_*`)) ~ ")" | OneNLMax ~ BlockExpr )
 
   def BlockExpr: R0 = rule( '{' ~ (CaseClauses | Block) ~ `}` )
@@ -140,21 +110,8 @@ class ScalaSyntax (val input: ParserInput)
     def Extractor = rule( StableId ~ opt('(' ~ ExtractorArgs ~ ')') )
     def TupleEx = rule( '(' ~ opt(ExtractorArgs) ~ ')' )
     def Thingy = rule( `_` ~ opt(`:` ~ TypePat) ~ !"*" )
-    rule( Xml.XmlPattern | Thingy | Literal | TupleEx | Extractor | VarId)
+    rule( XmlPattern | Thingy | Literal | TupleEx | Extractor | VarId)
   }
-
-  def TypeArgList: R0 = {
-    def Variant: R0 = rule( rep(Annot) ~ opt(WL ~ anyOf("+-")) ~ TypeArg )
-    rule( '[' ~ rep1Sep(Variant, ',') ~ ']' )
-  }
-
-  def TypeBounds: R0 = rule( opt(`>:` ~ Type) ~ opt(`<:` ~ Type) )
-  def TypeArg: R0 = {
-    def CtxBounds = rule(rep(`<%` ~ Type) ~ rep(`:` ~ Type))
-    rule((Id | `_`) ~ opt(TypeArgList) ~ TypeBounds ~ CtxBounds)
-  }
-
-  def Annot: R0 = rule( `@` ~ SimpleType ~  rep(ArgList)  )
 
   def TmplBody: R0 = {
     def Prelude = rule( rep(Annot ~ OneNLMax) ~ rep(Mod) )
@@ -172,22 +129,6 @@ class ScalaSyntax (val input: ParserInput)
     rule( `import` ~ rep1Sep(ImportExpr, ',') )
   }
 
-  def Dcl: R0 = {
-    def VarDcl = rule( `var` ~ Ids ~ `:` ~ Type )
-    def FunDcl = rule( `def` ~ FunSig ~ opt(`:` ~ Type) )
-    rule( ValDcl | VarDcl | FunDcl | TypeDcl )
-  }
-  def FunSig: R0 = {
-    def FunTypeArgs = rule( '[' ~ rep1Sep(rep(Annot) ~ TypeArg, ',') ~ ']' )
-    def FunAllArgs = rule( rep(FunArgs) ~ opt(OneNLMax ~ '(' ~ `implicit` ~ Args ~ ')') )
-    def FunArgs = rule( OneNLMax ~ '(' ~ opt(Args) ~ ')' )
-    def FunArg = rule( rep(Annot) ~ Id ~ opt(`:` ~ ParamType) ~ opt(`=` ~ Expr) )
-    def Args = rule( rep1Sep(FunArg, ',') )
-    rule( (Id | `this`) ~ opt(FunTypeArgs) ~ FunAllArgs )
-  }
-  def ValDcl: R0 = rule( `val` ~ Ids ~ `:` ~ Type )
-  def TypeDcl: R0 = rule( `type` ~ Id ~ opt(TypeArgList) ~ TypeBounds )
-
   def ValVarDef: R0 = {
     def Val = rule( rep1Sep(Pat2, ',') ~ opt(`:` ~ Type) ~ `=` ~ Expr0(true) )
     def Var = rule( Ids ~ `:` ~ Type ~ `=` ~ `_` | Val )
@@ -198,8 +139,6 @@ class ScalaSyntax (val input: ParserInput)
     def FunDef = rule( `def` ~ FunSig ~ opt(`:` ~ Type) ~ Body )
     rule( FunDef | TypeDef | ValVarDef | TmplDef )
   }
-
-  def TypeDef: R0 = rule( `type` ~ Id ~ opt(TypeArgList) ~ `=` ~ Type )
 
   def TmplDef: R0 = {
     def ClsDef = {
