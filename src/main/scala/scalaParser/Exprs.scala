@@ -55,14 +55,16 @@ trait Exprs extends Core with Types with Xml{
     }
     def Throw = rule( `throw` ~ Expr0(G) )
     def Return = rule( `return` ~ Expr0(G).? )
-    def Assign = rule( SimpleExpr() ~ `=` ~ Expr0(G) )
+
     def SmallerExpr = rule( PostfixExpr(G) ~ (`match` ~ '{' ~ CaseClauses ~ "}" | Ascription).? )
-    def LambdaBody = rule( If | While | Try | DoWhile | For | Throw | Return | Assign | SmallerExpr )
+    def LambdaBody = rule( If | While | Try | DoWhile | For | Throw | Return | SmallerExpr )
     rule( LambdaHead.* ~ LambdaBody )
   }
 
   def PostfixExpr(G: Boolean = false): R0 = {
-    def PrefixExpr = rule( (WL ~ anyOf("-+~!") ~ WS ~ !Basic.OpChar).? ~  SimpleExpr(G) )
+    def Prefixed = rule( (WL ~ anyOf("-+~!") ~ WS ~ !Basic.OpChar) ~  SimpleExpr(G) )
+    def Assign = rule( SimpleExpr(G) ~ (`=` ~ Expr0(G)).? )
+    def PrefixExpr = rule( Prefixed | Assign )
     def Check = if (G) OneNLMax else MATCH
     def Check0 = if (G) NotNewline else MATCH
     def InfixExpr = rule( PrefixExpr ~ (Check0 ~ Id ~ TypeArgs.? ~ Check ~ PrefixExpr).* )
