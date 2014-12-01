@@ -76,8 +76,6 @@ trait Types extends Core{
     def Variant: R0 = rule( rep(Annot) ~ opt(WL ~ anyOf("+-")) ~ TypeArg )
     rule( '[' ~ rep1Sep(Variant, ',') ~ ']' )
   }
-
-
   def Exprs: R0 = rule( rep1Sep(Expr, ',') )
   def TypeDef: R0 = rule( `type` ~ Id ~ opt(TypeArgList) ~ `=` ~ Type )
 }
