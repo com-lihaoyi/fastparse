@@ -2,13 +2,10 @@ package scalaParser
 
 trait Types extends Core{
 
-  def Expr: R0
+  def TypeExpr: R0
 
   private implicit def wspStr(s: String) = rule( WL ~ str(s) )
   private implicit def wspCh(s: Char) = rule( WL ~ ch(s) )
-
-  import KeyWordOperators._
-  import KeyWordOperators.`_`
 
   def Mod: R0 = rule( LocalMod | AccessMod | `override` )
   def LocalMod: R0 = rule( `abstract` | `final` | `sealed` | `implicit` | `lazy` )
@@ -56,7 +53,7 @@ trait Types extends Core{
     def FunTypeArgs = rule( '[' ~ (Annot.* ~ TypeArg).+.sep(',') ~ ']' )
     def FunAllArgs = rule( FunArgs.* ~ (OneNLMax ~ '(' ~ `implicit` ~ Args ~ ')').? )
     def FunArgs = rule( OneNLMax ~ '(' ~ Args.? ~ ')' )
-    def FunArg = rule( Annot.* ~ Id ~ (`:` ~ ParamType).? ~ (`=` ~ Expr).? )
+    def FunArg = rule( Annot.* ~ Id ~ (`:` ~ ParamType).? ~ (`=` ~ TypeExpr).? )
     def Args = rule( FunArg.+.sep(',') )
     rule( (Id | `this`) ~ FunTypeArgs.? ~ FunAllArgs )
   }
@@ -74,6 +71,6 @@ trait Types extends Core{
     def Variant: R0 = rule( Annot.* ~ (WL ~ anyOf("+-")).? ~ TypeArg )
     rule( '[' ~ Variant.*.sep(',') ~ ']' )
   }
-  def Exprs: R0 = rule( Expr.+.sep(',') )
+  def Exprs: R0 = rule( TypeExpr.+.sep(',') )
   def TypeDef: R0 = rule( `type` ~ Id ~ TypeArgList.? ~ `=` ~ Type )
 }

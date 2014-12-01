@@ -10,14 +10,12 @@ import org.parboiled2._
 class Scala (val input: ParserInput)
   extends Core with Types with Exprs with Xml{
 
-  import KeyWordOperators._
-  import KeyWordOperators.`_`
   private implicit def wspStr(s: String) = rule( WL ~ str(s) )
   private implicit def wspCh(s: Char) = rule( WL ~ ch(s) )
 
   def TmplBody: R0 = {
     def Prelude = rule( (Annot ~ OneNLMax).* ~ Mod.* )
-    def TmplStat = rule( Import | Prelude ~ (Def | Dcl) | Expr0(true) )
+    def TmplStat = rule( Import | Prelude ~ (Def | Dcl) | StatCtx.Expr )
     def SelfType = rule( (`this` | Id | `_`) ~ (`:` ~ InfixType).? ~ `=>` )
     rule( '{' ~ SelfType.? ~ Semis.? ~ TmplStat.*.sep(Semis) ~ `}` )
   }
@@ -27,12 +25,12 @@ class Scala (val input: ParserInput)
   def BlockDef = rule( Def | TmplDef )
 
   def ValVarDef: R0 = {
-    def Val = rule( Pat2.+.sep(',') ~ (`:` ~ Type).? ~ `=` ~ Expr0(true) )
+    def Val = rule( Pat2.+.sep(',') ~ (`:` ~ Type).? ~ `=` ~ StatCtx.Expr )
     def Var = rule( Ids ~ `:` ~ Type ~ `=` ~ `_` | Val )
     rule( `val` ~ Val | `var` ~ Var )
   }
   def Def: R0 = {
-    def Body = rule( `=` ~ `macro`.? ~ Expr0(true) | OneNLMax ~ '{' ~ Block ~ "}" )
+    def Body = rule( `=` ~ `macro`.? ~ StatCtx.Expr | OneNLMax ~ '{' ~ Block ~ "}" )
     def FunDef = rule( `def` ~ FunSig ~ (`:` ~ Type).? ~ Body )
     rule( FunDef | TypeDef | ValVarDef | TmplDef )
   }
@@ -42,7 +40,7 @@ class Scala (val input: ParserInput)
       def ClsAnnot = rule( `@` ~ SimpleType ~ ArgList )
       def Prelude = rule( NotNewline ~ ( ClsAnnot.+ ~ AccessMod.? | ClsAnnot.* ~ AccessMod) )
       def ClsArgMod = rule( (Mod.* ~ (`val` | `var`)).? )
-      def ClsArg = rule( Annot.* ~ ClsArgMod ~ Id ~ `:` ~ ParamType ~ (`=` ~ Expr).? )
+      def ClsArg = rule( Annot.* ~ ClsArgMod ~ Id ~ `:` ~ ParamType ~ (`=` ~ ExprCtx.Expr).? )
 
       def Implicit = rule( OneNLMax ~ '(' ~ `implicit` ~ ClsArg.+.sep(",") ~ ")" )
       def ClsArgs = rule( OneNLMax ~'(' ~ ClsArg.*.sep(',') ~ ")" )
