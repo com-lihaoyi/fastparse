@@ -19,7 +19,7 @@ class Scala (val input: ParserInput)
     def Prelude = rule( (Annot ~ OneNLMax).* ~ Mod.* )
     def TmplStat = rule( Import | Prelude ~ (Def | Dcl) | Expr0(true) )
     def ThisType = rule( `this` ~ `:` ~ InfixType ~ `=>` )
-    def OtherType = rule( (Id | `_`) ~ (`:` ~ InfixType).+ ~ `=>` )
+    def OtherType = rule( (Id | `_`) ~ (`:` ~ InfixType).? ~ `=>` )
     def SelfType = rule( ThisType | OtherType)
     rule( '{' ~ SelfType.? ~ Semis.? ~ TmplStat.*.sep(Semis) ~ `}` )
   }
@@ -29,7 +29,7 @@ class Scala (val input: ParserInput)
   def BlockDef = rule( Def | TmplDef )
 
   def ValVarDef: R0 = {
-    def Val = rule( Pat2.+.sep(',') ~ (`:` ~ Type).+ ~ `=` ~ Expr0(true) )
+    def Val = rule( Pat2.+.sep(',') ~ (`:` ~ Type).? ~ `=` ~ Expr0(true) )
     def Var = rule( Ids ~ `:` ~ Type ~ `=` ~ `_` | Val )
     rule( `val` ~ Val | `var` ~ Var )
   }

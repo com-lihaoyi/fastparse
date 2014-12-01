@@ -58,7 +58,7 @@ trait Exprs extends Core with Types with Xml{
     def Assign = rule( SimpleExpr() ~ `=` ~ Expr0(G) )
     def SmallerExpr = rule( PostfixExpr(G) ~ (`match` ~ '{' ~ CaseClauses ~ "}" | Ascription).? )
     def LambdaBody = rule( If | While | Try | DoWhile | For | Throw | Return | Assign | SmallerExpr )
-    rule( LambdaHead.+ ~ LambdaBody )
+    rule( LambdaHead.* ~ LambdaBody )
   }
 
   def PostfixExpr(G: Boolean = false): R0 = {

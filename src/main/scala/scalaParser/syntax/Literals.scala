@@ -31,7 +31,7 @@ trait Literals { self: Parser with Basic with Identifiers =>
     def Symbol = rule( ''' ~ (Identifiers.PlainId | Identifiers.Keywords) )
 
     def Char = rule {
-      ''' ~ (UnicodeEscape | EscapedChars | !'\\' ~ CharPredicate.from(isPrintableChar)) ~ '''
+      "'" ~ (UnicodeEscape | EscapedChars | !'\\' ~ CharPredicate.from(isPrintableChar)) ~ "'"
     }
 
 
@@ -44,7 +44,7 @@ trait Literals { self: Parser with Basic with Identifiers =>
       def InterpIf(b: Boolean) = if(b) rule(Interp) else rule(MISMATCH0)
       def TQ = rule( "\"\"\"" )
       def TripleChars(b: Boolean) = rule( (InterpIf(b) | '"'.? ~ '"'.? ~ noneOf("\"")).* )
-      def TripleTail = rule( TQ ~ '"'.+ )
+      def TripleTail = rule( TQ ~ zeroOrMore('"') )
       def SingleChars(b: Boolean) = rule( (InterpIf(b) | "\\\"" | "\\\\" | noneOf("\n\"")).* )
       rule {
         (Id ~ TQ ~ TripleChars(b = true) ~ TripleTail) |

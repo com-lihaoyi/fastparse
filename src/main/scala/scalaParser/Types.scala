@@ -24,7 +24,7 @@ trait Types extends Core{
   }
 
   def Type: R0 = {
-    def FunctionArgTypes = rule('(' ~ (ParamType.+.sep(',')).? ~ ')' )
+    def FunctionArgTypes = rule('(' ~ ParamType.+.sep(',').? ~ ')' )
     def ArrowType = rule( FunctionArgTypes ~ `=>` ~ Type )
     def ExistentialClause = rule( `forSome` ~ `{` ~ (TypeDcl | ValDcl).+.sep(Semis) ~ `}` )
     def PostfixType = rule( InfixType ~ (`=>` ~ Type | ExistentialClause.?) )
@@ -36,7 +36,7 @@ trait Types extends Core{
 
   def CompoundType = {
     def RefineStat = rule( TypeDef | Dcl  )
-    def Refinement = rule( OneNLMax ~ `{` ~ RefineStat.+.sep(Semis) ~ `}` )
+    def Refinement = rule( OneNLMax ~ `{` ~ RefineStat.*.sep(Semis) ~ `}` )
     rule( AnnotType.+.sep(`with`) ~ Refinement.? | Refinement )
   }
   def AnnotType = rule(SimpleType ~ (NotNewline ~ (NotNewline ~ Annot).+).? )

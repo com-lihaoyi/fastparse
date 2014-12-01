@@ -15,7 +15,7 @@ trait Identifiers { self: Parser with Basic =>
     def Id = rule( !Keywords ~ PlainId | ("`" ~ noneOf("`").+ ~ "`") )
     def SkipChar(dollar: Boolean) = if(dollar) rule("_") else rule(anyOf("_$"))
     def IdRest(dollar: Boolean) = rule(
-      ("_".* ~ (!SkipChar(dollar) ~ Letter | Digit).+).* ~ ("_".+ ~ OpChar.*).?
+      (zeroOrMore("_") ~ (!SkipChar(dollar) ~ Letter | Digit).+).* ~ (oneOrMore("_") ~ OpChar.*).?
     )
 
     def AlphabetKeywords = rule {
