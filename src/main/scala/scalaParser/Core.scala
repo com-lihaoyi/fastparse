@@ -5,7 +5,6 @@ import org.parboiled2._
 
 import scala.language.implicitConversions
 
-
 abstract class Core extends Parser with syntax.Basic with syntax.Literals with syntax.Identifiers {
   // Aliases for common things. These things are used in almost every parser
   // in the file, so it makes sense to keep them short.
@@ -125,5 +124,12 @@ abstract class Core extends Parser with syntax.Basic with syntax.Literals with s
     def ClassQualifier = rule( '[' ~ Id ~ ']' )
     def ThisSuper = rule( `this` | `super` ~ opt(ClassQualifier) )
     rule( rep(Id ~ '.') ~ ThisSuper ~ rep('.' ~ Id) | Id ~ rep('.' ~ Id) )
+  }
+
+  def Mod: R0 = rule( LocalMod | AccessMod | `override` )
+  def LocalMod: R0 = rule( `abstract` | `final` | `sealed` | `implicit` | `lazy` )
+  def AccessMod: R0 = {
+    def AccessQualifier = rule( '[' ~ (`this` | Id) ~ ']' )
+    rule( (`private` | `protected`) ~ opt(AccessQualifier) )
   }
 }

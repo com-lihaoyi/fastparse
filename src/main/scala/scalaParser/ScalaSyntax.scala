@@ -94,7 +94,7 @@ class ScalaSyntax (val input: ParserInput)
   }
 
   def SimpleExpr(G: Boolean = false): R0 = {
-    def Path: R0 = rule( rep(Id ~ '.') ~ `this` ~ rep('.' ~ Id) | StableId )
+    def Path = rule( rep(Id ~ '.') ~ `this` ~ rep('.' ~ Id) | StableId )
     def Check0 = if (G) NotNewline else MATCH
     def New = rule( `new` ~ (ClsTmpl | TmplBody) )
     def Parened = rule ( '(' ~ opt(Exprs) ~ ")"  )
@@ -109,14 +109,14 @@ class ScalaSyntax (val input: ParserInput)
 
   def BlockStats: R0 = {
     def Prelude = rule( rep(Annot) ~ opt(`implicit`) ~ opt(`lazy`) ~ rep(LocalMod) )
-    def Template: R0 = rule( Prelude ~ (Def | TmplDef) )
-    def BlockStat: R0 = rule( Import | Template | Expr0(true) )
+    def Template = rule( Prelude ~ (Def | TmplDef) )
+    def BlockStat = rule( Import | Template | Expr0(true) )
     rule( rep1Sep(BlockStat, Semis) )
   }
 
   def Block: R0 = {
-    def End: R0 = rule( opt(Semis) ~ &("}" | `case`) )
-    def ResultExpr: R0 = rule{ Expr0(true) | LambdaHead ~ Block}
+    def End = rule( opt(Semis) ~ &("}" | `case`) )
+    def ResultExpr = rule{ Expr0(true) | LambdaHead ~ Block}
     def Body = rule( ResultExpr ~ End | BlockStats ~ opt(Semis ~ ResultExpr) ~ End | End )
     rule( rep(LambdaHead) ~ opt(Semis) ~ Body )
   }
@@ -131,7 +131,7 @@ class ScalaSyntax (val input: ParserInput)
   def Pat: R0 = rule( rep1Sep(Pat1, '|') )
   def Pat1: R0 = rule( `_` ~ `:` ~ TypePat | VarId ~ `:` ~ TypePat | Pat2 )
   def Pat2: R0 = {
-    def Pat3: R0 = rule( `_*` | SimplePat ~ rep(Id ~ SimplePat) )
+    def Pat3 = rule( `_*` | SimplePat ~ rep(Id ~ SimplePat) )
     rule( VarId ~ `@` ~ Pat3 | Pat3 | VarId )
   }
 
@@ -154,22 +154,15 @@ class ScalaSyntax (val input: ParserInput)
     rule((Id | `_`) ~ opt(TypeArgList) ~ TypeBounds ~ CtxBounds)
   }
 
-  def Mod: R0 = rule( LocalMod | AccessMod | `override` )
-  def LocalMod: R0 = rule( `abstract` | `final` | `sealed` | `implicit` | `lazy` )
-  def AccessMod: R0 = {
-    def AccessQualifier: R0 = rule( '[' ~ (`this` | Id) ~ ']' )
-    rule( (`private` | `protected`) ~ opt(AccessQualifier) )
-  }
-
   def Annot: R0 = rule( `@` ~ SimpleType ~  rep(ArgList)  )
 
   def TmplBody: R0 = {
     def Prelude = rule( rep(Annot ~ OneNLMax) ~ rep(Mod) )
-    def TemplateStat = rule( Import | Prelude ~ (Def | Dcl) | Expr0(true) )
+    def TmplStat = rule( Import | Prelude ~ (Def | Dcl) | Expr0(true) )
     def ThisType = rule( `this` ~ `:` ~ InfixType ~ `=>` )
     def OtherType = rule( (Id | `_`) ~ opt(`:` ~ InfixType) ~ `=>` )
-    def SelfType: R0 = rule( ThisType | OtherType)
-    rule( '{' ~ opt(SelfType) ~ opt(Semis) ~ repSep(TemplateStat, Semis) ~ `}` )
+    def SelfType = rule( ThisType | OtherType)
+    rule( '{' ~ opt(SelfType) ~ opt(Semis) ~ repSep(TmplStat, Semis) ~ `}` )
   }
 
   def Import: R0 = {
@@ -180,76 +173,74 @@ class ScalaSyntax (val input: ParserInput)
   }
 
   def Dcl: R0 = {
-    def VarDcl: R0 = rule( `var` ~ Ids ~ `:` ~ Type )
-    def FunDcl: R0 = rule( `def` ~ FunSig ~ opt(`:` ~ Type) )
+    def VarDcl = rule( `var` ~ Ids ~ `:` ~ Type )
+    def FunDcl = rule( `def` ~ FunSig ~ opt(`:` ~ Type) )
     rule( ValDcl | VarDcl | FunDcl | TypeDcl )
   }
   def FunSig: R0 = {
-    def FunTypeArgs: R0 = rule( '[' ~ rep1Sep(rep(Annot) ~ TypeArg, ',') ~ ']' )
-    def FunAllArgs: R0 = rule( rep(FunArgs) ~ opt(OneNLMax ~ '(' ~ `implicit` ~ Args ~ ')') )
-    def FunArgs: R0 = rule( OneNLMax ~ '(' ~ opt(Args) ~ ')' )
-    def FunArg: R0 = rule( rep(Annot) ~ Id ~ opt(`:` ~ ParamType) ~ opt(`=` ~ Expr) )
-    def Args: R0 = rule( rep1Sep(FunArg, ',') )
+    def FunTypeArgs = rule( '[' ~ rep1Sep(rep(Annot) ~ TypeArg, ',') ~ ']' )
+    def FunAllArgs = rule( rep(FunArgs) ~ opt(OneNLMax ~ '(' ~ `implicit` ~ Args ~ ')') )
+    def FunArgs = rule( OneNLMax ~ '(' ~ opt(Args) ~ ')' )
+    def FunArg = rule( rep(Annot) ~ Id ~ opt(`:` ~ ParamType) ~ opt(`=` ~ Expr) )
+    def Args = rule( rep1Sep(FunArg, ',') )
     rule( (Id | `this`) ~ opt(FunTypeArgs) ~ FunAllArgs )
   }
   def ValDcl: R0 = rule( `val` ~ Ids ~ `:` ~ Type )
   def TypeDcl: R0 = rule( `type` ~ Id ~ opt(TypeArgList) ~ TypeBounds )
 
   def ValVarDef: R0 = {
-    def Val: R0 = rule( rep1Sep(Pat2, ',') ~ opt(`:` ~ Type) ~ `=` ~ Expr0(true) )
-    def Var: R0 = rule( Ids ~ `:` ~ Type ~ `=` ~ `_` | Val )
+    def Val = rule( rep1Sep(Pat2, ',') ~ opt(`:` ~ Type) ~ `=` ~ Expr0(true) )
+    def Var = rule( Ids ~ `:` ~ Type ~ `=` ~ `_` | Val )
     rule( `val` ~ Val | `var` ~ Var )
   }
   def Def: R0 = {
-    def Body: R0 = rule( `=` ~ opt(`macro`) ~ Expr0(true) | OneNLMax ~ '{' ~ Block ~ "}" )
-    def FunDef: R0 = rule( `def` ~ FunSig ~ opt(`:` ~ Type) ~ Body )
+    def Body = rule( `=` ~ opt(`macro`) ~ Expr0(true) | OneNLMax ~ '{' ~ Block ~ "}" )
+    def FunDef = rule( `def` ~ FunSig ~ opt(`:` ~ Type) ~ Body )
     rule( FunDef | TypeDef | ValVarDef | TmplDef )
   }
 
   def TypeDef: R0 = rule( `type` ~ Id ~ opt(TypeArgList) ~ `=` ~ Type )
 
   def TmplDef: R0 = {
-    def ClsDef: R0 = {
+    def ClsDef = {
       def ClsAnnot = rule( `@` ~ SimpleType ~ ArgList )
       def Prelude = rule( NotNewline ~ ( rep1(ClsAnnot) ~ opt(AccessMod) | rep(ClsAnnot) ~ AccessMod) )
-      def ParamMod = rule( opt(rep(Mod) ~ (`val` | `var`)) )
-      def ClsParam = rule( rep(Annot) ~ ParamMod ~ Id ~ `:` ~ ParamType ~ opt(`=` ~ Expr) )
+      def ClsArgMod = rule( opt(rep(Mod) ~ (`val` | `var`)) )
+      def ClsArg = rule( rep(Annot) ~ ClsArgMod ~ Id ~ `:` ~ ParamType ~ opt(`=` ~ Expr) )
 
-      def Implicit = rule( OneNLMax ~ '(' ~ `implicit` ~ rep1Sep(ClsParam, ",") ~ ")" )
-      def ClsArgs = rule( OneNLMax ~'(' ~ repSep(ClsParam, ',') ~ ")" )
+      def Implicit = rule( OneNLMax ~ '(' ~ `implicit` ~ rep1Sep(ClsArg, ",") ~ ")" )
+      def ClsArgs = rule( OneNLMax ~'(' ~ repSep(ClsArg, ',') ~ ")" )
       def AllArgs = rule( rep1(ClsArgs) ~ opt(Implicit) | Implicit )
       rule( `class` ~ Id ~ opt(TypeArgList) ~ opt(Prelude) ~ opt(AllArgs) ~ ClsTmplOpt )
     }
-    def TraitTmplOpt: R0 = {
-      def TraitParents: R0 = rule( AnnotType ~ rep(`with` ~ AnnotType) )
-      def TraitTmpl: R0 = rule( opt(EarlyDefs) ~ TraitParents ~ opt(TmplBody) )
+    def TraitTmplOpt = {
+      def TraitParents = rule( AnnotType ~ rep(`with` ~ AnnotType) )
+      def TraitTmpl = rule( opt(EarlyDefs) ~ TraitParents ~ opt(TmplBody) )
       rule( `extends` ~ TraitTmpl | opt(opt(`extends`) ~ TmplBody) )
     }
-    def TraitDef: R0 = rule( `trait` ~ Id ~ opt(TypeArgList) ~ TraitTmplOpt )
+    def TraitDef = rule( `trait` ~ Id ~ opt(TypeArgList) ~ TraitTmplOpt )
     rule( TraitDef | opt(`case`) ~ (ClsDef | ObjDef) )
   }
 
   def ObjDef: R0 = rule( `object` ~ Id ~ ClsTmplOpt )
-  def ClsTmplOpt: R0 = rule {
-    `extends` ~ ClsTmpl | opt(opt(`extends`) ~ TmplBody)
-  }
+  def ClsTmplOpt: R0 = rule( `extends` ~ ClsTmpl | opt(opt(`extends`) ~ TmplBody) )
 
   def ClsTmpl: R0 = {
-    def Constr: R0 = rule( AnnotType ~ rep(NotNewline ~ ArgList) )
-    def ClsParents: R0 = rule( Constr ~ rep(`with` ~ AnnotType) )
+    def Constr = rule( AnnotType ~ rep(NotNewline ~ ArgList) )
+    def ClsParents = rule( Constr ~ rep(`with` ~ AnnotType) )
     rule( opt(EarlyDefs) ~ ClsParents ~ opt(TmplBody) )
   }
 
   def EarlyDefs: R0 = {
-    def EarlyDef: R0 = rule( rep(Annot ~ OneNLMax) ~ rep(Mod) ~ ValVarDef )
+    def EarlyDef = rule( rep(Annot ~ OneNLMax) ~ rep(Mod) ~ ValVarDef )
     rule( `{` ~ repSep(EarlyDef, Semis) ~ `}` ~ `with` )
   }
 
   def TopStatSeq: R0 = {
-    def PkgObj: R0 = rule( `package` ~ ObjDef )
-    def PkgBlock: R0 = rule( `package` ~ QualId ~ `{` ~ opt(TopStatSeq) ~ `}` )
+    def PkgObj = rule( `package` ~ ObjDef )
+    def PkgBlock = rule( `package` ~ QualId ~ `{` ~ opt(TopStatSeq) ~ `}` )
     def Tmpl = rule( rep(Annot ~ OneNLMax) ~ rep(Mod) ~ TmplDef )
-    def TopStat: R0 = rule( PkgBlock | PkgObj | Import | Tmpl )
+    def TopStat = rule( PkgBlock | PkgObj | Import | Tmpl )
     rule( rep1Sep(TopStat, Semis) )
   }
 
