@@ -41,8 +41,7 @@ object ProjectTests extends TestSuite{
       )
       checkDir("framework", f => blacklist.exists(f.contains))
     }
-//    'play - checkDir("playframework", f => f.endsWith(".scala.html"))
-
+    'play - checkDir("playframework", f => f.endsWith(".scala.html"))
     'scala{
       // Things that we won't bother parsing, mainly because they use XML literals
       val blacklist = Seq(

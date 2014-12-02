@@ -17,6 +17,7 @@ scala-parser currently has a small unit test suite to prevent regressions of alr
 - https://github.com/scalaz/scalaz
 - https://github.com/milessabin/shapeless
 - https://github.com/lift/framework
+- https://github.com/playframework/playframework
 
 It parses everything in all of these projects, modulo a blacklist which you can see in the test code which mainly excludes unsupported functionality (mentioned above) and broken Scala files (scripts, negative-tests, etc.)
 

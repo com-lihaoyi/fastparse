@@ -1,14 +1,12 @@
 package scalaParser
 import acyclic.file
-import macros.Macros._
 import org.parboiled2._
 
 import scala.language.implicitConversions
-import macros.Macros._
 
 trait Xml extends Core {
   def Patterns: Rule0
-  def XmlExpr = rule( WL ~ Xml.XmlContent ~ rep(WL ~ Xml.Element) )
+  def XmlExpr = rule( WL ~ Xml.XmlContent ~ (WL ~ Xml.Element).* )
   def XmlPattern = rule( WL ~ Xml.ElemPattern )
 
   private[this] object Xml{
@@ -61,48 +59,48 @@ trait Xml extends Core {
       ("\u3041"-"\u3094") | ("\u30A1"-"\u30FA") | ("\u3105"-"\u312C") | ("\uAC00"-"\uD7A3")
     )
     def Ideographic = rule( "\u4E00"-"\u9FA5" | "\u3007" | "\u3021"-"\u3029" )
-    def Eq = rule (opt(WL) ~ '=' ~ opt(WL))
+    def Eq = rule (WL.? ~ '=' ~ WL.?)
 
 
     def Element = rule( EmptyElemTag | STag ~ Content ~ ETag )
 
-    def EmptyElemTag = rule( '<' ~ Name ~ rep(WL ~ Attribute) ~ opt(WL) ~ "/>" )
+    def EmptyElemTag = rule( '<' ~ Name ~ (WL ~ Attribute).* ~ WL.? ~ "/>" )
 
-    def STag = rule( '<' ~ Name ~ rep(WL ~ Attribute) ~ opt(WL) ~ '>' )
-    def ETag = rule( "</" ~ Name ~ opt(WL) ~ '>' )
-    def Content = rule( rep(CharData | Content1) )
+    def STag = rule( '<' ~ Name ~ (WL ~ Attribute).* ~ WL.? ~ '>' )
+    def ETag = rule( "</" ~ Name ~ WL.? ~ '>' )
+    def Content = rule( (CharData | Content1).* )
     def Content1  = rule( XmlContent | Reference | ScalaExpr )
     def XmlContent: Rule0 = rule( Element | CDSect | PI | Comment )
 
     def CDSect = rule( CDStart ~ CData ~ CDEnd )
     def CDStart = rule( "<![CDATA[" )
-    def CData = rule( rep(!"]]>" ~ Char))
+    def CData = rule( (!"]]>" ~ Char).* )
     def CDEnd = rule( "]]>" )
 
     def Attribute = rule( Name ~ Eq ~ AttValue )
 
     def AttValue = rule(
-      '"' ~ rep(CharQ | Reference) ~ '"' |
-      "'" ~ rep(CharA | Reference) ~ "'" |
+      '"' ~ (CharQ | Reference).* ~ '"' |
+      "'" ~ (CharA | Reference).* ~ "'" |
       ScalaExpr
     )
 
-    def Comment = rule( "<!--" ~ rep((!'-' ~ Char) | ('-' ~ (!'-' ~ Char))) ~ "-->" )
+    def Comment = rule( "<!--" ~ ((!'-' ~ Char) | ('-' ~ (!'-' ~ Char))).* ~ "-->" )
 
-    def PI = rule( "<?" ~ PITarget ~ opt(WL ~ rep(!"?>" ~ Char)) ~ "?>" )
+    def PI = rule( "<?" ~ PITarget ~ (WL ~ (!"?>" ~ Char).*).? ~ "?>" )
     def PITarget = rule( !(("X" | "x") ~ ("M" | "m") ~ ("L" | "l")) ~ Name )
-    def CharRef = rule( "&#" ~ rep1("0"-"9") ~ ';' | "&#x" ~ Basic.HexNum ~ ";" )
+    def CharRef = rule( "&#" ~ ("0"-"9").+ ~ ';' | "&#x" ~ Basic.HexNum ~ ";" )
     def Reference = rule( EntityRef | CharRef )
     def EntityRef = rule( "&" ~ Name ~ ";" )
     def ScalaExpr = rule("{" ~ WS ~ Block ~ WS ~ "}")
     def Char = rule( ANY )
-    def CharData = rule( rep1(!("{" | "]]>" | CharRef) ~ Char1 | "{{") )
+    def CharData = rule( (!("{" | "]]>" | CharRef) ~ Char1 | "{{").+ )
 
     def Char1  = rule( &(noneOf("<&")) ~ Char )
     def CharQ = rule( !'"' ~ Char1 )
     def CharA = rule( !"'" ~ Char1 )
     def CharB = rule( !'{' ~ Char1 )
-    def Name = rule( XNameStart ~ rep(NameChar) )
+    def Name = rule( XNameStart ~ NameChar.* )
     def XNameStart  = rule( '_' | BaseChar | Ideographic )
 
     def NameStartChar = rule(
@@ -113,12 +111,11 @@ trait Xml extends Core {
 
     def NameChar = rule( NameStartChar | "-" | "." | ("0"-"9") | "\u00B7" | ("\u0300"-"\u036F") | ("\u203F"-"\u2040") )
     def ElemPattern: Rule0 = rule( EmptyElemTagP | STagP ~ ContentP ~ ETagP )
-    def EmptyElemTagP = rule( "<" ~ Name ~ opt(WL) ~ "/>" )
-    def STagP = rule( "<" ~ Name ~ opt(WL) ~ ">")
-    def ETagP = rule( "</" ~ Name ~ opt(WL) ~ ">" )
-    def ContentP = rule( opt(CharData) ~ rep((ElemPattern | ScalaPatterns) ~ opt(CharData)) )
+    def EmptyElemTagP = rule( "<" ~ Name ~ WL.? ~ "/>" )
+    def STagP = rule( "<" ~ Name ~ WL.? ~ ">")
+    def ETagP = rule( "</" ~ Name ~ WL.? ~ ">" )
+    def ContentP = rule( CharData.? ~ ((ElemPattern | ScalaPatterns) ~ CharData.?).* )
     def ContentP1 = rule( ElemPattern | Reference | CDSect | PI | Comment | ScalaPatterns )
     def ScalaPatterns = rule( "{" ~ Patterns ~ WL ~ "}" )
-
   }
 }

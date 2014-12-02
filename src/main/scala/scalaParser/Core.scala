@@ -1,6 +1,5 @@
 package scalaParser
 import acyclic.file
-import macros.Macros._
 import org.parboiled2._
 
 import scala.language.implicitConversions
@@ -14,13 +13,13 @@ abstract class Core extends Parser with syntax.Basic with syntax.Literals with s
    * really useful in e.g. {} blocks, where we want to avoid
    * capturing newlines so semicolon-inference would work
    */
-  def WS = rule( rep(Basic.WSChar | Literals.Comment) )
+  def WS = rule( (Basic.WSChar | Literals.Comment).* )
 
   /**
    * Parses whitespace, including newlines.
    * This is the default for most things
    */
-  def WL = rule( rep(Basic.WSChar | Literals.Comment | Basic.Newline) )
+  def WL = rule( (Basic.WSChar | Literals.Comment | Basic.Newline).* )
 
 
   /**
@@ -36,64 +35,64 @@ abstract class Core extends Parser with syntax.Basic with syntax.Literals with s
    * (W) and key-operators (O) which have different non-match criteria.
    */
   object KeyWordOperators {
-    private[this] def W(s: String) = rule( WL ~ Key.W(s) )
-    private[this] def O(s: String) = rule( WL ~ Key.O(s) )
-
-    def `=>` = rule( O("=>") | O("⇒") )
-    def `<-` = rule( O("<-") | O("←") )
-    def `:` = O(":")
-    def `=` = O("=")
-    def `@` = O("@")
-    def `_` = W("_")
-    def `this` = W("this")
-    def `type` = W("type")
-    def `val` = W("val")
-    def `var` = W("var")
-    def `def` = W("def")
-    def `with` = W("with")
-    def `package` = W("package")
-    def `object` = W("object")
-    def `class` = W("class")
-    def `case` = W("case")
-    def `trait` = W("trait")
-    def `extends` = W("extends")
-    def `implicit` = W("implicit")
-    def `try` = W("try")
-    def `new` = W("new")
-    def `macro` = W("macro")
-    def `import` = W("import")
-    def `else` = W("else")
-    def `super` = W("super")
-    def `catch` = W("catch")
-    def `finally` = W("finally")
-    def `do` = W("do")
-    def `yield` = W("yield")
-    def `while` = W("while")
-    def `<%` = O("<%")
-    def `override` = W("override")
-    def `#` = O("#")
-    def `forSome` = W("forSome")
-    def `for` = W("for")
-    def `abstract` = W("abstract")
-    def `throw` = W("throw")
-    def `return` = W("return")
-    def `lazy` = W("lazy")
-    def `if` = W("if")
-    def `match` = W("match")
-    def `>:` = O(">:")
-    def `<:` = O("<:")
-    def `final` =  W("final")
-    def `sealed` = W("sealed")
-    def `private` = W("private")
-    def `protected` = W("protected")
+    def W(s: String) = rule( WL ~ Key.W(s) )
+    def O(s: String) = rule( WL ~ Key.O(s) )
   }
-
   import KeyWordOperators._
-  import KeyWordOperators.`_`
+  // Keywords that match themselves and nothing else
+  def `=>` = rule( O("=>") | O("⇒") )
+  def `<-` = rule( O("<-") | O("←") )
+  def `:` = O(":")
+  def `=` = O("=")
+  def `@` = O("@")
+  def `_` = W("_")
+  def `this` = W("this")
+  def `type` = W("type")
+  def `val` = W("val")
+  def `var` = W("var")
+  def `def` = W("def")
+  def `with` = W("with")
+  def `package` = W("package")
+  def `object` = W("object")
+  def `class` = W("class")
+  def `case` = W("case")
+  def `trait` = W("trait")
+  def `extends` = W("extends")
+  def `implicit` = W("implicit")
+  def `try` = W("try")
+  def `new` = W("new")
+  def `macro` = W("macro")
+  def `import` = W("import")
+  def `else` = W("else")
+  def `super` = W("super")
+  def `catch` = W("catch")
+  def `finally` = W("finally")
+  def `do` = W("do")
+  def `yield` = W("yield")
+  def `while` = W("while")
+  def `<%` = O("<%")
+  def `override` = W("override")
+  def `#` = O("#")
+  def `forSome` = W("forSome")
+  def `for` = W("for")
+  def `abstract` = W("abstract")
+  def `throw` = W("throw")
+  def `return` = W("return")
+  def `lazy` = W("lazy")
+  def `if` = W("if")
+  def `match` = W("match")
+  def `>:` = O(">:")
+  def `<:` = O("<:")
+  def `final` =  W("final")
+  def `sealed` = W("sealed")
+  def `private` = W("private")
+  def `protected` = W("protected")
 
+  // kinda-sorta keywords that are common patterns even if not
+  // really-truly keywords
   def `_*` = rule( `_` ~ "*" )
-  def `}` = rule( opt(Semis) ~ '}' )
-  def `{` = rule( '{' ~ opt(Semis) )
+  def `}` = rule( Semis.? ~ '}' )
+  def `{` = rule( '{' ~ Semis.? )
   /**
    * helper printing function
    */
@@ -103,22 +102,22 @@ abstract class Core extends Parser with syntax.Basic with syntax.Literals with s
   def VarId = rule( WL ~ Identifiers.VarId )
   def Literal = rule( WL ~ Literals.Literal )
   def Semi = rule( WS ~ Basic.Semi )
-  def Semis = rule( rep1(Semi) )
+  def Semis = rule( Semi.+ )
   def Newline = rule( WL ~ Basic.Newline )
 
-  def QualId = rule( WL ~ rep1Sep(Id, '.') )
-  def Ids = rule( rep1Sep(Id, ',') )
+  def QualId = rule( WL ~ Id.+.sep('.') )
+  def Ids = rule( Id.+.sep(',') )
 
   def NotNewline: R0 = rule( &( WS ~ !Basic.Newline ) )
   def OneNLMax: R0 = {
-    def WSChar = rule( rep(Basic.WSChar) )
-    def ConsumeComments = rule( rep(WSChar ~ Literals.Comment ~ WSChar ~ Basic.Newline) )
-    rule( WS ~ opt(Basic.Newline) ~ ConsumeComments ~ NotNewline )
+    def WSChar = rule( Basic.WSChar.* )
+    def ConsumeComments = rule( (WSChar ~ Literals.Comment ~ WSChar ~ Basic.Newline).* )
+    rule( WS ~ Basic.Newline.? ~ ConsumeComments ~ NotNewline )
   }
   def StableId: R0 = {
     def ClassQualifier = rule( '[' ~ Id ~ ']' )
-    def ThisSuper = rule( `this` | `super` ~ opt(ClassQualifier) )
-    rule( rep(Id ~ '.') ~ ThisSuper ~ rep('.' ~ Id) | Id ~ rep('.' ~ Id) )
+    def ThisSuper = rule( `this` | `super` ~ ClassQualifier.? )
+    rule( (Id ~ '.').* ~ ThisSuper ~ ('.' ~ Id).* | Id ~ ('.' ~ Id).* )
   }
 
 }

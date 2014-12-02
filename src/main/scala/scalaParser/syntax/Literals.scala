@@ -2,28 +2,28 @@ package scalaParser
 package syntax
 import acyclic.file
 import org.parboiled2._
-import macros.Macros._
+
 trait Literals { self: Parser with Basic with Identifiers =>
   def Block: Rule0
   def WL: Rule0
   object Literals{
     import Basic._
     def Float = {
-      def Thing = rule( rep1(Digit) ~ opt(Exp) ~ opt(FloatType) )
-      def Thing2 = rule( "." ~ Thing | Exp ~ opt(FloatType) | opt(Exp) ~ FloatType )
-      rule( "." ~ Thing | rep1(Digit) ~ Thing2 )
+      def Thing = rule( Digit.+ ~ Exp.? ~ FloatType.? )
+      def Thing2 = rule( "." ~ Thing | Exp ~ FloatType.? | Exp.? ~ FloatType )
+      rule( "." ~ Thing | Digit.+ ~ Thing2 )
     } 
 
-    def Int = rule( (HexNum | DecNum) ~ opt(anyOf("Ll")) )
+    def Int = rule( (HexNum | DecNum) ~ anyOf("Ll").? )
 
     def Bool = rule( Key.W("true") | Key.W("false")  )
 
-    def MultilineComment: Rule0 = rule( "/*" ~ rep(MultilineComment | !"*/" ~ ANY) ~ "*/" )
+    def MultilineComment: Rule0 = rule( "/*" ~ (MultilineComment | !"*/" ~ ANY).* ~ "*/" )
     def Comment: Rule0 = rule(
-      MultilineComment | "//" ~ rep(!Basic.Newline ~ ANY) ~ &(Basic.Newline | EOI)
+      MultilineComment | "//" ~ (!Basic.Newline ~ ANY).* ~ &(Basic.Newline | EOI)
     )
     def Null = Key.W("null")
-    def Literal = rule( (opt("-") ~ (Float | Int)) | Bool | Char | String | Symbol | Null )
+    def Literal = rule( ("-".? ~ (Float | Int)) | Bool | Char | String | Symbol | Null )
 
     def EscapedChars = rule( '\\' ~ anyOf("btnfr'\\\"") )
 
@@ -31,7 +31,7 @@ trait Literals { self: Parser with Basic with Identifiers =>
     def Symbol = rule( ''' ~ (Identifiers.PlainId | Identifiers.Keywords) )
 
     def Char = rule {
-      ''' ~ (UnicodeEscape | EscapedChars | !'\\' ~ CharPredicate.from(isPrintableChar)) ~ '''
+      "'" ~ (UnicodeEscape | EscapedChars | !'\\' ~ CharPredicate.from(isPrintableChar)) ~ "'"
     }
 
 
@@ -43,9 +43,9 @@ trait Literals { self: Parser with Basic with Identifiers =>
       import Identifiers.Id
       def InterpIf(b: Boolean) = if(b) rule(Interp) else rule(MISMATCH0)
       def TQ = rule( "\"\"\"" )
-      def TripleChars(b: Boolean) = rule( rep(InterpIf(b) | opt('"') ~ opt('"') ~ noneOf("\"")) )
-      def TripleTail = rule( TQ ~ rep('"') )
-      def SingleChars(b: Boolean) = rule( rep(InterpIf(b) | "\\\"" | "\\\\" | noneOf("\n\"")) )
+      def TripleChars(b: Boolean) = rule( (InterpIf(b) | '"'.? ~ '"'.? ~ noneOf("\"")).* )
+      def TripleTail = rule( TQ ~ zeroOrMore('"') )
+      def SingleChars(b: Boolean) = rule( (InterpIf(b) | "\\\"" | "\\\\" | noneOf("\n\"")).* )
       rule {
         (Id ~ TQ ~ TripleChars(b = true) ~ TripleTail) |
         (Id ~ '"' ~ SingleChars(b = true) ~ '"') |
