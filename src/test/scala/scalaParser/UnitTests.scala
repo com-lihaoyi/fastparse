@@ -13,19 +13,19 @@ object UnitTests extends TestSuite{
       case Success(parsed) => assert(parsed.length != input.length)
     }
   }
-  def check[T](input: String) = {
+  def check[T](input: String, tag: String = "") = {
     println("Checking...")
     new Scala(input).CompilationUnit.run() match{
       case Failure(f: ParseError) =>
         println(f.position)
-        println(f.formatExpectedAsString)
-        println(f.formatTraces)
-        throw new Exception(f.position + "\t" + f.formatTraces)
+//        println(f.formatExpectedAsString)
+//        println(f.formatTraces)
+        throw new Exception(""+f.position)
       case Success(parsed) =>
         if(parsed != input)
 
           throw new Exception(
-            "Parsing Failed at " + parsed.length + "\n" + input.drop(parsed.length).take(50)
+            s"Parsing $tag Failed at ${parsed.length}\n${input.drop(parsed.length).take(50)}"
           )
     }
   }

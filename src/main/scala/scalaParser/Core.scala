@@ -105,8 +105,8 @@ abstract class Core extends Parser with syntax.Basic with syntax.Literals with s
   def Semis = rule( Semi.+ )
   def Newline = rule( WL ~ Basic.Newline )
 
-  def QualId = rule( WL ~ Id.+.sep('.') )
-  def Ids = rule( Id.+.sep(',') )
+  def QualId = rule( WL ~ Id.+('.') )
+  def Ids = rule( Id.+(',') )
 
   def NotNewline: R0 = rule( &( WS ~ !Basic.Newline ) )
   def OneNLMax: R0 = {

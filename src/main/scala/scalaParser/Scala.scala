@@ -17,7 +17,7 @@ class Scala (val input: ParserInput)
     def Prelude = rule( (Annot ~ OneNLMax).* ~ Mod.* )
     def TmplStat = rule( Import | Prelude ~ (Def | Dcl) | StatCtx.Expr )
     def SelfType = rule( (`this` | Id | `_`) ~ (`:` ~ InfixType).? ~ `=>` )
-    rule( '{' ~ SelfType.? ~ Semis.? ~ TmplStat.*.sep(Semis) ~ `}` )
+    rule( '{' ~ SelfType.? ~ Semis.? ~ TmplStat.*(Semis) ~ `}` )
   }
 
   def NewBody = rule( ClsTmpl | TmplBody )
@@ -25,7 +25,7 @@ class Scala (val input: ParserInput)
   def BlockDef = rule( Def | TmplDef )
 
   def ValVarDef: R0 = {
-    def Val = rule( Pat2.+.sep(',') ~ (`:` ~ Type).? ~ `=` ~ StatCtx.Expr )
+    def Val = rule( Pat2.+(',') ~ (`:` ~ Type).? ~ `=` ~ StatCtx.Expr )
     def Var = rule( Ids ~ `:` ~ Type ~ `=` ~ `_` | Val )
     rule( `val` ~ Val | `var` ~ Var )
   }
@@ -42,8 +42,8 @@ class Scala (val input: ParserInput)
       def ClsArgMod = rule( (Mod.* ~ (`val` | `var`)).? )
       def ClsArg = rule( Annot.* ~ ClsArgMod ~ Id ~ `:` ~ ParamType ~ (`=` ~ ExprCtx.Expr).? )
 
-      def Implicit = rule( OneNLMax ~ '(' ~ `implicit` ~ ClsArg.+.sep(",") ~ ")" )
-      def ClsArgs = rule( OneNLMax ~'(' ~ ClsArg.*.sep(',') ~ ")" )
+      def Implicit = rule( OneNLMax ~ '(' ~ `implicit` ~ ClsArg.+(",") ~ ")" )
+      def ClsArgs = rule( OneNLMax ~'(' ~ ClsArg.*(',') ~ ")" )
       def AllArgs = rule( ClsArgs.+ ~ Implicit.? | Implicit )
       rule( `class` ~ Id ~ TypeArgList.? ~ Prelude.? ~ AllArgs.? ~ ClsTmplOpt )
     }
@@ -67,7 +67,7 @@ class Scala (val input: ParserInput)
 
   def EarlyDefs: R0 = {
     def EarlyDef = rule( (Annot ~ OneNLMax).* ~ Mod.* ~ ValVarDef )
-    rule( `{` ~ EarlyDef.*.sep(Semis) ~ `}` ~ `with` )
+    rule( `{` ~ EarlyDef.*(Semis) ~ `}` ~ `with` )
   }
 
   def TopStatSeq: R0 = {
@@ -75,11 +75,11 @@ class Scala (val input: ParserInput)
     def PkgBlock = rule( `package` ~ QualId ~ `{` ~ TopStatSeq.? ~ `}` )
     def Tmpl = rule( (Annot ~ OneNLMax).* ~ Mod.* ~ TmplDef )
     def TopStat = rule( PkgBlock | PkgObj | Import | Tmpl )
-    rule( TopStat.+.sep(Semis) )
+    rule( TopStat.+(Semis) )
   }
 
   def CompilationUnit: Rule1[String] = {
-    def TopPackageSeq = rule( (`package` ~ QualId ~ !(WS ~ "{")).+.sep(Semis) )
+    def TopPackageSeq = rule( (`package` ~ QualId ~ !(WS ~ "{")).+(Semis) )
     def Body = rule( TopPackageSeq ~ (Semis ~ TopStatSeq).? | TopStatSeq | MATCH )
     rule( capture(Semis.? ~ Body ~ Semis.? ~ WL) )
   }

@@ -21,9 +21,9 @@ trait Types extends Core{
   }
 
   def Type: R0 = {
-    def FunctionArgTypes = rule('(' ~ ParamType.+.sep(',').? ~ ')' )
+    def FunctionArgTypes = rule('(' ~ ParamType.+(',').? ~ ')' )
     def ArrowType = rule( FunctionArgTypes ~ `=>` ~ Type )
-    def ExistentialClause = rule( `forSome` ~ `{` ~ (TypeDcl | ValDcl).+.sep(Semis) ~ `}` )
+    def ExistentialClause = rule( `forSome` ~ `{` ~ (TypeDcl | ValDcl).+(Semis) ~ `}` )
     def PostfixType = rule( InfixType ~ (`=>` ~ Type | ExistentialClause.?) )
     def Unbounded = rule( `_` | ArrowType | PostfixType )
     rule( Unbounded ~ TypeBounds )
@@ -33,8 +33,8 @@ trait Types extends Core{
 
   def CompoundType = {
     def RefineStat = rule( TypeDef | Dcl  )
-    def Refinement = rule( OneNLMax ~ `{` ~ RefineStat.*.sep(Semis) ~ `}` )
-    rule( AnnotType.+.sep(`with`) ~ Refinement.? | Refinement )
+    def Refinement = rule( OneNLMax ~ `{` ~ RefineStat.*(Semis) ~ `}` )
+    rule( AnnotType.+(`with`) ~ Refinement.? | Refinement )
   }
   def AnnotType = rule(SimpleType ~ (NotNewline ~ (NotNewline ~ Annot).+).? )
 
@@ -44,17 +44,17 @@ trait Types extends Core{
   }
 
   def TypeArgs = rule( '[' ~ Types ~ "]" )
-  def Types = rule( Type.+.sep(',') )
+  def Types = rule( Type.+(',') )
 
   def ValDcl: R0 = rule( `val` ~ Ids ~ `:` ~ Type )
   def TypeDcl: R0 = rule( `type` ~ Id ~ TypeArgList.? ~ TypeBounds )
 
   def FunSig: R0 = {
-    def FunTypeArgs = rule( '[' ~ (Annot.* ~ TypeArg).+.sep(',') ~ ']' )
+    def FunTypeArgs = rule( '[' ~ (Annot.* ~ TypeArg).+(',') ~ ']' )
     def FunAllArgs = rule( FunArgs.* ~ (OneNLMax ~ '(' ~ `implicit` ~ Args ~ ')').? )
     def FunArgs = rule( OneNLMax ~ '(' ~ Args.? ~ ')' )
     def FunArg = rule( Annot.* ~ Id ~ (`:` ~ ParamType).? ~ (`=` ~ TypeExpr).? )
-    def Args = rule( FunArg.+.sep(',') )
+    def Args = rule( FunArg.+(',') )
     rule( (Id | `this`) ~ FunTypeArgs.? ~ FunAllArgs )
   }
   def ParamType = rule( `=>` ~ Type | Type ~ "*" | Type )
@@ -69,8 +69,8 @@ trait Types extends Core{
 
   def TypeArgList: R0 = {
     def Variant: R0 = rule( Annot.* ~ (WL ~ anyOf("+-")).? ~ TypeArg )
-    rule( '[' ~ Variant.*.sep(',') ~ ']' )
+    rule( '[' ~ Variant.*(',') ~ ']' )
   }
-  def Exprs: R0 = rule( TypeExpr.+.sep(',') )
+  def Exprs: R0 = rule( TypeExpr.+(',') )
   def TypeDef: R0 = rule( `type` ~ Id ~ TypeArgList.? ~ `=` ~ Type )
 }

@@ -11,7 +11,7 @@ object ProjectTests extends TestSuite{
 
   println("running")
   def tests = TestSuite{
-    def checkFile(path: String) = UnitTests.check(io.Source.fromFile(path).mkString)
+    def checkFile(path: String) = UnitTests.check(io.Source.fromFile(path).mkString, tag = path)
     def checkDir(path: String, filter: String => Boolean = _ => false) = {
 
       def listFiles(s: java.io.File): Iterator[String] = {
@@ -50,6 +50,7 @@ object ProjectTests extends TestSuite{
         "genprod.scala",
         "disabled", // don't bother parsing disabled tests
         "neg", // or neg tests
+        "virtpatmat_exhaust_big.scala",
         "deprecate-early-type-defs.scala", // or deprecated tests
         // or unicode escapes
         "test/files/run/literals.scala",

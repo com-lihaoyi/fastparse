@@ -16,14 +16,14 @@ trait Exprs extends Core with Types with Xml{
     def ImportExpr: R0 = rule( StableId ~ ('.' ~ (`_` | Selectors)).? )
     def Selectors: R0 = rule( '{' ~ (Selector ~ ',').* ~ (Selector | `_`) ~ "}" )
     def Selector: R0 = rule( Id ~ (`=>` ~ (Id | `_`)).? )
-    rule( `import` ~ ImportExpr.+.sep(',') )
+    rule( `import` ~ ImportExpr.+(',') )
   }
 
   def Ascription = rule( `:` ~ (`_*` |  Type | Annot.+) )
 
   def LambdaHead: R0 = {
     def Binding = rule( (Id | `_`) ~ (`:` ~ Type).? )
-    def Bindings = rule( '(' ~ Binding.*.sep(',') ~ ')' )
+    def Bindings = rule( '(' ~ Binding.*(',') ~ ')' )
     def Implicit = rule( `implicit`.? ~ Id ~ (`:` ~ InfixType).? )
     rule( (Bindings | Implicit | `_` ~ Ascription.?) ~ `=>` )
   }
@@ -85,7 +85,7 @@ trait Exprs extends Core with Types with Xml{
     def Guard : R0 = rule( `if` ~ PostfixExpr )
   }
   def SimplePat: R0 = {
-    def ExtractorArgs = rule( Pat.*.sep(',') )
+    def ExtractorArgs = rule( Pat.*(',') )
     def Extractor = rule( StableId ~ ('(' ~ ExtractorArgs ~ ')').? )
     def TupleEx = rule( '(' ~ ExtractorArgs.? ~ ')' )
     def Thingy = rule( `_` ~ (`:` ~ TypePat).? ~ !"*" )
@@ -98,7 +98,7 @@ trait Exprs extends Core with Types with Xml{
     def Prelude = rule( Annot.* ~ `implicit`.? ~ `lazy`.? ~ LocalMod.* )
     def Tmpl = rule( Prelude ~ BlockDef )
     def BlockStat = rule( Import | Tmpl | StatCtx.Expr )
-    rule( BlockStat.+.sep(Semis) )
+    rule( BlockStat.+(Semis) )
   }
 
   def Block: R0 = {
@@ -108,12 +108,12 @@ trait Exprs extends Core with Types with Xml{
     rule( LambdaHead.* ~ Semis.? ~ Body )
   }
 
-  def Patterns: R0 = rule( Pat.+.sep(",") )
-  def Pat: R0 = rule( Pat1.+.sep('|') )
+  def Patterns: R0 = rule( Pat.+(",") )
+  def Pat: R0 = rule( Pat1.+('|') )
   def Pat1: R0 = rule( `_` ~ `:` ~ TypePat | VarId ~ `:` ~ TypePat | Pat2 )
   def Pat2: R0 = {
     def Pat3 = rule( `_*` | SimplePat ~ (Id ~ SimplePat).* )
-    rule( VarId ~ `@` ~ Pat3 | Pat3 | VarId )
+    rule( (VarId | `_`) ~ `@` ~ Pat3 | Pat3 | VarId )
   }
 
   def TypePat = rule( CompoundType )
