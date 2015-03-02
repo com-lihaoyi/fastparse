@@ -15,48 +15,45 @@ class Scala (val input: ParserInput)
 
   def TmplBody: R0 = {
     def Prelude = rule( (Annot ~ OneNLMax).* ~ Mod.* )
-    def TmplStat = rule( Import | Prelude ~ (Def | Dcl) | StatCtx.Expr )
+    def TmplStat = rule( Import | Prelude ~ (BlockDef | Dcl) | StatCtx.Expr )
     def SelfType = rule( (`this` | Id | `_`) ~ (`:` ~ InfixType).? ~ `=>` )
     rule( '{' ~ SelfType.? ~ Semis.? ~ TmplStat.*(Semis) ~ `}` )
   }
 
   def NewBody = rule( ClsTmpl | TmplBody )
 
-  def BlockDef = rule( Def | TmplDef )
+  def ValRhs = rule( Pat2.+(',') ~ (`:` ~ Type).? ~ `=` ~ StatCtx.Expr )
+  def ValDef = rule( `val` ~ ValRhs )
+  def VarDef = rule( `var` ~ Ids ~ `:` ~ Type ~ `=` ~ `_` | `var` ~ ValRhs )
 
-  def ValVarDef: R0 = {
-    def Val = rule( Pat2.+(',') ~ (`:` ~ Type).? ~ `=` ~ StatCtx.Expr )
-    def Var = rule( Ids ~ `:` ~ Type ~ `=` ~ `_` | Val )
-    rule( `val` ~ Val | `var` ~ Var )
-  }
-  def Def: R0 = {
+  def DefDef = {
     def Body = rule( `=` ~ `macro`.? ~ StatCtx.Expr | OneNLMax ~ '{' ~ Block ~ "}" )
-    def FunDef = rule( `def` ~ FunSig ~ (`:` ~ Type).? ~ Body )
-    rule( FunDef | TypeDef | ValVarDef | TmplDef )
+    rule( `def` ~ FunSig ~ (`:` ~ Type).? ~ Body )
   }
 
-  def TmplDef: R0 = {
-    def ClsDef = {
-      def ClsAnnot = rule( `@` ~ SimpleType ~ ArgList )
-      def Prelude = rule( NotNewline ~ ( ClsAnnot.+ ~ AccessMod.? | ClsAnnot.* ~ AccessMod) )
-      def ClsArgMod = rule( (Mod.* ~ (`val` | `var`)).? )
-      def ClsArg = rule( Annot.* ~ ClsArgMod ~ Id ~ `:` ~ ParamType ~ (`=` ~ ExprCtx.Expr).? )
+  def BlockDef: R0 = rule( DefDef | TypeDef | ValDef | VarDef | TraitDef | ClsDef | ObjDef )
 
-      def Implicit = rule( OneNLMax ~ '(' ~ `implicit` ~ ClsArg.+(",") ~ ")" )
-      def ClsArgs = rule( OneNLMax ~'(' ~ ClsArg.*(',') ~ ")" )
-      def AllArgs = rule( ClsArgs.+ ~ Implicit.? | Implicit )
-      rule( `class` ~ Id ~ TypeArgList.? ~ Prelude.? ~ AllArgs.? ~ ClsTmplOpt )
-    }
+  def ClsDef = {
+    def ClsAnnot = rule( `@` ~ SimpleType ~ ArgList )
+    def Prelude = rule( NotNewline ~ ( ClsAnnot.+ ~ AccessMod.? | ClsAnnot.* ~ AccessMod) )
+    def ClsArgMod = rule( (Mod.* ~ (`val` | `var`)).? )
+    def ClsArg = rule( Annot.* ~ ClsArgMod ~ Id ~ `:` ~ ParamType ~ (`=` ~ ExprCtx.Expr).? )
+
+    def Implicit = rule( OneNLMax ~ '(' ~ `implicit` ~ ClsArg.+(",") ~ ")" )
+    def ClsArgs = rule( OneNLMax ~'(' ~ ClsArg.*(',') ~ ")" )
+    def AllArgs = rule( ClsArgs.+ ~ Implicit.? | Implicit )
+    rule( `case`.? ~ `class` ~ Id ~ TypeArgList.? ~ Prelude.? ~ AllArgs.? ~ ClsTmplOpt )
+  }
+  def TraitDef = {
     def TraitTmplOpt = {
       def TraitParents = rule( AnnotType ~ (`with` ~ AnnotType).* )
       def TraitTmpl = rule( EarlyDefs.? ~ TraitParents ~ TmplBody.? )
       rule( `extends` ~ TraitTmpl | (`extends`.? ~ TmplBody).? )
     }
-    def TraitDef = rule( `trait` ~ Id ~ TypeArgList.? ~ TraitTmplOpt )
-    rule( TraitDef | `case`.? ~ (ClsDef | ObjDef) )
+    rule( `trait` ~ Id ~ TypeArgList.? ~ TraitTmplOpt )
   }
 
-  def ObjDef: R0 = rule( `object` ~ Id ~ ClsTmplOpt )
+  def ObjDef: R0 = rule( `case`.? ~ `object` ~ Id ~ ClsTmplOpt )
   def ClsTmplOpt: R0 = rule( `extends` ~ ClsTmpl | (`extends`.? ~ TmplBody).? )
 
   def ClsTmpl: R0 = {
@@ -66,14 +63,14 @@ class Scala (val input: ParserInput)
   }
 
   def EarlyDefs: R0 = {
-    def EarlyDef = rule( (Annot ~ OneNLMax).* ~ Mod.* ~ ValVarDef )
+    def EarlyDef = rule( (Annot ~ OneNLMax).* ~ Mod.* ~ (ValDef | VarDef) )
     rule( `{` ~ EarlyDef.*(Semis) ~ `}` ~ `with` )
   }
 
+  def PkgObj = rule( `package` ~ ObjDef )
+  def PkgBlock = rule( `package` ~ QualId ~ `{` ~ TopStatSeq.? ~ `}` )
   def TopStatSeq: R0 = {
-    def PkgObj = rule( `package` ~ ObjDef )
-    def PkgBlock = rule( `package` ~ QualId ~ `{` ~ TopStatSeq.? ~ `}` )
-    def Tmpl = rule( (Annot ~ OneNLMax).* ~ Mod.* ~ TmplDef )
+    def Tmpl = rule( (Annot ~ OneNLMax).* ~ Mod.* ~ (TraitDef | ClsDef | ObjDef) )
     def TopStat = rule( PkgBlock | PkgObj | Import | Tmpl )
     rule( TopStat.+(Semis) )
   }
