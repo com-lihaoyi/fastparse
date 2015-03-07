@@ -30,8 +30,13 @@ trait Literals { self: Parser with Basic with Identifiers =>
     // Note that symbols can take on the same values as keywords!
     def Symbol = rule( ''' ~ (Identifiers.PlainId | Identifiers.Keywords) )
 
-    def Char = rule {
-      "'" ~ (UnicodeEscape | EscapedChars | !'\\' ~ CharPredicate.from(isPrintableChar)) ~ "'"
+    def Char = {
+      // scalac 2.10 crashes if PrintableChar below is substituted by its body
+      def PrintableChar = CharPredicate.from(isPrintableChar)
+
+      rule {
+        "'" ~ (UnicodeEscape | EscapedChars | !'\\' ~ PrintableChar) ~ "'"
+      }
     }
 
 

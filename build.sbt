@@ -4,6 +4,7 @@ val root = project.in(file(".")).settings(
   organization := "com.lihaoyi",
   version := "0.1.1",
   scalaVersion := "2.11.4",
+  crossScalaVersions := Seq("2.11.4", "2.10.5"),
   libraryDependencies += "com.lihaoyi" %% "acyclic" % "0.1.2" % "provided",
   addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.2"),
   autoCompilerPlugins := true,

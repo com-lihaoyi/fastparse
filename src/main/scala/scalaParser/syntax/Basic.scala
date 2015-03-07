@@ -18,15 +18,27 @@ trait Basic { self: Parser =>
     def WSChar = rule( "\u0020" | "\u0009" )
     def Newline = rule( "\r\n" | "\n" )
     def Semi = rule( ";" | oneOrMore(Newline) )
-    def OpChar = rule {
-      anyOf("""!#$%&*+-/:<=>?@\^|~""") |
-      CharPredicate.from(_.getType match {
+    def OpChar = {
+      // scalac 2.10 crashes if OtherOrMathSymbol below is substituted by its body
+      // Same thing for LetterDigit, LowerChar, UpperChar
+      def OtherOrMathSymbol = CharPredicate.from(_.getType match {
         case Character.OTHER_SYMBOL | Character.MATH_SYMBOL => true; case _ => false
       })
+
+      rule { anyOf("""!#$%&*+-/:<=>?@\^|~""") | OtherOrMathSymbol }
     }
-    def Letter = rule( Upper | Lower | CharPredicate.from(c => c.isLetter | c.isDigit) )
-    def Lower = rule( "a" - "z" | "$" | "_" | CharPredicate.from(_.isLower) )
-    def Upper = rule( "A" - "Z" | CharPredicate.from(_.isUpper) )
+    def Letter = {
+      def LetterDigit = CharPredicate.from(c => c.isLetter | c.isDigit)
+      rule(Upper | Lower | LetterDigit )
+    }
+    def Lower = {
+      def LowerChar = CharPredicate.from(_.isLower)
+      rule("a" - "z" | "$" | "_" | LowerChar )
+    }
+    def Upper = {
+      def UpperChar = CharPredicate.from(_.isUpper)
+      rule("A" - "Z" | UpperChar )
+    }
   }
   /**
    * Most keywords don't just require the correct characters to match,
