@@ -2,7 +2,7 @@ scala-parser
 ============
 
 ```scala
-"com.lihaoyi" %% "scala-parser" % "0.1.1"
+"com.lihaoyi" %% "scala-parser" % "0.1.2"
 ```
 
 scala-parser is a [parboiled2](https://github.com/sirthias/parboiled2) parser for the [Scala programming language](https://github.com/scala/scala). It aims to parse Scala code using the parboiled2 library in a much simpler way than Scala's existing hand-rolled parser.

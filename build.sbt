@@ -2,7 +2,7 @@
 val root = project.in(file(".")).settings(
   name := "scala-parser",
   organization := "com.lihaoyi",
-  version := "0.1.1",
+  version := "0.1.2",
   scalaVersion := "2.11.4",
   crossScalaVersions := Seq("2.11.4", "2.10.5"),
   libraryDependencies += "com.lihaoyi" %% "acyclic" % "0.1.2" % "provided",
