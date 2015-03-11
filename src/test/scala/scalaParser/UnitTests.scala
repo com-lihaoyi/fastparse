@@ -942,6 +942,13 @@ object UnitTests extends TestSuite{
           |}
         """.stripMargin
       )
+      * - check(
+      """object X{
+        |  // parses as ~?>.$(1)
+        |  ~?>$ 1
+        |}
+      """.stripMargin
+      )
 
     }
     'neg{

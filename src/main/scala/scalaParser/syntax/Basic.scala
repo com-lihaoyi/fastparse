@@ -25,7 +25,7 @@ trait Basic { self: Parser =>
         case Character.OTHER_SYMBOL | Character.MATH_SYMBOL => true; case _ => false
       })
 
-      rule { anyOf("""!#$%&*+-/:<=>?@\^|~""") | OtherOrMathSymbol }
+      rule { anyOf("""!#%&*+-/:<=>?@\^|~""") | OtherOrMathSymbol }
     }
     def Letter = {
       def LetterDigit = CharPredicate.from(c => c.isLetter | c.isDigit)
