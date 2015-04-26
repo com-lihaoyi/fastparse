@@ -17,7 +17,7 @@ object Parsing {
     def rep = Parser.Repeat(this, 0)
     def rep1 = Parser.Repeat(this, 1)
     def |[T1 >: T, V <: T1](p: Parser[V]) = Parser.Either(this, p)
-
+    def ~[V](p: Parser[V]) = Parser.Sequence(this, p)
   }
   object Parser{
     case class Repeat[T](p: Parser[T], min: Int) extends Parser[Seq[T]]{
@@ -53,6 +53,17 @@ object Parsing {
       def parse(input: String, index: Int) = {
         if (input.startsWith(s, index)) Res.Success(s, index + s.length)
         else Res.Failure(index)
+      }
+    }
+    case class Sequence[T1, T2](p1: Parser[T1], p2: Parser[T2]) extends Parser[(T1, T2)]{
+      def parse(input: String, index: Int) = {
+        p1.parse(input, index) match{
+          case s1: Success[_] => p2.parse(input, s1.index) match{
+            case s2: Success[_] => Success((s1.t, s2.t), s2.index)
+            case f: Failure => f
+          }
+          case f: Failure => f
+        }
       }
     }
 //    case class Regex(re: scala.util.matching.Regex) extends Parser[String]

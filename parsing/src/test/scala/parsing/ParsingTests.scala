@@ -31,5 +31,11 @@ object ParsingTests extends TestSuite{
       check("Hello" | "Bye", ("HelloBye", 2), Failure(2))
       check(("Hello" | "Bye").rep, ("HelloBye", 0), Success(Seq("Hello", "Bye"), 8))
     }
+    'sequence{
+      check("Hello" ~ "Bye", ("HelloBye", 0), Success(("Hello", "Bye"), 8))
+      check("Hello" ~ "Bye" ~ "!", ("HelloBye!", 0), Success((("Hello", "Bye"), "!"), 9))
+      check("Hello" ~ "Bye", ("Hello", 0), Failure(5))
+      check("Hello" ~ "Bye", ("Bye", 0), Failure(0))
+    }
   }
 }
