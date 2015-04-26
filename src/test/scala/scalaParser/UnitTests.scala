@@ -955,6 +955,8 @@ object UnitTests extends TestSuite{
           |  Y z = 2
           |  case class Z(z: Int){case class X(x: Int){ var y = 1}}
           |  Z apply 1 X 2 y = 4
+          |
+          |  a m "txt" t = 18; println("x")
           |}
         """.stripMargin
       )

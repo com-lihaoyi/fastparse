@@ -3,7 +3,9 @@ package scalaParser
 trait Types extends Core{
 
   def TypeExpr: R0
-
+  def ValDef: R0
+  def VarDef: R0
+  def DefDef: R0
   private implicit def wspStr(s: String) = rule( WL ~ str(s) )
   private implicit def wspCh(s: Char) = rule( WL ~ ch(s) )
 
@@ -15,15 +17,16 @@ trait Types extends Core{
   }
 
   def Dcl: R0 = {
-    def VarDcl = rule( `var` ~ Ids ~ `:` ~ Type )
-    def FunDcl = rule( `def` ~ FunSig ~ (`:` ~ Type).? )
+    def ValDcl = rule( ValDef | `val` ~ Ids ~ `:` ~ Type )
+    def VarDcl = rule( VarDef | `var` ~ Ids ~ `:` ~ Type )
+    def FunDcl = rule( DefDef | `def` ~ FunSig ~ (`:` ~ Type).? )
     rule( ValDcl | VarDcl | FunDcl | TypeDcl )
   }
 
   def Type: R0 = {
     def FunctionArgTypes = rule('(' ~ ParamType.+(',').? ~ ')' )
     def ArrowType = rule( FunctionArgTypes ~ `=>` ~ Type )
-    def ExistentialClause = rule( `forSome` ~ `{` ~ (TypeDcl | ValDcl).+(Semis) ~ `}` )
+    def ExistentialClause = rule( `forSome` ~ `{` ~ Dcl.+(Semis) ~ `}` )
     def PostfixType = rule( InfixType ~ (`=>` ~ Type | ExistentialClause.?) )
     def Unbounded = rule( `_` | ArrowType | PostfixType )
     rule( Unbounded ~ TypeBounds )
@@ -46,7 +49,6 @@ trait Types extends Core{
   def TypeArgs = rule( '[' ~ Types ~ "]" )
   def Types = rule( Type.+(',') )
 
-  def ValDcl: R0 = rule( `val` ~ Ids ~ `:` ~ Type )
   def TypeDcl: R0 = rule( `type` ~ Id ~ TypeArgList.? ~ TypeBounds )
 
   def FunSig: R0 = {
