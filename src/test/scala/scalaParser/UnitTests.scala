@@ -949,6 +949,21 @@ object UnitTests extends TestSuite{
         |}
       """.stripMargin
       )
+      * - check(
+        """object X{
+          |  object Y{var z = 1}
+          |  Y z = 2
+          |  case class Z(z: Int){case class X(x: Int){ var y = 1}}
+          |  Z apply 1 X 2 y = 4
+          |}
+        """.stripMargin
+      )
+      * - check(
+        """object X{
+          |  type x = {def t: Int = 1}
+          |}
+        """.stripMargin
+      )
 
     }
     'neg{
@@ -995,6 +1010,5 @@ object UnitTests extends TestSuite{
       )
 
     }
-
   }
 }

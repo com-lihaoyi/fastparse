@@ -68,11 +68,9 @@ trait Exprs extends Core with Types with Xml{
 
     def PostfixExpr: R0 = {
       def Prefixed = rule( (WL ~ anyOf("-+~!") ~ WS ~ !Basic.OpChar) ~  SimpleExpr )
-      def Assign = rule( SimpleExpr ~ (`=` ~ Expr).? )
-      def PrefixExpr = rule( Prefixed | Assign )
-
-      def InfixExpr = rule( PrefixExpr ~ (NoSemis ~ Id ~ TypeArgs.? ~ OneSemiMax ~ PrefixExpr).* )
-      rule( InfixExpr ~ (NotNewline ~ Id ~ Newline.?).? )
+      def PrefixExpr = rule( Prefixed | SimpleExpr )
+      def InfixExpr = rule( PrefixExpr ~ (NoSemis ~ Id ~ TypeArgs.? ~ OneSemiMax ~ PrefixExpr).*)
+      rule( InfixExpr ~ (NotNewline ~ Id ~ Newline.?).? ~ (`=` ~ Expr).?)
     }
 
     def SimpleExpr: R0 = {
