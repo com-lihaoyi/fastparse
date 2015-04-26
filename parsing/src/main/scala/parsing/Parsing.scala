@@ -1,23 +1,56 @@
 package parsing
 
+import parsing.Parsing.Res.Success
+
+import scala.annotation.tailrec
+import scala.collection.mutable
+
 object Parsing {
   sealed trait Res[+T]
   object Res{
     case class Success[T](t: T, index: Int) extends Res[T]
     case class Failure(index: Int) extends Res[Nothing]
   }
+  import Res._
   sealed trait Parser[T]{
-    def parse(s: String, index: Int): Res[T]
+    def parse(input: String, index: Int): Res[T]
+    def rep = Parser.Repeat(this, 0)
+    def rep1 = Parser.Repeat(this, 1)
+    def |[T1 >: T, V <: T1](p: Parser[V]) = Parser.Either(this, p)
+
   }
   object Parser{
-//    case class Repeat[T](p: Parser[T]) extends Parser[Vector[T]]{
-//      def parse
-//    }
-//    case class Either[T, V1 <: T, V2 <: T](p1: Parser[V1], p2: Parser[V2]) extends Parser[T]
+    case class Repeat[T](p: Parser[T], min: Int) extends Parser[Seq[T]]{
+      def parse(input: String, index: Int) = {
+        val res = mutable.Buffer.empty[T]
+        var finalIndex = index
+        @tailrec def rec(index: Int): Unit = {
+          p.parse(input, index) match{
+            case Failure(_) =>
+            case Success(t, i) =>
+              res.append(t)
+              finalIndex = i
+              rec(i)
+          }
+        }
+        rec(index)
+        if (res.length >= min) Success(res, finalIndex)
+        else Failure(index)
+      }
+    }
+    case class Either[T, V1 <: T, V2 <: T](p1: Parser[V1], p2: Parser[V2]) extends Parser[T]{
+      def parse(input: String, index: Int) = {
+        p1.parse(input, index) match{
+          case s: Success[_] => s
+          case f: Failure => p2.parse(input, index) match{
+            case s: Success[_] => s
+            case f: Failure => Failure(index)
+          }
+        }
+      }
+    }
     case class Literal(s: String) extends Parser[String]{
       def parse(input: String, index: Int) = {
-        println("LITERAL |" + s + "|" + input + "|" + index + "|" + input.startsWith(s, index))
-
         if (input.startsWith(s, index)) Res.Success(s, index + s.length)
         else Res.Failure(index)
       }
