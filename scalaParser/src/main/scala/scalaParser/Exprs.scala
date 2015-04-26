@@ -41,6 +41,7 @@ trait Exprs extends Core with Types with Xml{
       def Enumerator = rule( Semis ~ Generator | optional(Semis) ~ Guard | Semis ~ Assign )
       rule( Generator ~ Enumerator.* ~ WL )
     }
+
     def Expr: R0 = {
       def If = {
         def Else = rule( Semi.? ~ `else` ~ Expr )
