@@ -43,20 +43,20 @@ trait Literals {
     }
 
     val Interp = rule{
-      "$" ~ Identifiers.PlainIdNoDollar | "${" ~ Block ~ WL ~ "}" | "$$"
+      "$" ~ Identifiers.PlainIdNoDollar | ("${" ~ Block ~ WL ~ "}") | "$$"
     }
     val String = {
       import Identifiers.Id
-      def InterpIf(b: Boolean) = if(b) rule(Interp) else rule(Parser.Fail)
+      def InterpIf(allowInterp: Boolean) = rule( if(allowInterp) Interp else Parser.Fail )
       def TQ = rule( "\"\"\"" )
-      def TripleChars(b: Boolean) = rule( (InterpIf(b) | '"'.? ~ '"'.? ~ !'"').rep )
+      def TripleChars(allowInterp: Boolean) = rule( (InterpIf(allowInterp) | '"'.? ~ '"'.? ~ !'"').rep )
       def TripleTail = rule( TQ ~ '"'.rep )
-      def SingleChars(b: Boolean) = rule( (InterpIf(b) | "\\\"" | "\\\\" | !("\n"|'"')).rep )
+      def SingleChars(allowInterp: Boolean) = rule( (InterpIf(allowInterp) | "\\\"" | "\\\\" | !("\n" | '"') ~ Parser.AnyChar).rep )
       rule {
-        (Id ~ TQ ~ TripleChars(b = true) ~ TripleTail) |
-        (Id ~ '"' ~ SingleChars(b = true) ~ '"') |
-        (TQ ~ TripleChars(b = false) ~ TripleTail) |
-        ('"' ~ SingleChars(b = false) ~ '"')
+        (Id ~ TQ ~ TripleChars(allowInterp = true) ~ TripleTail) |
+        (Id ~ '"' ~ SingleChars(allowInterp = true) ~ '"') |
+        (TQ ~ TripleChars(allowInterp = false) ~ TripleTail) |
+        ('"' ~ SingleChars(allowInterp = false) ~ '"')
       }
     }
 

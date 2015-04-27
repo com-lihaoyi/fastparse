@@ -1,5 +1,6 @@
 package scalaParser
 import acyclic.file
+import parsing.Parsing.Parser.Pass
 import parsing.Parsing._
 trait Exprs extends Core with Types /*with Xml*/{
 
@@ -100,7 +101,11 @@ trait Exprs extends Core with Types /*with Xml*/{
   val Block: R0 = {
     val End = rule( Semis.? ~ &("}" | `case`) )
     val ResultExpr = rule{ StatCtx.Expr | LambdaHead ~ Block}
-    val Body = rule( ResultExpr ~ End | BlockStats ~ (Semis ~ ResultExpr).? ~ End | End )
+    val Body = rule(
+      ResultExpr ~ End |
+      BlockStats ~ (Semis ~ ResultExpr).? ~ End |
+      End
+    )
     rule( LambdaHead.rep ~ Semis.? ~ Body )
   }
 
