@@ -31,6 +31,15 @@ object UnitTests extends TestSuite{
   }
   println("running")
   def tests = TestSuite{
+    'perf{
+      val input = scala.io.Source.fromFile(
+        "scala-js/compiler/src/main/scala/org/scalajs/core/compiler/GenJSCode.scala"
+      ).mkString
+      println("Loaded " + input.length + " bytes of input. Parsing...")
+      for(i <- 0 until 5){
+        Scala.CompilationUnit.parse(input, 0)
+      }
+    }
     'pos {
       * - check("package torimatomeru")
       * - check(

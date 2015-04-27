@@ -49,7 +49,7 @@ trait Literals {
       import Identifiers.Id
       def InterpIf(allowInterp: Boolean) = rule( if(allowInterp) Interp else Parser.Fail )
       def TQ = rule( "\"\"\"" )
-      def TripleChars(allowInterp: Boolean) = rule( (InterpIf(allowInterp) | '"'.? ~ '"'.? ~ !'"').rep )
+      def TripleChars(allowInterp: Boolean) = rule( (InterpIf(allowInterp) | '"'.? ~ '"'.? ~ !'"' ~ Parser.AnyChar).rep )
       def TripleTail = rule( TQ ~ '"'.rep )
       def SingleChars(allowInterp: Boolean) = rule( (InterpIf(allowInterp) | "\\\"" | "\\\\" | !("\n" | '"') ~ Parser.AnyChar).rep )
       rule {
