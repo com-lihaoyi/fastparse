@@ -17,12 +17,12 @@ object UnitTests extends TestSuite{
   def check[T](input: String, tag: String = "") = {
     println("Checking...\n" + input)
     import Scala._
-
-    Scala.CompilationUnit.parse(input, 0) match{
-      case Res.Failure(index, p) =>
+    val res = Scala.CompilationUnit.parse(input, 0)
+    res match{
+      case Res.Failure(index, ps) =>
 //        println(f.formatExpectedAsString)
 //        println(f.formatTraces)
-        throw new Exception(index + " " + p)
+        throw new Exception(index + " " + ps)
       case Res.Success(parsed, index) =>
 //        println(parsed)
         val inputLength = input.length

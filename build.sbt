@@ -1,5 +1,13 @@
 val shared = Seq(
-
+  libraryDependencies ++= Seq(
+    "org.scala-lang" % "scala-reflect" % scalaVersion.value
+  ) ++ (
+    if (scalaVersion.value startsWith "2.11.") Nil
+    else Seq(
+      compilerPlugin("org.scalamacros" % s"paradise" % "2.0.0" cross CrossVersion.full),
+      "org.scalamacros" %% s"quasiquotes" % "2.0.0"
+    )
+  ),
   libraryDependencies ++= Seq(
     "com.lihaoyi" %% "utest" % "0.3.0"
   ),

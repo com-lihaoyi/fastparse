@@ -15,7 +15,7 @@ object Basic {
   val Exp = rule( ("E"|"e") ~ ("+"|"-").? ~ Digit.rep1 )
   val FloatType = rule( CharPredicate("fFdD".toSet) )
 
-  val WSChar = rule( "\u0020" | "\u0009" )
+  val WSChar = rule( "\u0020" | "\u0009" )(enclosingFunctionName)
   val Newline = rule( "\r\n" | "\n" )
   val Semi = rule( ";" | Newline.rep1 )
   val OpChar = {
