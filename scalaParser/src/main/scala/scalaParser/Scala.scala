@@ -72,7 +72,7 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
     val TopStat = rule( PkgBlock | PkgObj | Import | Tmpl )
     rule( TopStat.rep1(Semis) )
   }
-  val TopPkgSeq = rule( (`package`))
+  val TopPkgSeq = rule( (`package` ~ QualId ~ !(WS ~ "{")).rep1(Semis) )
   val CompilationUnit: Rule0 = {
     val Body = rule( TopPkgSeq ~ (Semis ~ TopStatSeq).? | TopStatSeq | "" )
     rule( Semis.? ~ Body ~ Semis.? ~ WL )

@@ -13,6 +13,7 @@ object Parsing {
   }
   import Res._
   sealed trait Parser[+T]{
+    def log(msg: String) = Parser.Logged(this, msg)
     def parse(input: String, index: Int): Res[T]
     def rep = Parser.Repeat(this, 0, Parser.Pass)
     def rep1 = Parser.Repeat(this, 1, Parser.Pass)
@@ -26,9 +27,23 @@ object Parsing {
   }
   def &(p: Parser[_]): Parser[Unit] = Parser.Lookahead(p)
   object Parser{
+    var logNesting = 0
+    case class Logged[+T](p: Parser[T], msg: String) extends Parser[T]{
+      def parse(input: String, index: Int) = {
+        val indent = "  " * logNesting
+        println(indent + "+" + msg + ":" + index)
+        logNesting += 1
+        val res = p.parse(input, index)
+        logNesting -= 1
+        println(indent + "-" + msg + ": " + res)
+        res
+      }
+    }
     case class Lazy[+T](p: () => Parser[T]) extends Parser[T]{
       lazy val pCached = p()
-      def parse(input: String, index: Int) = pCached.parse(input, index)
+      def parse(input: String, index: Int) = {
+        pCached.parse(input, index)
+      }
     }
     case class Lookahead(p: Parser[_]) extends Parser[Unit]{
       def parse(input: String, index: Int) = {
@@ -46,16 +61,18 @@ object Parsing {
     }
     case class Not(p: Parser[_]) extends Parser[Unit]{
       def parse(input: String, index: Int) = {
-        p.parse(input, index) match{
+        val res0 = p.parse(input, index)
+        val res = res0 match{
           case Success(t, i) => Failure(i, this)
           case Failure(_, _) => Res.Success((), index)
         }
+        res
       }
     }
-    case object Any extends Parser[Char]{
+    case object AnyChar extends Parser[Char]{
       def parse(input: String, index: Int) = {
         if (index >= input.length) Failure(index, this)
-        else Success(input(0), index+1)
+        else Success(input(index), index+1)
       }
     }
     case class Repeat[+T](p: Parser[T], min: Int, delimiter: Parser[_]) extends Parser[Seq[T]]{
@@ -100,14 +117,16 @@ object Parsing {
     }
     case class CharLiteral(c: Char) extends Parser[Char]{
       def parse(input: String, index: Int) = {
-        if (input(0) == c) Res.Success(c, index + 1)
+        if (index >= input.length) Res.Failure(index, this)
+        else if (input(index) == c) Res.Success(c, index + 1)
         else Res.Failure(index, this)
       }
     }
 
     case class CharPredicate(f: Char => Boolean) extends Parser[Char]{
       def parse(input: String, index: Int) = {
-        if (f(input(0))) Res.Success(input(0), index + 1)
+        if (index >= input.length) Res.Failure(index, this)
+        else if (f(input(index))) Res.Success(input(index), index + 1)
         else Res.Failure(index, this)
       }
     }

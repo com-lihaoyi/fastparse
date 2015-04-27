@@ -1,7 +1,7 @@
 package scalaParser
 
 
-import parsing.Parsing.Res
+import parsing.Parsing._
 import utest._
 
 import scala.util.{Failure, Success}
@@ -16,7 +16,9 @@ object UnitTests extends TestSuite{
   }
   def check[T](input: String, tag: String = "") = {
     println("Checking...\n" + input)
-    Scala.CompilationUnit.parse(input, 0) match{
+    import Scala._
+    val parser = scalaParser.syntax.Identifiers.PlainId
+    parser.parse(input, 0) match{
       case Res.Failure(index, p) =>
 //        println(f.formatExpectedAsString)
 //        println(f.formatTraces)
@@ -29,10 +31,7 @@ object UnitTests extends TestSuite{
   println("running")
   def tests = TestSuite{
     'pos {
-      * - check(
-        "package torimatomeru"
-
-      )
+      * - check("torimatomeru")
       * - check(
         """package torimatomeru
           |

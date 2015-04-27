@@ -29,7 +29,7 @@ object Basic {
   }
   val Letter = {
     val LetterDigit = CharPredicate(c => c.isLetter | c.isDigit)
-    rule(Upper | Lower | LetterDigit )
+    rule(Upper.log("Upper") | Lower.log("Lower") | LetterDigit.log("LetterDigit") )
   }
   val Lower = {
     val LowerChar = CharPredicate(_.isLower)
@@ -47,6 +47,6 @@ object Basic {
  * (W) and key-operators (O) which have different non-match criteria.
  */
 object Key {
-  def W(s: String) = rule( s ~ !(Basic.Letter | Basic.Digit) )
+  def W(s: String) = rule( s )
   def O(s: String) = rule( s ~ !Basic.OpChar )
 }

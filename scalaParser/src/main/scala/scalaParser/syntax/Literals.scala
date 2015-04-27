@@ -21,9 +21,9 @@ trait Literals {
 
     val Bool = rule( Key.W("true") | Key.W("false")  )
 
-    val MultilineComment: Rule0 = rule( "/*" ~ (MultilineComment | !"*/" ~ Parser.Any).rep ~ "*/" )
+    val MultilineComment: Rule0 = rule( "/*" ~ (MultilineComment | !"*/" ~ Parser.AnyChar).rep ~ "*/" )
     val Comment: Rule0 = rule(
-      MultilineComment | "//" ~ (!Basic.Newline ~ Parser.Any).rep ~ &(Basic.Newline)
+      MultilineComment | "//" ~ (!Basic.Newline ~ Parser.AnyChar).rep ~ &(Basic.Newline)
     )
     val Null = Key.W("null")
     val Literal = rule( ("-".? ~ (Float | Int)) | Bool | Char | String | Symbol | Null )
