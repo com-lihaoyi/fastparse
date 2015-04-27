@@ -1,19 +1,19 @@
 package scalaParser
 package syntax
 import acyclic.file
-import parsing.Parsing.Parser.CharsIn
+import parsing.Parsing.Parser.CharPred
 import parsing.Parsing._
 
 object Basic {
   val UnicodeEscape = rule( "\\u" ~ HexDigit ~ HexDigit ~ HexDigit ~ HexDigit )
 
   //Numbers and digits
-  val HexDigit = rule( CharsIn("0123456789abcdefABCDEF".toSet) )
-  val Digit = rule( CharsIn("0123456789".toSet) )
+  val HexDigit = rule( Parser.CharIn("0123456789abcdefABCDEF") )
+  val Digit = rule( Parser.CharIn("0123456789") )
   val HexNum = rule( "0x" ~ HexDigit.rep1 )
   val DecNum = rule(Digit.rep1)
   val Exp = rule( ("E"|"e") ~ ("+"|"-").? ~ Digit.rep1 )
-  val FloatType = rule( CharsIn("fFdD".toSet) )
+  val FloatType = rule( Parser.CharIn("fFdD") )
 
   val WSChar = rule( "\u0020" | "\u0009" )(enclosingFunctionName)
   val Newline = rule( "\r\n" | "\n" )
@@ -21,23 +21,23 @@ object Basic {
   val OpChar = {
     // scalac 2.10 crashes if OtherOrMathSymbol below is substituted by its body
     // Same thing for LetterDigit, LowerChar, UpperChar
-    val OtherOrMathSymbol = CharsIn(_.getType match {
+    val OtherOrMathSymbol = CharPred(_.getType match {
       case Character.OTHER_SYMBOL | Character.MATH_SYMBOL => true; case _ => false
     })
 
-    rule { CharsIn("!#%&*+-/:<=>?@\\^|~".toSet) | OtherOrMathSymbol }
+    rule { Parser.CharIn("!#%&*+-/:<=>?@\\^|~") | OtherOrMathSymbol }
   }
   val Letter = {
-    val LetterDigit = CharsIn(c => c.isLetter | c.isDigit)
+    val LetterDigit = CharPred(c => c.isLetter | c.isDigit)
     rule(Upper | Lower | LetterDigit )
   }
   val Lower = {
-    val LowerChar = CharsIn(_.isLower)
-    rule(CharsIn("abcdefghijklmnopqrstuvwxyz$_".toSet) | LowerChar )
+    val LowerChar = CharPred(_.isLower)
+    rule(Parser.CharIn("abcdefghijklmnopqrstuvwxyz$_") | LowerChar )
   }
   val Upper = {
-    val UpperChar = CharsIn(_.isUpper)
-    rule(CharsIn("ABCDEFGHIJKLMNOPQRSTUCWXYZ".toSet) | UpperChar )
+    val UpperChar = CharPred(_.isUpper)
+    rule(Parser.CharIn("ABCDEFGHIJKLMNOPQRSTUCWXYZ") | UpperChar )
   }
 }
 /**

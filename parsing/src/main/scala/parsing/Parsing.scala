@@ -21,14 +21,8 @@ object Parsing {
     val sym = c.internal.enclosingOwner
     val simpleName = sym.name.decodedName.toString.trim
 
-    val name =
-      if (!sym.isMethod) q"$simpleName"
-      else{
-        val params = sym.asMethod
-//        println("::: " + params)
-        q"$simpleName"
-//        q"""$simpleName + "(" + Seq(..$params).mkString(",") + ")" """
-      }
+    val name = q"$simpleName"
+
     c.Expr[FuncName](q"parsing.FuncName($name)")
   }
 
@@ -79,12 +73,13 @@ object Parsing {
         res
       }
     }
+
     case class Optional[+T](p: Parser[T]) extends Parser[Option[T]]{
 
       def parse(input: String, index: Int) = {
         p.parse(input, index) match{
           case Success(t, index) => Success(Some(t), index)
-          case Failure(input, ps, true) => Failure(input, (index, this) :: ps, true)
+          case f: Failure if f.fatal => failMore(f, index)
           case _ => Success(None, index)
         }
       }
@@ -94,7 +89,7 @@ object Parsing {
       lazy val pCached = p()
       def parse(input: String, index: Int) = {
         pCached.parse(input, index) match{
-          case f: Failure => Failure(f.input, (index, this) :: f.ps, f.fatal)
+          case f: Failure => failMore(f, index)
           case s => s
         }
       }
@@ -103,8 +98,8 @@ object Parsing {
     case class Lookahead(p: Parser[_]) extends Parser[Unit]{
       def parse(input: String, index: Int) = {
         p.parse(input, index) match{
-          case Success(t, i) => Res.Success((), index)
-          case Failure(input, ps, fatal) => Failure(input, (index, this) :: ps, fatal)
+          case s: Success[_] => Res.Success((), index)
+          case f: Failure => failMore(f, index)
         }
       }
       override def toString = s"&($p)"
@@ -119,8 +114,8 @@ object Parsing {
       def parse(input: String, index: Int) = {
         val res0 = p.parse(input, index)
         val res = res0 match{
-          case Success(t, idx) => fail(input, idx)
-          case Failure(_, _, _) => Res.Success((), index)
+          case s: Success[_] => fail(input, s.index)
+          case f: Failure => Res.Success((), index)
         }
         res
       }
@@ -151,11 +146,11 @@ object Parsing {
         var lastFailure: Failure = null
         @tailrec def rec(index: Int, del: Parser[_]): Unit = {
           del.parse(input, index) match{
-            case Failure(input, ps, true) => Failure(input, (index, this) :: ps, true)
+            case f: Failure if f.fatal => failMore(f, index)
             case f: Failure => lastFailure = f
             case Success(t, i) =>
               p.parse(input, i) match{
-                case Failure(input, ps, true) => Failure(input, (index, this) :: ps, true)
+                case f: Failure if f.fatal => failMore(f, index)
                 case f: Failure => lastFailure = f
                 case Success(t, i) =>
                   res.append(t)
@@ -163,21 +158,20 @@ object Parsing {
                   rec(i, delimiter)
               }
           }
-
         }
         rec(index, Pass)
         if (res.length >= min) Success(res, finalIndex)
         else fail(input, index)
       }
       override def toString = {
-        p + ".rep" + (if (min == 0)"" else min) + (if (delimiter == Pass) "" else s"($delimiter)")
+        p + ".rep" + (if (min == 0) "" else min) + (if (delimiter == Pass) "" else s"($delimiter)")
       }
     }
     case class Either[+T, +V1 <: T, +V2 <: T](p1: Parser[V1], p2: Parser[V2]) extends Parser[T]{
       def parse(input: String, index: Int) = {
         p1.parse(input, index) match{
           case s: Success[_] => s
-          case Failure(input, ps, true) => Failure(input, (index, this) :: ps, true)
+          case f: Failure if f.fatal => failMore(f, index)
           case _ => p2.parse(input, index) match{
             case s: Success[_] => s
             case f: Failure => fail(input, index)
@@ -202,25 +196,25 @@ object Parsing {
       override def toString = "'" + c + "'"
     }
 
-    case class CharsIn(f: Char => Boolean) extends Parser[Char]{
+    case class CharPred(f: Char => Boolean) extends Parser[Char]{
       def parse(input: String, index: Int) = {
         if (index >= input.length) fail(input, index)
         else if (f(input(index))) Res.Success(input(index), index + 1)
         else fail(input, index)
       }
     }
-    def chars(sets: Seq[Char]*) = {
+    def CharIn(sets: Seq[Char]*) = {
       val uberSet = BitSet(sets.flatten.map(_.toInt):_*)
-      CharsIn((c: Char) => uberSet(c.toInt))
+      CharPred((c: Char) => uberSet(c.toInt))
     }
     case class Sequence[+T1, +T2](p1: Parser[T1], p2: Parser[T2], cut: Boolean) extends Parser[(T1, T2)]{
       def parse(input: String, index: Int) = {
         p1.parse(input, index) match{
-          case s1: Success[_] => p2.parse(input, s1.index) match{
-            case s2: Success[_] => Success((s1.t, s2.t), s2.index)
-            case f: Failure => failMore(f, index)
-          }
           case f: Failure => failMore(f, index)
+          case s1: Success[_] => p2.parse(input, s1.index) match{
+            case f: Failure => failMore(f, index)
+            case s2: Success[_] => Success((s1.t, s2.t), s2.index)
+          }
         }
       }
       override def toString = {
@@ -228,18 +222,10 @@ object Parsing {
         s"($p1 $op $p2)"
       }
     }
-//    case class Regex(re: scala.util.matching.Regex) extends Parser[String]{
-//      def parse(input: String, index: Int) = {
-//
-//        if (input.startsWith(s, index)) Res.Success(s, index + s.length)
-//        else Res.Failure(index)
-//      }
-//    }
   }
   implicit def wspStr(s: String) = Parser.Literal(s)
   implicit def wspCh(s: Char) = Parser.CharLiteral(s)
 
-//  implicit def regexToRegex(re: scala.util.matching.Regex): Parser[String] = ???
   def rule[T](p: => Parser[T])(implicit name: FuncName): Parser[T] = Parser.Lazy(name.name, () => p)
 
   type Rule0 = Parser[_]

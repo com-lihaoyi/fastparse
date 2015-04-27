@@ -44,7 +44,7 @@ object UnitTests extends TestSuite{
         Scala.CompilationUnit.parse(input, 0)
         count += 1
       }
-      println(count)
+      count
     }
     'pos {
       * - check("package torimatomeru")
