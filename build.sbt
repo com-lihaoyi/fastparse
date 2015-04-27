@@ -38,7 +38,7 @@ val parsing = project.in(file("parsing")).settings(
   name := "parsing",
   shared
 )
-val scalaParser = project.in(file("scalaParser")).settings(
+val scalaParser = project.in(file("scalaParser")).dependsOn(parsing).settings(
   name := "scala-parser",
   shared
 )

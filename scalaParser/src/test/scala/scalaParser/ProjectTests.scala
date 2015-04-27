@@ -1,6 +1,6 @@
 package scalaParser
 
-import org.parboiled2.ParseError
+
 import utest._
 import utest.framework.Test
 import utest.util.Tree

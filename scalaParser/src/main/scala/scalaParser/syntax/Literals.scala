@@ -1,56 +1,57 @@
 package scalaParser
 package syntax
 import acyclic.file
-import org.parboiled2._
+import parsing.Parsing.Parser.CharPredicate
+import parsing.Parsing._
+import Basic._
+import Identifiers._
 
-trait Literals { self: Parser with Basic with Identifiers =>
+trait Literals {
   def Block: Rule0
   def WL: Rule0
   object Literals{
     import Basic._
-    def Float = {
-      def Thing = rule( Digit.+ ~ Exp.? ~ FloatType.? )
+    val Float = {
+      def Thing = rule( Digit.rep1 ~ Exp.? ~ FloatType.? )
       def Thing2 = rule( "." ~ Thing | Exp ~ FloatType.? | Exp.? ~ FloatType )
-      rule( "." ~ Thing | Digit.+ ~ Thing2 )
-    } 
+      rule( "." ~ Thing | Digit.rep1 ~ Thing2 )
+    }
 
-    def Int = rule( (HexNum | DecNum) ~ anyOf("Ll").? )
+    val Int = rule( (HexNum | DecNum) ~ ("L"|"l").? )
 
-    def Bool = rule( Key.W("true") | Key.W("false")  )
+    val Bool = rule( Key.W("true") | Key.W("false")  )
 
-    def MultilineComment: Rule0 = rule( "/*" ~ (MultilineComment | !"*/" ~ ANY).* ~ "*/" )
-    def Comment: Rule0 = rule(
-      MultilineComment | "//" ~ (!Basic.Newline ~ ANY).* ~ &(Basic.Newline | EOI)
+    val MultilineComment: Rule0 = rule( "/*" ~ (MultilineComment | !"*/" ~ Parser.Any).rep ~ "*/" )
+    val Comment: Rule0 = rule(
+      MultilineComment | "//" ~ (!Basic.Newline ~ Parser.Any).rep ~ &(Basic.Newline)
     )
-    def Null = Key.W("null")
-    def Literal = rule( ("-".? ~ (Float | Int)) | Bool | Char | String | Symbol | Null )
+    val Null = Key.W("null")
+    val Literal = rule( ("-".? ~ (Float | Int)) | Bool | Char | String | Symbol | Null )
 
-    def EscapedChars = rule( '\\' ~ anyOf("btnfr'\\\"") )
+    val EscapedChars = rule( '\\' ~ CharPredicate("""btnfr'\"]""".toSet))
 
     // Note that symbols can take on the same values as keywords!
-    def Symbol = rule( ''' ~ (Identifiers.PlainId | Identifiers.Keywords) )
+    val Symbol = rule( ''' ~ (Identifiers.PlainId | Identifiers.Keywords) )
 
-    def Char = {
+    val Char = {
       // scalac 2.10 crashes if PrintableChar below is substituted by its body
-      def PrintableChar = CharPredicate.from(isPrintableChar)
+      def PrintableChar = CharPredicate(isPrintableChar)
 
       rule {
         "'" ~ (UnicodeEscape | EscapedChars | !'\\' ~ PrintableChar) ~ "'"
       }
     }
 
-
-    def pr(s: String) = rule( run(println(s"LOGGING $cursor: $s")) )
-    def Interp = rule{
+    val Interp = rule{
       "$" ~ Identifiers.PlainIdNoDollar | "${" ~ Block ~ WL ~ "}" | "$$"
     }
-    def String = {
+    val String = {
       import Identifiers.Id
-      def InterpIf(b: Boolean) = if(b) rule(Interp) else rule(MISMATCH0)
+      def InterpIf(b: Boolean) = if(b) rule(Interp) else rule(Parser.Fail)
       def TQ = rule( "\"\"\"" )
-      def TripleChars(b: Boolean) = rule( (InterpIf(b) | '"'.? ~ '"'.? ~ noneOf("\"")).* )
-      def TripleTail = rule( TQ ~ zeroOrMore('"') )
-      def SingleChars(b: Boolean) = rule( (InterpIf(b) | "\\\"" | "\\\\" | noneOf("\n\"")).* )
+      def TripleChars(b: Boolean) = rule( (InterpIf(b) | '"'.? ~ '"'.? ~ !'"').rep )
+      def TripleTail = rule( TQ ~ '"'.rep )
+      def SingleChars(b: Boolean) = rule( (InterpIf(b) | "\\\"" | "\\\\" | !("\n"|'"')).rep )
       rule {
         (Id ~ TQ ~ TripleChars(b = true) ~ TripleTail) |
         (Id ~ '"' ~ SingleChars(b = true) ~ '"') |
@@ -65,4 +66,3 @@ trait Literals { self: Parser with Basic with Identifiers =>
     }
   }
 }
-

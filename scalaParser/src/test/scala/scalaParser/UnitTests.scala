@@ -1,32 +1,29 @@
 package scalaParser
 
-import org.parboiled2.ParseError
+
+import parsing.Parsing.Res
 import utest._
 
 import scala.util.{Failure, Success}
 
 object UnitTests extends TestSuite{
   def checkNeg[T](input: String) = {
-    println("Checking...")
-    new Scala(input).CompilationUnit.run() match{
-      case Failure(f: ParseError) => () // yay
-      case Success(parsed) => assert(parsed.length != input.length)
+    println("Checking...\n" + input)
+    Scala.TopPkgSeq.parse(input, 0) match{
+      case Res.Failure(index, p) => () // yay
+      case Res.Success(parsed, index) => assert(index != input.length)
     }
   }
   def check[T](input: String, tag: String = "") = {
-    println("Checking...")
-    new Scala(input).CompilationUnit.run() match{
-      case Failure(f: ParseError) =>
-        println(f.position)
+    println("Checking...\n" + input)
+    Scala.CompilationUnit.parse(input, 0) match{
+      case Res.Failure(index, p) =>
 //        println(f.formatExpectedAsString)
 //        println(f.formatTraces)
-        throw new Exception(""+f.position)
-      case Success(parsed) =>
-        if(parsed != input)
-
-          throw new Exception(
-            s"Parsing $tag Failed at ${parsed.length}\n${input.drop(parsed.length).take(50)}"
-          )
+        throw new Exception(index + " " + p)
+      case Res.Success(parsed, index) =>
+        println(parsed)
+        assert(index == input.length)
     }
   }
   println("running")

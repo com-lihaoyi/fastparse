@@ -1,78 +1,78 @@
 package scalaParser
-
+import parsing.Parsing._
 trait Types extends Core{
 
   def TypeExpr: R0
   def ValDef: R0
   def VarDef: R0
   def DefDef: R0
-  private implicit def wspStr(s: String) = rule( WL ~ str(s) )
-  private implicit def wspCh(s: Char) = rule( WL ~ ch(s) )
+  private implicit def wspStr(s: String) = rule( WL ~ s )
+  private implicit def wspCh(s: Char) = rule( WL ~ s )
 
-  def Mod: R0 = rule( LocalMod | AccessMod | `override` )
-  def LocalMod: R0 = rule( `abstract` | `final` | `sealed` | `implicit` | `lazy` )
-  def AccessMod: R0 = {
-    def AccessQualifier = rule( '[' ~ (`this` | Id) ~ ']' )
+  val Mod: R0 = rule( LocalMod | AccessMod | `override` )
+  val LocalMod: R0 = rule( `abstract` | `final` | `sealed` | `implicit` | `lazy` )
+  val AccessMod: R0 = {
+    val AccessQualifier = rule( '[' ~ (`this` | Id) ~ ']' )
     rule( (`private` | `protected`) ~ AccessQualifier.? )
   }
 
-  def Dcl: R0 = {
-    def ValDcl = rule( ValDef | `val` ~ Ids ~ `:` ~ Type )
-    def VarDcl = rule( VarDef | `var` ~ Ids ~ `:` ~ Type )
-    def FunDcl = rule( DefDef | `def` ~ FunSig ~ (`:` ~ Type).? )
+  val Dcl: R0 = {
+    val ValDcl = rule( ValDef | `val` ~ Ids ~ `:` ~ Type )
+    val VarDcl = rule( VarDef | `var` ~ Ids ~ `:` ~ Type )
+    val FunDcl = rule( DefDef | `def` ~ FunSig ~ (`:` ~ Type).? )
     rule( ValDcl | VarDcl | FunDcl | TypeDcl )
   }
 
-  def Type: R0 = {
-    def FunctionArgTypes = rule('(' ~ ParamType.+(',').? ~ ')' )
-    def ArrowType = rule( FunctionArgTypes ~ `=>` ~ Type )
-    def ExistentialClause = rule( `forSome` ~ `{` ~ Dcl.+(Semis) ~ `}` )
-    def PostfixType = rule( InfixType ~ (`=>` ~ Type | ExistentialClause.?) )
-    def Unbounded = rule( `_` | ArrowType | PostfixType )
+  val Type: R0 = {
+    val FunctionArgTypes = rule('(' ~ ParamType.rep1(',').? ~ ')' )
+    val ArrowType = rule( FunctionArgTypes ~ `=>` ~ Type )
+    val ExistentialClause = rule( `forSome` ~ `{` ~ Dcl.rep1(Semis) ~ `}` )
+    val PostfixType = rule( InfixType ~ (`=>` ~ Type | ExistentialClause.?) )
+    val Unbounded = rule( `_` | ArrowType | PostfixType )
     rule( Unbounded ~ TypeBounds )
   }
 
-  def InfixType = rule( CompoundType ~ (NotNewline ~ Id ~ OneNLMax ~ CompoundType).* )
+  val InfixType = rule( CompoundType ~ (NotNewline ~ Id ~ OneNLMax ~ CompoundType).rep )
 
-  def CompoundType = {
-    def RefineStat = rule( TypeDef | Dcl  )
-    def Refinement = rule( OneNLMax ~ `{` ~ RefineStat.*(Semis) ~ `}` )
-    rule( AnnotType.+(`with`) ~ Refinement.? | Refinement )
+  val CompoundType = {
+    val RefineStat = rule( TypeDef | Dcl  )
+    val Refinement = rule( OneNLMax ~ `{` ~ RefineStat.rep(Semis) ~ `}` )
+    rule( AnnotType.rep1(`with`) ~ Refinement.? | Refinement )
   }
-  def AnnotType = rule(SimpleType ~ (NotNewline ~ (NotNewline ~ Annot).+).? )
+  val AnnotType = rule(SimpleType ~ (NotNewline ~ (NotNewline ~ Annot).rep1).? )
 
-  def SimpleType: R0 = {
-    def BasicType = rule( '(' ~ Types ~ ')'  | StableId ~ '.' ~ `type` | StableId )
-    rule( BasicType ~ (TypeArgs | `#` ~ Id).* )
+  val SimpleType: R0 = {
+    val BasicType = rule( '(' ~ Types ~ ')'  | StableId ~ '.' ~ `type` | StableId )
+    rule( BasicType ~ (TypeArgs | `#` ~ Id).rep )
   }
 
-  def TypeArgs = rule( '[' ~ Types ~ "]" )
-  def Types = rule( Type.+(',') )
+  val TypeArgs = rule( '[' ~ Types ~ "]" )
+  val Types = rule( Type.rep1(',') )
 
-  def TypeDcl: R0 = rule( `type` ~ Id ~ TypeArgList.? ~ TypeBounds )
+  val TypeDcl: R0 = rule( `type` ~ Id ~ TypeArgList.? ~ TypeBounds )
 
-  def FunSig: R0 = {
-    def FunTypeArgs = rule( '[' ~ (Annot.* ~ TypeArg).+(',') ~ ']' )
-    def FunAllArgs = rule( FunArgs.* ~ (OneNLMax ~ '(' ~ `implicit` ~ Args ~ ')').? )
-    def FunArgs = rule( OneNLMax ~ '(' ~ Args.? ~ ')' )
-    def FunArg = rule( Annot.* ~ Id ~ (`:` ~ ParamType).? ~ (`=` ~ TypeExpr).? )
-    def Args = rule( FunArg.+(',') )
+  val FunSig: R0 = {
+    val FunArg = rule( Annot.rep ~ Id ~ (`:` ~ ParamType).? ~ (`=` ~ TypeExpr).? )
+    val Args = rule( FunArg.rep1(',') )
+    val FunArgs = rule( OneNLMax ~ '(' ~ Args.? ~ ')' )
+    val FunAllArgs = rule( FunArgs.rep ~ (OneNLMax ~ '(' ~ `implicit` ~ Args ~ ')').? )
+    val FunTypeArgs = rule( '[' ~ (Annot.rep ~ TypeArg).rep1(',') ~ ']' )
     rule( (Id | `this`) ~ FunTypeArgs.? ~ FunAllArgs )
   }
-  def ParamType = rule( `=>` ~ Type | Type ~ "*" | Type )
+  val ParamType = rule( `=>` ~ Type | Type ~ "*" | Type )
 
-  def TypeBounds: R0 = rule( (`>:` ~ Type).? ~ (`<:` ~ Type).? )
-  def TypeArg: R0 = {
-    def CtxBounds = rule((`<%` ~ Type).* ~ (`:` ~ Type).*)
+  val TypeBounds: R0 = rule( (`>:` ~ Type).? ~ (`<:` ~ Type).? )
+  val TypeArg: R0 = {
+    val CtxBounds = rule((`<%` ~ Type).rep ~ (`:` ~ Type).rep)
     rule((Id | `_`) ~ TypeArgList.? ~ TypeBounds ~ CtxBounds)
   }
 
-  def Annot: R0 = rule( `@` ~ SimpleType ~  ('(' ~ (Exprs ~ (`:` ~ `_*`).?).? ~ ")").*  )
+  val Annot: R0 = rule( `@` ~ SimpleType ~  ('(' ~ (Exprs ~ (`:` ~ `_*`).?).? ~ ")").rep)
 
-  def TypeArgList: R0 = {
-    def Variant: R0 = rule( Annot.* ~ (WL ~ anyOf("+-")).? ~ TypeArg )
-    rule( '[' ~ Variant.*(',') ~ ']' )
+  val TypeArgList: R0 = {
+    val Variant: R0 = rule( Annot.rep ~ (WL ~ ("+" | "-")).? ~ TypeArg )
+    rule( '[' ~ Variant.rep(',') ~ ']' )
   }
-  def Exprs: R0 = rule( TypeExpr.+(',') )
-  def TypeDef: R0 = rule( `type` ~ Id ~ TypeArgList.? ~ `=` ~ Type )
+  val Exprs: R0 = rule( TypeExpr.rep1(',') )
+  val TypeDef: R0 = rule( `type` ~ Id ~ TypeArgList.? ~ `=` ~ Type )
 }
