@@ -68,7 +68,8 @@ object Parsing {
       for(string <- strings){
         var current = bitSet
         for(char <- string){
-          if (!current.children.contains(char)) {
+          val next = current.children.getOrNull(char)
+          if (next == null) {
             current.children(char) = Dispatcher.Node()
           }
           current = current.children(char)
@@ -80,9 +81,9 @@ object Parsing {
           if (index + offset >= input.length) currentRes
           else {
             val char = input(index + offset)
-            if (!currentNode.children.contains(char)) currentRes
+            val next = currentNode.children.getOrNull(char)
+            if (next == null) currentRes
             else {
-              val next = currentNode.children(char)
               rec(
                 offset + 1,
                 next,
