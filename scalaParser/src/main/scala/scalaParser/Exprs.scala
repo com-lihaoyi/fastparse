@@ -3,8 +3,8 @@ import acyclic.file
 import parsing.Parsing._
 trait Exprs extends Core with Types /*with Xml*/{
 
-  private implicit def wspStr(s: String) = rule( WL ~ s )
-  private implicit def wspCh(s: Char) = rule( WL ~ s )
+  private implicit def wspStr(s: String) = WL ~ s
+  private implicit def wspCh(s: Char) = WL ~ s
 
   def NewBody: R0
   def BlockDef: R0
@@ -101,7 +101,7 @@ trait Exprs extends Core with Types /*with Xml*/{
     val End = rule( Semis.? ~ &("}" | `case`) )
     val ResultExpr = rule{ StatCtx.Expr | LambdaHead ~ Block}
     val Body = rule( ResultExpr ~ End | BlockStats ~ (Semis ~ ResultExpr).? ~ End | End )
-    rule( LambdaHead.rep1 ~ Semis.? ~ Body )
+    rule( LambdaHead.rep ~ Semis.? ~ Body )
   }
 
   val Patterns: R0 = rule( Pat.rep1(",") )

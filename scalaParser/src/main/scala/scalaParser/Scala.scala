@@ -8,8 +8,8 @@ import parsing.Parsing._
  */
 object Scala extends Core with Types with Exprs/* with Xml*/{
 
-  private implicit def wspStr(s: String) = rule( WL ~ s )
-  private implicit def wspCh(s: Char) = rule( WL ~ s )
+  private implicit def wspStr(s: String) = WL ~ s
+  private implicit def wspCh(s: Char) = WL ~ s
 
   def TmplBody: R0 = {
     val Prelude = rule( (Annot ~ OneNLMax).rep ~ Mod.rep )
@@ -52,12 +52,12 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
   }
 
   val ObjDef: R0 = rule( `case`.? ~ `object` ~ Id ~ ClsTmplOpt )
-  val ClsTmplOpt: R0 = rule( `extends` ~ ClsTmpl.log("ClsTmpl") | (`extends`.? ~ TmplBody).? )
+  val ClsTmplOpt: R0 = rule( `extends` ~ ClsTmpl | (`extends`.? ~ TmplBody).? )
 
   val ClsTmpl: R0 = {
     val Constr = rule( AnnotType ~ (NotNewline ~ ArgList).rep )
     val ClsParents = rule( Constr ~ (`with` ~ AnnotType).rep )
-    rule( EarlyDefs.? ~ ClsParents ~ TmplBody.log("TmplBody").? )
+    rule( EarlyDefs.? ~ ClsParents ~ TmplBody.? )
   }
 
   val EarlyDefs: R0 = {

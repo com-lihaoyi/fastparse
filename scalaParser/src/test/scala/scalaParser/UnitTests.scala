@@ -10,7 +10,7 @@ object UnitTests extends TestSuite{
   def checkNeg[T](input: String) = {
     println("Checking...\n" + input)
     Scala.CompilationUnit.parse(input, 0) match{
-      case Res.Failure(index, p) => () // yay
+      case Res.Failure(ps) => () // yay
       case Res.Success(parsed, index) => assert(index != input.length)
     }
   }
@@ -19,14 +19,14 @@ object UnitTests extends TestSuite{
     import Scala._
     val res = Scala.CompilationUnit.parse(input, 0)
     res match{
-      case Res.Failure(index, ps) =>
+      case f: Res.Failure =>
 //        println(f.formatExpectedAsString)
 //        println(f.formatTraces)
-        throw new Exception(index + " " + ps)
-      case Res.Success(parsed, index) =>
+        throw new Exception(s"Failure\n" + f.ps.map(x => x._1 + ":\t" + x._2).mkString("\n"))
+      case s: Res.Success[_] =>
 //        println(parsed)
         val inputLength = input.length
-        assert(index == inputLength)
+        assert(s.index == inputLength)
     }
   }
   println("running")

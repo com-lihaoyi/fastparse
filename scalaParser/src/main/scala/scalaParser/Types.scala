@@ -6,8 +6,8 @@ trait Types extends Core{
   def ValDef: R0
   def VarDef: R0
   def DefDef: R0
-  private implicit def wspStr(s: String) = rule( WL ~ s )
-  private implicit def wspCh(s: Char) = rule( WL ~ s )
+  private implicit def wspStr(s: String) = WL ~ s
+  private implicit def wspCh(s: Char) = WL ~ s 
 
   val Mod: R0 = rule( LocalMod | AccessMod | `override` )
   val LocalMod: R0 = rule( `abstract` | `final` | `sealed` | `implicit` | `lazy` )

@@ -27,8 +27,8 @@ trait Core extends syntax.Literals{
    * By default, all strings and characters greedily
    * capture all whitespace immediately before the token.
    */
-  private implicit def wspStr(s: String) = rule( WL ~ s )
-  private implicit def wspCh(s: Char) = rule( WL ~ s )
+  private implicit def wspStr(s: String) = WL ~ s
+  private implicit def wspCh(s: Char) = WL ~ s
   /**
    * Most keywords don't just require the correct characters to match,
    * they have to ensure that subsequent characters *don't* match in
@@ -36,13 +36,13 @@ trait Core extends syntax.Literals{
    * (W) and key-operators (O) which have different non-match criteria.
    */
   object KeyWordOperators {
-    def W(s: String) = rule( WL ~ Key.W(s) )
-    def O(s: String) = rule( WL ~ Key.O(s) )
+    def W(s: String) = rule( WL ~ Key.W(s) )(s"`$s`")
+    def O(s: String) = rule( WL ~ Key.O(s) )(s"`$s`")
   }
   import KeyWordOperators._
   // Keywords that match themselves and nothing else
-  val `=>` = rule( O("=>") | O("⇒") )
-  val `<-` = rule( O("<-") | O("←") )
+  val `=>` = O("=>") | O("⇒")
+  val `<-` = O("<-") | O("←")
   val `:` = O(":")
   val `=` = O("=")
   val `@` = O("@")
