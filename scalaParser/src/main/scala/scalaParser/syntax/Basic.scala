@@ -12,11 +12,11 @@ object Basic {
   val Digit = rule( Parser.CharIn("0123456789") )
   val HexNum = rule( "0x" ~ HexDigit.rep1 )
   val DecNum = rule(Digit.rep1)
-  val Exp = rule( ("E"|"e") ~ ("+"|"-").? ~ Digit.rep1 )
+  val Exp = rule( Parser.CharIn("Ee") ~ Parser.CharIn("+-").? ~ Digit.rep1 )
   val FloatType = rule( Parser.CharIn("fFdD") )
 
-  val WSChar = rule( "\u0020" | "\u0009" )(enclosingFunctionName)
-  val Newline = rule( "\r\n" | "\n" )
+  val WSChar = rule( Parser.CharIn("\u0020\u0009") )(enclosingFunctionName)
+  val Newline = rule( Parser.Dispatcher("\r\n", "\n") )
   val Semi = rule( ";" | Newline.rep1 )
   val OpChar = {
     // scalac 2.10 crashes if OtherOrMathSymbol below is substituted by its body

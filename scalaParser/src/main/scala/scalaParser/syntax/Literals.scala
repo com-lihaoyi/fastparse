@@ -13,11 +13,11 @@ trait Literals {
     import Basic._
     val Float = {
       def Thing = rule( Digit.rep1 ~ Exp.? ~ FloatType.? )
-      def Thing2 = rule( "." ~ Thing | Exp ~ FloatType.? | Exp.? ~ FloatType )
-      rule( "." ~ Thing | Digit.rep1 ~ Thing2 )
+      def Thing2 = rule( '.' ~ Thing | Exp ~ FloatType.? | Exp.? ~ FloatType )
+      rule( '.' ~ Thing | Digit.rep1 ~ Thing2 )
     }
 
-    val Int = rule( (HexNum | DecNum) ~ ("L"|"l").? )
+    val Int = rule( (HexNum | DecNum) ~ Parser.CharIn("Ll").? )
 
     val Bool = rule( Key.W("true") | Key.W("false")  )
 
@@ -26,7 +26,7 @@ trait Literals {
       MultilineComment | "//" ~ (!Basic.Newline ~ Parser.AnyChar).rep ~ &(Basic.Newline | Parser.End)
     )
     val Null = Key.W("null")
-    val Literal = rule( ("-".? ~ (Float | Int)) | Bool | Char | String | Symbol | Null )
+    val Literal = rule( ('-'.? ~ (Float | Int)) | Bool | Char | String | Symbol | Null )
 
     val EscapedChars = rule( '\\' ~ Parser.CharIn("""btnfr'\"]"""))
 
@@ -51,7 +51,7 @@ trait Literals {
       def TQ = rule( "\"\"\"" )
       def TripleChars(allowInterp: Boolean) = rule( (InterpIf(allowInterp) | '"'.? ~ '"'.? ~ !'"' ~ Parser.AnyChar).rep )
       def TripleTail = rule( TQ ~ '"'.rep )
-      def SingleChars(allowInterp: Boolean) = rule( (InterpIf(allowInterp) | "\\\"" | "\\\\" | !("\n" | '"') ~ Parser.AnyChar).rep )
+      def SingleChars(allowInterp: Boolean) = rule( (InterpIf(allowInterp) | "\\\"" | "\\\\" | !Parser.CharIn("\n\"") ~ Parser.AnyChar).rep )
       rule {
         (Id ~ TQ ~ TripleChars(allowInterp = true) ~ TripleTail) |
         (Id ~ '"' ~ SingleChars(allowInterp = true) ~ '"') |

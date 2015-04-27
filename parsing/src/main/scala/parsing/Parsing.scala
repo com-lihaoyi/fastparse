@@ -63,7 +63,7 @@ object Parsing {
     object Dispatcher{
       case class Node(children: mutable.LongMap[Node] = mutable.LongMap.empty, var word: String = null)
     }
-    case class Dispatcher(strings: Seq[String]) extends Parser[String]{
+    case class Dispatcher(strings: String*) extends Parser[String]{
       val bitSet = Dispatcher.Node()
       for(string <- strings){
         var current = bitSet
@@ -258,7 +258,6 @@ object Parsing {
     }
   }
   implicit def wspStr(s: String) = Parser.Literal(s)
-  implicit def wspCh(s: Char) = Parser.CharLiteral(s)
 
   def rule[T](p: => Parser[T])(implicit name: FuncName): Parser[T] = Parser.Lazy(name.name, () => p)
 

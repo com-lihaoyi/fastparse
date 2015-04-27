@@ -38,8 +38,8 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
     val ClsArgMod = rule( (Mod.rep ~ (`val` | `var`)).? )
     val ClsArg = rule( Annot.rep ~ ClsArgMod ~ Id ~ `:` ~ ParamType ~ (`=` ~ ExprCtx.Expr).? )
 
-    val Implicit = rule( OneNLMax ~ '(' ~! `implicit` ~ ClsArg.rep1(",") ~ ")" )
-    val ClsArgs = rule( OneNLMax ~'(' ~ ClsArg.rep(',') ~ ")" )
+    val Implicit = rule( OneNLMax ~ '(' ~! `implicit` ~ ClsArg.rep1(',') ~ ')' )
+    val ClsArgs = rule( OneNLMax ~'(' ~ ClsArg.rep(',') ~ ')' )
     val AllArgs = rule( ClsArgs.rep1 ~ Implicit.? | Implicit )
     rule( `case`.? ~ `class` ~! Id ~ TypeArgList.? ~ Prelude.? ~ AllArgs.? ~ ClsTmplOpt )
   }
@@ -73,9 +73,9 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
     val TopStat = rule( PkgBlock | PkgObj | Import | Tmpl )
     rule( TopStat.rep1(Semis) )
   }
-  val TopPkgSeq = rule( (`package` ~ QualId ~ !(WS ~ "{")).rep1(Semis) )
+  val TopPkgSeq = rule( (`package` ~ QualId ~ !(WS ~ '{')).rep1(Semis) )
   val CompilationUnit: Rule0 = {
-    val Body = rule( TopPkgSeq ~ (Semis ~ TopStatSeq).? | TopStatSeq | "" )
-    rule( Semis.? ~ Body ~ Semis.? ~ WL ~ Parser.End)
+    val Body = rule( TopPkgSeq ~ (Semis ~ TopStatSeq).? | TopStatSeq )
+    rule( Semis.? ~ Body.? ~ Semis.? ~ WL ~ Parser.End)
   }
 }

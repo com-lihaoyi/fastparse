@@ -46,7 +46,7 @@ trait Types extends Core{
     rule( BasicType ~ (TypeArgs | `#` ~ Id).rep )
   }
 
-  val TypeArgs = rule( '[' ~ Types ~ "]" )
+  val TypeArgs = rule( '[' ~ Types ~ ']' )
   val Types = rule( Type.rep1(',') )
 
   val TypeDcl: R0 = rule( `type` ~ Id ~ TypeArgList.? ~ TypeBounds )
@@ -59,7 +59,7 @@ trait Types extends Core{
     val FunTypeArgs = rule( '[' ~ (Annot.rep ~ TypeArg).rep1(',') ~ ']' )
     rule( (Id | `this`) ~ FunTypeArgs.? ~ FunAllArgs )
   }
-  val ParamType = rule( `=>` ~ Type | Type ~ "*" | Type )
+  val ParamType = rule( `=>` ~ Type | Type ~ '*' | Type )
 
   val TypeBounds: R0 = rule( (`>:` ~ Type).? ~ (`<:` ~ Type).? )
   val TypeArg: R0 = {
@@ -67,10 +67,10 @@ trait Types extends Core{
     rule((Id | `_`) ~ TypeArgList.? ~ TypeBounds ~ CtxBounds)
   }
 
-  val Annot: R0 = rule( `@` ~ SimpleType ~  ('(' ~ (Exprs ~ (`:` ~ `_*`).?).? ~ ")").rep)
+  val Annot: R0 = rule( `@` ~ SimpleType ~  ('(' ~ (Exprs ~ (`:` ~ `_*`).?).? ~ ')').rep)
 
   val TypeArgList: R0 = {
-    val Variant: R0 = rule( Annot.rep ~ (WL ~ ("+" | "-")).? ~ TypeArg )
+    val Variant: R0 = rule( Annot.rep ~ (WL ~ Parser.CharIn("+-")).? ~ TypeArg )
     rule( '[' ~! Variant.rep(',') ~ ']' )
   }
   val Exprs: R0 = rule( TypeExpr.rep1(',') )

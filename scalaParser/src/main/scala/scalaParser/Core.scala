@@ -91,7 +91,7 @@ trait Core extends syntax.Literals{
 
   // kinda-sorta keywords that are common patterns even if not
   // really-truly keywords
-  val `_*` = rule( `_` ~ "*" )
+  val `_*` = rule( `_` ~ '*' )
   val `}` = rule( Semis.? ~ '}' )
   val `{` = rule( '{' ~ Semis.? )
   /**
