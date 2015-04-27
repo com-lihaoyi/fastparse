@@ -22,7 +22,7 @@ object Parsing {
 
     def |[T1 >: T, V <: T1](p: Parser[V]) = Parser.Either(this, p)
     def ~[V](p: Parser[V]) = Parser.Sequence(this, p)
-    def ? = Parser.Either(this, "")
+    def ? = Parser.Either(this, Parser.Pass)
     def unary_! = Parser.Not(this)
   }
   def &(p: Parser[_]): Parser[Unit] = Parser.Lookahead(p)
@@ -35,7 +35,7 @@ object Parsing {
         logNesting += 1
         val res = p.parse(input, index)
         logNesting -= 1
-        println(indent + "-" + msg + ": " + res)
+        println(indent + "-" + msg + ":" + res)
         res
       }
     }
@@ -149,8 +149,9 @@ object Parsing {
 //      }
 //    }
   }
-  implicit val stringToLiteral = Parser.Literal
-  implicit val charToLiteral = Parser.CharLiteral
+  implicit def wspStr(s: String) = Parser.Literal(s)
+  implicit def wspCh(s: Char) = Parser.CharLiteral(s)
+
 //  implicit def regexToRegex(re: scala.util.matching.Regex): Parser[String] = ???
   def rule[T](p: => Parser[T]): Parser[T] = Parser.Lazy(() => p)
   def main(args: Array[String]): Unit = {

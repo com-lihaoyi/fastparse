@@ -52,12 +52,12 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
   }
 
   val ObjDef: R0 = rule( `case`.? ~ `object` ~ Id ~ ClsTmplOpt )
-  val ClsTmplOpt: R0 = rule( `extends` ~ ClsTmpl | (`extends`.? ~ TmplBody).? )
+  val ClsTmplOpt: R0 = rule( `extends` ~ ClsTmpl.log("ClsTmpl") | (`extends`.? ~ TmplBody).? )
 
   val ClsTmpl: R0 = {
     val Constr = rule( AnnotType ~ (NotNewline ~ ArgList).rep )
     val ClsParents = rule( Constr ~ (`with` ~ AnnotType).rep )
-    rule( EarlyDefs.? ~ ClsParents ~ TmplBody.? )
+    rule( EarlyDefs.? ~ ClsParents ~ TmplBody.log("TmplBody").? )
   }
 
   val EarlyDefs: R0 = {

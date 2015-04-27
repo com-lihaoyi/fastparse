@@ -9,8 +9,8 @@ object Identifiers{
 
   val VarId = VarId0(true)
   val VarIdFalse = VarId0(false)
-  def VarId0(dollar: Boolean) = rule( !Keywords ~ Lower.log("Lower") ~ IdRest(dollar).log("IdRest(dollar)") )
-  val PlainId = rule( !Keywords ~ Upper ~ IdRestTrue.log("IdRestTrue") | VarId.log("VarId") | Operator.log("Operator") ).log("PlainId")
+  def VarId0(dollar: Boolean) = rule( !Keywords ~ Lower ~ IdRest(dollar) )
+  val PlainId = rule( !Keywords ~ Upper ~ IdRestTrue | VarId | Operator )
   val PlainIdNoDollar = rule( !Keywords ~ Upper ~ IdRestFalse | VarIdFalse | Operator )
   val Id = rule( !Keywords ~ PlainId | ("`" ~ (!'`' ~ Parser.AnyChar).rep1 ~ "`") )
 
@@ -18,8 +18,8 @@ object Identifiers{
   val IdRestTrue = IdRest(true)
   def IdRest(allowDollar: Boolean) = {
     val SkipChar = if(allowDollar) rule("_") else rule("_" | "$")
-    val IdUnderscoreChunk = rule( "_".log("_").rep ~ (!SkipChar.log("SC") ~ Letter.log("Letter") | Digit.log("Digit")).rep1 )
-    rule( IdUnderscoreChunk.log("IUC").rep ~ ("_".rep1 ~ OpChar.log("OpChar").rep).? )
+    val IdUnderscoreChunk = rule( "_".rep ~ (!SkipChar ~ Letter | Digit ).rep1 )
+    rule( IdUnderscoreChunk.rep ~ ("_".rep1 ~ OpChar.rep).? )
   }
 
   val AlphabetKeywords = rule {

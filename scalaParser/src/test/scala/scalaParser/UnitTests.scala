@@ -9,7 +9,7 @@ import scala.util.{Failure, Success}
 object UnitTests extends TestSuite{
   def checkNeg[T](input: String) = {
     println("Checking...\n" + input)
-    Scala.TopPkgSeq.parse(input, 0) match{
+    Scala.CompilationUnit.parse(input, 0) match{
       case Res.Failure(index, p) => () // yay
       case Res.Success(parsed, index) => assert(index != input.length)
     }
@@ -17,21 +17,22 @@ object UnitTests extends TestSuite{
   def check[T](input: String, tag: String = "") = {
     println("Checking...\n" + input)
     import Scala._
-    val parser = scalaParser.syntax.Identifiers.PlainId
-    parser.parse(input, 0) match{
+
+    Scala.CompilationUnit.parse(input, 0) match{
       case Res.Failure(index, p) =>
 //        println(f.formatExpectedAsString)
 //        println(f.formatTraces)
         throw new Exception(index + " " + p)
       case Res.Success(parsed, index) =>
-        println(parsed)
-        assert(index == input.length)
+//        println(parsed)
+        val inputLength = input.length
+        assert(index == inputLength)
     }
   }
   println("running")
   def tests = TestSuite{
     'pos {
-      * - check("torimatomeru")
+      * - check("package torimatomeru")
       * - check(
         """package torimatomeru
           |
