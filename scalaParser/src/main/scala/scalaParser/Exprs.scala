@@ -2,7 +2,7 @@ package scalaParser
 import acyclic.file
 import parsing.Parsing.Parser.Pass
 import parsing.Parsing._
-trait Exprs extends Core with Types /*with Xml*/{
+trait Exprs extends Core with Types with Xml{
 
   private implicit def wspStr(s: String) = WL ~ s
   private implicit def wspCh(s: Char) = WL ~ s
@@ -76,7 +76,7 @@ trait Exprs extends Core with Types /*with Xml*/{
       val Path = rule( (Id ~ '.').rep ~ `this` ~ ('.' ~ Id).rep | StableId )
       val New = rule( `new` ~ NewBody )
       val Parened = rule ( '(' ~ Exprs.? ~ ")"  )
-      val SimpleExpr1 = rule( /*XmlExpr | */New | BlockExpr | Literal | Path | `_` | Parened)
+      val SimpleExpr1 = rule( XmlExpr | New | BlockExpr | Literal | Path | `_` | Parened)
       rule( SimpleExpr1 ~ ('.' ~ Id | TypeArgs | NoSemis ~ ArgList).rep ~ (NoSemis  ~ `_`).?)
     }
     val Guard : R0 = rule( `if` ~ PostfixExpr )
@@ -86,7 +86,7 @@ trait Exprs extends Core with Types /*with Xml*/{
     val Extractor = rule( StableId ~ ('(' ~ ExtractorArgs ~ ')').? )
     val TupleEx = rule( '(' ~ ExtractorArgs.? ~ ')' )
     val Thingy = rule( `_` ~ (`:` ~ TypePat).? ~ !"*" )
-    rule( /*XmlPattern | */Thingy | Literal | TupleEx | Extractor | VarId)
+    rule( XmlPattern | Thingy | Literal | TupleEx | Extractor | VarId)
   }
 
   val BlockExpr: R0 = rule( '{' ~ (CaseClauses | Block) ~ `}` )

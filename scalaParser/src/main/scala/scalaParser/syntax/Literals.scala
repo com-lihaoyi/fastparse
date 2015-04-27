@@ -1,7 +1,7 @@
 package scalaParser
 package syntax
 import acyclic.file
-import parsing.Parsing.Parser.CharPredicate
+import parsing.Parsing.Parser.CharsIn
 import parsing.Parsing._
 import Basic._
 import Identifiers._
@@ -28,14 +28,14 @@ trait Literals {
     val Null = Key.W("null")
     val Literal = rule( ("-".? ~ (Float | Int)) | Bool | Char | String | Symbol | Null )
 
-    val EscapedChars = rule( '\\' ~ CharPredicate("""btnfr'\"]""".toSet))
+    val EscapedChars = rule( '\\' ~ CharsIn("""btnfr'\"]""".toSet))
 
     // Note that symbols can take on the same values as keywords!
     val Symbol = rule( ''' ~ (Identifiers.PlainId | Identifiers.Keywords) )
 
     val Char = {
       // scalac 2.10 crashes if PrintableChar below is substituted by its body
-      def PrintableChar = CharPredicate(isPrintableChar)
+      def PrintableChar = CharsIn(isPrintableChar)
 
       rule {
         "'" ~ (UnicodeEscape | EscapedChars | !'\\' ~ PrintableChar) ~ "'"

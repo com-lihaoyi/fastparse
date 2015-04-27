@@ -3,6 +3,7 @@ package parsing
 import parsing.Parsing.Res.Success
 
 import scala.annotation.tailrec
+import scala.collection.immutable.BitSet
 import scala.collection.mutable
 
 import scala.reflect.macros.blackbox.Context
@@ -190,12 +191,16 @@ object Parsing {
       override def toString = "'" + c + "'"
     }
 
-    case class CharPredicate(f: Char => Boolean) extends Parser[Char]{
+    case class CharsIn(f: Char => Boolean) extends Parser[Char]{
       def parse(input: String, index: Int) = {
         if (index >= input.length) fail(input, index)
         else if (f(input(index))) Res.Success(input(index), index + 1)
         else fail(input, index)
       }
+    }
+    def chars(sets: Seq[Char]*) = {
+      val uberSet = BitSet(sets.flatten.map(_.toInt):_*)
+      CharsIn((c: Char) => uberSet(c.toInt))
     }
     case class Sequence[+T1, +T2](p1: Parser[T1], p2: Parser[T2]) extends Parser[(T1, T2)]{
       def parse(input: String, index: Int) = {
