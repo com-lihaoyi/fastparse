@@ -3,7 +3,7 @@ package parsing
 import parsing.Parsing.Res.Success
 
 import scala.annotation.tailrec
-import scala.collection.immutable.BitSet
+import scala.collection.immutable.{IntMap, BitSet}
 import scala.collection.mutable
 
 import scala.reflect.macros.blackbox.Context
@@ -60,7 +60,40 @@ object Parsing {
   }
   def &(p: Parser[_]): Parser[Unit] = Parser.Lookahead(p)
   object Parser{
-
+    object Dispatcher{
+      case class Node(children: mutable.LongMap[Node] = mutable.LongMap.empty, var word: String = null)
+    }
+    case class Dispatcher(strings: Seq[String]) extends Parser[String]{
+      val bitSet = Dispatcher.Node()
+      for(string <- strings){
+        var current = bitSet
+        for(char <- string){
+          if (!current.children.contains(char)) {
+            current.children(char) = Dispatcher.Node()
+          }
+          current = current.children(char)
+        }
+        current.word = string
+      }
+      def parse(input: String, index: Int) = {
+        @tailrec def rec(offset: Int, currentNode: Dispatcher.Node, currentRes: Res[String]): Res[String] = {
+          if (index + offset >= input.length) currentRes
+          else {
+            val char = input(index + offset)
+            if (!currentNode.children.contains(char)) currentRes
+            else {
+              val next = currentNode.children(char)
+              rec(
+                offset + 1,
+                next,
+                if (next.word != null) Success(next.word, index + offset + 1) else currentRes
+              )
+            }
+          }
+        }
+        rec(0, bitSet, fail(input, index))
+      }
+    }
     var logNesting = 0
     case class Logged[+T](p: Parser[T], msg: String) extends Parser[T]{
       def parse(input: String, index: Int) = {

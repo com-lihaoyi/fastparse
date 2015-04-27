@@ -21,20 +21,23 @@ object Identifiers{
     rule( IdUnderscoreChunk.rep ~ ("_".rep1 ~ OpChar.rep).? )
   }
 
+  val alphaKeywords = Seq(
+    "abstract", "case", "catch", "class", "def", "do", "else",
+    "extends", "false", "finally", "final", "finally", "forSome",
+    "for", "if", "implicit", "import", "lazy", "match", "new",
+    "null", "object", "override", "package", "private", "protected",
+    "return", "sealed", "super", "this", "throw", "trait", "try",
+    "true", "type", "val", "var", "while", "with", "yield", "_"
+  )
+
   val AlphabetKeywords = rule {
-    (
-      "abstract" | "case" | "catch" | "class" | "def" | "do" | "else" |
-      "extends" | "false" | "finally" | "final" | "finally" | "forSome" |
-      "for" | "if" | "implicit" | "import" | "lazy" | "match" | "new" |
-      "null" | "object" | "override" | "package" | "private" | "protected" |
-      "return" | "sealed" | "super" | "this" | "throw" | "trait" | "try" |
-      "true" | "type" | "val" | "var" | "while" | "with" | "yield" | "_"
-    ) ~ !Letter
+    Parser.Dispatcher(alphaKeywords) ~ !Letter
   }
+  val symbolKeywords = Seq(
+    ":", ";", "=>", "=", "<-", "<:", "<%", ">:", "#", "@", "\u21d2", "\u2190"
+  ) 
   val SymbolicKeywords = rule{
-    (
-      ":" | ";" | "=>" | "=" | "<-" | "<:" | "<%" | ">:" | "#" | "@" | "\u21d2" | "\u2190"
-    )  ~ !OpChar
+    Parser.Dispatcher(symbolKeywords)  ~ !OpChar
   }
   val Keywords = rule( AlphabetKeywords | SymbolicKeywords )
 }

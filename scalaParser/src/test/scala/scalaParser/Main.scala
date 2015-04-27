@@ -8,3 +8,4 @@ object Main {
     println(syntax.Basic.Digit.parse("a", 0))
   }
 }
+

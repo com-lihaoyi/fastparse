@@ -52,7 +52,7 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
     rule( `trait` ~ Id ~ TypeArgList.? ~ TraitTmplOpt )
   }
 
-  val ObjDef: R0 = rule( `case`.? ~ `object` ~ Id ~ ClsTmplOpt )
+  val ObjDef: R0 = rule( `case`.? ~ `object` ~! Id ~ ClsTmplOpt )
   val ClsTmplOpt: R0 = rule( `extends` ~ ClsTmpl ~ Pass | (`extends`.? ~ TmplBody).? ~ Pass )
 
   val ClsTmpl: R0 = {
