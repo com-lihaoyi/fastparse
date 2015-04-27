@@ -25,7 +25,7 @@ object Basic {
       case Character.OTHER_SYMBOL | Character.MATH_SYMBOL => true; case _ => false
     })
 
-    rule { CharsIn("[!#%&*+-/:<=>?@\\^|~]".toSet) | OtherOrMathSymbol }
+    rule { CharsIn("!#%&*+-/:<=>?@\\^|~".toSet) | OtherOrMathSymbol }
   }
   val Letter = {
     val LetterDigit = CharsIn(c => c.isLetter | c.isDigit)

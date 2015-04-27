@@ -8,21 +8,21 @@ import scala.util.{Failure, Success}
 
 object UnitTests extends TestSuite{
   def checkNeg[T](input: String) = {
-    println("Checking...\n" + input)
+    println("Checking...\n" )
     Scala.CompilationUnit.parse(input, 0) match{
       case _: Res.Failure => () // yay
       case Res.Success(parsed, index) => assert(index != input.length)
     }
   }
   def check[T](input: String, tag: String = "") = {
-    println("Checking...\n" + input)
+    println("Checking...\n" )
     import Scala._
     val res = Scala.CompilationUnit.parse(input, 0)
     res match{
       case f: Res.Failure =>
 //        println(f.formatExpectedAsString)
 //        println(f.formatTraces)
-        throw new Exception(s"Failure\n" + input + "\n" + f.ps.map(x => x._1 + ":\t" + x._2).mkString("\n"))
+        throw new Exception(s"Failure\n" + input + "\n" + f.ps.length + "\n" + f.ps.map(x => x._1 + ":\t" + x._2).mkString("\n"))
       case s: Res.Success[_] =>
 //        println(parsed)
         val inputLength = input.length
@@ -32,13 +32,19 @@ object UnitTests extends TestSuite{
   println("running")
   def tests = TestSuite{
     'perf{
+      // Parboiled parser runs ~492 times in 30 seconds
+      // Our combinators seem to run ~14 times in 30 seconds
       val input = scala.io.Source.fromFile(
         "scala-js/compiler/src/main/scala/org/scalajs/core/compiler/GenJSCode.scala"
       ).mkString
       println("Loaded " + input.length + " bytes of input. Parsing...")
-      for(i <- 0 until 5){
+      val start = System.currentTimeMillis()
+      var count = 0
+      while(System.currentTimeMillis() - start < 30000){
         Scala.CompilationUnit.parse(input, 0)
+        count += 1
       }
+      println(count)
     }
     'pos {
       * - check("package torimatomeru")

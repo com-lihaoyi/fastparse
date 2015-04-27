@@ -1,5 +1,6 @@
 package scalaParser
 import acyclic.file
+import parsing.Parsing.Parser.Pass
 import language.implicitConversions
 import syntax._
 import parsing.Parsing._
@@ -37,10 +38,10 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
     val ClsArgMod = rule( (Mod.rep ~ (`val` | `var`)).? )
     val ClsArg = rule( Annot.rep ~ ClsArgMod ~ Id ~ `:` ~ ParamType ~ (`=` ~ ExprCtx.Expr).? )
 
-    val Implicit = rule( OneNLMax ~ '(' ~ `implicit` ~ ClsArg.+(",") ~ ")" )
+    val Implicit = rule( OneNLMax ~ '(' ~! `implicit` ~ ClsArg.rep1(",") ~ ")" )
     val ClsArgs = rule( OneNLMax ~'(' ~ ClsArg.rep(',') ~ ")" )
     val AllArgs = rule( ClsArgs.rep1 ~ Implicit.? | Implicit )
-    rule( `case`.? ~ `class` ~ Id ~ TypeArgList.? ~ Prelude.? ~ AllArgs.? ~ ClsTmplOpt )
+    rule( `case`.? ~ `class` ~! Id ~ TypeArgList.? ~ Prelude.? ~ AllArgs.? ~ ClsTmplOpt )
   }
   val TraitDef = {
     val TraitTmplOpt = {
@@ -52,7 +53,7 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
   }
 
   val ObjDef: R0 = rule( `case`.? ~ `object` ~ Id ~ ClsTmplOpt )
-  val ClsTmplOpt: R0 = rule( `extends` ~ ClsTmpl | (`extends`.? ~ TmplBody).? )
+  val ClsTmplOpt: R0 = rule( `extends` ~ ClsTmpl ~ Pass | (`extends`.? ~ TmplBody).? ~ Pass )
 
   val ClsTmpl: R0 = {
     val Constr = rule( AnnotType ~ (NotNewline ~ ArgList).rep )

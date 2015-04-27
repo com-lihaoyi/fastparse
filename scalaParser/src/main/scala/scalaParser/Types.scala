@@ -71,7 +71,7 @@ trait Types extends Core{
 
   val TypeArgList: R0 = {
     val Variant: R0 = rule( Annot.rep ~ (WL ~ ("+" | "-")).? ~ TypeArg )
-    rule( '[' ~ Variant.rep(',') ~ ']' )
+    rule( '[' ~! Variant.rep(',') ~ ']' )
   }
   val Exprs: R0 = rule( TypeExpr.rep1(',') )
   val TypeDef: R0 = rule( `type` ~ Id ~ TypeArgList.? ~ `=` ~ Type )

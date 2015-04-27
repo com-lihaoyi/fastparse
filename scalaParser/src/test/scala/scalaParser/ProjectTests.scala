@@ -27,9 +27,9 @@ object ProjectTests extends TestSuite{
         checkFile(f)
       }
     }
-    'test - checkFile("src/test/resources/test.scala")
+    'test - checkFile("scalaParser/src/test/resources/test.scala")
 
-    'scalaParser - checkDir("src")
+    'scalaParser - checkDir("scalaParser/src")
     'scalaJs - checkDir("scala-js")
     'scalaz - checkDir("scalaz")
     'shapeless - checkDir("shapeless")

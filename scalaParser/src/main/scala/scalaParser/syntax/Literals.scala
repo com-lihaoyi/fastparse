@@ -23,7 +23,7 @@ trait Literals {
 
     val MultilineComment: Rule0 = rule( "/*" ~ (MultilineComment | !"*/" ~ Parser.AnyChar).rep ~ "*/" )
     val Comment: Rule0 = rule(
-      MultilineComment | "//" ~ (!Basic.Newline ~ Parser.AnyChar).rep ~ &(Basic.Newline)
+      MultilineComment | "//" ~ (!Basic.Newline ~ Parser.AnyChar).rep ~ &(Basic.Newline | Parser.End)
     )
     val Null = Key.W("null")
     val Literal = rule( ("-".? ~ (Float | Int)) | Bool | Char | String | Symbol | Null )
