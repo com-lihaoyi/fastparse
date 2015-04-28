@@ -4,7 +4,7 @@ import acyclic.file
 import scala.language.implicitConversions
 import syntax.Basic._
 import scalaParser.syntax.{Key, Basic, Identifiers}
-import parsing.Parsing._
+import parsing._
 trait Core extends syntax.Literals{
   // Aliases for common things. These things are used in almost every parser
   // in the file, so it makes sense to keep them short.
@@ -28,7 +28,7 @@ trait Core extends syntax.Literals{
    * capture all whitespace immediately before the token.
    */
   private implicit def wspStr(s: String) = WL ~ s
-  private implicit def wspCh(s: Char) = WL ~ s
+
   /**
    * Most keywords don't just require the correct characters to match,
    * they have to ensure that subsequent characters *don't* match in
@@ -91,9 +91,9 @@ trait Core extends syntax.Literals{
 
   // kinda-sorta keywords that are common patterns even if not
   // really-truly keywords
-  val `_*` = rule( `_` ~ '*' )
-  val `}` = rule( Semis.? ~ '}' )
-  val `{` = rule( '{' ~ Semis.? )
+  val `_*` = rule( `_` ~ "*" )
+  val `}` = rule( Semis.? ~ "}" )
+  val `{` = rule( "{" ~ Semis.? )
   /**
    * helper printing function
    */
@@ -105,8 +105,8 @@ trait Core extends syntax.Literals{
   val Semis = rule( Semi.rep1 )
   val Newline = rule( WL ~ Basic.Newline )
 
-  val QualId = rule( WL ~ Id.rep1('.') )
-  val Ids = rule( Id.rep1(',') )
+  val QualId = rule( WL ~ Id.rep1(".") )
+  val Ids = rule( Id.rep1(",") )
 
   val NotNewline: R0 = rule( &( WS ~ !Basic.Newline ) )
   val OneNLMax: R0 = {
@@ -115,9 +115,9 @@ trait Core extends syntax.Literals{
     rule( WS ~ Basic.Newline.? ~ ConsumeComments ~ NotNewline )
   }
   val StableId: R0 = {
-    val ClassQualifier = rule( '[' ~ Id ~ ']' )
+    val ClassQualifier = rule( "[" ~ Id ~ "]" )
     val ThisSuper = rule( `this` | `super` ~ ClassQualifier.? )
-    rule( (Id ~ '.').rep ~ ThisSuper ~ ('.' ~ Id).rep | Id ~ ('.' ~ Id).rep )
+    rule( (Id ~ ".").rep ~ ThisSuper ~ ("." ~ Id).rep | Id ~ ("." ~ Id).rep )
   }
 
 }

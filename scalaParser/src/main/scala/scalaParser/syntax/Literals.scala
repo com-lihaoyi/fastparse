@@ -1,8 +1,7 @@
 package scalaParser
 package syntax
 import acyclic.file
-import parsing.Parsing.Parser.CharPred
-import parsing.Parsing._
+import parsing._
 import Basic._
 import Identifiers._
 
@@ -13,11 +12,11 @@ trait Literals {
     import Basic._
     val Float = {
       def Thing = rule( Digit.rep1 ~ Exp.? ~ FloatType.? )
-      def Thing2 = rule( '.' ~ Thing | Exp ~ FloatType.? | Exp.? ~ FloatType )
-      rule( '.' ~ Thing | Digit.rep1 ~ Thing2 )
+      def Thing2 = rule( "." ~ Thing | Exp ~ FloatType.? | Exp.? ~ FloatType )
+      rule( "." ~ Thing | Digit.rep1 ~ Thing2 )
     }
 
-    val Int = rule( (HexNum | DecNum) ~ Parser.CharIn("Ll").? )
+    val Int = rule( (HexNum | DecNum) ~ CharSets("Ll").? )
 
     val Bool = rule( Key.W("true") | Key.W("false")  )
 
@@ -26,19 +25,19 @@ trait Literals {
       MultilineComment | "//" ~ (!Basic.Newline ~ Parser.AnyChar).rep ~ &(Basic.Newline | Parser.End)
     )
     val Null = Key.W("null")
-    val Literal = rule( ('-'.? ~ (Float | Int)) | Bool | Char | String | Symbol | Null )
+    val Literal = rule( ("-".? ~ (Float | Int)) | Bool | Char | String | Symbol | Null )
 
-    val EscapedChars = rule( '\\' ~ Parser.CharIn("""btnfr'\"]"""))
+    val EscapedChars = rule( "\\" ~ CharSets("""btnfr'\"]"""))
 
     // Note that symbols can take on the same values as keywords!
-    val Symbol = rule( ''' ~ (Identifiers.PlainId | Identifiers.Keywords) )
+    val Symbol = rule( "'" ~ (Identifiers.PlainId | Identifiers.Keywords) )
 
     val Char = {
       // scalac 2.10 crashes if PrintableChar below is substituted by its body
       def PrintableChar = CharPred(isPrintableChar)
 
       rule {
-        "'" ~ (UnicodeEscape | EscapedChars | !'\\' ~ PrintableChar) ~ "'"
+        "'" ~ (UnicodeEscape | EscapedChars | !"\\" ~ PrintableChar) ~ "'"
       }
     }
 
@@ -49,14 +48,14 @@ trait Literals {
       import Identifiers.Id
       def InterpIf(allowInterp: Boolean) = rule( if(allowInterp) Interp else Parser.Fail )
       def TQ = rule( "\"\"\"" )
-      def TripleChars(allowInterp: Boolean) = rule( (InterpIf(allowInterp) | '"'.? ~ '"'.? ~ !'"' ~ Parser.AnyChar).rep )
-      def TripleTail = rule( TQ ~ '"'.rep )
-      def SingleChars(allowInterp: Boolean) = rule( (InterpIf(allowInterp) | "\\\"" | "\\\\" | !Parser.CharIn("\n\"") ~ Parser.AnyChar).rep )
+      def TripleChars(allowInterp: Boolean) = rule( (InterpIf(allowInterp) | "\"".? ~ "\"".? ~ !"\"" ~ Parser.AnyChar).rep )
+      def TripleTail = rule( TQ ~ "\"".rep )
+      def SingleChars(allowInterp: Boolean) = rule( (InterpIf(allowInterp) | "\\\"" | "\\\\" | !CharSets("\n\"") ~ Parser.AnyChar).rep )
       rule {
         (Id ~ TQ ~ TripleChars(allowInterp = true) ~ TripleTail) |
-        (Id ~ '"' ~ SingleChars(allowInterp = true) ~ '"') |
+        (Id ~ "\"" ~ SingleChars(allowInterp = true) ~ "\"") |
         (TQ ~ TripleChars(allowInterp = false) ~ TripleTail) |
-        ('"' ~ SingleChars(allowInterp = false) ~ '"')
+        ("\"" ~ SingleChars(allowInterp = false) ~ "\"")
       }
     }
 

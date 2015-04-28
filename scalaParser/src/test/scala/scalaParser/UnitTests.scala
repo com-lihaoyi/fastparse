@@ -1,7 +1,7 @@
 package scalaParser
 
 
-import parsing.Parsing._
+import parsing._
 import utest._
 
 import scala.util.{Failure, Success}

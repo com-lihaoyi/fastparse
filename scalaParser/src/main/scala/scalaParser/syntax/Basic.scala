@@ -1,22 +1,22 @@
 package scalaParser
 package syntax
 import acyclic.file
-import parsing.Parsing.Parser.CharPred
-import parsing.Parsing._
+
+import parsing._
 
 object Basic {
   val UnicodeEscape = rule( "\\u" ~ HexDigit ~ HexDigit ~ HexDigit ~ HexDigit )
 
   //Numbers and digits
-  val HexDigit = rule( Parser.CharIn("0123456789abcdefABCDEF") )
-  val Digit = rule( Parser.CharIn("0123456789") )
+  val HexDigit = rule( CharSets("0123456789abcdefABCDEF") )
+  val Digit = rule( CharSets("0123456789") )
   val HexNum = rule( "0x" ~ HexDigit.rep1 )
   val DecNum = rule(Digit.rep1)
-  val Exp = rule( Parser.CharIn("Ee") ~ Parser.CharIn("+-").? ~ Digit.rep1 )
-  val FloatType = rule( Parser.CharIn("fFdD") )
+  val Exp = rule( CharSets("Ee") ~ CharSets("+-").? ~ Digit.rep1 )
+  val FloatType = rule( CharSets("fFdD") )
 
-  val WSChar = rule( Parser.CharIn("\u0020\u0009") )(enclosingFunctionName)
-  val Newline = rule( Parser.Dispatcher("\r\n", "\n") )
+  val WSChar = rule( CharSets("\u0020\u0009") )(enclosingFunctionName)
+  val Newline = rule( Dispatcher("\r\n", "\n") )
   val Semi = rule( ";" | Newline.rep1 )
   val OpChar = {
     // scalac 2.10 crashes if OtherOrMathSymbol below is substituted by its body
@@ -25,7 +25,7 @@ object Basic {
       case Character.OTHER_SYMBOL | Character.MATH_SYMBOL => true; case _ => false
     })
 
-    rule { Parser.CharIn("!#%&*+-/:<=>?@\\^|~") | OtherOrMathSymbol }
+    rule { CharSets("!#%&*+-/:<=>?@\\^|~") | OtherOrMathSymbol }
   }
   val Letter = {
     val LetterDigit = CharPred(c => c.isLetter | c.isDigit)
@@ -33,11 +33,11 @@ object Basic {
   }
   val Lower = {
     val LowerChar = CharPred(_.isLower)
-    rule(Parser.CharIn("abcdefghijklmnopqrstuvwxyz$_") | LowerChar )
+    rule(CharSets("abcdefghijklmnopqrstuvwxyz$_") | LowerChar )
   }
   val Upper = {
     val UpperChar = CharPred(_.isUpper)
-    rule(Parser.CharIn("ABCDEFGHIJKLMNOPQRSTUCWXYZ") | UpperChar )
+    rule(CharSets("ABCDEFGHIJKLMNOPQRSTUCWXYZ") | UpperChar )
   }
 }
 /**
