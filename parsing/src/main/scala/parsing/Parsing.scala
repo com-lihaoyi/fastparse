@@ -3,9 +3,12 @@ package parsing
 
 
 import scala.annotation.tailrec
-import scala.collection.mutable
+import scala.collection.{BitSet, mutable}
 import acyclic.file
 
+/**
+ * Result of a parse, whether successful or failed
+ */
 sealed trait Res[+T]
 object Res{
   case class Success[T](t: T, index: Int) extends Res[T]{
@@ -302,6 +305,17 @@ object Parser{
     def parse(input: String, index: Int) = {
       if (index >= input.length) fail(input, index)
       else if (predicate(input(index))) Res.Success(input(index), index + 1)
+      else fail(input, index)
+    }
+  }
+  /**
+   * Parses a single character if it passes the predicate
+   */
+  case class CharSets(strings: Seq[Char]*) extends Parser[Char]{
+    private[this] val uberSet = BitSet(strings.flatten.map(_.toInt):_*)
+    def parse(input: String, index: Int) = {
+      if (index >= input.length) fail(input, index)
+      else if (uberSet(input(index))) Res.Success(input(index), index + 1)
       else fail(input, index)
     }
   }

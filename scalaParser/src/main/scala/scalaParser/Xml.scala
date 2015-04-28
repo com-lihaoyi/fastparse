@@ -7,7 +7,7 @@ import scala.language.implicitConversions
 import scalaParser.syntax.Basic
 
 trait Xml extends Core {
-  def Patterns: Rule0
+  def Patterns: Parser0
   val XmlExpr = rule( WL ~ Xml.XmlContent ~ (WL ~ Xml.Element).rep )
   val XmlPattern = rule( WL ~ Xml.ElemPattern )
 
@@ -74,7 +74,7 @@ trait Xml extends Core {
     val ETag = rule( "</" ~ Name ~ WL.? ~ ">" )
     val Content = rule( (CharData | Content1).rep )
     val Content1  = rule( XmlContent | Reference | ScalaExpr )
-    val XmlContent: Rule0 = rule( Element | CDSect | PI | Comment )
+    val XmlContent: Parser0 = rule( Element | CDSect | PI | Comment )
 
     val CDSect = rule( CDStart ~ CData ~ CDEnd )
     val CDStart = rule( "<![CDATA[" )
@@ -117,7 +117,7 @@ trait Xml extends Core {
     val NameChar = rule( NameStartChar | CharSets(
       "-", ".", '0' to '9', "\u00B7", '\u0300' to '\u036F', '\u203F' to '\u2040'
     ))
-    val ElemPattern: Rule0 = rule( EmptyElemTagP | STagP ~ ContentP ~ ETagP )
+    val ElemPattern: Parser0 = rule( EmptyElemTagP | STagP ~ ContentP ~ ETagP )
     val EmptyElemTagP = rule( "<" ~ Name ~ WL.? ~ "/>" )
     val STagP = rule( "<" ~ Name ~ WL.? ~ ">")
     val ETagP = rule( "</" ~ Name ~ WL.? ~ ">" )

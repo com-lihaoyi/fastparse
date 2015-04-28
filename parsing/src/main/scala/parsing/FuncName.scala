@@ -3,6 +3,11 @@ package parsing
 import scala.reflect.macros.blackbox.Context
 import acyclic.file
 import scala.language.experimental.macros
+
+/**
+ * Type, which when summoned implicitly, provides the
+ * name of the nearest enclosing method for your perusal
+ */
 case class FuncName(name: String)
 object FuncName{
   implicit def strToFuncName(s: String) = FuncName(s)

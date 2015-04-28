@@ -14,6 +14,7 @@ object UnitTests extends TestSuite{
       case Res.Success(parsed, index) => assert(index != input.length)
     }
   }
+
   def check[T](input: String, tag: String = "") = {
     println("Checking...\n" )
     import Scala._
