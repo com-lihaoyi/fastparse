@@ -10,19 +10,19 @@ trait Exprs extends Core with Types with Xml{
   def BlockDef: R0
 
   val Import: R0 = {
-    val Selector: R0 = rule( Id ~ (`=>` ~ (Id | `_`)).? )
-    val Selectors: R0 = rule( "{" ~ (Selector ~ ",").rep ~ (Selector | `_`) ~ "}" )
-    val ImportExpr: R0 = rule( StableId ~ ("." ~ (`_` | Selectors)).? )
-    rule( `import` ~ ImportExpr.rep1(",") )
+    val Selector: R0 = R( Id ~ (`=>` ~ (Id | `_`)).? )
+    val Selectors: R0 = R( "{" ~ (Selector ~ ",").rep ~ (Selector | `_`) ~ "}" )
+    val ImportExpr: R0 = R( StableId ~ ("." ~ (`_` | Selectors)).? )
+    R( `import` ~ ImportExpr.rep1(",") )
   }
 
-  val Ascription = rule( `:` ~ (`_*` |  Type | Annot.rep1) )
+  val Ascription = R( `:` ~ (`_*` |  Type | Annot.rep1) )
 
   val LambdaHead: R0 = {
-    val Binding = rule( (Id | `_`) ~ (`:` ~ Type).? )
-    val Bindings = rule( "(" ~ Binding.rep(",") ~ ")" )
-    val Implicit = rule( `implicit`.? ~ Id ~ (`:` ~ InfixType).? )
-    rule( (Bindings | Implicit | `_` ~ Ascription.?) ~ `=>` )
+    val Binding = R( (Id | `_`) ~ (`:` ~ Type).? )
+    val Bindings = R( "(" ~ Binding.rep(",") ~ ")" )
+    val Implicit = R( `implicit`.? ~ Id ~ (`:` ~ InfixType).? )
+    R( (Bindings | Implicit | `_` ~ Ascription.?) ~ `=>` )
   }
   object StatCtx extends WsCtx(true)
   object ExprCtx extends WsCtx(false)
@@ -33,95 +33,95 @@ trait Exprs extends Core with Types with Xml{
     val NoSemis = if (injectSemicolons) NotNewline else Parser.Pass
 
     val Enumerators = {
-      val Generator = rule( Pat1 ~ `<-` ~ Expr ~ Guard.? )
-      val Assign = rule( Pat1 ~ `=` ~ Expr )
-      val Enumerator = rule( Semis ~ Generator | Semis.? ~ Guard | Semis ~ Assign )
-      rule( Generator ~ Enumerator.rep ~ WL )
+      val Generator = R( Pat1 ~ `<-` ~ Expr ~ Guard.? )
+      val Assign = R( Pat1 ~ `=` ~ Expr )
+      val Enumerator = R( Semis ~ Generator | Semis.? ~ Guard | Semis ~ Assign )
+      R( Generator ~ Enumerator.rep ~ WL )
     }
 
     val Expr: R0 = {
       val If = {
-        val Else = rule( Semi.? ~ `else` ~ Expr )
-        rule( `if` ~ "(" ~ ExprCtx.Expr ~ ")" ~ Expr ~ Else.? )
+        val Else = R( Semi.? ~ `else` ~ Expr )
+        R( `if` ~ "(" ~ ExprCtx.Expr ~ ")" ~ Expr ~ Else.? )
       }
-      val While = rule( `while` ~ "(" ~ Expr ~ ")" ~ Expr )
+      val While = R( `while` ~ "(" ~ Expr ~ ")" ~ Expr )
       val Try = {
-        val Catch = rule( `catch` ~ Expr )
-        val Finally = rule( `finally` ~ Expr )
-        rule( `try` ~ Expr ~ Catch.? ~ Finally.? )
+        val Catch = R( `catch` ~ Expr )
+        val Finally = R( `finally` ~ Expr )
+        R( `try` ~ Expr ~ Catch.? ~ Finally.? )
       }
-      val DoWhile = rule( `do` ~ Expr ~ Semi.? ~ `while` ~ "(" ~ Expr ~ ")" )
+      val DoWhile = R( `do` ~ Expr ~ Semi.? ~ `while` ~ "(" ~ Expr ~ ")" )
 
       val For = {
-        val Body = rule( "(" ~ ExprCtx.Enumerators ~ ")" | "{" ~ StatCtx.Enumerators ~ "}" )
-        rule( `for` ~ Body ~ `yield`.? ~ Expr )
+        val Body = R( "(" ~ ExprCtx.Enumerators ~ ")" | "{" ~ StatCtx.Enumerators ~ "}" )
+        R( `for` ~ Body ~ `yield`.? ~ Expr )
       }
-      val Throw = rule( `throw` ~ Expr )
-      val Return = rule( `return` ~ Expr.? )
+      val Throw = R( `throw` ~ Expr )
+      val Return = R( `return` ~ Expr.? )
 
-      val SmallerExpr = rule( PostfixExpr ~ (`match` ~ "{" ~ CaseClauses ~ "}" | Ascription).? )
-      val LambdaBody = rule( If | While | Try | DoWhile | For | Throw | Return | SmallerExpr )
-      rule( LambdaHead.rep ~ LambdaBody )
+      val SmallerExpr = R( PostfixExpr ~ (`match` ~ "{" ~ CaseClauses ~ "}" | Ascription).? )
+      val LambdaBody = R( If | While | Try | DoWhile | For | Throw | Return | SmallerExpr )
+      R( LambdaHead.rep ~ LambdaBody )
     }
 
     val PostfixExpr: R0 = {
-      val Prefixed = rule( (WL ~ CharSets("-+~!") ~ WS ~ !syntax.Basic.OpChar) ~  SimpleExpr )
-      val PrefixExpr = rule( Prefixed | SimpleExpr )
-      val InfixExpr = rule( PrefixExpr ~ (NoSemis ~ Id ~ TypeArgs.? ~ OneSemiMax ~ PrefixExpr).rep)
-      rule( InfixExpr ~ (NotNewline ~ Id ~ Newline.?).? ~ (`=` ~ Expr).?)
+      val Prefixed = R( (WL ~ CharSets("-+~!") ~ WS ~ !syntax.Basic.OpChar) ~  SimpleExpr )
+      val PrefixExpr = R( Prefixed | SimpleExpr )
+      val InfixExpr = R( PrefixExpr ~ (NoSemis ~ Id ~ TypeArgs.? ~ OneSemiMax ~ PrefixExpr).rep)
+      R( InfixExpr ~ (NotNewline ~ Id ~ Newline.?).? ~ (`=` ~ Expr).?)
     }
 
     val SimpleExpr: R0 = {
-      val Path = rule( (Id ~ ".").rep ~ `this` ~ ("." ~ Id).rep | StableId )
-      val New = rule( `new` ~ NewBody )
-      val Parened = rule ( "(" ~ Exprs.? ~ ")"  )
-      val SimpleExpr1 = rule( XmlExpr | New | BlockExpr | Literal | Path | `_` | Parened)
-      rule( SimpleExpr1 ~ ("." ~ Id | TypeArgs | NoSemis ~ ArgList).rep ~ (NoSemis  ~ `_`).?)
+      val Path = R( (Id ~ ".").rep ~ `this` ~ ("." ~ Id).rep | StableId )
+      val New = R( `new` ~ NewBody )
+      val Parened = R ( "(" ~ Exprs.? ~ ")"  )
+      val SimpleExpr1 = R( XmlExpr | New | BlockExpr | Literal | Path | `_` | Parened)
+      R( SimpleExpr1 ~ ("." ~ Id | TypeArgs | NoSemis ~ ArgList).rep ~ (NoSemis  ~ `_`).?)
     }
-    val Guard : R0 = rule( `if` ~ PostfixExpr )
+    val Guard : R0 = R( `if` ~ PostfixExpr )
   }
   val SimplePat: R0 = {
-    val ExtractorArgs = rule( Pat.rep(",") )
-    val Extractor = rule( StableId ~ ("(" ~ ExtractorArgs ~ ")").? )
-    val TupleEx = rule( "(" ~ ExtractorArgs.? ~ ")" )
-    val Thingy = rule( `_` ~ (`:` ~ TypePat).? ~ !"*" )
-    rule( XmlPattern | Thingy | Literal | TupleEx | Extractor | VarId)
+    val ExtractorArgs = R( Pat.rep(",") )
+    val Extractor = R( StableId ~ ("(" ~ ExtractorArgs ~ ")").? )
+    val TupleEx = R( "(" ~ ExtractorArgs.? ~ ")" )
+    val Thingy = R( `_` ~ (`:` ~ TypePat).? ~ !"*" )
+    R( XmlPattern | Thingy | Literal | TupleEx | Extractor | VarId)
   }
 
-  val BlockExpr: R0 = rule( "{" ~ (CaseClauses | Block) ~ `}` )
+  val BlockExpr: R0 = R( "{" ~ (CaseClauses | Block) ~ `}` )
 
   val BlockStats: R0 = {
-    val Prelude = rule( Annot.rep ~ `implicit`.? ~ `lazy`.? ~ LocalMod.rep )
-    val Tmpl = rule( Prelude ~ BlockDef )
-    val BlockStat = rule( Import | Tmpl | StatCtx.Expr )
-    rule( BlockStat.rep1(Semis) )
+    val Prelude = R( Annot.rep ~ `implicit`.? ~ `lazy`.? ~ LocalMod.rep )
+    val Tmpl = R( Prelude ~ BlockDef )
+    val BlockStat = R( Import | Tmpl | StatCtx.Expr )
+    R( BlockStat.rep1(Semis) )
   }
 
   val Block: R0 = {
-    val End = rule( Semis.? ~ &("}" | `case`) )
-    val ResultExpr = rule{ StatCtx.Expr | LambdaHead ~ Block}
-    val Body = rule(
+    val End = R( Semis.? ~ &("}" | `case`) )
+    val ResultExpr = R{ StatCtx.Expr | LambdaHead ~ Block}
+    val Body = R(
       ResultExpr ~ End |
       BlockStats ~ (Semis ~ ResultExpr).? ~ End |
       End
     )
-    rule( LambdaHead.rep ~ Semis.? ~ Body )
+    R( LambdaHead.rep ~ Semis.? ~ Body )
   }
 
-  val Patterns: R0 = rule( Pat.rep1(",") )
-  val Pat: R0 = rule( Pat1.rep1("|") )
-  val Pat1: R0 = rule( `_` ~ `:` ~ TypePat | VarId ~ `:` ~ TypePat | Pat2 )
+  val Patterns: R0 = R( Pat.rep1(",") )
+  val Pat: R0 = R( Pat1.rep1("|") )
+  val Pat1: R0 = R( `_` ~ `:` ~ TypePat | VarId ~ `:` ~ TypePat | Pat2 )
   val Pat2: R0 = {
-    val Pat3 = rule( `_*` | SimplePat ~ (Id ~ SimplePat).rep )
-    rule( (VarId | `_`) ~ `@` ~ Pat3 | Pat3 | VarId )
+    val Pat3 = R( `_*` | SimplePat ~ (Id ~ SimplePat).rep )
+    R( (VarId | `_`) ~ `@` ~ Pat3 | Pat3 | VarId )
   }
 
-  val TypePat = rule( CompoundType )
+  val TypePat = R( CompoundType )
 
-  val ArgList: R0 = rule( "(" ~ (Exprs ~ (`:` ~ `_*`).?).? ~ ")" | OneNLMax ~ BlockExpr )
+  val ArgList: R0 = R( "(" ~ (Exprs ~ (`:` ~ `_*`).?).? ~ ")" | OneNLMax ~ BlockExpr )
 
   val CaseClauses: R0 = {
-    val CaseClause: R0 = rule( `case` ~ Pat ~ ExprCtx.Guard.? ~ `=>` ~ Block )
-    rule( CaseClause.rep1 )
+    val CaseClause: R0 = R( `case` ~ Pat ~ ExprCtx.Guard.? ~ `=>` ~ Block )
+    R( CaseClause.rep1 )
   }
 }

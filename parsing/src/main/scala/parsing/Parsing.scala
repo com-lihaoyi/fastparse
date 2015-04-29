@@ -37,19 +37,19 @@ sealed trait Parser[+T]{
   /**
    * Repeats this parser 0 or more times
    */
-  def rep = Parser.Repeat(this, 0, Parser.Pass)
+  def rep[R](implicit ev: Implicits.Repeater[T, R]): Parser[R] = Parser.Repeat(this, 0, Parser.Pass)
   /**
    * Repeats this parser 1 or more times
    */
-  def rep1 = Parser.Repeat(this, 1, Parser.Pass)
+  def rep1[R](implicit ev: Implicits.Repeater[T, R]): Parser[R] = Parser.Repeat(this, 1, Parser.Pass)
   /**
    * Repeats this parser 0 or more times, with a delimiter
    */
-  def rep(delimiter: Parser[_]): Parser[Seq[T]] = Parser.Repeat(this, 0, delimiter)
+  def rep[R](delimiter: Parser[_])(implicit ev: Implicits.Repeater[T, R]): Parser[R] = Parser.Repeat(this, 0, delimiter)
   /**
    * Repeats this parser 1 or more times, with a delimiter
    */
-  def rep1(delimiter: Parser[_]): Parser[Seq[T]] = Parser.Repeat(this, 1, delimiter)
+  def rep1[R](delimiter: Parser[_])(implicit ev: Implicits.Repeater[T, R]): Parser[R] = Parser.Repeat(this, 1, delimiter)
 
   /**
    * Parses using this or the parser `p`
@@ -59,23 +59,25 @@ sealed trait Parser[+T]{
   /**
    * Parses using this followed by the parser `p`
    */
-  def ~[V](p: Parser[V]) = Parser.Sequence(this, p, false)
-  def ~![V](p: Parser[V]) = Parser.Sequence(this, p, true)
+  def ~[V, R](p: Parser[V])(implicit ev: Implicits.Sequencer[T, V, R]): Parser[R] = Parser.Sequence(this, p, cut=false)
+  def ~![V, R](p: Parser[V])(implicit ev: Implicits.Sequencer[T, V, R]): Parser[R] = Parser.Sequence(this, p, cut=true)
 
   /**
    * Parses this, optionally
    */
-  def ? = Parser.Optional(this)
+  def ?[R](implicit ev: Implicits.Optioner[T, R]) = Parser.Optional(this)
 
   /**
    * Wraps this in a [[Parser.Not]] for negative lookaheal
    */
   def unary_! = Parser.Not(this)
 
+  def ! = Parser.Capturing(this)
+
   protected def fail(input: String, index: Int) =
     Failure(input, (index -> this) :: Nil, fatal=false)
-  protected def failMore(f: Failure, index: Int) =
-    Failure(f.input, (index -> this) :: f.ps, fatal=f.fatal)
+  protected def failMore(f: Failure, index: Int, newFatal: Boolean = false) =
+    Failure(f.input, (index -> this) :: f.ps, fatal=f.fatal || newFatal)
 }
 
 object Parser{
@@ -94,6 +96,14 @@ object Parser{
     def parse(input: String, index: Int) = fail(input, index)
   }
 
+  case class Capturing(p: Parser[_]) extends Parser[String]{
+    def parse(input: String, index: Int) = {
+      p.parse(input, index) match {
+        case Success(t, i) => Success(input.substring(index, i), i)
+        case f: Failure => f
+      }
+    }
+  }
   /**
    * Succeeds, consuming a single character
    */
@@ -126,7 +136,7 @@ object Parser{
   /**
    * Parses a literal `String`
    */
-  case class Literal(s: String) extends Parser[String]{
+  case class Literal(s: String) extends Parser[Unit]{
     def parse(input: String, index: Int) = {
       if (input.startsWith(s, index)) Res.Success(s, index + s.length)
       else fail(input, index)
@@ -137,7 +147,7 @@ object Parser{
   /**
    * Parses a single character
    */
-  case class CharLiteral(c: Char) extends Parser[String]{
+  case class CharLiteral(c: Char) extends Parser[Unit]{
     def parse(input: String, index: Int) = {
       if (index >= input.length) fail(input, index)
       else if (input(index) == c) Res.Success(c.toString, index + 1)
@@ -214,13 +224,14 @@ object Parser{
    * Wraps a parser and succeeds with `Some` if [[p]] succeeds,
    * and succeeds with `None` if [[p]] fails.
    */
-  case class Optional[+T](p: Parser[T]) extends Parser[Option[T]]{
+    case class Optional[+T, R](p: Parser[T])
+                              (implicit ev: Implicits.Optioner[T, R]) extends Parser[R]{
 
     def parse(input: String, index: Int) = {
       p.parse(input, index) match{
-        case Success(t, index) => Success(Some(t), index)
+        case Success(t, index) => Success(ev(Some(t)), index)
         case f: Failure if f.fatal => failMore(f, index)
-        case _ => Success(None, index)
+        case _ => Success(ev(None), index)
       }
     }
     override def toString = s"$p.?"
@@ -230,13 +241,14 @@ object Parser{
    * Parsers two things in a row, returning a tuple of the two
    * results if both things succeed
    */
-  case class Sequence[+T1, +T2](p1: Parser[T1], p2: Parser[T2], cut: Boolean) extends Parser[(T1, T2)]{
+  case class Sequence[+T1, +T2, R](p1: Parser[T1], p2: Parser[T2], cut: Boolean)
+                                  (implicit ev: Implicits.Sequencer[T1, T2, R]) extends Parser[R]{
     def parse(input: String, index: Int) = {
       p1.parse(input, index) match{
-        case f: Failure => failMore(f, index)
+        case f: Failure => failMore(f, index, newFatal = cut)
         case s1: Success[_] => p2.parse(input, s1.index) match{
-          case f: Failure => failMore(f, index)
-          case s2: Success[_] => Success((s1.t, s2.t), s2.index)
+          case f: Failure => failMore(f, index, newFatal = cut)
+          case s2: Success[_] => Success(ev(s1.t, s2.t), s2.index)
         }
       }
     }
@@ -251,18 +263,19 @@ object Parser{
    * if there are more than [[min]] successful parses. uses the [[delimiter]]
    * between parses and discards its results
    */
-  case class Repeat[+T](p: Parser[T], min: Int, delimiter: Parser[_]) extends Parser[Seq[T]]{
+  case class Repeat[T, +R](p: Parser[T], min: Int, delimiter: Parser[_])
+                          (implicit ev: Implicits.Repeater[T, R]) extends Parser[R]{
     def parse(input: String, index: Int) = {
       val res = mutable.Buffer.empty[T]
       var finalIndex = index
       var lastFailure: Failure = null
       @tailrec def rec(index: Int, del: Parser[_]): Unit = {
         del.parse(input, index) match{
-          case f: Failure if f.fatal => failMore(f, index)
+          case f: Failure if f.fatal => lastFailure = failMore(f, index)
           case f: Failure => lastFailure = f
           case Success(t, i) =>
             p.parse(input, i) match{
-              case f: Failure if f.fatal => failMore(f, index)
+              case f: Failure if f.fatal => lastFailure = failMore(f, index)
               case f: Failure => lastFailure = f
               case Success(t, i) =>
                 res.append(t)
@@ -272,7 +285,10 @@ object Parser{
         }
       }
       rec(index, Pass)
-      if (res.length >= min) Success(res, finalIndex)
+      if (lastFailure != null && lastFailure.fatal) {
+        failMore(lastFailure, index)
+      }
+      else if (res.length >= min) Success(ev(res.iterator), finalIndex)
       else fail(input, index)
     }
     override def toString = {
@@ -301,7 +317,7 @@ object Parser{
   /**
    * Parses a single character if it passes the predicate
    */
-  case class CharPred(predicate: Char => Boolean) extends Parser[Char]{
+  case class CharPred(predicate: Char => Boolean) extends Parser[Unit]{
     def parse(input: String, index: Int) = {
       if (index >= input.length) fail(input, index)
       else if (predicate(input(index))) Res.Success(input(index), index + 1)
@@ -311,7 +327,7 @@ object Parser{
   /**
    * Parses a single character if it passes the predicate
    */
-  case class CharSets(strings: Seq[Char]*) extends Parser[Char]{
+  case class CharSets(strings: Seq[Char]*) extends Parser[Unit]{
     private[this] val uberSet = BitSet(strings.flatten.map(_.toInt):_*)
     def parse(input: String, index: Int) = {
       if (index >= input.length) fail(input, index)
@@ -325,7 +341,7 @@ object Parser{
    * first converting it into a Trie and then walking it once.
    * If multiple strings match the input, longest match wins.
    */
-  case class CharTrie(strings: String*) extends Parser[String]{
+  case class CharTrie(strings: String*) extends Parser[Unit]{
     private[this ]case class Node(children: mutable.LongMap[Node] = mutable.LongMap.empty,
                                   var word: String = null)
     private[this] val bitSet = Node()
@@ -341,7 +357,7 @@ object Parser{
       current.word = string
     }
     def parse(input: String, index: Int) = {
-      @tailrec def rec(offset: Int, currentNode: Node, currentRes: Res[String]): Res[String] = {
+      @tailrec def rec(offset: Int, currentNode: Node, currentRes: Res[Unit]): Res[Unit] = {
         if (index + offset >= input.length) currentRes
         else {
           val char = input(index + offset)
@@ -351,7 +367,7 @@ object Parser{
             rec(
               offset + 1,
               next,
-              if (next.word != null) Success(next.word, index + offset + 1) else currentRes
+              if (next.word != null) Success((), index + offset + 1) else currentRes
             )
           }
         }
