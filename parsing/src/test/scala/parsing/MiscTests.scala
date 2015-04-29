@@ -3,6 +3,8 @@ package parsing
 import parsing.Parser.CharTrie
 import utest._
 
+import scala.collection.mutable
+
 object MiscTests extends TestSuite{
 
   val tests = TestSuite{
@@ -42,7 +44,7 @@ object MiscTests extends TestSuite{
         check("A".! ~ "ABC".!, """("A".! ~ "ABC".!)""")
       }
       'named{
-        def Foo = R( "A" )
+        val Foo = R( "A" )
         check(Foo, """Foo""")
         check(End, """End""")
         check(Start, """Start""")
@@ -56,6 +58,20 @@ object MiscTests extends TestSuite{
         )
         check(CharPred(_.isUpper), """CharPred(<function1>)""")
       }
+    }
+    'logging{
+      val logged = mutable.Buffer.empty[String]
+      val Foo = R( "A".log("A", logged +=) ~ "B".!.log("B", logged +=) ).log("AB", logged+=)
+      Foo.parse("AB")
+      val expected = Seq(
+        "+AB:0",
+        "  +A:0",
+        "  -A:0:Success((),1,false)",
+        "  +B:1",
+        "  -B:1:Success(B,2,false)",
+        "-AB:0:Success(B,2,false)"
+      )
+      assert(logged == expected)
     }
   }
 }

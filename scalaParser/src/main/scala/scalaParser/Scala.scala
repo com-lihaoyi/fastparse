@@ -37,10 +37,10 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
     val ClsArgMod = R( (Mod.rep ~ (`val` | `var`)).? )
     val ClsArg = R( Annot.rep ~ ClsArgMod ~ Id ~ `:` ~ ParamType ~ (`=` ~ ExprCtx.Expr).? )
 
-    val Implicit = R( OneNLMax ~ "(" ~! `implicit` ~ ClsArg.rep1(",") ~ ")" )
+    val Implicit = R( OneNLMax ~ "(" ~ `implicit` ~ ClsArg.rep1(",") ~ ")" )
     val ClsArgs = R( OneNLMax ~ "(" ~ ClsArg.rep(",") ~ ")" )
     val AllArgs = R( ClsArgs.rep1 ~ Implicit.? | Implicit )
-    R( `case`.? ~ `class` ~! Id ~ TypeArgList.? ~ Prelude.? ~ AllArgs.? ~ ClsTmplOpt )
+    R( `case`.? ~ `class` ~ Id ~ TypeArgList.? ~ Prelude.? ~ AllArgs.? ~ ClsTmplOpt )
   }
   val TraitDef = {
     val TraitTmplOpt = {
@@ -51,7 +51,7 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
     R( `trait` ~ Id ~ TypeArgList.? ~ TraitTmplOpt )
   }
 
-  val ObjDef: R0 = R( `case`.? ~ `object` ~! Id ~ ClsTmplOpt )
+  val ObjDef: R0 = R( `case`.? ~ `object` ~ Id ~ ClsTmplOpt )
   val ClsTmplOpt: R0 = R( `extends` ~ ClsTmpl ~ Pass | (`extends`.? ~ TmplBody).? ~ Pass )
 
   val ClsTmpl: R0 = {

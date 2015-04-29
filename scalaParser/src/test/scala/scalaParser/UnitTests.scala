@@ -23,7 +23,7 @@ object UnitTests extends TestSuite{
       case f: Result.Failure =>
 //        println(f.formatExpectedAsString)
 //        println(f.formatTraces)
-        throw new Exception(s"Failure\n" + input + "\n" + f.fullStack.length + "\n" + f.fullStack.map(x => x._1 + ":\t" + x._2).mkString("\n"))
+        throw new Exception(f.toString)
       case s: Result.Success[_] =>
 //        println(parsed)
         val inputLength = input.length

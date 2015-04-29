@@ -1,4 +1,6 @@
-class MyActor extends Actor {
+
+trait AbstractActor {
+
+  type Future[R] <: Int
 
 }
-//#exhaustiveness-check

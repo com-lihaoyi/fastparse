@@ -3,54 +3,50 @@ package parsing
 import scala.annotation.{switch, tailrec}
 import scala.collection.{BitSet, mutable}
 import acyclic.file
-
+import Utils._
 /**
  * Result of a parse, whether successful or failed
  */
 sealed trait Result[+T]
+
 object Result{
-  case class Success[T](t: T, index: Int, cut: Boolean = false) extends Result[T]{
-    override def toString = {
-      s"Success($index, $cut)"
-    }
-  }
 
   /**
-   * Convert a string to a C&P-able literal. Basically
-   * copied verbatim from the uPickle source code.
+   * @param value The result of this parse
+   * @param index The index where the parse completed; may be less than
+   *              the length of input
+   * @param cut Whether or not this parse encountered a Cut
    */
-  def literalize(s: String, unicode: Boolean = true) = {
-    val sb = new StringBuilder
-    sb.append('"')
-    var i = 0
-    val len = s.length
-    while (i < len) {
-      (s.charAt(i): @switch) match {
-        case '"' => sb.append("\\\"")
-        case '\\' => sb.append("\\\\")
-        case '\b' => sb.append("\\b")
-        case '\f' => sb.append("\\f")
-        case '\n' => sb.append("\\n")
-        case '\r' => sb.append("\\r")
-        case '\t' => sb.append("\\t")
-        case c =>
-          if (c < ' ' || (c > '~' && unicode)) sb.append("\\u%04x" format c.toInt)
-          else sb.append(c)
-      }
-      i += 1
-    }
-    sb.append('"')
+  case class Success[T](value: T, index: Int, cut: Boolean = false) extends Result[T]
 
-  }
+  /**
+   * @param input The input string for the failed parse. Useful so the [[Failure]]
+   *              object can pretty-print snippet
+   * @param fullStack The entire stack trace where the parse failed, containing every
+   *                  parser in the stack and the index where the parser was used
+   * @param cut Whether or not this parse encountered a Cut
+   */
   case class Failure(input: String, fullStack: List[(Int, Parser[_])], cut: Boolean) extends Result[Nothing]{
+    /**
+     * A slimmed down version of [[fullStack]], this only includes named
+     * [[Parser.Rule]] objects as well as the final Parser (whether named or not)
+     * for easier reading.
+     */
     def stack = fullStack.filter(_._2.isInstanceOf[Parser.Rule[_]]) :+ fullStack.last
 
+    /**
+     * A longer version of [[trace]], which shows more context for every stack frame
+     */
     def verboseTrace = {
       val body =
         for((index, p) <- stack)
           yield s"$index\t...${literalize(input.slice(index, index+5))}\t$p"
       body.mkString("\n")
     }
+
+    /**
+     * A one-line snippet that tells you what the state of the parser was when it failed
+     */
     def trace = {
       val body =
         for((index, p) <- stack)
@@ -62,21 +58,27 @@ object Result{
   }
 }
 import Result._
+
+/**
+ * A single, self-contained, immutable parser. The primary method is
+ * `parse`, which returns a [[T]] on success and a stack trace on failure.
+ */
 sealed trait Parser[+T]{
-  /**
-   * Wraps this in a [[Parser.Logged]]
-   */
-  def log(msg: String) = Parser.Logged(this, msg)
 
   /**
-   * Parses the given `input` starting from the given `index`
+    * Parses the given `input` starting from the given `index`
    */
   def parse(input: String, index: Int = 0): Result[T] = parseRecursive(input, index, 0)
   /**
-   * Parses the given `input` starting from the given `index` and `logDepth`
+    * Parses the given `input` starting from the given `index` and `logDepth`
    */
   def parseRecursive(input: String, index: Int, logDepth: Int): Result[T]
 
+  /**
+   * Wraps this in a [[Parser.Logged]]. This prints out information where a parser
+   * was tried and its result, which is useful for debugging
+   */
+  def log(msg: String, output: String => Unit = println) = Parser.Logged(this, msg, output)
   /**
    * Repeats this parser 0 or more times
    */
@@ -140,10 +142,14 @@ sealed trait Parser[+T]{
 }
 
 object Parser{
+
+  /**
+   * Applies a transformation [[f]] to the result of [[p]]
+   */
   case class Mapper[T, V](p: Parser[T], f: T => V) extends Parser[V]{
     def parseRecursive(input: String, index: Int, logDepth: Int) = {
       p.parseRecursive(input, index, logDepth) match{
-        case s: Success[T] => Success(f(s.t), s.index, s.cut)
+        case s: Success[T] => Success(f(s.value), s.index, s.cut)
         case f: Failure => failMore(f, index)
       }
     }
@@ -162,6 +168,9 @@ object Parser{
     def parseRecursive(input: String, index: Int, logDepth: Int) = fail(input, index)
   }
 
+  /**
+   * Captures the string parsed by the given parser [[p]].
+   */
   case class Capturing(p: Parser[_]) extends Parser[String]{
     def parseRecursive(input: String, index: Int, logDepth: Int) = {
       p.parseRecursive(input, index, logDepth) match {
@@ -224,27 +233,25 @@ object Parser{
   }
 
 
-  var logNesting = 0
-
   /**
    * Wraps a parser and prints out the indices where it starts
    * and ends, together with its result
    */
-  case class Logged[+T](p: Parser[T], msg: String) extends Parser[T]{
+  case class Logged[+T](p: Parser[T], msg: String, output: String => Unit) extends Parser[T]{
     def parseRecursive(input: String, index: Int, logDepth: Int) = {
-      val indent = "  " * logNesting
-      println(indent + "+" + msg + ":" + index)
-      logNesting += 1
+      val indent = "  " * logDepth
+      output(indent + "+" + msg + ":" + index)
       val res = p.parseRecursive(input, index, logDepth + 1)
-      logNesting -= 1
-      println(indent + "-" + msg + ":" + index + ":" + res)
+      output(indent + "-" + msg + ":" + index + ":" + res)
       res
     }
   }
 
 
   /**
-   * A top-level, named parser.
+   * A top-level, named parser. Lazily evaluates the wrapped parser
+   * [[p]] only when `parse` is called to allow for circular
+   * dependencies between parsers.
    */
   case class Rule[+T](name: String, p: () => Parser[T]) extends Parser[T]{
     lazy val pCached = p()
@@ -316,7 +323,7 @@ object Parser{
         case s1: Success[_] =>
           p2.parseRecursive(input, s1.index, logDepth) match{
           case f: Failure => failMore(f, index, cut = cut || f.cut || s1.cut)
-          case s2: Success[_] => Success(ev(s1.t, s2.t), s2.index, s2.cut || s1.cut | cut)
+          case s2: Success[_] => Success(ev(s1.value, s2.value), s2.index, s2.cut || s1.cut | cut)
         }
       }
     }

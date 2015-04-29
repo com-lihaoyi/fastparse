@@ -1,7 +1,8 @@
 package parsing
 
 /**
- * Created by haoyi on 4/28/15.
+ * Container for all the type-level logic around appending things
+ * to tuples or flattening `Seq[Unit]`s into `Unit`s
  */
 object Implicits {
   trait Sequencer[-T, V, R]{

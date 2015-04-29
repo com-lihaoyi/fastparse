@@ -2,6 +2,12 @@ package parsing
 
 
 import utest._
+
+/**
+ * A complete, self-contained JSON parser that parses the JSON
+ * but does not build an AST. Demonstrates the use of `~!` cuts
+ * to provide excellent error-reporting almost for free
+ */
 object JsonTests extends TestSuite{
   val space         = R( CharSets(" \n").rep1 )
   val digits        = R( CharSets('0' to '9').rep1 )
@@ -19,7 +25,7 @@ object JsonTests extends TestSuite{
   val array         = R( ("[" ~! jsonExpr) ~ ("," ~! jsonExpr).rep ~ space.? ~ "]")
   val pair          = R( string ~! ":" ~! jsonExpr )
   val obj           = R( "{" ~! pair ~ ("," ~! pair).rep ~ space.? ~ "}" )
-  val jsonExpr: Parser[_] = R(space.? ~ (obj | array | string | `true` | `false` | `null` | number) ~ space.?)
+  val jsonExpr: R0  = R(space.? ~ (obj | array | string | `true` | `false` | `null` | number) ~ space.?)
 
   val tests = TestSuite{
     'pass {
