@@ -13,7 +13,7 @@ sealed trait Res[+T]
 object Res{
   case class Success[T](t: T, index: Int, cut: Boolean = false) extends Res[T]{
     override def toString = {
-      s"Success($index)"
+      s"Success($index, $cut)"
     }
   }
 
@@ -50,7 +50,7 @@ object Res{
     def verboseTrace = {
       val body =
         for((index, p) <- stack)
-          yield s"$index\t...${literalize(input.substring(index, index+5))}\t$p"
+          yield s"$index\t...${literalize(input.slice(index, index+5))}\t$p"
       body.mkString("\n")
     }
     def trace = {
@@ -58,9 +58,9 @@ object Res{
         for((index, p) <- stack)
           yield s"$p:$index"
       val lastIndex = fullStack.last._1
-      body.mkString(" / ") + " ..." + literalize(input.substring(lastIndex, lastIndex+10))
+      body.mkString(" / ") + " ..." + literalize(input.slice(lastIndex, lastIndex+10))
     }
-    override def toString = s"Failure($trace)"
+    override def toString = s"Failure($trace, $cut)"
   }
 }
 import Res._
@@ -95,7 +95,7 @@ sealed trait Parser[+T]{
   /**
    * Parses using this or the parser `p`
    */
-  def |[T1 >: T, V <: T1](p: Parser[V]) = Parser.Either(this, p)
+  def |[V >: T](p: Parser[V]): Parser[V] = Parser.Either[V](this, p)
 
   /**
    * Parses using this followed by the parser `p`
@@ -115,6 +115,8 @@ sealed trait Parser[+T]{
 
   def ! = Parser.Capturing(this)
 
+  def map[V](f: T => V): Parser[V] = Parser.Mapper(this, f)
+
   protected def fail(input: String, index: Int) =
     Failure(input, (index -> this) :: Nil, cut=false)
   protected def failMore(f: Failure, index: Int, cut: Boolean = false) =
@@ -122,7 +124,17 @@ sealed trait Parser[+T]{
 }
 
 object Parser{
-
+  case class Mapper[T, V](p: Parser[T], f: T => V) extends Parser[V]{
+    def parse(input: String, index: Int) = {
+      p.parse(input, index) match{
+        case s: Success[T] =>
+          println("!!! "  + s.t)
+          println("??? "  + f(s.t))
+          Success(f(s.t), s.index, s.cut)
+        case f: Failure => failMore(f, index)
+      }
+    }
+  }
   /**
    * A parser that always succeeds, consuming no input
    */
@@ -287,7 +299,8 @@ object Parser{
     def parse(input: String, index: Int) = {
       p1.parse(input, index) match{
         case f: Failure => failMore(f, index, cut = f.cut)
-        case s1: Success[_] => p2.parse(input, s1.index) match{
+        case s1: Success[_] =>
+          p2.parse(input, s1.index) match{
           case f: Failure => failMore(f, index, cut = cut || f.cut || s1.cut)
           case s2: Success[_] => Success(ev(s1.t, s2.t), s2.index, s2.cut || s1.cut | cut)
         }
@@ -347,20 +360,21 @@ object Parser{
    * Parses using one parser or the other, if the first one fails. Returns 
    * the first one that succeeds and fails if both fail
    */
-  case class Either[+T, +V1 <: T, +V2 <: T](p1: Parser[V1], p2: Parser[V2]) extends Parser[T]{
+  case class Either[V](p1: Parser[V], p2: Parser[V]) extends Parser[V]{
     def parse(input: String, index: Int) = {
       p1.parse(input, index) match{
         case s: Success[_] => s
         case f: Failure if f.cut => failMore(f, index)
         case _ => p2.parse(input, index) match{
           case s: Success[_] => s
+          case f: Failure if f.cut => failMore(f, index)
           case f: Failure => fail(input, index)
         }
       }
     }
     override def toString = {
       def rec(p: Parser[_]): String = p match {
-        case p: Either[_, _, _] => rec(p.p1) + " | " + rec(p.p2)
+        case p: Either[_] => rec(p.p1) + " | " + rec(p.p2)
         case p => p.toString
       }
       "(" + rec(this) + ")"
@@ -386,6 +400,9 @@ object Parser{
       if (index >= input.length) fail(input, index)
       else if (uberSet(input(index))) Res.Success(input(index), index + 1)
       else fail(input, index)
+    }
+    override def toString = {
+      s"CharSets(${literalize(strings.flatten.mkString)})"
     }
   }
 
@@ -426,6 +443,9 @@ object Parser{
         }
       }
       rec(0, bitSet, fail(input, index))
+    }
+    override def toString = {
+      s"CharTrie(${strings.map(literalize(_)).mkString(",")})"
     }
   }
 

@@ -5,6 +5,8 @@ package object parsing {
 
   val Pass = Parser.Pass
   val Fail = Parser.Fail
+  val Start = Parser.Start
+  val End = Parser.End
   val CharPred = Parser.CharPred
   val CharSets = Parser.CharSets
   val Dispatcher = Parser.CharTrie

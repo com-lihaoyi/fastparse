@@ -16,7 +16,7 @@ object JsonTests extends TestSuite{
   val unicodeEscape = R( "u" ~ hexDigit ~ hexDigit ~ hexDigit ~ hexDigit )
   val escape        = R( "\\" ~ (CharSets("\"/\\bfnrt") | unicodeEscape) )
   val string        = R( space.? ~ "\"" ~ (!"\"" ~ AnyChar | escape).rep ~ "\"")
-  val array         = R( "[" ~! jsonExpr ~ ("," ~! jsonExpr).rep ~ space.? ~ "]")
+  val array         = R( ("[" ~! jsonExpr) ~ ("," ~! jsonExpr).rep ~ space.? ~ "]")
   val pair          = R( string ~! ":" ~! jsonExpr )
   val obj           = R( "{" ~! pair ~ ("," ~! pair).rep ~ space.? ~ "}" )
   val jsonExpr: Parser[_] = R(space.? ~ (obj | array | string | `true` | `false` | `null` | number) ~ space.?)
@@ -68,7 +68,7 @@ object JsonTests extends TestSuite{
             assert(error == expected)
         }
       }
-      check(
+      * - check(
         """
         }
             "firstName": "John",
@@ -96,7 +96,7 @@ object JsonTests extends TestSuite{
           jsonExpr:0 / (obj | array | string | true | false | null | number):9 ..."}\n        "
         """
       )
-      check(
+      * - check(
         """
         {
             firstName": "John",
@@ -124,7 +124,7 @@ object JsonTests extends TestSuite{
           jsonExpr:0 / obj:9 / pair:10 / string:10 / "\"":23 ..."firstName\""
         """
       )
-      check(
+      * - check(
         """
         {
             "firstName" "John",
@@ -152,7 +152,7 @@ object JsonTests extends TestSuite{
           jsonExpr:0 / obj:9 / pair:10 / ":":34 ..." \"John\",\n "
         """
       )
-      check(
+      * - check(
         """
         {
             "firstName": "John,
@@ -180,7 +180,7 @@ object JsonTests extends TestSuite{
           jsonExpr:0 / obj:9 / "}":56 ..."lastName\":"
         """
       )
-      check(
+      * - check(
         """
         {
             "firstName": "John",
@@ -208,7 +208,7 @@ object JsonTests extends TestSuite{
           jsonExpr:0 / obj:9 / "}":154 ...": \"21 2nd "
         """
       )
-      check(
+      * - check(
         """
         {
             "firstName": "John",
@@ -236,7 +236,35 @@ object JsonTests extends TestSuite{
           jsonExpr:0 / obj:9 / pair:438 / string:438 / "\"":455 ..."{\n        "
         """
       )
-      check(
+      * - check(
+        """
+        {
+            "firstName": "John",
+            "lastName": "Smith",
+            "age": 25,
+            "address": {
+                "streetAddress": "21 2nd Street",
+                "city": "New York",
+                "state": "NY",
+                "postalCode": 10021
+            },
+            "phoneNumbers":
+                {
+                    "type" "home",
+                    "number": "212 555-1234"
+                },
+                {
+                    "type": "fax",
+                    "number": "646 555-4567"
+                }
+            ]
+        }
+        """,
+        """
+          jsonExpr:0 / obj:9 / pair:292 / jsonExpr:320 / obj:337 / pair:338 / ":":365 ..." \"home\",\n "
+        """
+      )
+      * - check(
         """
         {
             "firstName": "John",
@@ -250,8 +278,8 @@ object JsonTests extends TestSuite{
             },
             "phoneNumbers": [
                 {
-                    "type" "home",
-                    "number": "212 555-1234"
+                    "type": "home",
+                    "number": 212 555-1234
                 },
                 {
                     "type": "fax",
@@ -261,7 +289,63 @@ object JsonTests extends TestSuite{
         }
         """,
         """
+          jsonExpr:0 / obj:9 / pair:292 / jsonExpr:320 / array:321 / jsonExpr:322 / obj:339 / "}":411 ..."555-1234\n "
+        """
+      )
+      * - check(
+        """
+        {
+            "firstName": "John",
+            "lastName": "Smith",
+            "age": 25,
+            "address": {
+                "streetAddress": "21 2nd Street",
+                "city": "New York",
+                "state": "NY",
+                "postalCode": 10021
+            },
+            "phoneNumbers": [
+                {
+                    "type": "home",
+                    "number": "212 555-1234"
+                },
+                {
+                    "type": "fax",
+                    "number": 646 555-4567
+                }
+            ]
+        }
+        """,
+        """
+          jsonExpr:0 / obj:9 / pair:292 / jsonExpr:320 / array:321 / jsonExpr:440 / obj:457 / "}":528 ..."555-4567\n "
+        """
+      )
+      * - check(
+        """
+        {
+            "firstName": "John",
+            "lastName": "Smith",
+            "age": 25,
+            "address": {
+                "streetAddress": "21 2nd Street",
+                "city": "New York",
+                "state": "NY",
+                "postalCode": 10021
+            },
+            "phoneNumbers": [
+                {
+                    "type": "home",
+                    "number": "212 555-1234"
+                },
+                {
+                    "type": "fax",
+                    "number": "646 555-4567"
+                }
 
+        }
+        """,
+        """
+          jsonExpr:0 / obj:9 / pair:292 / jsonExpr:320 / array:321 / "]":566 ..."}\n        "
         """
       )
     }
