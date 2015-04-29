@@ -15,7 +15,7 @@ object ParsingTests extends TestSuite{
   def checkFail[T](parser: Parser[T], input: (String, Int), expectedFailureIndex: Int) = {
     val (str, index) = input
     val parsed = parser.parse(str, index)
-    val failureIndex = parsed.asInstanceOf[Failure].ps.last._1
+    val failureIndex = parsed.asInstanceOf[Failure].fullStack.last._1
     assert({parser; str; failureIndex} == expectedFailureIndex)
   }
   val tests = TestSuite{

@@ -2,7 +2,7 @@ package parsing
 
 
 
-import scala.annotation.tailrec
+import scala.annotation.{switch, tailrec}
 import scala.collection.{BitSet, mutable}
 import acyclic.file
 
@@ -16,10 +16,51 @@ object Res{
       s"Success($index)"
     }
   }
-  case class Failure(input: String, ps: List[(Int, Parser[_])], cut: Boolean) extends Res[Nothing]{
-    override def toString = {
-      s"Failure\n" + ps.map(x => x._1 + "\t..." + input.slice(x._1, x._1 + 5) + ":\t" + x._2).mkString("\n")
+
+  /**
+   * Convert a string to a C&P-able literal. Basically
+   * copied verbatim from the uPickle source code.
+   */
+  def literalize(s: String, unicode: Boolean = true) = {
+    val sb = new StringBuilder
+    sb.append('"')
+    var i = 0
+    val len = s.length
+    while (i < len) {
+      (s.charAt(i): @switch) match {
+        case '"' => sb.append("\\\"")
+        case '\\' => sb.append("\\\\")
+        case '\b' => sb.append("\\b")
+        case '\f' => sb.append("\\f")
+        case '\n' => sb.append("\\n")
+        case '\r' => sb.append("\\r")
+        case '\t' => sb.append("\\t")
+        case c =>
+          if (c < ' ' || (c > '~' && unicode)) sb.append("\\u%04x" format c.toInt)
+          else sb.append(c)
+      }
+      i += 1
     }
+    sb.append('"')
+
+  }
+  case class Failure(input: String, fullStack: List[(Int, Parser[_])], cut: Boolean) extends Res[Nothing]{
+    def stack = fullStack.filter(_._2.isInstanceOf[Parser.Named[_]]) :+ fullStack.last
+
+    def verboseTrace = {
+      val body =
+        for((index, p) <- stack)
+          yield s"$index\t...${literalize(input.substring(index, index+5))}\t$p"
+      body.mkString("\n")
+    }
+    def trace = {
+      val body =
+        for((index, p) <- stack)
+          yield s"$p:$index"
+      val lastIndex = fullStack.last._1
+      body.mkString(" / ") + " ..." + literalize(input.substring(lastIndex, lastIndex+10))
+    }
+    override def toString = s"Failure($trace)"
   }
 }
 import Res._
@@ -77,7 +118,7 @@ sealed trait Parser[+T]{
   protected def fail(input: String, index: Int) =
     Failure(input, (index -> this) :: Nil, cut=false)
   protected def failMore(f: Failure, index: Int, cut: Boolean = false) =
-    Failure(f.input, (index -> this) :: f.ps, cut=f.cut || cut)
+    Failure(f.input, (index -> this) :: f.fullStack, cut=f.cut || cut)
 }
 
 object Parser{
@@ -141,7 +182,7 @@ object Parser{
       if (input.startsWith(s, index)) Res.Success(s, index + s.length)
       else fail(input, index)
     }
-    override def toString = '"' + s + '"'
+    override def toString = literalize(s).toString
   }
 
   /**
@@ -153,7 +194,7 @@ object Parser{
       else if (input(index) == c) Res.Success(c.toString, index + 1)
       else fail(input, index)
     }
-    override def toString = "'" + c + "'"
+    override def toString = literalize(c.toString).toString
   }
 
 
@@ -244,18 +285,23 @@ object Parser{
   case class Sequence[+T1, +T2, R](p1: Parser[T1], p2: Parser[T2], cut: Boolean)
                                   (implicit ev: Implicits.Sequencer[T1, T2, R]) extends Parser[R]{
     def parse(input: String, index: Int) = {
-
       p1.parse(input, index) match{
-        case f: Failure => failMore(f, index, cut = cut | f.cut)
+        case f: Failure => failMore(f, index, cut = f.cut)
         case s1: Success[_] => p2.parse(input, s1.index) match{
           case f: Failure => failMore(f, index, cut = cut || f.cut || s1.cut)
           case s2: Success[_] => Success(ev(s1.t, s2.t), s2.index, s2.cut || s1.cut | cut)
         }
       }
     }
+
     override def toString = {
-      val op = if(cut) "~!" else "~"
-      s"($p1 $op $p2)"
+      def rec(p: Parser[_]): String = p match {
+        case p: Sequence[_, _, _] =>
+          val op = if(cut) "~!" else "~"
+          rec(p.p1) + " " + op + " " + rec(p.p2)
+        case p => p.toString
+      }
+      "(" + rec(this) + ")"
     }
   }
 
@@ -312,7 +358,13 @@ object Parser{
         }
       }
     }
-    override def toString = s"($p1 | $p2)"
+    override def toString = {
+      def rec(p: Parser[_]): String = p match {
+        case p: Either[_, _, _] => rec(p.p1) + " | " + rec(p.p2)
+        case p => p.toString
+      }
+      "(" + rec(this) + ")"
+    }
   }
 
   /**
