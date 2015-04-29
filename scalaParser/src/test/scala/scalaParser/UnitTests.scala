@@ -15,6 +15,7 @@ object UnitTests extends TestSuite{
     }
   }
 
+
   def check[T](input: String, tag: String = "") = {
     println("Checking...\n" )
     import Scala._
@@ -42,7 +43,7 @@ object UnitTests extends TestSuite{
       val start = System.currentTimeMillis()
       var count = 0
       while(System.currentTimeMillis() - start < 30000){
-        Scala.CompilationUnit.parse(input)
+        Scala.CompilationUnit.parse(input, trace = true)
         count += 1
       }
       count
