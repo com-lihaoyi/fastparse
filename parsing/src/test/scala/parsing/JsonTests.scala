@@ -3,7 +3,7 @@ package parsing
 
 import utest._
 object JsonTests extends TestSuite{
-  val space         = R( " ".rep1 )
+  val space         = R( CharSets(" \n").rep1 )
   val digits        = R( CharSets('0' to '9').rep1 )
   val exponent      = R( CharSets("eE") ~ CharSets("+-").? ~ digits )
   val fractional    = R( "." ~ digits )
