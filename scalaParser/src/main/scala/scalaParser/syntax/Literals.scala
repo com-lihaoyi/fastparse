@@ -6,8 +6,8 @@ import Basic._
 import Identifiers._
 
 trait Literals {
-  def Block: Parser0
-  def WL: Parser0
+  def Block: R0
+  def WL: R0
   object Literals{
     import Basic._
     val Float = {
@@ -20,8 +20,8 @@ trait Literals {
 
     val Bool = R( Key.W("true") | Key.W("false")  )
 
-    val MultilineComment: Parser0 = R( "/*" ~ (MultilineComment | !"*/" ~ Parser.AnyChar).rep ~ "*/" )
-    val Comment: Parser0 = R(
+    val MultilineComment: R0 = R( "/*" ~ (MultilineComment | !"*/" ~ Parser.AnyChar).rep ~ "*/" )
+    val Comment: R0 = R(
       MultilineComment | "//" ~ (!Basic.Newline ~ Parser.AnyChar).rep ~ &(Basic.Newline | Parser.End)
     )
     val Null = Key.W("null")

@@ -5,7 +5,7 @@ package scalaParser
  */
 object Main {
   def main(args: Array[String]): Unit = {
-    println(syntax.Basic.Digit.parse("a", 0))
+    println(syntax.Basic.Digit.parse("a"))
   }
 }
 

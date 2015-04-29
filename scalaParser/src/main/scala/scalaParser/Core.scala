@@ -8,7 +8,7 @@ import parsing._
 trait Core extends syntax.Literals{
   // Aliases for common things. These things are used in almost every parser
   // in the file, so it makes sense to keep them short.
-  type R0 = Parser0
+
   /**
    * Parses all whitespace, excluding newlines. This is only
    * really useful in e.g. {} blocks, where we want to avoid

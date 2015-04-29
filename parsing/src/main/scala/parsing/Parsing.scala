@@ -1,7 +1,5 @@
 package parsing
 
-
-
 import scala.annotation.{switch, tailrec}
 import scala.collection.{BitSet, mutable}
 import acyclic.file
@@ -9,9 +7,9 @@ import acyclic.file
 /**
  * Result of a parse, whether successful or failed
  */
-sealed trait Res[+T]
-object Res{
-  case class Success[T](t: T, index: Int, cut: Boolean = false) extends Res[T]{
+sealed trait Result[+T]
+object Result{
+  case class Success[T](t: T, index: Int, cut: Boolean = false) extends Result[T]{
     override def toString = {
       s"Success($index, $cut)"
     }
@@ -44,8 +42,8 @@ object Res{
     sb.append('"')
 
   }
-  case class Failure(input: String, fullStack: List[(Int, Parser[_])], cut: Boolean) extends Res[Nothing]{
-    def stack = fullStack.filter(_._2.isInstanceOf[Parser.Named[_]]) :+ fullStack.last
+  case class Failure(input: String, fullStack: List[(Int, Parser[_])], cut: Boolean) extends Result[Nothing]{
+    def stack = fullStack.filter(_._2.isInstanceOf[Parser.Rule[_]]) :+ fullStack.last
 
     def verboseTrace = {
       val body =
@@ -63,7 +61,7 @@ object Res{
     override def toString = s"Failure($trace, $cut)"
   }
 }
-import Res._
+import Result._
 sealed trait Parser[+T]{
   /**
    * Wraps this in a [[Parser.Logged]]
@@ -73,7 +71,11 @@ sealed trait Parser[+T]{
   /**
    * Parses the given `input` starting from the given `index`
    */
-  def parse(input: String, index: Int): Res[T]
+  def parse(input: String, index: Int = 0): Result[T] = parseRecursive(input, index, 0)
+  /**
+   * Parses the given `input` starting from the given `index` and `logDepth`
+   */
+  def parseRecursive(input: String, index: Int, logDepth: Int): Result[T]
 
   /**
    * Repeats this parser 0 or more times
@@ -101,6 +103,14 @@ sealed trait Parser[+T]{
    * Parses using this followed by the parser `p`
    */
   def ~[V, R](p: Parser[V])(implicit ev: Implicits.Sequencer[T, V, R]): Parser[R] = Parser.Sequence(this, p, cut=false)
+  /**
+   * Parses using this followed by the parser `p`, performing a Cut if
+   * this parses successfully. That means that if `p` fails to parse, the
+   * parse will fail immediately and not backtrack past this success.
+   *
+   * This lets you greatly narrow the error position by avoiding unwanted
+   * backtracking.
+   */
   def ~![V, R](p: Parser[V])(implicit ev: Implicits.Sequencer[T, V, R]): Parser[R] = Parser.Sequence(this, p, cut=true)
 
   /**
@@ -113,8 +123,14 @@ sealed trait Parser[+T]{
    */
   def unary_! = Parser.Not(this)
 
+  /**
+   * Used to capture the text parsed by this as a `String`
+   */
   def ! = Parser.Capturing(this)
 
+  /**
+   * Transforms the result of this Parser with the given function
+   */
   def map[V](f: T => V): Parser[V] = Parser.Mapper(this, f)
 
   protected def fail(input: String, index: Int) =
@@ -125,12 +141,9 @@ sealed trait Parser[+T]{
 
 object Parser{
   case class Mapper[T, V](p: Parser[T], f: T => V) extends Parser[V]{
-    def parse(input: String, index: Int) = {
-      p.parse(input, index) match{
-        case s: Success[T] =>
-          println("!!! "  + s.t)
-          println("??? "  + f(s.t))
-          Success(f(s.t), s.index, s.cut)
+    def parseRecursive(input: String, index: Int, logDepth: Int) = {
+      p.parseRecursive(input, index, logDepth) match{
+        case s: Success[T] => Success(f(s.t), s.index, s.cut)
         case f: Failure => failMore(f, index)
       }
     }
@@ -139,29 +152,30 @@ object Parser{
    * A parser that always succeeds, consuming no input
    */
   case object Pass extends Parser[Unit]{
-    def parse(input: String, index: Int) = Res.Success((), index)
+    def parseRecursive(input: String, index: Int, logDepth: Int) = Result.Success((), index)
   }
 
   /**
    * A parser that always fails immediately
    */
   case object Fail extends Parser[Nothing]{
-    def parse(input: String, index: Int) = fail(input, index)
+    def parseRecursive(input: String, index: Int, logDepth: Int) = fail(input, index)
   }
 
   case class Capturing(p: Parser[_]) extends Parser[String]{
-    def parse(input: String, index: Int) = {
-      p.parse(input, index) match {
+    def parseRecursive(input: String, index: Int, logDepth: Int) = {
+      p.parseRecursive(input, index, logDepth) match {
         case s: Success[_] => Success(input.substring(index, s.index), s.index, s.cut)
         case f: Failure => f
       }
     }
+    override def toString = p.toString + ".!"
   }
   /**
    * Succeeds, consuming a single character
    */
   case object AnyChar extends Parser[Char]{
-    def parse(input: String, index: Int) = {
+    def parseRecursive(input: String, index: Int, logDepth: Int) = {
       if (index >= input.length) fail(input, index)
       else Success(input(index), index+1)
     }
@@ -171,7 +185,7 @@ object Parser{
    * Succeeds if at the start of the input, consuming no input
    */
   case object Start extends Parser[Unit]{
-    def parse(input: String, index: Int) = {
+    def parseRecursive(input: String, index: Int, logDepth: Int) = {
       if (index == 0) Success((), index)
       else fail(input, index)
     }
@@ -180,7 +194,7 @@ object Parser{
    * Succeeds if at the end of the input, consuming no input
    */
   case object End extends Parser[Unit]{
-    def parse(input: String, index: Int) = {
+    def parseRecursive(input: String, index: Int, logDepth: Int) = {
       if (index == input.length) Success((), index)
       else fail(input, index)
     }
@@ -190,8 +204,8 @@ object Parser{
    * Parses a literal `String`
    */
   case class Literal(s: String) extends Parser[Unit]{
-    def parse(input: String, index: Int) = {
-      if (input.startsWith(s, index)) Res.Success(s, index + s.length)
+    def parseRecursive(input: String, index: Int, logDepth: Int) = {
+      if (input.startsWith(s, index)) Result.Success(s, index + s.length)
       else fail(input, index)
     }
     override def toString = literalize(s).toString
@@ -201,9 +215,9 @@ object Parser{
    * Parses a single character
    */
   case class CharLiteral(c: Char) extends Parser[Unit]{
-    def parse(input: String, index: Int) = {
+    def parseRecursive(input: String, index: Int, logDepth: Int) = {
       if (index >= input.length) fail(input, index)
-      else if (input(index) == c) Res.Success(c.toString, index + 1)
+      else if (input(index) == c) Result.Success(c.toString, index + 1)
       else fail(input, index)
     }
     override def toString = literalize(c.toString).toString
@@ -217,11 +231,11 @@ object Parser{
    * and ends, together with its result
    */
   case class Logged[+T](p: Parser[T], msg: String) extends Parser[T]{
-    def parse(input: String, index: Int) = {
+    def parseRecursive(input: String, index: Int, logDepth: Int) = {
       val indent = "  " * logNesting
       println(indent + "+" + msg + ":" + index)
       logNesting += 1
-      val res = p.parse(input, index)
+      val res = p.parseRecursive(input, index, logDepth + 1)
       logNesting -= 1
       println(indent + "-" + msg + ":" + index + ":" + res)
       res
@@ -232,10 +246,10 @@ object Parser{
   /**
    * A top-level, named parser.
    */
-  case class Named[+T](name: String, p: () => Parser[T]) extends Parser[T]{
+  case class Rule[+T](name: String, p: () => Parser[T]) extends Parser[T]{
     lazy val pCached = p()
-    def parse(input: String, index: Int) = {
-      pCached.parse(input, index) match{
+    def parseRecursive(input: String, index: Int, logDepth: Int) = {
+      pCached.parseRecursive(input, index, logDepth) match{
         case f: Failure => failMore(f, index)
         case s => s
       }
@@ -248,9 +262,9 @@ object Parser{
    * but consuming no input
    */
   case class Lookahead(p: Parser[_]) extends Parser[Unit]{
-    def parse(input: String, index: Int) = {
-      p.parse(input, index) match{
-        case s: Success[_] => Res.Success((), index)
+    def parseRecursive(input: String, index: Int, logDepth: Int) = {
+      p.parseRecursive(input, index, logDepth) match{
+        case s: Success[_] => Result.Success((), index)
         case f: Failure => failMore(f, index)
       }
     }
@@ -261,11 +275,11 @@ object Parser{
    * if it succeeds. Neither case consumes any input
    */
   case class Not(p: Parser[_]) extends Parser[Unit]{
-    def parse(input: String, index: Int) = {
-      val res0 = p.parse(input, index)
+    def parseRecursive(input: String, index: Int, logDepth: Int) = {
+      val res0 = p.parseRecursive(input, index, logDepth)
       val res = res0 match{
         case s: Success[_] => fail(input, s.index)
-        case f: Failure => Res.Success((), index)
+        case f: Failure => Result.Success((), index)
       }
       res
     }
@@ -280,8 +294,8 @@ object Parser{
     case class Optional[+T, R](p: Parser[T])
                               (implicit ev: Implicits.Optioner[T, R]) extends Parser[R]{
 
-    def parse(input: String, index: Int) = {
-      p.parse(input, index) match{
+    def parseRecursive(input: String, index: Int, logDepth: Int) = {
+      p.parseRecursive(input, index, logDepth) match{
         case Success(t, index, cut) => Success(ev(Some(t)), index, cut)
         case f: Failure if f.cut => failMore(f, index)
         case _ => Success(ev(None), index)
@@ -296,11 +310,11 @@ object Parser{
    */
   case class Sequence[+T1, +T2, R](p1: Parser[T1], p2: Parser[T2], cut: Boolean)
                                   (implicit ev: Implicits.Sequencer[T1, T2, R]) extends Parser[R]{
-    def parse(input: String, index: Int) = {
-      p1.parse(input, index) match{
+    def parseRecursive(input: String, index: Int, logDepth: Int) = {
+      p1.parseRecursive(input, index, logDepth) match{
         case f: Failure => failMore(f, index, cut = f.cut)
         case s1: Success[_] =>
-          p2.parse(input, s1.index) match{
+          p2.parseRecursive(input, s1.index, logDepth) match{
           case f: Failure => failMore(f, index, cut = cut || f.cut || s1.cut)
           case s2: Success[_] => Success(ev(s1.t, s2.t), s2.index, s2.cut || s1.cut | cut)
         }
@@ -325,16 +339,16 @@ object Parser{
    */
   case class Repeat[T, +R](p: Parser[T], min: Int, delimiter: Parser[_])
                           (implicit ev: Implicits.Repeater[T, R]) extends Parser[R]{
-    def parse(input: String, index: Int) = {
+    def parseRecursive(input: String, index: Int, logDepth: Int) = {
       val res = mutable.Buffer.empty[T]
       var finalIndex = index
       var lastFailure: Failure = null
       @tailrec def rec(index: Int, del: Parser[_]): Unit = {
-        del.parse(input, index) match{
+        del.parseRecursive(input, index, logDepth) match{
           case f: Failure if f.cut => lastFailure = failMore(f, index)
           case f: Failure => lastFailure = f
           case Success(t, i, cut1) =>
-            p.parse(input, i) match{
+            p.parseRecursive(input, i, logDepth) match{
               case f: Failure if f.cut | cut1 => lastFailure = failMore(f, index, f.cut | cut1)
               case f: Failure => lastFailure = f
               case Success(t, i, cut2) =>
@@ -361,11 +375,11 @@ object Parser{
    * the first one that succeeds and fails if both fail
    */
   case class Either[V](p1: Parser[V], p2: Parser[V]) extends Parser[V]{
-    def parse(input: String, index: Int) = {
-      p1.parse(input, index) match{
+    def parseRecursive(input: String, index: Int, logDepth: Int) = {
+      p1.parseRecursive(input, index, logDepth) match{
         case s: Success[_] => s
         case f: Failure if f.cut => failMore(f, index)
-        case _ => p2.parse(input, index) match{
+        case _ => p2.parseRecursive(input, index, logDepth) match{
           case s: Success[_] => s
           case f: Failure if f.cut => failMore(f, index)
           case f: Failure => fail(input, index)
@@ -385,20 +399,20 @@ object Parser{
    * Parses a single character if it passes the predicate
    */
   case class CharPred(predicate: Char => Boolean) extends Parser[Unit]{
-    def parse(input: String, index: Int) = {
+    def parseRecursive(input: String, index: Int, logDepth: Int) = {
       if (index >= input.length) fail(input, index)
-      else if (predicate(input(index))) Res.Success(input(index), index + 1)
+      else if (predicate(input(index))) Result.Success(input(index), index + 1)
       else fail(input, index)
     }
   }
   /**
    * Parses a single character if it passes the predicate
    */
-  case class CharSets(strings: Seq[Char]*) extends Parser[Unit]{
+  case class CharIn(strings: Seq[Char]*) extends Parser[Unit]{
     private[this] val uberSet = BitSet(strings.flatten.map(_.toInt):_*)
-    def parse(input: String, index: Int) = {
+    def parseRecursive(input: String, index: Int, logDepth: Int) = {
       if (index >= input.length) fail(input, index)
-      else if (uberSet(input(index))) Res.Success(input(index), index + 1)
+      else if (uberSet(input(index))) Result.Success(input(index), index + 1)
       else fail(input, index)
     }
     override def toString = {
@@ -426,8 +440,8 @@ object Parser{
       }
       current.word = string
     }
-    def parse(input: String, index: Int) = {
-      @tailrec def rec(offset: Int, currentNode: Node, currentRes: Res[Unit]): Res[Unit] = {
+    def parseRecursive(input: String, index: Int, logDepth: Int) = {
+      @tailrec def rec(offset: Int, currentNode: Node, currentRes: Result[Unit]): Result[Unit] = {
         if (index + offset >= input.length) currentRes
         else {
           val char = input(index + offset)
@@ -445,9 +459,8 @@ object Parser{
       rec(0, bitSet, fail(input, index))
     }
     override def toString = {
-      s"CharTrie(${strings.map(literalize(_)).mkString(",")})"
+      s"CharTrie(${strings.map(literalize(_)).mkString(", ")})"
     }
   }
-
 }
 

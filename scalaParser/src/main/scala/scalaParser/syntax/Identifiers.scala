@@ -12,7 +12,7 @@ object Identifiers{
   def VarId0(dollar: Boolean) = R( !Keywords ~ Lower ~ IdRest(dollar) )
   val PlainId = R( !Keywords ~ Upper ~ IdRest(true) | VarId | Operator )
   val PlainIdNoDollar = R( !Keywords ~ Upper ~ IdRest(false) | VarId0(false) | Operator )
-  val Id = R( !Keywords ~ PlainId | ("`" ~ (!"`" ~ Parser.AnyChar).rep1 ~ "`") )
+  val Id: R0 = R( !Keywords ~ PlainId | ("`" ~ (!"`" ~ Parser.AnyChar).rep1 ~ "`") )
 
   def IdRest(allowDollar: Boolean) = {
     val SkipChar: Parser[_] = if(allowDollar) "_" else CharSets("_$")

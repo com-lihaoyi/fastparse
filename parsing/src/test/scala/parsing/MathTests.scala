@@ -7,13 +7,13 @@ object MathTests extends TestSuite{
   val parens = R( "(" ~ addSub ~ ")" )
   val factor = R( number | parens )
 
-  val divMul: Parser[Int] = R( factor ~ (CharSets("*/").! ~ factor).rep ).map{
+  val divMul: R[Int] = R( factor ~ (CharSets("*/").! ~ factor).rep ).map{
     case (a, s) => s.foldLeft(a){
       case (left, ("*", right)) => left * right
       case (left, ("/", right)) => left / right
     }
   }
-  val addSub: Parser[Int] = R( divMul ~ (CharSets("+-").! ~ divMul).rep ).map{
+  val addSub: R[Int] = R( divMul ~ (CharSets("+-").! ~ divMul).rep ).map{
     case (a, s) => s.foldLeft(a){
       case (left, ("+", right)) => left + right
       case (left, ("-", right)) => left - right
@@ -23,8 +23,8 @@ object MathTests extends TestSuite{
   val tests = TestSuite{
     'pass {
       def check(str: String, num: Int) = {
-        val res = expr.parse(str, 0)
-        assert(res == Res.Success(num, str.length))
+        val res = expr.parse(str)
+        assert(res == Result.Success(num, str.length))
       }
       check("1+1", 2)
       check("1+1*2", 3)

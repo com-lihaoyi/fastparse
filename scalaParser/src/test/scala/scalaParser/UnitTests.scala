@@ -9,22 +9,22 @@ import scala.util.{Failure, Success}
 object UnitTests extends TestSuite{
   def checkNeg[T](input: String) = {
     println("Checking...\n" )
-    Scala.CompilationUnit.parse(input, 0) match{
-      case _: Res.Failure => () // yay
-      case Res.Success(parsed, index) => assert(index != input.length)
+    Scala.CompilationUnit.parse(input) match{
+      case _: Result.Failure => () // yay
+      case Result.Success(parsed, index, cut) => assert(index != input.length)
     }
   }
 
   def check[T](input: String, tag: String = "") = {
     println("Checking...\n" )
     import Scala._
-    val res = Scala.CompilationUnit.parse(input, 0)
+    val res = Scala.CompilationUnit.parse(input)
     res match{
-      case f: Res.Failure =>
+      case f: Result.Failure =>
 //        println(f.formatExpectedAsString)
 //        println(f.formatTraces)
         throw new Exception(s"Failure\n" + input + "\n" + f.fullStack.length + "\n" + f.fullStack.map(x => x._1 + ":\t" + x._2).mkString("\n"))
-      case s: Res.Success[_] =>
+      case s: Result.Success[_] =>
 //        println(parsed)
         val inputLength = input.length
         assert(s.index == inputLength)
@@ -42,7 +42,7 @@ object UnitTests extends TestSuite{
       val start = System.currentTimeMillis()
       var count = 0
       while(System.currentTimeMillis() - start < 30000){
-        Scala.CompilationUnit.parse(input, 0)
+        Scala.CompilationUnit.parse(input)
         count += 1
       }
       count
