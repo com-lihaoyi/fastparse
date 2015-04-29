@@ -21,15 +21,10 @@ object JsonTests extends TestSuite{
   val obj           = R( "{" ~ pair ~ ("," ~ pair).rep ~ space.? ~ "}" )
   val jsonExpr: Parser[_] = R(space.? ~ (obj | array | string | `true` | `false` | `null` | number) ~ space.?)
 
-  def check[T](parser: Parser[T], input: (String, Int), rhs: Res[T]) = {
-    val (str, index) = input
-    val parsed = parser.parse(str, index)
-    assert({parser; str; parsed} == rhs)
-  }
   val tests = TestSuite{
     'literal {
       def test(p: Parser[_], s: String) = p.parse(s, 0) match{
-        case Res.Success(v, i) =>
+        case Res.Success(v, i, cut) =>
           val expectedIndex = s.length
           assert(i == {s; expectedIndex})
         case f: Res.Failure => throw new Exception(f.ps.mkString("\n"))

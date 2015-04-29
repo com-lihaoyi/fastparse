@@ -11,12 +11,12 @@ import acyclic.file
  */
 sealed trait Res[+T]
 object Res{
-  case class Success[T](t: T, index: Int) extends Res[T]{
+  case class Success[T](t: T, index: Int, cut: Boolean = false) extends Res[T]{
     override def toString = {
       s"Success($index)"
     }
   }
-  case class Failure(input: String, ps: List[(Int, Parser[_])], fatal: Boolean) extends Res[Nothing]{
+  case class Failure(input: String, ps: List[(Int, Parser[_])], cut: Boolean) extends Res[Nothing]{
     override def toString = {
       s"Failure\n" + ps.map(x => x._1 + "\t..." + input.slice(x._1, x._1 + 5) + ":\t" + x._2).mkString("\n")
     }
@@ -75,9 +75,9 @@ sealed trait Parser[+T]{
   def ! = Parser.Capturing(this)
 
   protected def fail(input: String, index: Int) =
-    Failure(input, (index -> this) :: Nil, fatal=false)
-  protected def failMore(f: Failure, index: Int, newFatal: Boolean = false) =
-    Failure(f.input, (index -> this) :: f.ps, fatal=f.fatal || newFatal)
+    Failure(input, (index -> this) :: Nil, cut=false)
+  protected def failMore(f: Failure, index: Int, cut: Boolean = false) =
+    Failure(f.input, (index -> this) :: f.ps, cut=f.cut || cut)
 }
 
 object Parser{
@@ -99,7 +99,7 @@ object Parser{
   case class Capturing(p: Parser[_]) extends Parser[String]{
     def parse(input: String, index: Int) = {
       p.parse(input, index) match {
-        case Success(t, i) => Success(input.substring(index, i), i)
+        case s: Success[_] => Success(input.substring(index, s.index), s.index, s.cut)
         case f: Failure => f
       }
     }
@@ -229,8 +229,8 @@ object Parser{
 
     def parse(input: String, index: Int) = {
       p.parse(input, index) match{
-        case Success(t, index) => Success(ev(Some(t)), index)
-        case f: Failure if f.fatal => failMore(f, index)
+        case Success(t, index, cut) => Success(ev(Some(t)), index, cut)
+        case f: Failure if f.cut => failMore(f, index)
         case _ => Success(ev(None), index)
       }
     }
@@ -244,11 +244,12 @@ object Parser{
   case class Sequence[+T1, +T2, R](p1: Parser[T1], p2: Parser[T2], cut: Boolean)
                                   (implicit ev: Implicits.Sequencer[T1, T2, R]) extends Parser[R]{
     def parse(input: String, index: Int) = {
+
       p1.parse(input, index) match{
-        case f: Failure => failMore(f, index, newFatal = cut)
+        case f: Failure => failMore(f, index, cut = cut | f.cut)
         case s1: Success[_] => p2.parse(input, s1.index) match{
-          case f: Failure => failMore(f, index, newFatal = cut)
-          case s2: Success[_] => Success(ev(s1.t, s2.t), s2.index)
+          case f: Failure => failMore(f, index, cut = cut || f.cut || s1.cut)
+          case s2: Success[_] => Success(ev(s1.t, s2.t), s2.index, s2.cut || s1.cut | cut)
         }
       }
     }
@@ -271,13 +272,13 @@ object Parser{
       var lastFailure: Failure = null
       @tailrec def rec(index: Int, del: Parser[_]): Unit = {
         del.parse(input, index) match{
-          case f: Failure if f.fatal => lastFailure = failMore(f, index)
+          case f: Failure if f.cut => lastFailure = failMore(f, index)
           case f: Failure => lastFailure = f
-          case Success(t, i) =>
+          case Success(t, i, cut1) =>
             p.parse(input, i) match{
-              case f: Failure if f.fatal => lastFailure = failMore(f, index)
+              case f: Failure if f.cut | cut1 => lastFailure = failMore(f, index, f.cut | cut1)
               case f: Failure => lastFailure = f
-              case Success(t, i) =>
+              case Success(t, i, cut2) =>
                 res.append(t)
                 finalIndex = i
                 rec(i, delimiter)
@@ -285,7 +286,7 @@ object Parser{
         }
       }
       rec(index, Pass)
-      if (lastFailure != null && lastFailure.fatal) {
+      if (lastFailure != null && lastFailure.cut) {
         failMore(lastFailure, index)
       }
       else if (res.length >= min) Success(ev(res.iterator), finalIndex)
@@ -304,7 +305,7 @@ object Parser{
     def parse(input: String, index: Int) = {
       p1.parse(input, index) match{
         case s: Success[_] => s
-        case f: Failure if f.fatal => failMore(f, index)
+        case f: Failure if f.cut => failMore(f, index)
         case _ => p2.parse(input, index) match{
           case s: Success[_] => s
           case f: Failure => fail(input, index)

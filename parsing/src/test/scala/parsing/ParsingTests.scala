@@ -58,6 +58,7 @@ object ParsingTests extends TestSuite{
         checkFail("Hello" ~ ("wtf" ~ "omg" | "bbq"), ("Hellowtfom", 0), 5)
         checkFail("Hello" ~ ("wtf" ~! "omg" | "wtfom"), ("Hellowtfom", 0), 8)
         checkFail("Hello" ~ ("wtf" ~ "omg" ~! "bbq" | "wtfom"), ("Hellowtfomgbbe", 0), 11)
+        checkFail("Hello" ~ ("wtf" ~! "omg" ~ "bbq" | "wtfom"), ("Hellowtfomgbbe", 0), 11)
       }
       'rep {
         check(("Hello" ~ "Bye").rep, ("HelloByeHello", 0), Success((), 8))
