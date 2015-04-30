@@ -16,7 +16,7 @@ trait Literals {
       R( "." ~ Thing | Digit.rep1 ~ Thing2 )
     }
 
-    val Int = R( (HexNum | DecNum) ~ CharSets("Ll").? )
+    val Int = R( (HexNum | DecNum) ~ CharIn("Ll").? )
 
     val Bool = R( Key.W("true") | Key.W("false")  )
 
@@ -27,7 +27,7 @@ trait Literals {
     val Null = Key.W("null")
     val Literal = R( ("-".? ~ (Float | Int)) | Bool | Char | String | Symbol | Null )
 
-    val EscapedChars = R( "\\" ~ CharSets("""btnfr'\"]"""))
+    val EscapedChars = R( "\\" ~ CharIn("""btnfr'\"]"""))
 
     // Note that symbols can take on the same values as keywords!
     val Symbol = R( "'" ~ (Identifiers.PlainId | Identifiers.Keywords) )
@@ -50,7 +50,7 @@ trait Literals {
       def TQ = R( "\"\"\"" )
       def TripleChars(allowInterp: Boolean) = R( (InterpIf(allowInterp) | "\"".? ~ "\"".? ~ !"\"" ~ Parser.AnyChar).rep )
       def TripleTail = R( TQ ~ "\"".rep )
-      def SingleChars(allowInterp: Boolean) = R( (InterpIf(allowInterp) | "\\\"" | "\\\\" | !CharSets("\n\"") ~ Parser.AnyChar).rep )
+      def SingleChars(allowInterp: Boolean) = R( (InterpIf(allowInterp) | "\\\"" | "\\\\" | !CharIn("\n\"") ~ Parser.AnyChar).rep )
       R {
         (Id ~ TQ ~ TripleChars(allowInterp = true) ~ TripleTail) |
         (Id ~ "\"" ~ SingleChars(allowInterp = true) ~ "\"") |

@@ -15,7 +15,7 @@ object Identifiers{
   val Id: R0 = R( !Keywords ~ PlainId | ("`" ~ (!"`" ~ Parser.AnyChar).rep1 ~ "`") )
 
   def IdRest(allowDollar: Boolean) = {
-    val SkipChar: Parser[_] = if(allowDollar) "_" else CharSets("_$")
+    val SkipChar: Parser[_] = if(allowDollar) "_" else CharIn("_$")
     val IdUnderscoreChunk = R( "_".rep ~ (!SkipChar ~ Letter | Digit ).rep1 )
     R( IdUnderscoreChunk.rep ~ ("_".rep1 ~ OpChar.rep).? )
   }
@@ -30,13 +30,13 @@ object Identifiers{
   )
 
   val AlphabetKeywords = R {
-    Dispatcher(alphaKeywords:_*) ~ !Letter
+    StringIn(alphaKeywords:_*) ~ !Letter
   }
   val symbolKeywords = Seq(
     ":", ";", "=>", "=", "<-", "<:", "<%", ">:", "#", "@", "\u21d2", "\u2190"
   ) 
   val SymbolicKeywords = R{
-    Dispatcher(symbolKeywords:_*)  ~ !OpChar
+    StringIn(symbolKeywords:_*)  ~ !OpChar
   }
   val Keywords = R( AlphabetKeywords | SymbolicKeywords )
 }

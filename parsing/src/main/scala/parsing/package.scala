@@ -8,8 +8,8 @@ package object parsing {
   val Start = Parser.Start
   val End = Parser.End
   val CharPred = Parser.CharPred
-  val CharSets = Parser.CharIn
-  val Dispatcher = Parser.CharTrie
+  val CharIn = Parser.CharIn
+  val StringIn = Parser.StringIn
   val AnyChar = Parser.AnyChar
 
   def &(p: Parser[_]): Parser[Unit] = Parser.Lookahead(p)

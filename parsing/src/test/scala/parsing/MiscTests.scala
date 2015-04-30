@@ -1,6 +1,6 @@
 package parsing
 
-import parsing.Parser.CharTrie
+import parsing.Parser.StringIn
 import utest._
 
 import scala.collection.mutable
@@ -51,10 +51,10 @@ object MiscTests extends TestSuite{
         check(Pass, """Pass""")
         check(Fail, """Fail""")
         check(AnyChar, """AnyChar""")
-        check(CharSets("abc", "d", Seq('1', '2', '3')), """CharSets("abcd123")""")
+        check(CharIn("abc", "d", Seq('1', '2', '3')), """CharIn("abcd123")""")
         check(
-          CharTrie("mango", "mandarin", "mangosteen"),
-          """CharTrie("mango", "mandarin", "mangosteen")"""
+          StringIn("mango", "mandarin", "mangosteen"),
+          """StringIn("mango", "mandarin", "mangosteen")"""
         )
         check(CharPred(_.isUpper), """CharPred(<function1>)""")
       }

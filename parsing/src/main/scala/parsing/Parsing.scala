@@ -24,6 +24,8 @@ object Result{
    *              object can pretty-print snippet
    * @param fullStack The entire stack trace where the parse failed, containing every
    *                  parser in the stack and the index where the parser was used
+   * @param index The index in the parse where this parse failed
+   * @param parser The deepest parser in the parse which failed
    * @param cut Whether or not this parse encountered a Cut
    */
   case class Failure(input: String,
@@ -36,7 +38,7 @@ object Result{
      * [[Parser.Rule]] objects as well as the final Parser (whether named or not)
      * for easier reading.
      */
-    def stack = fullStack.filter(_.parser.isInstanceOf[Parser.Rule[_]]) :+ fullStack.last
+    def stack = fullStack.filter(_.parser.isInstanceOf[Parser.Rule[_]]) :+ Frame(index, parser)
 
     /**
      * A longer version of [[trace]], which shows more context for every stack frame
@@ -55,8 +57,8 @@ object Result{
       val body =
         for(Frame(index, p) <- stack)
           yield s"$p:$index"
-      val lastIndex = fullStack.last.index
-      body.mkString(" / ") + " ..." + literalize(input.slice(lastIndex, lastIndex+10))
+
+      body.mkString(" / ") + " ..." + literalize(input.slice(index, index+10))
     }
     override def toString = s"Failure($trace, $cut)"
   }
@@ -387,7 +389,7 @@ object Parser{
    * Parses using one parser or the other, if the first one fails. Returns
    * the first one that succeeds and fails if both fail
    */
-  case class Either[V](p1: Parser[V], p2: Parser[V]) extends Parser[V]{
+  case class Either[T](p1: Parser[T], p2: Parser[T]) extends Parser[T]{
     def parseRecursive(input: String, index: Int, logDepth: Int, trace: Boolean) = {
       p1.parseRecursive(input, index, logDepth, trace) match{
         case s: Success[_] => s
@@ -429,7 +431,7 @@ object Parser{
       else fail(input, index)
     }
     override def toString = {
-      s"CharSets(${literalize(strings.flatten.mkString)})"
+      s"CharIn(${literalize(strings.flatten.mkString)})"
     }
   }
 
@@ -438,7 +440,7 @@ object Parser{
    * first converting it into a Trie and then walking it once.
    * If multiple strings match the input, longest match wins.
    */
-  case class CharTrie(strings: String*) extends Parser[Unit]{
+  case class StringIn(strings: String*) extends Parser[Unit]{
     private[this ]case class Node(children: mutable.LongMap[Node] = mutable.LongMap.empty,
                                   var word: String = null)
     private[this] val bitSet = Node()
@@ -472,7 +474,7 @@ object Parser{
       rec(0, bitSet, fail(input, index))
     }
     override def toString = {
-      s"CharTrie(${strings.map(literalize(_)).mkString(", ")})"
+      s"StringIn(${strings.map(literalize(_)).mkString(", ")})"
     }
   }
 }

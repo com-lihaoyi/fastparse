@@ -69,7 +69,7 @@ trait Types extends Core{
   val Annot: R0 = R( `@` ~ SimpleType ~  ("(" ~ (Exprs ~ (`:` ~ `_*`).?).? ~ ")").rep)
 
   val TypeArgList: R0 = {
-    val Variant: R0 = R( Annot.rep ~ (WL ~ CharSets("+-")).? ~ TypeArg )
+    val Variant: R0 = R( Annot.rep ~ (WL ~ CharIn("+-")).? ~ TypeArg )
     R( "[" ~ Variant.rep(",") ~ "]" )
   }
   val Exprs: R0 = R( TypeExpr.rep1(",") )

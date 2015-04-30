@@ -16,12 +16,12 @@ object MathTests extends TestSuite{
       case "/" => left / right
     }}
   }
-  val number = R( CharSets('0'to'9').rep1.!.map(_.toInt) )
+  val number = R( CharIn('0'to'9').rep1.!.map(_.toInt) )
   val parens = R( "(" ~ addSub ~ ")" )
   val factor = R( number | parens )
 
-  val divMul: R[Int] = R( factor ~ (CharSets("*/").! ~ factor).rep ).map(eval)
-  val addSub: R[Int] = R( divMul ~ (CharSets("+-").! ~ divMul).rep ).map(eval)
+  val divMul: R[Int] = R( factor ~ (CharIn("*/").! ~ factor).rep ).map(eval)
+  val addSub: R[Int] = R( divMul ~ (CharIn("+-").! ~ divMul).rep ).map(eval)
   val expr = R( addSub ~ End )
   val tests = TestSuite{
     'pass {

@@ -8,15 +8,15 @@ object Basic {
   val UnicodeEscape = R( "\\u" ~ HexDigit ~ HexDigit ~ HexDigit ~ HexDigit )
 
   //Numbers and digits
-  val HexDigit = R( CharSets("0123456789abcdefABCDEF") )
-  val Digit = R( CharSets("0123456789") )
+  val HexDigit = R( CharIn("0123456789abcdefABCDEF") )
+  val Digit = R( CharIn("0123456789") )
   val HexNum = R( "0x" ~ HexDigit.rep1 )
   val DecNum = R(Digit.rep1)
-  val Exp = R( CharSets("Ee") ~ CharSets("+-").? ~ Digit.rep1 )
-  val FloatType = R( CharSets("fFdD") )
+  val Exp = R( CharIn("Ee") ~ CharIn("+-").? ~ Digit.rep1 )
+  val FloatType = R( CharIn("fFdD") )
 
-  val WSChar = R( CharSets("\u0020\u0009") )(enclosingFunctionName)
-  val Newline = R( Dispatcher("\r\n", "\n") )
+  val WSChar = R( CharIn("\u0020\u0009") )(enclosingFunctionName)
+  val Newline = R( StringIn("\r\n", "\n") )
   val Semi = R( ";" | Newline.rep1 )
   val OpChar = {
     // scalac 2.10 crashes if OtherOrMathSymbol below is substituted by its body
@@ -25,7 +25,7 @@ object Basic {
       case Character.OTHER_SYMBOL | Character.MATH_SYMBOL => true; case _ => false
     })
 
-    R { CharSets("!#%&*+-/:<=>?@\\^|~") | OtherOrMathSymbol }
+    R { CharIn("!#%&*+-/:<=>?@\\^|~") | OtherOrMathSymbol }
   }
   val Letter = {
     val LetterDigit = CharPred(c => c.isLetter | c.isDigit)
@@ -33,11 +33,11 @@ object Basic {
   }
   val Lower = {
     val LowerChar = CharPred(_.isLower)
-    R(CharSets("abcdefghijklmnopqrstuvwxyz$_") | LowerChar )
+    R(CharIn("abcdefghijklmnopqrstuvwxyz$_") | LowerChar )
   }
   val Upper = {
     val UpperChar = CharPred(_.isUpper)
-    R(CharSets("ABCDEFGHIJKLMNOPQRSTUCWXYZ") | UpperChar )
+    R(CharIn("ABCDEFGHIJKLMNOPQRSTUCWXYZ") | UpperChar )
   }
 }
 /**
