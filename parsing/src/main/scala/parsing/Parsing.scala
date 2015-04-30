@@ -474,9 +474,7 @@ object Parser{
         }
       }
       rec(index, Pass)
-      if (lastFailure != null && lastFailure.cut) {
-        failMore(lastFailure, index, cfg.trace)
-      }
+      if (lastFailure != null && lastFailure.cut) failMore(lastFailure, index, cfg.trace)
       else if (res.length >= min) Success(ev(res.iterator), finalIndex)
       else fail(cfg.input, index)
     }

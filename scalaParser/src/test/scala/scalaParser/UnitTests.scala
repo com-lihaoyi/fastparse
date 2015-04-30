@@ -35,15 +35,17 @@ object UnitTests extends TestSuite{
   println("running")
   def tests = TestSuite{
     'perf{
-      // Parboiled parser runs ~492 times in 30 seconds
-      // Our combinators seem to run ~14 times in 30 seconds
+      // Last measurements, runs in 30s:
+      // parboiled2: 446 443 447
+      // parsing: 104 123 122
+      // Parboiled2 is 3.9 times faster
       val input = scala.io.Source.fromFile(
         "scala-js/compiler/src/main/scala/org/scalajs/core/compiler/GenJSCode.scala"
       ).mkString
       println("Loaded " + input.length + " bytes of input. Parsing...")
       val start = System.currentTimeMillis()
       var count = 0
-      while(System.currentTimeMillis() - start < 30000){
+      while(System.currentTimeMillis() - start < 3000000){
         Scala.CompilationUnit.parse(input, trace = false)
         count += 1
       }
