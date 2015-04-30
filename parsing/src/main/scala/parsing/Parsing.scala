@@ -385,25 +385,31 @@ object Parser{
     }
   }
 
+  object Either{
+    def flatten[T](p: Parser[T]) = p match{
+      case Either(p1, p2) =>
+      case p => p
+    }
+  }
   /**
    * Parses using one parser or the other, if the first one fails. Returns
    * the first one that succeeds and fails if both fail
    */
-  case class Either[T](p1: Parser[T], p2: Parser[T]) extends Parser[T]{
+  case class Either[T](ps: Parser[T]*) extends Parser[T]{
     def parseRecursive(input: String, index: Int, logDepth: Int, trace: Boolean) = {
-      p1.parseRecursive(input, index, logDepth, trace) match{
-        case s: Success[_] => s
-        case f: Failure if f.cut => failMore(f, index, trace)
-        case _ => p2.parseRecursive(input, index, logDepth, trace) match{
+      @tailrec def rec(parserIndex: Int): Result[T] = {
+        if (parserIndex >= ps.length) fail(input, index)
+        else ps(parserIndex).parseRecursive(input, index, logDepth, trace) match {
           case s: Success[_] => s
           case f: Failure if f.cut => failMore(f, index, trace)
-          case f: Failure => fail(input, index)
+          case _ => rec(parserIndex + 1)
         }
       }
+      rec(0)
     }
     override def toString = {
       def rec(p: Parser[_]): String = p match {
-        case p: Either[_] => rec(p.p1) + " | " + rec(p.p2)
+        case p: Either[_] => p.ps.map(rec).mkString(" | ")
         case p => p.toString
       }
       "(" + rec(this) + ")"
