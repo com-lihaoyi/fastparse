@@ -65,6 +65,7 @@ object Result{
 }
 import Result._
 
+case class ParseConfig(input: String, logDepth: Int, trace: Boolean)
 /**
  * A single, self-contained, immutable parser. The primary method is
  * `parse`, which returns a [[T]] on success and a stack trace on failure.
@@ -87,11 +88,13 @@ sealed trait Parser[+T]{
   /**
     * Parses the given `input` starting from the given `index`
    */
-  def parse(input: String, index: Int = 0, trace: Boolean = true): Result[T] = parseRec(input, index, 0, trace)
+  def parse(input: String, index: Int = 0, trace: Boolean = true): Result[T] = {
+    parseRec(ParseConfig(input, 0, trace), index)
+  }
   /**
     * Parses the given `input` starting from the given `index` and `logDepth`
    */
-  def parseRec(input: String, index: Int, logDepth: Int, trace: Boolean): Result[T]
+  def parseRec(cfg: ParseConfig, index: Int): Result[T]
 
   /**
    * Wraps this in a [[Parser.Logged]]. This prints out information where a parser
@@ -169,10 +172,10 @@ object Parser{
    * Applies a transformation [[f]] to the result of [[p]]
    */
   case class Mapper[T, V](p: Parser[T], f: T => V) extends Parser[V]{
-    def parseRec(input: String, index: Int, logDepth: Int, trace: Boolean) = {
-      p.parseRec(input, index, logDepth, trace) match{
+    def parseRec(cfg: ParseConfig, index: Int) = {
+      p.parseRec(cfg, index) match{
         case s: Success[T] => Success(f(s.value), s.index, s.cut)
-        case f: Failure => failMore(f, index, trace)
+        case f: Failure => failMore(f, index, cfg.trace)
       }
     }
   }
@@ -180,23 +183,23 @@ object Parser{
    * A parser that always succeeds, consuming no input
    */
   case object Pass extends Parser[Unit]{
-    def parseRec(input: String, index: Int, logDepth: Int, trace: Boolean) = Result.Success((), index)
+    def parseRec(cfg: ParseConfig, index: Int) = Result.Success((), index)
   }
 
   /**
    * A parser that always fails immediately
    */
   case object Fail extends Parser[Nothing]{
-    def parseRec(input: String, index: Int, logDepth: Int, trace: Boolean) = fail(input, index)
+    def parseRec(cfg: ParseConfig, index: Int) = fail(cfg.input, index)
   }
 
   /**
    * Captures the string parsed by the given parser [[p]].
    */
   case class Capturing(p: Parser[_]) extends Parser[String]{
-    def parseRec(input: String, index: Int, logDepth: Int, trace: Boolean) = {
-      p.parseRec(input, index, logDepth, trace) match {
-        case s: Success[_] => Success(input.substring(index, s.index), s.index, s.cut)
+    def parseRec(cfg: ParseConfig, index: Int) = {
+      p.parseRec(cfg, index) match {
+        case s: Success[_] => Success(cfg.input.substring(index, s.index), s.index, s.cut)
         case f: Failure => f
       }
     }
@@ -206,7 +209,8 @@ object Parser{
    * Succeeds, consuming a single character
    */
   case object AnyChar extends Parser[Char]{
-    def parseRec(input: String, index: Int, logDepth: Int, trace: Boolean) = {
+    def parseRec(cfg: ParseConfig, index: Int) = {
+      val input = cfg.input
       if (index >= input.length) fail(input, index)
       else Success(input(index), index+1)
     }
@@ -216,18 +220,18 @@ object Parser{
    * Succeeds if at the start of the input, consuming no input
    */
   case object Start extends Parser[Unit]{
-    def parseRec(input: String, index: Int, logDepth: Int, trace: Boolean) = {
+    def parseRec(cfg: ParseConfig, index: Int) = {
       if (index == 0) Success((), index)
-      else fail(input, index)
+      else fail(cfg.input, index)
     }
   }
   /**
    * Succeeds if at the end of the input, consuming no input
    */
   case object End extends Parser[Unit]{
-    def parseRec(input: String, index: Int, logDepth: Int, trace: Boolean) = {
-      if (index == input.length) Success((), index)
-      else fail(input, index)
+    def parseRec(cfg: ParseConfig, index: Int) = {
+      if (index == cfg.input.length) Success((), index)
+      else fail(cfg.input, index)
     }
   }
 
@@ -235,9 +239,9 @@ object Parser{
    * Parses a literal `String`
    */
   case class Literal(s: String) extends Parser[Unit]{
-    def parseRec(input: String, index: Int, logDepth: Int, trace: Boolean) = {
-      if (input.startsWith(s, index)) Result.Success(s, index + s.length)
-      else fail(input, index)
+    def parseRec(cfg: ParseConfig, index: Int) = {
+      if (cfg.input.startsWith(s, index)) Result.Success(s, index + s.length)
+      else fail(cfg.input, index)
     }
     override def toString = literalize(s).toString
   }
@@ -246,7 +250,8 @@ object Parser{
    * Parses a single character
    */
   case class CharLiteral(c: Char) extends Parser[Unit]{
-    def parseRec(input: String, index: Int, logDepth: Int, trace: Boolean) = {
+    def parseRec(cfg: ParseConfig, index: Int) = {
+      val input = cfg.input
       if (index >= input.length) fail(input, index)
       else if (input(index) == c) Result.Success(c.toString, index + 1)
       else fail(input, index)
@@ -260,10 +265,10 @@ object Parser{
    * and ends, together with its result
    */
   case class Logged[+T](p: Parser[T], msg: String, output: String => Unit) extends Parser[T]{
-    def parseRec(input: String, index: Int, logDepth: Int, trace: Boolean) = {
-      val indent = "  " * logDepth
+    def parseRec(cfg: ParseConfig, index: Int) = {
+      val indent = "  " * cfg.logDepth
       output(indent + "+" + msg + ":" + index)
-      val res = p.parseRec(input, index, logDepth + 1, trace)
+      val res = p.parseRec(cfg.copy(logDepth = cfg.logDepth+1), index)
       output(indent + "-" + msg + ":" + index + ":" + res)
       res
     }
@@ -277,9 +282,9 @@ object Parser{
    */
   case class Rule[+T](name: String, p: () => Parser[T]) extends Parser[T]{
     lazy val pCached = p()
-    def parseRec(input: String, index: Int, logDepth: Int, trace: Boolean) = {
-      pCached.parseRec(input, index, logDepth, trace) match{
-        case f: Failure => failMore(f, index, trace)
+    def parseRec(cfg: ParseConfig, index: Int) = {
+      pCached.parseRec(cfg, index) match{
+        case f: Failure => failMore(f, index, cfg.trace)
         case s => s
       }
     }
@@ -291,10 +296,10 @@ object Parser{
    * but consuming no input
    */
   case class Lookahead(p: Parser[_]) extends Parser[Unit]{
-    def parseRec(input: String, index: Int, logDepth: Int, trace: Boolean) = {
-      p.parseRec(input, index, logDepth, trace) match{
+    def parseRec(cfg: ParseConfig, index: Int) = {
+      p.parseRec(cfg, index) match{
         case s: Success[_] => Result.Success((), index)
-        case f: Failure => failMore(f, index, trace)
+        case f: Failure => failMore(f, index, cfg.trace)
       }
     }
     override def toString = s"&($p)"
@@ -304,10 +309,10 @@ object Parser{
    * if it succeeds. Neither case consumes any input
    */
   case class Not(p: Parser[_]) extends Parser[Unit]{
-    def parseRec(input: String, index: Int, logDepth: Int, trace: Boolean) = {
-      val res0 = p.parseRec(input, index, logDepth, trace)
+    def parseRec(cfg: ParseConfig, index: Int) = {
+      val res0 = p.parseRec(cfg, index)
       val res = res0 match{
-        case s: Success[_] => fail(input, s.index)
+        case s: Success[_] => fail(cfg.input, s.index)
         case f: Failure => Result.Success((), index)
       }
       res
@@ -323,10 +328,10 @@ object Parser{
     case class Optional[+T, R](p: Parser[T])
                               (implicit ev: Implicits.Optioner[T, R]) extends Parser[R]{
 
-    def parseRec(input: String, index: Int, logDepth: Int, trace: Boolean) = {
-      p.parseRec(input, index, logDepth, trace) match{
+    def parseRec(cfg: ParseConfig, index: Int) = {
+      p.parseRec(cfg, index) match{
         case Success(t, index, cut) => Success(ev(Some(t)), index, cut)
-        case f: Failure if f.cut => failMore(f, index, trace)
+        case f: Failure if f.cut => failMore(f, index, cfg.trace)
         case _ => Success(ev(None), index)
       }
     }
@@ -353,7 +358,7 @@ object Parser{
     case class Chain[R](p: Parser[R], cut: Boolean)(val ev: Implicits.Sequencer[R, R, R])
     case class Flat[R](p0: Parser[R],
                        ps: Vector[Chain[R]]) extends Parser[R] {
-      def parseRec(input: String, index: Int, logDepth: Int, trace: Boolean): Result[R] = {
+      def parseRec(cfg: ParseConfig, index: Int): Result[R] = {
         /**
          * Given
          *
@@ -370,8 +375,8 @@ object Parser{
           if (vIndex >= ps.length) Success(r1, rIndex, rCut)
           else {
             val c = ps(vIndex)
-            c.p.parseRec(input, rIndex, logDepth, trace) match {
-              case f: Failure => failMore(f, rIndex, trace, cut = c.cut | f.cut | rCut)
+            c.p.parseRec(cfg, rIndex) match {
+              case f: Failure => failMore(f, rIndex, cfg.trace, cut = c.cut | f.cut | rCut)
               case res2: Success[R] => rec(
                 c.ev(r1, res2.value), res2.index, c.cut | res2.cut | rCut,
                 vIndex + 1
@@ -379,8 +384,8 @@ object Parser{
             }
           }
         }
-        p0.parseRec(input, index, logDepth, trace) match{
-          case f: Failure => failMore(f, index, trace, cut = f.cut)
+        p0.parseRec(cfg, index) match{
+          case f: Failure => failMore(f, index, cfg.trace, cut = f.cut)
           case s: Success[R] => rec(s.value, s.index, s.cut, 0)
         }
       }
@@ -420,12 +425,12 @@ object Parser{
   case class Sequence[+T1, +T2, R](p1: Parser[T1], p2: Parser[T2], cut: Boolean)
                                   (implicit ev: Implicits.Sequencer[T1, T2, R]) extends Parser[R]{
     def ev2: Implicits.Sequencer[_, _, _] = ev
-    def parseRec(input: String, index: Int, logDepth: Int, trace: Boolean) = {
-      p1.parseRec(input, index, logDepth, trace) match{
-        case f: Failure => failMore(f, index, trace, cut = f.cut)
+    def parseRec(cfg: ParseConfig, index: Int) = {
+      p1.parseRec(cfg, index) match{
+        case f: Failure => failMore(f, index, cfg.trace, cut = f.cut)
         case s1: Success[_] =>
-          p2.parseRec(input, s1.index, logDepth, trace) match{
-          case f: Failure => failMore(f, index, trace, cut = cut || f.cut || s1.cut)
+          p2.parseRec(cfg, s1.index) match{
+          case f: Failure => failMore(f, index, cfg.trace, cut = cut || f.cut || s1.cut)
           case s2: Success[_] => Success(ev(s1.value, s2.value), s2.index, s2.cut || s1.cut | cut)
         }
       }
@@ -449,16 +454,16 @@ object Parser{
    */
   case class Repeat[T, +R](p: Parser[T], min: Int, delimiter: Parser[_])
                           (implicit ev: Implicits.Repeater[T, R]) extends Parser[R]{
-    def parseRec(input: String, index: Int, logDepth: Int, trace: Boolean) = {
+    def parseRec(cfg: ParseConfig, index: Int) = {
       val res = mutable.Buffer.empty[T]
       var finalIndex = index
       var lastFailure: Failure = null
       @tailrec def rec(index: Int, del: Parser[_]): Unit = {
-        del.parseRec(input, index, logDepth, trace) match{
-          case f: Failure if f.cut => lastFailure = failMore(f, index, trace)
+        del.parseRec(cfg, index) match{
+          case f: Failure if f.cut => lastFailure = failMore(f, index, cfg.trace)
           case f: Failure => lastFailure = f
           case Success(t, i, cut1) =>
-            p.parseRec(input, i, logDepth, trace) match{
+            p.parseRec(cfg, i) match{
               case f: Failure if f.cut | cut1 => lastFailure = failMore(f, index, f.cut | cut1)
               case f: Failure => lastFailure = f
               case Success(t, i, cut2) =>
@@ -470,10 +475,10 @@ object Parser{
       }
       rec(index, Pass)
       if (lastFailure != null && lastFailure.cut) {
-        failMore(lastFailure, index, trace)
+        failMore(lastFailure, index, cfg.trace)
       }
       else if (res.length >= min) Success(ev(res.iterator), finalIndex)
-      else fail(input, index)
+      else fail(cfg.input, index)
     }
     override def toString = {
       p + ".rep" + (if (min == 0) "" else min) + (if (delimiter == Pass) "" else s"($delimiter)")
@@ -491,12 +496,12 @@ object Parser{
    * the first one that succeeds and fails if both fail
    */
   case class Either[T](ps: Parser[T]*) extends Parser[T]{
-    def parseRec(input: String, index: Int, logDepth: Int, trace: Boolean) = {
+    def parseRec(cfg: ParseConfig, index: Int) = {
       @tailrec def rec(parserIndex: Int): Result[T] = {
-        if (parserIndex >= ps.length) fail(input, index)
-        else ps(parserIndex).parseRec(input, index, logDepth, trace) match {
+        if (parserIndex >= ps.length) fail(cfg.input, index)
+        else ps(parserIndex).parseRec(cfg, index) match {
           case s: Success[_] => s
-          case f: Failure if f.cut => failMore(f, index, trace)
+          case f: Failure if f.cut => failMore(f, index, cfg.trace)
           case _ => rec(parserIndex + 1)
         }
       }
@@ -515,9 +520,10 @@ object Parser{
    * Parses a single character if it passes the predicate
    */
   case class CharPred(predicate: Char => Boolean) extends Parser[Unit]{
-    def parseRec(input: String, index: Int, logDepth: Int, trace: Boolean) = {
+    def parseRec(cfg: ParseConfig, index: Int) = {
+      val input = cfg.input
       if (index >= input.length) fail(input, index)
-      else if (predicate(input(index))) Result.Success(input(index), index + 1)
+      else if (predicate(input(index))) Result.Success((), index + 1)
       else fail(input, index)
     }
   }
@@ -526,7 +532,8 @@ object Parser{
    */
   case class CharIn(strings: Seq[Char]*) extends Parser[Unit]{
     private[this] val uberSet = BitSet(strings.flatten.map(_.toInt):_*)
-    def parseRec(input: String, index: Int, logDepth: Int, trace: Boolean) = {
+    def parseRec(cfg: ParseConfig, index: Int) = {
+      val input = cfg.input
       if (index >= input.length) fail(input, index)
       else if (uberSet(input(index))) Result.Success(input(index), index + 1)
       else fail(input, index)
@@ -556,7 +563,8 @@ object Parser{
       }
       current.word = string
     }
-    def parseRec(input: String, index: Int, logDepth: Int, trace: Boolean) = {
+    def parseRec(cfg: ParseConfig, index: Int) = {
+      val input = cfg.input
       @tailrec def rec(offset: Int, currentNode: Node, currentRes: Result[Unit]): Result[Unit] = {
         if (index + offset >= input.length) currentRes
         else {
