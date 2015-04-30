@@ -22,7 +22,11 @@ object MiscTests extends TestSuite{
         check("A" ~ "BBB", """("A" ~ "BBB")""")
         check("A" ~ "B" ~ "C", """("A" ~ "B" ~ "C")""")
         check(("A" ~ "B") ~ "C", """("A" ~ "B" ~ "C")""")
-        check("A" ~ ("B" ~ "C"), """("A" ~ "B" ~ "C")""")
+        // Not that this prints differently from the others; we
+        // only collapse Sequence nodes on the left, and sequence
+        // nodes on the right are harder to extract because of the
+        // way each node's `ev` is called
+        check("A" ~ ("B" ~ "C"), """("A" ~ ("B" ~ "C"))""")
       }
       'Mixed{
         check(("A" ~ "B") | "C", """(("A" ~ "B") | "C")""")
@@ -75,9 +79,19 @@ object MiscTests extends TestSuite{
     }
     'flattening{
       'either{
-        assert(("A" | "B" | "C" | "D") == Parser.Either("A": R0, "B": R0, "C": R0, "D": R0))
-        assert((("A" | "B") | ("C" | "D")) == Parser.Either("A": R0, "B": R0, "C": R0, "D": R0))
-        assert(("A" | ("B" | ("C" | "D"))) == Parser.Either("A": R0, "B": R0, "C": R0, "D": R0))
+        val E = Parser.Either
+        assert(("A" | "B" | "C" | "D") == E("A", "B", "C", "D"))
+        assert((("A" | "B") | ("C" | "D")) == E("A", "B", "C", "D"))
+        assert(("A" | ("B" | ("C" | "D"))) == E("A", "B", "C", "D"))
+      }
+      'sequence{
+        val S = Parser.Sequence
+        val F = Parser.Sequence.Flat
+        def C(p: R0, b: Boolean = false) = Parser.Sequence.Chain(p, b)(null)
+        assert(
+          ("A" ~ "B" ~ "C" ~ "D") == F("A", Vector(C("B"), C("C"), C("D"))),
+          (("A" ~ "B") ~ ("C" ~ "D")) == F("A", Vector(C("B"), C(F("C", Vector(C("D"))))))
+        )
       }
     }
   }

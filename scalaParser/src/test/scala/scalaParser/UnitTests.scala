@@ -42,8 +42,8 @@ object UnitTests extends TestSuite{
       println("Loaded " + input.length + " bytes of input. Parsing...")
       val start = System.currentTimeMillis()
       var count = 0
-      while(System.currentTimeMillis() - start < 30000){
-        Scala.CompilationUnit.parse(input, trace = true)
+      while(System.currentTimeMillis() - start < 300000){
+        Scala.CompilationUnit.parse(input, trace = false)
         count += 1
       }
       count

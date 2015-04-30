@@ -43,7 +43,9 @@ object ParsingTests extends TestSuite{
       check(("Hello" | "Bye").rep.!, ("HelloBye", 0), Success("HelloBye", 8))
     }
     'sequence{
-      check("Hello".! ~ "Bye".!, ("HelloBye", 0), Success(("Hello", "Bye"), 8))
+      val p = "Hello".! ~ "Bye".!
+      println(p)
+      check(p, ("HelloBye", 0), Success(("Hello", "Bye"), 8))
       check("Hello".! ~ "Bye".! ~ "!", ("HelloBye!", 0), Success(("Hello", "Bye"), 9))
       check("Hello".! ~ "Bye".! ~ "!".!, ("HelloBye!", 0), Success(("Hello", "Bye", "!"), 9))
       checkFail("Hello" ~ "Bye", ("Bye", 0), 0)
