@@ -105,7 +105,7 @@ sealed trait Parser[+T]{
   /**
    * Parses using this or the parser `p`
    */
-  def |[V >: T](p: Parser[V]): Parser[V] = Parser.Either[V](this, p)
+  def |[V >: T](p: Parser[V]): Parser[V] = Parser.Either[V](Parser.Either.flatten(Seq(this, p)):_*)
 
   /**
    * Parses using this followed by the parser `p`
@@ -386,9 +386,9 @@ object Parser{
   }
 
   object Either{
-    def flatten[T](p: Parser[T]) = p match{
-      case Either(p1, p2) =>
-      case p => p
+    def flatten[T](p: Seq[Parser[T]]) = p.flatMap{
+      case Either(ps@_*) => ps
+      case p => Seq(p)
     }
   }
   /**

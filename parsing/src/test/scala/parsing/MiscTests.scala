@@ -73,5 +73,12 @@ object MiscTests extends TestSuite{
       )
       assert(logged == expected)
     }
+    'flattening{
+      'either{
+        assert(("A" | "B" | "C" | "D") == Parser.Either("A": R0, "B": R0, "C": R0, "D": R0))
+        assert((("A" | "B") | ("C" | "D")) == Parser.Either("A": R0, "B": R0, "C": R0, "D": R0))
+        assert(("A" | ("B" | ("C" | "D"))) == Parser.Either("A": R0, "B": R0, "C": R0, "D": R0))
+      }
+    }
   }
 }
