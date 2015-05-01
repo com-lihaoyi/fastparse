@@ -11,25 +11,31 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
   private implicit def wspStr(s: String) = WL ~ s
 
 
-  def TmplBody: R0 = {
+  val TmplBody: R0 = {
     val Prelude = R( (Annot ~ OneNLMax).rep ~ Mod.rep )
-    val TmplStat = R( Import | Prelude ~ (BlockDef | Dcl) | StatCtx.Expr )
+    val DefDcl = R(
+      `def` ~ (DefDef | FunDcl) |
+      `type` ~ (TypeDef | TypeDcl) |
+      `val` ~ (ValDef | ValDcl) |
+      `var` ~ (VarDef | VarDcl) |
+      TraitDef | ClsDef | ObjDef
+    )
+    val TmplStat = R( Import | Prelude ~ DefDcl | StatCtx.Expr )
     val SelfType = R( (`this` | Id | `_`) ~ (`:` ~ InfixType).? ~ `=>` )
     R( "{" ~ SelfType.? ~ Semis.? ~ TmplStat.rep(Semis) ~ `}` )
   }
 
   val NewBody = R( ClsTmpl | TmplBody )
 
-  val ValRhs = R( Pat2.rep1(",") ~ (`:` ~ Type).? ~ `=` ~ StatCtx.Expr )
-  val ValDef = R( ValRhs )
-  val VarDef = R( Ids ~ `:` ~ Type ~ `=` ~ `_` | ValRhs )
+  val ValDef = R( Pat2.rep1(",") ~ (`:` ~ Type).? ~ `=` ~ StatCtx.Expr )
+  val VarDef = R( Ids ~ `:` ~ Type ~ `=` ~ `_` | ValDef )
 
   val DefDef = {
     val Body = R( `=` ~ `macro`.? ~ StatCtx.Expr | OneNLMax ~ "{" ~ Block ~ "}" )
     R( FunSig ~ (`:` ~ Type).? ~ Body )
   }
 
-  val BlockDef: R0 = R( (`def` ~ DefDef) | (`type` ~ TypeDef) | (`val` ~ ValDef) | (`var` ~ VarDef) | TraitDef | ClsDef | ObjDef )
+  val BlockDef: R0 = R( `def` ~ DefDef | `type` ~ TypeDef | `val` ~ ValDef | `var` ~ VarDef | TraitDef | ClsDef | ObjDef )
 
   val ClsDef = {
     val ClsAnnot = R( `@` ~ SimpleType ~ ArgList )
@@ -65,11 +71,11 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
     R( `{` ~ EarlyDef.rep(Semis) ~ `}` ~ `with` )
   }
 
-  val PkgObj = R( `package` ~ ObjDef )
-  val PkgBlock = R( `package` ~ QualId ~! `{` ~ TopStatSeq.? ~ `}` )
+  val PkgObj = R( ObjDef )
+  val PkgBlock = R( QualId ~! `{` ~ TopStatSeq.? ~ `}` )
   val TopStatSeq: R0 = {
     val Tmpl = R( (Annot ~ OneNLMax).rep ~ Mod.rep ~ (TraitDef | ClsDef | ObjDef) )
-    val TopStat = R( PkgBlock | PkgObj | Import | Tmpl )
+    val TopStat = R( `package` ~ (PkgBlock | PkgObj) | Import | Tmpl )
     R( TopStat.rep1(Semis) )
   }
   val TopPkgSeq = R( (`package` ~ QualId ~ !(WS ~ "{")).rep1(Semis) )
