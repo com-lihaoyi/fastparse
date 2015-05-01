@@ -21,15 +21,15 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
   val NewBody = R( ClsTmpl | TmplBody )
 
   val ValRhs = R( Pat2.rep1(",") ~ (`:` ~ Type).? ~ `=` ~ StatCtx.Expr )
-  val ValDef = R( `val` ~ ValRhs )
-  val VarDef = R( `var` ~ Ids ~ `:` ~ Type ~ `=` ~ `_` | `var` ~ ValRhs )
+  val ValDef = R( ValRhs )
+  val VarDef = R( Ids ~ `:` ~ Type ~ `=` ~ `_` | ValRhs )
 
   val DefDef = {
     val Body = R( `=` ~ `macro`.? ~ StatCtx.Expr | OneNLMax ~ "{" ~ Block ~ "}" )
-    R( `def` ~ FunSig ~ (`:` ~ Type).? ~ Body )
+    R( FunSig ~ (`:` ~ Type).? ~ Body )
   }
 
-  val BlockDef: R0 = R( DefDef | TypeDef | ValDef | VarDef | TraitDef | ClsDef | ObjDef )
+  val BlockDef: R0 = R( (`def` ~ DefDef) | (`type` ~ TypeDef) | (`val` ~ ValDef) | (`var` ~ VarDef) | TraitDef | ClsDef | ObjDef )
 
   val ClsDef = {
     val ClsAnnot = R( `@` ~ SimpleType ~ ArgList )
@@ -61,7 +61,7 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
   }
 
   val EarlyDefs: R0 = {
-    val EarlyDef = R( (Annot ~ OneNLMax).rep ~ Mod.rep ~ (ValDef | VarDef) )
+    val EarlyDef = R( (Annot ~ OneNLMax).rep ~ Mod.rep ~ ((`val` ~ ValDef) | (`var` ~ VarDef)) )
     R( `{` ~ EarlyDef.rep(Semis) ~ `}` ~ `with` )
   }
 

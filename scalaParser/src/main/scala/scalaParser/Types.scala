@@ -16,10 +16,10 @@ trait Types extends Core{
   }
 
   val Dcl: R0 = {
-    val ValDcl = R( ValDef | `val` ~ Ids ~ `:` ~ Type )
-    val VarDcl = R( VarDef | `var` ~ Ids ~ `:` ~ Type )
-    val FunDcl = R( DefDef | `def` ~ FunSig ~ (`:` ~ Type).? )
-    R( ValDcl | VarDcl | FunDcl | TypeDcl )
+    val ValDcl = R( ValDef | Ids ~ `:` ~ Type )
+    val VarDcl = R( VarDef | Ids ~ `:` ~ Type )
+    val FunDcl = R( DefDef | FunSig ~ (`:` ~ Type).? )
+    R( (`val` ~ ValDcl) | (`var` ~ VarDcl) | (`def` ~ FunDcl) | (`type` ~ TypeDcl) )
   }
 
   val Type: R0 = {
@@ -34,7 +34,7 @@ trait Types extends Core{
   val InfixType = R( CompoundType ~ (NotNewline ~ Id ~ OneNLMax ~ CompoundType).rep )
 
   val CompoundType = {
-    val RefineStat = R( TypeDef | Dcl  )
+    val RefineStat = R( (`type` ~ TypeDef) | Dcl  )
     val Refinement = R( OneNLMax ~ `{` ~ RefineStat.rep(Semis) ~ `}` )
     R( AnnotType.rep1(`with`) ~ Refinement.? | Refinement )
   }
@@ -48,7 +48,7 @@ trait Types extends Core{
   val TypeArgs = R( "[" ~ Types ~ "]" )
   val Types = R( Type.rep1(",") )
 
-  val TypeDcl: R0 = R( `type` ~ Id ~ TypeArgList.? ~ TypeBounds )
+  val TypeDcl: R0 = R( Id ~ TypeArgList.? ~ TypeBounds )
 
   val FunSig: R0 = {
     val FunArg = R( Annot.rep ~ Id ~ (`:` ~ ParamType).? ~ (`=` ~ TypeExpr).? )
@@ -73,5 +73,5 @@ trait Types extends Core{
     R( "[" ~ Variant.rep(",") ~ "]" )
   }
   val Exprs: R0 = R( TypeExpr.rep1(",") )
-  val TypeDef: R0 = R( `type` ~ Id ~ TypeArgList.? ~ `=` ~ Type )
+  val TypeDef: R0 = R( Id ~ TypeArgList.? ~ `=` ~ Type )
 }
