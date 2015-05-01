@@ -1,5 +1,7 @@
 package parsing
 
+import parsing.Parser.Rule
+
 import scala.annotation.{switch, tailrec}
 import scala.collection.{BitSet, mutable}
 import acyclic.file
@@ -65,7 +67,24 @@ object Result{
 }
 import Result._
 
+/**
+ * Things which get passed through the entire parse run, but almost never
+ * get changed in the process.
+ *
+ * @param input The string that is currently being parsed
+ * @param logDepth
+ * @param trace
+ */
 case class ParseConfig(input: String, logDepth: Int, trace: Boolean)
+
+/**
+ * A [[Walker]] that is provided to each Parser's `mapChildren` call, which
+ * automatically appends the current Parser to the stack.
+ */
+trait ScopedWalker{
+  def apply[T](p: Parser[T]): Parser[T]
+}
+
 /**
  * A single, self-contained, immutable parser. The primary method is
  * `parse`, which returns a [[T]] on success and a stack trace on failure.
@@ -96,6 +115,7 @@ sealed trait Parser[+T]{
    */
   def parseRec(cfg: ParseConfig, index: Int): Result[T]
 
+  def mapChildren(w: ScopedWalker): Parser[T] = this
   /**
    * Wraps this in a [[Parser.Logged]]. This prints out information where a parser
    * was tried and its result, which is useful for debugging
@@ -178,6 +198,7 @@ object Parser{
         case f: Failure => failMore(f, index, cfg.trace)
       }
     }
+    override def mapChildren(w: ScopedWalker) = Mapper(w(p), f)
   }
   /**
    * A parser that always succeeds, consuming no input
@@ -204,6 +225,7 @@ object Parser{
       }
     }
     override def toString = p.toString + ".!"
+    override def mapChildren(w: ScopedWalker) = Capturing(w(p))
   }
   /**
    * Succeeds, consuming a single character
@@ -272,6 +294,7 @@ object Parser{
       output(indent + "-" + msg + ":" + index + ":" + res)
       res
     }
+    override def mapChildren(w: ScopedWalker) = Logged(w(p), msg, output)
   }
 
 
@@ -289,6 +312,7 @@ object Parser{
       }
     }
     override def toString = name
+    override def mapChildren(w: ScopedWalker) = Rule(name, () => w(p()))
   }
 
   /**
@@ -303,6 +327,7 @@ object Parser{
       }
     }
     override def toString = s"&($p)"
+    override def mapChildren(w: ScopedWalker) = Lookahead(w(p))
   }
   /**
    * Wraps another parser, succeeding it it fails and failing
@@ -318,6 +343,7 @@ object Parser{
       res
     }
     override def toString = s"!($p)"
+    override def mapChildren(w: ScopedWalker) = Not(w(p))
   }
 
 
@@ -336,6 +362,7 @@ object Parser{
       }
     }
     override def toString = s"$p.?"
+    override def mapChildren(w: ScopedWalker) = Optional(w(p))(ev)
   }
 
 
@@ -396,6 +423,10 @@ object Parser{
         }
         s"($p0${rhs.mkString})"
       }
+      override def mapChildren(w: ScopedWalker) = Flat(
+        w(p0),
+        ps.map(c => Chain(w(c.p), c.cut)(c.ev))
+      )
     }
 
     /**
@@ -445,6 +476,9 @@ object Parser{
       }
       "(" + rec(this) + ")"
     }
+    override def mapChildren(w: ScopedWalker) = {
+      Sequence(w(p1), w(p2), cut)(ev)
+    }
   }
 
   /**
@@ -481,6 +515,8 @@ object Parser{
     override def toString = {
       p + ".rep" + (if (min == 0) "" else min) + (if (delimiter == Pass) "" else s"($delimiter)")
     }
+    override def mapChildren(w: ScopedWalker) =
+      Repeat(w(p), min, delimiter)(ev)
   }
 
   object Either{
@@ -512,6 +548,7 @@ object Parser{
       }
       "(" + rec(this) + ")"
     }
+    override def mapChildren(w: ScopedWalker) = Either(ps.map(w(_)):_*)
   }
 
   /**
@@ -585,4 +622,3 @@ object Parser{
     }
   }
 }
-

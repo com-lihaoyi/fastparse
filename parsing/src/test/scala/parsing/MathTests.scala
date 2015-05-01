@@ -26,8 +26,10 @@ object MathTests extends TestSuite{
   val tests = TestSuite{
     'pass {
       def check(str: String, num: Int) = {
-        val res = expr.parse(str)
-        assert(res == Result.Success(num, str.length))
+        for (parser <- Seq(expr, EitherSequenceWalker.recurse(RuleWalker.recurse(expr, Nil), Nil))) {
+          val res = parser.parse(str)
+          assert(res == Result.Success(num, str.length))
+        }
       }
       check("1+1", 2)
       check("1+1*2", 3)
@@ -37,5 +39,12 @@ object MathTests extends TestSuite{
       check("(1+1*2)+(3*4*5)/20", 6)
       check("((1+1*2)+(3*4*5))/3", 21)
     }
+
   }
+  println("    A")
+  println(expr)
+  println("    B")
+  println(RuleWalker.recurse(expr, Nil))
+  println("    C")
+  println(EitherSequenceWalker.recurse(RuleWalker.recurse(expr, Nil), Nil))
 }

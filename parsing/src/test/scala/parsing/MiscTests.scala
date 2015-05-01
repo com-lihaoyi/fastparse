@@ -93,31 +93,10 @@ object MiscTests extends TestSuite{
           (("A" ~ "B") ~ ("C" ~ "D")) == F("A", Vector(C("B"), C(F("C", Vector(C("D"))))))
         )
       }
-      'rule{""+{
+      'rule{""+{ // working around a bug in uTest that crashes on lazy vals
         lazy val X: R0 = R( "A" | X )
-
-
-        assert(rec(X, Nil) == ("A"| X))
-        println(JsonTests.jsonExpr)
-        println(rec(JsonTests.jsonExpr, Nil))
+        assert(RuleWalker.recurse(X, Nil) == ("A"| X))
       }}
     }
-  }
-  def rec[T](p: Parser[T], stack: List[Parser[_]]): Parser[T] = {
-    def recStack[T](pRec: Parser[T]): Parser[T] = rec(pRec, p :: stack)
-    val res: Parser[T] = p match{
-      case r: Rule[T] =>
-        if (stack.contains(r)) r
-        else recStack(r.pCached)
-      case m: Parser.Mapper[_, T] => m.copy(p = recStack(m.p))
-      case e: Parser.Either[T] => Parser.Either(e.ps.map(rec(_, p :: stack)):_*)
-      case s: Parser.Sequence[_, _, T] => s.copy(p1 = recStack(s.p1), p2 = recStack(s.p2)).asInstanceOf[Parser[T]]
-      case f: Parser.Sequence.Flat[T] => Parser.Sequence.Flat(
-        recStack(f.p0),
-        f.ps.map(c => Parser.Sequence.Chain(recStack(c.p), c.cut)(c.ev))
-      )
-      case p => p
-    }
-    res
   }
 }

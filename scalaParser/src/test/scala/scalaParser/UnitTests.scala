@@ -46,7 +46,7 @@ object UnitTests extends TestSuite{
       val start = System.currentTimeMillis()
       var count = 0
       while(System.currentTimeMillis() - start < 3000000){
-        Scala.CompilationUnit.parse(input, trace = false)
+        EitherSequenceWalker.recurse(RuleWalker.recurse(Scala.CompilationUnit, Nil), Nil).parse(input, trace = false)
         count += 1
       }
       count
