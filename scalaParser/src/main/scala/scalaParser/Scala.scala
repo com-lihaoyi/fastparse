@@ -40,7 +40,7 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
     val Implicit = R( OneNLMax ~ "(" ~ `implicit` ~ ClsArg.rep1(",") ~ ")" )
     val ClsArgs = R( OneNLMax ~ "(" ~ ClsArg.rep(",") ~ ")" )
     val AllArgs = R( ClsArgs.rep1 ~ Implicit.? | Implicit )
-    R( `case`.? ~ `class` ~ Id ~ TypeArgList.? ~ Prelude.? ~ AllArgs.? ~ ClsTmplOpt )
+    R( `case`.? ~ `class` ~! Id ~ TypeArgList.? ~ Prelude.? ~ AllArgs.? ~ ClsTmplOpt )
   }
   val TraitDef = {
     val TraitTmplOpt = {
@@ -48,10 +48,10 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
       val TraitTmpl = R( EarlyDefs.? ~ TraitParents ~ TmplBody.? )
       R( `extends` ~ TraitTmpl | (`extends`.? ~ TmplBody).? )
     }
-    R( `trait` ~ Id ~ TypeArgList.? ~ TraitTmplOpt )
+    R( `trait` ~! Id ~ TypeArgList.? ~ TraitTmplOpt )
   }
 
-  val ObjDef: R0 = R( `case`.? ~ `object` ~ Id ~ ClsTmplOpt )
+  val ObjDef: R0 = R( `case`.? ~ `object` ~! Id ~ ClsTmplOpt )
   val ClsTmplOpt: R0 = R( `extends` ~ ClsTmpl ~ Pass | (`extends`.? ~ TmplBody).? ~ Pass )
 
   val ClsTmpl: R0 = {
@@ -66,7 +66,7 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
   }
 
   val PkgObj = R( `package` ~ ObjDef )
-  val PkgBlock = R( `package` ~ QualId ~ `{` ~ TopStatSeq.? ~ `}` )
+  val PkgBlock = R( `package` ~ QualId ~! `{` ~ TopStatSeq.? ~ `}` )
   val TopStatSeq: R0 = {
     val Tmpl = R( (Annot ~ OneNLMax).rep ~ Mod.rep ~ (TraitDef | ClsDef | ObjDef) )
     val TopStat = R( PkgBlock | PkgObj | Import | Tmpl )

@@ -13,7 +13,7 @@ trait Exprs extends Core with Types with Xml{
     val Selector: R0 = R( Id ~ (`=>` ~ (Id | `_`)).? )
     val Selectors: R0 = R( "{" ~ (Selector ~ ",").rep ~ (Selector | `_`) ~ "}" )
     val ImportExpr: R0 = R( StableId ~ ("." ~ (`_` | Selectors)).? )
-    R( `import` ~ ImportExpr.rep1(",") )
+    R( `import` ~! ImportExpr.rep1(",") )
   }
 
   val Ascription = R( `:` ~ (`_*` |  Type | Annot.rep1) )

@@ -39,17 +39,17 @@ object UnitTests extends TestSuite{
       // parboiled2: 446 443 447
       // parsing: 104 123 122
       // Parboiled2 is 3.9 times faster
-      val input = scala.io.Source.fromFile(
-        "scala-js/compiler/src/main/scala/org/scalajs/core/compiler/GenJSCode.scala"
-      ).mkString
-      println("Loaded " + input.length + " bytes of input. Parsing...")
-      val start = System.currentTimeMillis()
-      var count = 0
-      while(System.currentTimeMillis() - start < 3000000){
-        EitherSequenceWalker.recurse(RuleWalker.recurse(Scala.CompilationUnit, Nil), Nil).parse(input, trace = false)
-        count += 1
-      }
-      count
+//      val input = scala.io.Source.fromFile(
+//        "scala-js/compiler/src/main/scala/org/scalajs/core/compiler/GenJSCode.scala"
+//      ).mkString
+//      println("Loaded " + input.length + " bytes of input. Parsing...")
+//      val start = System.currentTimeMillis()
+//      var count = 0
+//      while(System.currentTimeMillis() - start < 3000000){
+//        EitherSequenceWalker.recurse(RuleWalker.recurse(Scala.CompilationUnit, Nil), Nil).parse(input, trace = false)
+//        count += 1
+//      }
+//      count
     }
     'pos {
       * - check("package torimatomeru")
