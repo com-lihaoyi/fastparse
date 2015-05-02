@@ -5,7 +5,7 @@ trait Types extends Core{
   def TypeExpr: R0
   def ValDef: R0
   def VarDef: R0
-  def DefDef: R0
+  def FunDef: R0
   private implicit def wspStr(s: String) = R(WL ~ s)(Utils.literalize(s).toString)
 
   val Mod: R0 = R( LocalMod | AccessMod | `override` )
@@ -17,9 +17,9 @@ trait Types extends Core{
 
   val ValDcl = R( Ids ~ `:` ~ Type )
   val VarDcl = R( Ids ~ `:` ~ Type )
-  val FunDcl = R( FunSig ~ (`:` ~ Type).? )
+
   val Dcl: R0 = {
-    R( (`val` ~ ValDcl) | (`var` ~ VarDcl) | (`def` ~ FunDcl) | (`type` ~ TypeDcl) )
+    R( `val` ~! ValDcl | `var` ~! VarDcl | `def` ~! FunDef | `type` ~! TypeDef )
   }
 
   val Type: R0 = {
@@ -41,14 +41,16 @@ trait Types extends Core{
   val AnnotType = R(SimpleType ~ (NotNewline ~ (NotNewline ~ Annot).rep1).? )
 
   val SimpleType: R0 = {
+    // Can't `cut` after the opening paren, because we might be trying to parse `()`
+    // or `() => T`! only cut after parsing one type
     val BasicType = R( "(" ~ Types ~ ")"  | StableId ~ "." ~ `type` | StableId )
     R( BasicType ~ (TypeArgs | `#` ~ Id).rep )
   }
 
   val TypeArgs = R( "[" ~ Types ~ "]" )
-  val Types = R( Type.rep1(",") )
+  val Types = R( Type ~! ("," ~! Type).rep )
 
-  val TypeDcl: R0 = R( Id ~ TypeArgList.? ~ TypeBounds )
+
 
   val FunSig: R0 = {
     val FunArg = R( Annot.rep ~ Id ~ (`:` ~ ParamType).? ~ (`=` ~ TypeExpr).? )
@@ -66,12 +68,12 @@ trait Types extends Core{
     R((Id | `_`) ~ TypeArgList.? ~ TypeBounds ~ CtxBounds)
   }
 
-  val Annot: R0 = R( `@` ~ SimpleType ~  ("(" ~ (Exprs ~ (`:` ~ `_*`).?).? ~ ")").rep)
+  val Annot: R0 = R( `@` ~! SimpleType ~  ("(" ~ (Exprs ~ (`:` ~ `_*`).?).? ~ ")").rep)
 
   val TypeArgList: R0 = {
     val Variant: R0 = R( Annot.rep ~ (WL ~ CharIn("+-")).? ~ TypeArg )
     R( "[" ~ Variant.rep(",") ~ "]" )
   }
   val Exprs: R0 = R( TypeExpr.rep1(",") )
-  val TypeDef: R0 = R( Id ~ TypeArgList.? ~ `=` ~ Type )
+  val TypeDef: R0 = R( Id ~ TypeArgList.? ~ (`=` ~ Type | TypeBounds) )
 }

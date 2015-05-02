@@ -1031,23 +1031,14 @@ object UnitTests extends TestSuite{
         found = "2\n  } yiel"
       )
       * - checkNeg(
-        """
-          |package torimatomeru
-          |
-          |import org.parboiled2.ParseError
-          |import utest._
-          |import utest.framework.Test
-          |import utest.util.Tree
-          |
-          |import scala.util.{Failure, Success}
-          |
-          |object SyntaxTest extends TestSuite
-        """.stripMargin
+        "import scala.util.{Failure, Success + 1}",
+        expected = """ "}" """,
+        found = "+ 1}"
       )
       * - check(
         """
           |object SyntaxTest extends TestSuite{
-          |  def check[T](input: String) = {
+          |  def check[T]](input: String) = {
           |
           |  }
           |}

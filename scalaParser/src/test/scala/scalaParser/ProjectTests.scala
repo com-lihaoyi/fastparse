@@ -13,12 +13,12 @@ object ProjectTests extends TestSuite{
   def tests = TestSuite{
     def checkFile(path: String) = UnitTests.check(io.Source.fromFile(path).mkString, tag = path)
     def checkDir(path: String, filter: String => Boolean = _ => false) = {
-
       def listFiles(s: java.io.File): Iterator[String] = {
         val (dirs, files) = s.listFiles().toIterator.partition(_.isDirectory)
         files.map(_.getPath) ++ dirs.flatMap(listFiles)
       }
       for{
+
         f <- listFiles(new java.io.File(path))
         if f.endsWith(".scala")
         if !filter(f)

@@ -150,7 +150,7 @@ sealed trait Parser[+T]{
    * Parses using this followed by the parser `p`
    */
   def ~[V, R](p: Parser[V])(implicit ev: Implicits.Sequencer[T, V, R]): Parser[R] =
-    Parser.Sequence.flatten(Parser.Sequence(this, p, cut=false).asInstanceOf[Parser.Sequence[R, R, R]])
+    /*Parser.Sequence.flatten(*/Parser.Sequence(this, p, cut=false)/*.asInstanceOf[Parser.Sequence[R, R, R]])*/
   /**
    * Parses using this followed by the parser `p`, performing a Cut if
    * this parses successfully. That means that if `p` fails to parse, the
@@ -463,6 +463,7 @@ object Parser{
       p1.parseRec(cfg, index) match{
         case f: Failure => failMore(f, index, cfg.trace, cut = f.cut)
         case s1: Success[_] =>
+//          if (cut) println("CUT! " + this)
           p2.parseRec(cfg, s1.index) match{
           case f: Failure => failMore(f, index, cfg.trace, cut = cut || f.cut || s1.cut)
           case s2: Success[_] => Success(ev(s1.value, s2.value), s2.index, s2.cut || s1.cut | cut)

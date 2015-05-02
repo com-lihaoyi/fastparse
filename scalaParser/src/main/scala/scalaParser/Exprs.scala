@@ -11,8 +11,8 @@ trait Exprs extends Core with Types with Xml{
 
   val Import: R0 = {
     val Selector: R0 = R( Id ~ (`=>` ~ (Id | `_`)).? )
-    val Selectors: R0 = R( "{" ~ (Selector ~ ",").rep ~ (Selector | `_`) ~ "}" )
-    val ImportExpr: R0 = R( StableId ~ ("." ~ (`_` | Selectors)).? )
+    val Selectors: R0 = R( "{" ~! (Selector ~ ",").rep ~ (Selector | `_`) ~ "}" )
+    val ImportExpr: R0 = R( StableId ~ ("." ~! (`_` | Selectors)).? )
     R( `import` ~! ImportExpr.rep1(",") )
   }
 
