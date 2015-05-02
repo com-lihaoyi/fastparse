@@ -1035,33 +1035,36 @@ object UnitTests extends TestSuite{
         expected = """ "}" """,
         found = "+ 1}"
       )
-      * - check(
+      * - checkNeg(
         """
           |object SyntaxTest extends TestSuite{
           |  def check[T]](input: String) = {
           |
           |  }
           |}
-        """.stripMargin
+        """.stripMargin,
+        expected = """ "}" """,
+        found = "](input: S"
+      )
+      * - checkNeg(
+        """
+          |object SyntaxTest{
+          |  a(
+          |  throw 1
+          |}
+        """.stripMargin,
+        expected = """ ")" """,
+        found ="}"
       )
       * - check(
         """
-          |object SyntaxTest{
-          |  a()
-          |  throw 1
+          |object SyntaxTest {
+          |  {
+          |    thro   1
+          |  }
           |}
         """.stripMargin
       )
-//      * - check(
-//        """
-//          |object SyntaxTest extends TestSuite{
-//          |  {
-//          |        println
-//          |        throw 1
-//          |  }
-//          |}
-//        """.stripMargin
-//      )
 //      * - check(
 //        """package scalatex
 //          |

@@ -100,7 +100,7 @@ trait Exprs extends Core with Types with Xml{
   val Block: R0 = {
     val BlockEnd = R( Semis.? ~ &("}" | `case`) )
     val LambdaBlock = R( LambdaHead | BlockStats )
-    val Body = R( LambdaBlock.rep )
+    val Body = R( LambdaBlock.rep(Semis) )
     R( LambdaHead.rep ~ Semis.? ~ Body ~ BlockEnd )
   }
 
@@ -114,7 +114,7 @@ trait Exprs extends Core with Types with Xml{
 
   val TypePat = R( CompoundType )
 
-  val ArgList: R0 = R( "(" ~ (Exprs ~ (`:` ~ `_*`).?).? ~ ")" | OneNLMax ~ BlockExpr )
+  val ArgList: R0 = R( "(" ~! (Exprs ~ (`:` ~ `_*`).?).? ~ ")" | OneNLMax ~ BlockExpr )
 
   val CaseClauses: R0 = {
     val CaseClause: R0 = R( `case` ~ Pat ~ ExprCtx.Guard.? ~ `=>` ~ Block )

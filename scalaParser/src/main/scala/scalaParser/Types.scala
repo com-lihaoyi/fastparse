@@ -32,8 +32,7 @@ trait Types extends Core{
   val InfixType = R( CompoundType ~ (NotNewline ~ Id ~ OneNLMax ~ CompoundType).rep )
 
   val CompoundType = {
-    val RefineStat = R( (`type` ~ TypeDef) | Dcl  )
-    val Refinement = R( OneNLMax ~ `{` ~ RefineStat.rep(Semis) ~ `}` )
+    val Refinement = R( OneNLMax ~ `{` ~ Dcl.rep(Semis) ~ `}` )
     R( AnnotType.rep1(`with`) ~ Refinement.? | Refinement )
   }
   val AnnotType = R(SimpleType ~ (NotNewline ~ (NotNewline ~ Annot).rep1).? )
