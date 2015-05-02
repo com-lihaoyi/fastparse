@@ -15,11 +15,10 @@ trait Types extends Core{
     R( (`private` | `protected`) ~ AccessQualifier.? )
   }
 
-  val ValDcl = R( Ids ~ `:` ~ Type )
   val VarDcl = R( Ids ~ `:` ~ Type )
 
   val Dcl: R0 = {
-    R( `val` ~! ValDcl | `var` ~! VarDcl | `def` ~! FunDef | `type` ~! TypeDef )
+    R( `val` ~! ValDef | `var` ~! VarDcl | `def` ~! FunDef | `type` ~! TypeDef )
   }
 
   val Type: R0 = {

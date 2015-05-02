@@ -16,7 +16,7 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
     val DefDcl = R(
       `def` ~ FunDef |
       `type` ~ TypeDef |
-      `val` ~ (ValDef | ValDcl) |
+      `val` ~ ValDef |
       `var` ~ (VarDef | VarDcl) |
       TraitDef | ClsDef | ObjDef
     )
@@ -27,7 +27,7 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
 
   val NewBody = R( ClsTmpl | TmplBody )
 
-  val ValDef = R( Pat2.rep1(",") ~ (`:` ~ Type).? ~ `=` ~ StatCtx.Expr )
+  val ValDef = R( Pat2.rep1(",") ~ (`:` ~ Type).? ~ (`=` ~ StatCtx.Expr).? )
   val VarDef = R( Ids ~ `:` ~ Type ~ `=` ~ `_` | ValDef )
 
   val FunDef = {
