@@ -17,7 +17,7 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
       `def` ~ FunDef |
       `type` ~ TypeDef |
       `val` ~ ValDef |
-      `var` ~ (VarDef | VarDcl) |
+      `var` ~ VarDef |
       TraitDef | ClsDef | ObjDef
     )
     val TmplStat = R( Import | Prelude ~ DefDcl | StatCtx.Expr )
