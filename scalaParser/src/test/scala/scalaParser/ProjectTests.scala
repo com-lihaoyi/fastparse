@@ -27,7 +27,16 @@ object ProjectTests extends TestSuite{
         checkFile(f)
       }
     }
-    'test - checkFile("scalaParser/src/test/resources/test.scala")
+    val x = {
+      println(1)
+      (x: Int) =>
+      println(2)
+      (y: Int) =>
+      println(3)
+      (y: Int) =>
+      println(3)
+    }
+    'test - checkFile("scala/src/actors/scala/actors/Actor.scala")
 
     'scalaParser - checkDir("scalaParser/src")
     'scalaJs - checkDir("scala-js")

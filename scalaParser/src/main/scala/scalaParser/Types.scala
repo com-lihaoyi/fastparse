@@ -6,7 +6,7 @@ trait Types extends Core{
   def ValDef: R0
   def VarDef: R0
   def DefDef: R0
-  private implicit def wspStr(s: String) = WL ~ s
+  private implicit def wspStr(s: String) = R(WL ~ s)(Utils.literalize(s).toString)
 
   val Mod: R0 = R( LocalMod | AccessMod | `override` )
   val LocalMod: R0 = R( `abstract` | `final` | `sealed` | `implicit` | `lazy` )

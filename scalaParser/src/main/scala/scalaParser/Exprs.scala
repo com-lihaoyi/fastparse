@@ -3,7 +3,7 @@ import acyclic.file
 import parsing._
 trait Exprs extends Core with Types with Xml{
 
-  private implicit def wspStr(s: String) = WL ~ s
+  private implicit def wspStr(s: String) = R(WL ~ s)(Utils.literalize(s).toString)
 
 
   def NewBody: R0
@@ -42,24 +42,24 @@ trait Exprs extends Core with Types with Xml{
     val Expr: R0 = {
       val If = {
         val Else = R( Semi.? ~ `else` ~ Expr )
-        R( `if` ~ "(" ~ ExprCtx.Expr ~ ")" ~ Expr ~ Else.? )
+        R( `if` ~! "(" ~ ExprCtx.Expr ~ ")" ~ Expr ~ Else.? )
       }
-      val While = R( `while` ~ "(" ~ Expr ~ ")" ~ Expr )
+      val While = R( `while` ~! "(" ~ Expr ~ ")" ~ Expr )
       val Try = {
-        val Catch = R( `catch` ~ Expr )
-        val Finally = R( `finally` ~ Expr )
-        R( `try` ~ Expr ~ Catch.? ~ Finally.? )
+        val Catch = R( `catch` ~! Expr )
+        val Finally = R( `finally` ~! Expr )
+        R( `try` ~! Expr ~ Catch.? ~ Finally.? )
       }
-      val DoWhile = R( `do` ~ Expr ~ Semi.? ~ `while` ~ "(" ~ Expr ~ ")" )
+      val DoWhile = R( `do` ~! Expr ~ Semi.? ~ `while` ~ "(" ~ Expr ~ ")" )
 
       val For = {
-        val Body = R( "(" ~ ExprCtx.Enumerators ~ ")" | "{" ~ StatCtx.Enumerators ~ "}" )
-        R( `for` ~ Body ~ `yield`.? ~ Expr )
+        val Body = R( "(" ~! ExprCtx.Enumerators ~ ")" | "{" ~! StatCtx.Enumerators ~ "}" )
+        R( `for` ~! Body ~ `yield`.? ~ Expr )
       }
-      val Throw = R( `throw` ~ Expr )
-      val Return = R( `return` ~ Expr.? )
+      val Throw = R( `throw` ~! Expr )
+      val Return = R( `return` ~! Expr.? )
 
-      val SmallerExpr = R( PostfixExpr ~ (`match` ~ "{" ~ CaseClauses ~ "}" | Ascription).? )
+      val SmallerExpr = R( PostfixExpr ~ (`match` ~! "{" ~ CaseClauses ~ "}" | Ascription).? )
       val LambdaBody = R( If | While | Try | DoWhile | For | Throw | Return | SmallerExpr )
       R( LambdaHead.rep ~ LambdaBody )
     }
@@ -98,14 +98,10 @@ trait Exprs extends Core with Types with Xml{
   }
 
   val Block: R0 = {
-    val End = R( Semis.? ~ &("}" | `case`) )
-    val ResultExpr = R{ StatCtx.Expr | LambdaHead ~ Block}
-    val Body = R(
-      ResultExpr ~ End |
-      BlockStats ~ (Semis ~ ResultExpr).? ~ End |
-      End
-    )
-    R( LambdaHead.rep ~ Semis.? ~ Body )
+    val BlockEnd = R( Semis.? ~ &("}" | `case`) )
+    val LambdaBlock = R( LambdaHead | BlockStats )
+    val Body = R( LambdaBlock.rep )
+    R( LambdaHead.rep ~ Semis.? ~ Body ~ BlockEnd )
   }
 
   val Patterns: R0 = R( Pat.rep1(",") )

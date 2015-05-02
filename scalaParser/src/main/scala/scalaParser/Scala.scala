@@ -8,7 +8,7 @@ import parsing._
  */
 object Scala extends Core with Types with Exprs/* with Xml*/{
 
-  private implicit def wspStr(s: String) = WL ~ s
+  private implicit def wspStr(s: String) = R(WL ~ s)(Utils.literalize(s).toString)
 
 
   val TmplBody: R0 = {
@@ -75,7 +75,7 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
   val PkgBlock = R( QualId ~! `{` ~ TopStatSeq.? ~ `}` )
   val TopStatSeq: R0 = {
     val Tmpl = R( (Annot ~ OneNLMax).rep ~ Mod.rep ~ (TraitDef | ClsDef | ObjDef) )
-    val TopStat = R( `package` ~ (PkgBlock | PkgObj) | Import | Tmpl )
+    val TopStat = R( `package` ~! (PkgBlock | PkgObj) | Import | Tmpl )
     R( TopStat.rep1(Semis) )
   }
   val TopPkgSeq = R( (`package` ~ QualId ~ !(WS ~ "{")).rep1(Semis) )

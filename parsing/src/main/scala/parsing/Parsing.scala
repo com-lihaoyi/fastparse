@@ -40,7 +40,10 @@ object Result{
      * [[Parser.Rule]] objects as well as the final Parser (whether named or not)
      * for easier reading.
      */
-    def stack = fullStack.filter(_.parser.isInstanceOf[Parser.Rule[_]]) :+ Frame(index, parser)
+    def stack = fullStack.collect{
+      case f @ Frame(i, p: Parser.Rule[_]) => f
+      case f @ Frame(i, p: Parser.Sequence[_, _, _]) if p.cut => f
+    } :+ Frame(index, parser)
 
     /**
      * A longer version of [[trace]], which shows more context for every stack frame
