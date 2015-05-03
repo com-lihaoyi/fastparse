@@ -60,7 +60,7 @@ trait Exprs extends Core with Types with Xml{
       val Return = R( `return` ~! Expr.? )
 
 
-      val LambdaRhs = if (curlyBlock) R( BlockStats ) else R( Expr )
+      val LambdaRhs = if (curlyBlock) R( BlockStat ) else R( Expr )
       val ImplicitLambda = R( `implicit`.? ~ (Id | `_`) ~ (`:` ~ InfixType).? ~ `=>` ~! LambdaRhs.? )
       R(
         ImplicitLambda |
@@ -74,14 +74,14 @@ trait Exprs extends Core with Types with Xml{
     val PrefixExpr = R( ExprPrefix.? ~ SimpleExpr )
     val InfixSuffix = R( NoSemis ~ Id ~ TypeArgs.? ~ OneSemiMax ~ PrefixExpr ~ ExprSuffix)
     val PostFix = R( NotNewline ~ Id ~ Newline.? )
-    val PostfixSuffix = R( InfixSuffix.rep ~ PostFix.? ~ (`=` ~ Expr).? ~ MatchAscriptionSuffix.?)
+    val PostfixSuffix = R( InfixSuffix.rep ~ PostFix.? ~ (`=` ~! Expr).? ~ MatchAscriptionSuffix.?)
 
     val PostfixExpr: R0 = R( PrefixExpr ~ ExprSuffix ~ PostfixSuffix)
 
     val Parened = R ( "(" ~ Exprs.? ~ ")" )
     val SimpleExpr: R0 = {
-      val Path = R( (Id ~ ".").rep ~ `this` ~ ("." ~ Id).rep | StableId )
-      val New = R( `new` ~ NewBody )
+      val Path = R( (Id ~ ".").rep ~ `this` ~ ("." ~! Id).rep | StableId )
+      val New = R( `new` ~! NewBody )
 
       R( XmlExpr | New | BlockExpr | Literal | Path | `_` | Parened)
     }
@@ -97,16 +97,15 @@ trait Exprs extends Core with Types with Xml{
 
   val BlockExpr: R0 = R( "{" ~! (CaseClauses | Block) ~ `}` )
 
-  val BlockStats: R0 = {
+  val BlockStat = {
     val Prelude = R( Annot.rep ~ `implicit`.? ~ `lazy`.? ~ LocalMod.rep )
     val Tmpl = R( Prelude ~ BlockDef )
-    val BlockStat = R( Import | Tmpl | StatCtx.Expr )
-    R( BlockStat.rep1(Semis) )
+    R( Import | Tmpl | StatCtx.Expr )
   }
 
   val Block: R0 = {
     val BlockEnd = R( Semis.? ~ &("}" | `case`) )
-    val Body = R( BlockStats.rep(Semis) )
+    val Body = R( BlockStat.rep(Semis) )
     R( Semis.? ~ Body ~ BlockEnd )
   }
 
