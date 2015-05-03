@@ -181,8 +181,8 @@ sealed trait Parser[+T]{
    */
   def map[V](f: T => V): Parser[V] = Parser.Mapper(this, f)
 
-  protected def fail(input: String, index: Int) =
-    Failure(input, Nil, index, this, cut=false)
+  protected def fail(input: String, index: Int, cut: Boolean = false) =
+    Failure(input, Nil, index, this, cut=cut)
   protected def failMore(f: Failure, index: Int, trace: Boolean, cut: Boolean = false) = {
     val newStack = if (!trace) f.fullStack else new ::(new Result.Frame(index, this), f.fullStack)
     Failure(f.input, newStack, f.index, f.parser, cut = f.cut || cut)
@@ -496,15 +496,18 @@ object Parser{
       val res = mutable.Buffer.empty[T]
       var finalIndex = index
       var lastFailure: Failure = null
+      var cut = false
       @tailrec def rec(index: Int, del: Parser[_]): Unit = {
         del.parseRec(cfg, index) match{
-          case f: Failure if f.cut => lastFailure = failMore(f, index, cfg.trace)
+          case f: Failure if f.cut => lastFailure = failMore(f, index, cfg.trace, cut)
           case f: Failure => lastFailure = f
           case Success(t, i, cut1) =>
+            cut |= cut1
             p.parseRec(cfg, i) match{
-              case f: Failure if f.cut | cut1 => lastFailure = failMore(f, index, f.cut | cut1)
+              case f: Failure if f.cut | cut1 => lastFailure = failMore(f, index, cut1)
               case f: Failure => lastFailure = f
               case Success(t, i, cut2) =>
+                cut |= cut2
                 res.append(t)
                 finalIndex = i
                 rec(i, delimiter)
@@ -513,7 +516,7 @@ object Parser{
       }
       rec(index, Pass)
       if (lastFailure != null && lastFailure.cut) failMore(lastFailure, index, cfg.trace)
-      else if (res.length >= min) Success(ev(res.iterator), finalIndex)
+      else if (res.length >= min) Success(ev(res.iterator), finalIndex, cut)
       else fail(cfg.input, index)
     }
     override def toString = {

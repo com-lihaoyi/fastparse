@@ -5,7 +5,7 @@ trait Exprs extends Core with Types with Xml{
 
   private implicit def wspStr(s: String) = R(WL ~ s)(Utils.literalize(s).toString)
 
-  def NewBody: R0
+  def ClsTmpl: R0
   def BlockDef: R0
 
   val Import: R0 = {
@@ -15,18 +15,11 @@ trait Exprs extends Core with Types with Xml{
     R( `import` ~! ImportExpr.rep1(",") )
   }
 
-  val Ascription = R( `:` ~ (`_*` |  Type | Annot.rep1) )
-
-
-  val LambdaHead: R0 = {
-    val Binding = R( (Id | `_`) ~ (`:` ~ Type).? )
-    val Bindings = R( "(" ~ Binding.rep(",") ~ ")" )
-    val Implicit = R( `implicit`.? ~ Id ~ (`:` ~ InfixType).? )
-    R( (Bindings | Implicit | `_` ~ Ascription.?) ~ `=>` )
-  }
   object StatCtx extends WsCtx(curlyBlock=true)
   object ExprCtx extends WsCtx(curlyBlock=false)
+
   val TypeExpr = ExprCtx.Expr
+
   class WsCtx(curlyBlock: Boolean){
 
     val OneSemiMax = if (curlyBlock) OneNLMax else Parser.Pass
@@ -58,16 +51,18 @@ trait Exprs extends Core with Types with Xml{
       }
       val Throw = R( `throw` ~! Expr )
       val Return = R( `return` ~! Expr.? )
-
-
       val LambdaRhs = if (curlyBlock) R( BlockStat ) else R( Expr )
-      val ImplicitLambda = R( `implicit`.? ~ (Id | `_`) ~ (`:` ~ InfixType).? ~ `=>` ~! LambdaRhs.? )
+
+
+      val ImplicitLambda = R( `implicit` ~ (Id | `_`) ~ (`:` ~ InfixType).? ~ `=>` ~ LambdaRhs.? )
       R(
         ImplicitLambda |
-        Parened ~ (`=>` ~! LambdaRhs.? | ExprSuffix ~ PostfixSuffix) |
-        If | While | Try | DoWhile | For | Throw | Return | PostfixExpr
+        Parened ~ (`=>` ~ LambdaRhs.? | ExprSuffix ~ PostfixSuffix) |
+        If | While | Try | DoWhile | For | Throw | Return | PostfixExpr ~ (`=>` ~ LambdaRhs.?).?
       )
     }
+    val LambdaType = if (curlyBlock) R( InfixType ) else R( Type )
+    val Ascription = R( `:` ~ (`_*` |  LambdaType | Annot.rep1) )
     val MatchAscriptionSuffix = R(`match` ~! "{" ~ CaseClauses ~ "}" | Ascription)
     val ExprPrefix = R( WL ~ CharIn("-+~!") ~ WS ~ !syntax.Basic.OpChar )
     val ExprSuffix = R( ("." ~! Id | TypeArgs | NoSemis ~ ArgList).rep ~ (NoSemis  ~ `_`).? )
@@ -81,7 +76,7 @@ trait Exprs extends Core with Types with Xml{
     val Parened = R ( "(" ~ Exprs.? ~ ")" )
     val SimpleExpr: R0 = {
       val Path = R( (Id ~ ".").rep ~ `this` ~ ("." ~! Id).rep | StableId )
-      val New = R( `new` ~! NewBody )
+      val New = R( `new` ~! ClsTmpl )
 
       R( XmlExpr | New | BlockExpr | ExprLiteral | Path | `_` | Parened)
     }

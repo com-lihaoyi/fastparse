@@ -19,10 +19,10 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
   }
 
 
-  val NewBody = R( ClsTmpl | TmplBody )
+
 
   val ValDef = R( Pat2.rep1(",") ~ (`:` ~ Type).? ~ (`=` ~ StatCtx.Expr).? )
-  val VarDef = R( Ids ~ `:` ~ Type ~ `=` ~ `_` | ValDef )
+  val VarDef = R( Ids ~ `:` ~ Type ~ (`=` ~! (`_` | StatCtx.Expr)).? | ValDef )
 
   val FunDef = {
     val Body = R( `=` ~ `macro`.? ~ StatCtx.Expr | OneNLMax ~ "{" ~ Block ~ "}" )
@@ -35,7 +35,7 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
     val ClsAnnot = R( `@` ~ SimpleType ~ ArgList )
     val Prelude = R( NotNewline ~ ( ClsAnnot.rep1 ~ AccessMod.? | ClsAnnot.rep ~ AccessMod) )
     val ClsArgMod = R( (Mod.rep ~ (`val` | `var`)).? )
-    val ClsArg = R( Annot.rep ~ ClsArgMod ~ Id ~ `:` ~ ParamType ~ (`=` ~ ExprCtx.Expr).? )
+    val ClsArg = R( Annot.rep ~ ClsArgMod ~ Id ~ `:` ~ Type ~ (`=` ~ ExprCtx.Expr).? )
 
     val Implicit = R( OneNLMax ~ "(" ~ `implicit` ~ ClsArg.rep1(",") ~ ")" )
     val ClsArgs = R( OneNLMax ~ "(" ~ ClsArg.rep(",") ~ ")" )
@@ -57,7 +57,8 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
   val ClsTmpl: R0 = {
     val Constr = R( AnnotType ~ (NotNewline ~ ParenArgList).rep )
     val ClsParents = R( Constr ~ (`with` ~ AnnotType).rep )
-    R( EarlyDefs.? ~ ClsParents ~ TmplBody.? )
+    val Body = R( ClsParents ~ TmplBody.? )
+    R( TmplBody ~ (`with` ~ Body).? | Body )
   }
 
   val EarlyDefs: R0 = {

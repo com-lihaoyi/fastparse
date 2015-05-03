@@ -1,5 +1,5 @@
-object ScalaSirdRouter {
-  {
-    case GET(p"${idString@int})") =>
+object Bosh {
+  new {
+    val t = 1
   }
 }

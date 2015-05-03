@@ -66,11 +66,12 @@ trait Xml extends Core {
     val Eq = R (WL.? ~ "=" ~ WL.?)
 
 
-    val Element = R( EmptyElemTag | STag ~ Content ~ ETag )
+    val TagHeader = R( "<" ~ Name ~ (WL ~ Attribute).rep ~ WL.? )
+    val Element = R( TagHeader ~ (EmptyElemTagEnd | STagEnd ~ Content ~ ETag ) )
 
-    val EmptyElemTag = R( "<" ~ Name ~ (WL ~ Attribute).rep ~ WL.? ~ "/>" )
+    val EmptyElemTagEnd = R( "/>" )
 
-    val STag = R( "<" ~ Name ~ (WL ~ Attribute).rep ~ WL.? ~ ">" )
+    val STagEnd = R( ">" )
     val ETag = R( "</" ~ Name ~ WL.? ~ ">" )
     val Content = R( (CharData | Content1).rep )
     val Content1  = R( XmlContent | Reference | ScalaExpr )
@@ -117,9 +118,10 @@ trait Xml extends Core {
     val NameChar = R( NameStartChar | CharIn(
       "-", ".", '0' to '9', "\u00B7", '\u0300' to '\u036F', '\u203F' to '\u2040'
     ))
-    val ElemPattern: R0 = R( EmptyElemTagP | STagP ~ ContentP ~ ETagP )
-    val EmptyElemTagP = R( "<" ~ Name ~ WL.? ~ "/>" )
-    val STagP = R( "<" ~ Name ~ WL.? ~ ">")
+    val ElemPattern: R0 = R( TagPHeader ~ (EmptyElemTagPEnd | STagPEnd ~ ContentP ~ ETagP ))
+    val TagPHeader = R( "<" ~ Name ~ WL.?  )
+    val EmptyElemTagPEnd = R( "/>" )
+    val STagPEnd = R( ">")
     val ETagP = R( "</" ~ Name ~ WL.? ~ ">" )
     val ContentP = R( CharData.? ~ ((ElemPattern | ScalaPatterns) ~ CharData.?).rep )
     val ContentP1 = R( ElemPattern | Reference | CDSect | PI | Comment | ScalaPatterns )
