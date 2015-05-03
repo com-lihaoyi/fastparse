@@ -980,6 +980,7 @@ object UnitTests extends TestSuite{
           |  Z apply 1 X 2 y = 4
           |
           |  a m "txt" t = 18; println("x")
+          |  X x = 1 match {case _ => 2}
           |}
         """.stripMargin
       )

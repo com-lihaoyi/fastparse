@@ -44,7 +44,7 @@ trait Types extends Core{
     R( BasicType ~ (TypeArgs | `#` ~ Id).rep )
   }
 
-  val TypeArgs = R( "[" ~ Types ~ "]" )
+  val TypeArgs = R( "[" ~! Types ~ "]" )
   val Types = R( Type ~ ("," ~! Type).rep )
 
 
