@@ -119,7 +119,9 @@ trait Exprs extends Core with Types with Xml{
   val ArgList: R0 = R( ParenArgList | OneNLMax ~ BlockExpr )
 
   val CaseClauses: R0 = {
-    val CaseClause: R0 = R( `case` ~! Pat ~ ExprCtx.Guard.? ~ `=>` ~ Block )
+    // Need to lookahead for `class` and `object` because
+    // the block { case object X } is not a case clause!
+    val CaseClause: R0 = R( `case` ~ !(`class` | `object`) ~! Pat ~ ExprCtx.Guard.? ~ `=>` ~ Block )
     R( CaseClause.rep1 )
   }
 }
