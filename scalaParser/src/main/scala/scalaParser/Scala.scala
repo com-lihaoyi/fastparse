@@ -26,7 +26,7 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
 
   val FunDef = {
     val Body = R( `=` ~ `macro`.? ~ StatCtx.Expr | OneNLMax ~ "{" ~ Block ~ "}" )
-    R( FunSig ~ (`:` ~ Type).? ~ Body.? )
+    R( FunSig ~ (`:` ~! Type).? ~ Body.? )
   }
 
   val BlockDef: R0 = R( Dcl | TraitDef | ClsDef | ObjDef )

@@ -48,5 +48,6 @@ val parsing = project.in(file("parsing")).settings(
 )
 val scalaParser = project.in(file("scalaParser")).dependsOn(parsing).settings(
   name := "scala-parser",
+  libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test",
   shared
 )

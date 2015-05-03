@@ -4,6 +4,7 @@ package scalaParser
 import parsing._
 import utest._
 
+import scala.tools.nsc.{Settings, Global}
 import scala.util.{Failure, Success}
 
 object UnitTests extends TestSuite{
@@ -42,18 +43,42 @@ object UnitTests extends TestSuite{
   println("running")
   def tests = TestSuite{
     'perf{
-      // Last measurements, runs in 30s:
-      // parboiled2: 446 443 447
-      // parsing: 104 123 122
-      // Parboiled2 is 3.9 times faster
+//
+//      var current = Thread.currentThread().getContextClassLoader
+//      val files = collection.mutable.Buffer.empty[java.io.File]
+//      files.appendAll(
+//        System.getProperty("sun.boot.class.path")
+//          .split(":")
+//          .map(new java.io.File(_))
+//      )
+//      while(current != null){
+//        current match{
+//          case t: java.net.URLClassLoader =>
+//            files.appendAll(t.getURLs.map(u => new java.io.File(u.toURI)))
+//          case _ =>
+//        }
+//        current = current.getParent
+//      }
+//
+//      val settings = new Settings()
+//      settings.usejavacp.value = true
+//      settings.classpath.append(files.mkString(":"))
+//      val global = new Global(settings)
+//      val run = new global.Run()
+//      // Last measurements, runs in 30s:
+//      // parboiled2: 446 443 447
+//      // parsing: 104 123 122
+//      // Parboiled2 is 3.9 times faster
 //      val input = scala.io.Source.fromFile(
 //        "scala-js/compiler/src/main/scala/org/scalajs/core/compiler/GenJSCode.scala"
 //      ).mkString
 //      println("Loaded " + input.length + " bytes of input. Parsing...")
 //      val start = System.currentTimeMillis()
 //      var count = 0
-//      while(System.currentTimeMillis() - start < 3000000){
-//        EitherSequenceWalker.recurse(RuleWalker.recurse(Scala.CompilationUnit, Nil), Nil).parse(input, trace = false)
+//      while(System.currentTimeMillis() - start < 30000){
+//        Scala.CompilationUnit.parse(input, trace = false)
+////        global.newUnitParser(input).parse()
+//
 //        count += 1
 //      }
 //      count
@@ -1124,107 +1149,125 @@ object UnitTests extends TestSuite{
         expected = "(Dcl | TraitDef | ClsDef | ObjDef)",
         found = " applyM"
       )
-//      * - check(
-//        """
-//          |object O{
-//          | private[this] def applyMacroFull(c: Context)
-//          |                      (expr: c.Expr[String],
-//          |                       runtimeErrors: Boolean,
-//          |                       debug: Boolean)
-//          |                      : c.Expr[Frag] = {
-//          |                      }
-//          |}
-//        """.stripMargin
-//      )
-//      * - check(
-//        """
-//          |object O{
-//          |  class DebugFailure extends Exception
-//          |
-//          |  1
-//          |}
-//        """.stripMargin
-//      )
-//      * - check(
-//        """
-//          |package torimatomeru
-//          |
-//          |package syntax
-//          |
-//          |import org.parboiled2._
-//          |
-//        """.stripMargin
-//      )
-//      * - check(
-//        """
-//          |object Foo{
-//          |  0 match {
-//          |    case A | B => 0
-//          |  }
-//          |}
-//        """.stripMargin
-//      )
-//      * - check(
-//        """
-//          |object Compiler{
-//          |
-//          |  def apply = {
-//          |    def rec = t match {
-//          |      case 0 => 0
-//          |    }
-//          |
-//          |    rec(tree)
-//          |  }
-//          |}
-//          |
-//        """.
-//          stripMargin
-//      )
-//      * - check(
-//        """
-//          |object O {
-//          |    A(A(A(A(A(A(A(A())))))))
-//          |}
-//          |
-//        """.stripMargin
-//      )
-//      * - check(
-//        """
-//          |object O{
-//          |   A(A(A(A(A(A(A(A(A(A(A(A(A(A(A(A())))))))))))))))
-//          |}
-//        """.stripMargin
-//      )
-//      * - check(
-//        """
-//          |object L{
-//          |  a.b = c
-//          |  a().b = c
-//          |}
-//        """.stripMargin
-//      )
-//      * - check(
-//        """
-//          |object L{
-//          |  a b c
-//          |  d = 1
-//          |}
-//        """.stripMargin
-//      )
+      * - checkNeg(
+        """
+          |object O{
+          | private[this] def applyMacroFull(c: Context)
+          |                      (expr: c.Expr[String],
+          |                       runtimeErrors: Boolean,
+          |                       debug: Boolean)
+          |                      :  = {
+          |                      }
+          |}
+        """.stripMargin,
+        expected = "(`_` | PostfixType)",
+        found = "  ="
+      )
+      * - checkNeg(
+        """
+          |object O{
+          |  class 1 extends Exception
+          |
+          |  1
+          |}
+        """.stripMargin,
+        expected = "(BacktickId | PlainId)",
+        found = "1 extends"
+      )
+      * - checkNeg(
+        """
+          |package torimatomeru
+          |
+          |package syntax
+          |
+          |import org.parboiled2 _
+          |
+        """.stripMargin,
+        expected = "End",
+        found = "_"
+      )
+      * - checkNeg(
+        """
+          |object Foo{
+          |  0 match {
+          |    case A B => 0
+          |  }
+          |}
+        """.stripMargin,
+        expected = "(`=>` | `⇒`)",
+        found = " B =>"
+      )
+      * - checkNeg(
+        """
+          |object Compiler{
+          |
+          |  def apply = {
+          |    def rec = t match
+          |      case 0 => 0
+          |    }
+          |
+          |    rec(tree)
+          |  }
+          |}
+          |
+        """.stripMargin,
+        expected = """ "{" """,
+        found = "case 0 =>"
+      )
+      * - checkNeg(
+        """
+          |object O {
+          |    A A(A(A(A(A(A(A())))))))
+          |}
+          |
+        """.stripMargin,
+        expected = """ "}" """,
+        found = ")"
+      )
+      * - checkNeg(
+        """
+          |object O{
+          |   A(A(A(A(A(A(A(A(A(A(A(A(A(A(A(A()))))))))))))))
+          |}
+        """.stripMargin,
+        expected = """ ")" """,
+        found = "}"
+      )
+      * - checkNeg(
+        """
+          |object L{
+          |  a.b =
+          |}
+        """.stripMargin,
+        expected = "(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | SmallerExprOrLambda)",
+        found = "\n}"
+      )
+      * - checkNeg(
+        """
+          |object L{
+          |  a b c
+          |  d = 1
+          |
+        """.stripMargin,
+        expected = """ "}" """,
+        found = ""
+      )
 //
-//      * - check(
-//        """/*                     __                                               *\
-//          |**     ________ ___   / /  ___      __ ____  Scala.js CLI               **
-//          |**    / __/ __// _ | / /  / _ | __ / // __/  (c) 2013-2014, LAMP/EPFL   **
-//          |**  __\ \/ /__/ __ |/ /__/ __ |/_// /_\ \    http://scala-js.org/       **
-//          |** /____/\___/_/ |_/____/_/ | |__/ /____/                               **
-//          |**                          |/____/                                     **
-//          |\*                                                                      */
-//          |
-//          |package scala.scalajs.cli
-//          |
-//        """.stripMargin
-//      )
+      * - checkNeg(
+        """/*                     __                                               *\
+          |**     ________ ___   / /  ___      __ ____  Scala.js CLI               **
+          |**    / __/ __// _ | / /  / _ | __ / // __/  (c) 2013-2014, LAMP/EPFL   **
+          |**  __\ \/ /__/ __ |/ /__/ __ |/_// /_\ \    http://scala-js.org/       **
+          |** /____/\___/_/ |_/____/_/ | |__/ /____/                               **
+          |**                          |/____/                                     **
+          |\*                                                                      *
+          |
+          |package scala.scalajs.cli
+          |
+        """.stripMargin,
+        expected = """ "*/" """,
+        found = ""
+      )
 //      * - check(
 //        """
 //          |object O{
