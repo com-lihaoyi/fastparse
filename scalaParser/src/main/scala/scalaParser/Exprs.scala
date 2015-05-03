@@ -18,19 +18,21 @@ trait Exprs extends Core with Types with Xml{
 
   val Ascription = R( `:` ~ (`_*` |  Type | Annot.rep1) )
 
+  // Expr = `implicit` ~ Id ~ (`:` ~ InfixType).? | Parened ~ (`=>` ~ Expr).?
+
   val LambdaHead: R0 = {
     val Binding = R( (Id | `_`) ~ (`:` ~ Type).? )
     val Bindings = R( "(" ~ Binding.rep(",") ~ ")" )
     val Implicit = R( `implicit`.? ~ Id ~ (`:` ~ InfixType).? )
     R( (Bindings | Implicit | `_` ~ Ascription.?) ~ `=>` )
   }
-  object StatCtx extends WsCtx(true)
-  object ExprCtx extends WsCtx(false)
+  object StatCtx extends WsCtx(curlyBlock=true)
+  object ExprCtx extends WsCtx(curlyBlock=false)
   val TypeExpr = ExprCtx.Expr
-  class WsCtx(injectSemicolons: Boolean){
+  class WsCtx(curlyBlock: Boolean){
 
-    val OneSemiMax = if (injectSemicolons) OneNLMax else Parser.Pass
-    val NoSemis = if (injectSemicolons) NotNewline else Parser.Pass
+    val OneSemiMax = if (curlyBlock) OneNLMax else Parser.Pass
+    val NoSemis = if (curlyBlock) NotNewline else Parser.Pass
 
     val Enumerators = {
       val Generator = R( Pat1 ~ `<-` ~ Expr ~ Guard.? )
@@ -58,25 +60,35 @@ trait Exprs extends Core with Types with Xml{
       }
       val Throw = R( `throw` ~! Expr )
       val Return = R( `return` ~! Expr.? )
-
-      val SmallerExpr = R( PostfixExpr ~ (`match` ~! "{" ~ CaseClauses ~ "}" | Ascription).? )
+      val MatchAscriptionSuffix = R(`match` ~! "{" ~ CaseClauses ~ "}" | Ascription)
+      val SmallerExpr = R( PostfixExpr ~ MatchAscriptionSuffix.? )
       val LambdaBody = R( If | While | Try | DoWhile | For | Throw | Return | SmallerExpr )
-      R( LambdaHead.rep ~ LambdaBody )
+      val LambdaRhs = if (curlyBlock) R( BlockStats ) else R( Expr )
+      R(
+        `implicit`.? ~ (Id | `_`) ~ (`:` ~ InfixType).? ~ `=>` ~ LambdaRhs.?  |
+        Parened ~ ((`=>` ~ LambdaRhs.?) | ExprSuffix ~ InfixSuffix.rep ~ MatchAscriptionSuffix.? ~ PostfixSuffix) |
+        LambdaBody
+      )
     }
-
+    val Prefixed = R( (WL ~ CharIn("-+~!") ~ WS ~ !syntax.Basic.OpChar) ~  SimpleExpr )
+    val PrefixExpr = R( Prefixed | SimpleExpr )
+    val InfixSuffix = R( NoSemis ~ Id ~ TypeArgs.? ~ OneSemiMax ~ PrefixExpr )
+    val PostfixSuffix = R( (NotNewline ~ Id ~ Newline.?).? ~ (`=` ~ Expr).? )
     val PostfixExpr: R0 = {
-      val Prefixed = R( (WL ~ CharIn("-+~!") ~ WS ~ !syntax.Basic.OpChar) ~  SimpleExpr )
-      val PrefixExpr = R( Prefixed | SimpleExpr )
-      val InfixExpr = R( PrefixExpr ~ (NoSemis ~ Id ~ TypeArgs.? ~ OneSemiMax ~ PrefixExpr).rep)
-      R( InfixExpr ~ (NotNewline ~ Id ~ Newline.?).? ~ (`=` ~ Expr).?)
-    }
 
+      val InfixExpr = R( PrefixExpr ~ InfixSuffix.rep)
+      R( InfixExpr ~ PostfixSuffix)
+    }
+    val ExprSuffix = {
+      R( ("." ~ Id | TypeArgs | NoSemis ~ ArgList).rep ~ (NoSemis  ~ `_`).? )
+    }
+    val Parened = R ( "(" ~ Exprs.? ~ ")" )
     val SimpleExpr: R0 = {
       val Path = R( (Id ~ ".").rep ~ `this` ~ ("." ~ Id).rep | StableId )
       val New = R( `new` ~ NewBody )
-      val Parened = R ( "(" ~ Exprs.? ~ ")"  )
+
       val SimpleExpr1 = R( XmlExpr | New | BlockExpr | Literal | Path | `_` | Parened)
-      R( SimpleExpr1 ~ ("." ~ Id | TypeArgs | NoSemis ~ ArgList).rep ~ (NoSemis  ~ `_`).?)
+      R( SimpleExpr1 ~ ExprSuffix )
     }
     val Guard : R0 = R( `if` ~ PostfixExpr )
   }
@@ -99,9 +111,8 @@ trait Exprs extends Core with Types with Xml{
 
   val Block: R0 = {
     val BlockEnd = R( Semis.? ~ &("}" | `case`) )
-    val LambdaBlock = R( LambdaHead | BlockStats )
-    val Body = R( LambdaBlock.rep(Semis) )
-    R( LambdaHead.rep ~ Semis.? ~ Body ~ BlockEnd )
+    val Body = R( BlockStats.rep(Semis) )
+    R( Semis.? ~ Body ~ BlockEnd )
   }
 
   val Patterns: R0 = R( Pat.rep1(",") )

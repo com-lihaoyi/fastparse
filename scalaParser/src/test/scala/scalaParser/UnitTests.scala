@@ -15,8 +15,8 @@ object UnitTests extends TestSuite{
         val parsedFound = input.slice(index, index + 10)
         val stack = f.trace
         assert(
-          {stack; parser.toString == expected.trim},
-          {stack; parsedFound.startsWith(found)}
+          {input; stack; parser.toString == expected.trim},
+          {input; stack; parsedFound.startsWith(found)}
         )
       case Result.Success(parsed, index, cut) => assert(false)
     }
@@ -31,7 +31,7 @@ object UnitTests extends TestSuite{
       case f: Result.Failure =>
 //        println(f.formatExpectedAsString)
 //        println(f.formatTraces)
-        throw new Exception(f.toString)
+        throw new Exception({input + "\n" + f.toString})
       case s: Result.Success[_] =>
 //        println(parsed)
         val inputLength = input.length
@@ -768,7 +768,6 @@ object UnitTests extends TestSuite{
       )
       * - check(
         """object test {
-          |  case object Int16 extends SampleFormat1
           |  (1) match {
           |    case _   => 1
           |  }

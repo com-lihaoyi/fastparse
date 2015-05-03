@@ -36,7 +36,7 @@ object ProjectTests extends TestSuite{
       (y: Int) =>
       println(3)
     }
-    'test - checkFile("scala/src/actors/scala/actors/Actor.scala")
+    'test - checkFile("scalaParser/src/test/resources/test.scala")
 
     'scalaParser - checkDir("scalaParser/src")
     'scalaJs - checkDir("scala-js")
