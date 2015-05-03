@@ -1,5 +1,7 @@
-object Bosh {
-  new {
-    val t = 1
-  }
-}
+/**/
+
+package org
+
+/**/
+
+trait Compat210Component

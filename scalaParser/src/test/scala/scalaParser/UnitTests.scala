@@ -1252,59 +1252,61 @@ object UnitTests extends TestSuite{
         expected = """ "}" """,
         found = ""
       )
-//
+//    Not sure how to properly put cuts on comments nodes
+//      * - checkNeg(
+//        """/*                     __                                               *\
+//          |**     ________ ___   / /  ___      __ ____  Scala.js CLI               **
+//          |**    / __/ __// _ | / /  / _ | __ / // __/  (c) 2013-2014, LAMP/EPFL   **
+//          |**  __\ \/ /__/ __ |/ /__/ __ |/_// /_\ \    http://scala-js.org/       **
+//          |** /____/\___/_/ |_/____/_/ | |__/ /____/                               **
+//          |**                          |/____/                                     **
+//          |\*                                                                      *
+//          |
+//          |package scala.scalajs.cli
+//          |
+//        """.stripMargin,
+//        expected = """ "*/" """,
+//        found = ""
+//      )
       * - checkNeg(
-        """/*                     __                                               *\
-          |**     ________ ___   / /  ___      __ ____  Scala.js CLI               **
-          |**    / __/ __// _ | / /  / _ | __ / // __/  (c) 2013-2014, LAMP/EPFL   **
-          |**  __\ \/ /__/ __ |/ /__/ __ |/_// /_\ \    http://scala-js.org/       **
-          |** /____/\___/_/ |_/____/_/ | |__/ /____/                               **
-          |**                          |/____/                                     **
-          |\*                                                                      *
-          |
-          |package scala.scalajs.cli
-          |
+        """
+          |object O{
+          |  for {
+          |      a  <- b
+          |      c <- d
+          |  }
+          |}
         """.stripMargin,
-        expected = """ "*/" """,
-        found = ""
+        expected = "(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | SmallerExprOrLambda)",
+        found = "\n}"
       )
-//      * - check(
-//        """
-//          |object O{
-//          |  for {
-//          |      a  <- b
-//          |      c <- d
-//          |  } {
-//          |    1
-//          |  }
-//          |}
-//        """.stripMargin
-//      )
-//      * - check(
-//        """
-//          |object O{
-//          |  val jarFile =
-//          |      try { 1 }
-//          |      catch { case _: F => G }
-//          |}
-//        """.stripMargin
-//      )
-//      * - check(
-//        """
-//          |object F{
-//          |  func{ case _: F => fail }
-//          |}
-//        """.stripMargin
-//      )
-//      * - check(
-//        """
-//          |object Foo{
-//          |    val a = d // g
-//          |    val b = e // h
-//          |    val c = f
-//          |}
-//        """.stripMargin
-//      )
+      * - checkNeg(
+        """
+          |object O{
+          |  val jarFile = catch { case _: F => G }
+          |}
+        """.stripMargin,
+        expected = "(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | SmallerExprOrLambda)",
+        found = " catch {"
+      )
+      * - checkNeg(
+        """
+          |object F{
+          |  func{ case _: F = fail }
+          |}
+        """.stripMargin,
+        expected = "(`=>` | `⇒`)",
+        found = " = fail"
+      )
+      * - check(
+        """
+          |object Foo{
+          |    val a d // g
+          |    val b = e // h
+          |    val c = f
+          |}
+        """.stripMargin
+      )
 //      * - check(
 //        """
 //          |object L{

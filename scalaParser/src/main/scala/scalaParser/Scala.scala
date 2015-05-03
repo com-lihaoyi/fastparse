@@ -21,7 +21,7 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
 
 
 
-  val ValDef = R( Pat2.rep1(",") ~ (`:` ~ Type).? ~ (`=` ~ StatCtx.Expr).? )
+  val ValDef = R( Pat2.rep1(",") ~ (`:` ~ Type).? ~ (`=` ~! StatCtx.Expr).? )
   val VarDef = R( Ids ~ `:` ~ Type ~ (`=` ~! (`_` | StatCtx.Expr)).? | ValDef )
 
   val FunDef = {

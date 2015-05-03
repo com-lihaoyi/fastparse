@@ -21,10 +21,13 @@ trait Literals { l =>
 
     val Bool = R( Key.W("true") | Key.W("false")  )
 
+    // Comments cannot have cuts in them, because they appear before every
+    // terminal node. That means that a comment before any terminal will
+    // prevent any backtracking from working, which is not what we want!
     val MultilineComment: R0 = R( "/*" ~ (MultilineComment | !"*/" ~ Parser.AnyChar).rep ~ "*/" )
-    val Comment: R0 = R(
-      MultilineComment | "//" ~ (!Basic.Newline ~ Parser.AnyChar).rep ~ &(Basic.Newline | Parser.End)
-    )
+    val LineComment = R( "//" ~ (!Basic.Newline ~ Parser.AnyChar).rep ~ &(Basic.Newline | Parser.End) )
+    val Comment: R0 = R( MultilineComment | LineComment )
+
     val Null = Key.W("null")
 
 
