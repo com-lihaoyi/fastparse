@@ -57,8 +57,9 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
   val ClsTmpl: R0 = {
     val Constr = R( AnnotType ~ (NotNewline ~ ParenArgList).rep )
     val ClsParents = R( Constr ~ (`with` ~ AnnotType).rep )
-    val Body = R( ClsParents ~ TmplBody.? )
-    R( TmplBody ~ (`with` ~ Body).? | Body )
+    val ClsBody = R( ClsParents ~ TmplBody.? )
+    val EarlyDefBody = R( TmplBody ~ (`with` ~ ClsBody).? )
+    R( EarlyDefBody | ClsBody )
   }
 
   val EarlyDefs: R0 = {

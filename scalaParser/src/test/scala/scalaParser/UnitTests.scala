@@ -1079,7 +1079,7 @@ object UnitTests extends TestSuite{
           |  def tests = TestSuite{}
           |}
         """.stripMargin,
-        expected = """(ClsTmpl | TmplBody)""",
+        expected = """(EarlyDefBody | ClsBody)""",
         found = " (1)).get"
       )
       * - checkNeg(
@@ -1403,7 +1403,7 @@ object UnitTests extends TestSuite{
           |  code: @ 12
           |}
         """.stripMargin,
-        expected = """(("(" ~ Types ~ ")") | (StableId ~ "." ~ `type`) | StableId)""",
+        expected = """(("(" ~ Types.? ~ ")") | (StableId ~ "." ~ `type`) | StableId)""",
         found = " 12"
       )
 
