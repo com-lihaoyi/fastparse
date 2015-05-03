@@ -41,10 +41,10 @@ object MathTests extends TestSuite{
     }
 
   }
-  println("    A")
-  println(expr)
-  println("    B")
-  println(RuleWalker.recurse(expr, Nil))
-  println("    C")
-  println(EitherSequenceWalker.recurse(RuleWalker.recurse(expr, Nil), Nil))
+//  println("    A")
+//  println(expr)
+//  println("    B")
+//  println(RuleWalker.recurse(expr, Nil))
+//  println("    C")
+//  println(EitherSequenceWalker.recurse(RuleWalker.recurse(expr, Nil), Nil))
 }

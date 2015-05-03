@@ -493,7 +493,7 @@ object Parser{
   case class Repeat[T, +R](p: Parser[T], min: Int, delimiter: Parser[_])
                           (implicit ev: Implicits.Repeater[T, R]) extends Parser[R]{
     def parseRec(cfg: ParseConfig, index: Int) = {
-      val res = mutable.Buffer.empty[T]
+      val acc = ev.makeAccumulator
       var finalIndex = index
       var lastFailure: Failure = null
       var cut = false
@@ -508,7 +508,7 @@ object Parser{
               case f: Failure => lastFailure = f
               case Success(t, i, cut2) =>
                 cut |= cut2
-                res.append(t)
+                ev.accumulate(t, acc)
                 finalIndex = i
                 rec(i, delimiter)
             }
@@ -516,7 +516,7 @@ object Parser{
       }
       rec(index, Pass)
       if (lastFailure != null && lastFailure.cut) failMore(lastFailure, index, cfg.trace, cut)
-      else if (res.length >= min) Success(ev(res.iterator), finalIndex, cut)
+      else if (ev.count(acc) >= min) Success(ev.result(acc), finalIndex, cut)
       else fail(cfg.input, index, cut)
     }
     override def toString = {

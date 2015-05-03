@@ -1,5 +1,8 @@
 package parsing
 
+import scala.collection.mutable
+import scala.runtime.IntRef
+
 /**
  * Container for all the type-level logic around appending things
  * to tuples or flattening `Seq[Unit]`s into `Unit`s
@@ -30,16 +33,34 @@ object Implicits {
     implicit def Sequencer1[T1, T2]: Sequencer[T1, T2, (T1, T2)] = Sequencer{case (t1, t2) => (t1, t2)}
   }
   trait Repeater[-T, R]{
-    def apply(i: Iterator[T]): R
+    /**
+     * The type of value used to accumulate
+     * the results of this repeated parse
+     */
+    type Acc
+    def makeAccumulator: Acc
+    def accumulate(t: T, acc: Acc): Unit
+    def count(acc: Acc): Int
+    def result(acc: Acc): R
   }
   object Repeater extends LowPriRepeater{
-    def apply[T, R](f: Iterator[T] => R) = new Repeater[T, R]{
-      def apply(i: Iterator[T]): R = f(i)
+    implicit object UnitRepeater extends Repeater[Unit, Unit]{
+      type Acc = IntRef
+      def makeAccumulator = new IntRef(0)
+      def accumulate(t: Unit, acc: Acc) = acc.elem += 1
+      def count(acc: Acc) = acc.elem
+      def result(acc: Acc) = ()
     }
-    implicit def UnitRepeater = Repeater[Unit, Unit](_ => ())
   }
   trait LowPriRepeater{
-    implicit def GenericRepeater[T] = Repeater[T, Seq[T]](_.toVector)
+    implicit def GenericRepeaterImplicit[T] = GenericRepeater[T]()
+    case class GenericRepeater[T]() extends Repeater[T, Seq[T]]{
+      type Acc = mutable.Buffer[T]
+      def makeAccumulator = mutable.Buffer.empty[T]
+      def accumulate(t: T, acc: Acc) = acc += t
+      def count(acc: Acc) = acc.length
+      def result(acc: Acc) = acc
+    }
   }
 
   trait Optioner[-T, R]{
