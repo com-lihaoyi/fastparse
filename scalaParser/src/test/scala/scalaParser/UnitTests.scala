@@ -13,10 +13,10 @@ object UnitTests extends TestSuite{
       case f: Result.Failure =>
         val parsing.Result.Frame(index, parser) = f.stack.last
         val parsedFound = input.slice(index, index + 10)
-
+        val stack = f.trace
         assert(
-          parser.toString == expected.trim,
-          parsedFound.startsWith(found)
+          {stack; parser.toString == expected.trim},
+          {stack; parsedFound.startsWith(found)}
         )
       case Result.Success(parsed, index, cut) => assert(false)
     }

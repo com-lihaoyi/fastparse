@@ -88,7 +88,7 @@ trait Exprs extends Core with Types with Xml{
     R( XmlPattern | Thingy | Literal | TupleEx | Extractor | VarId)
   }
 
-  val BlockExpr: R0 = R( "{" ~ (CaseClauses | Block) ~ `}` )
+  val BlockExpr: R0 = R( "{" ~! (CaseClauses | Block) ~ `}` )
 
   val BlockStats: R0 = {
     val Prelude = R( Annot.rep ~ `implicit`.? ~ `lazy`.? ~ LocalMod.rep )
@@ -113,8 +113,8 @@ trait Exprs extends Core with Types with Xml{
   }
 
   val TypePat = R( CompoundType )
-
-  val ArgList: R0 = R( "(" ~! (Exprs ~ (`:` ~ `_*`).?).? ~ ")" | OneNLMax ~ BlockExpr )
+  val ParenArgList = "(" ~! (Exprs ~ (`:` ~ `_*`).?).? ~ ")"
+  val ArgList: R0 = R( ParenArgList | OneNLMax ~ BlockExpr )
 
   val CaseClauses: R0 = {
     val CaseClause: R0 = R( `case` ~ Pat ~ ExprCtx.Guard.? ~ `=>` ~ Block )
