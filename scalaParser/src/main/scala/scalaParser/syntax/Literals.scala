@@ -1,6 +1,7 @@
 package scalaParser
 package syntax
 import acyclic.file
+import parsing.Parser.CharsWhile
 import parsing._
 import Basic._
 import Identifiers._
@@ -12,9 +13,9 @@ trait Literals { l =>
   object Literals{
     import Basic._
     val Float = {
-      def Thing = R( Digit.rep1 ~ Exp.? ~ FloatType.? )
+      def Thing = R( DecNum ~ Exp.? ~ FloatType.? )
       def Thing2 = R( "." ~ Thing | Exp ~ FloatType.? | Exp.? ~ FloatType )
-      R( "." ~ Thing | Digit.rep1 ~ Thing2 )
+      R( "." ~ Thing | DecNum ~ Thing2 )
     }
 
     val Int = R( (HexNum | DecNum) ~ CharIn("Ll").? )
@@ -24,8 +25,9 @@ trait Literals { l =>
     // Comments cannot have cuts in them, because they appear before every
     // terminal node. That means that a comment before any terminal will
     // prevent any backtracking from working, which is not what we want!
-    val MultilineComment: R0 = R( "/*" ~ (MultilineComment | !"*/" ~ Parser.AnyChar).rep ~ "*/" )
-    val LineComment = R( "//" ~ (!Basic.Newline ~ Parser.AnyChar).rep ~ &(Basic.Newline | Parser.End) )
+    val CommentChunk = R( CharsWhile(!"/*".contains(_), min = 1) | MultilineComment | !"*/" ~ Parser.AnyChar )
+    val MultilineComment: R0 = R( "/*" ~ CommentChunk.rep ~ "*/" )
+    val LineComment = R( "//" ~ (CharsWhile(!"\n\r".contains(_), min = 1) | !Basic.Newline ~ Parser.AnyChar).rep ~ &(Basic.Newline | Parser.End) )
     val Comment: R0 = R( MultilineComment | LineComment )
 
     val Null = Key.W("null")
@@ -45,29 +47,31 @@ trait Literals { l =>
       }
     }
 
-    class InterpCtx(interp: R0){
+    class InterpCtx(interp: Option[R0]){
       val Literal = R( ("-".? ~ (Float | Int)) | Bool | Char | String | Symbol | Null )
-      val Interp = {
-        "$" ~ Identifiers.PlainIdNoDollar | ("${" ~ interp ~ WL ~ "}") | "$$"
+      def Interp = {
+        "$" ~ Identifiers.PlainIdNoDollar | ("${" ~ interp.get ~ WL ~ "}") | "$$"
       }
+
+      val InterpIf = R( if(interp.isDefined) Interp else Parser.Fail )
+      def TQ = R( "\"\"\"" )
+      def TripleChars = R( (InterpIf | "\"".? ~ "\"".? ~ !"\"" ~ Parser.AnyChar).rep )
+      def TripleTail = R( TQ ~ "\"".rep )
+      def SingleChars = R( (InterpIf | "\\\"" | "\\\\" | !CharIn("\n\"") ~ Parser.AnyChar).rep )
       val String = {
-        import Identifiers.Id
-        def InterpIf(allowInterp: Boolean) = R( if(allowInterp) Interp else Parser.Fail )
-        def TQ = R( "\"\"\"" )
-        def TripleChars(allowInterp: Boolean) = R( (InterpIf(allowInterp) | "\"".? ~ "\"".? ~ !"\"" ~ Parser.AnyChar).rep )
-        def TripleTail = R( TQ ~ "\"".rep )
-        def SingleChars(allowInterp: Boolean) = R( (InterpIf(allowInterp) | "\\\"" | "\\\\" | !CharIn("\n\"") ~ Parser.AnyChar).rep )
         R {
-          (Id ~ TQ ~ TripleChars(allowInterp = true) ~ TripleTail) |
-            (Id ~ "\"" ~ SingleChars(allowInterp = true) ~ "\"") |
-            (TQ ~ TripleChars(allowInterp = false) ~ TripleTail) |
-            ("\"" ~ SingleChars(allowInterp = false) ~ "\"")
+          (Id ~ TQ ~ TripleChars ~ TripleTail) |
+          (Id ~ "\"" ~ SingleChars  ~ "\"") |
+          (TQ ~ NoInterp.TripleChars ~ TripleTail) |
+          ("\"" ~ NoInterp.SingleChars ~ "\"")
         }
       }
 
     }
-    object Pat extends InterpCtx(l.Pat)
-    object Expr extends InterpCtx(Block)
+    object NoInterp extends InterpCtx(None)
+    object Pat extends InterpCtx(Some(l.Pat))
+    object Expr extends InterpCtx(Some(Block))
+
 
     def isPrintableChar(c: Char): Boolean = {
       val block = Character.UnicodeBlock.of(c)

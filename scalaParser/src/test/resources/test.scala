@@ -1,5 +1,3 @@
-
-class C{
-
-  def complete_?
+object Utils {
+  "\\"
 }
