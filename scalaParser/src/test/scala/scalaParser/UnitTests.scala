@@ -1393,14 +1393,18 @@ object UnitTests extends TestSuite{
 //          |;
 //        """.stripMargin
 //      )
-//      * - check(
-//        """
-//          |
-//          |object GenJSCode {
-//          |  code: @switch
-//          |}
-//        """.stripMargin
-//      )
+
+      * - checkNeg(
+        """
+          |
+          |object GenJSCode {
+          |  code: @ 12
+          |}
+        """.stripMargin,
+        expected = """(("(" ~ Types ~ ")") | (StableId ~ "." ~ `type`) | StableId)""",
+        found = " 12"
+      )
+
 //      * - check(
 //        """object B {
 //          |  { a: L => }

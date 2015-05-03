@@ -45,7 +45,7 @@ trait Types extends Core{
   }
 
   val TypeArgs = R( "[" ~ Types ~ "]" )
-  val Types = R( Type ~! ("," ~! Type).rep )
+  val Types = R( Type ~ ("," ~! Type).rep )
 
 
 
