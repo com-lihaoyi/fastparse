@@ -1,24 +1,28 @@
 package scalaParser
 package syntax
 import acyclic.file
+import parsing.Parser.CharsWhile
 import parsing._
 import Basic._
 object Identifiers{
 
-  val Operator = R{!Keywords ~ OpChar.rep1}
+  val Operator = R( !Keywords ~ CharsWhile(isOpChar, min = 1) )
 
   val VarId = VarId0(true)
 
   def VarId0(dollar: Boolean) = R( !Keywords ~ Lower ~ IdRest(dollar) )
   val PlainId = R( !Keywords ~ Upper ~ IdRest(true) | VarId | Operator )
   val PlainIdNoDollar = R( !Keywords ~ Upper ~ IdRest(false) | VarId0(false) | Operator )
-  val BacktickId = R( "`" ~ (!"`" ~ Parser.AnyChar).rep1 ~ "`" )
+  val BacktickId = R( "`" ~ CharsWhile(_ != '`', min = 1) ~ "`" )
   val Id: R0 = R( BacktickId | PlainId )
 
   def IdRest(allowDollar: Boolean) = {
-    val SkipChar: Parser[_] = if(allowDollar) "_" else CharIn("_$")
-    val IdUnderscoreChunk = R( "_".rep ~ (!SkipChar ~ Letter | Digit ).rep1 )
-    R( IdUnderscoreChunk.rep ~ ("_".rep1 ~ OpChar.rep).? )
+    val NonLetterDigitId = if(!allowDollar) "" else "$"
+    val IdUnderscoreChunk = R( CharsWhile(_ ==  '_', min = 0) ~ CharsWhile(
+      c => NonLetterDigitId.contains(c) || c.isLetterOrDigit,
+      min = 1
+    ) )
+    R( IdUnderscoreChunk.rep ~ (CharsWhile(_ == '_', min = 1) ~ CharsWhile(isOpChar)).? )
   }
 
   val alphaKeywords = Seq(

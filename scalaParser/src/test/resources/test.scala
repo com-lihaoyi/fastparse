@@ -1,8 +1,5 @@
 
-object RepositoryBuilder {
+class C{
 
-  def doLicenseReport(localRepoReport: LocalRepoReport): Unit = {
-    case class Category(name: String, safe: Boolean)
-  }
-
+  def complete_?
 }

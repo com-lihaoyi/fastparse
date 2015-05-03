@@ -562,10 +562,11 @@ object Parser{
    * Parses a single character if it passes the predicate
    */
   case class CharPred(predicate: Char => Boolean) extends Parser[Unit]{
+    private[this] val uberSet = BitSet((Char.MinValue to Char.MaxValue).filter(predicate).map(_.toInt):_*)
     def parseRec(cfg: ParseConfig, index: Int) = {
       val input = cfg.input
       if (index >= input.length) fail(input, index)
-      else if (predicate(input(index))) Result.Success((), index + 1)
+      else if (uberSet(input(index))) Result.Success((), index + 1)
       else fail(input, index)
     }
   }
@@ -577,7 +578,7 @@ object Parser{
     def parseRec(cfg: ParseConfig, index: Int) = {
       val input = cfg.input
       if (index >= input.length) fail(input, index)
-      else if (uberSet(input(index))) Result.Success(input(index), index + 1)
+      else if (uberSet(input(index))) Result.Success((), index + 1)
       else fail(input, index)
     }
     override def toString = {
@@ -585,6 +586,17 @@ object Parser{
     }
   }
 
+  case class CharsWhile(pred: Char => Boolean, min: Int = 0) extends Parser[Unit]{
+    private[this] val uberSet = BitSet((Char.MinValue to Char.MaxValue).filter(pred).map(_.toInt):_*)
+
+    def parseRec(cfg: ParseConfig, index: Int) = {
+      var curr = index
+      val input = cfg.input
+      while(curr < input.length && uberSet(input(curr))) curr += 1
+      if (curr - index < min) fail(input, curr)
+      else Success((), curr)
+    }
+  }
   /**
    * Very efficiently attempts to parse a set of strings, by
    * first converting it into a Trie and then walking it once.
