@@ -63,8 +63,8 @@ trait Exprs extends Core with Types with Xml{
         ImplicitLambda | SmallerExprOrLambda
       )
     }
-    val LambdaType = if (curlyBlock) R( InfixType ) else R( Type )
-    val Ascription = R( `:` ~ (`_*` |  LambdaType | Annot.rep1) )
+    val AscriptionType = if (curlyBlock) R( InfixType ) else R( Type )
+    val Ascription = R( `:` ~! (`_*` |  AscriptionType | Annot.rep1) )
     val MatchAscriptionSuffix = R(`match` ~! "{" ~ CaseClauses ~ "}" | Ascription)
     val ExprPrefix = R( WL ~ CharIn("-+~!") ~ WS ~ !syntax.Basic.OpChar )
     val ExprSuffix = R( ("." ~! Id | TypeArgs | NoSemis ~ ArgList).rep ~ (NoSemis  ~ `_`).? )
@@ -115,7 +115,7 @@ trait Exprs extends Core with Types with Xml{
   }
 
   val TypePat = R( CompoundType )
-    val ParenArgList = "(" ~! (Exprs ~ (`:` ~ `_*`).?).? ~ ")"
+    val ParenArgList = "(" ~! (Exprs ~ (`:` ~! `_*`).?).? ~ ")"
   val ArgList: R0 = R( ParenArgList | OneNLMax ~ BlockExpr )
 
   val CaseClauses: R0 = {

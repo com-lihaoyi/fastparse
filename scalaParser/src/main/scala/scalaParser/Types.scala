@@ -45,12 +45,11 @@ trait Types extends Core{
   val Types = R( Type ~ ("," ~! Type).rep )
 
   val FunSig: R0 = {
-    val FunArg = R( Annot.rep ~ Id ~ (`:` ~ Type).? ~ (`=` ~ TypeExpr).? )
+    val FunArg = R( Annot.rep ~ Id ~ (`:` ~! Type).? ~ (`=` ~ TypeExpr).? )
     val Args = R( FunArg.rep1(",") )
-    val FunArgs = R( OneNLMax ~ "(" ~ Args.? ~ ")" )
-    val FunAllArgs = R( FunArgs.rep ~ (OneNLMax ~ "(" ~ `implicit` ~ Args ~ ")").? )
+    val FunArgs = R( OneNLMax ~ "(" ~! `implicit`.? ~ Args.? ~ ")" )
     val FunTypeArgs = R( "[" ~ (Annot.rep ~ TypeArg).rep1(",") ~ "]" )
-    R( (Id | `this`) ~ FunTypeArgs.? ~ FunAllArgs )
+    R( (Id | `this`) ~ FunTypeArgs.? ~ FunArgs.rep )
   }
 
   val TypeBounds: R0 = R( (`>:` ~ Type).? ~ (`<:` ~ Type).? )

@@ -1007,6 +1007,12 @@ object UnitTests extends TestSuite{
           |}
         """.stripMargin
       )
+      * - check(// This should parse as a postfix call
+        """object Foo{
+          |  x_!toString
+          |}
+        """.stripMargin
+      )
     }
     'neg{
 
@@ -1298,97 +1304,115 @@ object UnitTests extends TestSuite{
         expected = "(`=>` | `⇒`)",
         found = " = fail"
       )
-      * - check(
+      * - checkNeg(
         """
           |object Foo{
           |    val a d // g
           |    val b = e // h
           |    val c = f
           |}
+        """.stripMargin,
+        expected = """ "}" """,
+        found = "d // g"
+      )
+      * - checkNeg(
+        """
+          |object L{
+          |  x match{
+          |    case y.Y(z => z
+          |  }
+          |}
+        """.stripMargin,
+        expected = "(`=>` | `⇒`)",
+        found = "(z => z"
+      )
+      * - checkNeg(
+        """object K{
+          |  val a:
+          |    val c: D
+          |  }
+          |
+          |  1
+          |}
+        """.stripMargin,
+        expected = "(`_` | PostfixType)",
+        found = "\n    val c"
+      )
+      * - checkNeg(
+        """
+          |object LOLS{
+          |  def run(def apply() {}) {}
+          |}
+        """.stripMargin,
+        expected = """ ")" """,
+        found = "def apply"
+      )
+      * - checkNeg(
+        """
+          |object O{
+          |  a =:= .c
+          |}
+        """.stripMargin,
+        expected = """ "}" """,
+        found = ".c"
+      )
+      * - checkNeg(
+        """
+          |object K{
+          |  a(
+          |    1:
+          |  )
+          |}
+        """.stripMargin,
+        expected = "(_* | AscriptionType | Annot.rep1)",
+        found = "\n  )\n}"
+      )
+      * - checkNeg(
+        """
+          |object P{
+          |  tree match {
+          |    stats :+ expr  => 1
+          |  }
+          |}
+        """.stripMargin,
+        expected = "CaseClause.rep1",
+        found = "\n    stats"
+      )
+      * - checkNeg(
+        """
+          |object K
+          |  val trueA = 1
+          |}
+        """.stripMargin,
+        expected = "End",
+        found = "val trueA"
+      )
+      * - checkNeg(
+        """
+          |object K{
+          |  val null null cow = 1
+          |}
+        """.stripMargin,
+        expected = """ "}" """,
+        found = "null cow"
+      )
+      * - checkNeg(
+        """
+          |object K{
+          |  val omg_+_+ = 1
+          |}
+        """.stripMargin,
+        expected = """ "}" """,
+        found = "_+ = 1"
+      )
+      * - check(
+        """
+          |object K{
+          |  val + = 1
+          |  var = 2
+          |}
         """.stripMargin
       )
-//      * - check(
-//        """
-//          |object L{
-//          |  x match{
-//          |    case y.Y(z) => z
-//          |  }
-//          |}
-//        """.stripMargin
-//      )
-//      * - check(
-//        """object K{
-//          |  val a: B {
-//          |    val c: D
-//          |  }
-//          |
-//          |  1
-//          |}
-//        """.stripMargin
-//      )
-//      * - check(
-//        """
-//          |object LOLS{
-//          |    def run() {}
-//          |
-//          |    def apply() {}
-//          |}
-//        """.stripMargin
-//      )
-//      * - check(
-//        """
-//          |object O{
-//          |  a =:= b.c
-//          |}
-//        """.stripMargin
-//      )
-//      * - check(
-//        """
-//          |object K{
-//          |  a(
-//          |    1: _*
-//          |  )
-//          |}
-//        """.stripMargin
-//      )
-//      * - check(
-//        """
-//          |object P{
-//          |      tree match {
-//          |        case stats :+ expr  => 1
-//          |      }
-//          |}
-//        """.stripMargin
-//      )
-//      * - check(
-//        """
-//          |object K{
-//          |  val trueA = 1
-//          |}
-//        """.stripMargin
-//      )
-//      * - check(
-//        """
-//          |object K{
-//          |  val nullo :: cow = 1
-//          |}
-//        """.stripMargin
-//      )
-//      * - check(
-//        """
-//          |object K{
-//          |  val omg_+ = 1
-//          |}
-//        """.stripMargin
-//      )
-//      * - check(
-//        """
-//          |object K{
-//          |  val + = 1
-//          |  var * = 2
-//          |}
-//        """.stripMargin
-//      )
 //      * - check(
 //        """
 //          |object O{

@@ -559,25 +559,6 @@ object Parser{
   }
 
   /**
-   * A small, fast implementation of a bitset packing up to 65k Chars
-   * into 2k Ints (8k Bytes) but using less if the range of inputs
-   * is smaller.
-   *
-   * Empirically seems to be a hell of a lot faster than immutable.Bitset,
-   * making the resultant parser up to 2x faster!
-   */
-  class CharBitSet(chars: Seq[Char]){
-    private[this] val first = chars.min
-    private[this] val last = chars.max
-    private[this] val span = last - first
-    private[this] val array = new Array[Int](span / 32 + 1)
-    for(c <- chars) array((c - first) / 32) |= 1 << ((c - first) % 32)
-
-    def apply(c: Char) =
-      if (c > last || c < first) false
-      else (array((c - first) / 32) & 1 << ((c - first) % 32)) != 0
-  }
-  /**
    * Parses a single character if it passes the predicate
    */
   case class CharPred(predicate: Char => Boolean) extends Parser[Unit]{

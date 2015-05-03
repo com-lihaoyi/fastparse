@@ -11,7 +11,7 @@ object Identifiers{
   val VarId = VarId0(true)
 
   def VarId0(dollar: Boolean) = R( !Keywords ~ Lower ~ IdRest(dollar) )
-  val PlainId = R( !Keywords ~ Upper ~ IdRest(true) | VarId | Operator )
+  val PlainId = R( !Keywords ~ Upper ~ IdRest(true) | VarId | Operator ~ !OpChar )
   val PlainIdNoDollar = R( !Keywords ~ Upper ~ IdRest(false) | VarId0(false) | Operator )
   val BacktickId = R( "`" ~ CharsWhile(_ != '`', min = 1) ~ "`" )
   val Id: R0 = R( BacktickId | PlainId )
@@ -41,7 +41,7 @@ object Identifiers{
     ":", ";", "=>", "=", "<-", "<:", "<%", ">:", "#", "@", "\u21d2", "\u2190"
   ) 
   val SymbolicKeywords = R{
-    StringIn(symbolKeywords:_*)  ~ !OpChar
+    StringIn(symbolKeywords:_*) ~ !OpChar
   }
   val Keywords = R( AlphabetKeywords | SymbolicKeywords )
 }
