@@ -515,9 +515,9 @@ object Parser{
         }
       }
       rec(index, Pass)
-      if (lastFailure != null && lastFailure.cut) failMore(lastFailure, index, cfg.trace)
+      if (lastFailure != null && lastFailure.cut) failMore(lastFailure, index, cfg.trace, cut)
       else if (res.length >= min) Success(ev(res.iterator), finalIndex, cut)
-      else fail(cfg.input, index)
+      else fail(cfg.input, index, cut)
     }
     override def toString = {
       p + ".rep" + (if (min == 0) "" else min) + (if (delimiter == Pass) "" else s"($delimiter)")
