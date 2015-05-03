@@ -233,7 +233,7 @@ object Parser{
   /**
    * Succeeds, consuming a single character
    */
-  case object AnyChar extends Parser[Char]{
+  case object AnyChar extends Parser[Unit]{
     def parseRec(cfg: ParseConfig, index: Int) = {
       val input = cfg.input
       if (index >= input.length) fail(input, index)

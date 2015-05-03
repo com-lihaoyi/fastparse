@@ -18,6 +18,6 @@ package object parsing {
 
   def R[T](p: => Parser[T])(implicit name: FuncName): Parser[T] = Parser.Rule(name.name, () => p)
   type R0 = Parser[Unit]
-  implicit def Unitize(f: Parser[Any]): Parser[Unit] = f.map(_ => ())
+
   type R[+T] = Parser[T]
 }

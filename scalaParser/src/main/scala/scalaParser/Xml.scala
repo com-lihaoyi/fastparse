@@ -7,7 +7,7 @@ import scala.language.implicitConversions
 import scalaParser.syntax.Basic
 
 trait Xml extends Core {
-  def Patterns: R[_]
+  def Patterns: R0
   val XmlExpr = R( WL ~ Xml.XmlContent ~ (WL ~ Xml.Element).rep )
   val XmlPattern = R( WL ~ Xml.ElemPattern )
 

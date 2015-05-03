@@ -70,7 +70,7 @@ trait Exprs extends Core with Types with Xml{
     }
     val MatchAscriptionSuffix = R(`match` ~! "{" ~ CaseClauses ~ "}" | Ascription)
     val ExprPrefix = R( WL ~ CharIn("-+~!") ~ WS ~ !syntax.Basic.OpChar )
-    val ExprSuffix = R( ("." ~ Id | TypeArgs | NoSemis ~ ArgList).rep ~ (NoSemis  ~ `_`).? )
+    val ExprSuffix = R( ("." ~! Id | TypeArgs | NoSemis ~ ArgList).rep ~ (NoSemis  ~ `_`).? )
     val PrefixExpr = R( ExprPrefix.? ~ SimpleExpr )
     val InfixSuffix = R( NoSemis ~ Id ~ TypeArgs.? ~ OneSemiMax ~ PrefixExpr ~ ExprSuffix)
     val PostFix = R( NotNewline ~ Id ~ Newline.? )
