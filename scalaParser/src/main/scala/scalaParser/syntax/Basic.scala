@@ -19,7 +19,7 @@ object Basic {
   val Exp = R( CharIn("Ee") ~ CharIn("+-").? ~ DecNum )
   val FloatType = R( CharIn("fFdD") )
 
-  val WSChar = R( CharIn("\u0020\u0009") )(enclosingFunctionName)
+  val WSChars = R( CharsWhile("\u0020\u0009".contains(_), min = 1) )
   val Newline = R( StringIn("\r\n", "\n") )
   val Semi = R( ";" | Newline.rep1 )
   val OpChar = R ( CharPred(isOpChar) )

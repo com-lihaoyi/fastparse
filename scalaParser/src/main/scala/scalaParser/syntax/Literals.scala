@@ -49,15 +49,17 @@ trait Literals { l =>
 
     class InterpCtx(interp: Option[R0]){
       val Literal = R( ("-".? ~ (Float | Int)) | Bool | Char | String | Symbol | Null )
-      def Interp = {
-        "$" ~ Identifiers.PlainIdNoDollar | ("${" ~ interp.get ~ WL ~ "}") | "$$"
+      val Interp = interp match{
+        case None => Parser.Fail
+        case Some(p) => "$" ~ Identifiers.PlainIdNoDollar | ("${" ~ p ~ WL ~ "}") | "$$"
       }
 
-      val InterpIf = R( if(interp.isDefined) Interp else Parser.Fail )
-      def TQ = R( "\"\"\"" )
-      def TripleChars = R( (InterpIf | "\"".? ~ "\"".? ~ !"\"" ~ Parser.AnyChar).rep )
-      def TripleTail = R( TQ ~ "\"".rep )
-      def SingleChars = R( (InterpIf | "\\\"" | "\\\\" | !CharIn("\n\"") ~ Parser.AnyChar).rep )
+
+      val TQ = R( "\"\"\"" )
+      val CharsChunk = CharsWhile(!"\n\"\\$".contains(_), min = 1)
+      val TripleChars = R( (CharsChunk | Interp | "\"".? ~ "\"".? ~ !"\"" ~ Parser.AnyChar).rep )
+      val TripleTail = R( TQ ~ "\"".rep )
+      val SingleChars = R( (CharsChunk | Interp | "\\\"" | "\\\\" | !CharIn("\n\"") ~ Parser.AnyChar).rep )
       val String = {
         R {
           (Id ~ TQ ~ TripleChars ~ TripleTail) |

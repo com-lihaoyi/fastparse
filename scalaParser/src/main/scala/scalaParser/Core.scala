@@ -14,13 +14,13 @@ trait Core extends syntax.Literals{
    * really useful in e.g. {} blocks, where we want to avoid
    * capturing newlines so semicolon-inference would work
    */
-  val WS = R( (Basic.WSChar | Literals.Comment).rep )
+  val WS = R( (Basic.WSChars | Literals.Comment).rep )
 
   /**
    * Parses whitespace, including newlines.
    * This is the default for most things
    */
-  val WL = R( (Basic.WSChar | Literals.Comment | Basic.Newline).rep )
+  val WL = R( (Basic.WSChars | Literals.Comment | Basic.Newline).rep )
 
 
   /**
@@ -111,8 +111,7 @@ trait Core extends syntax.Literals{
 
   val NotNewline: R0 = R( &( WS ~ !Basic.Newline ) )
   val OneNLMax: R0 = {
-    val WSChar = R( Basic.WSChar.rep )
-    val ConsumeComments = R( (WSChar ~ Literals.Comment ~ WSChar ~ Basic.Newline).rep )
+    val ConsumeComments = R( (Basic.WSChars.? ~ Literals.Comment ~ Basic.WSChars.? ~ Basic.Newline).rep )
     R( WS ~ Basic.Newline.? ~ ConsumeComments ~ NotNewline )
   }
   val StableId: R0 = {
