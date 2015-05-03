@@ -5,9 +5,10 @@ import parsing._
 import Basic._
 import Identifiers._
 
-trait Literals {
+trait Literals { l =>
   def Block: R0
   def WL: R0
+  def Pat: R0
   object Literals{
     import Basic._
     val Float = {
@@ -25,7 +26,7 @@ trait Literals {
       MultilineComment | "//" ~ (!Basic.Newline ~ Parser.AnyChar).rep ~ &(Basic.Newline | Parser.End)
     )
     val Null = Key.W("null")
-    val Literal = R( ("-".? ~ (Float | Int)) | Bool | Char | String | Symbol | Null )
+
 
     val EscapedChars = R( "\\" ~ CharIn("""btnfr'\"]"""))
 
@@ -41,23 +42,29 @@ trait Literals {
       }
     }
 
-    val Interp = R{
-      "$" ~ Identifiers.PlainIdNoDollar | ("${" ~ Block ~ WL ~ "}") | "$$"
-    }
-    val String = {
-      import Identifiers.Id
-      def InterpIf(allowInterp: Boolean) = R( if(allowInterp) Interp else Parser.Fail )
-      def TQ = R( "\"\"\"" )
-      def TripleChars(allowInterp: Boolean) = R( (InterpIf(allowInterp) | "\"".? ~ "\"".? ~ !"\"" ~ Parser.AnyChar).rep )
-      def TripleTail = R( TQ ~ "\"".rep )
-      def SingleChars(allowInterp: Boolean) = R( (InterpIf(allowInterp) | "\\\"" | "\\\\" | !CharIn("\n\"") ~ Parser.AnyChar).rep )
-      R {
-        (Id ~ TQ ~ TripleChars(allowInterp = true) ~ TripleTail) |
-        (Id ~ "\"" ~ SingleChars(allowInterp = true) ~ "\"") |
-        (TQ ~ TripleChars(allowInterp = false) ~ TripleTail) |
-        ("\"" ~ SingleChars(allowInterp = false) ~ "\"")
+    class InterpCtx(interp: R0){
+      val Literal = R( ("-".? ~ (Float | Int)) | Bool | Char | String | Symbol | Null )
+      val Interp = {
+        "$" ~ Identifiers.PlainIdNoDollar | ("${" ~ interp ~ WL ~ "}") | "$$"
       }
+      val String = {
+        import Identifiers.Id
+        def InterpIf(allowInterp: Boolean) = R( if(allowInterp) Interp else Parser.Fail )
+        def TQ = R( "\"\"\"" )
+        def TripleChars(allowInterp: Boolean) = R( (InterpIf(allowInterp) | "\"".? ~ "\"".? ~ !"\"" ~ Parser.AnyChar).rep )
+        def TripleTail = R( TQ ~ "\"".rep )
+        def SingleChars(allowInterp: Boolean) = R( (InterpIf(allowInterp) | "\\\"" | "\\\\" | !CharIn("\n\"") ~ Parser.AnyChar).rep )
+        R {
+          (Id ~ TQ ~ TripleChars(allowInterp = true) ~ TripleTail) |
+            (Id ~ "\"" ~ SingleChars(allowInterp = true) ~ "\"") |
+            (TQ ~ TripleChars(allowInterp = false) ~ TripleTail) |
+            ("\"" ~ SingleChars(allowInterp = false) ~ "\"")
+        }
+      }
+
     }
+    object Pat extends InterpCtx(l.Pat)
+    object Expr extends InterpCtx(Block)
 
     def isPrintableChar(c: Char): Boolean = {
       val block = Character.UnicodeBlock.of(c)

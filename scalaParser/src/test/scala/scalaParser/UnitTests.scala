@@ -1056,14 +1056,16 @@ object UnitTests extends TestSuite{
         expected = """ ")" """,
         found ="}"
       )
-      * - check(
+      * - checkNeg(
         """
           |object SyntaxTest {
           |  {
           |    thro   1
           |  }
           |}
-        """.stripMargin
+        """.stripMargin,
+        expected = """("}" | `case`)""",
+        found ="   1"
       )
 //      * - check(
 //        """package scalatex

@@ -1,5 +1,5 @@
-
-trait MetaMapper{
-  () => val fld = 1
-  a
+object ScalaSirdRouter {
+  {
+    case GET(p"${idString@int})") =>
+  }
 }

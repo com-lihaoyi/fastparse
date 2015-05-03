@@ -100,7 +100,8 @@ trait Core extends syntax.Literals{
 
   val Id = R( WL ~ Identifiers.Id )
   val VarId = R( WL ~ Identifiers.VarId )
-  val Literal = R( WL ~ Literals.Literal )
+  val ExprLiteral = R( WL ~ Literals.Expr.Literal )
+  val PatLiteral = R( WL ~ Literals.Pat.Literal )
   val Semi = R( WS ~ Basic.Semi )
   val Semis = R( Semi.rep1 )
   val Newline = R( WL ~ Basic.Newline )

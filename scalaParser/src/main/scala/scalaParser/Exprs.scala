@@ -83,7 +83,7 @@ trait Exprs extends Core with Types with Xml{
       val Path = R( (Id ~ ".").rep ~ `this` ~ ("." ~! Id).rep | StableId )
       val New = R( `new` ~! NewBody )
 
-      R( XmlExpr | New | BlockExpr | Literal | Path | `_` | Parened)
+      R( XmlExpr | New | BlockExpr | ExprLiteral | Path | `_` | Parened)
     }
     val Guard : R0 = R( `if` ~! PostfixExpr )
   }
@@ -92,7 +92,7 @@ trait Exprs extends Core with Types with Xml{
     val TupleEx = R( "(" ~ ExtractorArgs ~ ")" )
     val Extractor = R( StableId ~ TupleEx.? )
     val Thingy = R( `_` ~ (`:` ~ TypePat).? ~ !"*" )
-    R( XmlPattern | Thingy | Literal | TupleEx | Extractor | VarId)
+    R( XmlPattern | Thingy | PatLiteral | TupleEx | Extractor | VarId)
   }
 
   val BlockExpr: R0 = R( "{" ~! (CaseClauses | Block) ~ `}` )
@@ -106,7 +106,7 @@ trait Exprs extends Core with Types with Xml{
   val Block: R0 = {
     val BlockEnd = R( Semis.? ~ &("}" | `case`) )
     val Body = R( BlockStat.rep(Semis) )
-    R( Semis.? ~ Body ~ BlockEnd )
+    R( Semis.? ~ Body ~! BlockEnd )
   }
 
   val Patterns: R0 = R( Pat.rep1(",") )
@@ -118,7 +118,7 @@ trait Exprs extends Core with Types with Xml{
   }
 
   val TypePat = R( CompoundType )
-  val ParenArgList = "(" ~! (Exprs ~ (`:` ~ `_*`).?).? ~ ")"
+    val ParenArgList = "(" ~! (Exprs ~ (`:` ~ `_*`).?).? ~ ")"
   val ArgList: R0 = R( ParenArgList | OneNLMax ~ BlockExpr )
 
   val CaseClauses: R0 = {
