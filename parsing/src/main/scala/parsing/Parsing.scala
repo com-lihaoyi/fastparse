@@ -559,10 +559,29 @@ object Parser{
   }
 
   /**
+   * A small, fast implementation of a bitset packing up to 65k Chars
+   * into 2k Ints (8k Bytes) but using less if the range of inputs
+   * is smaller.
+   *
+   * Empirically seems to be a hell of a lot faster than immutable.Bitset,
+   * making the resultant parser up to 2x faster!
+   */
+  class CharBitSet(chars: Seq[Char]){
+    private[this] val first = chars.min
+    private[this] val last = chars.max
+    private[this] val span = last - first
+    private[this] val array = new Array[Int](span / 32 + 1)
+    for(c <- chars) array((c - first) / 32) |= 1 << ((c - first) % 32)
+
+    def apply(c: Char) =
+      if (c > last || c < first) false
+      else (array((c - first) / 32) & 1 << ((c - first) % 32)) != 0
+  }
+  /**
    * Parses a single character if it passes the predicate
    */
   case class CharPred(predicate: Char => Boolean) extends Parser[Unit]{
-    private[this] val uberSet = BitSet((Char.MinValue to Char.MaxValue).filter(predicate).map(_.toInt):_*)
+    private[this] val uberSet = new CharBitSet((Char.MinValue to Char.MaxValue).filter(predicate))
     def parseRec(cfg: ParseConfig, index: Int) = {
       val input = cfg.input
       if (index >= input.length) fail(input, index)
@@ -574,7 +593,7 @@ object Parser{
    * Parses a single character if it passes the predicate
    */
   case class CharIn(strings: Seq[Char]*) extends Parser[Unit]{
-    private[this] val uberSet = BitSet(strings.flatten.map(_.toInt):_*)
+    private[this] val uberSet = new CharBitSet(strings.flatten)
     def parseRec(cfg: ParseConfig, index: Int) = {
       val input = cfg.input
       if (index >= input.length) fail(input, index)
@@ -587,7 +606,7 @@ object Parser{
   }
 
   case class CharsWhile(pred: Char => Boolean, min: Int = 0) extends Parser[Unit]{
-    private[this] val uberSet = BitSet((Char.MinValue to Char.MaxValue).filter(pred).map(_.toInt):_*)
+    private[this] val uberSet = new CharBitSet((Char.MinValue to Char.MaxValue).filter(pred))
 
     def parseRec(cfg: ParseConfig, index: Int) = {
       var curr = index

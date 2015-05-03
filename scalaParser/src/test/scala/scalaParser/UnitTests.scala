@@ -76,12 +76,13 @@ object UnitTests extends TestSuite{
 //      val start = System.currentTimeMillis()
 //      var count = 0
 //      while(System.currentTimeMillis() - start < 30000){
-////        Scala.CompilationUnit.parse(input, trace = false)
-//        global.newUnitParser(input).parse()
+//        Scala.CompilationUnit.parse(input, trace = false)
+////        global.newUnitParser(input).parse()
 //        count += 1
 //      }
 //      count
     }
+
     'pos {
       * - check("package torimatomeru")
       * - check(
