@@ -1104,31 +1104,33 @@ object UnitTests extends TestSuite{
         expected = """(BacktickId | PlainId)""",
         found = "."
       )
-//      * - check(
-//        """
-//          |object Moo{
-//          | filename
-//          |        .asInstanceOf[Literal]
-//          |10
-//          |}
-//        """.stripMargin
-//      )
-//      * - check(
-//        """
-//          |object Cow{
-//          |  ().mkString
-//          |
-//          |  1
-//          |}
-//        """.stripMargin
-//      )
-//      * - check(
-//        """
-//          |object O{
-//          | private[this] val applyMacroFull = 1
-//          |}
-//        """.stripMargin
-//      )
+      * - checkNeg(
+        """
+          |object Moo{
+          | filename.asInstanceOf 10
+          |}
+        """.stripMargin,
+        expected = """ "}" """,
+        found = "10"
+      )
+      * - checkNeg(
+        """
+          |object C o w{
+          |  ().mkString
+          |
+          |  1
+          |}
+        """.stripMargin,
+        expected = "End",
+        found = "o w{"
+      )
+      * - check(
+        """
+          |object O{
+          | private[this] applyMacroFull = 1
+          |}
+        """.stripMargin
+      )
 //      * - check(
 //        """
 //          |object O{

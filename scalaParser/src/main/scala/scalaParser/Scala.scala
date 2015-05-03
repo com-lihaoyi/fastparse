@@ -12,11 +12,12 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
 
 
   val TmplBody: R0 = {
-    val Prelude = R( (Annot ~ OneNLMax).rep ~ Mod.rep )
+    val Prelude = R( (Annot ~ OneNLMax).rep ~ (Mod ~! Pass).rep )
     val TmplStat = R( Import | Prelude ~ BlockDef | StatCtx.Expr )
     val SelfType = R( (`this` | Id | `_`) ~ (`:` ~ InfixType).? ~ `=>` )
     R( "{" ~! SelfType.? ~ Semis.? ~ TmplStat.rep(Semis) ~ `}` )
   }
+
 
   val NewBody = R( ClsTmpl | TmplBody )
 
@@ -51,7 +52,7 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
   }
 
   val ObjDef: R0 = R( `case`.? ~ `object` ~! Id ~ ClsTmplOpt )
-  val ClsTmplOpt: R0 = R( `extends` ~ ClsTmpl ~ Pass | (`extends`.? ~ TmplBody).? )
+  val ClsTmplOpt: R0 = R( `extends` ~ (ClsTmpl | TmplBody) | TmplBody.? )
 
   val ClsTmpl: R0 = {
     val Constr = R( AnnotType ~ (NotNewline ~ ParenArgList).rep )

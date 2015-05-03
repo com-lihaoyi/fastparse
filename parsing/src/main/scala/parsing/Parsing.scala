@@ -463,7 +463,7 @@ object Parser{
       p1.parseRec(cfg, index) match{
         case f: Failure => failMore(f, index, cfg.trace, cut = f.cut)
         case s1: Success[_] =>
-//          if (cut) println("CUT! " + this)
+//          if (cut) println("CUT! " + this + ":" + s1.index)
           p2.parseRec(cfg, s1.index) match{
           case f: Failure => failMore(f, index, cfg.trace, cut = cut || f.cut || s1.cut)
           case s2: Success[_] => Success(ev(s1.value, s2.value), s2.index, s2.cut || s1.cut | cut)

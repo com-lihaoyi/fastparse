@@ -11,7 +11,7 @@ trait Types extends Core{
   val Mod: R0 = R( LocalMod | AccessMod | `override` )
   val LocalMod: R0 = R( `abstract` | `final` | `sealed` | `implicit` | `lazy` )
   val AccessMod: R0 = {
-    val AccessQualifier = R( "[" ~ (`this` | Id) ~ "]" )
+    val AccessQualifier = R( "[" ~! (`this` | Id) ~ "]" )
     R( (`private` | `protected`) ~ AccessQualifier.? )
   }
 
