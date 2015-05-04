@@ -114,11 +114,16 @@ trait Core extends syntax.Literals{
     val ConsumeComments = R( (Basic.WSChars.? ~ Literals.Comment ~ Basic.WSChars.? ~ Basic.Newline).rep )
     R( WS ~ Basic.Newline.? ~ ConsumeComments ~ NotNewline )
   }
+  /**
+   * Sketchy way to whitelist a few suffixes that come after a . select;
+   * apart from these and IDs, everything else is illegal
+   */
+  val PostDotCheck = R( WL ~ !(`super` | `this` | "{" | `_` | `type`) )
   val StableId: R0 = {
     val ClassQualifier = R( "[" ~ Id ~ "]" )
     val ThisSuper = R( `this` | `super` ~ ClassQualifier.? )
-    val ThisPath = R( ThisSuper ~ ("." ~ Id).rep )
-    val IdPath = R( Id ~ ("." ~ Id).rep ~ ("." ~ ThisPath).? )
+    val ThisPath = R( ThisSuper ~ ("." ~ PostDotCheck ~! Id).rep )
+    val IdPath = R( Id ~ ("." ~ PostDotCheck ~! Id).rep ~ ("." ~ ThisPath).? )
     R( ThisPath | IdPath )
   }
 }

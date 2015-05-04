@@ -479,67 +479,111 @@ object FailureTests extends TestSuite{
       expected = "(`_` | PostfixType)",
       found = " 10)"
     )
-      * - check(
+      * - checkNeg(
         """object GenJSCode{
-          |  val g: this.g.()
+          |  a.b.()
           |}
           |
-        """.stripMargin
+        """.stripMargin,
+        expected = "(BacktickId | PlainId)",
+        found = "()"
       )
-//      * - check(
-//        """object K{
-//          |  class RTTypeTest
-//          |  private object O
-//          |}
-//        """.stripMargin
-//      )
-//      * - check(
-//        """object O{
-//          |  if (eqeq &&
-//          |
-//          |    false)  1
-//          |}
-//        """.stripMargin
-//      )
-//      * - check(
-//        """
-//          |object O{
-//          |  for(
-//          |    x <- Nil map
-//          |
-//          |  (x => x)
-//          |  ) yield x
-//          |}
-//        """.stripMargin
-//      )
-//      * - check(
-//        """
-//          |object O{
-//          |  for{
-//          |    x <- Nil
-//          |    if
-//          |
-//          |    1 == 2
-//          |  } yield x
-//          |}
-//        """.stripMargin
-//      )
-//      * - check(
-//        """
-//          |object ScopedVar {
-//          |  def withScopedVars(ass: Seq[_]) = 1
-//          |}
-//          |
-//        """.stripMargin
-//      )
-//      * - check(
-//        """
-//          |abstract class JSASTTest extends DirectTest {
-//          |  def show: this.type = ()
-//          |}
-//          |
-//        """.stripMargin
-//      )
+    * - checkNeg(
+      """object GenJSCode{
+        |  this.this.()
+        |}
+        |
+      """.stripMargin,
+      expected = "(BacktickId | PlainId)",
+      found = "this"
+    )
+    * - checkNeg(
+      """object GenJSCode{
+        |  null: b.()
+        |}
+        |
+      """.stripMargin,
+      expected = "(BacktickId | PlainId)",
+      found = "()"
+    )
+      * - checkNeg(
+        """object K{
+          |  private O
+          |}
+        """.stripMargin,
+        expected = "(Dcl | TraitDef | ClsDef | ObjDef)",
+        found = " O\n"
+      )
+      * - checkNeg(
+        """object O{
+          |  if eqeq &&
+          |
+          |    false  1
+          |}
+        """.stripMargin,
+        expected = """ "(" """,
+        found = "eqeq"
+      )
+      * - checkNeg(
+        """
+          |object O{
+          |  for{
+          |    x <- Nil map
+          |
+          |    (x => x)
+          |  } yield x
+          |}
+        """.stripMargin,
+        expected = """ "}" """,
+        found = "(x => x)"
+      )
+    * - checkNeg(
+      """
+        |object O{
+        |  for{
+        |    x <- Nil
+        |    println(1)
+        |  } yield x
+        |}
+      """.stripMargin,
+      expected = """ "}" """,
+      found = "println(1)"
+    )
+      * - checkNeg(
+        """
+          |object O{
+          |  for{
+          |    x <- Nil
+          |    if
+          |
+          |    1 == 2
+          |  } yield
+          |}
+        """.stripMargin,
+        expected = "(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | SmallerExprOrLambda)",
+        found = "\n}"
+      )
+      * - checkNeg(
+        """
+          |object ScopedVar {
+          |  def withScopedVars(ass: Seq[_, ]) = 1
+          |}
+          |
+        """.stripMargin,
+        expected = "(`_` | PostfixType)",
+        found = " ]) = 1"
+      )
+      * - checkNeg(
+        """
+          |abstract class JSASTTest extends DirectTest {
+          |  def show: this.type = )
+          |}
+          |
+        """.stripMargin,
+        expected = "(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | SmallerExprOrLambda)",
+        found = " )\n"
+
+      )
 //      * - check(
 //        """object Traversers {
 //          |  {

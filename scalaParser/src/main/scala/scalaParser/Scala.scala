@@ -22,7 +22,7 @@ object Scala extends Core with Types with Exprs with Xml{
   
 
   val FunDef = {
-    val Body = R( `=` ~ `macro`.? ~ StatCtx.Expr | OneNLMax ~ "{" ~ Block ~ "}" )
+    val Body = R( `=` ~! `macro`.? ~ StatCtx.Expr | OneNLMax ~ "{" ~ Block ~ "}" )
     R( FunSig ~ (`:` ~! Type).? ~ Body.? )
   }
 

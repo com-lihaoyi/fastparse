@@ -51,6 +51,8 @@ object UnitTests extends TestSuite{
 
 
     * - check("package torimatomeru")
+
+    * - check("import com.typesafe")
     * - check(
       """package torimatomeru
         |
