@@ -36,17 +36,17 @@ trait Literals { l =>
     val EscapedChars = R( "\\" ~! (CharIn("""btnfr'\"]""") | OctalEscape | UnicodeEscape ) )
 
     // Note that symbols can take on the same values as keywords!
-    val Symbol = R( "'" ~ (Identifiers.PlainId | Identifiers.Keywords) )
+    val Symbol = R( Identifiers.PlainId | Identifiers.Keywords )
 
     val Char = {
       // scalac 2.10 crashes if PrintableChar below is substituted by its body
       def PrintableChar = CharPred(isPrintableChar)
 
-      R( "'" ~ (EscapedChars | PrintableChar) ~ "'" )
+      R( (EscapedChars | PrintableChar) ~ "'" )
     }
 
     class InterpCtx(interp: Option[R0]){
-      val Literal = R( ("-".? ~ (Float | Int)) | Bool | Char | String | Symbol | Null )
+      val Literal = R( ("-".? ~ (Float | Int)) | Bool | String | "'" ~! (Char | Symbol) | Null )
       val Interp = interp match{
         case None => Parser.Fail
         case Some(p) => "$" ~ Identifiers.PlainIdNoDollar | ("${" ~ p ~ WL ~ "}") | "$$"
@@ -54,6 +54,12 @@ trait Literals { l =>
 
 
       val TQ = R( "\"\"\"" )
+      /**
+       * Helper to quickly gobble up large chunks of un-interesting
+       * characters. We break out conservatively, even if we don't know
+       * it's a "real" escape sequence: worst come to worst it turns out
+       * to be a dud and we go back into a CharsChunk next rep
+       */
       val CharsChunk = CharsWhile(!"\n\"\\$".contains(_), min = 1)
       val TripleChars = R( (CharsChunk | Interp | "\"".? ~ "\"".? ~ !"\"" ~ Parser.AnyChar).rep )
       val TripleTail = R( TQ ~ "\"".rep )

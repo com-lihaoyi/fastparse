@@ -2,6 +2,8 @@ package parsing
 
 import parsing.Parser.Rule
 
+import scala.collection.mutable
+
 
 /**
  * This provides an easy way to recurse over and transform a tree of [[Parser]]s
@@ -18,11 +20,19 @@ trait Walker{ w =>
 }
 
 object RuleWalker extends parsing.Walker{
-  def recurse[T](p: Parser[T], stack: List[Parser[_]]): Parser[T] = p match {
-    case r: Rule[T] =>
-      if (stack.contains(r)) r
-      else recurse(r.pCached, r :: stack)
-    case m => recurseChildren(m, stack)
+  val cache = mutable.AnyRefMap.empty[Parser[_], Parser[_]]
+  def recurse[T](p: Parser[T], stack: List[Parser[_]]): Parser[T] = {
+//    println(stack.length + "\t" + stack.headOption.getOrElse(""))
+
+    cache.getOrElseUpdate(p,
+      p match {
+        case r: Rule[T] =>
+          if (stack.contains(r)) r
+          else recurse(r.pCached, r :: stack)
+        case m =>
+          recurseChildren(m, stack)
+      }
+    ).asInstanceOf[Parser[T]]
   }
 }
 object EitherSequenceWalker extends parsing.Walker{

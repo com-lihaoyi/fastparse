@@ -108,7 +108,15 @@ trait ScopedWalker{
 sealed trait Parser[+T]{
 
   /**
-    * Parses the given `input` starting from the given `index`
+   * Parses the given `input` starting from the given `index`
+   *
+   * @param input The string we want to parse
+   * @param index The index in the string to start from
+   * @param trace Whether or not you want a full trace of any error messages that appear.
+   *              Without it, you only get the single deepest parser in the call-stack when
+   *              it failed, and its index. With `trace`, you get every parser all the way
+   *              to the top, though this comes with a ~20-40% slowdown.
+   * @return
    */
   def parse(input: String, index: Int = 0, trace: Boolean = true): Result[T] = {
     parseRec(ParseConfig(input, 0, trace), index)
@@ -150,7 +158,7 @@ sealed trait Parser[+T]{
    * Parses using this followed by the parser `p`
    */
   def ~[V, R](p: Parser[V])(implicit ev: Implicits.Sequencer[T, V, R]): Parser[R] =
-    /*Parser.Sequence.flatten(*/Parser.Sequence(this, p, cut=false)/*.asInstanceOf[Parser.Sequence[R, R, R]])*/
+    Parser.Sequence.flatten(Parser.Sequence(this, p, cut=false).asInstanceOf[Parser.Sequence[R, R, R]])
   /**
    * Parses using this followed by the parser `p`, performing a Cut if
    * this parses successfully. That means that if `p` fails to parse, the
@@ -159,7 +167,8 @@ sealed trait Parser[+T]{
    * This lets you greatly narrow the error position by avoiding unwanted
    * backtracking.
    */
-  def ~![V, R](p: Parser[V])(implicit ev: Implicits.Sequencer[T, V, R]): Parser[R] = Parser.Sequence(this, p, cut=true)
+  def ~![V, R](p: Parser[V])(implicit ev: Implicits.Sequencer[T, V, R]): Parser[R] =
+    Parser.Sequence.flatten(Parser.Sequence(this, p, cut=true).asInstanceOf[Parser.Sequence[R, R, R]])
 
   /**
    * Parses this, optionally
@@ -433,6 +442,10 @@ object Parser{
     }
 
     /**
+     * The types here are all lies. It's ok, just trust the
+     * code to do the right thing!
+     *
+     *
      * A ~ B ~ C ~ D
      * ((A ~ B) ~ C) ~ D
      */
@@ -503,15 +516,15 @@ object Parser{
             if (f1.cut) failMore(f1, index, cfg.trace, true)
             else passIfMin(cut, f1, index, acc)
 
-          case s @ Success(t1, i1, cut1) =>
-            p.parseRec(cfg, i1) match{
+          case s1: Success[_] =>
+            p.parseRec(cfg, s1.index) match{
               case f2: Failure =>
-                if (f2.cut | cut1) failMore(f2, i1, cfg.trace, true)
-                else passIfMin(cut | cut1, f2, index, acc)
+                if (f2.cut | s1.cut) failMore(f2, s1.index, cfg.trace, true)
+                else passIfMin(cut | s1.cut, f2, index, acc)
 
-              case s @ Success(t, i, cut2) =>
-                ev.accumulate(t, acc)
-                rec(i, delimiter, lastFailure, acc, cut1 | cut2)
+              case s2: Success[T] =>
+                ev.accumulate(s2.value, acc)
+                rec(s2.index, delimiter, lastFailure, acc, s1.cut | s2.cut)
             }
         }
       }

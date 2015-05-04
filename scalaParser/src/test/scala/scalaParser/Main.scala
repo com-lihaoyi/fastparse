@@ -5,7 +5,12 @@ package scalaParser
  */
 object Main {
   def main(args: Array[String]): Unit = {
-    println(syntax.Basic.Digit.parse("a"))
+    println("Walking...")
+    val walked = parsing.RuleWalker.recurse(
+      Scala.Block, Nil
+    )
+    println("Walked!")
+    println(walked)
   }
 }
 

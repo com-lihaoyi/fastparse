@@ -615,7 +615,7 @@ object FailureTests extends TestSuite{
         expected = """ "\"" """,
         found = "\n"
       )
-    val tq = "\"\"\""
+      val tq = "\"\"\""
       * - checkNeg(
         s"""
           |object Utils {
@@ -628,6 +628,26 @@ object FailureTests extends TestSuite{
         expected = """ "\"\"\"" """,
         found = ""
       )
+      * - checkNeg(
+        """
+          |object X{
+          |  ''
+          |}
+          |
+        """.stripMargin,
+        expected = "(Char | Symbol)",
+        found = "'\n"
+      )
+      * - checkNeg(
+        """
+          |object X{
+          |  (1.)
+          |}
+          |
+        """.stripMargin,
+        expected = "(BacktickId | PlainId)",
+        found = ")"
+      )
 //      * - check(
 //        """object F{
 //          |  this eq that.asInstanceOf[AnyRef]
@@ -636,7 +656,7 @@ object FailureTests extends TestSuite{
 //      )
 //      * - check(
 //        """class C{
-//          |  0x00 <= 2 && 1
+//          |  0x01230 <= 2 && 1
 //          |}
 //          |
 //        """.stripMargin
@@ -645,14 +665,16 @@ object FailureTests extends TestSuite{
 //        """class Runtime private
 //        """.stripMargin
 //      )
-//      * - check(
-//        """
-//          |object System {
-//          |  def a[@b T[@b V]] = 1
-//          |}
-//          |
-//        """.stripMargin
-//      )
+      * - checkNeg(
+        """
+          |object System {
+          |  def a[@b T @f [@b V]] = 1
+          |}
+          |
+        """.stripMargin,
+        expected = """ "]" """,
+        found = "@f"
+      )
 //      * - check(
 //        """object U{
 //          |  private val _fragment = fld(Fragment)
