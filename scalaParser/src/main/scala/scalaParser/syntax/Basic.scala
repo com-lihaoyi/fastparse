@@ -6,7 +6,7 @@ import parsing.Parser.CharsWhile
 import parsing._
 
 object Basic {
-  val UnicodeEscape = R( "\\u" ~ HexDigit ~ HexDigit ~ HexDigit ~ HexDigit )
+  val UnicodeEscape = R( "u" ~ HexDigit ~ HexDigit ~ HexDigit ~ HexDigit )
 
   //Numbers and digits
 

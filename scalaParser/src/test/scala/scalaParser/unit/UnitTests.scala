@@ -983,5 +983,43 @@ object UnitTests extends TestSuite{
     )
 
 
+    // Pull these bits out and combine them to avoid escaping issues
+    val slash = "\\"
+    val u = "u"
+    val d1 = "dca5"
+    val d2 = "20ac"
+    val d3 = "d83c"
+    val d4 = "dca5"
+    * - check(
+      s"""object U{
+        |  Seq(
+        |    "$slash$u$d1",
+        |    "$slash$u$d2"
+        |  )
+        |  Await.result(result, Duration.Inf) must be equalTo "$slash$u$d1$slash$u$d2$slash$u$d3"
+        |}
+      """.stripMargin
+    )
+
+    * - check(
+      s"""object U{
+        |  '$slash$u$d1'
+        |  '$slash$u$d2'
+        |}
+      """.stripMargin
+    )
+
+    val o1 = "252"
+    val o2 = "12"
+    * - check(
+      s"""
+        |object X{
+        |  println('$slash$o1')
+        |  printl('$slash$o2')
+        |}
+      """.stripMargin
+    )
+
+
   }
 }

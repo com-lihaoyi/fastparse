@@ -32,8 +32,8 @@ trait Literals { l =>
 
     val Null = Key.W("null")
 
-
-    val EscapedChars = R( "\\" ~ CharIn("""btnfr'\"]"""))
+    val OctalEscape = R( Digit ~ Digit.? ~ Digit.? )
+    val EscapedChars = R( "\\" ~! (CharIn("""btnfr'\"]""") | OctalEscape | UnicodeEscape ) )
 
     // Note that symbols can take on the same values as keywords!
     val Symbol = R( "'" ~ (Identifiers.PlainId | Identifiers.Keywords) )
@@ -42,9 +42,7 @@ trait Literals { l =>
       // scalac 2.10 crashes if PrintableChar below is substituted by its body
       def PrintableChar = CharPred(isPrintableChar)
 
-      R {
-        "'" ~ (UnicodeEscape | EscapedChars | !"\\" ~ PrintableChar) ~ "'"
-      }
+      R( "'" ~ (EscapedChars | PrintableChar) ~ "'" )
     }
 
     class InterpCtx(interp: Option[R0]){
@@ -59,7 +57,7 @@ trait Literals { l =>
       val CharsChunk = CharsWhile(!"\n\"\\$".contains(_), min = 1)
       val TripleChars = R( (CharsChunk | Interp | "\"".? ~ "\"".? ~ !"\"" ~ Parser.AnyChar).rep )
       val TripleTail = R( TQ ~ "\"".rep )
-      val SingleChars = R( (CharsChunk | Interp | "\\\"" | "\\\\" | !CharIn("\n\"") ~ Parser.AnyChar).rep )
+      val SingleChars = R( (CharsChunk | Interp | EscapedChars | !CharIn("\n\"") ~ Parser.AnyChar).rep )
       val String = {
         R {
           (Id ~ TQ ~ TripleChars ~ TripleTail) |

@@ -584,22 +584,26 @@ object FailureTests extends TestSuite{
         found = " )\n"
 
       )
-//      * - check(
-//        """object Traversers {
-//          |  {
-//          |        1
-//          |        cases foreach nil
-//          |  }
-//          |}
-//        """.stripMargin
-//      )
-//      * - check(
-//        """object Utils {
-//          |  "\\"
-//          |}
-//          |
-//        """.stripMargin
-//      )
+      * - checkNeg(
+        """object Traversers {
+          |  {
+          |        1
+          |        case foreach nil
+          |  }
+          |}
+        """.stripMargin,
+        expected = """ "}" """,
+        found = "case for"
+      )
+      * - checkNeg(
+        """object Utils {
+          |  "\q"
+          |}
+          |
+        """.stripMargin,
+        expected = """(CharIn("btnfr'\\\"]") | OctalEscape | UnicodeEscape)""",
+        found = "q"
+      )
 //      * - check(
 //        """object F{
 //          |  this eq that.asInstanceOf[AnyRef]

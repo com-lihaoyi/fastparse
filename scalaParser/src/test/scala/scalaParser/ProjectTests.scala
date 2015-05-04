@@ -66,6 +66,7 @@ object ProjectTests extends TestSuite{
         "test/files/run/literals.scala",
         "test/files/run/t3835.scala",
         "test/files/run/richs.scala",
+        "test/files/pos/t389.scala",
         // Lots of guys in these folders seem
         // to be borked, skip all of them
         "test/files/positions",
