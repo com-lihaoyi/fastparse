@@ -638,6 +638,8 @@ object FailureTests extends TestSuite{
         expected = "(Char | Symbol)",
         found = "'\n"
       )
+
+      // These two guys pass in Scalac, but I'm not gonna support it
       * - checkNeg(
         """
           |object X{
@@ -647,6 +649,15 @@ object FailureTests extends TestSuite{
         """.stripMargin,
         expected = "(BacktickId | PlainId)",
         found = ")"
+      )
+      * - checkNeg(
+        s"""
+           |object X{
+           |  1..toString
+           |}
+        """.stripMargin,
+        expected = "(BacktickId | PlainId)",
+        found = ".toString"
       )
 //      * - check(
 //        """object F{

@@ -978,12 +978,5 @@ object UnitTests extends TestSuite{
         |}
       """.stripMargin
     )
-    * - check(// Parses as (1.0).toString
-      s"""
-         |object X{
-         |  1..toString
-         |}
-      """.stripMargin
-    )
   }
 }

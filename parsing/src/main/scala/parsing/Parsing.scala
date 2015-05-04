@@ -22,6 +22,8 @@ object Result{
   case class Success[T](value: T, index: Int, cut: Boolean = false) extends Result[T]
 
   /**
+   * Encapsulates
+   *
    * @param input The input string for the failed parse. Useful so the [[Failure]]
    *              object can pretty-print snippet
    * @param fullStack The entire stack trace where the parse failed, containing every
@@ -30,11 +32,11 @@ object Result{
    * @param parser The deepest parser in the parse which failed
    * @param cut Whether or not this parse encountered a Cut
    */
-  case class Failure(input: String,
-                     fullStack: List[Frame],
-                     index: Int,
-                     parser: Parser[_],
-                     cut: Boolean) extends Result[Nothing]{
+  case class Failure(var input: String,
+                     var fullStack: List[Frame],
+                     var index: Int,
+                     var parser: Parser[_],
+                     var cut: Boolean) extends Result[Nothing]{
     /**
      * A slimmed down version of [[fullStack]], this only includes named
      * [[Parser.Rule]] objects as well as the final Parser (whether named or not)
@@ -78,7 +80,9 @@ import Result._
  * @param logDepth
  * @param trace
  */
-case class ParseConfig(input: String, logDepth: Int, trace: Boolean)
+case class ParseConfig(input: String, logDepth: Int, trace: Boolean){
+  val failure = new Failure(input, Nil, 0, null, false)
+}
 
 /**
  * A [[Walker]] that is provided to each Parser's `mapChildren` call, which
@@ -190,11 +194,18 @@ sealed trait Parser[+T]{
    */
   def map[V](f: T => V): Parser[V] = Parser.Mapper(this, f)
 
-  protected def fail(input: String, index: Int, cut: Boolean = false) =
-    Failure(input, Nil, index, this, cut=cut)
+  protected def fail(f: Failure, index: Int, cut: Boolean = false) = {
+    f.index = index
+    f.cut = cut
+    f.fullStack = Nil
+    f.parser = this
+    f
+  }
+
   protected def failMore(f: Failure, index: Int, trace: Boolean, cut: Boolean = false) = {
-    val newStack = if (!trace) f.fullStack else new ::(new Result.Frame(index, this), f.fullStack)
-    Failure(f.input, newStack, f.index, f.parser, cut = f.cut || cut)
+    if (trace) f.fullStack = new ::(new Result.Frame(index, this), f.fullStack)
+    f.cut = f.cut | cut
+    f
   }
 }
 
@@ -223,7 +234,7 @@ object Parser{
    * A parser that always fails immediately
    */
   case object Fail extends Parser[Nothing]{
-    def parseRec(cfg: ParseConfig, index: Int) = fail(cfg.input, index)
+    def parseRec(cfg: ParseConfig, index: Int) = fail(cfg.failure, index)
   }
 
   /**
@@ -245,7 +256,7 @@ object Parser{
   case object AnyChar extends Parser[Unit]{
     def parseRec(cfg: ParseConfig, index: Int) = {
       val input = cfg.input
-      if (index >= input.length) fail(input, index)
+      if (index >= input.length) fail(cfg.failure, index)
       else Success(input(index), index+1)
     }
   }
@@ -256,7 +267,7 @@ object Parser{
   case object Start extends Parser[Unit]{
     def parseRec(cfg: ParseConfig, index: Int) = {
       if (index == 0) Success((), index)
-      else fail(cfg.input, index)
+      else fail(cfg.failure, index)
     }
   }
   /**
@@ -265,7 +276,7 @@ object Parser{
   case object End extends Parser[Unit]{
     def parseRec(cfg: ParseConfig, index: Int) = {
       if (index == cfg.input.length) Success((), index)
-      else fail(cfg.input, index)
+      else fail(cfg.failure, index)
     }
   }
 
@@ -275,7 +286,7 @@ object Parser{
   case class Literal(s: String) extends Parser[Unit]{
     def parseRec(cfg: ParseConfig, index: Int) = {
       if (cfg.input.startsWith(s, index)) Result.Success(s, index + s.length)
-      else fail(cfg.input, index)
+      else fail(cfg.failure, index)
     }
     override def toString = literalize(s).toString
   }
@@ -286,9 +297,9 @@ object Parser{
   case class CharLiteral(c: Char) extends Parser[Unit]{
     def parseRec(cfg: ParseConfig, index: Int) = {
       val input = cfg.input
-      if (index >= input.length) fail(input, index)
+      if (index >= input.length) fail(cfg.failure, index)
       else if (input(index) == c) Result.Success(c.toString, index + 1)
-      else fail(input, index)
+      else fail(cfg.failure, index)
     }
     override def toString = literalize(c.toString).toString
   }
@@ -349,7 +360,7 @@ object Parser{
     def parseRec(cfg: ParseConfig, index: Int) = {
       val res0 = p.parseRec(cfg, index)
       val res = res0 match{
-        case s: Success[_] => fail(cfg.input, s.index)
+        case s: Success[_] => fail(cfg.failure, s.index)
         case f: Failure => Result.Success((), index)
       }
       res
@@ -559,7 +570,7 @@ object Parser{
   case class Either[T](ps: Parser[T]*) extends Parser[T]{
     def parseRec(cfg: ParseConfig, index: Int) = {
       @tailrec def rec(parserIndex: Int): Result[T] = {
-        if (parserIndex >= ps.length) fail(cfg.input, index)
+        if (parserIndex >= ps.length) fail(cfg.failure, index)
         else ps(parserIndex).parseRec(cfg, index) match {
           case s: Success[_] => s
           case f: Failure if f.cut => failMore(f, index, cfg.trace)
@@ -585,9 +596,9 @@ object Parser{
     private[this] val uberSet = new CharBitSet((Char.MinValue to Char.MaxValue).filter(predicate))
     def parseRec(cfg: ParseConfig, index: Int) = {
       val input = cfg.input
-      if (index >= input.length) fail(input, index)
+      if (index >= input.length) fail(cfg.failure, index)
       else if (uberSet(input(index))) Result.Success((), index + 1)
-      else fail(input, index)
+      else fail(cfg.failure, index)
     }
   }
   /**
@@ -597,9 +608,9 @@ object Parser{
     private[this] val uberSet = new CharBitSet(strings.flatten)
     def parseRec(cfg: ParseConfig, index: Int) = {
       val input = cfg.input
-      if (index >= input.length) fail(input, index)
+      if (index >= input.length) fail(cfg.failure, index)
       else if (uberSet(input(index))) Result.Success((), index + 1)
-      else fail(input, index)
+      else fail(cfg.failure, index)
     }
     override def toString = {
       s"CharIn(${literalize(strings.flatten.mkString)})"
@@ -613,7 +624,7 @@ object Parser{
       var curr = index
       val input = cfg.input
       while(curr < input.length && uberSet(input(curr))) curr += 1
-      if (curr - index < min) fail(input, curr)
+      if (curr - index < min) fail(cfg.failure, curr)
       else Success((), curr)
     }
   }
@@ -654,7 +665,7 @@ object Parser{
           }
         }
       }
-      rec(0, bitSet, fail(input, index))
+      rec(0, bitSet, fail(cfg.failure, index))
     }
     override def toString = {
       s"StringIn(${strings.map(literalize(_)).mkString(", ")})"
