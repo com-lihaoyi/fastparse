@@ -20,7 +20,7 @@ trait Types extends Core{
 
   val Type: R0 = {
     val ExistentialClause = R( `forSome` ~ `{` ~ Dcl.rep1(Semis) ~ `}` )
-    val PostfixType = R( InfixType ~ (`=>` ~ Type | ExistentialClause).? )
+    val PostfixType = R( InfixType ~ (`=>` ~! Type | ExistentialClause).? )
     val Unbounded = R( `_` | PostfixType )
     R( `=>`.? ~ Unbounded ~ TypeBounds ~ "*".? )
   }
@@ -36,7 +36,7 @@ trait Types extends Core{
   val SimpleType: R0 = {
     // Can't `cut` after the opening paren, because we might be trying to parse `()`
     // or `() => T`! only cut after parsing one type
-    val BasicType = R( "(" ~ Types.? ~ ")"  | StableId ~ "." ~ `type` | StableId )
+    val BasicType = R( "(" ~ Types.? ~ ")"  | StableId ~ ("." ~ `type`).?)
     R( BasicType ~ (TypeArgs | `#` ~ Id).rep )
   }
 
