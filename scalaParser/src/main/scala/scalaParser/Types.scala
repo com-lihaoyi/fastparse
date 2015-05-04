@@ -3,8 +3,7 @@ import parsing._
 trait Types extends Core{
 
   def TypeExpr: R0
-  def ValDef: R0
-  def VarDef: R0
+  def ValVarDef: R0
   def FunDef: R0
   private implicit def wspStr(s: String) = R(WL ~ s)(Utils.literalize(s).toString)
 
@@ -14,7 +13,7 @@ trait Types extends Core{
     R( (`private` | `protected`) ~ AccessQualifier.? )
   }
   val Dcl: R0 = {
-    R( `val` ~! ValDef | `var` ~! VarDef | `def` ~! FunDef | `type` ~! TypeDef )
+    R( (`val` | `var`) ~! ValVarDef | `def` ~! FunDef | `type` ~! TypeDef )
   }
 
   val Mod: R0 = R( LocalMod | AccessMod | `override` )
@@ -62,7 +61,7 @@ trait Types extends Core{
 
   val TypeArgList: R0 = {
     val Variant: R0 = R( Annot.rep ~ (WL ~ CharIn("+-")).? ~ TypeArg )
-    R( "[" ~ Variant.rep(",") ~ "]" )
+    R( "[" ~ Variant.rep(",") ~ "]" ).log("TypeArgList")
   }
   val Exprs: R0 = R( TypeExpr.rep1(",") )
   val TypeDef: R0 = R( Id ~ TypeArgList.? ~ (`=` ~ Type | TypeBounds) )

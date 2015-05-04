@@ -26,8 +26,8 @@ trait Exprs extends Core with Types with Xml{
     val NoSemis = if (curlyBlock) NotNewline else Parser.Pass
 
     val Enumerators = {
-      val Generator = R( Pat1 ~ `<-` ~! Expr ~ Guard.? )
-      val Assign = R( Pat1 ~ `=` ~! Expr )
+      val Generator = R( TypeOrBindPattern ~ `<-` ~! Expr ~ Guard.? )
+      val Assign = R( TypeOrBindPattern ~ `=` ~! Expr )
       val Enumerator = R( Semis ~ Generator | Semis.? ~ Guard | Semis ~ Assign )
       R( Generator ~ Enumerator.rep ~ WL )
     }
@@ -84,8 +84,8 @@ trait Exprs extends Core with Types with Xml{
     }
     val Guard : R0 = R( `if` ~! PostfixExpr )
   }
-  val SimplePat: R0 = {
-    val ExtractorArgs = R( Pat.rep(",") )
+  val SimplePattern: R0 = {
+    val ExtractorArgs = R( Pattern.rep(",") )
     val TupleEx = R( "(" ~ ExtractorArgs ~ ")" )
     val Extractor = R( StableId ~ TupleEx.? )
     val Thingy = R( `_` ~ (`:` ~ TypePat).? ~ !"*" )
@@ -106,22 +106,24 @@ trait Exprs extends Core with Types with Xml{
     R( Semis.? ~ Body ~! BlockEnd )
   }
 
-  val Patterns: R0 = R( Pat.rep1(",") )
-  val Pat: R0 = R( Pat1.rep1("|") )
-  val Pat1: R0 = R( `_` ~ `:` ~ TypePat | VarId ~ `:` ~ TypePat | Pat2 )
-  val Pat2: R0 = {
-    val Pat3 = R( `_*` | SimplePat ~ (Id ~ SimplePat).rep )
-    R( (VarId | `_`) ~ `@` ~ Pat3 | Pat3 | VarId )
+  val Patterns: R0 = R( Pattern.rep1(",") )
+  val Pattern: R0 = R( TypeOrBindPattern.rep1("|" ~! Pass) )
+  val TypePattern = R( (`_` | VarId) ~ `:` ~ TypePat )
+  val TypeOrBindPattern: R0 = R( TypePattern | BindPattern )
+  val BindPattern: R0 = {
+    val InfixPattern = R( `_*` | SimplePattern ~ (Id ~ SimplePattern).rep )
+    val Binding = R( (VarId | `_`) ~ `@` )
+    R( Binding ~ InfixPattern | InfixPattern | VarId )
   }
 
   val TypePat = R( CompoundType )
-    val ParenArgList = "(" ~! (Exprs ~ (`:` ~! `_*`).?).? ~ ")"
+  val ParenArgList = R( "(" ~! (Exprs ~ (`:` ~! `_*`).?).? ~ ")" )
   val ArgList: R0 = R( ParenArgList | OneNLMax ~ BlockExpr )
 
   val CaseClauses: R0 = {
     // Need to lookahead for `class` and `object` because
     // the block { case object X } is not a case clause!
-    val CaseClause: R0 = R( `case` ~ !(`class` | `object`) ~! Pat ~ ExprCtx.Guard.? ~ `=>` ~ Block )
+    val CaseClause: R0 = R( `case` ~ !(`class` | `object`) ~! Pattern ~ ExprCtx.Guard.? ~ `=>` ~ Block )
     R( CaseClause.rep1 )
   }
 }

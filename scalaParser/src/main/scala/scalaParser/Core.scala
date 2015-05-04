@@ -117,7 +117,8 @@ trait Core extends syntax.Literals{
   val StableId: R0 = {
     val ClassQualifier = R( "[" ~ Id ~ "]" )
     val ThisSuper = R( `this` | `super` ~ ClassQualifier.? )
-    R( (Id ~ ".").rep ~ ThisSuper ~ ("." ~ Id).rep | Id ~ ("." ~ Id).rep )
+    val ThisPath = R( ThisSuper ~ ("." ~ Id).rep )
+    val IdPath = R( Id ~ ("." ~ Id).rep ~ ("." ~ ThisPath).? )
+    R( ThisPath | IdPath )
   }
-
 }

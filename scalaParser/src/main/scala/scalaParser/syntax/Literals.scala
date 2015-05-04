@@ -9,7 +9,7 @@ import Identifiers._
 trait Literals { l =>
   def Block: R0
   def WL: R0
-  def Pat: R0
+  def Pattern: R0
   object Literals{
     import Basic._
     val Float = {
@@ -71,7 +71,7 @@ trait Literals { l =>
 
     }
     object NoInterp extends InterpCtx(None)
-    object Pat extends InterpCtx(Some(l.Pat))
+    object Pat extends InterpCtx(Some(l.Pattern))
     object Expr extends InterpCtx(Some(Block))
 
 

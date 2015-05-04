@@ -6,7 +6,7 @@ import parsing._
 /**
  * Parser for Scala syntax.
  */
-object Scala extends Core with Types with Exprs/* with Xml*/{
+object Scala extends Core with Types with Exprs with Xml{
 
   private implicit def wspStr(s: String) = R(WL ~ s)(Utils.literalize(s).toString)
 
@@ -18,11 +18,8 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
     R( "{" ~! SelfType.? ~ Semis.? ~ TmplStat.rep(Semis) ~ `}` )
   }
 
-
-
-
-  val ValDef = R( Pat2.rep1(",") ~ (`:` ~! Type).? ~ (`=` ~! StatCtx.Expr).? )
-  val VarDef = R( Ids ~ `:` ~ Type ~ (`=` ~! (`_` | StatCtx.Expr)).? | ValDef )
+  val ValVarDef = R( BindPattern.rep1(",") ~ (`:` ~! Type).? ~ (`=` ~! StatCtx.Expr).? )
+  
 
   val FunDef = {
     val Body = R( `=` ~ `macro`.? ~ StatCtx.Expr | OneNLMax ~ "{" ~ Block ~ "}" )
@@ -63,7 +60,7 @@ object Scala extends Core with Types with Exprs/* with Xml*/{
   }
 
   val EarlyDefs: R0 = {
-    val EarlyDef = R( (Annot ~ OneNLMax).rep ~ Mod.rep ~ (`val` ~! ValDef | `var` ~! VarDef) )
+    val EarlyDef = R( (Annot ~ OneNLMax).rep ~ Mod.rep ~ (`val` | `var`) ~! ValVarDef )
     R( `{` ~ EarlyDef.rep(Semis) ~ `}` ~ `with` )
   }
 

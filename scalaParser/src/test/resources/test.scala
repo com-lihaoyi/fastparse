@@ -1,3 +1,6 @@
+
 object O{
-  def f(implicit i: I)
+   {
+    case b |  => 1
+  }
 }

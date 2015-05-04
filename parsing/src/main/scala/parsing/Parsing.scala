@@ -465,8 +465,8 @@ object Parser{
         case s1: Success[_] =>
 //          if (cut) println("CUT! " + this + ":" + s1.index)
           p2.parseRec(cfg, s1.index) match{
-          case f: Failure => failMore(f, index, cfg.trace, cut = cut || f.cut || s1.cut)
-          case s2: Success[_] => Success(ev(s1.value, s2.value), s2.index, s2.cut || s1.cut | cut)
+          case f: Failure => failMore(f, index, cfg.trace, cut = cut | f.cut | s1.cut)
+          case s2: Success[_] => Success(ev(s1.value, s2.value), s2.index, s2.cut | s1.cut | cut)
         }
       }
     }
@@ -493,32 +493,39 @@ object Parser{
   case class Repeat[T, +R](p: Parser[T], min: Int, delimiter: Parser[_])
                           (implicit ev: Implicits.Repeater[T, R]) extends Parser[R]{
     def parseRec(cfg: ParseConfig, index: Int) = {
-      val acc = ev.makeAccumulator
-      var finalIndex = index
-      var lastFailure: Failure = null
-      var cut = false
-      @tailrec def rec(index: Int, del: Parser[_]): Unit = {
+      @tailrec def rec(index: Int,
+                       del: Parser[_],
+                       lastFailure: Failure,
+                       acc: ev.Acc,
+                       cut: Boolean): Result[R] = {
         del.parseRec(cfg, index) match{
-          case f: Failure if f.cut => lastFailure = failMore(f, index, cfg.trace, cut)
-          case f: Failure => lastFailure = f
-          case Success(t, i, cut1) =>
-            cut |= cut1
-            p.parseRec(cfg, i) match{
-              case f: Failure if f.cut | cut1 => lastFailure = failMore(f, index, cut1)
-              case f: Failure => lastFailure = f
-              case Success(t, i, cut2) =>
-                cut |= cut2
+          case f1: Failure =>
+            if (f1.cut) failMore(f1, index, cfg.trace, true)
+            else passIfMin(cut, f1, index, acc)
+
+          case s @ Success(t1, i1, cut1) =>
+            p.parseRec(cfg, i1) match{
+              case f2: Failure =>
+                if (f2.cut | cut1) failMore(f2, i1, cfg.trace, true)
+                else passIfMin(cut | cut1, f2, index, acc)
+
+              case s @ Success(t, i, cut2) =>
                 ev.accumulate(t, acc)
-                finalIndex = i
-                rec(i, delimiter)
+                rec(i, delimiter, lastFailure, acc, cut1 | cut2)
             }
         }
       }
-      rec(index, Pass)
-      if (lastFailure != null && lastFailure.cut) failMore(lastFailure, index, cfg.trace, cut)
-      else if (ev.count(acc) >= min) Success(ev.result(acc), finalIndex, cut)
-      else fail(cfg.input, index, cut)
+
+      def passIfMin(cut: Boolean, lastFailure: Failure, finalIndex: Int, acc: ev.Acc) = {
+        if (ev.count(acc) >= min) {
+          Success(ev.result(acc), finalIndex, cut)
+        } else {
+          failMore(lastFailure, index, cfg.trace, cut)
+        }
+      }
+      rec(index, Pass, null, ev.makeAccumulator, false)
     }
+
     override def toString = {
       p + ".rep" + (if (min == 0) "" else min) + (if (delimiter == Pass) "" else s"($delimiter)")
     }

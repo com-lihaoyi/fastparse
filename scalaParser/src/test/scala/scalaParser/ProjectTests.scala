@@ -6,12 +6,13 @@ import utest.framework.Test
 import utest.util.Tree
 
 import scala.util.{Failure, Success}
+import scalaParser.TestUtil._
 
 object ProjectTests extends TestSuite{
 
   println("running")
   def tests = TestSuite{
-    def checkFile(path: String) = UnitTests.check(io.Source.fromFile(path).mkString, tag = path)
+    def checkFile(path: String) = check(io.Source.fromFile(path).mkString, tag = path)
     def checkDir(path: String, filter: String => Boolean = _ => false) = {
       def listFiles(s: java.io.File): Iterator[String] = {
         val (dirs, files) = s.listFiles().toIterator.partition(_.isDirectory)

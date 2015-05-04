@@ -66,6 +66,7 @@ object ParsingTests extends TestSuite{
         check(("Hello" ~ "Bye").rep, ("HelloByeHello", 0), Success((), 8))
         checkFail(("Hello" ~! "Bye").rep, ("HelloByeHello", 0), 13)
         check(("Hello" ~ "Bye").rep, ("HelloByeHello", 0), Success((), 8))
+        checkFail("Hello".log("Hello").rep(("Bye".log("Bye") ~! Pass).log("Delimiter")), ("HelloBye", 0), 8)
       }
       'optional{
         check(("Hello" ~ "Bye").?, ("HelloBoo", 0), Success((), 0))
