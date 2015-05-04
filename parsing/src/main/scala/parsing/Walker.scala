@@ -22,7 +22,7 @@ trait Walker{ w =>
 object RuleWalker extends parsing.Walker{
   val cache = mutable.AnyRefMap.empty[Parser[_], Parser[_]]
   def recurse[T](p: Parser[T], stack: List[Parser[_]]): Parser[T] = {
-//    println(stack.length + "\t" + stack.headOption.getOrElse(""))
+    println(cache.size)
 
     cache.getOrElseUpdate(p,
       p match {

@@ -10,10 +10,10 @@ object Basic {
 
   //Numbers and digits
 
-  val hexDigits = "0123456789abcdefABCDEF"
-  val HexDigit = R( CharIn(hexDigits) )
   val digits = "0123456789"
   val Digit = R( CharIn(digits) )
+  val hexDigits = digits + "abcdefABCDEF"
+  val HexDigit = R( CharIn(hexDigits) )
   val HexNum = R( "0x" ~ CharsWhile(hexDigits.contains(_), min = 1) )
   val DecNum = R( CharsWhile(digits.contains(_), min = 1) )
   val Exp = R( CharIn("Ee") ~ CharIn("+-").? ~ DecNum )

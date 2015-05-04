@@ -8,7 +8,7 @@ package object parsing {
   val Start = Parser.Start
   val End = Parser.End
   val CharPred = Parser.CharPred
-  val CharIn = Parser.CharIn
+  def CharIn(strings: Seq[Char]*) = Parser.CharIn(strings:_*)
   val StringIn = Parser.StringIn
   val AnyChar = Parser.AnyChar
 
