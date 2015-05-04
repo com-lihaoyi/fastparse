@@ -604,6 +604,30 @@ object FailureTests extends TestSuite{
         expected = """(CharIn("btnfr'\\\"]") | OctalEscape | UnicodeEscape)""",
         found = "q"
       )
+      * - checkNeg(
+        """object Utils {
+          |  "
+          |  1
+          |  "
+          |}
+          |
+        """.stripMargin,
+        expected = """ "\"" """,
+        found = "\n"
+      )
+    val tq = "\"\"\""
+      * - checkNeg(
+        s"""
+          |object Utils {
+          |  $tq
+          |  1
+          |  "
+          |}
+          |
+        """.stripMargin,
+        expected = """ "\"\"\"" """,
+        found = ""
+      )
 //      * - check(
 //        """object F{
 //          |  this eq that.asInstanceOf[AnyRef]

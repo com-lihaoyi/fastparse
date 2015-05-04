@@ -60,10 +60,10 @@ trait Literals { l =>
       val SingleChars = R( (CharsChunk | Interp | EscapedChars | !CharIn("\n\"") ~ Parser.AnyChar).rep )
       val String = {
         R {
-          (Id ~ TQ ~ TripleChars ~ TripleTail) |
-          (Id ~ "\"" ~ SingleChars  ~ "\"") |
-          (TQ ~ NoInterp.TripleChars ~ TripleTail) |
-          ("\"" ~ NoInterp.SingleChars ~ "\"")
+          (Id ~ TQ ~! TripleChars ~ TripleTail) |
+          (Id ~ "\"" ~! SingleChars  ~ "\"") |
+          (TQ ~! NoInterp.TripleChars ~ TripleTail) |
+          ("\"" ~! NoInterp.SingleChars ~ "\"")
         }
       }
 
