@@ -12,7 +12,7 @@ val shared = Seq(
     "com.lihaoyi" %% "utest" % "0.3.0"
   ),
   organization := "com.lihaoyi",
-  version := "0.1.4",
+  version := "0.1.0-SNAPSHOT",
   scalaVersion := "2.11.6",
   crossScalaVersions := Seq("2.11.6", "2.10.5"),
   libraryDependencies += "com.lihaoyi" %% "acyclic" % "0.1.2" % "provided",
@@ -40,14 +40,16 @@ val shared = Seq(
           <url>https://github.com/lihaoyi</url>
         </developer>
       </developers>
-
 )
-val parsing = project.in(file("parsing")).settings(
-  name := "parsing",
+
+val fastparse = project.in(file("fastparse")).settings(
+  name := "fastparse",
   shared
 )
-val scalaParser = project.in(file("scalaParser")).dependsOn(parsing).settings(
-  name := "scala-parser",
+
+val scalaparser = project.in(file("scalaparser")).dependsOn(fastparse).settings(
+  name := "fastparse-scala",
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test",
   shared
 )
+
