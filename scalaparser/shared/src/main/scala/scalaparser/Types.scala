@@ -48,21 +48,21 @@ trait Types extends Core{
     val FunArg = R( Annot.rep ~ Id ~ (`:` ~! Type).? ~ (`=` ~! TypeExpr).? )
     val Args = R( FunArg.rep1("," ~! Pass) )
     val FunArgs = R( OneNLMax ~ "(" ~! `implicit`.? ~ Args.? ~ ")" )
-    val FunTypeArgs = R( "[" ~ (Annot.rep ~ TypeArg).rep1("," ~! Pass) ~ "]" )
+    val FunTypeArgs = R( "[" ~! (Annot.rep ~ TypeArg).rep1("," ~! Pass) ~ "]" )
     R( (Id | `this`) ~ FunTypeArgs.? ~ FunArgs.rep )
   }
 
-  val TypeBounds: R0 = R( (`>:` ~ Type).? ~ (`<:` ~ Type).? )
+  val TypeBounds: R0 = R( (`>:` ~! Type).? ~ (`<:` ~! Type).? )
   val TypeArg: R0 = {
-    val CtxBounds = R((`<%` ~! Type).rep ~ (`:` ~ Type).rep)
+    val CtxBounds = R((`<%` ~! Type).rep ~ (`:` ~! Type).rep)
     R((Id | `_`) ~ TypeArgList.? ~ TypeBounds ~ CtxBounds)
   }
 
-  val Annot: R0 = R( `@` ~! SimpleType ~  ("(" ~ (Exprs ~ (`:` ~ `_*`).?).? ~ ")").rep )
+  val Annot: R0 = R( `@` ~! SimpleType ~  ("(" ~! (Exprs ~ (`:` ~! `_*`).?).? ~ ")").rep )
 
   val TypeArgList: R0 = {
     val Variant: R0 = R( Annot.rep ~ (WL ~ CharIn("+-")).? ~ TypeArg )
-    R( "[" ~ Variant.rep("," ~! Pass) ~ "]" )
+    R( "[" ~! Variant.rep1("," ~! Pass) ~ "]" )
   }
   val Exprs: R0 = R( TypeExpr.rep1("," ~! Pass) )
   val TypeDef: R0 = R( Id ~ TypeArgList.? ~ (`=` ~! Type | TypeBounds) )

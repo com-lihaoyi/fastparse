@@ -666,6 +666,12 @@ object UnitTests extends TestSuite{
       """.stripMargin
     )
     * - check(
+      """class immutable {
+        |  new ({val x = 1})
+        |}
+      """.stripMargin
+    )
+    * - check(
       """import java.util.concurrent.TimeUnit.{ NANOSECONDS => NANOS, MILLISECONDS ⇒ MILLIS }
       """.stripMargin
     )
