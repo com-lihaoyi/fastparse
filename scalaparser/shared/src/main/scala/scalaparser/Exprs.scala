@@ -10,10 +10,10 @@ trait Exprs extends Core with Types with Xml{
   def BlockDef: R0
 
   val Import: R0 = {
-    val Selector: R0 = R( Id ~ (`=>` ~ (Id | `_`)).? )
-    val Selectors: R0 = R( "{" ~! (Selector ~ ",").rep ~ (Selector | `_`) ~ "}" )
+    val Selector: R0 = R( Id ~ (`=>` ~! (Id | `_`)).? )
+    val Selectors: R0 = R( "{" ~! (Selector | `_` ).rep("," ~! Pass) ~ "}" )
     val ImportExpr: R0 = R( StableId ~ ("." ~! (`_` | Selectors)).? )
-    R( `import` ~! ImportExpr.rep1(",") )
+    R( `import` ~! ImportExpr.rep1("," ~! Pass) )
   }
 
   object StatCtx extends WsCtx(curlyBlock=true)
@@ -89,7 +89,7 @@ trait Exprs extends Core with Types with Xml{
     val ExtractorArgs = R( Pattern.rep("," ~! Pass) )
     val TupleEx = R( "(" ~! ExtractorArgs ~ ")" )
     val Extractor = R( StableId ~ TypeArgs.? ~ TupleEx.? )
-    val Thingy = R( `_` ~ (`:` ~ TypePat).? ~ !"*" )
+    val Thingy = R( `_` ~ (`:` ~! TypePat).? ~ !"*" )
     R( XmlPattern | Thingy | PatLiteral | TupleEx | Extractor | VarId)
   }
 
@@ -107,7 +107,7 @@ trait Exprs extends Core with Types with Xml{
     R( Semis.? ~ Body ~! BlockEnd )
   }
 
-  val Patterns: R0 = R( Pattern.rep1(",") )
+  val Patterns: R0 = R( Pattern.rep1("," ~! Pass) )
   val Pattern: R0 = R( TypeOrBindPattern.rep1("|" ~! Pass) )
   val TypePattern = R( (`_` | VarId) ~ `:` ~ TypePat )
   val TypeOrBindPattern: R0 = R( TypePattern | BindPattern )

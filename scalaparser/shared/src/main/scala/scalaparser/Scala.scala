@@ -31,8 +31,8 @@ object Scala extends Core with Types with Exprs with Xml{
   val ClsDef = {
     val ClsAnnot = R( `@` ~ SimpleType ~ ArgList )
     val Prelude = R( NotNewline ~ ( ClsAnnot.rep1 ~ AccessMod.? | ClsAnnot.rep ~ AccessMod) )
-    val ClsArgMod = R( (Mod.rep ~ (`val` | `var`)).? )
-    val ClsArg = R( Annot.rep ~ ClsArgMod ~ Id ~ `:` ~ Type ~ (`=` ~ ExprCtx.Expr).? )
+    val ClsArgMod = R( (Mod.rep ~ (`val` | `var`)) )
+    val ClsArg = R( Annot.rep ~ ClsArgMod.? ~ Id ~ `:` ~ Type ~ (`=` ~ ExprCtx.Expr).? )
 
     val Implicit = R( OneNLMax ~ "(" ~ `implicit` ~ ClsArg.rep1(",") ~ ")" )
     val ClsArgs = R( OneNLMax ~ "(" ~ ClsArg.rep(",") ~ ")" )

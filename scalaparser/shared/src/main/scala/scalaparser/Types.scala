@@ -20,7 +20,7 @@ trait Types extends Core{
   val Mod: R0 = R( LocalMod | AccessMod | `override` )
 
   val Type: R0 = {
-    val ExistentialClause = R( `forSome` ~ `{` ~ Dcl.rep1(Semis) ~ `}` )
+    val ExistentialClause = R( `forSome` ~! `{` ~ Dcl.rep1(Semis) ~ `}` )
     val PostfixType = R( InfixType ~ (`=>` ~! Type | ExistentialClause).? )
     val Unbounded = R( `_` | PostfixType )
     R( `=>`.? ~ Unbounded ~ TypeBounds ~ "*".? )
@@ -30,7 +30,7 @@ trait Types extends Core{
 
   val CompoundType = {
     val Refinement = R( OneNLMax ~ `{` ~ Dcl.rep(Semis) ~ `}` )
-    R( AnnotType.rep1(`with`) ~ Refinement.? | Refinement )
+    R( AnnotType.rep1(`with` ~! Pass) ~ Refinement.? | Refinement )
   }
   val AnnotType = R(SimpleType ~ (NotNewline ~ (NotNewline ~ Annot).rep1).? )
 
@@ -45,25 +45,25 @@ trait Types extends Core{
   val Types = R( Type ~ ("," ~! Type).rep )
 
   val FunSig: R0 = {
-    val FunArg = R( Annot.rep ~ Id ~ (`:` ~! Type).? ~ (`=` ~ TypeExpr).? )
-    val Args = R( FunArg.rep1(",") )
+    val FunArg = R( Annot.rep ~ Id ~ (`:` ~! Type).? ~ (`=` ~! TypeExpr).? )
+    val Args = R( FunArg.rep1("," ~! Pass) )
     val FunArgs = R( OneNLMax ~ "(" ~! `implicit`.? ~ Args.? ~ ")" )
-    val FunTypeArgs = R( "[" ~ (Annot.rep ~ TypeArg).rep1(",") ~ "]" )
+    val FunTypeArgs = R( "[" ~ (Annot.rep ~ TypeArg).rep1("," ~! Pass) ~ "]" )
     R( (Id | `this`) ~ FunTypeArgs.? ~ FunArgs.rep )
   }
 
   val TypeBounds: R0 = R( (`>:` ~ Type).? ~ (`<:` ~ Type).? )
   val TypeArg: R0 = {
-    val CtxBounds = R((`<%` ~ Type).rep ~ (`:` ~ Type).rep)
+    val CtxBounds = R((`<%` ~! Type).rep ~ (`:` ~ Type).rep)
     R((Id | `_`) ~ TypeArgList.? ~ TypeBounds ~ CtxBounds)
   }
 
-  val Annot: R0 = R( `@` ~! SimpleType ~  ("(" ~ (Exprs ~ (`:` ~ `_*`).?).? ~ ")").rep)
+  val Annot: R0 = R( `@` ~! SimpleType ~  ("(" ~ (Exprs ~ (`:` ~ `_*`).?).? ~ ")").rep )
 
   val TypeArgList: R0 = {
     val Variant: R0 = R( Annot.rep ~ (WL ~ CharIn("+-")).? ~ TypeArg )
-    R( "[" ~ Variant.rep(",") ~ "]" )
+    R( "[" ~ Variant.rep("," ~! Pass) ~ "]" )
   }
-  val Exprs: R0 = R( TypeExpr.rep1(",") )
+  val Exprs: R0 = R( TypeExpr.rep1("," ~! Pass) )
   val TypeDef: R0 = R( Id ~ TypeArgList.? ~ (`=` ~ Type | TypeBounds) )
 }

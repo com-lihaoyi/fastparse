@@ -652,6 +652,84 @@ object FailureTests extends TestSuite{
       expected = "(TypePattern | BindPattern)",
       found = ") = 1"
     )
+    * - checkNeg(
+      s"""
+         |object X{ val (_:) = 1 }
+        """.stripMargin,
+      expected = "((AnnotType.rep1((`with` ~! Pass)) ~ Refinement.?) | Refinement)",
+      found = ") = 1"
+    )
+    * - checkNeg(
+      s"""
+         |import x.{y=>}
+        """.stripMargin,
+      expected = "(Id | `_`)",
+      found = "}"
+    )
+    * - checkNeg(
+      s"""
+         |import x.y,
+        """.stripMargin,
+      expected = "(ThisPath | IdPath)",
+      found = "\n"
+    )
+    * - checkNeg(
+      s"""
+         |object X{type T = A with}
+        """.stripMargin,
+      expected = """(("(" ~ Types.? ~ ")") | (StableId ~ ("." ~ `type`).?))""",
+      found = "}"
+    )
+    * - checkNeg(
+      s"""
+         |object X{def f(x: Int, ) = 1}
+        """.stripMargin,
+      expected = """(BacktickId | PlainId)""",
+      found = ") = 1"
+    )
+    * - checkNeg(
+      s"""
+         |object X{val x = (1, 2,)}
+        """.stripMargin,
+      expected = """(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | SmallerExprOrLambda)""",
+      found = ")"
+    )
+    * - checkNeg(
+      s"""
+         |object X{f[A,]}
+        """.stripMargin,
+      expected = """(`_` | PostfixType)""",
+      found = "]"
+    )
+    * - checkNeg(
+      s"""
+         |object X{def f[T <% A <%] = 1}
+        """.stripMargin,
+      expected = """(`_` | PostfixType)""",
+      found = "]"
+    )
+    * - checkNeg(
+      s"""
+         |object X{def f[T, B,] = 1}
+        """.stripMargin,
+      expected = """(Id | `_`)""",
+      found = "]"
+    )
+    * - checkNeg(
+      s"""
+         |object X{type T = F forSome }}
+        """.stripMargin,
+      expected = """ "{" """,
+      found = "}}"
+    )
+
+    * - checkNeg(
+      s"""
+         |object X{def f(x: Int =) = 1}
+        """.stripMargin,
+      expected = """(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | SmallerExprOrLambda)""",
+      found = ") = 1"
+    )
 //      * - check(
 //        """object F{
 //          |  this eq that.asInstanceOf[AnyRef]
