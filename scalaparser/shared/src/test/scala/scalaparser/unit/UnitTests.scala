@@ -1000,7 +1000,8 @@ object UnitTests extends TestSuite{
     )
 
     * - check(
-      """
+      """class D extends {val x = 1} with C(2)
+        |
         |trait B extends { val x = 1} with A { println("B") }
         |
       """.stripMargin

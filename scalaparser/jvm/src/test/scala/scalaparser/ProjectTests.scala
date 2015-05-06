@@ -32,7 +32,7 @@ object ProjectTests extends TestSuite{
         if filename.endsWith(".scala")
         if filter(filename)
         code = io.Source.fromFile(filename).mkString
-        if !Scalac.checkParseFails(code)
+        if !ScalacParser.checkParseFails(code)
       } yield Future{
         println("Checking: " + filename)
         TestUtil.check(code)

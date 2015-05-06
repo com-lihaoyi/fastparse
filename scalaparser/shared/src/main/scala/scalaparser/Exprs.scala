@@ -6,7 +6,7 @@ trait Exprs extends Core with Types with Xml{
 
   private implicit def wspStr(s: String) = R(WL ~ s)(Utils.literalize(s).toString)
 
-  def ClsTmpl: R0
+  def AnonTmpl: R0
   def BlockDef: R0
 
   val Import: R0 = {
@@ -79,7 +79,7 @@ trait Exprs extends Core with Types with Xml{
     val Parened = R ( "(" ~! Exprs.? ~ ")" )
     val SimpleExpr: R0 = {
       val Path = R( (Id ~ ".").rep ~ `this` ~ ("." ~! Id).rep | StableId )
-      val New = R( `new` ~! ClsTmpl )
+      val New = R( `new` ~! AnonTmpl )
 
       R( XmlExpr | New | BlockExpr | ExprLiteral | Path | `_` | Parened)
     }

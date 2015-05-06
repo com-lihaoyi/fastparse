@@ -2,7 +2,7 @@ package scalaparser
 
 import scala.tools.nsc.{Global, Settings}
 
-object Scalac{
+object ScalacParser{
   var current = Thread.currentThread().getContextClassLoader
   val files = collection.mutable.Buffer.empty[java.io.File]
   files.appendAll(

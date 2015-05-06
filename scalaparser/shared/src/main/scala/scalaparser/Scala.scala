@@ -20,7 +20,6 @@ object Scala extends Core with Types with Exprs with Xml{
   }
 
   val ValVarDef = R( BindPattern.rep1(",") ~ (`:` ~! Type).? ~ (`=` ~! StatCtx.Expr).? )
-  
 
   val FunDef = {
     val Body = R( `=` ~! `macro`.? ~ StatCtx.Expr | OneNLMax ~ "{" ~ Block ~ "}" )
@@ -38,28 +37,21 @@ object Scala extends Core with Types with Exprs with Xml{
     val Implicit = R( OneNLMax ~ "(" ~ `implicit` ~ ClsArg.rep1(",") ~ ")" )
     val ClsArgs = R( OneNLMax ~ "(" ~ ClsArg.rep(",") ~ ")" )
     val AllArgs = R( ClsArgs.rep1 ~ Implicit.? | Implicit )
-    R( `case`.? ~ `class` ~! Id ~ TypeArgList.? ~ Prelude.? ~ AllArgs.? ~ ClsTmplOpt )
-  }
-  val TraitDef = {
-    val TraitTmplOpt = {
-      val Constrs = R( (`with` ~ Constr).rep )
-      val TraitParents = R( Constr ~ Constrs )
-      val TraitTmpl = R( TmplBody ~ Constrs ~ TmplBody.?  | TraitParents ~ TmplBody.? | Pass )
-      R( (`extends` | `<:`) ~ TraitTmpl | TmplBody | Pass )
-    }
-    R( `trait` ~! Id ~ TypeArgList.? ~ TraitTmplOpt )
+    R( `case`.? ~ `class` ~! Id ~ TypeArgList.? ~ Prelude.? ~ AllArgs.? ~ DefTmpl.? )
   }
 
-  val ObjDef: R0 = R( `case`.? ~ `object` ~! Id ~ ClsTmplOpt )
-  val ClsTmplOpt: R0 = R( (`extends` | `<:`) ~ (ClsTmpl | TmplBody) | TmplBody.? )
+  val Constrs = R( Constr.rep1(`with` ~! Pass) )
+  val EarlyDefTmpl = R( TmplBody ~ (`with` ~! Constr).rep ~ TmplBody.? )
+  val NamedTmpl = R( Constrs ~ TmplBody.? )
+
+  val DefTmpl = R( (`extends` | `<:`) ~ AnonTmpl | TmplBody)
+  val AnonTmpl = R( EarlyDefTmpl | NamedTmpl | TmplBody )
+
+  val TraitDef = R( `trait` ~! Id ~ TypeArgList.? ~ DefTmpl.? )
+
+  val ObjDef: R0 = R( `case`.? ~ `object` ~! Id ~ DefTmpl.? )
 
   val Constr = R( AnnotType ~ (NotNewline ~ ParenArgList).rep )
-  val ClsTmpl: R0 = {
-    val ClsParents = R( Constr ~ (`with` ~ Constr).rep )
-    val ClsBody = R( ClsParents ~ TmplBody.? )
-    val EarlyDefBody = R( TmplBody ~ (`with` ~ ClsBody).? )
-    R( EarlyDefBody | ClsBody )
-  }
 
   val PkgObj = R( ObjDef )
   val PkgBlock = R( QualId ~! `{` ~ TopStatSeq.? ~ `}` )
