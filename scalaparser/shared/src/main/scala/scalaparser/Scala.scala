@@ -44,7 +44,7 @@ object Scala extends Core with Types with Exprs with Xml{
     val TraitTmplOpt = {
       val Constrs = R( (`with` ~ Constr).rep )
       val TraitParents = R( Constr ~ Constrs )
-      val TraitTmpl = R( TmplBody ~ Constrs ~ TmplBody.? | TraitParents ~ TmplBody.? | Pass )
+      val TraitTmpl = R( TmplBody ~ Constrs ~ TmplBody.?  | TraitParents ~ TmplBody.? | Pass )
       R( (`extends` | `<:`) ~ TraitTmpl | TmplBody | Pass )
     }
     R( `trait` ~! Id ~ TypeArgList.? ~ TraitTmplOpt )

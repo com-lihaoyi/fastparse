@@ -22,12 +22,12 @@ object Scalac{
   val settings = new Settings()
   settings.usejavacp.value = true
   settings.classpath.append(files.mkString(":"))
-  var fail = false
+
   val global = new Global(settings)
 
   def checkParseFails(input: String) = {
     val run = new global.Run()
-    fail = false
+    var fail = false
     import global.syntaxAnalyzer.Offset
     val cu = new global.CompilationUnit(global.newSourceFile(input, "<test"))
     val parser = new global.syntaxAnalyzer.UnitParser(cu, Nil){

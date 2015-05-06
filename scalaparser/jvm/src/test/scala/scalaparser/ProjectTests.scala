@@ -1,12 +1,14 @@
 package scalaparser
 
 import java.nio.file.{Paths, Path, Files}
-
+import concurrent.ExecutionContext.Implicits.global
 import utest._
 import utest.framework.Test
 import utest.util.Tree
 
 import scala.collection.mutable
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
 import scala.util.{Failure, Success}
 import TestUtil._
 
@@ -16,6 +18,7 @@ object ProjectTests extends TestSuite{
   def tests = TestSuite{
 
     def checkDir(path: String, filter: String => Boolean = _ => true) = {
+
       val failures = mutable.Buffer.empty[String]
       def listFiles(s: java.io.File): Iterator[String] = {
         val (dirs, files) = Option(s.listFiles()).toIterator
@@ -23,17 +26,19 @@ object ProjectTests extends TestSuite{
                                                  .partition(_.isDirectory)
         files.map(_.getPath) ++ dirs.flatMap(listFiles)
       }
-      for{
-        f0 <- Option(listFiles(new java.io.File(path)))
-        f <- f0
-        if f.endsWith(".scala")
-        if filter(f)
-        r = io.Source.fromFile(f).mkString
-        if !Scalac.checkParseFails(r)
-      }{
-        println(f + " CHECKING")
-        TestUtil.check(r)
+      val files = for{
+        f0 <- Option(listFiles(new java.io.File(path))).toVector
+        filename <- f0
+        if filename.endsWith(".scala")
+        if filter(filename)
+        code = io.Source.fromFile(filename).mkString
+        if !Scalac.checkParseFails(code)
+      } yield Future{
+        println("Checking: " + filename)
+        TestUtil.check(code)
       }
+
+      files.map(Await.result(_, Duration.Inf))
     }
     'test - checkDir("scalaparser/shared/src/test/resources")
     def checkRepo(url: String, filter: String => Boolean = _ => false) = {
@@ -55,6 +60,12 @@ object ProjectTests extends TestSuite{
     'akka - checkRepo("https://github.com/akka/akka")
     'lift - checkRepo("https://github.com/lift/framework")
     'play - checkRepo("https://github.com/playframework/playframework")
+    'PredictionIO - checkRepo("https://github.com/PredictionIO/PredictionIO")
+    'spark - checkRepo("https://github.com/apache/spark")
+    'sbt - checkRepo("https://github.com/sbt/sbt")
+    'cats - checkRepo("https://github.com/non/cats")
+    'finagle - checkRepo("https://github.com/twitter/finagle")
+    'kafka - checkRepo("https://github.com/apache/kafka")
     'scala - checkRepo(
       "https://github.com/scala/scala",
       !Seq(
