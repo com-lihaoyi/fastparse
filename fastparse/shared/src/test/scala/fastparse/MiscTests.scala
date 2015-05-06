@@ -55,7 +55,7 @@ object MiscTests extends TestSuite{
         check(Pass, """Pass""")
         check(Fail, """Fail""")
         check(AnyChar, """AnyChar""")
-        check(CharIn("abc", "d", Seq('1', '2', '3')), """CharPred("abcd123")""")
+        check(CharIn("abc", "d", Seq('1', '2', '3')), """CharIn("abcd123")""")
         check(
           StringIn("mango", "mandarin", "mangosteen"),
           """StringIn("mango", "mandarin", "mangosteen")"""
@@ -67,15 +67,15 @@ object MiscTests extends TestSuite{
       val logged = mutable.Buffer.empty[String]
       val Foo = R( "A".log("A", logged +=) ~ "B".!.log("B", logged +=) ).log("AB", logged+=)
       Foo.parse("AB")
-      val expected = Seq(
+      def expected(unit: String) = Seq(
         "+AB:0",
         "  +A:0",
-        "  -A:0:Success((),1,false)",
+        s"  -A:0:Success($unit,1,false)",
         "  +B:1",
         "  -B:1:Success(B,2,false)",
         "-AB:0:Success(B,2,false)"
       )
-      assert(logged == expected)
+      assert(logged == expected("()") || logged == expected("undefined"))
     }
     'flattening{
       'either{

@@ -9,8 +9,9 @@ val shared = Seq(
     )
   ),
   libraryDependencies ++= Seq(
-    "com.lihaoyi" %% "utest" % "0.3.0"
+    "com.lihaoyi" %%% "utest" % "0.3.0"
   ),
+  scalaJSStage in Global := FastOptStage,
   organization := "com.lihaoyi",
   version := "0.1.0-SNAPSHOT",
   scalaVersion := "2.11.6",
@@ -42,14 +43,18 @@ val shared = Seq(
       </developers>
 )
 
-val fastparse = project.in(file("fastparse")).settings(
-  name := "fastparse",
-  shared
-)
 
-val scalaparser = project.in(file("scalaparser")).dependsOn(fastparse).settings(
-  name := "fastparse-scala",
-  libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test",
-  shared
+lazy val fastparse = crossProject.settings(
+  name := "fastparse"
+).settings(shared:_*)
+lazy val fastparseJS = fastparse.js
+lazy val fastparseJVM = fastparse.jvm
+lazy val scalaparser = crossProject.dependsOn(fastparse).settings(
+  name := "fastparse-scala"
+).settings(shared:_*)
+.jvmSettings(
+  libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"
 )
+lazy val scalaparserJS = scalaparser.js
+lazy val scalaparserJVM = scalaparser.jvm
 

@@ -88,7 +88,7 @@ trait Exprs extends Core with Types with Xml{
   val SimplePattern: R0 = {
     val ExtractorArgs = R( Pattern.rep(",") )
     val TupleEx = R( "(" ~ ExtractorArgs ~ ")" )
-    val Extractor = R( StableId ~ TupleEx.? )
+    val Extractor = R( StableId ~ TypeArgs.? ~ TupleEx.? )
     val Thingy = R( `_` ~ (`:` ~ TypePat).? ~ !"*" )
     R( XmlPattern | Thingy | PatLiteral | TupleEx | Extractor | VarId)
   }

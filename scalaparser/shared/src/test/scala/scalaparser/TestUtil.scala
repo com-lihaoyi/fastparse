@@ -8,8 +8,8 @@ import utest._
  */
 object TestUtil {
   def checkNeg[T](input: String, expected: String = "ADA???D", found: String = "ADQW??") = {
-    println("Checking Neg...\n" )
-    println(input)
+//    println("Checking Neg...\n" )
+//    println(input)
     Scala.CompilationUnit.parse(input) match{
       case f: Result.Failure =>
         val fastparse.Result.Frame(index, parser) = f.stack.last
@@ -23,10 +23,9 @@ object TestUtil {
     }
   }
 
-
   def check[T](input: String, tag: String = "") = {
-    println("Checking...\n" )
-    println(input)
+//    println("Checking...\n" )
+//    println(input)
     val res = Scala.CompilationUnit.parse(input)
     res match{
       case f: Result.Failure =>
@@ -39,5 +38,4 @@ object TestUtil {
         assert(s.index == inputLength)
     }
   }
-
 }

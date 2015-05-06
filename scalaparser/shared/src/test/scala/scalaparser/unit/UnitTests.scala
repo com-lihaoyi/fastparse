@@ -978,5 +978,57 @@ object UnitTests extends TestSuite{
         |}
       """.stripMargin
     )
+
+
+    * - check(
+      """
+        |class Foo1 {
+        |  trait Inner extends { val x : Int = 3 }
+        |  class Inner extends { val x : Int = 3 }
+        |}
+      """.stripMargin
+    )
+    * - check(
+      """
+        |class Foo {
+        |  trait Inner <: { val x : Int = 3 }
+        |}
+        |class Bar extends Foo {
+        |  trait Inner <: super.Inner { val y : Int = x }
+        |}
+      """.stripMargin
+    )
+
+    * - check(
+      """
+        |trait B extends { val x = 1} with A { println("B") }
+        |
+      """.stripMargin
+    )
+
+    // These are currently illegal but parse correctly,
+    // only failing later in the compiler
+    * - check(
+      s"""
+        |object Test{
+        |  t match {
+        |    case Cell[a](x: Int) => ()
+        |  }
+        |}
+      """.stripMargin
+    )
+    * - check(
+      s"""trait T2 extends {
+         |  type X = Int
+         |} with Base
+         |
+      """.stripMargin
+    )
+    * - check(
+      """class Toto extends Expr with Case1(12);
+        |
+      """.stripMargin
+    )
+
   }
 }

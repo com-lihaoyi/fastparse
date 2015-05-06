@@ -42,27 +42,23 @@ object Scala extends Core with Types with Exprs with Xml{
   }
   val TraitDef = {
     val TraitTmplOpt = {
-      val TraitParents = R( AnnotType ~ (`with` ~ AnnotType).rep )
-      val TraitTmpl = R( EarlyDefs.? ~ TraitParents ~ TmplBody.? )
-      R( `extends` ~ TraitTmpl | (`extends`.? ~ TmplBody).? )
+      val Constrs = R( (`with` ~ Constr).rep )
+      val TraitParents = R( Constr ~ Constrs )
+      val TraitTmpl = R( TmplBody ~ Constrs ~ TmplBody.? | TraitParents ~ TmplBody.? | Pass )
+      R( (`extends` | `<:`) ~ TraitTmpl | TmplBody | Pass )
     }
     R( `trait` ~! Id ~ TypeArgList.? ~ TraitTmplOpt )
   }
 
   val ObjDef: R0 = R( `case`.? ~ `object` ~! Id ~ ClsTmplOpt )
-  val ClsTmplOpt: R0 = R( `extends` ~ (ClsTmpl | TmplBody) | TmplBody.? )
+  val ClsTmplOpt: R0 = R( (`extends` | `<:`) ~ (ClsTmpl | TmplBody) | TmplBody.? )
 
+  val Constr = R( AnnotType ~ (NotNewline ~ ParenArgList).rep )
   val ClsTmpl: R0 = {
-    val Constr = R( AnnotType ~ (NotNewline ~ ParenArgList).rep )
-    val ClsParents = R( Constr ~ (`with` ~ AnnotType).rep )
+    val ClsParents = R( Constr ~ (`with` ~ Constr).rep )
     val ClsBody = R( ClsParents ~ TmplBody.? )
     val EarlyDefBody = R( TmplBody ~ (`with` ~ ClsBody).? )
     R( EarlyDefBody | ClsBody )
-  }
-
-  val EarlyDefs: R0 = {
-    val EarlyDef = R( (Annot ~ OneNLMax).rep ~ Mod.rep ~ (`val` | `var`) ~! ValVarDef )
-    R( `{` ~ EarlyDef.rep(Semis) ~ `}` ~ `with` )
   }
 
   val PkgObj = R( ObjDef )

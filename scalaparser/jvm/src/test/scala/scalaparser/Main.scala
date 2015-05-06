@@ -5,7 +5,6 @@ package scalaparser
  */
 object Main {
   def main(args: Array[String]): Unit = {
-
+    scalaparser.Scalac.checkParseFails("lol")
   }
 }
-

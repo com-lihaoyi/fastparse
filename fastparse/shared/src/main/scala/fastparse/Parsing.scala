@@ -287,11 +287,26 @@ object Parser{
   }
 
   /**
+   * Workaround https://github.com/scala-js/scala-js/issues/1603
+   * by implementing startsWith myself
+   */
+  def startsWith(src: String, prefix: String, offset: Int) = {
+    val max = prefix.length
+    @tailrec def rec(i: Int): Boolean = {
+      if (i >= prefix.length) true
+      else if (i + offset >= src.length) false
+      else if (src.charAt(i + offset) != prefix.charAt(i)) false
+      else rec(i + 1)
+    }
+    rec(0)
+  }
+  /**
    * Parses a literal `String`
    */
   case class Literal(s: String) extends Parser[Unit]{
     def parseRec(cfg: ParseConfig, index: Int) = {
-      if (cfg.input.startsWith(s, index)) success(cfg.success, (), index + s.length, false)
+
+      if (startsWith(cfg.input, s, index)) success(cfg.success, (), index + s.length, false)
       else fail(cfg.failure, index)
     }
     override def toString = literalize(s).toString
