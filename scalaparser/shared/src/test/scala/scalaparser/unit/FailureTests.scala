@@ -16,19 +16,7 @@ object FailureTests extends TestSuite{
       expected = """(ThisPath | IdPath)""",
       found = " import"
     )
-    * - checkNeg(
-      """
-        |object O{
-        |  for{
-        |    x <- Nil map
-        |
-        |  (x => x)
-        |  } yield x
-        |}
-      """.stripMargin,
-      expected = """ "}" """ ,
-      found = s"""(x => x)"""
-    )
+
     * - checkNeg(
       """object O{
         |  for{
@@ -298,8 +286,8 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      expected = "(`=>` | `⇒`)",
-      found = "(z => z"
+      expected = """ ")" """,
+      found = "=> z"
     )
     * - checkNeg(
       """object K{
@@ -521,8 +509,8 @@ object FailureTests extends TestSuite{
           |  } yield x
           |}
         """.stripMargin,
-        expected = """ "}" """,
-        found = "(x => x)"
+        expected = """ ")" """,
+        found = "=> x)"
       )
     * - checkNeg(
       """
@@ -533,8 +521,8 @@ object FailureTests extends TestSuite{
         |  } yield x
         |}
       """.stripMargin,
-      expected = """ "}" """,
-      found = "println(1)"
+      expected = """(`<-` | `←`)""",
+      found = "\n  } yield"
     )
       * - checkNeg(
         """
@@ -646,6 +634,24 @@ object FailureTests extends TestSuite{
         expected = "(BacktickId | PlainId)",
         found = ".toString"
       )
+      * - checkNeg(
+        s"""
+           |object X{
+           |  val x, = 1
+           |}
+        """.stripMargin,
+        expected = "((Binding ~ InfixPattern) | InfixPattern | VarId)",
+        found = " = 1"
+      )
+    * - checkNeg(
+      s"""
+         |object X{
+         |  val (x,) = 1
+         |}
+        """.stripMargin,
+      expected = "(TypePattern | BindPattern)",
+      found = ") = 1"
+    )
 //      * - check(
 //        """object F{
 //          |  this eq that.asInstanceOf[AnyRef]

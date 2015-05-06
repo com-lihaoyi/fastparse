@@ -19,7 +19,7 @@ object Scala extends Core with Types with Exprs with Xml{
     R( "{" ~! SelfType.? ~ Semis.? ~ TmplStat.rep(Semis) ~ `}` )
   }
 
-  val ValVarDef = R( BindPattern.rep1(",") ~ (`:` ~! Type).? ~ (`=` ~! StatCtx.Expr).? )
+  val ValVarDef = R( BindPattern.rep1("," ~! Pass) ~ (`:` ~! Type).? ~ (`=` ~! StatCtx.Expr).? )
 
   val FunDef = {
     val Body = R( `=` ~! `macro`.? ~ StatCtx.Expr | OneNLMax ~ "{" ~ Block ~ "}" )

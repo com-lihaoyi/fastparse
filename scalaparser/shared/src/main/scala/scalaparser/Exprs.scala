@@ -86,8 +86,8 @@ trait Exprs extends Core with Types with Xml{
     val Guard : R0 = R( `if` ~! PostfixExpr )
   }
   val SimplePattern: R0 = {
-    val ExtractorArgs = R( Pattern.rep(",") )
-    val TupleEx = R( "(" ~ ExtractorArgs ~ ")" )
+    val ExtractorArgs = R( Pattern.rep("," ~! Pass) )
+    val TupleEx = R( "(" ~! ExtractorArgs ~ ")" )
     val Extractor = R( StableId ~ TypeArgs.? ~ TupleEx.? )
     val Thingy = R( `_` ~ (`:` ~ TypePat).? ~ !"*" )
     R( XmlPattern | Thingy | PatLiteral | TupleEx | Extractor | VarId)
