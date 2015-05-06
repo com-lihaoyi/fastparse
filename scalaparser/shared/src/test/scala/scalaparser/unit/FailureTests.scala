@@ -730,6 +730,27 @@ object FailureTests extends TestSuite{
       expected = """(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | SmallerExprOrLambda)""",
       found = ") = 1"
     )
+    * - checkNeg(
+      s"""
+         |object X{type T = Int#}
+        """.stripMargin,
+      expected = """(BacktickId | PlainId)""",
+      found = "}"
+    )
+    * - checkNeg(
+      s"""
+         |object X{type T = }
+        """.stripMargin,
+      expected = """(`_` | PostfixType)""",
+      found = " }"
+    )
+    * - checkNeg(
+      s"""
+         |object X{type T = (}}
+        """.stripMargin,
+      expected = """(`_` | PostfixType)""",
+      found = " }"
+    )
 //      * - check(
 //        """object F{
 //          |  this eq that.asInstanceOf[AnyRef]

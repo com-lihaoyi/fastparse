@@ -38,7 +38,7 @@ trait Types extends Core{
     // Can't `cut` after the opening paren, because we might be trying to parse `()`
     // or `() => T`! only cut after parsing one type
     val BasicType = R( "(" ~ Types.? ~ ")"  | StableId ~ ("." ~ `type`).?)
-    R( BasicType ~ (TypeArgs | `#` ~ Id).rep )
+    R( BasicType ~ (TypeArgs | `#` ~! Id).rep )
   }
 
   val TypeArgs = R( "[" ~! Types ~ "]" )
@@ -65,5 +65,5 @@ trait Types extends Core{
     R( "[" ~ Variant.rep("," ~! Pass) ~ "]" )
   }
   val Exprs: R0 = R( TypeExpr.rep1("," ~! Pass) )
-  val TypeDef: R0 = R( Id ~ TypeArgList.? ~ (`=` ~ Type | TypeBounds) )
+  val TypeDef: R0 = R( Id ~ TypeArgList.? ~ (`=` ~! Type | TypeBounds) )
 }

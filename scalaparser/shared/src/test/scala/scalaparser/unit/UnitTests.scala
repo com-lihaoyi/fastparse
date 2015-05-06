@@ -652,6 +652,19 @@ object UnitTests extends TestSuite{
         |}
       """.stripMargin
     )
+
+    * - check(
+      """object immutable {
+        |  new (((String)))
+        |}
+      """.stripMargin
+    )
+    * - check(
+      """package immutable {
+        |  class C extends (((D)))
+        |}
+      """.stripMargin
+    )
     * - check(
       """import java.util.concurrent.TimeUnit.{ NANOSECONDS => NANOS, MILLISECONDS ⇒ MILLIS }
       """.stripMargin
