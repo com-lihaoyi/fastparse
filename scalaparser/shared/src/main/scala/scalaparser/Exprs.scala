@@ -27,10 +27,10 @@ trait Exprs extends Core with Types with Xml{
     val NoSemis = if (curlyBlock) NotNewline else Parser.Pass
 
     val Enumerators = {
-      val Generator = R( TypeOrBindPattern ~ `<-` ~! Expr ~ Guard.? )
-      val Assign = R( TypeOrBindPattern ~ `=` ~! Expr )
-      val Enumerator = R( Semis ~ Generator | Semis.? ~ Guard | Semis ~ Assign )
-      R( Generator ~ Enumerator.rep ~ WL )
+      val Generator = R( `<-` ~! Expr ~ Guard.? )
+      val Assign = R( `=` ~! Expr )
+      val Enumerator = R( Semis ~ TypeOrBindPattern ~! (Generator | Assign) | Semis.? ~ Guard  )
+      R( TypeOrBindPattern ~ Generator ~ Enumerator.rep ~ WL )
     }
 
     val Expr: R0 = {

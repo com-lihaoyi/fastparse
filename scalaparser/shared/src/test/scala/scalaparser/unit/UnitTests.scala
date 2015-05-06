@@ -1006,6 +1006,12 @@ object UnitTests extends TestSuite{
         |
       """.stripMargin
     )
+    * - check(
+      """object X{
+        |  for(a <- "" ; (b, c) = (1, 2)) {}
+        |}
+      """.stripMargin
+    )
 
     // These are currently illegal but parse correctly,
     // only failing later in the compiler

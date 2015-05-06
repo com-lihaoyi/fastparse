@@ -27,8 +27,8 @@ object FailureTests extends TestSuite{
         |  } yield x
         |}
       """.stripMargin,
-      expected = """ "}" """,
-      found = "2\n  } yiel"
+      expected = """ (Generator | Assign) """,
+      found = "\n  } yiel"
     )
     * - checkNeg(
       "import scala.util.{Failure, Success + 1}",
@@ -521,7 +521,7 @@ object FailureTests extends TestSuite{
         |  } yield x
         |}
       """.stripMargin,
-      expected = """(`<-` | `←`)""",
+      expected = """(Generator | Assign)""",
       found = "\n  } yield"
     )
       * - checkNeg(
