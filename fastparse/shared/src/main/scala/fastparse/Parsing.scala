@@ -615,7 +615,7 @@ object Parser{
   }
 
   abstract class CharSet(chars: Seq[Char]) extends Parser[Unit]{
-    private[this] val uberSet = new CharBitSet(chars)
+    private[this] val uberSet = CharBitSet(chars)
     def parseRec(cfg: ParseConfig, index: Int) = {
       val input = cfg.input
       if (index >= input.length) fail(cfg.failure, index)
@@ -639,7 +639,7 @@ object Parser{
 
 
   case class CharsWhile(pred: Char => Boolean, min: Int = 0) extends Parser[Unit]{
-    private[this] val uberSet = new CharBitSet((Char.MinValue to Char.MaxValue).filter(pred))
+    private[this] val uberSet = CharBitSet((Char.MinValue to Char.MaxValue).filter(pred))
 
     def parseRec(cfg: ParseConfig, index: Int) = {
       var curr = index

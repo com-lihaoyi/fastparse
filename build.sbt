@@ -43,8 +43,14 @@ val shared = Seq(
       </developers>
 )
 
+lazy val utils = crossProject.settings(
+  name := "fastparse-utils"
+).settings(shared:_*)
+lazy val utilsJS = utils.js
+lazy val utilsJVM= utils.jvm
 
-lazy val fastparse = crossProject.settings(
+
+lazy val fastparse = crossProject.dependsOn(utils).settings(
   name := "fastparse"
 ).settings(shared:_*)
 lazy val fastparseJS = fastparse.js

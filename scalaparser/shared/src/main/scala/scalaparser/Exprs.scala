@@ -74,14 +74,14 @@ trait Exprs extends Core with Types with Xml{
     val PostFix = R( NotNewline ~ Id ~ Newline.? )
     val PostfixSuffix = R( InfixSuffix.rep ~ PostFix.? ~ (`=` ~! Expr).? ~ MatchAscriptionSuffix.?)
 
-    val PostfixExpr: R0 = R( PrefixExpr ~ ExprSuffix ~ PostfixSuffix)
+    val PostfixExpr: R0 = R( PrefixExpr ~ ExprSuffix ~ PostfixSuffix )
 
     val Parened = R ( "(" ~! Exprs.? ~ ")" )
     val SimpleExpr: R0 = {
       val Path = R( (Id ~ ".").rep ~ `this` ~ ("." ~! Id).rep | StableId )
       val New = R( `new` ~! AnonTmpl )
 
-      R( XmlExpr | New | BlockExpr | ExprLiteral | Path | `_` | Parened)
+      R( XmlExpr | New | BlockExpr | ExprLiteral | Path | `_` | Parened )
     }
     val Guard : R0 = R( `if` ~! PostfixExpr )
   }

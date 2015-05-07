@@ -51,7 +51,7 @@ object Scala extends Core with Types with Exprs with Xml{
 
   val ObjDef: R0 = R( `case`.? ~ `object` ~! Id ~ DefTmpl.? )
 
-  val Constr = R( AnnotType ~ (NotNewline ~ ParenArgList).rep )
+  val Constr = R( AnnotType ~ (NotNewline ~ ParenArgList ).rep )
 
   val PkgObj = R( ObjDef )
   val PkgBlock = R( QualId ~! `{` ~ TopStatSeq.? ~ `}` )

@@ -3,6 +3,7 @@ package scalaparser.syntax
 import acyclic.file
 import fastparse.Parser.CharsWhile
 import fastparse._
+import fastparse.preds.CharPredicates
 import Basic._
 object Identifiers{
 
@@ -19,7 +20,7 @@ object Identifiers{
   def IdRest(allowDollar: Boolean) = {
     val NonLetterDigitId = if(!allowDollar) "" else "$"
     val IdUnderscoreChunk = R( CharsWhile(_ ==  '_', min = 0) ~ CharsWhile(
-      c => NonLetterDigitId.contains(c) || c.isLetterOrDigit,
+      c => NonLetterDigitId.contains(c) || CharPredicates.isLetter(c) || CharPredicates.isDigit(c),
       min = 1
     ) )
     R( IdUnderscoreChunk.rep ~ (CharsWhile(_ == '_', min = 1) ~ CharsWhile(isOpChar)).? )

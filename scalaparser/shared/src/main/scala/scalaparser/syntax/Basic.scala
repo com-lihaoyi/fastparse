@@ -4,7 +4,8 @@ import acyclic.file
 import fastparse.Parser.CharsWhile
 
 import fastparse._
-
+import fastparse.preds.CharPredicates
+import fastparse.preds.CharPredicates._
 object Basic {
   val UnicodeEscape = R( "u" ~ HexDigit ~ HexDigit ~ HexDigit ~ HexDigit )
 
@@ -27,12 +28,12 @@ object Basic {
   def isOpChar(c: Char) = {
     // scalac 2.10 crashes if OtherOrMathSymbol below is substituted by its body
     // Same thing for LetterDigit, LowerChar, UpperChar
-    c.getType == Character.OTHER_SYMBOL || c.getType == Character.MATH_SYMBOL || "!#%&*+-/:<=>?@\\^|~".contains(c)
+    preds.CharPredicates.isOtherSymbol(c) || preds.CharPredicates.isMathSymbol(c) || "!#%&*+-/:<=>?@\\^|~".contains(c)
   }
-  val Letter = R( CharPred(c => c.isLetter | c.isDigit | "$_".contains(c)) )
-  val LetterDigitDollarUnderscore =  R( CharPred(c => c.isLetterOrDigit || "$_".contains(c) ) )
-  val Lower = R( CharPred(c => c.isLower || "$_".contains(c)) )
-  val Upper = R( CharPred(_.isUpper) )
+  val Letter = R( CharPred(c => isLetter(c) | isDigit(c) | "$_".contains(c)) )
+  val LetterDigitDollarUnderscore =  R( CharPred(c => isLetter(c) | isDigit(c) | "$_".contains(c) ) )
+  val Lower = R( CharPred(c => isLower(c) || "$_".contains(c)) )
+  val Upper = R( CharPred(isUpper) )
 }
 /**
  * Most keywords don't just require the correct characters to match,

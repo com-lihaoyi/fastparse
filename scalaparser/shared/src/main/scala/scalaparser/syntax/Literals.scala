@@ -3,6 +3,7 @@ package scalaparser.syntax
 import acyclic.file
 import fastparse.Parser.CharsWhile
 import fastparse._
+import fastparse.preds.CharPredicates
 import Basic._
 import Identifiers._
 
@@ -40,7 +41,7 @@ trait Literals { l =>
 
     val Char = {
       // scalac 2.10 crashes if PrintableChar below is substituted by its body
-      def PrintableChar = CharPred(isPrintableChar)
+      def PrintableChar = CharPred(CharPredicates.isPrintableChar)
 
       R( (EscapedChars | PrintableChar) ~ "'" )
     }
@@ -79,9 +80,5 @@ trait Literals { l =>
     object Expr extends InterpCtx(Some(Block))
 
 
-    def isPrintableChar(c: Char): Boolean = {
-      val block = Character.UnicodeBlock.of(c)
-      !Character.isISOControl(c) && !Character.isSurrogate(c) && block != null && block != Character.UnicodeBlock.SPECIALS
-    }
   }
 }

@@ -1055,6 +1055,9 @@ object UnitTests extends TestSuite{
         |
       """.stripMargin
     )
+    * - check(
+      """class A extends B()""".stripMargin
+    )
 
   }
 }
