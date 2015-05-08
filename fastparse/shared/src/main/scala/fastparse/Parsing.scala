@@ -67,11 +67,13 @@ object Result{
     def parser: Parser[_]
 
     /**
-     * A one-line snippet that tells you what the state of the parser was when it failed
+     * A one-line snippet that tells you what the state of the
+     * parser was when it failed
      */
     def trace: String
     /**
-     * A longer version of [[trace]], which shows more context for every stack frame
+     * A longer version of [[trace]], which shows more context
+     * for every stack frame
      */
     def verboseTrace: String
 
@@ -149,24 +151,30 @@ case class ParseCtx(input: String, logDepth: Int, trace: Boolean){
  * none       true    84 /79 /80
  * none       false   96 /99 /97
  */
-sealed trait Parser[+T]{
-
+trait Parser[+T] extends ParserApi[T]{
   /**
    * Parses the given `input` starting from the given `index`
    *
    * @param input The string we want to parse
-   * @param index The index in the string to start from
-   * @param trace Whether or not you want a full trace of any error messages that appear.
-   *              Without it, you only get the single deepest parser in the call-stack when
-   *              it failed, and its index. With `trace`, you get every parser all the way
-   *              to the top, though this comes with a ~20-40% slowdown.
-   * @return
+   *
+   * @param index The index in the string to start from. By default parsing
+   *              starts from the beginning of a string, but you can start
+   *              from halfway through the string if you want.
+   *
+   * @param trace Whether or not you want a full trace of any error messages
+   *              that appear. Without it, you only get the single deepest
+   *              parser in the call-stack when it failed, and its index. With
+   *              `trace`, you get every parser all the way to the top, though
+   *              this comes with a ~20-40% slowdown.
    */
   def parse(input: String, index: Int = 0, trace: Boolean = true): Result[T] = {
     parseRec(ParseCtx(input, 0, trace), index)
   }
+}
+
+trait ParserApi[+T]{ this: Parser[T] =>
   /**
-    * Parses the given `input` starting from the given `index` and `logDepth`
+   * Parses the given `input` starting from the given `index` and `logDepth`
    */
   def parseRec(cfg: ParseCtx, index: Int): Result[T]
 
@@ -254,7 +262,6 @@ sealed trait Parser[+T]{
     s1
   }
 }
-
 object Parser{
 
   /**
@@ -639,84 +646,4 @@ object Parser{
     }
   }
 
-  abstract class CharSet(chars: Seq[Char]) extends Parser[Unit]{
-    private[this] val uberSet = CharBitSet(chars)
-    def parseRec(cfg: ParseCtx, index: Int) = {
-      val input = cfg.input
-      if (index >= input.length) fail(cfg.failure, index)
-      else if (uberSet(input(index))) success(cfg.success, (), index + 1, false)
-      else fail(cfg.failure, index)
-    }
-  }
-  /**
-   * Parses a single character if it passes the predicate
-   */
-  case class CharPred(predicate: Char => Boolean)
-    extends CharSet((Char.MinValue to Char.MaxValue).filter(predicate))
-
-  /**
-   * Parses a single character if its contained in the lists of allowed characters
-   */
-  case class CharIn(strings: Seq[Char]*) extends CharSet(strings.flatten){
-    override def toString = s"CharIn(${Utils.literalize(strings.flatten.mkString)})"
-  }
-
-  /**
-   * Keeps consuming characters until the predicate [[pred]] becomes false.
-   * Functionally equivalent to using `.rep` and [[CharPred]], but much faster.
-   */
-  case class CharsWhile(pred: Char => Boolean, min: Int = 0) extends Parser[Unit]{
-    private[this] val uberSet = CharBitSet((Char.MinValue to Char.MaxValue).filter(pred))
-
-    def parseRec(cfg: ParseCtx, index: Int) = {
-      var curr = index
-      val input = cfg.input
-      while(curr < input.length && uberSet(input(curr))) curr += 1
-      if (curr - index < min) fail(cfg.failure, curr)
-      else success(cfg.success, (), curr, false)
-    }
-  }
-  /**
-   * Very efficiently attempts to parse a set of strings, by
-   * first converting it into an array-backed Trie and then walking it once.
-   * If multiple strings match the input, longest match wins.
-   */
-  case class StringIn(strings: String*) extends Parser[Unit]{
-
-    private[this] val bitSet = new TrieNode
-    for(string <- strings){
-      var current = bitSet
-      for(char <- string){
-        val next = current.children.getOrElse(char, null)
-        if (next == null) {
-          current.children(char) = new TrieNode
-        }
-        current = current.children(char)
-      }
-      current.word = string
-    }
-
-    def parseRec(cfg: ParseCtx, index: Int) = {
-      val input = cfg.input
-      @tailrec def rec(offset: Int, currentNode: TrieNode, currentRes: Result[Unit]): Result[Unit] = {
-        if (index + offset >= input.length) currentRes
-        else {
-          val char = input(index + offset)
-          val next = currentNode(char)
-          if (next == null) currentRes
-          else {
-            rec(
-              offset + 1,
-              next,
-              if (next.word != null) success(cfg.success, (), index + offset + 1, false) else currentRes
-            )
-          }
-        }
-      }
-      rec(0, bitSet, fail(cfg.failure, index))
-    }
-    override def toString = {
-      s"StringIn(${strings.map(literalize(_)).mkString(", ")})"
-    }
-  }
 }

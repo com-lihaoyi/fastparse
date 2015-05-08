@@ -30,14 +30,17 @@ object JsonTests extends TestSuite{
       def value = null
     }
   }
-  // Here is the parser
 
-  val space         = R( CharIn(" \n").rep1 )
+  // Here is the parser
+  val space         = R( CharIn(" \n").rep )
   val digits        = R( CharIn('0' to '9').rep1 )
   val exponent      = R( CharIn("eE") ~ CharIn("+-").? ~ digits )
   val fractional    = R( "." ~ digits )
   val integral      = R( "0" | CharIn('1' to '9') ~ digits.rep )
-  val number        = R( "?".? ~ integral ~ fractional.? ~ exponent.? ).!.map(x => Js.Num(x.toDouble))
+
+  val number = R( "?".? ~ integral ~ fractional.? ~ exponent.? ).!.map(
+    x => Js.Num(x.toDouble)
+  )
 
   val `null`        = R( "null" ).map(_ => Js.Null)
   val `false`       = R( "false" ).map(_ => Js.False)
@@ -46,11 +49,21 @@ object JsonTests extends TestSuite{
   val hexDigit      = R( CharIn('0'to'9', 'a'to'f', 'A'to'F') )
   val unicodeEscape = R( "u" ~ hexDigit ~ hexDigit ~ hexDigit ~ hexDigit )
   val escape        = R( "\\" ~ (CharIn("\"/\\bfnrt") | unicodeEscape) )
-  val string        = R( space.? ~ "\"" ~ (!"\"" ~ AnyChar | escape).rep.! ~ "\"").map(Js.Str)
-  val array         = R( "[" ~! jsonExpr.rep("," ~! Pass) ~ space.? ~ "]").map(Js.Arr(_:_*))
-  val pair          = R( string.map(_.value) ~! ":" ~! jsonExpr )
-  val obj           = R( "{" ~! pair.rep("," ~! Pass) ~ space.? ~ "}" ).map(Js.Obj(_:_*))
-  val jsonExpr: R[Js.Val]  = R(space.? ~ (obj | array | string | `true` | `false` | `null` | number) ~ space.?)
+
+  val string =
+    R( space ~ "\"" ~ (!"\"" ~ AnyChar | escape).rep.! ~ "\"").map(Js.Str)
+
+  val array =
+    R( "[" ~! jsonExpr.rep("," ~! Pass) ~ space ~ "]").map(Js.Arr(_:_*))
+
+  val pair = R( string.map(_.value) ~! ":" ~! jsonExpr )
+
+  val obj =
+    R( "{" ~! pair.rep("," ~! Pass) ~ space ~ "}" ).map(Js.Obj(_:_*))
+
+  val jsonExpr: R[Js.Val] = R(
+    space ~ (obj | array | string | `true` | `false` | `null` | number) ~ space
+  )
 
   val tests = TestSuite{
     'pass {
@@ -60,15 +73,17 @@ object JsonTests extends TestSuite{
           assert(i == {s; expectedIndex})
         case f: Result.Failure => throw new Exception(f.fullStack.mkString("\n"))
       }
-      * - test(number, "12031.33123E-2")
-      * - test(string, "\"i am a cow lol omfg\"" )
-      * - test(array, """[1, 2, "omg", ["wtf", "bbq", 42]]""")
-      * - test(obj, """{"omg": "123", "wtf": 456, "bbq": "789"}""")
-      * - {
+      'parts {
+        * - test(number, "12031.33123E-2")
+        * - test(string, "\"i am a cow lol omfg\"")
+        * - test(array, """[1, 2, "omg", ["wtf", "bbq", 42]]""")
+        * - test(obj, """{"omg": "123", "wtf": 456, "bbq": "789"}""")
+      }
+      'jsonExpr - {
         val Result.Success(value, _) = jsonExpr.parse("""{"omg": "123", "wtf": 12.4123}""")
         assert(value == Js.Obj("omg" -> Js.Str("123"), "wtf" -> Js.Num(12.4123)))
       }
-      * - test(jsonExpr, """
+      'bigJsonExpr - test(jsonExpr, """
             {
                 "firstName": "John",
                 "lastName": "Smith",

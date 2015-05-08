@@ -64,3 +64,9 @@ lazy val scalaparser = crossProject.dependsOn(fastparse).settings(
 lazy val scalaparserJS = scalaparser.js
 lazy val scalaparserJVM = scalaparser.jvm
 
+lazy val readme = scalatex.ScalatexReadme(
+  folder = "readme",
+  url = "https://github.com/lihaoyi/fastparse/tree/master",
+  source = "Readme",
+  targetFolder = "target/site"
+)

@@ -1,6 +1,5 @@
 package fastparse
 
-import Parser.{Rule, StringIn}
 import utest._
 
 import scala.collection.mutable

@@ -7,9 +7,10 @@ package object fastparse {
   val Fail = Parser.Fail
   val Start = Parser.Start
   val End = Parser.End
-  val CharPred = Parser.CharPred
-  def CharIn(strings: Seq[Char]*) = Parser.CharIn(strings:_*)
-  val StringIn = Parser.StringIn
+  val CharPred = Intrinsics.CharPred
+  val CharIn = Intrinsics.CharIn
+  val CharsWhile = Intrinsics.CharsWhile
+  val StringIn = Intrinsics.StringIn
   val AnyChar = Parser.AnyChar
 
   object &{
