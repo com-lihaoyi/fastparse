@@ -1,5 +1,6 @@
 package fastparse
 
+import fastparse.Result
 import utest._
 
 /**
@@ -26,8 +27,9 @@ object MathTests extends TestSuite{
   val tests = TestSuite{
     'pass {
       def check(str: String, num: Int) = {
-        val res = expr.parse(str)
-        assert(res == Result.Success(num, str.length))
+        val length = str.length
+        val Result.Success(`num`, `length`) = expr.parse(str)
+
       }
       check("1+1", 2)
       check("1+1*2", 3)

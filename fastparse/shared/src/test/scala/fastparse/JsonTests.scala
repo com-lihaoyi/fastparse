@@ -55,7 +55,7 @@ object JsonTests extends TestSuite{
   val tests = TestSuite{
     'pass {
       def test(p: R[_], s: String) = p.parse(s) match{
-        case Result.Success(v, i, cut) =>
+        case Result.Success(v, i) =>
           val expectedIndex = s.length
           assert(i == {s; expectedIndex})
         case f: Result.Failure => throw new Exception(f.fullStack.mkString("\n"))
@@ -65,7 +65,7 @@ object JsonTests extends TestSuite{
       * - test(array, """[1, 2, "omg", ["wtf", "bbq", 42]]""")
       * - test(obj, """{"omg": "123", "wtf": 456, "bbq": "789"}""")
       * - {
-        val Result.Success(value, _, _) = jsonExpr.parse("""{"omg": "123", "wtf": 12.4123}""")
+        val Result.Success(value, _) = jsonExpr.parse("""{"omg": "123", "wtf": 12.4123}""")
         assert(value == Js.Obj("omg" -> Js.Str("123"), "wtf" -> Js.Num(12.4123)))
       }
       * - test(jsonExpr, """

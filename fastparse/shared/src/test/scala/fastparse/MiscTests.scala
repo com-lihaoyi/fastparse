@@ -65,17 +65,20 @@ object MiscTests extends TestSuite{
     }
     'logging{
       val logged = mutable.Buffer.empty[String]
-      val Foo = R( "A".log("A", logged +=) ~ "B".!.log("B", logged +=) ).log("AB", logged+=)
+      implicit val logger = fastparse.Logger(logged.append(_))
+      val Foo = R( "A".log("A") ~ "B".!.log("B") ).log("AB")
       Foo.parse("AB")
-      def expected(unit: String) = Seq(
+      def expected(unit: String) = mutable.Buffer(
         "+AB:0",
         "  +A:0",
-        s"  -A:0:Success($unit,1,false)",
+        s"  -A:0:Success($unit, 1)",
         "  +B:1",
-        "  -B:1:Success(B,2,false)",
-        "-AB:0:Success(B,2,false)"
+        "  -B:1:Success(B, 2)",
+        "-AB:0:Success(B, 2)"
       )
-      assert(logged == expected("()") || logged == expected("undefined"))
+      val expected1 = expected("()")
+      val expected2 = expected("undefined")
+      assert(logged == expected1 || logged == expected2)
     }
     'flattening{
       'either{

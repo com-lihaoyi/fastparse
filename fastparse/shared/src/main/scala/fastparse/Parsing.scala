@@ -11,61 +11,109 @@ sealed trait Result[+T]
 
 object Result{
   case class Frame(index: Int, parser: Parser[_])
-  /**
-   * @param value The result of this parse
-   * @param index The index where the parse completed; may be less than
-   *              the length of input
-   * @param cut Whether or not this parse encountered a Cut
-   */
-  case class Success[T](var value: T, var index: Int, var cut: Boolean = false) extends Result[T]
+  trait Success[T] extends Result[T]{
+    /**
+     * The result of this parse
+     */
+    def value: T
+    /**
+     * The index where the parse completed; may be less than
+     * the length of input
+     */
+    def index: Int
+    /**
+     * Whether or not this parse encountered a Cut
+     */
+    def cut: Boolean
+  }
+  object Success{
+    case class Mutable[T](var value: T, var index: Int, var cut: Boolean = false) extends Success[T]{
+      override def toString = s"Success($value, $index)"
+    }
+    def unapply[T](x: Result[T]) = x match{
+      case s: Success[T] => Some((s.value, s.index))
+      case _ => None
+    }
+  }
 
-  /**
-   * Encapsulates
-   *
-   * @param input The input string for the failed parse. Useful so the [[Failure]]
-   *              object can pretty-print snippet
-   * @param fullStack The entire stack trace where the parse failed, containing every
-   *                  parser in the stack and the index where the parser was used
-   * @param index The index in the parse where this parse failed
-   * @param parser The deepest parser in the parse which failed
-   * @param cut Whether or not this parse encountered a Cut
-   */
-  case class Failure(var input: String,
-                     var fullStack: List[Frame],
-                     var index: Int,
-                     var parser: Parser[_],
-                     var cut: Boolean) extends Result[Nothing]{
+  trait Failure extends Result[Nothing]{
+    /**
+     * The input string for the failed parse. Useful so the [[Failure]]
+     * object can pretty-print snippet
+     */
+    def input: String
+
+    /**
+     * The entire stack trace where the parse failed, containing every
+     * parser in the stack and the index where the parser was used, excluding
+     * the final parser and index where the parse failed
+     */
+    def fullStack: List[Frame]
     /**
      * A slimmed down version of [[fullStack]], this only includes named
      * [[Parser.Rule]] objects as well as the final Parser (whether named or not)
-     * for easier reading.
+     * and index where the parse failed for easier reading.
      */
-    def stack = fullStack.collect{
-      case f @ Frame(i, p: Parser.Rule[_]) => f
-      case f @ Frame(i, p: Parser.Sequence[_, _, _]) if p.cut => f
-    } :+ Frame(index, parser)
+    def stack: List[Frame]
 
     /**
-     * A longer version of [[trace]], which shows more context for every stack frame
+     * The index in the parse where this parse failed
      */
-    def verboseTrace = {
-      val body =
-        for(Frame(index, p) <- stack)
-          yield s"$index\t...${literalize(input.slice(index, index+5))}\t$p"
-      body.mkString("\n")
-    }
+    def index: Int
+
+    /**
+     * The deepest parser in the parse which failed
+     */
+    def parser: Parser[_]
 
     /**
      * A one-line snippet that tells you what the state of the parser was when it failed
      */
-    def trace = {
-      val body =
-        for(Frame(index, p) <- stack)
-          yield s"$p:$index"
+    def trace: String
+    /**
+     * A longer version of [[trace]], which shows more context for every stack frame
+     */
+    def verboseTrace: String
 
-      body.mkString(" / ") + " ..." + literalize(input.slice(index, index+10))
+    /**
+     * Whether or not this parse encountered a Cut
+     */
+    def cut: Boolean
+  }
+  object Failure {
+    def unapply[T](x: Result[T]) = x match{
+      case s: Failure => Some((s.parser, s.index))
+      case _ => None
     }
-    override def toString = s"Failure($trace, $cut)"
+    case class Mutable(var input: String,
+                       var fullStack: List[Frame],
+                       var index: Int,
+                       var parser: Parser[_],
+                       var cut: Boolean) extends Failure {
+
+      def stack = fullStack.collect {
+        case f@Frame(i, p: Parser.Rule[_]) => f
+        case f@Frame(i, p: Parser.Sequence[_, _, _]) if p.cut => f
+      } :+ Frame(index, parser)
+
+      def verboseTrace = {
+        val body =
+          for (Frame(index, p) <- stack)
+            yield s"$index\t...${literalize(input.slice(index, index + 5))}\t$p"
+        body.mkString("\n")
+      }
+
+      def trace = {
+        val body =
+          for (Frame(index, p) <- stack)
+            yield s"$p:$index"
+
+        body.mkString(" / ") + " ..." + literalize(input.slice(index, index + 10))
+      }
+
+      override def toString = s"Failure($trace, $cut)"
+    }
+
   }
 }
 import Result._
@@ -78,18 +126,11 @@ import Result._
  * @param logDepth
  * @param trace
  */
-case class ParseConfig(input: String, logDepth: Int, trace: Boolean){
-  val failure = new Failure(input, Nil, 0, null, false)
-  val success = new Success(null, 0, false)
+case class ParseCtx(input: String, logDepth: Int, trace: Boolean){
+  val failure = Failure.Mutable(input, Nil, 0, null, false)
+  val success = Success.Mutable(null, 0, false)
 }
 
-/**
- * A [[Walker]] that is provided to each Parser's `mapChildren` call, which
- * automatically appends the current Parser to the stack.
- */
-trait ScopedWalker{
-  def apply[T](p: Parser[T]): Parser[T]
-}
 
 /**
  * A single, self-contained, immutable parser. The primary method is
@@ -122,19 +163,18 @@ sealed trait Parser[+T]{
    * @return
    */
   def parse(input: String, index: Int = 0, trace: Boolean = true): Result[T] = {
-    parseRec(ParseConfig(input, 0, trace), index)
+    parseRec(ParseCtx(input, 0, trace), index)
   }
   /**
     * Parses the given `input` starting from the given `index` and `logDepth`
    */
-  def parseRec(cfg: ParseConfig, index: Int): Result[T]
+  def parseRec(cfg: ParseCtx, index: Int): Result[T]
 
-  def mapChildren(w: ScopedWalker): Parser[T] = this
   /**
    * Wraps this in a [[Parser.Logged]]. This prints out information where a parser
    * was tried and its result, which is useful for debugging
    */
-  def log(msg: String, output: String => Unit = println) = Parser.Logged(this, msg, output)
+  def log(msg: String)(implicit output: Logger) = Parser.Logged(this, msg, output.f)
   /**
    * Repeats this parser 0 or more times
    */
@@ -193,7 +233,7 @@ sealed trait Parser[+T]{
    */
   def map[V](f: T => V): Parser[V] = Parser.Mapper(this, f)
 
-  protected def fail(f: Failure, index: Int, cut: Boolean = false) = {
+  protected def fail(f: Failure.Mutable, index: Int, cut: Boolean = false) = {
     f.index = index
     f.cut = cut
     f.fullStack = Nil
@@ -201,13 +241,13 @@ sealed trait Parser[+T]{
     f
   }
 
-  protected def failMore(f: Failure, index: Int, trace: Boolean, cut: Boolean = false) = {
+  protected def failMore(f: Failure.Mutable, index: Int, trace: Boolean, cut: Boolean = false) = {
     if (trace) f.fullStack = new ::(new Result.Frame(index, this), f.fullStack)
     f.cut = f.cut | cut
     f
   }
-  protected def success[T](s: Success[_], value: T, index: Int, cut: Boolean) = {
-    val s1 = s.asInstanceOf[Success[T]]
+  protected def success[T](s: Success.Mutable[_], value: T, index: Int, cut: Boolean) = {
+    val s1 = s.asInstanceOf[Success.Mutable[T]]
     s1.value = value
     s1.index = index
     s1.cut = cut
@@ -221,47 +261,45 @@ object Parser{
    * Applies a transformation [[f]] to the result of [[p]]
    */
   case class Mapper[T, V](p: Parser[T], f: T => V) extends Parser[V]{
-    def parseRec(cfg: ParseConfig, index: Int) = {
+    def parseRec(cfg: ParseCtx, index: Int) = {
       p.parseRec(cfg, index) match{
-        case s: Success[T] => success(s, f(s.value), s.index, s.cut)
-        case f: Failure => failMore(f, index, cfg.trace)
+        case s: Success.Mutable[T] => success(s, f(s.value), s.index, s.cut)
+        case f: Failure.Mutable => failMore(f, index, cfg.trace)
       }
     }
-    override def mapChildren(w: ScopedWalker) = Mapper(w(p), f)
     override def toString = p.toString
   }
   /**
    * A parser that always succeeds, consuming no input
    */
   case object Pass extends Parser[Unit]{
-    def parseRec(cfg: ParseConfig, index: Int) = success(cfg.success, (), index, false)
+    def parseRec(cfg: ParseCtx, index: Int) = success(cfg.success, (), index, false)
   }
 
   /**
    * A parser that always fails immediately
    */
   case object Fail extends Parser[Nothing]{
-    def parseRec(cfg: ParseConfig, index: Int) = fail(cfg.failure, index)
+    def parseRec(cfg: ParseCtx, index: Int) = fail(cfg.failure, index)
   }
 
   /**
    * Captures the string parsed by the given parser [[p]].
    */
   case class Capturing(p: Parser[_]) extends Parser[String]{
-    def parseRec(cfg: ParseConfig, index: Int) = {
+    def parseRec(cfg: ParseCtx, index: Int) = {
       p.parseRec(cfg, index) match {
-        case s: Success[_] => success(cfg.success, cfg.input.substring(index, s.index), s.index, s.cut)
-        case f: Failure => f
+        case s: Success.Mutable[_] => success(cfg.success, cfg.input.substring(index, s.index), s.index, s.cut)
+        case f: Failure.Mutable => f
       }
     }
     override def toString = p.toString
-    override def mapChildren(w: ScopedWalker) = Capturing(w(p))
   }
   /**
    * Succeeds, consuming a single character
    */
   case object AnyChar extends Parser[Unit]{
-    def parseRec(cfg: ParseConfig, index: Int) = {
+    def parseRec(cfg: ParseCtx, index: Int) = {
       val input = cfg.input
       if (index >= input.length) fail(cfg.failure, index)
       else success(cfg.success, input(index), index+1, false)
@@ -272,7 +310,7 @@ object Parser{
    * Succeeds if at the start of the input, consuming no input
    */
   case object Start extends Parser[Unit]{
-    def parseRec(cfg: ParseConfig, index: Int) = {
+    def parseRec(cfg: ParseCtx, index: Int) = {
       if (index == 0) success(cfg.success, (), index, false)
       else fail(cfg.failure, index)
     }
@@ -281,7 +319,7 @@ object Parser{
    * Succeeds if at the end of the input, consuming no input
    */
   case object End extends Parser[Unit]{
-    def parseRec(cfg: ParseConfig, index: Int) = {
+    def parseRec(cfg: ParseCtx, index: Int) = {
       if (index == cfg.input.length) success(cfg.success, (), index, false)
       else fail(cfg.failure, index)
     }
@@ -305,7 +343,7 @@ object Parser{
    * Parses a literal `String`
    */
   case class Literal(s: String) extends Parser[Unit]{
-    def parseRec(cfg: ParseConfig, index: Int) = {
+    def parseRec(cfg: ParseCtx, index: Int) = {
 
       if (startsWith(cfg.input, s, index)) success(cfg.success, (), index + s.length, false)
       else fail(cfg.failure, index)
@@ -317,7 +355,7 @@ object Parser{
    * Parses a single character
    */
   case class CharLiteral(c: Char) extends Parser[Unit]{
-    def parseRec(cfg: ParseConfig, index: Int) = {
+    def parseRec(cfg: ParseCtx, index: Int) = {
       val input = cfg.input
       if (index >= input.length) fail(cfg.failure, index)
       else if (input(index) == c) success(cfg.success, c.toString, index + 1, false)
@@ -332,14 +370,13 @@ object Parser{
    * and ends, together with its result
    */
   case class Logged[+T](p: Parser[T], msg: String, output: String => Unit) extends Parser[T]{
-    def parseRec(cfg: ParseConfig, index: Int) = {
+    def parseRec(cfg: ParseCtx, index: Int) = {
       val indent = "  " * cfg.logDepth
       output(indent + "+" + msg + ":" + index)
       val res = p.parseRec(cfg.copy(logDepth = cfg.logDepth+1), index)
       output(indent + "-" + msg + ":" + index + ":" + res)
       res
     }
-    override def mapChildren(w: ScopedWalker) = Logged(w(p), msg, output)
   }
 
 
@@ -350,14 +387,13 @@ object Parser{
    */
   case class Rule[+T](name: String, p: () => Parser[T]) extends Parser[T]{
     lazy val pCached = p()
-    def parseRec(cfg: ParseConfig, index: Int) = {
+    def parseRec(cfg: ParseCtx, index: Int) = {
       pCached.parseRec(cfg, index) match{
-        case f: Failure => failMore(f, index, cfg.trace)
+        case f: Failure.Mutable => failMore(f, index, cfg.trace)
         case s => s
       }
     }
     override def toString = name
-    override def mapChildren(w: ScopedWalker) = Rule(name, () => w(p()))
   }
 
   /**
@@ -365,30 +401,28 @@ object Parser{
    * but consuming no input
    */
   case class Lookahead(p: Parser[_]) extends Parser[Unit]{
-    def parseRec(cfg: ParseConfig, index: Int) = {
+    def parseRec(cfg: ParseCtx, index: Int) = {
       p.parseRec(cfg, index) match{
-        case s: Success[_] => success(cfg.success, (), index, false)
-        case f: Failure => failMore(f, index, cfg.trace)
+        case s: Success.Mutable[_] => success(cfg.success, (), index, false)
+        case f: Failure.Mutable => failMore(f, index, cfg.trace)
       }
     }
     override def toString = s"&($p)"
-    override def mapChildren(w: ScopedWalker) = Lookahead(w(p))
   }
   /**
    * Wraps another parser, succeeding it it fails and failing
    * if it succeeds. Neither case consumes any input
    */
   case class Not(p: Parser[_]) extends Parser[Unit]{
-    def parseRec(cfg: ParseConfig, index: Int) = {
+    def parseRec(cfg: ParseCtx, index: Int) = {
       val res0 = p.parseRec(cfg, index)
       val res = res0 match{
-        case s: Success[_] => fail(cfg.failure, s.index)
-        case f: Failure => success(cfg.success, (), index, false)
+        case s: Success.Mutable[_] => fail(cfg.failure, s.index)
+        case f: Failure.Mutable => success(cfg.success, (), index, false)
       }
       res
     }
     override def toString = s"!($p)"
-    override def mapChildren(w: ScopedWalker) = Not(w(p))
   }
 
 
@@ -399,15 +433,14 @@ object Parser{
     case class Optional[+T, R](p: Parser[T])
                               (implicit ev: Implicits.Optioner[T, R]) extends Parser[R]{
 
-    def parseRec(cfg: ParseConfig, index: Int) = {
+    def parseRec(cfg: ParseCtx, index: Int) = {
       p.parseRec(cfg, index) match{
-        case Success(t, index, cut) => success(cfg.success, ev.some(t), index, cut)
-        case f: Failure if f.cut => failMore(f, index, cfg.trace)
+        case s: Success.Mutable[_] => success(cfg.success, ev.some(s.value), s.index, s.cut)
+        case f: Failure.Mutable if f.cut => failMore(f, index, cfg.trace)
         case _ => success(cfg.success, ev.none, index, false)
       }
     }
     override def toString = s"$p.?"
-    override def mapChildren(w: ScopedWalker) = Optional(w(p))(ev)
   }
 
 
@@ -430,7 +463,7 @@ object Parser{
     case class Chain[R](p: Parser[R], cut: Boolean)(val ev: Implicits.Sequencer[R, R, R])
     case class Flat[R](p0: Parser[R],
                        ps: Vector[Chain[R]]) extends Parser[R] {
-      def parseRec(cfg: ParseConfig, index: Int): Result[R] = {
+      def parseRec(cfg: ParseCtx, index: Int): Result[R] = {
         /**
          * Given
          *
@@ -448,8 +481,8 @@ object Parser{
           else {
             val c = ps(vIndex)
             c.p.parseRec(cfg, rIndex) match {
-              case f: Failure => failMore(f, rIndex, cfg.trace, cut = c.cut | f.cut | rCut)
-              case res2: Success[R] => rec(
+              case f: Failure.Mutable => failMore(f, rIndex, cfg.trace, cut = c.cut | f.cut | rCut)
+              case res2: Success.Mutable[R] => rec(
                 c.ev(r1, res2.value), res2.index, c.cut | res2.cut | rCut,
                 vIndex + 1
               )
@@ -457,8 +490,8 @@ object Parser{
           }
         }
         p0.parseRec(cfg, index) match{
-          case f: Failure => failMore(f, index, cfg.trace, cut = f.cut)
-          case s: Success[R] => rec(s.value, s.index, s.cut, 0)
+          case f: Failure.Mutable => failMore(f, index, cfg.trace, cut = f.cut)
+          case s: Success.Mutable[R] => rec(s.value, s.index, s.cut, 0)
         }
       }
       override def toString = {
@@ -468,10 +501,6 @@ object Parser{
         }
         s"($p0${rhs.mkString})"
       }
-      override def mapChildren(w: ScopedWalker) = Flat(
-        w(p0),
-        ps.map(c => Chain(w(c.p), c.cut)(c.ev))
-      )
     }
 
     /**
@@ -505,16 +534,16 @@ object Parser{
   case class Sequence[+T1, +T2, R](p1: Parser[T1], p2: Parser[T2], cut: Boolean)
                                   (implicit ev: Implicits.Sequencer[T1, T2, R]) extends Parser[R]{
     def ev2: Implicits.Sequencer[_, _, _] = ev
-    def parseRec(cfg: ParseConfig, index: Int) = {
+    def parseRec(cfg: ParseCtx, index: Int) = {
       p1.parseRec(cfg, index) match{
-        case f: Failure => failMore(f, index, cfg.trace, cut = f.cut)
-        case s1: Success[_] =>
+        case f: Failure.Mutable => failMore(f, index, cfg.trace, cut = f.cut)
+        case s1: Success.Mutable[_] =>
           val value1 = s1.value
           val cut1 = s1.cut
 //          if (cut) println("CUT! " + this + ":" + s1.index)
           p2.parseRec(cfg, s1.index) match{
-          case f: Failure => failMore(f, index, cfg.trace, cut = cut | f.cut | cut1)
-          case s2: Success[_] => success(cfg.success, ev(value1, s2.value), s2.index, s2.cut | cut1 | cut)
+          case f: Failure.Mutable => failMore(f, index, cfg.trace, cut = cut | f.cut | cut1)
+          case s2: Success.Mutable[_] => success(cfg.success, ev(value1, s2.value), s2.index, s2.cut | cut1 | cut)
         }
       }
     }
@@ -528,10 +557,8 @@ object Parser{
       }
       "(" + rec(this) + ")"
     }
-    override def mapChildren(w: ScopedWalker) = {
-      Sequence(w(p1), w(p2), cut)(ev)
-    }
   }
+
 
   /**
    * Repeats the parser over and over. Succeeds with a `Seq` of results
@@ -540,34 +567,34 @@ object Parser{
    */
   case class Repeat[T, +R](p: Parser[T], min: Int, delimiter: Parser[_])
                           (implicit ev: Implicits.Repeater[T, R]) extends Parser[R]{
-    def parseRec(cfg: ParseConfig, index: Int) = {
+    def parseRec(cfg: ParseCtx, index: Int) = {
       @tailrec def rec(index: Int,
                        del: Parser[_],
-                       lastFailure: Failure,
+                       lastFailure: Failure.Mutable,
                        acc: ev.Acc,
                        cut: Boolean,
                        count: Int): Result[R] = {
         del.parseRec(cfg, index) match{
-          case f1: Failure =>
+          case f1: Failure.Mutable =>
             if (f1.cut) failMore(f1, index, cfg.trace, true)
             else passIfMin(cut, f1, index, ev.result(acc), count)
 
-          case s1: Success[_] =>
+          case s1: Success.Mutable[_] =>
             val cut1 = s1.cut
             val index1 = s1.index
-            p.parseRec(cfg, s1.index) match{
-              case f2: Failure =>
+            p.parseRec(cfg, index1) match{
+              case f2: Failure.Mutable =>
                 if (f2.cut | cut1) failMore(f2, index1, cfg.trace, true)
                 else passIfMin(cut | s1.cut, f2, index, ev.result(acc), count)
 
-              case s2: Success[T] =>
+              case s2: Success.Mutable[T] =>
                 ev.accumulate(s2.value, acc)
                 rec(s2.index, delimiter, lastFailure, acc, cut1 | s2.cut, count + 1)
             }
         }
       }
 
-      def passIfMin(cut: Boolean, lastFailure: Failure, finalIndex: Int, acc: R, count: Int) = {
+      def passIfMin(cut: Boolean, lastFailure: Failure.Mutable, finalIndex: Int, acc: R, count: Int) = {
         if (count >= min) success(cfg.success, acc, finalIndex, cut)
         else failMore(lastFailure, index, cfg.trace, cut)
       }
@@ -577,8 +604,6 @@ object Parser{
     override def toString = {
       p + ".rep" + (if (min == 0) "" else min) + (if (delimiter == Pass) "" else s"($delimiter)")
     }
-    override def mapChildren(w: ScopedWalker) =
-      Repeat(w(p), min, delimiter)(ev)
   }
 
   object Either{
@@ -594,12 +619,12 @@ object Parser{
   case class Either[T](ps: Parser[T]*) extends Parser[T]{
     private[this] val ps0 = ps.toArray
     private[this] val n = ps0.length
-    def parseRec(cfg: ParseConfig, index: Int) = {
+    def parseRec(cfg: ParseCtx, index: Int) = {
       @tailrec def rec(parserIndex: Int): Result[T] = {
         if (parserIndex >= n) fail(cfg.failure, index)
         else ps0(parserIndex).parseRec(cfg, index) match {
-          case s: Success[_] => s
-          case f: Failure if f.cut => failMore(f, index, cfg.trace)
+          case s: Success.Mutable[_] => s
+          case f: Failure.Mutable if f.cut => failMore(f, index, cfg.trace)
           case _ => rec(parserIndex + 1)
         }
       }
@@ -612,12 +637,11 @@ object Parser{
       }
       "(" + rec(this) + ")"
     }
-    override def mapChildren(w: ScopedWalker) = Either(ps.map(w(_)):_*)
   }
 
   abstract class CharSet(chars: Seq[Char]) extends Parser[Unit]{
     private[this] val uberSet = CharBitSet(chars)
-    def parseRec(cfg: ParseConfig, index: Int) = {
+    def parseRec(cfg: ParseCtx, index: Int) = {
       val input = cfg.input
       if (index >= input.length) fail(cfg.failure, index)
       else if (uberSet(input(index))) success(cfg.success, (), index + 1, false)
@@ -637,12 +661,14 @@ object Parser{
     override def toString = s"CharIn(${Utils.literalize(strings.flatten.mkString)})"
   }
 
-
-
+  /**
+   * Keeps consuming characters until the predicate [[pred]] becomes false.
+   * Functionally equivalent to using `.rep` and [[CharPred]], but much faster.
+   */
   case class CharsWhile(pred: Char => Boolean, min: Int = 0) extends Parser[Unit]{
     private[this] val uberSet = CharBitSet((Char.MinValue to Char.MaxValue).filter(pred))
 
-    def parseRec(cfg: ParseConfig, index: Int) = {
+    def parseRec(cfg: ParseCtx, index: Int) = {
       var curr = index
       val input = cfg.input
       while(curr < input.length && uberSet(input(curr))) curr += 1
@@ -652,31 +678,31 @@ object Parser{
   }
   /**
    * Very efficiently attempts to parse a set of strings, by
-   * first converting it into a Trie and then walking it once.
+   * first converting it into an array-backed Trie and then walking it once.
    * If multiple strings match the input, longest match wins.
    */
   case class StringIn(strings: String*) extends Parser[Unit]{
-    private[this ]case class Node(children: mutable.LongMap[Node] = mutable.LongMap.empty,
-                                  var word: String = null)
-    private[this] val bitSet = Node()
+
+    private[this] val bitSet = new TrieNode
     for(string <- strings){
       var current = bitSet
       for(char <- string){
-        val next = current.children.getOrNull(char)
+        val next = current.children.getOrElse(char, null)
         if (next == null) {
-          current.children(char) = Node()
+          current.children(char) = new TrieNode
         }
         current = current.children(char)
       }
       current.word = string
     }
-    def parseRec(cfg: ParseConfig, index: Int) = {
+
+    def parseRec(cfg: ParseCtx, index: Int) = {
       val input = cfg.input
-      @tailrec def rec(offset: Int, currentNode: Node, currentRes: Result[Unit]): Result[Unit] = {
+      @tailrec def rec(offset: Int, currentNode: TrieNode, currentRes: Result[Unit]): Result[Unit] = {
         if (index + offset >= input.length) currentRes
         else {
           val char = input(index + offset)
-          val next = currentNode.children.getOrNull(char)
+          val next = currentNode(char)
           if (next == null) currentRes
           else {
             rec(

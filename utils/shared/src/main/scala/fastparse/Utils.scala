@@ -2,16 +2,23 @@ package fastparse
 
 import scala.annotation.switch
 import acyclic.file
+import scala.collection.mutable
 import scala.reflect.macros.blackbox.Context
 
 import scala.language.experimental.macros
 
 object Utils {
-  def preCompute(f: Char => Boolean): fastparse.Utils.CharBitSet = macro impl
+  /**
+   * Takes a predicate and pre-generates a base64 encoded bit-set, that 
+   * evaluates at run-time to create a [[CharBitSet]]. Useful for pre-computing
+   * Char predicates that are unfeasible at runtime, e.g. because they're too
+   * slow or because they don't work in Scala.js
+   */
+  def preCompute(pred: Char => Boolean): fastparse.Utils.CharBitSet = macro preComputeImpl
 
-  def impl(c: Context)(f: c.Expr[Char => Boolean]): c.Expr[fastparse.Utils.CharBitSet] = {
+  def preComputeImpl(c: Context)(pred: c.Expr[Char => Boolean]): c.Expr[CharBitSet] = {
     import c.universe._
-    val evaled = c.eval(c.Expr[Char => Boolean](c.untypecheck(f.tree.duplicate)))
+    val evaled = c.eval(c.Expr[Char => Boolean](c.untypecheck(pred.tree.duplicate)))
     val (first, last, array) = CharBitSet.compute((Char.MinValue to Char.MaxValue).filter(evaled))
     val txt = CharBitSet.ints2Hex(array)
     c.Expr[CharBitSet](q"""
@@ -101,7 +108,7 @@ object Utils {
    * Empirically seems to be a hell of a lot faster than immutable.Bitset,
    * making the resultant parser up to 2x faster!
    */
-  class CharBitSet(array: Array[Int], first: Int, last: Int) extends (Char => Boolean){
+  final class CharBitSet(array: Array[Int], first: Int, last: Int) extends (Char => Boolean){
     def apply(c: Char) = {
       if (c > last || c < first) false
       else {
@@ -109,5 +116,20 @@ object Utils {
         (array(offset >> 5) & 1 << (offset & 31)) != 0
       }
     }
+  }
+
+  /**
+   * An trie node for quickly matching multiple strings which
+   * share the same prefix, one char at a time.
+   *
+   * The `LongMap` could be pretty easily replaced by a lookup-table
+   * `Array[TrieNode]`, but empirically that doesn't seem to give any
+   * performance improvements.
+   */
+  final class TrieNode{
+    val children: mutable.LongMap[TrieNode]  = mutable.LongMap.empty
+    var word: String = null
+    def apply(c: Char) = children.getOrNull(c)
+
   }
 }

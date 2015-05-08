@@ -19,7 +19,7 @@ object TestUtil {
         {input; stack; parser.toString == expected.trim},
         {input; stack; parsedFound.startsWith(found)}
         )
-      case Result.Success(parsed, index, cut) => assert(false)
+      case s: Result.Success[_] => assert(false)
     }
   }
 
