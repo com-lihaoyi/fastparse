@@ -228,6 +228,7 @@ object Parser{
       }
     }
     override def mapChildren(w: ScopedWalker) = Mapper(w(p), f)
+    override def toString = p.toString
   }
   /**
    * A parser that always succeeds, consuming no input
@@ -253,7 +254,7 @@ object Parser{
         case f: Failure => f
       }
     }
-    override def toString = p.toString + ".!"
+    override def toString = p.toString
     override def mapChildren(w: ScopedWalker) = Capturing(w(p))
   }
   /**

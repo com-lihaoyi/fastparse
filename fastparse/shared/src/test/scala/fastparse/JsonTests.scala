@@ -9,23 +9,48 @@ import utest._
  * to provide excellent error-reporting almost for free
  */
 object JsonTests extends TestSuite{
+  /**
+   * A very small, very simple JSON AST
+   */
+  object Js {
+    sealed trait Val extends Any {
+      def value: Any
+    }
+    case class Str(value: java.lang.String) extends AnyVal with Val
+    case class Obj(value: (java.lang.String, Val)*) extends AnyVal with Val
+    case class Arr(value: Val*) extends AnyVal with Val
+    case class Num(value: Double) extends AnyVal with Val
+    case object False extends Val{
+      def value = false
+    }
+    case object True extends Val{
+      def value = true
+    }
+    case object Null extends Val{
+      def value = null
+    }
+  }
+  // Here is the parser
+
   val space         = R( CharIn(" \n").rep1 )
   val digits        = R( CharIn('0' to '9').rep1 )
   val exponent      = R( CharIn("eE") ~ CharIn("+-").? ~ digits )
   val fractional    = R( "." ~ digits )
   val integral      = R( "0" | CharIn('1' to '9') ~ digits.rep )
-  val number        = R( "?".? ~ integral ~ fractional.? ~ exponent.? )
-  val `null`        = R( "null" )
-  val `false`       = R( "false" )
-  val `true`        = R( "true" )
+  val number        = R( "?".? ~ integral ~ fractional.? ~ exponent.? ).!.map(x => Js.Num(x.toDouble))
+
+  val `null`        = R( "null" ).map(_ => Js.Null)
+  val `false`       = R( "false" ).map(_ => Js.False)
+  val `true`        = R( "true" ).map(_ => Js.True)
+
   val hexDigit      = R( CharIn('0'to'9', 'a'to'f', 'A'to'F') )
   val unicodeEscape = R( "u" ~ hexDigit ~ hexDigit ~ hexDigit ~ hexDigit )
   val escape        = R( "\\" ~ (CharIn("\"/\\bfnrt") | unicodeEscape) )
-  val string        = R( space.? ~ "\"" ~ (!"\"" ~ AnyChar | escape).rep ~ "\"")
-  val array         = R( ("[" ~! jsonExpr) ~ ("," ~! jsonExpr).rep ~ space.? ~ "]")
-  val pair          = R( string ~! ":" ~! jsonExpr )
-  val obj           = R( "{" ~! pair ~ ("," ~! pair).rep ~ space.? ~ "}" )
-  val jsonExpr: R0  = R(space.? ~ (obj | array | string | `true` | `false` | `null` | number) ~ space.?)
+  val string        = R( space.? ~ "\"" ~ (!"\"" ~ AnyChar | escape).rep.! ~ "\"").map(Js.Str)
+  val array         = R( "[" ~! jsonExpr.rep("," ~! Pass) ~ space.? ~ "]").map(Js.Arr(_:_*))
+  val pair          = R( string.map(_.value) ~! ":" ~! jsonExpr )
+  val obj           = R( "{" ~! pair.rep("," ~! Pass) ~ space.? ~ "}" ).map(Js.Obj(_:_*))
+  val jsonExpr: R[Js.Val]  = R(space.? ~ (obj | array | string | `true` | `false` | `null` | number) ~ space.?)
 
   val tests = TestSuite{
     'pass {
@@ -39,30 +64,33 @@ object JsonTests extends TestSuite{
       * - test(string, "\"i am a cow lol omfg\"" )
       * - test(array, """[1, 2, "omg", ["wtf", "bbq", 42]]""")
       * - test(obj, """{"omg": "123", "wtf": 456, "bbq": "789"}""")
-      * - test(jsonExpr, """{"omg": 1, "wtf": 12.4123}  """)
+      * - {
+        val Result.Success(value, _, _) = jsonExpr.parse("""{"omg": "123", "wtf": 12.4123}""")
+        assert(value == Js.Obj("omg" -> Js.Str("123"), "wtf" -> Js.Num(12.4123)))
+      }
       * - test(jsonExpr, """
-                  {
-                      "firstName": "John",
-                      "lastName": "Smith",
-                      "age": 25,
-                      "address": {
-                          "streetAddress": "21 2nd Street",
-                          "city": "New York",
-                          "state": "NY",
-                          "postalCode": 10021
-                      },
-                      "phoneNumbers": [
-                          {
-                              "type": "home",
-                              "number": "212 555-1234"
-                          },
-                          {
-                              "type": "fax",
-                              "number": "646 555-4567"
-                          }
-                      ]
-                  }
-            """)
+            {
+                "firstName": "John",
+                "lastName": "Smith",
+                "age": 25,
+                "address": {
+                    "streetAddress": "21 2nd Street",
+                    "city": "New York",
+                    "state": "NY",
+                    "postalCode": 10021
+                },
+                "phoneNumbers": [
+                    {
+                        "type": "home",
+                        "number": "212 555-1234"
+                    },
+                    {
+                        "type": "fax",
+                        "number": "646 555-4567"
+                    }
+                ]
+            }
+      """)
     }
     'fail{
       def check(s: String, expectedError: String) = {
@@ -127,7 +155,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / pair:10 / string:10 / "\"":23 ..."firstName\""
+          jsonExpr:0 / obj:9 / "}":23 ..."firstName\""
         """
       )
       * - check(

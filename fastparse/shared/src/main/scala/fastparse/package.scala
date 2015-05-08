@@ -12,7 +12,13 @@ package object fastparse {
   val StringIn = Parser.StringIn
   val AnyChar = Parser.AnyChar
 
-  def &(p: Parser[_]): Parser[Unit] = Parser.Lookahead(p)
+  object &{
+    def apply(p: Parser[_]): Parser[Unit]  = Parser.Lookahead(p)
+    def unapply(p: Parser[_]): Option[Parser[_]] = p match{
+      case Parser.Lookahead(p) => Some(p)
+      case _ => None
+    }
+  }
 
   implicit def wspStr(s: String) = if (s.length == 0) Parser.CharLiteral(s(0)) else Parser.Literal(s)
 

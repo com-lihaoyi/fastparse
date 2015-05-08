@@ -45,7 +45,7 @@ object MiscTests extends TestSuite{
       'lookahead{
         check(&("A") ~ "ABC", """(&("A") ~ "ABC")""")
         check(!"A" ~ "ABC", """(!("A") ~ "ABC")""")
-        check("A".! ~ "ABC".!, """("A".! ~ "ABC".!)""")
+        check("A".! ~ "ABC".!, """("A" ~ "ABC")""")
       }
       'named{
         val Foo = R( "A" )
