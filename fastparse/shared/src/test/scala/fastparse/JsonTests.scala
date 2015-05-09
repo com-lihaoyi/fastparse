@@ -32,42 +32,43 @@ object JsonTests extends TestSuite{
   }
 
   // Here is the parser
-  val space         = R( CharIn(" \n").rep )
-  val digits        = R( CharIn('0' to '9').rep1 )
-  val exponent      = R( CharIn("eE") ~ CharIn("+-").? ~ digits )
-  val fractional    = R( "." ~ digits )
-  val integral      = R( "0" | CharIn('1' to '9') ~ digits.rep )
+  val space         = P( CharsWhile(" \n".contains(_)) )
+  val digits        = P( CharsWhile('0' to '9' contains (_), min = 1))
+  val exponent      = P( CharIn("eE") ~ CharIn("+-").? ~ digits )
+  val fractional    = P( "." ~ digits )
+  val integral      = P( "0" | CharIn('1' to '9') ~ digits.? )
 
-  val number = R( "?".? ~ integral ~ fractional.? ~ exponent.? ).!.map(
+  val number = P( "?".? ~ integral ~ fractional.? ~ exponent.? ).!.map(
     x => Js.Num(x.toDouble)
   )
 
-  val `null`        = R( "null" ).map(_ => Js.Null)
-  val `false`       = R( "false" ).map(_ => Js.False)
-  val `true`        = R( "true" ).map(_ => Js.True)
+  val `null`        = P( "null" ).map(_ => Js.Null)
+  val `false`       = P( "false" ).map(_ => Js.False)
+  val `true`        = P( "true" ).map(_ => Js.True)
 
-  val hexDigit      = R( CharIn('0'to'9', 'a'to'f', 'A'to'F') )
-  val unicodeEscape = R( "u" ~ hexDigit ~ hexDigit ~ hexDigit ~ hexDigit )
-  val escape        = R( "\\" ~ (CharIn("\"/\\bfnrt") | unicodeEscape) )
+  val hexDigit      = P( CharIn('0'to'9', 'a'to'f', 'A'to'F') )
+  val unicodeEscape = P( "u" ~ hexDigit ~ hexDigit ~ hexDigit ~ hexDigit )
+  val escape        = P( "\\" ~ (CharIn("\"/\\bfnrt") | unicodeEscape) )
 
+  val strChars = P( CharsWhile(!"\"\\".contains(_), min = 1) )
   val string =
-    R( space ~ "\"" ~ (!"\"" ~ AnyChar | escape).rep.! ~ "\"").map(Js.Str)
+    P( space ~ "\"" ~ (strChars | escape).rep.! ~ "\"").map(Js.Str)
 
   val array =
-    R( "[" ~! jsonExpr.rep("," ~! Pass) ~ space ~ "]").map(Js.Arr(_:_*))
+    P( "[" ~! jsonExpr.rep("," ~! Pass) ~ space ~ "]").map(Js.Arr(_:_*))
 
-  val pair = R( string.map(_.value) ~! ":" ~! jsonExpr )
+  val pair = P( string.map(_.value) ~! ":" ~! jsonExpr )
 
   val obj =
-    R( "{" ~! pair.rep("," ~! Pass) ~ space ~ "}" ).map(Js.Obj(_:_*))
+    P( "{" ~! pair.rep("," ~! Pass) ~ space ~ "}" ).map(Js.Obj(_:_*))
 
-  val jsonExpr: R[Js.Val] = R(
+  val jsonExpr: P[Js.Val] = P(
     space ~ (obj | array | string | `true` | `false` | `null` | number) ~ space
   )
 
   val tests = TestSuite{
     'pass {
-      def test(p: R[_], s: String) = p.parse(s) match{
+      def test(p: P[_], s: String) = p.parse(s) match{
         case Result.Success(v, i) =>
           val expectedIndex = s.length
           assert(i == {s; expectedIndex})

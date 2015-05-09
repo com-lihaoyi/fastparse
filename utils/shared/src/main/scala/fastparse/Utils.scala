@@ -3,11 +3,31 @@ package fastparse
 import scala.annotation.switch
 import acyclic.file
 import scala.collection.mutable
-import scala.reflect.macros.blackbox.Context
 
 import scala.language.experimental.macros
 
+
 object Utils {
+  /**
+   * Type, which when summoned implicitly, provides the
+   * name of the nearest enclosing method for your perusal
+   */
+  case class FuncName(name: String)
+  object FuncName{
+    implicit def strToFuncName(s: String) = FuncName(s)
+
+    def impl(c: Compat.Context): c.Expr[FuncName] = {
+      import c.universe._
+
+      val sym = Compat.enclosingName(c)
+      val simpleName = sym.name.decodedName.toString.trim
+
+      val name = q"$simpleName"
+
+      c.Expr[FuncName](q"fastparse.Utils.FuncName($name)")
+    }
+  }
+
   /**
    * Takes a predicate and pre-generates a base64 encoded bit-set, that 
    * evaluates at run-time to create a [[CharBitSet]]. Useful for pre-computing
@@ -16,9 +36,9 @@ object Utils {
    */
   def preCompute(pred: Char => Boolean): fastparse.Utils.CharBitSet = macro preComputeImpl
 
-  def preComputeImpl(c: Context)(pred: c.Expr[Char => Boolean]): c.Expr[CharBitSet] = {
+  def preComputeImpl(c: Compat.Context)(pred: c.Expr[Char => Boolean]): c.Expr[CharBitSet] = {
     import c.universe._
-    val evaled = c.eval(c.Expr[Char => Boolean](c.untypecheck(pred.tree.duplicate)))
+    val evaled = c.eval(c.Expr[Char => Boolean](c.resetLocalAttrs(pred.tree.duplicate)))
     val (first, last, array) = CharBitSet.compute((Char.MinValue to Char.MaxValue).filter(evaled))
     val txt = CharBitSet.ints2Hex(array)
     c.Expr[CharBitSet](q"""
@@ -127,9 +147,11 @@ object Utils {
    * performance improvements.
    */
   final class TrieNode{
-    val children: mutable.LongMap[TrieNode]  = mutable.LongMap.empty
+    val children: mutable.Map[Char, TrieNode]  = mutable.Map.empty
     var word: String = null
-    def apply(c: Char) = children.getOrNull(c)
-
+    def apply(c: Char) = {
+      if (children.contains(c)) children(c)
+      else null
+    }
   }
 }

@@ -16,13 +16,13 @@ trait Core extends syntax.Literals{
    * really useful in e.g. {} blocks, where we want to avoid
    * capturing newlines so semicolon-inference would work
    */
-  val WS = R( (Basic.WSChars | Literals.Comment).rep )
+  val WS = P( (Basic.WSChars | Literals.Comment).rep )
 
   /**
    * Parses whitespace, including newlines.
    * This is the default for most things
    */
-  val WL = R( (Basic.WSChars | Literals.Comment | Basic.Newline).rep )
+  val WL = P( (Basic.WSChars | Literals.Comment | Basic.Newline).rep )
 
 
   /**
@@ -38,8 +38,8 @@ trait Core extends syntax.Literals{
    * (W) and key-operators (O) which have different non-match criteria.
    */
   object KeyWordOperators {
-    def W(s: String) = R( WL ~ Key.W(s) )(s"`$s`")
-    def O(s: String) = R( WL ~ Key.O(s) )(s"`$s`")
+    def W(s: String) = P( WL ~ Key.W(s) )(s"`$s`")
+    def O(s: String) = P( WL ~ Key.O(s) )(s"`$s`")
   }
   import KeyWordOperators._
   // Keywords that match themselves and nothing else
@@ -93,39 +93,39 @@ trait Core extends syntax.Literals{
 
   // kinda-sorta keywords that are common patterns even if not
   // really-truly keywords
-  val `_*` = R( `_` ~ "*" )
-  val `}` = R( Semis.? ~ "}" )
-  val `{` = R( "{" ~ Semis.? )
+  val `_*` = P( `_` ~ "*" )
+  val `}` = P( Semis.? ~ "}" )
+  val `{` = P( "{" ~ Semis.? )
   /**
    * helper printing function
    */
 
-  val Id = R( WL ~ Identifiers.Id )
-  val VarId = R( WL ~ Identifiers.VarId )
-  val ExprLiteral = R( WL ~ Literals.Expr.Literal )
-  val PatLiteral = R( WL ~ Literals.Pat.Literal )
-  val Semi = R( WS ~ Basic.Semi )
-  val Semis = R( Semi.rep1 )
-  val Newline = R( WL ~ Basic.Newline )
+  val Id = P( WL ~ Identifiers.Id )
+  val VarId = P( WL ~ Identifiers.VarId )
+  val ExprLiteral = P( WL ~ Literals.Expr.Literal )
+  val PatLiteral = P( WL ~ Literals.Pat.Literal )
+  val Semi = P( WS ~ Basic.Semi )
+  val Semis = P( Semi.rep1 )
+  val Newline = P( WL ~ Basic.Newline )
 
-  val QualId = R( WL ~ Id.rep1(".") )
-  val Ids = R( Id.rep1(",") )
+  val QualId = P( WL ~ Id.rep1(".") )
+  val Ids = P( Id.rep1(",") )
 
-  val NotNewline: R0 = R( &( WS ~ !Basic.Newline ) )
-  val OneNLMax: R0 = {
-    val ConsumeComments = R( (Basic.WSChars.? ~ Literals.Comment ~ Basic.WSChars.? ~ Basic.Newline).rep )
-    R( WS ~ Basic.Newline.? ~ ConsumeComments ~ NotNewline )
+  val NotNewline: P0 = P( &( WS ~ !Basic.Newline ) )
+  val OneNLMax: P0 = {
+    val ConsumeComments = P( (Basic.WSChars.? ~ Literals.Comment ~ Basic.WSChars.? ~ Basic.Newline).rep )
+    P( WS ~ Basic.Newline.? ~ ConsumeComments ~ NotNewline )
   }
   /**
    * Sketchy way to whitelist a few suffixes that come after a . select;
    * apart from these and IDs, everything else is illegal
    */
-  val PostDotCheck = R( WL ~ !(`super` | `this` | "{" | `_` | `type`) )
-  val StableId: R0 = {
-    val ClassQualifier = R( "[" ~ Id ~ "]" )
-    val ThisSuper = R( `this` | `super` ~ ClassQualifier.? )
-    val ThisPath = R( ThisSuper ~ ("." ~ PostDotCheck ~! Id).rep )
-    val IdPath = R( Id ~ ("." ~ PostDotCheck ~! Id).rep ~ ("." ~ ThisPath).? )
-    R( ThisPath | IdPath )
+  val PostDotCheck = P( WL ~ !(`super` | `this` | "{" | `_` | `type`) )
+  val StableId: P0 = {
+    val ClassQualifier = P( "[" ~ Id ~ "]" )
+    val ThisSuper = P( `this` | `super` ~ ClassQualifier.? )
+    val ThisPath = P( ThisSuper ~ ("." ~ PostDotCheck ~! Id).rep )
+    val IdPath = P( Id ~ ("." ~ PostDotCheck ~! Id).rep ~ ("." ~ ThisPath).? )
+    P( ThisPath | IdPath )
   }
 }

@@ -16,13 +16,13 @@ object MathTests extends TestSuite{
     }}
   }
 
-  val number: R[Int] = R( CharIn('0'to'9').rep1.!.map(_.toInt) )
-  val parens: R[Int] = R( "(" ~ addSub ~ ")" )
-  val factor: R[Int] = R( number | parens )
+  val number: P[Int] = P( CharIn('0'to'9').rep1.!.map(_.toInt) )
+  val parens: P[Int] = P( "(" ~ addSub ~ ")" )
+  val factor: P[Int] = P( number | parens )
 
-  val divMul: R[Int] = R( factor ~ (CharIn("*/").! ~ factor).rep ).map(eval)
-  val addSub: R[Int] = R( divMul ~ (CharIn("+-").! ~ divMul).rep ).map(eval)
-  val expr: R[Int]   = R( addSub ~ End )
+  val divMul: P[Int] = P( factor ~ (CharIn("*/").! ~ factor).rep ).map(eval)
+  val addSub: P[Int] = P( divMul ~ (CharIn("+-").! ~ divMul).rep ).map(eval)
+  val expr: P[Int]   = P( addSub ~ End )
 
   val tests = TestSuite{
     'pass {
@@ -41,10 +41,5 @@ object MathTests extends TestSuite{
     }
 
   }
-//  println("    A")
-//  println(expr)
-//  println("    B")
-//  println(RuleWalker.recurse(expr, Nil))
-//  println("    C")
-//  println(EitherSequenceWalker.recurse(RuleWalker.recurse(expr, Nil), Nil))
+
 }

@@ -1,3 +1,5 @@
+crossScalaVersions := Seq("2.11.6", "2.10.4")
+
 val shared = Seq(
   libraryDependencies ++= Seq(
     "org.scala-lang" % "scala-reflect" % scalaVersion.value
@@ -44,7 +46,11 @@ val shared = Seq(
 )
 
 lazy val utils = crossProject.settings(
-  name := "fastparse-utils"
+  name := "fastparse-utils",
+  unmanagedSourceDirectories in Compile ++= {
+    if (scalaVersion.value startsWith "2.10.") Seq(baseDirectory.value / ".."/"shared"/"src"/ "main" / "scala-2.10")
+    else Seq(baseDirectory.value / ".."/"shared" / "src"/"main" / "scala-2.11")
+  }
 ).settings(shared:_*)
 lazy val utilsJS = utils.js
 lazy val utilsJVM= utils.jvm

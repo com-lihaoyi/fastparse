@@ -7,12 +7,12 @@ import fastparse._
 import scala.language.implicitConversions
 
 trait Xml extends Core {
-  def Patterns: R0
-  val XmlExpr = R( WL ~ Xml.XmlContent ~ (WL ~ Xml.Element).rep )
-  val XmlPattern = R( WL ~ Xml.ElemPattern )
+  def Patterns: P0
+  val XmlExpr = P( WL ~ Xml.XmlContent ~ (WL ~ Xml.Element).rep )
+  val XmlPattern = P( WL ~ Xml.ElemPattern )
 
   private[this] object Xml{
-    val BaseChar = R(CharIn(
+    val BaseChar = P(CharIn(
       '\u0041' to '\u005A', '\u0061' to '\u007A', '\u00C0' to '\u00D6', '\u00D8' to '\u00F6',
       '\u00F8' to '\u00FF', '\u0100' to '\u0131', '\u0134' to '\u013E', '\u0141' to '\u0148', 
       '\u014A' to '\u017E', '\u0180' to '\u01C3', '\u01CD' to '\u01F0', '\u01F4' to '\u01F5', 
@@ -60,71 +60,71 @@ trait Xml extends Core {
       '\u1FF6' to '\u1FFC',  "\u2126", '\u212A' to '\u212B',  "\u212E", '\u2180' to '\u2182', 
       '\u3041' to '\u3094', '\u30A1' to '\u30FA', '\u3105' to '\u312C', '\uAC00' to '\uD7A3'
     ))
-    val Ideographic = R( CharIn(
+    val Ideographic = P( CharIn(
       '\u4E00' to '\u9FA5',  "\u3007", '\u3021' to '\u3029'
     ))
-    val Eq = R (WL.? ~ "=" ~ WL.?)
+    val Eq = P (WL.? ~ "=" ~ WL.?)
 
 
-    val TagHeader = R( "<" ~ Name ~ (WL ~ Attribute).rep ~ WL.? )
-    val Element = R( TagHeader ~ (EmptyElemTagEnd | STagEnd ~ Content ~ ETag ) )
+    val TagHeader = P( "<" ~ Name ~ (WL ~ Attribute).rep ~ WL.? )
+    val Element = P( TagHeader ~ (EmptyElemTagEnd | STagEnd ~ Content ~ ETag ) )
 
-    val EmptyElemTagEnd = R( "/>" )
+    val EmptyElemTagEnd = P( "/>" )
 
-    val STagEnd = R( ">" )
-    val ETag = R( "</" ~ Name ~ WL.? ~ ">" )
-    val Content = R( (CharData | Content1).rep )
-    val Content1  = R( XmlContent | Reference | ScalaExpr )
-    val XmlContent: R0 = R( Element | CDSect | PI | Comment )
+    val STagEnd = P( ">" )
+    val ETag = P( "</" ~ Name ~ WL.? ~ ">" )
+    val Content = P( (CharData | Content1).rep )
+    val Content1  = P( XmlContent | Reference | ScalaExpr )
+    val XmlContent: P0 = P( Element | CDSect | PI | Comment )
 
-    val CDSect = R( CDStart ~ CData ~ CDEnd )
-    val CDStart = R( "<![CDATA[" )
-    val CData = R( (!"]]>" ~ Char).rep )
-    val CDEnd = R( "]]>" )
+    val CDSect = P( CDStart ~ CData ~ CDEnd )
+    val CDStart = P( "<![CDATA[" )
+    val CData = P( (!"]]>" ~ Char).rep )
+    val CDEnd = P( "]]>" )
 
-    val Attribute = R( Name ~ Eq ~ AttValue )
+    val Attribute = P( Name ~ Eq ~ AttValue )
 
-    val AttValue = R(
+    val AttValue = P(
       "\"" ~ (CharQ | Reference).rep ~ "\"" |
       "'" ~ (CharA | Reference).rep ~ "'" |
       ScalaExpr
     )
 
-    val Comment = R( "<!--" ~ ((!"-" ~ Char) | ("-" ~ (!"-" ~ Char))).rep ~ "-->" )
+    val Comment = P( "<!--" ~ ((!"-" ~ Char) | ("-" ~ (!"-" ~ Char))).rep ~ "-->" )
 
-    val PI = R( "<?" ~ PITarget ~ (WL ~ (!"?>" ~ Char).rep).? ~ "?>" )
-    val PITarget = R( !(("X" | "x") ~ ("M" | "m") ~ ("L" | "l")) ~ Name )
-    val CharRef = R( "&#" ~ CharIn('0' to '9').rep1 ~ ";" | "&#x" ~ Basic.HexNum ~ ";" )
-    val Reference = R( EntityRef | CharRef )
-    val EntityRef = R( "&" ~ Name ~ ";" )
-    val ScalaExpr = R("{" ~ WS ~ Block ~ WS ~ "}")
-    val Char = R( Parser.AnyChar )
-    val CharData = R( (!("{" | "]]>" | CharRef) ~ Char1 | "{{").rep1 )
+    val PI = P( "<?" ~ PITarget ~ (WL ~ (!"?>" ~ Char).rep).? ~ "?>" )
+    val PITarget = P( !(("X" | "x") ~ ("M" | "m") ~ ("L" | "l")) ~ Name )
+    val CharRef = P( "&#" ~ CharIn('0' to '9').rep1 ~ ";" | "&#x" ~ Basic.HexNum ~ ";" )
+    val Reference = P( EntityRef | CharRef )
+    val EntityRef = P( "&" ~ Name ~ ";" )
+    val ScalaExpr = P("{" ~ WS ~ Block ~ WS ~ "}")
+    val Char = P( Parser.AnyChar )
+    val CharData = P( (!("{" | "]]>" | CharRef) ~ Char1 | "{{").rep1 )
 
-    val Char1  = R( !("<" | "&") ~ Char )
-    val CharQ = R( !"\"" ~ Char1 )
-    val CharA = R( !"'" ~ Char1 )
-    val CharB = R( !"{" ~ Char1 )
-    val Name = R( XNameStart ~ NameChar.rep )
-    val XNameStart  = R( "_" | BaseChar | Ideographic )
+    val Char1  = P( !("<" | "&") ~ Char )
+    val CharQ = P( !"\"" ~ Char1 )
+    val CharA = P( !"'" ~ Char1 )
+    val CharB = P( !"{" ~ Char1 )
+    val Name = P( XNameStart ~ NameChar.rep )
+    val XNameStart  = P( "_" | BaseChar | Ideographic )
 
-    val NameStartChar = R(CharIn(
+    val NameStartChar = P(CharIn(
       ":", 'A' to 'Z', "_", 'a' to 'z', '\u00C0' to '\u00D6', '\u00D8' to '\u00F6',
       '\u00F8' to '\u02FF', '\u0370' to '\u037D', '\u037F' to '\u1FFF', '\u200C' to '\u200D',
       '\u2070' to '\u218F', '\u2C00' to '\u2FEF', '\u3001' to '\uD7FF', '\uF900' to '\uFDCF',
       '\uFDF0' to '\uFFFD' // ++ [#x10000-#xEFFFF] ???? don't chars max out at \uffff ????
     ))
 
-    val NameChar = R( NameStartChar | CharIn(
+    val NameChar = P( NameStartChar | CharIn(
       "-", ".", '0' to '9', "\u00B7", '\u0300' to '\u036F', '\u203F' to '\u2040'
     ))
-    val ElemPattern: R0 = R( TagPHeader ~ (EmptyElemTagPEnd | STagPEnd ~ ContentP ~ ETagP ))
-    val TagPHeader = R( "<" ~ Name ~ WL.?  )
-    val EmptyElemTagPEnd = R( "/>" )
-    val STagPEnd = R( ">")
-    val ETagP = R( "</" ~ Name ~ WL.? ~ ">" )
-    val ContentP = R( CharData.? ~ ((ElemPattern | ScalaPatterns) ~ CharData.?).rep )
-    val ContentP1 = R( ElemPattern | Reference | CDSect | PI | Comment | ScalaPatterns )
-    val ScalaPatterns = R( "{" ~ Patterns ~ WL ~ "}" )
+    val ElemPattern: P0 = P( TagPHeader ~ (EmptyElemTagPEnd | STagPEnd ~ ContentP ~ ETagP ))
+    val TagPHeader = P( "<" ~ Name ~ WL.?  )
+    val EmptyElemTagPEnd = P( "/>" )
+    val STagPEnd = P( ">")
+    val ETagP = P( "</" ~ Name ~ WL.? ~ ">" )
+    val ContentP = P( CharData.? ~ ((ElemPattern | ScalaPatterns) ~ CharData.?).rep )
+    val ContentP1 = P( ElemPattern | Reference | CDSect | PI | Comment | ScalaPatterns )
+    val ScalaPatterns = P( "{" ~ Patterns ~ WL ~ "}" )
   }
 }

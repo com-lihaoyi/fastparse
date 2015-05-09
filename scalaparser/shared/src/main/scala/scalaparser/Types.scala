@@ -3,67 +3,67 @@ package scalaparser
 import fastparse._
 trait Types extends Core{
 
-  def TypeExpr: R0
-  def ValVarDef: R0
-  def FunDef: R0
-  private implicit def wspStr(s: String) = R(WL ~ s)(Utils.literalize(s).toString)
+  def TypeExpr: P0
+  def ValVarDef: P0
+  def FunDef: P0
+  private implicit def wspStr(s: String) = P(WL ~ s)(Utils.literalize(s).toString)
 
-  val LocalMod: R0 = R( `abstract` | `final` | `sealed` | `implicit` | `lazy` )
-  val AccessMod: R0 = {
-    val AccessQualifier = R( "[" ~! (`this` | Id) ~ "]" )
-    R( (`private` | `protected`) ~ AccessQualifier.? )
+  val LocalMod: P0 = P( `abstract` | `final` | `sealed` | `implicit` | `lazy` )
+  val AccessMod: P0 = {
+    val AccessQualifier = P( "[" ~! (`this` | Id) ~ "]" )
+    P( (`private` | `protected`) ~ AccessQualifier.? )
   }
-  val Dcl: R0 = {
-    R( (`val` | `var`) ~! ValVarDef | `def` ~! FunDef | `type` ~! TypeDef )
-  }
-
-  val Mod: R0 = R( LocalMod | AccessMod | `override` )
-
-  val Type: R0 = {
-    val ExistentialClause = R( `forSome` ~! `{` ~ Dcl.rep1(Semis) ~ `}` )
-    val PostfixType = R( InfixType ~ (`=>` ~! Type | ExistentialClause).? )
-    val Unbounded = R( `_` | PostfixType )
-    R( `=>`.? ~ Unbounded ~ TypeBounds ~ "*".? )
+  val Dcl: P0 = {
+    P( (`val` | `var`) ~! ValVarDef | `def` ~! FunDef | `type` ~! TypeDef )
   }
 
-  val InfixType = R( CompoundType ~ (NotNewline ~ Id ~ OneNLMax ~ CompoundType).rep )
+  val Mod: P0 = P( LocalMod | AccessMod | `override` )
+
+  val Type: P0 = {
+    val ExistentialClause = P( `forSome` ~! `{` ~ Dcl.rep1(Semis) ~ `}` )
+    val PostfixType = P( InfixType ~ (`=>` ~! Type | ExistentialClause).? )
+    val Unbounded = P( `_` | PostfixType )
+    P( `=>`.? ~ Unbounded ~ TypeBounds ~ "*".? )
+  }
+
+  val InfixType = P( CompoundType ~ (NotNewline ~ Id ~ OneNLMax ~ CompoundType).rep )
 
   val CompoundType = {
-    val Refinement = R( OneNLMax ~ `{` ~ Dcl.rep(Semis) ~ `}` )
-    R( AnnotType.rep1(`with` ~! Pass) ~ Refinement.? | Refinement )
+    val Refinement = P( OneNLMax ~ `{` ~ Dcl.rep(Semis) ~ `}` )
+    P( AnnotType.rep1(`with` ~! Pass) ~ Refinement.? | Refinement )
   }
-  val AnnotType = R(SimpleType ~ (NotNewline ~ (NotNewline ~ Annot).rep1).? )
+  val AnnotType = P(SimpleType ~ (NotNewline ~ (NotNewline ~ Annot).rep1).? )
 
-  val SimpleType: R0 = {
+  val SimpleType: P0 = {
     // Can't `cut` after the opening paren, because we might be trying to parse `()`
     // or `() => T`! only cut after parsing one type
-    val BasicType = R( "(" ~ Types.? ~ ")"  | StableId ~ ("." ~ `type`).?)
-    R( BasicType ~ (TypeArgs | `#` ~! Id).rep )
+    val BasicType = P( "(" ~ Types.? ~ ")"  | StableId ~ ("." ~ `type`).?)
+    P( BasicType ~ (TypeArgs | `#` ~! Id).rep )
   }
 
-  val TypeArgs = R( "[" ~! Types ~ "]" )
-  val Types = R( Type ~ ("," ~! Type).rep )
+  val TypeArgs = P( "[" ~! Types ~ "]" )
+  val Types = P( Type ~ ("," ~! Type).rep )
 
-  val FunSig: R0 = {
-    val FunArg = R( Annot.rep ~ Id ~ (`:` ~! Type).? ~ (`=` ~! TypeExpr).? )
-    val Args = R( FunArg.rep1("," ~! Pass) )
-    val FunArgs = R( OneNLMax ~ "(" ~! `implicit`.? ~ Args.? ~ ")" )
-    val FunTypeArgs = R( "[" ~! (Annot.rep ~ TypeArg).rep1("," ~! Pass) ~ "]" )
-    R( (Id | `this`) ~ FunTypeArgs.? ~ FunArgs.rep )
+  val FunSig: P0 = {
+    val FunArg = P( Annot.rep ~ Id ~ (`:` ~! Type).? ~ (`=` ~! TypeExpr).? )
+    val Args = P( FunArg.rep1("," ~! Pass) )
+    val FunArgs = P( OneNLMax ~ "(" ~! `implicit`.? ~ Args.? ~ ")" )
+    val FunTypeArgs = P( "[" ~! (Annot.rep ~ TypeArg).rep1("," ~! Pass) ~ "]" )
+    P( (Id | `this`) ~ FunTypeArgs.? ~ FunArgs.rep )
   }
 
-  val TypeBounds: R0 = R( (`>:` ~! Type).? ~ (`<:` ~! Type).? )
-  val TypeArg: R0 = {
-    val CtxBounds = R((`<%` ~! Type).rep ~ (`:` ~! Type).rep)
-    R((Id | `_`) ~ TypeArgList.? ~ TypeBounds ~ CtxBounds)
+  val TypeBounds: P0 = P( (`>:` ~! Type).? ~ (`<:` ~! Type).? )
+  val TypeArg: P0 = {
+    val CtxBounds = P((`<%` ~! Type).rep ~ (`:` ~! Type).rep)
+    P((Id | `_`) ~ TypeArgList.? ~ TypeBounds ~ CtxBounds)
   }
 
-  val Annot: R0 = R( `@` ~! SimpleType ~  ("(" ~! (Exprs ~ (`:` ~! `_*`).?).? ~ ")").rep )
+  val Annot: P0 = P( `@` ~! SimpleType ~  ("(" ~! (Exprs ~ (`:` ~! `_*`).?).? ~ ")").rep )
 
-  val TypeArgList: R0 = {
-    val Variant: R0 = R( Annot.rep ~ (WL ~ CharIn("+-")).? ~ TypeArg )
-    R( "[" ~! Variant.rep1("," ~! Pass) ~ "]" )
+  val TypeArgList: P0 = {
+    val Variant: P0 = P( Annot.rep ~ (WL ~ CharIn("+-")).? ~ TypeArg )
+    P( "[" ~! Variant.rep1("," ~! Pass) ~ "]" )
   }
-  val Exprs: R0 = R( TypeExpr.rep1("," ~! Pass) )
-  val TypeDef: R0 = R( Id ~ TypeArgList.? ~ (`=` ~! Type | TypeBounds) )
+  val Exprs: P0 = P( TypeExpr.rep1("," ~! Pass) )
+  val TypeDef: P0 = P( Id ~ TypeArgList.? ~ (`=` ~! Type | TypeBounds) )
 }

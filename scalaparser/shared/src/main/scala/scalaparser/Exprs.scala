@@ -4,16 +4,16 @@ import acyclic.file
 import fastparse._
 trait Exprs extends Core with Types with Xml{
 
-  private implicit def wspStr(s: String) = R(WL ~ s)(Utils.literalize(s).toString)
+  private implicit def wspStr(s: String) = P(WL ~ s)(Utils.literalize(s).toString)
 
-  def AnonTmpl: R0
-  def BlockDef: R0
+  def AnonTmpl: P0
+  def BlockDef: P0
 
-  val Import: R0 = {
-    val Selector: R0 = R( Id ~ (`=>` ~! (Id | `_`)).? )
-    val Selectors: R0 = R( "{" ~! (Selector | `_` ).rep("," ~! Pass) ~ "}" )
-    val ImportExpr: R0 = R( StableId ~ ("." ~! (`_` | Selectors)).? )
-    R( `import` ~! ImportExpr.rep1("," ~! Pass) )
+  val Import: P0 = {
+    val Selector: P0 = P( Id ~ (`=>` ~! (Id | `_`)).? )
+    val Selectors: P0 = P( "{" ~! (Selector | `_` ).rep("," ~! Pass) ~ "}" )
+    val ImportExpr: P0 = P( StableId ~ ("." ~! (`_` | Selectors)).? )
+    P( `import` ~! ImportExpr.rep1("," ~! Pass) )
   }
 
   object StatCtx extends WsCtx(curlyBlock=true)
@@ -27,104 +27,104 @@ trait Exprs extends Core with Types with Xml{
     val NoSemis = if (curlyBlock) NotNewline else Parser.Pass
 
     val Enumerators = {
-      val Generator = R( `<-` ~! Expr ~ Guard.? )
-      val Assign = R( `=` ~! Expr )
-      val Enumerator = R( Semis ~ TypeOrBindPattern ~! (Generator | Assign) | Semis.? ~ Guard  )
-      R( TypeOrBindPattern ~ Generator ~ Enumerator.rep ~ WL )
+      val Generator = P( `<-` ~! Expr ~ Guard.? )
+      val Assign = P( `=` ~! Expr )
+      val Enumerator = P( Semis ~ TypeOrBindPattern ~! (Generator | Assign) | Semis.? ~ Guard  )
+      P( TypeOrBindPattern ~ Generator ~ Enumerator.rep ~ WL )
     }
 
-    val Expr: R0 = {
+    val Expr: P0 = {
       val If = {
-        val Else = R( Semi.? ~ `else` ~ Expr )
-        R( `if` ~! "(" ~ ExprCtx.Expr ~ ")" ~ Expr ~ Else.? )
+        val Else = P( Semi.? ~ `else` ~ Expr )
+        P( `if` ~! "(" ~ ExprCtx.Expr ~ ")" ~ Expr ~ Else.? )
       }
-      val While = R( `while` ~! "(" ~ Expr ~ ")" ~ Expr )
+      val While = P( `while` ~! "(" ~ Expr ~ ")" ~ Expr )
       val Try = {
-        val Catch = R( `catch` ~! Expr )
-        val Finally = R( `finally` ~! Expr )
-        R( `try` ~! Expr ~ Catch.? ~ Finally.? )
+        val Catch = P( `catch` ~! Expr )
+        val Finally = P( `finally` ~! Expr )
+        P( `try` ~! Expr ~ Catch.? ~ Finally.? )
       }
-      val DoWhile = R( `do` ~! Expr ~ Semi.? ~ `while` ~ "(" ~ Expr ~ ")" )
+      val DoWhile = P( `do` ~! Expr ~ Semi.? ~ `while` ~ "(" ~ Expr ~ ")" )
 
       val For = {
-        val Body = R( "(" ~! ExprCtx.Enumerators ~ ")" | "{" ~! StatCtx.Enumerators ~ "}" )
-        R( `for` ~! Body ~ `yield`.? ~ Expr )
+        val Body = P( "(" ~! ExprCtx.Enumerators ~ ")" | "{" ~! StatCtx.Enumerators ~ "}" )
+        P( `for` ~! Body ~ `yield`.? ~ Expr )
       }
-      val Throw = R( `throw` ~! Expr )
-      val Return = R( `return` ~! Expr.? )
-      val LambdaRhs = if (curlyBlock) R( BlockStat ) else R( Expr )
+      val Throw = P( `throw` ~! Expr )
+      val Return = P( `return` ~! Expr.? )
+      val LambdaRhs = if (curlyBlock) P( BlockStat ) else P( Expr )
 
 
-      val ImplicitLambda = R( `implicit` ~ (Id | `_`) ~ (`:` ~ InfixType).? ~ `=>` ~ LambdaRhs.? )
-      val ParenedLambda = R( Parened ~ (`=>` ~ LambdaRhs.? | ExprSuffix ~ PostfixSuffix) )
-      val PostfixLambda = R( PostfixExpr ~ (`=>` ~ LambdaRhs.?).? )
-      val SmallerExprOrLambda = R( ParenedLambda | PostfixLambda )
-      R(
+      val ImplicitLambda = P( `implicit` ~ (Id | `_`) ~ (`:` ~ InfixType).? ~ `=>` ~ LambdaRhs.? )
+      val ParenedLambda = P( Parened ~ (`=>` ~ LambdaRhs.? | ExprSuffix ~ PostfixSuffix) )
+      val PostfixLambda = P( PostfixExpr ~ (`=>` ~ LambdaRhs.?).? )
+      val SmallerExprOrLambda = P( ParenedLambda | PostfixLambda )
+      P(
         If | While | Try | DoWhile | For | Throw | Return |
         ImplicitLambda | SmallerExprOrLambda
       )
     }
-    val AscriptionType = if (curlyBlock) R( InfixType ) else R( Type )
-    val Ascription = R( `:` ~! (`_*` |  AscriptionType | Annot.rep1) )
-    val MatchAscriptionSuffix = R(`match` ~! "{" ~ CaseClauses ~ "}" | Ascription)
-    val ExprPrefix = R( WL ~ CharIn("-+~!") ~ WS ~ !syntax.Basic.OpChar )
-    val ExprSuffix = R( ("." ~! Id | TypeArgs | NoSemis ~ ArgList).rep ~ (NoSemis  ~ `_`).? )
-    val PrefixExpr = R( ExprPrefix.? ~ SimpleExpr )
-    val InfixSuffix = R( NoSemis ~ Id ~ TypeArgs.? ~ OneSemiMax ~ PrefixExpr ~ ExprSuffix)
-    val PostFix = R( NotNewline ~ Id ~ Newline.? )
-    val PostfixSuffix = R( InfixSuffix.rep ~ PostFix.? ~ (`=` ~! Expr).? ~ MatchAscriptionSuffix.?)
+    val AscriptionType = if (curlyBlock) P( InfixType ) else P( Type )
+    val Ascription = P( `:` ~! (`_*` |  AscriptionType | Annot.rep1) )
+    val MatchAscriptionSuffix = P(`match` ~! "{" ~ CaseClauses ~ "}" | Ascription)
+    val ExprPrefix = P( WL ~ CharIn("-+~!") ~ WS ~ !syntax.Basic.OpChar )
+    val ExprSuffix = P( ("." ~! Id | TypeArgs | NoSemis ~ ArgList).rep ~ (NoSemis  ~ `_`).? )
+    val PrefixExpr = P( ExprPrefix.? ~ SimpleExpr )
+    val InfixSuffix = P( NoSemis ~ Id ~ TypeArgs.? ~ OneSemiMax ~ PrefixExpr ~ ExprSuffix)
+    val PostFix = P( NotNewline ~ Id ~ Newline.? )
+    val PostfixSuffix = P( InfixSuffix.rep ~ PostFix.? ~ (`=` ~! Expr).? ~ MatchAscriptionSuffix.?)
 
-    val PostfixExpr: R0 = R( PrefixExpr ~ ExprSuffix ~ PostfixSuffix )
+    val PostfixExpr: P0 = P( PrefixExpr ~ ExprSuffix ~ PostfixSuffix )
 
-    val Parened = R ( "(" ~! Exprs.? ~ ")" )
-    val SimpleExpr: R0 = {
-      val Path = R( (Id ~ ".").rep ~ `this` ~ ("." ~! Id).rep | StableId )
-      val New = R( `new` ~! AnonTmpl )
+    val Parened = P ( "(" ~! Exprs.? ~ ")" )
+    val SimpleExpr: P0 = {
+      val Path = P( (Id ~ ".").rep ~ `this` ~ ("." ~! Id).rep | StableId )
+      val New = P( `new` ~! AnonTmpl )
 
-      R( XmlExpr | New | BlockExpr | ExprLiteral | Path | `_` | Parened )
+      P( XmlExpr | New | BlockExpr | ExprLiteral | Path | `_` | Parened )
     }
-    val Guard : R0 = R( `if` ~! PostfixExpr )
+    val Guard : P0 = P( `if` ~! PostfixExpr )
   }
-  val SimplePattern: R0 = {
-    val ExtractorArgs = R( Pattern.rep("," ~! Pass) )
-    val TupleEx = R( "(" ~! ExtractorArgs ~ ")" )
-    val Extractor = R( StableId ~ TypeArgs.? ~ TupleEx.? )
-    val Thingy = R( `_` ~ (`:` ~! TypePat).? ~ !"*" )
-    R( XmlPattern | Thingy | PatLiteral | TupleEx | Extractor | VarId)
+  val SimplePattern: P0 = {
+    val ExtractorArgs = P( Pattern.rep("," ~! Pass) )
+    val TupleEx = P( "(" ~! ExtractorArgs ~ ")" )
+    val Extractor = P( StableId ~ TypeArgs.? ~ TupleEx.? )
+    val Thingy = P( `_` ~ (`:` ~! TypePat).? ~ !"*" )
+    P( XmlPattern | Thingy | PatLiteral | TupleEx | Extractor | VarId)
   }
 
-  val BlockExpr: R0 = R( "{" ~! (CaseClauses | Block) ~ `}` )
+  val BlockExpr: P0 = P( "{" ~! (CaseClauses | Block) ~ `}` )
 
   val BlockStat = {
-    val Prelude = R( Annot.rep ~ `implicit`.? ~ `lazy`.? ~ LocalMod.rep )
-    val Tmpl = R( Prelude ~ BlockDef )
-    R( Import | Tmpl | StatCtx.Expr )
+    val Prelude = P( Annot.rep ~ `implicit`.? ~ `lazy`.? ~ LocalMod.rep )
+    val Tmpl = P( Prelude ~ BlockDef )
+    P( Import | Tmpl | StatCtx.Expr )
   }
 
-  val Block: R0 = {
-    val BlockEnd = R( Semis.? ~ &("}" | `case`) )
-    val Body = R( BlockStat.rep(Semis) )
-    R( Semis.? ~ Body ~! BlockEnd )
+  val Block: P0 = {
+    val BlockEnd = P( Semis.? ~ &("}" | `case`) )
+    val Body = P( BlockStat.rep(Semis) )
+    P( Semis.? ~ Body ~! BlockEnd )
   }
 
-  val Patterns: R0 = R( Pattern.rep1("," ~! Pass) )
-  val Pattern: R0 = R( TypeOrBindPattern.rep1("|" ~! Pass) )
-  val TypePattern = R( (`_` | VarId) ~ `:` ~ TypePat )
-  val TypeOrBindPattern: R0 = R( TypePattern | BindPattern )
-  val BindPattern: R0 = {
-    val InfixPattern = R( `_*` | SimplePattern ~ (Id ~ SimplePattern).rep )
-    val Binding = R( (VarId | `_`) ~ `@` )
-    R( Binding ~ InfixPattern | InfixPattern | VarId )
+  val Patterns: P0 = P( Pattern.rep1("," ~! Pass) )
+  val Pattern: P0 = P( TypeOrBindPattern.rep1("|" ~! Pass) )
+  val TypePattern = P( (`_` | VarId) ~ `:` ~ TypePat )
+  val TypeOrBindPattern: P0 = P( TypePattern | BindPattern )
+  val BindPattern: P0 = {
+    val InfixPattern = P( `_*` | SimplePattern ~ (Id ~ SimplePattern).rep )
+    val Binding = P( (VarId | `_`) ~ `@` )
+    P( Binding ~ InfixPattern | InfixPattern | VarId )
   }
 
-  val TypePat = R( CompoundType )
-  val ParenArgList = R( "(" ~! (Exprs ~ (`:` ~! `_*`).?).? ~ ")" )
-  val ArgList: R0 = R( ParenArgList | OneNLMax ~ BlockExpr )
+  val TypePat = P( CompoundType )
+  val ParenArgList = P( "(" ~! (Exprs ~ (`:` ~! `_*`).?).? ~ ")" )
+  val ArgList: P0 = P( ParenArgList | OneNLMax ~ BlockExpr )
 
-  val CaseClauses: R0 = {
+  val CaseClauses: P0 = {
     // Need to lookahead for `class` and `object` because
     // the block { case object X } is not a case clause!
-    val CaseClause: R0 = R( `case` ~ !(`class` | `object`) ~! Pattern ~ ExprCtx.Guard.? ~ `=>` ~ Block )
-    R( CaseClause.rep1 )
+    val CaseClause: P0 = P( `case` ~ !(`class` | `object`) ~! Pattern ~ ExprCtx.Guard.? ~ `=>` ~ Block )
+    P( CaseClause.rep1 )
   }
 }

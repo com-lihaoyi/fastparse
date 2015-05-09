@@ -47,7 +47,7 @@ object MiscTests extends TestSuite{
         check("A".! ~ "ABC".!, """("A" ~ "ABC")""")
       }
       'named{
-        val Foo = R( "A" )
+        val Foo = P( "A" )
         check(Foo, """Foo""")
         check(End, """End""")
         check(Start, """Start""")
@@ -65,7 +65,7 @@ object MiscTests extends TestSuite{
     'logging{
       val logged = mutable.Buffer.empty[String]
       implicit val logger = fastparse.Logger(logged.append(_))
-      val Foo = R( "A".log("A") ~ "B".!.log("B") ).log("AB")
+      val Foo = P( "A".log("A") ~ "B".!.log("B") ).log("AB")
       Foo.parse("AB")
       def expected(unit: String) = mutable.Buffer(
         "+AB:0",
@@ -89,7 +89,7 @@ object MiscTests extends TestSuite{
       'sequence{
         val S = Parser.Sequence
         val F = Parser.Sequence.Flat
-        def C(p: R0, b: Boolean = false) = Parser.Sequence.Chain(p, b)(null)
+        def C(p: P0, b: Boolean = false) = Parser.Sequence.Chain(p, b)(null)
         assert(
           ("A" ~ "B" ~ "C" ~ "D") == F("A", Vector(C("B"), C("C"), C("D"))),
           (("A" ~ "B") ~ ("C" ~ "D")) == F("A", Vector(C("B"), C(F("C", Vector(C("D"))))))

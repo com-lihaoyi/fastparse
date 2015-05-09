@@ -7,12 +7,12 @@ object ParsingTests extends TestSuite{
 
   import Result.{Success, Failure}
 
-  def check[T](parser: R[T], input: (String, Int), rhs: Result[T]) = {
+  def check[T](parser: P[T], input: (String, Int), rhs: Result[T]) = {
     val (str, index) = input
     val parsed = parser.parse(str, index)
     assert({parser; str; parsed} == rhs)
   }
-  def checkFail[T](parser: R[T], input: (String, Int), expectedFailureIndex: Int) = {
+  def checkFail[T](parser: P[T], input: (String, Int), expectedFailureIndex: Int) = {
     val (str, index) = input
     val parsed = parser.parse(str, index)
     val failureIndex = parsed.asInstanceOf[Failure].index

@@ -9,60 +9,60 @@ import fastparse._
  */
 object Scala extends Core with Types with Exprs with Xml{
 
-  private implicit def wspStr(s: String) = R(WL ~ s)(Utils.literalize(s).toString)
+  private implicit def wspStr(s: String) = P(WL ~ s)(Utils.literalize(s).toString)
 
 
-  val TmplBody: R0 = {
-    val Prelude = R( (Annot ~ OneNLMax).rep ~ (Mod ~! Pass).rep )
-    val TmplStat = R( Import | Prelude ~ BlockDef | StatCtx.Expr )
-    val SelfType = R( (`this` | Id | `_`) ~ (`:` ~ InfixType).? ~ `=>` )
-    R( "{" ~! SelfType.? ~ Semis.? ~ TmplStat.rep(Semis) ~ `}` )
+  val TmplBody: P0 = {
+    val Prelude = P( (Annot ~ OneNLMax).rep ~ (Mod ~! Pass).rep )
+    val TmplStat = P( Import | Prelude ~ BlockDef | StatCtx.Expr )
+    val SelfType = P( (`this` | Id | `_`) ~ (`:` ~ InfixType).? ~ `=>` )
+    P( "{" ~! SelfType.? ~ Semis.? ~ TmplStat.rep(Semis) ~ `}` )
   }
 
-  val ValVarDef = R( BindPattern.rep1("," ~! Pass) ~ (`:` ~! Type).? ~ (`=` ~! StatCtx.Expr).? )
+  val ValVarDef = P( BindPattern.rep1("," ~! Pass) ~ (`:` ~! Type).? ~ (`=` ~! StatCtx.Expr).? )
 
   val FunDef = {
-    val Body = R( `=` ~! `macro`.? ~ StatCtx.Expr | OneNLMax ~ "{" ~ Block ~ "}" )
-    R( FunSig ~ (`:` ~! Type).? ~ Body.? )
+    val Body = P( `=` ~! `macro`.? ~ StatCtx.Expr | OneNLMax ~ "{" ~ Block ~ "}" )
+    P( FunSig ~ (`:` ~! Type).? ~ Body.? )
   }
 
-  val BlockDef: R0 = R( Dcl | TraitDef | ClsDef | ObjDef )
+  val BlockDef: P0 = P( Dcl | TraitDef | ClsDef | ObjDef )
 
   val ClsDef = {
-    val ClsAnnot = R( `@` ~ SimpleType ~ ArgList )
-    val Prelude = R( NotNewline ~ ( ClsAnnot.rep1 ~ AccessMod.? | ClsAnnot.rep ~ AccessMod) )
-    val ClsArgMod = R( (Mod.rep ~ (`val` | `var`)) )
-    val ClsArg = R( Annot.rep ~ ClsArgMod.? ~ Id ~ `:` ~ Type ~ (`=` ~ ExprCtx.Expr).? )
+    val ClsAnnot = P( `@` ~ SimpleType ~ ArgList )
+    val Prelude = P( NotNewline ~ ( ClsAnnot.rep1 ~ AccessMod.? | ClsAnnot.rep ~ AccessMod) )
+    val ClsArgMod = P( (Mod.rep ~ (`val` | `var`)) )
+    val ClsArg = P( Annot.rep ~ ClsArgMod.? ~ Id ~ `:` ~ Type ~ (`=` ~ ExprCtx.Expr).? )
 
-    val Implicit = R( OneNLMax ~ "(" ~ `implicit` ~ ClsArg.rep1(",") ~ ")" )
-    val ClsArgs = R( OneNLMax ~ "(" ~ ClsArg.rep(",") ~ ")" )
-    val AllArgs = R( ClsArgs.rep1 ~ Implicit.? | Implicit )
-    R( `case`.? ~ `class` ~! Id ~ TypeArgList.? ~ Prelude.? ~ AllArgs.? ~ DefTmpl.? )
+    val Implicit = P( OneNLMax ~ "(" ~ `implicit` ~ ClsArg.rep1(",") ~ ")" )
+    val ClsArgs = P( OneNLMax ~ "(" ~ ClsArg.rep(",") ~ ")" )
+    val AllArgs = P( ClsArgs.rep1 ~ Implicit.? | Implicit )
+    P( `case`.? ~ `class` ~! Id ~ TypeArgList.? ~ Prelude.? ~ AllArgs.? ~ DefTmpl.? )
   }
 
-  val Constrs = R( Constr.rep1(`with` ~! Pass) )
-  val EarlyDefTmpl = R( TmplBody ~ (`with` ~! Constr).rep ~ TmplBody.? )
-  val NamedTmpl = R( Constrs ~ TmplBody.? )
+  val Constrs = P( Constr.rep1(`with` ~! Pass) )
+  val EarlyDefTmpl = P( TmplBody ~ (`with` ~! Constr).rep ~ TmplBody.? )
+  val NamedTmpl = P( Constrs ~ TmplBody.? )
 
-  val DefTmpl = R( (`extends` | `<:`) ~ AnonTmpl | TmplBody)
-  val AnonTmpl = R( EarlyDefTmpl | NamedTmpl | TmplBody )
+  val DefTmpl = P( (`extends` | `<:`) ~ AnonTmpl | TmplBody)
+  val AnonTmpl = P( EarlyDefTmpl | NamedTmpl | TmplBody )
 
-  val TraitDef = R( `trait` ~! Id ~ TypeArgList.? ~ DefTmpl.? )
+  val TraitDef = P( `trait` ~! Id ~ TypeArgList.? ~ DefTmpl.? )
 
-  val ObjDef: R0 = R( `case`.? ~ `object` ~! Id ~ DefTmpl.? )
+  val ObjDef: P0 = P( `case`.? ~ `object` ~! Id ~ DefTmpl.? )
 
-  val Constr = R( AnnotType ~ (NotNewline ~ ParenArgList ).rep )
+  val Constr = P( AnnotType ~ (NotNewline ~ ParenArgList ).rep )
 
-  val PkgObj = R( ObjDef )
-  val PkgBlock = R( QualId ~! `{` ~ TopStatSeq.? ~ `}` )
-  val TopStatSeq: R0 = {
-    val Tmpl = R( (Annot ~ OneNLMax).rep ~ Mod.rep ~ (TraitDef | ClsDef | ObjDef) )
-    val TopStat = R( `package` ~! (PkgBlock | PkgObj) | Import | Tmpl )
-    R( TopStat.rep1(Semis) )
+  val PkgObj = P( ObjDef )
+  val PkgBlock = P( QualId ~! `{` ~ TopStatSeq.? ~ `}` )
+  val TopStatSeq: P0 = {
+    val Tmpl = P( (Annot ~ OneNLMax).rep ~ Mod.rep ~ (TraitDef | ClsDef | ObjDef) )
+    val TopStat = P( `package` ~! (PkgBlock | PkgObj) | Import | Tmpl )
+    P( TopStat.rep1(Semis) )
   }
-  val TopPkgSeq = R( (`package` ~ QualId ~ !(WS ~ "{")).rep1(Semis) )
-  val CompilationUnit: R0 = {
-    val Body = R( TopPkgSeq ~ (Semis ~ TopStatSeq).? | TopStatSeq )
-    R( Semis.? ~ Body.? ~ Semis.? ~ WL ~ Parser.End)
+  val TopPkgSeq = P( (`package` ~ QualId ~ !(WS ~ "{")).rep1(Semis) )
+  val CompilationUnit: P0 = {
+    val Body = P( TopPkgSeq ~ (Semis ~ TopStatSeq).? | TopStatSeq )
+    P( Semis.? ~ Body.? ~ Semis.? ~ WL ~ Parser.End)
   }
 }

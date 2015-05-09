@@ -1,7 +1,7 @@
 import scala.collection.BitSet
 import scala.language.experimental.macros
 package object fastparse {
-  implicit def enclosingFunctionName: FuncName = macro FuncName.impl
+  implicit def enclosingFunctionName: Utils.FuncName = macro Utils.FuncName.impl
 
   val Pass = Parser.Pass
   val Fail = Parser.Fail
@@ -23,8 +23,8 @@ package object fastparse {
 
   implicit def wspStr(s: String) = if (s.length == 0) Parser.CharLiteral(s(0)) else Parser.Literal(s)
 
-  def R[T](p: => Parser[T])(implicit name: FuncName): Parser[T] = Parser.Rule(name.name, () => p)
-  type R0 = Parser[Unit]
+  def P[T](p: => Parser[T])(implicit name: Utils.FuncName): Parser[T] = Parser.Rule(name.name, () => p)
+  type P0 = Parser[Unit]
 
-  type R[+T] = Parser[T]
+  type P[+T] = Parser[T]
 }
