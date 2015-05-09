@@ -220,6 +220,7 @@
         @sect{Math}
             @hl.ref(tests/"MathTests.scala", "val number", "val tests")
 
+
             @p
                 This is a small arithmetic expression parser, the same one shown at the top of this page. It parses only whole integers, parentheses, @hl.scala{+-*/}, and no whitespace.
             @p
@@ -240,7 +241,13 @@
             @p
                 This is a small example, but it works. We check it using a helper to verify that every parse results in the expected integer:
 
-            @hl.ref(tests/"MathTests.scala", "def check")  
+            @hl.ref(tests/"MathTests.scala", "def check")
+
+            @p
+                Try it out yourself! Remember that it does not handle whitespace:
+
+            @div(id := "mathdiv")
+            @script(raw("""demo.DemoMain().math(document.getElementById("mathdiv"))"""))
 
         @sect{Json}          
             @hl.ref(tests/"JsonTests.scala", "Here is the parser", "val tests")
@@ -253,24 +260,38 @@
 
             @ul
                 @li
-                    We use cuts (@hl.scala{~!}) liberally in order to improve the quality of errors.
+                    We use cuts (@hl.scala{~!}) liberally in order to improve the quality of errors. Anywhere there's an @sect.ref{Either} or @sect.ref{Repeat}, the children have cuts once the parse has progressed far enough backtracking isn't an option.
+                @li 
+                    We use @hl.scala{CharIn} and @hl.scala{CharsWhile} quite a lot, in order to speed up the common case of consuming lots of boring characters.
+                @li
+                    In @hl.scala{strChars}, we break out of @hl.scala{CharsWhile} closing quote (@hl.scala{'"'}) or whenever we see the start of an escape sequence (@hl.scala{'\'}). Although @hl.scala{CharsWhile} can't process these multi-char sequences, we let the @hl.scala{escape} parser deal with these before trying to fall back to @hl.scala{strChars} after. This lets us speed up the "common" case of consuming large numbers of non-escape characters, while still properly handling escapes.
                 @li
                     We use @hl.scala{.map} to convert the various things we parse into instances of our own @hl.scala{Js.Val} JSON AST:
+
 
             @hl.ref(tests/"JsonTests.scala", "object Js {", "Here is the parser")
 
             @p
                 We can verify that this parser builds the JSON tree that we expect:
 
-            @hl.ref(tests/"JsonTests.scala", "'jsonExpr'", "'bigJsonExpr'")
+            @hl.ref(tests/"JsonTests.scala", Seq("'jsonExpr", ""))
 
             @p
                 And that it provides good error messages in the case of mal-formed JSON, even for moderately-sized fragemnts
 
-            @val failPath = Seq("'fail", "* -", "* -", "* -", "* -", "* -", "\"\"\"", "")    
+            @val failPath = Seq("'fail", "* -", "* -", "* -", "* -", "* -", "* -", "\"\"\"", "")    
             @hl.ref(tests/"JsonTests.scala", failPath, "\"\"\"")
 
             @hl.ref(tests/"JsonTests.scala", failPath ++ Seq("\"\"\"", "\"\"\"", ""), "\"\"\"")            
+
+            @p
+                Here, we're missing a square bracket after the @hl.scala{"phoneNumbers"} key, and so the parser expects to find a single JSON expression. It finds a JSON object, and then fails reporting that it expected to find the next key (a string), but instead found @hl.scala{"{\n"} at that index.
+
+            @p
+                Try it out!
+
+            @div(id := "jsondiv")
+            @script(raw("""demo.DemoMain().json(document.getElementById("jsondiv"))"""))
 
     @sect{API Highlights}
 
@@ -312,42 +333,48 @@
                 @th{Benchmark}@th{Score}@th{Error}
             @tbody
                 @tr
-                    @td{fastparse}@td{35.579}@td{± 1.019}
+                    @td{fastparse}@td{80.536}@td{± 0.942}
                 @tr
-                    @td{argonaut}@td{81.744}@td{± 2.611}
+                    @td{fastparse-no-trace}@td{89.873}@td{± 0.875}
                 @tr
-                    @td{json4SJackson}@td{144.965}@td{± 3.292}
+                    @td{argonaut}@td{164.092}@td{± 2.869}
                 @tr
-                    @td{json4SNative}@td{87.691}@td{± 1.729}
+                    @td{json4s-jackson}@td{285.637}@td{± 3.954}
                 @tr
-                    @td{parboiled2}@td{46.106}@td{± 1.211}
+                    @td{json4s-native}@td{142.964}@td{± 2.076}
                 @tr
-                    @td{scala-parser-combinators}@td{0.490}@td{± 0.017}
+                    @td{parboiled2}@td{87.586}@td{± 1.176}
                 @tr
-                    @td{spray-json}@td{97.484}@td{± 2.890}
+                    @td{scala-parser-combinators}@td{0.976}@td{± 0.018}
+                @tr
+                    @td{spray-json}@td{189.784}@td{± 2.825}
+
 
         @p
-            These numbers are the number of iterations/second of parsing a sample @code{test.json} file, averaged over 200 runs. As you can see, the FastParse based parser comes with a factor of 4 of the fastest hand written parser (Jackson) and within 25% of the Parboiled2 based parser, and is over 70x faster than the scala-parser-combinators library.
+            These numbers are the number of iterations/second of parsing a sample @code{test.json} file, averaged over 200 runs. As you can see, the FastParse based parser comes within a factor of 4 of the fastest hand written parser (Jackson), is just as fast as the Parboiled2 based parser (slightly faster/slower depending if full tracing is enabled), and is almost 100x faster than the scala-parser-combinators library.
 
         @p
-            In exchange for the slight perf hit, you get the @sect.ref("Json", "short, super-simple parser definition"), and excellent error free error reporting. While for super-high-performance use cases you may still want a hand-rolled parser, for many ad-hoc situations a FastParse parser would do just fine.
+            In exchange for the perf hit compared to hand-rolled solutions, you get the @sect.ref("Json", "short, super-simple parser definition"), and excellent error free error reporting. While for super-high-performance use cases you may still want a hand-rolled parser, for many ad-hoc situations a FastParse parser would do just fine.
 
         @p
-            A similar speed ratio can be seen in parsing a @a("sample Scala file", href:="https://github.com/scala-js/scala-js/blob/master/compiler/src/main/scala/org/scalajs/core/compiler/GenJSCode.scala") using FastParse, a similar Parboiled2 based parser, and Scalac's inbuilt hand-written parser:
+            A similar speed ratio can be seen in parsing a @a("sample Scala file", href:="https://github.com/scala-js/scala-js/blob/master/compiler/src/main/scala/org/scalajs/core/compiler/GenJSCode.scala") using FastParse, Parboiled2 and Scalac's inbuilt hand-written Scala-language parser:
 
         @table(width := "100%")
             @thead
                 @th{Benchmark}@th{Score}@th{Error}
             @tbody
                 @tr
-                    @td{fastparse}@td{162}@td{23.57}
+                    @td{fastparse}@td{338}@td{2.51}
                 @tr
-                    @td{parboiled2}
+                    @td{fastparse-no-trace}@td{414}@td{26.4}
                 @tr
-                    @td{scalac}@td{1383}@td{181.60}
+                    @td{parboiled2}@td{1249}@td{87.8}
+                @tr
+                    @td{scalac}@td{5406}@td{260}
 
         @p
-            These numbers are the number of iterations over 30 seconds. FastParse performs worse here, at a factor of 8 slower than Scalac's in-built parser. Depending on what you're doing, that may or may not be a problem.
+            These numbers are the number of iterations over 30 seconds. FastParse performs worse here, at 13x slower than Scalac's in-built parser, and 3x slower than the equivalent Parboiled2-based parser. Depending on what you're doing, that may or may not be a problem.
+
     @sect{Internals}
         @p 
             FastParse's internals are straightforward, at less than 1000 lines of code. Nonetheless, its design is unlike any other combinator library I've seen: externally immutable, pure-functional parser-combinators with mutable, highly-optimized internals.
@@ -406,6 +433,8 @@
         @p
             scalaparser is a parser for the entire Scala programming language, written using FastParse. This is notable for a few reasons:
 
+        @div(id := "scaladiv")
+        @script(raw("""demo.DemoMain().scalaparse(document.getElementById("scaladiv"))"""))
         @ul
             @li
                 scalaparser is about 700 lines of code, making it about 1/10th the size of the default parser in @hl.scala{tools.nsc.Global}

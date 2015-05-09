@@ -13,7 +13,7 @@ val shared = Seq(
   libraryDependencies ++= Seq(
     "com.lihaoyi" %%% "utest" % "0.3.0"
   ),
-  scalaJSStage in Global := FastOptStage,
+  scalaJSStage in Global := FullOptStage,
   organization := "com.lihaoyi",
   version := "0.1.0-SNAPSHOT",
   scalaVersion := "2.11.6",
@@ -70,9 +70,22 @@ lazy val scalaparser = crossProject.dependsOn(fastparse).settings(
 lazy val scalaparserJS = scalaparser.js
 lazy val scalaparserJVM = scalaparser.jvm
 
+
+lazy val demo = project.enablePlugins(ScalaJSPlugin)
+  .dependsOn(fastparseJS % "compile->compile;compile->test", scalaparserJS)
+  .settings(shared:_*)
+  .settings(
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.8.0",
+      libraryDependencies += "com.lihaoyi" %%% "scalatags" % "0.5.1"
+  )
 lazy val readme = scalatex.ScalatexReadme(
   folder = "readme",
   url = "https://github.com/lihaoyi/fastparse/tree/master",
   source = "Readme",
-  targetFolder = "target/site"
+  targetFolder = "target/site",
+  autoResources = List("demo-fastopt.js")
 )
+.settings((resources in Compile) += {
+  (fastOptJS in (demo, Compile)).value
+  (artifactPath in (demo,  Compile, fastOptJS)).value
+})

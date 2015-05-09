@@ -16,7 +16,8 @@ object JsonTests extends TestSuite{
     sealed trait Val extends Any {
       def value: Any
       def apply(i: Int): Val = this.asInstanceOf[Arr].value(i)
-      def apply(s: java.lang.String): Val = this.asInstanceOf[Obj].value.find(_._1 == s).get._2
+      def apply(s: java.lang.String): Val =
+        this.asInstanceOf[Obj].value.find(_._1 == s).get._2
     }
     case class Str(value: java.lang.String) extends AnyVal with Val
     case class Obj(value: (java.lang.String, Val)*) extends AnyVal with Val
@@ -54,7 +55,7 @@ object JsonTests extends TestSuite{
 
   val strChars = P( CharsWhile(!"\"\\".contains(_), min = 1) )
   val string =
-    P( space ~ "\"" ~ (strChars | escape).rep.! ~ "\"").map(Js.Str)
+    P( space ~ "\"" ~! (strChars | escape).rep.! ~ "\"").map(Js.Str)
 
   val array =
     P( "[" ~! jsonExpr.rep("," ~! Pass) ~ space ~ "]").map(Js.Arr(_:_*))
@@ -84,7 +85,9 @@ object JsonTests extends TestSuite{
         * - test(obj, """{"omg": "123", "wtf": 456, "bbq": "789"}""")
       }
       'jsonExpr - {
-        val Result.Success(value, _) = jsonExpr.parse("""{"omg": "123", "wtf": 12.4123}""")
+        val Result.Success(value, _) = jsonExpr.parse(
+          """{"omg": "123", "wtf": 12.4123}"""
+        )
         assert(value == Js.Obj("omg" -> Js.Str("123"), "wtf" -> Js.Num(12.4123)))
       }
       'bigJsonExpr - test(jsonExpr, """

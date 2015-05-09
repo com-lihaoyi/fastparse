@@ -73,11 +73,6 @@ object Utils {
 
   }
 
-  def isPrintableChar(c: Char): Boolean = {
-    val block = Character.UnicodeBlock.of(c)
-    !Character.isISOControl(c) && !Character.isSurrogate(c) && block != null && block != Character.UnicodeBlock.SPECIALS
-  }
-
   object CharBitSet{
     val hexChars = Seq(
       '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',

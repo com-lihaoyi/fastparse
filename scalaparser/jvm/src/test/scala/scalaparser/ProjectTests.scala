@@ -38,7 +38,7 @@ object ProjectTests extends TestSuite{
         TestUtil.check(code)
       }
 
-      files.map(Await.result(_, Duration.Inf))
+      files.foreach(Await.result(_, Duration.Inf))
     }
     'test - checkDir("scalaparser/shared/src/test/resources")
     def checkRepo(url: String, filter: String => Boolean = _ => false) = {
