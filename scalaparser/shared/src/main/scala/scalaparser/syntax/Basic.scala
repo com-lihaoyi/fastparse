@@ -3,8 +3,7 @@ package scalaparser.syntax
 import acyclic.file
 
 import fastparse._
-import fastparse.preds.CharPredicates
-import fastparse.preds.CharPredicates._
+import fastparse.CharPredicates._
 object Basic {
   val UnicodeEscape = P( "u" ~ HexDigit ~ HexDigit ~ HexDigit ~ HexDigit )
 
@@ -27,7 +26,7 @@ object Basic {
   def isOpChar(c: Char) = {
     // scalac 2.10 crashes if OtherOrMathSymbol below is substituted by its body
     // Same thing for LetterDigit, LowerChar, UpperChar
-    preds.CharPredicates.isOtherSymbol(c) || preds.CharPredicates.isMathSymbol(c) || "!#%&*+-/:<=>?@\\^|~".contains(c)
+    fastparse.CharPredicates.isOtherSymbol(c) || fastparse.CharPredicates.isMathSymbol(c) || "!#%&*+-/:<=>?@\\^|~".contains(c)
   }
   val Letter = P( CharPred(c => isLetter(c) | isDigit(c) | "$_".contains(c)) )
   val LetterDigitDollarUnderscore =  P( CharPred(c => isLetter(c) | isDigit(c) | "$_".contains(c) ) )

@@ -5,6 +5,8 @@
 @sect("FastParse 0.1.0", "Fast to write, Fast running Parsers in Scala")
     @hl.ref(tests/"MathTests.scala", "val number", "val tests")
     @hl.ref(tests/"MathTests.scala", Seq("def check", "check"))
+    @div(id := "splashdiv")
+    @script(raw("""demo.DemoMain().math(document.getElementById("splashdiv"))"""))
     @p
         FastParse is a parser-combinator library for Scala that lets you quickly and easily write recursive descent parsers in Scala. Features include:
 

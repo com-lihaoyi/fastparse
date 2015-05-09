@@ -1,7 +1,8 @@
+
 package fastparse
-package preds
+
 object CharPredicates{
-lazy val isLetter = (c: Char) => c.isLetter
+  lazy val isLetter = (c: Char) => c.isLetter
   lazy val isDigit = (c: Char) => c.isDigit
   lazy val isPrintableChar = (c: Char) => {
     val block = java.lang.Character.UnicodeBlock.of(c)

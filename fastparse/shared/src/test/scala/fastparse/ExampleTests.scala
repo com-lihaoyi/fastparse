@@ -122,7 +122,7 @@ object ExampleTests extends TestSuite{
     }
     'charX{
       'charPred{
-        val cp = P( CharPred(_.isUpper).rep.! ~ "." ~ End )
+        val cp = P( CharPred(CharPredicates.isUpper).rep.! ~ "." ~ End )
         val Result.Success("ABC", _) = cp.parse("ABC.")
         val Result.Failure(_, 2) = cp.parse("ABc.")
       }

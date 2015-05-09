@@ -2,7 +2,6 @@ package scalaparser.syntax
 
 import acyclic.file
 import fastparse._
-import fastparse.preds.CharPredicates
 import Basic._
 object Identifiers{
 

@@ -1,5 +1,5 @@
 package fastparse
-package preds
+
 object CharPredicates{
   // Not available in Scala.js
   lazy val isLetter = Utils.preCompute(_.isLetter)

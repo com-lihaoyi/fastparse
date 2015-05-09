@@ -39,24 +39,17 @@ object PerfTests extends TestSuite{
       // Last Run
       // (384,336,5107,434,338,5569,424,341,5544)
       (
-        time(() => parser.parse(genJsCodeSource, trace = false)),
-        time(() => parser.parse(genJsCodeSource, trace = true)),
-        time(() => global.newUnitParser(genJsCodeSource).parse()),
-        time(() => parser.parse(genJsCodeSource, trace = false)),
-        time(() => parser.parse(genJsCodeSource, trace = true)),
-        time(() => global.newUnitParser(genJsCodeSource).parse()),
-        time(() => parser.parse(genJsCodeSource, trace = false)),
-        time(() => parser.parse(genJsCodeSource, trace = true)),
-        time(() => global.newUnitParser(genJsCodeSource).parse())
+//        time(() => parser.parse(genJsCodeSource, trace = false)),
+//        time(() => parser.parse(genJsCodeSource, trace = true)),
+//        time(() => global.newUnitParser(genJsCodeSource).parse()),
+//        time(() => parser.parse(genJsCodeSource, trace = false)),
+//        time(() => parser.parse(genJsCodeSource, trace = true)),
+//        time(() => global.newUnitParser(genJsCodeSource).parse()),
+//        time(() => parser.parse(genJsCodeSource, trace = false)),
+//        time(() => parser.parse(genJsCodeSource, trace = true)),
+//        time(() => global.newUnitParser(genJsCodeSource).parse())
       )
     }
-  }
-  def main(args: Array[String]): Unit = {
-    println(
-//      time(() => Scala.CompilationUnit.parse(genJsCodeSource, trace = false)),
-//      time(() => Scala.CompilationUnit.parse(genJsCodeSource, trace = false)),
-      time(() => Scala.CompilationUnit.parse(genJsCodeSource, trace = false))
-    )
   }
   def time(f: () => Unit) = {
     val start = System.currentTimeMillis()
