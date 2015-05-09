@@ -147,11 +147,10 @@ object Utils {
    * performance improvements.
    */
   final class TrieNode{
-    val children: mutable.Map[Char, TrieNode]  = mutable.Map.empty
+    val children: mutable.LongMap[TrieNode] = mutable.LongMap.empty
     var word: String = null
     def apply(c: Char) = {
-      if (children.contains(c)) children(c)
-      else null
+      children.getOrNull(c)
     }
   }
 }

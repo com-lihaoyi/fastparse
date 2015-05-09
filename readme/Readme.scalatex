@@ -304,7 +304,50 @@
             @hl.ref(main/"Parsing.scala", "trait Failure", "object Failure")
 
     @sect{Performance}
-        ...
+        @p
+            FastParse will never be able to compete with hand-written recursive descent parsers for speed. However, it's no slouch either; here's a comparison of FastParse with alternatives, using Parboiled2's JSON parsing benchmark:
+
+        @table(width := "100%")
+            @thead
+                @th{Benchmark}@th{Score}@th{Error}
+            @tbody
+                @tr
+                    @td{fastparse}@td{35.579}@td{± 1.019}
+                @tr
+                    @td{argonaut}@td{81.744}@td{± 2.611}
+                @tr
+                    @td{json4SJackson}@td{144.965}@td{± 3.292}
+                @tr
+                    @td{json4SNative}@td{87.691}@td{± 1.729}
+                @tr
+                    @td{parboiled2}@td{46.106}@td{± 1.211}
+                @tr
+                    @td{scala-parser-combinators}@td{0.490}@td{± 0.017}
+                @tr
+                    @td{spray-json}@td{97.484}@td{± 2.890}
+
+        @p
+            These numbers are the number of iterations/second of parsing a sample @code{test.json} file, averaged over 200 runs. As you can see, the FastParse based parser comes with a factor of 4 of the fastest hand written parser (Jackson) and within 25% of the Parboiled2 based parser, and is over 70x faster than the scala-parser-combinators library.
+
+        @p
+            In exchange for the slight perf hit, you get the @sect.ref("Json", "short, super-simple parser definition"), and excellent error free error reporting. While for super-high-performance use cases you may still want a hand-rolled parser, for many ad-hoc situations a FastParse parser would do just fine.
+
+        @p
+            A similar speed ratio can be seen in parsing a @a("sample Scala file", href:="https://github.com/scala-js/scala-js/blob/master/compiler/src/main/scala/org/scalajs/core/compiler/GenJSCode.scala") using FastParse, a similar Parboiled2 based parser, and Scalac's inbuilt hand-written parser:
+
+        @table(width := "100%")
+            @thead
+                @th{Benchmark}@th{Score}@th{Error}
+            @tbody
+                @tr
+                    @td{fastparse}@td{162}@td{23.57}
+                @tr
+                    @td{parboiled2}
+                @tr
+                    @td{scalac}@td{1383}@td{181.60}
+
+        @p
+            These numbers are the number of iterations over 30 seconds. FastParse performs worse here, at a factor of 8 slower than Scalac's in-built parser. Depending on what you're doing, that may or may not be a problem.
     @sect{Internals}
         @p 
             FastParse's internals are straightforward, at less than 1000 lines of code. Nonetheless, its design is unlike any other combinator library I've seen: externally immutable, pure-functional parser-combinators with mutable, highly-optimized internals.

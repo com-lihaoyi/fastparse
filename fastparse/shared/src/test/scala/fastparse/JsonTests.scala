@@ -15,6 +15,8 @@ object JsonTests extends TestSuite{
   object Js {
     sealed trait Val extends Any {
       def value: Any
+      def apply(i: Int): Val = this.asInstanceOf[Arr].value(i)
+      def apply(s: java.lang.String): Val = this.asInstanceOf[Obj].value.find(_._1 == s).get._2
     }
     case class Str(value: java.lang.String) extends AnyVal with Val
     case class Obj(value: (java.lang.String, Val)*) extends AnyVal with Val
@@ -38,7 +40,7 @@ object JsonTests extends TestSuite{
   val fractional    = P( "." ~ digits )
   val integral      = P( "0" | CharIn('1' to '9') ~ digits.? )
 
-  val number = P( "?".? ~ integral ~ fractional.? ~ exponent.? ).!.map(
+  val number = P( CharIn("+-").? ~ integral ~ fractional.? ~ exponent.? ).!.map(
     x => Js.Num(x.toDouble)
   )
 
@@ -74,6 +76,7 @@ object JsonTests extends TestSuite{
           assert(i == {s; expectedIndex})
         case f: Result.Failure => throw new Exception(f.fullStack.mkString("\n"))
       }
+
       'parts {
         * - test(number, "12031.33123E-2")
         * - test(string, "\"i am a cow lol omfg\"")

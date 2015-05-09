@@ -46,6 +46,10 @@ object PerfTests extends TestSuite{
 
       (
         time(() => parser.parse(input, trace = false)),
+        time(() => global.newUnitParser(input).parse()),
+        time(() => parser.parse(input, trace = false)),
+        time(() => global.newUnitParser(input).parse()),
+        time(() => parser.parse(input, trace = false)),
         time(() => global.newUnitParser(input).parse())
       )
     }
