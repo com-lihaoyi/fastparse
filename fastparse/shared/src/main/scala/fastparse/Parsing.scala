@@ -151,7 +151,7 @@ case class ParseCtx(input: String, logDepth: Int, trace: Boolean){
  * none       true    84 /79 /80
  * none       false   96 /99 /97
  */
-trait Parser[+T] extends ParserApi[T]{
+trait Parser[+T] extends ParserApi[T] with ParserApiImpl[T]{
   /**
    * Parses the given `input` starting from the given `index`
    *
@@ -170,46 +170,47 @@ trait Parser[+T] extends ParserApi[T]{
   def parse(input: String, index: Int = 0, trace: Boolean = true): Result[T] = {
     parseRec(ParseCtx(input, 0, trace), index)
   }
-}
 
-trait ParserApi[+T]{ this: Parser[T] =>
   /**
    * Parses the given `input` starting from the given `index` and `logDepth`
    */
   def parseRec(cfg: ParseCtx, index: Int): Result[T]
+}
+
+trait ParserApi[+T]{
+  import Implicits._
 
   /**
-   * Wraps this in a [[Parser.Logged]]. This prints out information where a parser
-   * was tried and its result, which is useful for debugging
+   * Wraps this in a [[Parser.Logged]]. This prints out information
+   * where a parser was tried and its result, which is useful for debugging
    */
-  def log(msg: String)(implicit output: Logger) = Parser.Logged(this, msg, output.f)
+  def log(msg: String)(implicit output: Logger): Parser[T]
   /**
    * Repeats this parser 0 or more times
    */
-  def rep[R](implicit ev: Implicits.Repeater[T, R]): Parser[R] = Parser.Repeat(this, 0, Parser.Pass)
+  def rep[R](implicit ev: Repeater[T, R]): Parser[R]
   /**
    * Repeats this parser 1 or more times
    */
-  def rep1[R](implicit ev: Implicits.Repeater[T, R]): Parser[R] = Parser.Repeat(this, 1, Parser.Pass)
+  def rep1[R](implicit ev: Repeater[T, R]): Parser[R]
   /**
    * Repeats this parser 0 or more times, with a delimiter
    */
-  def rep[R](delimiter: Parser[_])(implicit ev: Implicits.Repeater[T, R]): Parser[R] = Parser.Repeat(this, 0, delimiter)
+  def rep[R](delimiter: Parser[_])(implicit ev: Repeater[T, R]): Parser[R]
   /**
    * Repeats this parser 1 or more times, with a delimiter
    */
-  def rep1[R](delimiter: Parser[_])(implicit ev: Implicits.Repeater[T, R]): Parser[R] = Parser.Repeat(this, 1, delimiter)
+  def rep1[R](delimiter: Parser[_])(implicit ev: Repeater[T, R]): Parser[R]
 
   /**
    * Parses using this or the parser `p`
    */
-  def |[V >: T](p: Parser[V]): Parser[V] = Parser.Either[V](Parser.Either.flatten(Vector(this, p)):_*)
+  def |[V >: T](p: Parser[V]): Parser[V]
 
   /**
    * Parses using this followed by the parser `p`
    */
-  def ~[V, R](p: Parser[V])(implicit ev: Implicits.Sequencer[T, V, R]): Parser[R] =
-    Parser.Sequence.flatten(Parser.Sequence(this, p, cut=false).asInstanceOf[Parser.Sequence[R, R, R]])
+  def ~[V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R]
   /**
    * Parses using this followed by the parser `p`, performing a Cut if
    * this parses successfully. That means that if `p` fails to parse, the
@@ -218,27 +219,53 @@ trait ParserApi[+T]{ this: Parser[T] =>
    * This lets you greatly narrow the error position by avoiding unwanted
    * backtracking.
    */
-  def ~![V, R](p: Parser[V])(implicit ev: Implicits.Sequencer[T, V, R]): Parser[R] =
-    Parser.Sequence.flatten(Parser.Sequence(this, p, cut=true).asInstanceOf[Parser.Sequence[R, R, R]])
+  def ~![V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R]
 
   /**
    * Parses this, optionally
    */
-  def ?[R](implicit ev: Implicits.Optioner[T, R]) = Parser.Optional(this)
+  def ?[R](implicit ev: Optioner[T, R]): Parser[R]
 
   /**
-   * Wraps this in a [[Parser.Not]] for negative lookaheal
+   * Wraps this in a [[Parser.Not]] for negative lookaheak
    */
-  def unary_! = Parser.Not(this)
+  def unary_! : Parser[_]
 
   /**
    * Used to capture the text parsed by this as a `String`
    */
-  def ! = Parser.Capturing(this)
+  def ! : Parser[_]
 
   /**
    * Transforms the result of this Parser with the given function
    */
+  def map[V](f: T => V): Parser[V]
+}
+
+trait ParserApiImpl[+T] extends ParserApi[T]{ this: Parser[T] =>
+  import Implicits._
+  def parseRec(cfg: ParseCtx, index: Int): Result[T]
+
+  def log(msg: String)(implicit output: Logger) = Parser.Logged(this, msg, output.f)
+
+  def rep[R](implicit ev: Repeater[T, R]): Parser[R] = Parser.Repeat(this, 0, Parser.Pass)
+  def rep1[R](implicit ev: Repeater[T, R]): Parser[R] = Parser.Repeat(this, 1, Parser.Pass)
+  def rep[R](delimiter: Parser[_])(implicit ev: Repeater[T, R]): Parser[R] = Parser.Repeat(this, 0, delimiter)
+  def rep1[R](delimiter: Parser[_])(implicit ev: Repeater[T, R]): Parser[R] = Parser.Repeat(this, 1, delimiter)
+
+  def |[V >: T](p: Parser[V]): Parser[V] = Parser.Either[V](Parser.Either.flatten(Vector(this, p)):_*)
+
+  def ~[V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R] =
+    Parser.Sequence.flatten(Parser.Sequence(this, p, cut=false).asInstanceOf[Parser.Sequence[R, R, R]])
+  def ~![V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R] =
+    Parser.Sequence.flatten(Parser.Sequence(this, p, cut=true).asInstanceOf[Parser.Sequence[R, R, R]])
+
+  def ?[R](implicit ev: Optioner[T, R]) = Parser.Optional(this)
+
+  def unary_! = Parser.Not(this)
+
+  def ! = Parser.Capturing(this)
+
   def map[V](f: T => V): Parser[V] = Parser.Mapper(this, f)
 
   protected def fail(f: Failure.Mutable, index: Int, cut: Boolean = false) = {

@@ -280,9 +280,18 @@
 
             @hl.ref(main/"Parsing.scala", "trait Parser", "trait ParserApi")
             @p
-                As you can see, apart from the @hl.scala{input} parameter, there are a few parameters that you can use to configure the parse.
+                The main external API is @hl.scala{.parse}. As you can see, apart from the @hl.scala{input} parameter, there are a few parameters that you can use to configure the parse. Apart from that, each @hl.scala{Parser[T]} needs to implement @hl.scala{parseRec} which is a less-convenient but more-performant version that FastParse uses internally when performing a parse.
             @p
                 Although the core of @sect.ref{Parser[T]} is simple, a lot of additional functionality is included in the @hl.scala{ParserApi[T]} trait in order to make constructing parsers convenient and concise.
+
+        @sect{ParserApi[T]}
+            @p
+                Apart from the core @hl.scala{Parser}, FastParse includes a large set of operations that you can perform on a @hl.scala{Parser} to make composing them more pleasant. These all live in @hl.scala{ParserApi}:
+
+            @hl.ref(main/"Parsing.scala", "trait ParserApi", "trait ParserApiImpl")
+            
+            @p
+                There are essentially all short-hand constructors for the parsers in the @hl.scala{object Parser} companion. This is the list of operators that you have available when writing your own parsers using FastParse.
 
         @sect{Results}
             @p
@@ -294,6 +303,71 @@
             @hl.ref(main/"Parsing.scala", "trait Success", "object Success")
             @hl.ref(main/"Parsing.scala", "trait Failure", "object Failure")
 
+    @sect{Performance}
+        ...
+    @sect{Internals}
+        @p 
+            FastParse's internals are straightforward, at less than 1000 lines of code. Nonetheless, its design is unlike any other combinator library I've seen: externally immutable, pure-functional parser-combinators with mutable, highly-optimized internals.
+
+        @sect{Fast Interpreter}
+            @p
+                FastParse is designed as a fast, immutable interpreter. That means
+            @ul
+                @li
+                    It does not do significant transformations of the grammar. The structure of the parser you define is the structure that will run. No transformation at compile time, no transformations at run-time.
+                @li
+                    It provides fast primitives like @sect.ref{CharsWhile}, that you can drop in many places to speed up otherwise slow bulk operations (e.g. parsing whitespace, identifiers).
+                @li
+                    Error reported is straightforward: the last index that it does not backtrack out of is the index that is reported, and the parser at that point is the parser that is reported.
+
+            @p
+                In theory, it could be possible to perform either compile-time or initialization-time (before actually parsing) optimizations on the parser to improve performance. So far, I have not managed to find a scheme that has a significant improvement at an acceptable cost in terms of complexity. Apart from trivial de-sugarings (e.g. merging together @hl.scala{(p1 | p2) | p3} into a single @hl.scala{Either} node) what you write is what gets run
+
+        @sect{External Immutabiliy}
+
+            @p
+                FastParse presents a pure-functional, immutable external API to the user. That means that you can call @hl.scala{Parser[T]#parse} and not worry about having to set up neccessary state or instantiating objects. You take a @hl.scala{Parser[T]}, call @hl.scala{.parse}, and get a @hl.scala{Success[T]} or @hl.scala{Failure}
+
+            @p
+                However, immutability poses a challenge: immutability usually involves lots of "copy & update" operations rather than "mutation" operations, and on the JVM that means excessive garbage generation and collection. This is harmful for performance.
+
+            @p
+                Thus FastParse performs some tricks internally to save allocations: the immutable @hl.scala{Parser.Success} and @hl.scala{Parser.Failure} result types are actually interfaces hiding @hl.scala{Parser.Success.Mutable} and @hl.scala{Parser.Failure.Mutable} implementations, which have entirely mutable fields. 
+
+            @p
+                This means that the same @hl.scala{Parser.Success.Mutable} and @hl.scala{Parser.Failure.Mutable} objects are shared throughout an entire parsing run, mutated as the parse progresses, while the external user only sees an immutable facade. This also means that a run of the large-and-complex @sect.ref{scalaparser} on a hundreds-of-kb source file results in exactly @i{three} allocations in all: one @hl.scala{Parser.Success.Mutable}, one @hl.scala{Parser.Failure.Mutable}, and one @hl.scala{Ctx} object holding them together. 
+
+        @sect{Internal Optimizations}
+            @p
+                FastParse does some things that take advantage of the type-directed nature of the result-aggregation: while @hl.scala{Parser[T].rep} returns a @hl.scala{Parser[Seq[T]]} for an arbitrary @hl.scala{T}, there is a short circuit such that @hl.scala{Parser[Unit].rep} simple returns @hl.scala{Parser[Unit]}. This lets the common case of "parsing things, not caring about the result" avoid the allocation, while still allowing you to stick some other type in there (e.g. @hl.scala{Any}) if you really do care about the bucket-of-@hl.scala{Unit}s.
+
+            @p
+                FastParse also takes advantage of the fact that @hl.scala{Parser}s are immutable. That makes it feasible to make instantiation mildly-expensive, since each one only gets instantiated once rather than per-parse. As an example, @sect.ref{CharIn}, @sect.ref{CharPred} and @sect.ref{CharsWhile} all have their predicate converted to an identical bit-set to make character lookups extremely fast. Similarly, @sect.ref{StringIn} gets converted into a Trie in order to allow one-pass matching of dozens of strings at the same time. 
+            @p
+                These operations are not cheap: the bitsets easily take a few KB of memory each, and involve 65k iterations to fill them in. However, since @hl.scala{Parser}s are immutable, this one-time-cost goes from "ridiculous" to "acceptable". All these internal optimizations are completely opaque to the user, who (apart from performance) never need to think about them.
+
+
+    @sect{Comparisons}
+        @p    
+            FastParse differs from all other parser-combinator libraries in the Scala universe, in quite substantial ways:
+
+        @ul
+            @li
+                Compared to @a("Parboiled2", href:="https://github.com/sirthias/parboiled2"), FastParse does not use macros to compile-time-generate fast parser code. Rather, it acts as an efficient interpreter, sacrificing a small amount of speed (with a factor of 2) for huge amounts of usability. Parboiled2 in particular has @a("usability problems and bugs", href:="https://groups.google.com/forum/#!msg/scala-internals/4N-uK5YOtKI/9vAdsH1VhqAJ") that make it excruciating difficult to use, and also does not support higher-order rules. FastParse suffers from none of these problems.
+            @li
+                @a("Parboiled1", href:="https://github.com/sirthias/parboiled/wiki") is a Java library, and does not/cannot work on Scala.js
+            @li
+                @a("scala-parser-combinators", href:="https://github.com/scala/scala-parser-combinators") is similar, but poorly executed. It is ~100x slower than FastParse, has an awkward inheritance-based API, and is full of bugs despite being half a decade old. FastParse is faster, has self-contained pure-functional parsers, and fixes bugs e.g. by having the @hl.scala{.log} operator actually work.
 
     @sect{scalaparser}
         @p
+            scalaparser is a parser for the entire Scala programming language, written using FastParse. This is notable for a few reasons:
+
+        @ul
+            @li
+                scalaparser is about 700 lines of code, making it about 1/10th the size of the default parser in @hl.scala{tools.nsc.Global}
+            @li
+                scalaparser runs about 1/8th the speed of of the default parser in @hl.scala{tools.nsc.Global}
+            @li
+                scalaparser has excellent error reporting due to proper use of @sect.ref{Cuts}, without any code explicitly dedicated to error reporting
+
