@@ -63,6 +63,6 @@ object Scala extends Core with Types with Exprs with Xml{
   val TopPkgSeq = P( (`package` ~ QualId ~ !(WS ~ "{")).rep1(Semis) )
   val CompilationUnit: P0 = {
     val Body = P( TopPkgSeq ~ (Semis ~ TopStatSeq).? | TopStatSeq )
-    P( Semis.? ~ Body.? ~ Semis.? ~ WL ~ Parser.End)
+    P( Semis.? ~ Body.? ~ Semis.? ~ WL ~ End)
   }
 }

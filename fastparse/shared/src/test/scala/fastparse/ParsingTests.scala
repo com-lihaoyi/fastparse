@@ -1,5 +1,6 @@
 package fastparse
 
+import fastparse.core.Result
 import utest._
 
 object ParsingTests extends TestSuite{

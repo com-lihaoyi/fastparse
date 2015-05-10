@@ -1,5 +1,5 @@
 package fastparse
-
+import acyclic.file
 import scala.annotation.implicitNotFound
 
 @implicitNotFound("You need to specify an implicit logger, e.g. `import fastparse.Logger.stdout`")

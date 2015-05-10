@@ -1,6 +1,6 @@
 package scalaparse
 
-import fastparse.Result
+import fastparse.core.Result
 import utest._
 
 /**
@@ -12,7 +12,7 @@ object TestUtil {
 //    println(input)
     Scala.CompilationUnit.parse(input) match{
       case f: Result.Failure =>
-        val fastparse.Result.Frame(index, parser) = f.stack.last
+        val Result.Frame(index, parser) = f.stack.last
         val parsedFound = input.slice(index, index + 10)
         val stack = f.trace
         assert(

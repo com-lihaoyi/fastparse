@@ -13,12 +13,12 @@ object Basic {
   val Digit = P( CharIn(digits) )
   val hexDigits = digits + "abcdefABCDEF"
   val HexDigit = P( CharIn(hexDigits) )
-  val HexNum = P( "0x" ~ CharsWhile(hexDigits.contains(_), min = 1) )
-  val DecNum = P( CharsWhile(digits.contains(_), min = 1) )
+  val HexNum = P( "0x" ~ CharsWhile(hexDigits.contains(_)) )
+  val DecNum = P( CharsWhile(digits.contains(_)) )
   val Exp = P( CharIn("Ee") ~ CharIn("+-").? ~ DecNum )
   val FloatType = P( CharIn("fFdD") )
 
-  val WSChars = P( CharsWhile("\u0020\u0009".contains(_), min = 1) )
+  val WSChars = P( CharsWhile("\u0020\u0009".contains(_)) )
   val Newline = P( StringIn("\r\n", "\n") )
   val Semi = P( ";" | Newline.rep1 )
   val OpChar = P ( CharPred(isOpChar) )

@@ -23,8 +23,8 @@ trait Exprs extends Core with Types with Xml{
 
   class WsCtx(curlyBlock: Boolean){
 
-    val OneSemiMax = if (curlyBlock) OneNLMax else Parser.Pass
-    val NoSemis = if (curlyBlock) NotNewline else Parser.Pass
+    val OneSemiMax = if (curlyBlock) OneNLMax else Pass
+    val NoSemis = if (curlyBlock) NotNewline else Pass
 
     val Enumerators = {
       val Generator = P( `<-` ~! Expr ~ Guard.? )

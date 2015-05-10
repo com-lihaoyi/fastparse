@@ -1,6 +1,7 @@
 package fastparse
 
 
+import fastparse.core.Result
 import utest._
 
 /**
@@ -35,8 +36,8 @@ object JsonTests extends TestSuite{
   }
 
   // Here is the parser
-  val space         = P( CharsWhile(" \n".contains(_)) )
-  val digits        = P( CharsWhile('0' to '9' contains (_), min = 1))
+  val space         = P( CharsWhile(" \n".contains(_)).? )
+  val digits        = P( CharsWhile('0' to '9' contains (_)))
   val exponent      = P( CharIn("eE") ~ CharIn("+-").? ~ digits )
   val fractional    = P( "." ~ digits )
   val integral      = P( "0" | CharIn('1' to '9') ~ digits.? )
@@ -53,7 +54,7 @@ object JsonTests extends TestSuite{
   val unicodeEscape = P( "u" ~ hexDigit ~ hexDigit ~ hexDigit ~ hexDigit )
   val escape        = P( "\\" ~ (CharIn("\"/\\bfnrt") | unicodeEscape) )
 
-  val strChars = P( CharsWhile(!"\"\\".contains(_), min = 1) )
+  val strChars = P( CharsWhile(!"\"\\".contains(_)) )
   val string =
     P( space ~ "\"" ~! (strChars | escape).rep.! ~ "\"").map(Js.Str)
 

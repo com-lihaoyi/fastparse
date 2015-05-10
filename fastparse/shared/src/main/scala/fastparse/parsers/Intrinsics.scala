@@ -1,6 +1,8 @@
-package fastparse
-import acyclic.file
+package fastparse.parsers
+
 import fastparse.Utils._
+import fastparse.core.{ParseCtx, Result}
+import fastparse.{Parser, Utils}
 
 import scala.annotation.tailrec
 
@@ -38,7 +40,7 @@ object Intrinsics {
    * Keeps consuming characters until the predicate [[pred]] becomes false.
    * Functionally equivalent to using `.rep` and [[CharPred]], but much faster.
    */
-  case class CharsWhile(pred: Char => Boolean, min: Int = 0) extends Parser[Unit]{
+  case class CharsWhile(pred: Char => Boolean, min: Int = 1) extends Parser[Unit]{
     private[this] val uberSet = CharBitSet((Char.MinValue to Char.MaxValue).filter(pred))
 
     def parseRec(cfg: ParseCtx, index: Int) = {

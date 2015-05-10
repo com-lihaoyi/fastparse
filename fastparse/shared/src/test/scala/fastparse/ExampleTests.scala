@@ -1,6 +1,7 @@
 package fastparse
 
 
+import fastparse.core.Result
 import utest._
 
 /**
@@ -76,6 +77,15 @@ object ExampleTests extends TestSuite{
 
       }
 
+      'passfail{
+        val Result.Success((), 0) = Pass.parse("asdad")
+        val Result.Failure(Fail, 0) = Fail.parse("asdad")
+      }
+
+      'index{
+        val finder = P( "hay".rep ~ Index ~ "needle" ~ "hay".rep )
+        val Result.Success(9, _) = finder.parse("hayhayhayneedlehay")
+      }
 
       'capturing{
         val capture1 = P( "a".rep.! ~ "b" ~ End)
@@ -118,6 +128,18 @@ object ExampleTests extends TestSuite{
         val binaryNum = P( binary.map(Integer.parseInt(_, 2)) )
         val Result.Success("1100", _) = binary.parse("1100")
         val Result.Success(12, _) = binaryNum.parse("1100")
+      }
+      'flatMap{
+        val leftTag = P( "<" ~ (!">" ~ AnyChar).rep1.! ~ ">" )
+        def rightTag(s: String) = P( "</" ~ s.! ~ ">" )
+        val xml = P( leftTag.flatMap(rightTag) )
+
+        val Result.Success("a", _) = xml.parse("<a></a>")
+        val Result.Success("abcde", _) = xml.parse("<abcde></abcde>")
+        val failure = xml.parse("<abcde></edcba>").asInstanceOf[Result.Failure]
+        assert(
+          failure.trace == """xml:0 / rightTag:7 / "abcde":9 ..."edcba>""""
+        )
       }
     }
     'charX{

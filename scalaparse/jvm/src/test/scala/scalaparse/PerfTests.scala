@@ -6,7 +6,7 @@ import scala.tools.nsc.{Global, Settings}
 
 object PerfTests extends TestSuite{
   val genJsCodeSource = scala.io.Source.fromInputStream(
-    getClass.getResourceAsStream("/scalaparser/GenJSCode.scala")
+    getClass.getResourceAsStream("/scalaparse/GenJSCode.scala")
   ).mkString
   val tests = TestSuite{
     'GenJSCode{

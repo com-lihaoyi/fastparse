@@ -1,7 +1,6 @@
 package fastparse
-
+import acyclic.file
 import scala.collection.mutable
-import scala.runtime.IntRef
 
 /**
  * Container for all the type-level logic around appending things

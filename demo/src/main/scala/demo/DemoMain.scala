@@ -1,6 +1,7 @@
 package demo
 
 import fastparse.Parser
+import fastparse.core.Result
 import org.scalajs.dom
 import org.scalajs.dom.html
 
@@ -69,14 +70,14 @@ object DemoMain {
     def recalc() = {
       inputBox.rows = inputBox.value.lines.length
       val details = parser.parse(inputBox.value) match{
-        case s: fastparse.Result.Success[_] =>
+        case s: Result.Success[_] =>
           table(
             width := "100%",
             tr(td("Success!")),
             tr(td("value:"), td(code(s.value.toString)))
           )
 
-        case f: fastparse.Result.Failure =>
+        case f: Result.Failure =>
           val pretty = fastparse.Utils.literalize(f.input.slice(f.index, f.index + 15)).toString
           table(
             width := "100%",

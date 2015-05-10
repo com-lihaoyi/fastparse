@@ -81,15 +81,15 @@ object MiscTests extends TestSuite{
     }
     'flattening{
       'either{
-        val E = Parser.Either
+        val E = parsers.Combinators.Either
         assert(("A" | "B" | "C" | "D") == E("A", "B", "C", "D"))
         assert((("A" | "B") | ("C" | "D")) == E("A", "B", "C", "D"))
         assert(("A" | ("B" | ("C" | "D"))) == E("A", "B", "C", "D"))
       }
       'sequence{
-        val S = Parser.Sequence
-        val F = Parser.Sequence.Flat
-        def C(p: P0, b: Boolean = false) = Parser.Sequence.Chain(p, b)(null)
+        val S = parsers.Combinators.Sequence
+        val F = parsers.Combinators.Sequence.Flat
+        def C(p: P0, b: Boolean = false) = parsers.Combinators.Sequence.Chain(p, b)(null)
         assert(
           ("A" ~ "B" ~ "C" ~ "D") == F("A", Vector(C("B"), C("C"), C("D"))),
           (("A" ~ "B") ~ ("C" ~ "D")) == F("A", Vector(C("B"), C(F("C", Vector(C("D"))))))

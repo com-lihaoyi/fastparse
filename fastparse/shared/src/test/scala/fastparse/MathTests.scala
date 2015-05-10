@@ -1,6 +1,6 @@
 package fastparse
 
-import fastparse.Result
+import fastparse.core.Result
 import utest._
 
 /**

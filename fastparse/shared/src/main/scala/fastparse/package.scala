@@ -1,29 +1,31 @@
-import scala.collection.BitSet
+import fastparse.parsers.Intrinsics
+
+
 import scala.language.experimental.macros
 package object fastparse {
   implicit def enclosingFunctionName: Utils.FuncName = macro Utils.FuncName.impl
 
-  val Pass = Parser.Pass
-  val Fail = Parser.Fail
-  val Start = Parser.Start
-  val End = Parser.End
+  val Pass = parsers.Terminals.Pass
+  val Fail = parsers.Terminals.Fail
+  val Start = parsers.Terminals.Start
+  val End = parsers.Terminals.End
+  val Index = parsers.Terminals.Index
+  val AnyChar = parsers.Terminals.AnyChar
+
   val CharPred = Intrinsics.CharPred
   val CharIn = Intrinsics.CharIn
   val CharsWhile = Intrinsics.CharsWhile
   val StringIn = Intrinsics.StringIn
-  val AnyChar = Parser.AnyChar
 
-  object &{
-    def apply(p: Parser[_]): Parser[Unit]  = Parser.Lookahead(p)
-    def unapply(p: Parser[_]): Option[Parser[_]] = p match{
-      case Parser.Lookahead(p) => Some(p)
-      case _ => None
-    }
-  }
+  val & = parsers.Combinators.Lookahead
 
-  implicit def wspStr(s: String) = if (s.length == 0) Parser.CharLiteral(s(0)) else Parser.Literal(s)
+  implicit def wspStr(s: String) =
+    if (s.length == 0) parsers.Terminals.CharLiteral(s(0))
+    else parsers.Terminals.Literal(s)
 
-  def P[T](p: => Parser[T])(implicit name: Utils.FuncName): Parser[T] = Parser.Rule(name.name, () => p)
+  def P[T](p: => Parser[T])(implicit name: Utils.FuncName): Parser[T] =
+    parsers.Combinators.Rule(name.name, () => p)
+
   type P0 = Parser[Unit]
 
   type P[+T] = Parser[T]

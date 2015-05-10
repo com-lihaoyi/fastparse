@@ -5,23 +5,22 @@ import fastparse._
 import Basic._
 object Identifiers{
 
-  val Operator = P( !Keywords ~ CharsWhile(isOpChar, min = 1) )
+  val Operator = P( !Keywords ~ CharsWhile(isOpChar) )
 
   val VarId = VarId0(true)
 
   def VarId0(dollar: Boolean) = P( !Keywords ~ Lower ~ IdRest(dollar) )
   val PlainId = P( !Keywords ~ Upper ~ IdRest(true) | VarId | Operator ~ !OpChar )
   val PlainIdNoDollar = P( !Keywords ~ Upper ~ IdRest(false) | VarId0(false) | Operator )
-  val BacktickId = P( "`" ~ CharsWhile(_ != '`', min = 1) ~ "`" )
+  val BacktickId = P( "`" ~ CharsWhile(_ != '`') ~ "`" )
   val Id: P0 = P( BacktickId | PlainId )
 
   def IdRest(allowDollar: Boolean) = {
     val NonLetterDigitId = if(!allowDollar) "" else "$"
     val IdUnderscoreChunk = P( CharsWhile(_ ==  '_', min = 0) ~ CharsWhile(
-      c => NonLetterDigitId.contains(c) || CharPredicates.isLetter(c) || CharPredicates.isDigit(c),
-      min = 1
+      c => NonLetterDigitId.contains(c) || CharPredicates.isLetter(c) || CharPredicates.isDigit(c)
     ) )
-    P( IdUnderscoreChunk.rep ~ (CharsWhile(_ == '_', min = 1) ~ CharsWhile(isOpChar)).? )
+    P( IdUnderscoreChunk.rep ~ (CharsWhile(_ == '_') ~ CharsWhile(isOpChar, min = 0)).? )
   }
 
   val alphaKeywords = Seq(

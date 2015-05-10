@@ -1,6 +1,7 @@
 package fastparse
 
 import fastparse.JsonTests._
+import fastparse.core.Result
 import utest._
 /**
  * Parse the JSON from the parboiled2 testsuite and make

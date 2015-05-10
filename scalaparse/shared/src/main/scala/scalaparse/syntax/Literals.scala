@@ -24,9 +24,10 @@ trait Literals { l =>
     // Comments cannot have cuts in them, because they appear before every
     // terminal node. That means that a comment before any terminal will
     // prevent any backtracking from working, which is not what we want!
-    val CommentChunk = P( CharsWhile(!"/*".contains(_), min = 1) | MultilineComment | !"*/" ~ Parser.AnyChar )
+    val CommentChunk = P( CharsWhile(!"/*".contains(_)) | MultilineComment | !"*/" ~ AnyChar )
     val MultilineComment: P0 = P( "/*" ~ CommentChunk.rep ~ "*/" )
-    val LineComment = P( "//" ~ (CharsWhile(!"\n\r".contains(_), min = 1) | !Basic.Newline ~ Parser.AnyChar).rep ~ &(Basic.Newline | Parser.End) )
+    val SameLineCharChunks = P( CharsWhile(!"\n\r".contains(_))  | !Basic.Newline ~ AnyChar )
+    val LineComment = P( "//" ~ SameLineCharChunks.rep ~ &(Basic.Newline | End) )
     val Comment: P0 = P( MultilineComment | LineComment )
 
     val Null = Key.W("null")
@@ -47,7 +48,7 @@ trait Literals { l =>
     class InterpCtx(interp: Option[P0]){
       val Literal = P( ("-".? ~ (Float | Int)) | Bool | String | "'" ~! (Char | Symbol) | Null )
       val Interp = interp match{
-        case None => Parser.Fail
+        case None => Fail
         case Some(p) => "$" ~ Identifiers.PlainIdNoDollar | ("${" ~ p ~ WL ~ "}") | "$$"
       }
 
@@ -59,10 +60,10 @@ trait Literals { l =>
        * it's a "real" escape sequence: worst come to worst it turns out
        * to be a dud and we go back into a CharsChunk next rep
        */
-      val CharsChunk = CharsWhile(!"\n\"\\$".contains(_), min = 1)
-      val TripleChars = P( (CharsChunk | Interp | "\"".? ~ "\"".? ~ !"\"" ~ Parser.AnyChar).rep )
+      val CharsChunk = CharsWhile(!"\n\"\\$".contains(_))
+      val TripleChars = P( (CharsChunk | Interp | "\"".? ~ "\"".? ~ !"\"" ~ AnyChar).rep )
       val TripleTail = P( TQ ~ "\"".rep )
-      val SingleChars = P( (CharsChunk | Interp | EscapedChars | !CharIn("\n\"") ~ Parser.AnyChar).rep )
+      val SingleChars = P( (CharsChunk | Interp | EscapedChars | !CharIn("\n\"") ~ AnyChar).rep )
       val String = {
         P {
           (Id ~ TQ ~! TripleChars ~ TripleTail) |
