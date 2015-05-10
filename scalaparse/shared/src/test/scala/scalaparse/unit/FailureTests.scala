@@ -31,6 +31,15 @@ object FailureTests extends TestSuite{
       found = "\n  } yiel"
     )
     * - checkNeg(
+      """object O{
+        | def from(n: Long, c: Int = 0): Int =
+        |  if (n == 1) c + 1 else
+        |}
+      """.stripMargin,
+      expected = """(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | SmallerExprOrLambda)""",
+      found = ""
+    )
+    * - checkNeg(
       "import scala.util.{Failure, Success + 1}",
       expected = """ "}" """,
       found = "+ 1}"

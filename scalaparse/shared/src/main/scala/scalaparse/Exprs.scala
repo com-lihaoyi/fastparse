@@ -35,7 +35,7 @@ trait Exprs extends Core with Types with Xml{
 
     val Expr: P0 = {
       val If = {
-        val Else = P( Semi.? ~ `else` ~ Expr )
+        val Else = P( Semi.? ~ `else` ~! Expr )
         P( `if` ~! "(" ~ ExprCtx.Expr ~ ")" ~ Expr ~ Else.? )
       }
       val While = P( `while` ~! "(" ~ Expr ~ ")" ~ Expr )
