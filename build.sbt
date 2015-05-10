@@ -79,19 +79,20 @@ lazy val demo = project.enablePlugins(ScalaJSPlugin)
   .settings(
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.8.0",
     libraryDependencies += "com.lihaoyi" %%% "scalatags" % "0.5.1",
-    emitSourceMaps := false
+    emitSourceMaps := false,
+    publishArtifact := false,
+    publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
   )
 lazy val readme = scalatex.ScalatexReadme(
-  folder = "readme",
+  projectId = "readme",
+  wd = file(""),
   url = "https://github.com/lihaoyi/fastparse/tree/master",
   source = "Readme",
-  targetFolder = "target/site",
   autoResources = List("demo-fastopt.js")
 ).settings(
   (resources in Compile) += {
     (fastOptJS in (demo, Compile)).value
     (artifactPath in (demo,  Compile, fastOptJS)).value
-
   },
   (unmanagedSources in Compile) += baseDirectory.value/".."/"project"/"repo.scala",
   publishArtifact := false,

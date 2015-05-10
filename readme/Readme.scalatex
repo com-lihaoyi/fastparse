@@ -475,4 +475,3 @@
             @hl.scala(s"""
                 "com.lihaoyi" %%% "scalaparse" % "${repo.version}"
             """)
-Moo Moo
