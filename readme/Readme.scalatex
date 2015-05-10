@@ -82,6 +82,19 @@
                 @p
                     There is also a similar @hl.scala{Start} parser, which only succeeds at the start of the input
                 @hl.ref(tests/"ExampleTests.scala", Seq("'start", ""))
+
+            @sect{Pass, Fail}
+                @hl.ref(tests/"ExampleTests.scala", Seq("'passfail", ""))
+
+                @p
+                    These two parsers always succeed, or always fail, respectively. Neither consumes any input.
+
+            @sect{Index}
+                @hl.ref(tests/"ExampleTests.scala", Seq("'index", ""))
+
+                @p
+                    Always succeeds, and provides the current index of the parse into the input string. e.g. useful for providing source locations for AST nodes. Consumes no input.
+                    
             @sect{Capturing}
                 @hl.ref(tests/"ExampleTests.scala", Seq("'capturing", ""))
                 @p
@@ -131,7 +144,15 @@
                         @hl.scala{Parser[Seq[String]]}, @hl.scala{Parser[Option[String]]}: capturing things in @hl.scala{.rep} and @hl.scala{.?}
 
                 @p
-                    @hl.scala{.map} lets you convert an arbitrary @hl.scala{Parser[T]} into a @hl.scala{Parser[V]} by providing a @hl.scala{T => V} function. This is useful for converting the strings and tuples/seqs/options of strings into more useful data-structures
+                    @hl.scala{.map} lets you convert an arbitrary @hl.scala{Parser[T]} into a @hl.scala{Parser[V]} by providing a @hl.scala{T => V} function. This is useful for converting the strings and tuples/seqs/options of strings into more useful data-structures.
+            @sect{FlatMap}  
+                @hl.ref(tests/"ExampleTests.scala", Seq("'flatMap", ""))
+
+                @p
+                    @hl.scala{.flatMap} allows you to dynamically choose a parser to continue with, given the result of the current parser. The example above uses it to parse balanced XML tags. @hl.scala{.flatMap} can be used to parse indentation-based grammars, and is used to do so in @a("Scalatex", href:="http://lihaoyi.github.io/Scalatex/").
+
+                @p
+                    Note that the function given to @hl.scala{.flatMap} is evaluated every time this parser is tried. You should be conscious of the cost of re-creating the resultant parser every time, since FastParse parsers are somewhat expensive to initialize despite being fast per-run. If possible, store the parsers somewhere before-hand or memo-ize/cache them to avoid initializing them wastefully.
         @sect{Intrinsics}
             @p
                 In theory, all possible parsers can be put together using the above tools. In practice, a few more tools are provided for convenience or performance:
@@ -304,7 +325,7 @@
             @p
                 Fastparse revolves around @hl.scala{Parser[T]}s: a parser that can attempt to parser a value @hl.scala{T} from an input string. These are defined as:
 
-            @hl.ref(main/"Parsing.scala", "trait Parser", "trait ParserApi")
+            @hl.ref(main/'core/"Parsing.scala", "trait Parser", "trait ParserApi")
             @p
                 The main external API is @hl.scala{.parse}. As you can see, apart from the @hl.scala{input} parameter, there are a few parameters that you can use to configure the parse. Apart from that, each @hl.scala{Parser[T]} needs to implement @hl.scala{parseRec} which is a less-convenient but more-performant version that FastParse uses internally when performing a parse.
             @p
@@ -314,7 +335,7 @@
             @p
                 Apart from the core @hl.scala{Parser}, FastParse includes a large set of operations that you can perform on a @hl.scala{Parser} to make composing them more pleasant. These all live in @hl.scala{ParserApi}:
 
-            @hl.ref(main/"Parsing.scala", "trait ParserApi", "trait ParserApiImpl")
+            @hl.ref(main/'core/"Parsing.scala", "trait ParserApi", "trait ParserApiImpl")
             
             @p
                 There are essentially all short-hand constructors for the parsers in the @hl.scala{object Parser} companion. This is the list of operators that you have available when writing your own parsers using FastParse.
@@ -326,8 +347,8 @@
             @p
                 Apart from that, @hl.scala{Result}s also provide other useful information about a parse:
 
-            @hl.ref(main/"Parsing.scala", "trait Success", "object Success")
-            @hl.ref(main/"Parsing.scala", "trait Failure", "object Failure")
+            @hl.ref(main/'core/"Parsing.scala", "trait Success", "object Success")
+            @hl.ref(main/'core/"Parsing.scala", "trait Failure", "object Failure")
 
     @sect{Performance}
         @p

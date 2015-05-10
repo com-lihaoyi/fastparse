@@ -96,7 +96,7 @@ object Terminals {
   /**
    * Always succeeds, and provides the current index of the
    * parse into the input string. e.g. useful for providing
-   * source locations for AST nodes.
+   * source locations for AST nodes. Consumes no input.
    */
   case object Index extends fastparse.Parser[Int]{
     def parseRec(cfg: ParseCtx, index: Int) = {

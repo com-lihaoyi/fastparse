@@ -5,6 +5,8 @@ import scala.language.experimental.macros
 package object fastparse {
   implicit def enclosingFunctionName: Utils.FuncName = macro Utils.FuncName.impl
 
+  val Result = core.Result
+
   val Pass = parsers.Terminals.Pass
   val Fail = parsers.Terminals.Fail
   val Start = parsers.Terminals.Start

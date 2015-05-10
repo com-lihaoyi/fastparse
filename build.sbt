@@ -83,18 +83,18 @@ lazy val demo = project.enablePlugins(ScalaJSPlugin)
     publishArtifact := false,
     publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
   )
-//lazy val readme = scalatex.ScalatexReadme(
-//  projectId = "readme",
-//  wd = file(""),
-//  url = "https://github.com/lihaoyi/fastparse/tree/master",
-//  source = "Readme",
-//  autoResources = List("demo-fastopt.js")
-//).settings(
-//  (resources in Compile) += {
-//    (fastOptJS in (demo, Compile)).value
-//    (artifactPath in (demo,  Compile, fastOptJS)).value
-//  },
-//  (unmanagedSources in Compile) += baseDirectory.value/".."/"project"/"repo.scala",
-//  publishArtifact := false,
-//  publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
-//)
+lazy val readme = scalatex.ScalatexReadme(
+  projectId = "readme",
+  wd = file(""),
+  url = "https://github.com/lihaoyi/fastparse/tree/master",
+  source = "Readme",
+  autoResources = List("demo-fastopt.js")
+).settings(
+  (resources in Compile) += {
+    (fastOptJS in (demo, Compile)).value
+    (artifactPath in (demo,  Compile, fastOptJS)).value
+  },
+  (unmanagedSources in Compile) += baseDirectory.value/".."/"project"/"repo.scala",
+  publishArtifact := false,
+  publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
+)

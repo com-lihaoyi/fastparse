@@ -1,7 +1,6 @@
 package fastparse
 
 
-import fastparse.core.Result
 import utest._
 
 /**
@@ -29,6 +28,7 @@ object ExampleTests extends TestSuite{
 
       'sequence {
         val ab = P( "a" ~ "b" )
+
         val Result.Success(_, 2) = ab.parse("ab")
 
         val Result.Failure(parser, 1) = ab.parse("aa")
@@ -36,11 +36,12 @@ object ExampleTests extends TestSuite{
       }
       'repeat{
         val ab = P( "a".rep ~ "b" )
-        val Result.Success(_, 8) = ab.parse("aaaaaaab")
 
+        val Result.Success(_, 8) = ab.parse("aaaaaaab")
         val Result.Success(_, 4) = ab.parse("aaaba")
 
         val abc = P( "a".rep("b") ~ "c").log("A")
+
         val Result.Success(_, 8) = abc.parse("abababac")
 
         val Result.Failure(parser, 3) = abc.parse("abaabac")
@@ -48,28 +49,31 @@ object ExampleTests extends TestSuite{
 
       'option{
         val option = P( "c".? ~ "a".rep("b").! ~ End)
+
         val Result.Success("aba", 3) = option.parse("aba")
         val Result.Success("aba", 3) = option.parse("aba")
       }
 
       'either{
         val either = P( "a".rep ~ ("b" | "c" | "d") ~ End)
+
         val Result.Success(_, 6) = either.parse("aaaaab")
         val Result.Failure(parser, 5) = either.parse("aaaaae")
         assert(parser == ("b" | "c" | "d"))
-
       }
 
 
       'end{
         val noEnd = P( "a".rep ~ "b")
         val withEnd = P( "a".rep ~ "b" ~ End)
+
         val Result.Success(_, 4) = noEnd.parse("aaaba")
         val Result.Failure(End, 4) = withEnd.parse("aaaba")
 
       }
       'start{
         val ab = P( (("a" | Start) ~ "b").rep ~ End).!
+
         val Result.Success("abab", 4) = ab.parse("abab")
         val Result.Success("babab", 5) = ab.parse("babab")
 
@@ -84,28 +88,36 @@ object ExampleTests extends TestSuite{
 
       'index{
         val finder = P( "hay".rep ~ Index ~ "needle" ~ "hay".rep )
+
         val Result.Success(9, _) = finder.parse("hayhayhayneedlehay")
       }
 
       'capturing{
         val capture1 = P( "a".rep.! ~ "b" ~ End)
+
         val Result.Success("aaa", 4) = capture1.parse("aaab")
 
         val capture2 = P( "a".rep.! ~ "b".! ~ End)
-        val s @ Result.Success(("aaa", "b"), 4) = capture2.parse("aaab")
+
+        val Result.Success(("aaa", "b"), 4) = capture2.parse("aaab")
 
         val capture3 = P( "a".rep.! ~ "b".! ~ "c".! ~ End)
+
         val Result.Success(("aaa", "b", "c"), 5) = capture3.parse("aaabc")
 
         val captureRep = P( "a".!.rep ~ "b" ~ End)
+
         val Result.Success(Seq("a", "a", "a"), 4) = captureRep.parse("aaab")
 
         val captureOpt = P( "a".rep ~ "b".!.? ~ End)
+
         val Result.Success(Some("b"), 4) = captureOpt.parse("aaab")
       }
       'anychar{
         val ab = P( "'" ~ AnyChar.! ~ "'" )
+
         val Result.Success("-", 3) = ab.parse("'-'")
+
         val Result.Failure(parser, 2) = ab.parse("'-='")
         assert(parser == ("'": P0))
       }
@@ -113,19 +125,23 @@ object ExampleTests extends TestSuite{
 
       'lookahead{
         val keyword = P( ("hello" ~ &(" ")).!.rep )
+
         val Result.Success(Seq("hello"), _) = keyword.parse("hello ")
         val Result.Success(Seq(), __) = keyword.parse("helloX")
       }
       'neglookahead{
         val keyword = P( "hello" ~ !" " ~ AnyChar ~ "world" ).!
+
         val Result.Success("hello-world", _) = keyword.parse("hello-world")
         val Result.Success("hello_world", _) = keyword.parse("hello_world")
+
         val Result.Failure(parser, 6) = keyword.parse("hello world")
         assert(parser == !(" "))
       }
       'map{
         val binary = P( ("0" | "1" ).rep.! )
         val binaryNum = P( binary.map(Integer.parseInt(_, 2)) )
+
         val Result.Success("1100", _) = binary.parse("1100")
         val Result.Success(12, _) = binaryNum.parse("1100")
       }
@@ -136,6 +152,7 @@ object ExampleTests extends TestSuite{
 
         val Result.Success("a", _) = xml.parse("<a></a>")
         val Result.Success("abcde", _) = xml.parse("<abcde></abcde>")
+
         val failure = xml.parse("<abcde></edcba>").asInstanceOf[Result.Failure]
         assert(
           failure.trace == """xml:0 / rightTag:7 / "abcde":9 ..."edcba>""""
@@ -145,25 +162,30 @@ object ExampleTests extends TestSuite{
     'charX{
       'charPred{
         val cp = P( CharPred(CharPredicates.isUpper).rep.! ~ "." ~ End )
+
         val Result.Success("ABC", _) = cp.parse("ABC.")
         val Result.Failure(_, 2) = cp.parse("ABc.")
       }
       'charIn{
         val ci = P( CharIn("abc", "xyz").rep.! ~ End )
+
         val Result.Success("aaabbccxyz", _) = ci.parse("aaabbccxyz")
         val Result.Failure(_, 7) = ci.parse("aaabbccdxyz.")
 
         val digits = P( CharIn('0' to '9').rep.! )
+
         val Result.Success("12345", _) = digits.parse("12345abcde")
         val Result.Success("123", _) = digits.parse("123abcde45")
       }
       'charsWhile{
         val cw = P( CharsWhile(_ != ' ').! )
+
         val Result.Success("12345", _) = cw.parse("12345")
         val Result.Success("123", _) = cw.parse("123 45")
       }
       'stringIn{
         val si = P( StringIn("cow", "cattle").!.rep )
+
         val Result.Success(Seq("cow", "cattle"), _) = si.parse("cowcattle")
         val Result.Success(Seq("cow"), _) = si.parse("cowmoo")
       }
@@ -172,6 +194,7 @@ object ExampleTests extends TestSuite{
       'nocut{
         val alpha = P( CharIn('a' to 'z') )
         val nocut = P( "val " ~ alpha.rep1.! | "def " ~ alpha.rep1.!)
+
         val Result.Success("abcd", _) = nocut.parse("val abcd")
 
         val failure = nocut.parse("val 1234").asInstanceOf[Result.Failure]
@@ -184,6 +207,7 @@ object ExampleTests extends TestSuite{
       'withcut{
         val alpha = P( CharIn('a' to 'z') )
         val nocut = P( "val " ~! alpha.rep1.! | "def " ~! alpha.rep1.!)
+
         val Result.Success("abcd", _) = nocut.parse("val abcd")
 
         val failure = nocut.parse("val 1234").asInstanceOf[Result.Failure]
