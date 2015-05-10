@@ -18,7 +18,7 @@ val shared = Seq(
   ),
   scalaJSStage in Global := FullOptStage,
   organization := "com.lihaoyi",
-  version := repo.version,
+  version := _root_.fastparse.Constants.version,
   scalaVersion := "2.11.6",
   libraryDependencies += "com.lihaoyi" %% "acyclic" % "0.1.2" % "provided",
   addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.2"),
@@ -94,7 +94,7 @@ lazy val readme = scalatex.ScalatexReadme(
     (fullOptJS in (demo, Compile)).value
     (artifactPath in (demo,  Compile, fullOptJS)).value
   },
-  (unmanagedSources in Compile) += baseDirectory.value/".."/"project"/"repo.scala",
+  (unmanagedSources in Compile) += baseDirectory.value/".."/"project"/"Constants.scala",
   publishArtifact := false,
   publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
 )
