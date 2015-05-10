@@ -4,7 +4,8 @@ publishTo := Some(Resolver.file("Unused transient repository", file("target/unus
 
 val shared = Seq(
   libraryDependencies ++= Seq(
-    "org.scala-lang" % "scala-reflect" % scalaVersion.value
+    "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
+    "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided"
   ) ++ (
     if (scalaVersion.value startsWith "2.11.") Nil
     else Seq(
@@ -17,7 +18,7 @@ val shared = Seq(
   ),
   scalaJSStage in Global := FullOptStage,
   organization := "com.lihaoyi",
-  version := "0.1.0",
+  version := repo.version,
   scalaVersion := "2.11.6",
   libraryDependencies += "com.lihaoyi" %% "acyclic" % "0.1.2" % "provided",
   addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.2"),
@@ -63,7 +64,7 @@ lazy val fastparse = crossProject.dependsOn(utils).settings(
 lazy val fastparseJS = fastparse.js
 lazy val fastparseJVM = fastparse.jvm
 lazy val scalaparse = crossProject.dependsOn(fastparse).settings(
-  name := "fastparse-scala"
+  name := "scalaparse"
 ).settings(shared:_*)
 .jvmSettings(
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"
@@ -77,7 +78,8 @@ lazy val demo = project.enablePlugins(ScalaJSPlugin)
   .settings(shared:_*)
   .settings(
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.8.0",
-      libraryDependencies += "com.lihaoyi" %%% "scalatags" % "0.5.1"
+    libraryDependencies += "com.lihaoyi" %%% "scalatags" % "0.5.1",
+    emitSourceMaps := false
   )
 lazy val readme = scalatex.ScalatexReadme(
   folder = "readme",
@@ -91,6 +93,7 @@ lazy val readme = scalatex.ScalatexReadme(
     (artifactPath in (demo,  Compile, fastOptJS)).value
 
   },
+  (unmanagedSources in Compile) += baseDirectory.value/".."/"project"/"repo.scala",
   publishArtifact := false,
   publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
 )

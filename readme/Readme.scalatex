@@ -2,7 +2,7 @@
 
 @val tests = wd/'fastparse/'shared/'src/'test/'scala/'fastparse
 @val main = wd/'fastparse/'shared/'src/'main/'scala/'fastparse
-@sect("FastParse 0.1.0", "Fast to write, Fast running Parsers in Scala")
+@sect("FastParse " + repo.version, "Fast to write, Fast running Parsers in Scala")
     @hl.ref(tests/"MathTests.scala", "val number", "val tests")
     @hl.ref(tests/"MathTests.scala", Seq("def check", "check"))
     @div(id := "splashdiv")
@@ -26,13 +26,16 @@
         @p
             To begin using FastParse, add
 
-        @hl.scala
-            "com.lihaoyi" %% "fastparse" % "0.1.0"
-
+        @hl.scala(s"""
+            "com.lihaoyi" %% "fastparse" % "${repo.version}"
+        """)
         @p
             To your SBT configuration. To use with Scala.js, you'll need
-        @hl.scala
-            "com.lihaoyi" %%% "fastparse" % "0.1.0"
+        @hl.scala(s"""
+            "com.lihaoyi" %%% "fastparse" % "${repo.version}"
+        """)
+        @p
+            FastParse is only compatible with Scala 2.11.x.
 
     @sect{Writing Parsers}
         @sect{Basic}
@@ -407,7 +410,7 @@
                 Thus FastParse performs some tricks internally to save allocations: the immutable @hl.scala{Parser.Success} and @hl.scala{Parser.Failure} result types are actually interfaces hiding @hl.scala{Parser.Success.Mutable} and @hl.scala{Parser.Failure.Mutable} implementations, which have entirely mutable fields. 
 
             @p
-                This means that the same @hl.scala{Parser.Success.Mutable} and @hl.scala{Parser.Failure.Mutable} objects are shared throughout an entire parsing run, mutated as the parse progresses, while the external user only sees an immutable facade. This also means that a run of the large-and-complex @sect.ref{scalaparser} on a hundreds-of-kb source file results in exactly @i{three} allocations in all: one @hl.scala{Parser.Success.Mutable}, one @hl.scala{Parser.Failure.Mutable}, and one @hl.scala{Ctx} object holding them together. 
+                This means that the same @hl.scala{Parser.Success.Mutable} and @hl.scala{Parser.Failure.Mutable} objects are shared throughout an entire parsing run, mutated as the parse progresses, while the external user only sees an immutable facade. This also means that a run of the large-and-complex @sect.ref{ScalaParse} on a hundreds-of-kb source file results in exactly @i{three} allocations in all: one @hl.scala{Parser.Success.Mutable}, one @hl.scala{Parser.Failure.Mutable}, and one @hl.scala{Ctx} object holding them together.
 
         @sect{Internal Optimizations}
             @p
@@ -459,14 +462,17 @@
             @li
                 Learn how
 
-        @sect{Using ScalaParser}
+        @sect{Using ScalaParse}
             @p
             To begin using ScalaParse, add
 
-            @hl.scala
-                "com.lihaoyi" %% "scalaparse" % "0.1.0"
-
+            @hl.scala(s"""
+                "com.lihaoyi" %% "scalaparse" % "${repo.version}"
+            """)
             @p
                 To your SBT configuration. To use with Scala.js, you'll need
-            @hl.scala
-                "com.lihaoyi" %%% "scalaparse" % "0.1.0"
+
+            @hl.scala(s"""
+                "com.lihaoyi" %%% "scalaparse" % "${repo.version}"
+            """)
+Moo Moo
