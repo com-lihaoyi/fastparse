@@ -41,9 +41,9 @@
 
         @p
             To your SBT configuration. To use with Scala.js, you'll need
-        @hl.scala(s"""
+        @hl.scala
             "com.lihaoyi" %%% "fastparse" % "@fastparse.Constants.version"
-        """)
+        
         @p
             FastParse is only compatible with Scala 2.11.x.
 
