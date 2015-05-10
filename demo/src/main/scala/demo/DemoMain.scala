@@ -10,7 +10,7 @@ import scala.scalajs.js.annotation.JSExport
 @JSExport
 object DemoMain {
   @JSExport
-  def scalaparse(container: html.Div) = {
+  def scalaparser(container: html.Div) = {
     val example =
       """
         |package scalaparser
@@ -23,7 +23,7 @@ object DemoMain {
         |    println("Hello World!")
         |  }
         |}""".stripMargin
-    helper(container, scalaparser.Scala.CompilationUnit, example)
+    helper(container, scalaparse.Scala.CompilationUnit, example)
   }
   @JSExport
   def math(container: html.Div) = {
@@ -60,6 +60,7 @@ object DemoMain {
       width := "45%",
       float.left,
       fontFamily := "monospace",
+      fontSize := 16,
       default
     ).render
 

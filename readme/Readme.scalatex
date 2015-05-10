@@ -366,7 +366,7 @@
                 @th{Benchmark}@th{Score}@th{Error}
             @tbody
                 @tr
-                    @td{fastparse}@td{338}@td{2.51}
+                    @td{fastparse}@td{338}@td{25.1}
                 @tr
                     @td{fastparse-no-trace}@td{414}@td{26.4}
                 @tr
@@ -425,23 +425,48 @@
 
         @ul
             @li
-                Compared to @a("Parboiled2", href:="https://github.com/sirthias/parboiled2"), FastParse does not use macros to compile-time-generate fast parser code. Rather, it acts as an efficient interpreter, sacrificing a small amount of speed (with a factor of 2) for huge amounts of usability. Parboiled2 in particular has @a("usability problems and bugs", href:="https://groups.google.com/forum/#!msg/scala-internals/4N-uK5YOtKI/9vAdsH1VhqAJ") that make it excruciating difficult to use, and also does not support higher-order rules. FastParse suffers from none of these problems.
+                Compared to @a("Parboiled2", href:="https://github.com/sirthias/parboiled2"), FastParse does not use macros to compile-time-generate fast parser code. Rather, it acts as an efficient interpreter, sacrificing some speed (1-4x slower) for huge amounts of usability. Parboiled2 in particular has @a("usability problems and bugs", href:="https://groups.google.com/forum/#!msg/scala-internals/4N-uK5YOtKI/9vAdsH1VhqAJ") that make it excruciating difficult to use, and also does not support higher-order rules. FastParse suffers from none of these problems.
             @li
                 @a("Parboiled1", href:="https://github.com/sirthias/parboiled/wiki") is a Java library, and does not/cannot work on Scala.js
             @li
                 @a("scala-parser-combinators", href:="https://github.com/scala/scala-parser-combinators") is similar, but poorly executed. It is ~100x slower than FastParse, has an awkward inheritance-based API, and is full of bugs despite being half a decade old. FastParse is faster, has self-contained pure-functional parsers, and fixes bugs e.g. by having the @hl.scala{.log} operator actually work.
 
-    @sect{scalaparser}
-        @p
-            scalaparser is a parser for the entire Scala programming language, written using FastParse. This is notable for a few reasons:
-
+    @sect{ScalaParse}
+        
         @div(id := "scaladiv")
-        @script(raw("""demo.DemoMain().scalaparse(document.getElementById("scaladiv"))"""))
+        @script(raw("""demo.DemoMain().scalaparser(document.getElementById("scaladiv"))"""))
+
+        @p
+            ScalaParse is a parser for the entire Scala programming language, written using FastParse. This is notable for a few reasons:
+
         @ul
             @li
-                scalaparser is about 700 lines of code, making it about 1/10th the size of the default parser in @hl.scala{tools.nsc.Global}
+                ScalaParse is about 700 lines of code, making it about 1/10th the size of the default parser in @hl.scala{tools.nsc.Global}
             @li
-                scalaparser runs about 1/8th the speed of of the default parser in @hl.scala{tools.nsc.Global}
+                ScalaParse runs about @sect.ref("Performance", "1/8th the speed") of of the default parser in @hl.scala{tools.nsc.Global}
             @li
-                scalaparser has excellent error reporting due to proper use of @sect.ref{Cuts}, without any code explicitly dedicated to error reporting
+                ScalaParse has excellent error reporting due to proper use of @sect.ref{Cuts}, without any code explicitly dedicated to error reporting
+        @p
+            ScalaParse does not currently generate an AST. As you can see, the parse result above is listed as @hl.scala{undefined}. However, that does not make it useless! Even without generating an AST, ScalaParse can be used to:
 
+        @ul
+            @li
+                Check for errors! ScalaParse provides excellent error reporting on parses, equal or better than that provided by the tools.nsc.Global parser, entirely for free.
+            @li
+                Prototype extensions to the Scala grammar! Unlike the default tools.nsc.Global parser, ScalaParse makes it trivial to add new rules at various sections of the grammar.
+            @li
+                Manipulate Scala code sections! It's trivial to wrap various rules in ScalaParse in an @sect.ref{Capture} and use it to pull out the relevant bits of a Scala file for you to use.
+            @li
+                Learn how
+
+        @sect{Using ScalaParser}
+            @p
+            To begin using ScalaParse, add
+
+            @hl.scala
+                "com.lihaoyi" %% "scalaparse" % "0.1.0"
+
+            @p
+                To your SBT configuration. To use with Scala.js, you'll need
+            @hl.scala
+                "com.lihaoyi" %%% "scalaparse" % "0.1.0"

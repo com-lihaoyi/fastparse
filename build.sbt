@@ -15,7 +15,7 @@ val shared = Seq(
   ),
   scalaJSStage in Global := FullOptStage,
   organization := "com.lihaoyi",
-  version := "0.1.0-SNAPSHOT",
+  version := "0.1.0",
   scalaVersion := "2.11.6",
   crossScalaVersions := Seq("2.11.6", "2.10.5"),
   libraryDependencies += "com.lihaoyi" %% "acyclic" % "0.1.2" % "provided",
@@ -61,18 +61,18 @@ lazy val fastparse = crossProject.dependsOn(utils).settings(
 ).settings(shared:_*)
 lazy val fastparseJS = fastparse.js
 lazy val fastparseJVM = fastparse.jvm
-lazy val scalaparser = crossProject.dependsOn(fastparse).settings(
+lazy val scalaparse = crossProject.dependsOn(fastparse).settings(
   name := "fastparse-scala"
 ).settings(shared:_*)
 .jvmSettings(
   libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"
 )
-lazy val scalaparserJS = scalaparser.js
-lazy val scalaparserJVM = scalaparser.jvm
+lazy val scalaparseJS = scalaparse.js
+lazy val scalaparseJVM = scalaparse.jvm
 
 
 lazy val demo = project.enablePlugins(ScalaJSPlugin)
-  .dependsOn(fastparseJS % "compile->compile;compile->test", scalaparserJS)
+  .dependsOn(fastparseJS % "compile->compile;compile->test", scalaparseJS)
   .settings(shared:_*)
   .settings(
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.8.0",
