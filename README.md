@@ -1,4 +1,4 @@
-[Documentation](lihaoyi.github.io/fastparse)
+[Documentation](https://lihaoyi.github.io/fastparse)
 
 License
 =======
