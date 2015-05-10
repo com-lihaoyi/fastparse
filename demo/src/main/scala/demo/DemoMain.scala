@@ -65,7 +65,7 @@ object DemoMain {
       default
     ).render
 
-    val outputBox = div(width:="45%", float.right).render
+    val outputBox = div(width:="45%", float.right, overflowX.scroll).render
 
     def recalc() = {
       inputBox.rows = inputBox.value.lines.length
