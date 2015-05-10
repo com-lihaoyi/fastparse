@@ -1,4 +1,6 @@
-crossScalaVersions := Seq("2.11.6", "2.10.4")
+publishArtifact := false
+
+publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
 
 val shared = Seq(
   libraryDependencies ++= Seq(
@@ -17,7 +19,6 @@ val shared = Seq(
   organization := "com.lihaoyi",
   version := "0.1.0",
   scalaVersion := "2.11.6",
-  crossScalaVersions := Seq("2.11.6", "2.10.5"),
   libraryDependencies += "com.lihaoyi" %% "acyclic" % "0.1.2" % "provided",
   addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.2"),
   autoCompilerPlugins := true,
@@ -84,8 +85,12 @@ lazy val readme = scalatex.ScalatexReadme(
   source = "Readme",
   targetFolder = "target/site",
   autoResources = List("demo-fastopt.js")
+).settings(
+  (resources in Compile) += {
+    (fastOptJS in (demo, Compile)).value
+    (artifactPath in (demo,  Compile, fastOptJS)).value
+
+  },
+  publishArtifact := false,
+  publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
 )
-.settings((resources in Compile) += {
-  (fastOptJS in (demo, Compile)).value
-  (artifactPath in (demo,  Compile, fastOptJS)).value
-})
