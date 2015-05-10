@@ -58,7 +58,7 @@ span.hljs-tag, span.hljs-symbol{
     background: none;
 }
     </style><script src="scripts.js"></script></head><body><div>
-<div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="FastParse0.1.0" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">FastParse 0.1.0<a class=" scalatex-site-Styles-headerLink" href="#FastParse0.1.0" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /><h2 style="font-weight: 300;color: #ccc;padding: 0px;margin-top: 0px;">Fast to write, Fast running Parsers in Scala</h2></div><div class=" scalatex-site-Styles-content">
+<div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="FastParse0.1.1" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">FastParse 0.1.1<a class=" scalatex-site-Styles-headerLink" href="#FastParse0.1.1" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /><h2 style="font-weight: 300;color: #ccc;padding: 0px;margin-top: 0px;">Fast to write, Fast running Parsers in Scala</h2></div><div class=" scalatex-site-Styles-content">
     <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">val number: P[Int] = P( CharIn('0'to'9').rep1.!.map(_.toInt) )
 val parens: P[Int] = P( &quot;(&quot; ~! addSub ~ &quot;)&quot; )
 val factor: P[Int] = P( number | parens )
@@ -94,11 +94,11 @@ check(&quot;((1+1*2)+(3*4*5))/3&quot;, 21)</code><a class=" scalatex-site-Styles
         <p>
             To begin using FastParse, add
 </p>
-        <pre><code class="scala scalatex-site-Styles-highlightMe">    &quot;com.lihaoyi&quot; %% &quot;fastparse&quot; % &quot;0.1.0&quot;
+        <pre><code class="scala scalatex-site-Styles-highlightMe">    &quot;com.lihaoyi&quot; %% &quot;fastparse&quot; % &quot;0.1.1&quot;
 </code></pre>
         <p>
             To your SBT configuration. To use with Scala.js, you'll need</p>
-        <pre><code class="scala scalatex-site-Styles-highlightMe">    &quot;com.lihaoyi&quot; %%% &quot;fastparse&quot; % &quot;0.1.0&quot;
+        <pre><code class="scala scalatex-site-Styles-highlightMe">    &quot;com.lihaoyi&quot; %%% &quot;fastparse&quot; % &quot;0.1.1&quot;
 </code></pre>
         <p>
             FastParse is only compatible with Scala 2.11.x.
@@ -129,49 +129,54 @@ assert(
             <h2 id="Sequence" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#Sequence" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Sequence</h2>
 
                 <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">val ab = P( &quot;a&quot; ~ &quot;b&quot; )
+
 val Result.Success(_, 2) = ab.parse(&quot;ab&quot;)
 
 val Result.Failure(parser, 1) = ab.parse(&quot;aa&quot;)
-assert(parser == (&quot;b&quot;: P0))</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L29-L34" target="_blank"><i class="fa fa-link "></i></a></pre>
+assert(parser == (&quot;b&quot;: P0))</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L29-L35" target="_blank"><i class="fa fa-link "></i></a></pre>
 
                 <p>
                     You can combine two parsers with the <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">~</code> operator. This creates a new parser that only succeeds if both left and right parsers succeed one after another.
 </p>
             <h2 id="Repeat" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#Repeat" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Repeat</h2>
                 <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">val ab = P( &quot;a&quot;.rep ~ &quot;b&quot; )
-val Result.Success(_, 8) = ab.parse(&quot;aaaaaaab&quot;)
 
+val Result.Success(_, 8) = ab.parse(&quot;aaaaaaab&quot;)
 val Result.Success(_, 4) = ab.parse(&quot;aaaba&quot;)
 
 val abc = P( &quot;a&quot;.rep(&quot;b&quot;) ~ &quot;c&quot;).log(&quot;A&quot;)
+
 val Result.Success(_, 8) = abc.parse(&quot;abababac&quot;)
 
-val Result.Failure(parser, 3) = abc.parse(&quot;abaabac&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L36-L45" target="_blank"><i class="fa fa-link "></i></a></pre>
+val Result.Failure(parser, 3) = abc.parse(&quot;abaabac&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L37-L47" target="_blank"><i class="fa fa-link "></i></a></pre>
 
                 <p>
                     The <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">.rep</code> method creates a new parser that attempts to parse the given parser zero or more times. You can optionally provide an argument to <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">.rep</code> which acts as a separator between the usages of the original parser, or use <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">.rep1</code> if you want to parse something one or more times.
 </p>
             <h2 id="Optional" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#Optional" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Optional</h2>
                 <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">val option = P( &quot;c&quot;.? ~ &quot;a&quot;.rep(&quot;b&quot;).! ~ End)
+
 val Result.Success(&quot;aba&quot;, 3) = option.parse(&quot;aba&quot;)
-val Result.Success(&quot;aba&quot;, 3) = option.parse(&quot;aba&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L48-L51" target="_blank"><i class="fa fa-link "></i></a></pre>
+val Result.Success(&quot;aba&quot;, 3) = option.parse(&quot;aba&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L50-L54" target="_blank"><i class="fa fa-link "></i></a></pre>
 
                 <p>
                     Similar to <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">.rep</code> is <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">.?</code>, which creates a new parser that attempts to parse the given parser zero or 1 times.
 </p>
             <h2 id="Either" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#Either" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Either</h2>
                 <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">val either = P( &quot;a&quot;.rep ~ (&quot;b&quot; | &quot;c&quot; | &quot;d&quot;) ~ End)
+
 val Result.Success(_, 6) = either.parse(&quot;aaaaab&quot;)
 val Result.Failure(parser, 5) = either.parse(&quot;aaaaae&quot;)
-assert(parser == (&quot;b&quot; | &quot;c&quot; | &quot;d&quot;))</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L54-L59" target="_blank"><i class="fa fa-link "></i></a></pre>
+assert(parser == (&quot;b&quot; | &quot;c&quot; | &quot;d&quot;))</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L57-L62" target="_blank"><i class="fa fa-link "></i></a></pre>
                 <p>
                     The <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">|</code> operator tries the parser on the left, and if that fails, tries the one on the right, failing only if both parsers fail.
 </p>
             <h2 id="End,Start" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#End,Start" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>End, Start</h2>
                 <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">val noEnd = P( &quot;a&quot;.rep ~ &quot;b&quot;)
 val withEnd = P( &quot;a&quot;.rep ~ &quot;b&quot; ~ End)
+
 val Result.Success(_, 4) = noEnd.parse(&quot;aaaba&quot;)
-val Result.Failure(End, 4) = withEnd.parse(&quot;aaaba&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L63-L68" target="_blank"><i class="fa fa-link "></i></a></pre>
+val Result.Failure(End, 4) = withEnd.parse(&quot;aaaba&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L66-L72" target="_blank"><i class="fa fa-link "></i></a></pre>
 
                 <p>
                     The <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">End</code> parser only succeeds if at the end of the input string. By default, a <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Parser</code> does not need to consume the whole input, and can succeed early consuming a portion of it (exactly how much input was consumed is stored in the <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Success#index</code> attribute). By using <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">End</code>, we can make the parse fail if it doesn't consume everything
@@ -179,25 +184,47 @@ val Result.Failure(End, 4) = withEnd.parse(&quot;aaaba&quot;)</code><a class=" s
                 <p>
                     There is also a similar <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Start</code> parser, which only succeeds at the start of the input</p>
                 <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">val ab = P( ((&quot;a&quot; | Start) ~ &quot;b&quot;).rep ~ End).!
+
 val Result.Success(&quot;abab&quot;, 4) = ab.parse(&quot;abab&quot;)
 val Result.Success(&quot;babab&quot;, 5) = ab.parse(&quot;babab&quot;)
 
-val Result.Failure(parser, 2) = ab.parse(&quot;abb&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L70-L76" target="_blank"><i class="fa fa-link "></i></a></pre>
+val Result.Failure(parser, 2) = ab.parse(&quot;abb&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L74-L81" target="_blank"><i class="fa fa-link "></i></a></pre>
+
+            <h2 id="Pass,Fail" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#Pass,Fail" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Pass, Fail</h2>
+                <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">val Result.Success((), 0) = Pass.parse(&quot;asdad&quot;)
+val Result.Failure(Fail, 0) = Fail.parse(&quot;asdad&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L84-L86" target="_blank"><i class="fa fa-link "></i></a></pre>
+
+                <p>
+                    These two parsers always succeed, or always fail, respectively. Neither consumes any input.
+</p>
+            <h2 id="Index" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#Index" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Index</h2>
+                <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">val finder = P( &quot;hay&quot;.rep ~ Index ~ &quot;needle&quot; ~ &quot;hay&quot;.rep )
+
+val Result.Success(9, _) = finder.parse(&quot;hayhayhayneedlehay&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L89-L92" target="_blank"><i class="fa fa-link "></i></a></pre>
+
+                <p>
+                    Always succeeds, and provides the current index of the parse into the input string. e.g. useful for providing source locations for AST nodes. Consumes no input.
+</p>
             <h2 id="Capturing" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#Capturing" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Capturing</h2>
                 <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">val capture1 = P( &quot;a&quot;.rep.! ~ &quot;b&quot; ~ End)
+
 val Result.Success(&quot;aaa&quot;, 4) = capture1.parse(&quot;aaab&quot;)
 
 val capture2 = P( &quot;a&quot;.rep.! ~ &quot;b&quot;.! ~ End)
-val s @ Result.Success((&quot;aaa&quot;, &quot;b&quot;), 4) = capture2.parse(&quot;aaab&quot;)
+
+val Result.Success((&quot;aaa&quot;, &quot;b&quot;), 4) = capture2.parse(&quot;aaab&quot;)
 
 val capture3 = P( &quot;a&quot;.rep.! ~ &quot;b&quot;.! ~ &quot;c&quot;.! ~ End)
+
 val Result.Success((&quot;aaa&quot;, &quot;b&quot;, &quot;c&quot;), 5) = capture3.parse(&quot;aaabc&quot;)
 
 val captureRep = P( &quot;a&quot;.!.rep ~ &quot;b&quot; ~ End)
+
 val Result.Success(Seq(&quot;a&quot;, &quot;a&quot;, &quot;a&quot;), 4) = captureRep.parse(&quot;aaab&quot;)
 
 val captureOpt = P( &quot;a&quot;.rep ~ &quot;b&quot;.!.? ~ End)
-val Result.Success(Some(&quot;b&quot;), 4) = captureOpt.parse(&quot;aaab&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L80-L94" target="_blank"><i class="fa fa-link "></i></a></pre>
+
+val Result.Success(Some(&quot;b&quot;), 4) = captureOpt.parse(&quot;aaab&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L95-L114" target="_blank"><i class="fa fa-link "></i></a></pre>
                 <p>
                     So far, all the parsers go over the input text but do not return any useful value: the <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Success#value</code> attribute was always <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">()</code>. In order to make them do so, you use the <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">.!</code> operation to capture the section of the input string the parser parsed.</p>
                 <p>
@@ -217,33 +244,39 @@ val Result.Success(Some(&quot;b&quot;), 4) = captureOpt.parse(&quot;aaab&quot;)<
                     In general, if you have a parser of type <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">TupleN</code>, capturing one more section turns it into a <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">TupleN+1</code>. Furthermore, if you capture within a <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">.rep</code> or <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">.?</code> optional parser, it becomes a <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Parser[Seq[T]]</code> or <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Parser[Option[T]]</code> respectively</p>
             <h2 id="AnyChar" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#AnyChar" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>AnyChar</h2>
                 <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">val ab = P( &quot;'&quot; ~ AnyChar.! ~ &quot;'&quot; )
+
 val Result.Success(&quot;-&quot;, 3) = ab.parse(&quot;'-'&quot;)
+
 val Result.Failure(parser, 2) = ab.parse(&quot;'-='&quot;)
-assert(parser == (&quot;'&quot;: P0))</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L96-L100" target="_blank"><i class="fa fa-link "></i></a></pre>
+assert(parser == (&quot;'&quot;: P0))</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L116-L122" target="_blank"><i class="fa fa-link "></i></a></pre>
 
                 <p>
                     This parser parses any single character successfully.
 </p>
             <h2 id="PositiveLookahead" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#PositiveLookahead" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Positive Lookahead</h2>
                 <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">val keyword = P( (&quot;hello&quot; ~ &amp;(&quot; &quot;)).!.rep )
+
 val Result.Success(Seq(&quot;hello&quot;), _) = keyword.parse(&quot;hello &quot;)
-val Result.Success(Seq(), __) = keyword.parse(&quot;helloX&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L104-L107" target="_blank"><i class="fa fa-link "></i></a></pre>
+val Result.Success(Seq(), __) = keyword.parse(&quot;helloX&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L126-L130" target="_blank"><i class="fa fa-link "></i></a></pre>
                 <p>
                     The <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">&amp;(...)</code> operator wraps a parser, only succeeds if it succeeds, but consumes no input. Useful for doing checks like &quot;these characters must be followed by a whitespace, but don't consume the whitespace&quot;
 </p>
             <h2 id="NegativeLookahead" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#NegativeLookahead" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Negative Lookahead</h2>
                 <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">val keyword = P( &quot;hello&quot; ~ !&quot; &quot; ~ AnyChar ~ &quot;world&quot; ).!
+
 val Result.Success(&quot;hello-world&quot;, _) = keyword.parse(&quot;hello-world&quot;)
 val Result.Success(&quot;hello_world&quot;, _) = keyword.parse(&quot;hello_world&quot;)
+
 val Result.Failure(parser, 6) = keyword.parse(&quot;hello world&quot;)
-assert(parser == !(&quot; &quot;))</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L109-L114" target="_blank"><i class="fa fa-link "></i></a></pre>
+assert(parser == !(&quot; &quot;))</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L132-L139" target="_blank"><i class="fa fa-link "></i></a></pre>
                 <p>
                     The <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">!...</code> operator wraps a parser and only succeeds of it fails, also consuming no input. Useful to combine with other parsers like <a href="#AnyChar">AnyChar</a> to restrict the things that they can parse.</p>
             <h2 id="Map" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#Map" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Map</h2>
                 <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">val binary = P( (&quot;0&quot; | &quot;1&quot; ).rep.! )
 val binaryNum = P( binary.map(Integer.parseInt(_, 2)) )
+
 val Result.Success(&quot;1100&quot;, _) = binary.parse(&quot;1100&quot;)
-val Result.Success(12, _) = binaryNum.parse(&quot;1100&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L116-L120" target="_blank"><i class="fa fa-link "></i></a></pre>
+val Result.Success(12, _) = binaryNum.parse(&quot;1100&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L141-L146" target="_blank"><i class="fa fa-link "></i></a></pre>
                 <p>
                     Up till now, we've only dealt with</p>
                 <ul>
@@ -257,15 +290,34 @@ val Result.Success(12, _) = binaryNum.parse(&quot;1100&quot;)</code><a class=" s
                         <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Parser[Seq[String]]</code>, <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Parser[Option[String]]</code>: capturing things in <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">.rep</code> and <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">.?</code>
 </li></ul>
                 <p>
-                    <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">.map</code> lets you convert an arbitrary <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Parser[T]</code> into a <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Parser[V]</code> by providing a <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">T =&gt; V</code> function. This is useful for converting the strings and tuples/seqs/options of strings into more useful data-structures</p>
+                    <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">.map</code> lets you convert an arbitrary <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Parser[T]</code> into a <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Parser[V]</code> by providing a <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">T =&gt; V</code> function. This is useful for converting the strings and tuples/seqs/options of strings into more useful data-structures.</p>
+            <h2 id="FlatMap" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#FlatMap" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>FlatMap</h2>
+                <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">val leftTag = P( &quot;&lt;&quot; ~ (!&quot;&gt;&quot; ~ AnyChar).rep1.! ~ &quot;&gt;&quot; )
+def rightTag(s: String) = P( &quot;&lt;/&quot; ~ s.! ~ &quot;&gt;&quot; )
+val xml = P( leftTag.flatMap(rightTag) )
+
+val Result.Success(&quot;a&quot;, _) = xml.parse(&quot;&lt;a&gt;&lt;/a&gt;&quot;)
+val Result.Success(&quot;abcde&quot;, _) = xml.parse(&quot;&lt;abcde&gt;&lt;/abcde&gt;&quot;)
+
+val failure = xml.parse(&quot;&lt;abcde&gt;&lt;/edcba&gt;&quot;).asInstanceOf[Result.Failure]
+assert(
+  failure.trace == &quot;&quot;&quot;xml:0 / rightTag:7 / &quot;abcde&quot;:9 ...&quot;edcba&gt;&quot;&quot;&quot;&quot;
+)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L148-L159" target="_blank"><i class="fa fa-link "></i></a></pre>
+
+                <p>
+                    <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">.flatMap</code> allows you to dynamically choose a parser to continue with, given the result of the current parser. The example above uses it to parse balanced XML tags. <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">.flatMap</code> can be used to parse indentation-based grammars, and is used to do so in <a href="http://lihaoyi.github.io/Scalatex/">Scalatex</a>.
+</p>
+                <p>
+                    Note that the function given to <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">.flatMap</code> is evaluated every time this parser is tried. You should be conscious of the cost of re-creating the resultant parser every time, since FastParse parsers are somewhat expensive to initialize despite being fast per-run. If possible, store the parsers somewhere before-hand or memo-ize/cache them to avoid initializing them wastefully.</p>
         <h1 id="Intrinsics" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#Intrinsics" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Intrinsics</h1>
             <p>
                 In theory, all possible parsers can be put together using the above tools. In practice, a few more tools are provided for convenience or performance:
 </p>
             <h2 id="CharPred" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#CharPred" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>CharPred</h2>
                 <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">val cp = P( CharPred(CharPredicates.isUpper).rep.! ~ &quot;.&quot; ~ End )
+
 val Result.Success(&quot;ABC&quot;, _) = cp.parse(&quot;ABC.&quot;)
-val Result.Failure(_, 2) = cp.parse(&quot;ABc.&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L124-L127" target="_blank"><i class="fa fa-link "></i></a></pre>
+val Result.Failure(_, 2) = cp.parse(&quot;ABc.&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L163-L167" target="_blank"><i class="fa fa-link "></i></a></pre>
                 <p>
                     <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">CharPred</code> takes a <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Char =&gt; Boolean</code> predicate and creates a parser that parses any single character that satisfies that predicate. e.g. you can use any of the helpful methods on <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">scala.Char</code> to check if a <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Char</code> <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">isUpper</code>, <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">isDigit</code>, <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">isControl</code>, etc. etc.
 </p>
@@ -274,12 +326,14 @@ val Result.Failure(_, 2) = cp.parse(&quot;ABc.&quot;)</code><a class=" scalatex-
 </p>
             <h2 id="CharIn" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#CharIn" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>CharIn</h2>
                 <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">val ci = P( CharIn(&quot;abc&quot;, &quot;xyz&quot;).rep.! ~ End )
+
 val Result.Success(&quot;aaabbccxyz&quot;, _) = ci.parse(&quot;aaabbccxyz&quot;)
 val Result.Failure(_, 7) = ci.parse(&quot;aaabbccdxyz.&quot;)
 
 val digits = P( CharIn('0' to '9').rep.! )
+
 val Result.Success(&quot;12345&quot;, _) = digits.parse(&quot;12345abcde&quot;)
-val Result.Success(&quot;123&quot;, _) = digits.parse(&quot;123abcde45&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L129-L136" target="_blank"><i class="fa fa-link "></i></a></pre>
+val Result.Success(&quot;123&quot;, _) = digits.parse(&quot;123abcde45&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L169-L178" target="_blank"><i class="fa fa-link "></i></a></pre>
                 <p>
                     Similar to <a href="#CharPred">CharPred</a>, except you pass in sequences of valid characters rather than a predicate.
 </p>
@@ -288,8 +342,9 @@ val Result.Success(&quot;123&quot;, _) = digits.parse(&quot;123abcde45&quot;)</c
 </p>
             <h2 id="CharsWhile" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#CharsWhile" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>CharsWhile</h2>
                 <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">val cw = P( CharsWhile(_ != ' ').! )
+
 val Result.Success(&quot;12345&quot;, _) = cw.parse(&quot;12345&quot;)
-val Result.Success(&quot;123&quot;, _) = cw.parse(&quot;123 45&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L138-L141" target="_blank"><i class="fa fa-link "></i></a></pre>
+val Result.Success(&quot;123&quot;, _) = cw.parse(&quot;123 45&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L180-L184" target="_blank"><i class="fa fa-link "></i></a></pre>
                 <p>
                     A repeated version of <a href="#CharPred">CharPred</a>: this parser continually chomps away at characters as long as they continue passes the given predicate.
 </p>
@@ -298,8 +353,9 @@ val Result.Success(&quot;123&quot;, _) = cw.parse(&quot;123 45&quot;)</code><a c
 </p>
             <h2 id="StringIn" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#StringIn" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>StringIn</h2>
                 <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">val si = P( StringIn(&quot;cow&quot;, &quot;cattle&quot;).!.rep )
+
 val Result.Success(Seq(&quot;cow&quot;, &quot;cattle&quot;), _) = si.parse(&quot;cowcattle&quot;)
-val Result.Success(Seq(&quot;cow&quot;), _) = si.parse(&quot;cowmoo&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L143-L146" target="_blank"><i class="fa fa-link "></i></a></pre>
+val Result.Success(Seq(&quot;cow&quot;), _) = si.parse(&quot;cowmoo&quot;)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L186-L190" target="_blank"><i class="fa fa-link "></i></a></pre>
 
                 <p>
                     Quickly parses one of any number of strings that you give it. Behind the scenes, it converts the list of strings into a Trie so it can attempt to parse all of them in a single pass.
@@ -313,6 +369,7 @@ val Result.Success(Seq(&quot;cow&quot;), _) = si.parse(&quot;cowmoo&quot;)</code
             <h2 id="NoCuts" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#NoCuts" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>No Cuts</h2>
                 <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">val alpha = P( CharIn('a' to 'z') )
 val nocut = P( &quot;val &quot; ~ alpha.rep1.! | &quot;def &quot; ~ alpha.rep1.!)
+
 val Result.Success(&quot;abcd&quot;, _) = nocut.parse(&quot;val abcd&quot;)
 
 val failure = nocut.parse(&quot;val 1234&quot;).asInstanceOf[Result.Failure]
@@ -320,7 +377,7 @@ assert(
   failure.index == 0,
   failure.trace ==
   &quot;&quot;&quot;nocut:0 / ((&quot;val &quot; ~ alpha.rep1) | (&quot;def &quot; ~ alpha.rep1)):0 ...&quot;val 1234&quot;&quot;&quot;&quot;
-)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L150-L160" target="_blank"><i class="fa fa-link "></i></a></pre>
+)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L194-L205" target="_blank"><i class="fa fa-link "></i></a></pre>
                 <p>
                     Above we have a naive scala definition parser: it either parses a <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">val</code> or <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">def</code>, a space, and its (lower-case only) name. On a success this works as expected, and extracts the name. However, on a failure, something odd happens: the deepest parser on-failure is shown to be the entire <a href="#Either">Either</a>, rather than just the <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">alpha</code> that came after <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">&quot;val &quot;</code>. Why is that?
 </p>
@@ -339,6 +396,7 @@ assert(
             <h2 id="Cuts" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#Cuts" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Cuts</h2>
                 <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">val alpha = P( CharIn('a' to 'z') )
 val nocut = P( &quot;val &quot; ~! alpha.rep1.! | &quot;def &quot; ~! alpha.rep1.!)
+
 val Result.Success(&quot;abcd&quot;, _) = nocut.parse(&quot;val abcd&quot;)
 
 val failure = nocut.parse(&quot;val 1234&quot;).asInstanceOf[Result.Failure]
@@ -346,7 +404,7 @@ assert(
   failure.index == 4,
   failure.trace ==
   &quot;&quot;&quot;nocut:0 / alpha:4 / CharIn(&quot;abcdefghijklmnopqrstuvwxyz&quot;):4 ...&quot;1234&quot;&quot;&quot;&quot;
-)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L162-L172" target="_blank"><i class="fa fa-link "></i></a></pre>
+)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L207-L218" target="_blank"><i class="fa fa-link "></i></a></pre>
 
                 <p>
                     Cuts are added using the <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">~!</code> operator, which is similar to the <a href="#Sequence">Sequence</a> operator <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">~</code>. Once the parse has crossed a cut, it can no longer backtrack past the point at which the cut occured. Hence, in this case you can see that it no longer backtracks to index 0, out of the enclosing <a href="#Either">Either</a> parser and offering that in the error trace. Instead, it shows a much more precise error: at index <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">4</code>, expecting one of the small set of alphanumeric characters.</p>
@@ -365,7 +423,7 @@ val failure = stmts.parse(&quot;val abcd; val &quot;).asInstanceOf[Result.Failur
 assert(
   failure.index == 10,
   failure.trace == &quot;&quot;&quot;stmts:0 / End:10 ...&quot;val &quot;&quot;&quot;&quot;
-)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L174-L186" target="_blank"><i class="fa fa-link "></i></a></pre>
+)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L220-L232" target="_blank"><i class="fa fa-link "></i></a></pre>
 
                 <p>
                     A similar problem occurs inside <a href="#Repeat">Repeat</a> or <a href="#Optional">Optional</a> parsers, where the parser will give up and backtrack out if it fails, even if it really should succeed. Again, adding cuts would result in a more precise error message:
@@ -382,7 +440,7 @@ assert(
   failure.index == 14,
   failure.trace ==
     &quot;&quot;&quot;stmts:0 / stmt:10 / alpha:14 / CharIn(&quot;abcdefghijklmnopqrstuvwxyz&quot;):14 ...&quot;&quot;&quot;&quot;&quot;
-)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L188-L201" target="_blank"><i class="fa fa-link "></i></a></pre>
+)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L234-L247" target="_blank"><i class="fa fa-link "></i></a></pre>
 
                 <p>
                     Another case where you may want to pay attention is when you are using delimiters with your <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">.rep</code> calls:
@@ -396,7 +454,7 @@ val failure = tuple.parse(&quot;(1,)&quot;).asInstanceOf[Result.Failure]
 assert(
   failure.index == 2,
   failure.trace == &quot;&quot;&quot;tuple:0 / &quot;)&quot;:2 ...&quot;,)&quot;&quot;&quot;&quot;
-)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L203-L213" target="_blank"><i class="fa fa-link "></i></a></pre>
+)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L249-L259" target="_blank"><i class="fa fa-link "></i></a></pre>
 
                 <p>
                     in many (but not all!) cases, if a delimiter is parsed, you want to commit to parsing one more iteration of the <a href="#Repeat">Repeat</a>. However, by default, it backtracks out of the <a href="#Repeat">Repeat</a> entirely and starts trying to parse the next item in sequence (in this case the <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">&quot;)&quot;</code> giving the behavior shown above.
@@ -413,7 +471,7 @@ val failure = tuple.parse(&quot;(1,)&quot;).asInstanceOf[Result.Failure]
 assert(
   failure.index == 3,
   failure.trace == &quot;&quot;&quot;tuple:0 / digits:3 / CharIn(&quot;0123456789&quot;):3 ...&quot;)&quot;&quot;&quot;&quot;
-)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L215-L225" target="_blank"><i class="fa fa-link "></i></a></pre>
+)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/ExampleTests.scala#L261-L271" target="_blank"><i class="fa fa-link "></i></a></pre>
 
     <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="ExampleParsers" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Example Parsers<a class=" scalatex-site-Styles-headerLink" href="#ExampleParsers" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
         <p>
@@ -476,8 +534,8 @@ check(&quot;((1+1*2)+(3*4*5))/3&quot;, 21)</code><a class=" scalatex-site-Styles
 
         <h1 id="Json" style="display: block;" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><a class=" scalatex-site-Styles-headerLink" href="#Json" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a>Json</h1>
             <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">// Here is the parser
-val space         = P( CharsWhile(&quot; \n&quot;.contains(_)) )
-val digits        = P( CharsWhile('0' to '9' contains (_), min = 1))
+val space         = P( CharsWhile(&quot; \n&quot;.contains(_)).? )
+val digits        = P( CharsWhile('0' to '9' contains (_)))
 val exponent      = P( CharIn(&quot;eE&quot;) ~ CharIn(&quot;+-&quot;).? ~ digits )
 val fractional    = P( &quot;.&quot; ~ digits )
 val integral      = P( &quot;0&quot; | CharIn('1' to '9') ~ digits.? )
@@ -494,7 +552,7 @@ val hexDigit      = P( CharIn('0'to'9', 'a'to'f', 'A'to'F') )
 val unicodeEscape = P( &quot;u&quot; ~ hexDigit ~ hexDigit ~ hexDigit ~ hexDigit )
 val escape        = P( &quot;\\&quot; ~ (CharIn(&quot;\&quot;/\\bfnrt&quot;) | unicodeEscape) )
 
-val strChars = P( CharsWhile(!&quot;\&quot;\\&quot;.contains(_), min = 1) )
+val strChars = P( CharsWhile(!&quot;\&quot;\\&quot;.contains(_)) )
 val string =
   P( space ~ &quot;\&quot;&quot; ~! (strChars | escape).rep.! ~ &quot;\&quot;&quot;).map(Js.Str)
 
@@ -508,7 +566,7 @@ val obj =
 
 val jsonExpr: P[Js.Val] = P(
   space ~ (obj | array | string | `true` | `false` | `null` | number) ~ space
-)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/JsonTests.scala#L36-L71" target="_blank"><i class="fa fa-link "></i></a></pre>
+)</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/JsonTests.scala#L37-L72" target="_blank"><i class="fa fa-link "></i></a></pre>
 
             <p>
                 This is a somewhat larger example than the math parser shown above. In it, we parse a JSON expression from a string, including all the proper handling for whitespace and error-handling built in.
@@ -547,7 +605,7 @@ val jsonExpr: P[Js.Val] = P(
   case object Null extends Val{
     def value = null
   }
-}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/JsonTests.scala#L14-L36" target="_blank"><i class="fa fa-link "></i></a></pre>
+}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/JsonTests.scala#L15-L37" target="_blank"><i class="fa fa-link "></i></a></pre>
 
             <p>
                 We can verify that this parser builds the JSON tree that we expect:
@@ -555,7 +613,7 @@ val jsonExpr: P[Js.Val] = P(
             <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">val Result.Success(value, _) = jsonExpr.parse(
   &quot;&quot;&quot;{&quot;omg&quot;: &quot;123&quot;, &quot;wtf&quot;: 12.4123}&quot;&quot;&quot;
 )
-assert(value == Js.Obj(&quot;omg&quot; -&gt; Js.Str(&quot;123&quot;), &quot;wtf&quot; -&gt; Js.Num(12.4123)))</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/JsonTests.scala#L87-L91" target="_blank"><i class="fa fa-link "></i></a></pre>
+assert(value == Js.Obj(&quot;omg&quot; -&gt; Js.Str(&quot;123&quot;), &quot;wtf&quot; -&gt; Js.Num(12.4123)))</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/JsonTests.scala#L88-L92" target="_blank"><i class="fa fa-link "></i></a></pre>
 
             <p>
                 And that it provides good error messages in the case of mal-formed JSON, even for moderately-sized fragemnts
@@ -581,9 +639,9 @@ assert(value == Js.Obj(&quot;omg&quot; -&gt; Js.Str(&quot;123&quot;), &quot;wtf&
             &quot;number&quot;: &quot;646 555-4567&quot;
         }
     ]
-}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/JsonTests.scala#L268-L289" target="_blank"><i class="fa fa-link "></i></a></pre>
+}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/JsonTests.scala#L269-L290" target="_blank"><i class="fa fa-link "></i></a></pre>
 
-            <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">jsonExpr:0 / obj:9 / pair:438 / string:438 / &quot;\&quot;&quot;:455 ...&quot;{\n        &quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/JsonTests.scala#L291-L292" target="_blank"><i class="fa fa-link "></i></a></pre>
+            <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">jsonExpr:0 / obj:9 / pair:438 / string:438 / &quot;\&quot;&quot;:455 ...&quot;{\n        &quot;</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/JsonTests.scala#L292-L293" target="_blank"><i class="fa fa-link "></i></a></pre>
 
             <p>
                 Here, we're missing a square bracket after the <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">&quot;phoneNumbers&quot;</code> key, and so the parser expects to find a single JSON expression. It finds a JSON object, and then fails reporting that it expected to find the next key (a string), but instead found <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">&quot;{\n&quot;</code> at that index.
@@ -600,7 +658,7 @@ assert(value == Js.Obj(&quot;omg&quot; -&gt; Js.Str(&quot;123&quot;), &quot;wtf&
             <p>
                 Fastparse revolves around <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Parser[T]</code>s: a parser that can attempt to parser a value <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">T</code> from an input string. These are defined as:
 </p>
-            <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">trait Parser[+T] extends ParserApi[T] with ParserApiImpl[T]{
+            <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">trait Parser[+T] extends ParserApi[T]{
   /**
    * Parses the given `input` starting from the given `index`
    *
@@ -624,7 +682,12 @@ assert(value == Js.Obj(&quot;omg&quot; -&gt; Js.Str(&quot;123&quot;), &quot;wtf&
    * Parses the given `input` starting from the given `index` and `logDepth`
    */
   def parseRec(cfg: ParseCtx, index: Int): Result[T]
-}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/main/scala/fastparse/Parsing.scala#L153-L179" target="_blank"><i class="fa fa-link "></i></a></pre>
+
+  /**
+   * Whether or not this parser should show up when [[Failure.trace]] is called
+   */
+  def shortTraced: Boolean = false
+}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/main/scala/fastparse/core/Parsing.scala#L150-L181" target="_blank"><i class="fa fa-link "></i></a></pre>
             <p>
                 The main external API is <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">.parse</code>. As you can see, apart from the <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">input</code> parameter, there are a few parameters that you can use to configure the parse. Apart from that, each <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Parser[T]</code> needs to implement <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">parseRec</code> which is a less-convenient but more-performant version that FastParse uses internally when performing a parse.</p>
             <p>
@@ -634,70 +697,7 @@ assert(value == Js.Obj(&quot;omg&quot; -&gt; Js.Str(&quot;123&quot;), &quot;wtf&
             <p>
                 Apart from the core <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Parser</code>, FastParse includes a large set of operations that you can perform on a <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">Parser</code> to make composing them more pleasant. These all live in <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">ParserApi</code>:
 </p>
-            <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">trait ParserApi[+T]{
-  import Implicits._
-
-  /**
-   * Wraps this in a [[Parser.Logged]]. This prints out information
-   * where a parser was tried and its result, which is useful for debugging
-   */
-  def log(msg: String)(implicit output: Logger): Parser[T]
-  /**
-   * Repeats this parser 0 or more times
-   */
-  def rep[R](implicit ev: Repeater[T, R]): Parser[R]
-  /**
-   * Repeats this parser 1 or more times
-   */
-  def rep1[R](implicit ev: Repeater[T, R]): Parser[R]
-  /**
-   * Repeats this parser 0 or more times, with a delimiter
-   */
-  def rep[R](delimiter: Parser[_])(implicit ev: Repeater[T, R]): Parser[R]
-  /**
-   * Repeats this parser 1 or more times, with a delimiter
-   */
-  def rep1[R](delimiter: Parser[_])(implicit ev: Repeater[T, R]): Parser[R]
-
-  /**
-   * Parses using this or the parser `p`
-   */
-  def |[V &gt;: T](p: Parser[V]): Parser[V]
-
-  /**
-   * Parses using this followed by the parser `p`
-   */
-  def ~[V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R]
-  /**
-   * Parses using this followed by the parser `p`, performing a Cut if
-   * this parses successfully. That means that if `p` fails to parse, the
-   * parse will fail immediately and not backtrack past this success.
-   *
-   * This lets you greatly narrow the error position by avoiding unwanted
-   * backtracking.
-   */
-  def ~![V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R]
-
-  /**
-   * Parses this, optionally
-   */
-  def ?[R](implicit ev: Optioner[T, R]): Parser[R]
-
-  /**
-   * Wraps this in a [[Parser.Not]] for negative lookaheak
-   */
-  def unary_! : Parser[_]
-
-  /**
-   * Used to capture the text parsed by this as a `String`
-   */
-  def ! : Parser[_]
-
-  /**
-   * Transforms the result of this Parser with the given function
-   */
-  def map[V](f: T =&gt; V): Parser[V]
-}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/main/scala/fastparse/Parsing.scala#L179-L244" target="_blank"><i class="fa fa-link "></i></a></pre>
+            <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe"></code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/main/scala/fastparse/core/Parsing.scala" target="_blank"><i class="fa fa-link "></i></a></pre>
 
             <p>
                 There are essentially all short-hand constructors for the parsers in the <code class="scala scalatex-site-Styles-highlightMe" style="display: inline;padding: 0px;margin: 0px;">object Parser</code> companion. This is the list of operators that you have available when writing your own parsers using FastParse.
@@ -723,7 +723,7 @@ assert(value == Js.Obj(&quot;omg&quot; -&gt; Js.Str(&quot;123&quot;), &quot;wtf&
    * Whether or not this parse encountered a Cut
    */
   def cut: Boolean
-}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/main/scala/fastparse/Parsing.scala#L13-L28" target="_blank"><i class="fa fa-link "></i></a></pre>
+}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/main/scala/fastparse/core/Parsing.scala#L11-L26" target="_blank"><i class="fa fa-link "></i></a></pre>
             <pre class=" scalatex-site-Styles-hoverContainer"><code class="scala scalatex-site-Styles-highlightMe">trait Failure extends Result[Nothing]{
   /**
    * The input string for the failed parse. Useful so the [[Failure]]
@@ -739,7 +739,7 @@ assert(value == Js.Obj(&quot;omg&quot; -&gt; Js.Str(&quot;123&quot;), &quot;wtf&
   def fullStack: List[Frame]
   /**
    * A slimmed down version of [[fullStack]], this only includes named
-   * [[Parser.Rule]] objects as well as the final Parser (whether named or not)
+   * [[parsers.Combinators.Rule]] objects as well as the final Parser (whether named or not)
    * and index where the parse failed for easier reading.
    */
   def stack: List[Frame]
@@ -769,7 +769,7 @@ assert(value == Js.Obj(&quot;omg&quot; -&gt; Js.Str(&quot;123&quot;), &quot;wtf&
    * Whether or not this parse encountered a Cut
    */
   def cut: Boolean
-}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/main/scala/fastparse/Parsing.scala#L38-L84" target="_blank"><i class="fa fa-link "></i></a></pre>
+}</code><a class=" scalatex-site-Styles-headerLink" style="position: absolute;right: 0.5em;top: 0.5em;display: block;font-size: 24px;" href="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/main/scala/fastparse/core/Parsing.scala#L36-L82" target="_blank"><i class="fa fa-link "></i></a></pre>
 
     <div style="margin: 0px;color: #333;text-align: center;padding: 2.5em 2em 0;border-bottom: 1px solid #eee;display: block;" id="Performance" class=" scalatex-site-Styles-hoverContainer scalatex-site-Styles-headerTag"><h1 style="margin: 0.2em 0;font-size: 3em;font-weight: 300;">Performance<a class=" scalatex-site-Styles-headerLink" href="#Performance" style="position: absolute;right: 0px;"><i class="fa fa-link"></i></a></h1><br /></div>
         <p>
@@ -908,16 +908,16 @@ assert(value == Js.Obj(&quot;omg&quot; -&gt; Js.Str(&quot;123&quot;), &quot;wtf&
             <p></p>
             To begin using ScalaParse, add
 
-            <pre><code class="scala scalatex-site-Styles-highlightMe">    &quot;com.lihaoyi&quot; %% &quot;scalaparse&quot; % &quot;0.1.0&quot;
+            <pre><code class="scala scalatex-site-Styles-highlightMe">    &quot;com.lihaoyi&quot; %% &quot;scalaparse&quot; % &quot;0.1.1&quot;
 </code></pre>
             <p>
                 To your SBT configuration. To use with Scala.js, you'll need
 </p>
-            <pre><code class="scala scalatex-site-Styles-highlightMe">    &quot;com.lihaoyi&quot; %%% &quot;scalaparse&quot; % &quot;0.1.0&quot;
+            <pre><code class="scala scalatex-site-Styles-highlightMe">    &quot;com.lihaoyi&quot; %%% &quot;scalaparse&quot; % &quot;0.1.1&quot;
 </code></pre></div>
 </div><script>
     scalatex.scrollspy.Controller().main(
-      [{"value":"FastParse 0.1.0","children":[{"value":"Getting Started","children":[]},{"value":"Writing Parsers","children":[{"value":"Basic","children":[{"value":"Sequence","children":[]},{"value":"Repeat","children":[]},{"value":"Optional","children":[]},{"value":"Either","children":[]},{"value":"End, Start","children":[]},{"value":"Capturing","children":[]},{"value":"AnyChar","children":[]},{"value":"Positive Lookahead","children":[]},{"value":"Negative Lookahead","children":[]},{"value":"Map","children":[]}]},{"value":"Intrinsics","children":[{"value":"CharPred","children":[]},{"value":"CharIn","children":[]},{"value":"CharsWhile","children":[]},{"value":"StringIn","children":[]}]},{"value":"Cuts","children":[{"value":"No Cuts","children":[]},{"value":"Cuts","children":[]},{"value":"Rep Cuts","children":[]}]}]},{"value":"Example Parsers","children":[{"value":"Math","children":[]},{"value":"Json","children":[]}]},{"value":"API Highlights","children":[{"value":"Parser[T]","children":[]},{"value":"ParserApi[T]","children":[]},{"value":"Results","children":[]}]},{"value":"Performance","children":[]},{"value":"Internals","children":[{"value":"Fast Interpreter","children":[]},{"value":"External Immutabiliy","children":[]},{"value":"Internal Optimizations","children":[]}]},{"value":"Comparisons","children":[]},{"value":"ScalaParse","children":[{"value":"Using ScalaParse","children":[]}]}]}]
+      [{"value":"FastParse 0.1.1","children":[{"value":"Getting Started","children":[]},{"value":"Writing Parsers","children":[{"value":"Basic","children":[{"value":"Sequence","children":[]},{"value":"Repeat","children":[]},{"value":"Optional","children":[]},{"value":"Either","children":[]},{"value":"End, Start","children":[]},{"value":"Pass, Fail","children":[]},{"value":"Index","children":[]},{"value":"Capturing","children":[]},{"value":"AnyChar","children":[]},{"value":"Positive Lookahead","children":[]},{"value":"Negative Lookahead","children":[]},{"value":"Map","children":[]},{"value":"FlatMap","children":[]}]},{"value":"Intrinsics","children":[{"value":"CharPred","children":[]},{"value":"CharIn","children":[]},{"value":"CharsWhile","children":[]},{"value":"StringIn","children":[]}]},{"value":"Cuts","children":[{"value":"No Cuts","children":[]},{"value":"Cuts","children":[]},{"value":"Rep Cuts","children":[]}]}]},{"value":"Example Parsers","children":[{"value":"Math","children":[]},{"value":"Json","children":[]}]},{"value":"API Highlights","children":[{"value":"Parser[T]","children":[]},{"value":"ParserApi[T]","children":[]},{"value":"Results","children":[]}]},{"value":"Performance","children":[]},{"value":"Internals","children":[{"value":"Fast Interpreter","children":[]},{"value":"External Immutabiliy","children":[]},{"value":"Internal Optimizations","children":[]}]},{"value":"Comparisons","children":[]},{"value":"ScalaParse","children":[{"value":"Using ScalaParse","children":[]}]}]}]
   )</script><script>
     ['DOMContentLoaded', 'load'].forEach(function(ev){
       addEventListener(ev, function(){
@@ -927,4 +927,4 @@ assert(value == Js.Obj(&quot;omg&quot; -&gt; Js.Str(&quot;123&quot;), &quot;wtf&
         );
       })
     })
-  </script></body></html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
+  </script></body></html>                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
