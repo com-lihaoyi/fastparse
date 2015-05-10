@@ -1031,6 +1031,15 @@ object UnitTests extends TestSuite{
         |}
       """.stripMargin
     )
+    * - check(
+      """object X{
+        |(
+        |1
+        |+
+        |)
+        |}
+      """.stripMargin
+    )
 
     // These are currently illegal but parse correctly,
     // only failing later in the compiler

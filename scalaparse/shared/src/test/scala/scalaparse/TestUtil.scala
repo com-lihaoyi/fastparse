@@ -1,7 +1,11 @@
 package scalaparse
 
+import fastparse._
 import fastparse.core.Result
 import utest._
+
+
+import scalaparse.Scala._
 
 /**
  * Created by haoyi on 5/3/15.
