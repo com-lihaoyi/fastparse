@@ -38,10 +38,13 @@ object ProjectTests extends TestSuite{
         TestUtil.check(code)
       }
 
+
       files.foreach(Await.result(_, Duration.Inf))
+
     }
-    'test - checkDir("scalaparser/shared/src/test/resources")
-    def checkRepo(url: String, filter: String => Boolean = _ => false) = {
+
+    'test - checkDir("scalaparse/shared/src/test/resources")
+    def checkRepo(url: String, filter: String => Boolean = _ => true) = {
       import sys.process._
       val name = url.split("/").last
       println("CLONING?")
@@ -50,8 +53,8 @@ object ProjectTests extends TestSuite{
         Seq("git", "clone", url, "target/repos/"+name, "--depth", "1").!
       }
       checkDir("target/repos/"+name, filter)
-
     }
+
 
     'fastparse - checkRepo("https://github.com/lihaoyi/fastparse")
     'scalaJs - checkRepo("https://github.com/scala-js/scala-js")
@@ -62,10 +65,18 @@ object ProjectTests extends TestSuite{
     'play - checkRepo("https://github.com/playframework/playframework")
     'PredictionIO - checkRepo("https://github.com/PredictionIO/PredictionIO")
     'spark - checkRepo("https://github.com/apache/spark")
-    'sbt - checkRepo("https://github.com/sbt/sbt")
+    'sbt - checkRepo("https://github.com/sbt/sbt",
+      !Seq(
+        // Unicode escapes in weird places
+        "target/repos/sbt/main/settings/src/main/scala/sbt/std/InputWrapper.scala"
+      ).contains(_)
+    )
     'cats - checkRepo("https://github.com/non/cats")
     'finagle - checkRepo("https://github.com/twitter/finagle")
     'kafka - checkRepo("https://github.com/apache/kafka")
+    'breeze - checkRepo("https://github.com/scalanlp/breeze")
+    'spire - checkRepo("https://github.com/non/spire")
+    'saddle - checkRepo("https://github.com/saddle/saddle")
     'scala - checkRepo(
       "https://github.com/scala/scala",
       !Seq(

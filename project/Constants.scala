@@ -1,4 +1,4 @@
 package fastparse
 object Constants{
-  val version = "0.1.3"
+  val version = "0.1.4"
 }

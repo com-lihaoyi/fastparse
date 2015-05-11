@@ -1,5 +1,6 @@
 package fastparse.parsers
 
+import fastparse.Utils.FuncName
 import fastparse._
 import fastparse.core.Result._
 import fastparse.core.{ParseCtx, Result}
@@ -7,7 +8,8 @@ import fastparse.core.{ParseCtx, Result}
 import scala.annotation.tailrec
 
 /**
- * Created by haoyi on 5/10/15.
+ * Parsers which are made up of other parsers,
+ * adding to or combining their behavior
  */
 object Combinators {
 
@@ -45,7 +47,7 @@ object Combinators {
    * [[p]] only when `parse` is called to allow for circular
    * dependencies between parsers.
    */
-  case class Rule[+T](name: String, p: () => Parser[T]) extends Parser[T]{
+  case class Rule[+T](name: FuncName, p: () => Parser[T]) extends Parser[T]{
     lazy val pCached = p()
     def parseRec(cfg: ParseCtx, index: Int) = {
       pCached.parseRec(cfg, index) match{
@@ -53,7 +55,7 @@ object Combinators {
         case s => s
       }
     }
-    override def toString = name
+    override def toString = name.name
     override def shortTraced = true
   }
 

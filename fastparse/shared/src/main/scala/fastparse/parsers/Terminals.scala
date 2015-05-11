@@ -7,7 +7,8 @@ import fastparse.core.ParseCtx
 import scala.annotation.tailrec
 
 /**
- * Created by haoyi on 5/10/15.
+ * Leaf parsers which do not contain any other
+ * parsers, and do simple things
  */
 object Terminals {
 

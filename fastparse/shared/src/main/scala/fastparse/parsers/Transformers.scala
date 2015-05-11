@@ -5,7 +5,7 @@ import fastparse.core.Result.{Failure, Success}
 import fastparse.core.{ParseCtx, Result}
 
 /**
- * Created by haoyi on 5/10/15.
+ * Parsers that work with the output of a successful parse
  */
 object Transformers {
   /**

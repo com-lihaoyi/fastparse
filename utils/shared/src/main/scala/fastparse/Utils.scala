@@ -12,19 +12,20 @@ object Utils {
    * Type, which when summoned implicitly, provides the
    * name of the nearest enclosing method for your perusal
    */
-  case class FuncName(name: String)
+  case class FuncName(name: String, fullName: String)
   object FuncName{
-    implicit def strToFuncName(s: String) = FuncName(s)
+    implicit def strToFuncName(s: String) = FuncName(s, s)
 
     def impl(c: Compat.Context): c.Expr[FuncName] = {
       import c.universe._
 
       val sym = Compat.enclosingName(c)
       val simpleName = sym.name.decodedName.toString.trim
+      val fullName = sym.fullName.trim
 
       val name = q"$simpleName"
 
-      c.Expr[FuncName](q"fastparse.Utils.FuncName($name)")
+      c.Expr[FuncName](q"fastparse.Utils.FuncName($name, $fullName)")
     }
   }
 

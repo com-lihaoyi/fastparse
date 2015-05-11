@@ -1040,6 +1040,32 @@ object UnitTests extends TestSuite{
         |}
       """.stripMargin
     )
+    * - check(
+      """class C{
+        |  while (a
+        |    && b) c
+        |}
+        |
+      """.stripMargin
+    )
+    * - check(
+      """class C{
+        |  do x
+        |  while(a
+        |
+        |  &&
+        |  b)
+        |}
+        |
+      """.stripMargin
+    )
+    * - check(
+      """class C{
+        |  x match{ case a @ _ ** y => z}
+        |}
+        |
+      """.stripMargin
+    )
 
     // These are currently illegal but parse correctly,
     // only failing later in the compiler

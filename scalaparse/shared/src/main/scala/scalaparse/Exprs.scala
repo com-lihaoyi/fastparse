@@ -2,6 +2,9 @@ package scalaparse
 
 import acyclic.file
 import fastparse._
+
+import scalaparse.syntax.Identifiers
+
 trait Exprs extends Core with Types with Xml{
 
   private implicit def wspStr(s: String) = P(WL ~ s)(Utils.literalize(s).toString)
@@ -26,6 +29,7 @@ trait Exprs extends Core with Types with Xml{
     val OneSemiMax = if (curlyBlock) OneNLMax else Pass
     val NoSemis = if (curlyBlock) NotNewline else Pass
 
+
     val Enumerators = {
       val Generator = P( `<-` ~! Expr ~ Guard.? )
       val Assign = P( `=` ~! Expr )
@@ -38,13 +42,13 @@ trait Exprs extends Core with Types with Xml{
         val Else = P( Semi.? ~ `else` ~! Expr )
         P( `if` ~! "(" ~ ExprCtx.Expr ~ ")" ~ Expr ~ Else.? )
       }
-      val While = P( `while` ~! "(" ~ Expr ~ ")" ~ Expr )
+      val While = P( `while` ~! "(" ~ ExprCtx.Expr ~ ")" ~ Expr )
       val Try = {
         val Catch = P( `catch` ~! Expr )
         val Finally = P( `finally` ~! Expr )
         P( `try` ~! Expr ~ Catch.? ~ Finally.? )
       }
-      val DoWhile = P( `do` ~! Expr ~ Semi.? ~ `while` ~ "(" ~ Expr ~ ")" )
+      val DoWhile = P( `do` ~! Expr ~ Semi.? ~ `while` ~ "(" ~ ExprCtx.Expr ~ ")" )
 
       val For = {
         val Body = P( "(" ~! ExprCtx.Enumerators ~ ")" | "{" ~! StatCtx.Enumerators ~ "}" )
@@ -89,7 +93,7 @@ trait Exprs extends Core with Types with Xml{
     val ExtractorArgs = P( Pattern.rep("," ~! Pass) )
     val TupleEx = P( "(" ~! ExtractorArgs ~ ")" )
     val Extractor = P( StableId ~ TypeArgs.? ~ TupleEx.? )
-    val Thingy = P( `_` ~ (`:` ~! TypePat).? ~ !"*" )
+    val Thingy = P( `_` ~ (`:` ~! TypePat).? ~ !("*" ~ !syntax.Basic.OpChar) )
     P( XmlPattern | Thingy | PatLiteral | TupleEx | Extractor | VarId)
   }
 
@@ -112,7 +116,7 @@ trait Exprs extends Core with Types with Xml{
   val TypePattern = P( (`_` | VarId) ~ `:` ~ TypePat )
   val TypeOrBindPattern: P0 = P( TypePattern | BindPattern )
   val BindPattern: P0 = {
-    val InfixPattern = P( `_*` | SimplePattern ~ (Id ~ SimplePattern).rep )
+    val InfixPattern = P( SimplePattern ~ (Id ~ SimplePattern).rep | `_*` )
     val Binding = P( (VarId | `_`) ~ `@` )
     P( Binding ~ InfixPattern | InfixPattern | VarId )
   }
