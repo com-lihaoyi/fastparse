@@ -409,7 +409,7 @@
                     @td{scalac}@td{4888}@td{113}
 
         @p
-            These numbers are the number of iterations over 30 seconds, average of 4 runs, with 2 runs of warmup (discarded). FastParse performs worse here, at 11.5x slower than Scalac's in-built parser, and 3x slower than the equivalent Parboiled2-based parser. Depending on what you're doing, that may or may not be a problem.
+            These numbers are the number of iterations over 30 seconds, average of 4 runs, with 2 runs of warmup (discarded). FastParse performs worse here, at 11.5x slower than Scalac's in-built parser, and 3x slower than the equivalent Parboiled2-based parser. Depending on what you're doing, that may or may not be a problem: ScalaParse still makes progress at 57,027 lines of Scala per second, which despite being slower than the others is still blazing fast.
 
     @sect{Internals}
         @p 
