@@ -36,9 +36,57 @@ object PerfTests extends TestSuite{
 
       val parser = Scala.CompilationUnit
       println("Loaded " + genJsCodeSource.length + " bytes of input. Parsing...")
-      // Last Run
-      // (384,336,5107,434,338,5569,424,341,5544)
+
+      /**
+       * Parboiled2 ( run separately in fork of parboiled project )
+       *
+       * avg 1354.25 dev 7.97392
+       * 1212
+       * 1361
+       * 1357
+       * 1363
+       * 1353
+       * 1344
+       *
+       * FastParse
+       *
+       * avg 320.75 dev 15.43535
+       * 321
+       * 343
+       * 341
+       * 322
+       * 316
+       * 304
+       * FastParseNoTrace
+       *
+       * avg 434.75 dev 23.4005
+       * 334
+       * 455
+       * 456
+       * 414
+       * 454
+       * 415
+       * Scalac
+       *
+       * avg 4888.25 dev 113.26481
+       * 5004
+       * 5340
+       * 4937
+       * 5022
+       * 4769
+       * 4825
+       */
+
       (
+//        time(() => parser.parse(genJsCodeSource, trace = false)),
+//        time(() => parser.parse(genJsCodeSource, trace = true)),
+//        time(() => global.newUnitParser(genJsCodeSource).parse()),
+//        time(() => parser.parse(genJsCodeSource, trace = false)),
+//        time(() => parser.parse(genJsCodeSource, trace = true)),
+//        time(() => global.newUnitParser(genJsCodeSource).parse()),
+//        time(() => parser.parse(genJsCodeSource, trace = false)),
+//        time(() => parser.parse(genJsCodeSource, trace = true)),
+//        time(() => global.newUnitParser(genJsCodeSource).parse()),
 //        time(() => parser.parse(genJsCodeSource, trace = false)),
 //        time(() => parser.parse(genJsCodeSource, trace = true)),
 //        time(() => global.newUnitParser(genJsCodeSource).parse()),

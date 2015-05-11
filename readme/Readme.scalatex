@@ -400,16 +400,16 @@
                 @th{Benchmark}@th{Score}@th{Error}
             @tbody
                 @tr
-                    @td{fastparse}@td{338}@td{25.1}
+                    @td{fastparse}@td{320.7}@td{15.4}
                 @tr
-                    @td{fastparse-no-trace}@td{414}@td{26.4}
+                    @td{fastparse-no-trace}@td{434.7}@td{23.4}
                 @tr
-                    @td{parboiled2}@td{1249}@td{87.8}
+                    @td{parboiled2}@td{1354}@td{7.97}
                 @tr
-                    @td{scalac}@td{5406}@td{260}
+                    @td{scalac}@td{4888}@td{113}
 
         @p
-            These numbers are the number of iterations over 30 seconds. FastParse performs worse here, at 13x slower than Scalac's in-built parser, and 3x slower than the equivalent Parboiled2-based parser. Depending on what you're doing, that may or may not be a problem.
+            These numbers are the number of iterations over 30 seconds, average of 4 runs, with 2 runs of warmup (discarded). FastParse performs worse here, at 11.5x slower than Scalac's in-built parser, and 3x slower than the equivalent Parboiled2-based parser. Depending on what you're doing, that may or may not be a problem.
 
     @sect{Internals}
         @p 
