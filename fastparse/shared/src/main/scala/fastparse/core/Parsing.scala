@@ -180,7 +180,7 @@ trait Parser[+T] extends ParserApi[T]{
 }
 
 trait ParserApi[+T]{ this: Parser[T] =>
-  protected def fail(f: Failure.Mutable, index: Int, cut: Boolean = false) = {
+  def fail(f: Failure.Mutable, index: Int, cut: Boolean = false) = {
     f.index = index
     f.cut = cut
     f.fullStack = Nil
@@ -188,12 +188,12 @@ trait ParserApi[+T]{ this: Parser[T] =>
     f
   }
 
-  protected def failMore(f: Failure.Mutable, index: Int, trace: Boolean, cut: Boolean = false) = {
+  def failMore(f: Failure.Mutable, index: Int, trace: Boolean, cut: Boolean = false) = {
     if (trace) f.fullStack = new ::(new Result.Frame(index, this), f.fullStack)
     f.cut = f.cut | cut
     f
   }
-  protected def success[T](s: Success.Mutable[_], value: T, index: Int, cut: Boolean) = {
+  def success[T](s: Success.Mutable[_], value: T, index: Int, cut: Boolean) = {
     val s1 = s.asInstanceOf[Success.Mutable[T]]
     s1.value = value
     s1.index = index

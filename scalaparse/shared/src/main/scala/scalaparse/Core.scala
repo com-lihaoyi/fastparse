@@ -105,11 +105,11 @@ trait Core extends syntax.Literals{
   val ExprLiteral = P( WL ~ Literals.Expr.Literal )
   val PatLiteral = P( WL ~ Literals.Pat.Literal )
   val Semi = P( WS ~ Basic.Semi )
-  val Semis = P( Semi.rep1 )
+  val Semis = P( Semi.rep(1) )
   val Newline = P( WL ~ Basic.Newline )
 
-  val QualId = P( WL ~ Id.rep1(".") )
-  val Ids = P( Id.rep1(",") )
+  val QualId = P( WL ~ Id.rep(1, sep = ".") )
+  val Ids = P( Id.rep(1, sep = ",") )
 
   val NotNewline: P0 = P( &( WS ~ !Basic.Newline ) )
   val OneNLMax: P0 = {

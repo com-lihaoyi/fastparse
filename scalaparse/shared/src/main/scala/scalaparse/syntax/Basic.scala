@@ -20,7 +20,7 @@ object Basic {
 
   val WSChars = P( CharsWhile("\u0020\u0009".contains(_)) )
   val Newline = P( StringIn("\r\n", "\n") )
-  val Semi = P( ";" | Newline.rep1 )
+  val Semi = P( ";" | Newline.rep(1) )
   val OpChar = P ( CharPred(isOpChar) )
 
   def isOpChar(c: Char) = {

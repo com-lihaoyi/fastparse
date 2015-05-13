@@ -14,9 +14,9 @@ trait Exprs extends Core with Types with Xml{
 
   val Import: P0 = {
     val Selector: P0 = P( Id ~ (`=>` ~! (Id | `_`)).? )
-    val Selectors: P0 = P( "{" ~! (Selector | `_` ).rep("," ~! Pass) ~ "}" )
+    val Selectors: P0 = P( "{" ~! (Selector | `_` ).rep(sep = "," ~!) ~ "}" )
     val ImportExpr: P0 = P( StableId ~ ("." ~! (`_` | Selectors)).? )
-    P( `import` ~! ImportExpr.rep1("," ~! Pass) )
+    P( `import` ~! ImportExpr.rep(1, sep = "," ~!) )
   }
 
   object StatCtx extends WsCtx(curlyBlock=true)
@@ -69,7 +69,7 @@ trait Exprs extends Core with Types with Xml{
       )
     }
     val AscriptionType = if (curlyBlock) P( InfixType ) else P( Type )
-    val Ascription = P( `:` ~! (`_*` |  AscriptionType | Annot.rep1) )
+    val Ascription = P( `:` ~! (`_*` |  AscriptionType | Annot.rep(1)) )
     val MatchAscriptionSuffix = P(`match` ~! "{" ~ CaseClauses ~ "}" | Ascription)
     val ExprPrefix = P( WL ~ CharIn("-+~!") ~ WS ~ !syntax.Basic.OpChar )
     val ExprSuffix = P( ("." ~! Id | TypeArgs | NoSemis ~ ArgList).rep ~ (NoSemis  ~ `_`).? )
@@ -80,7 +80,7 @@ trait Exprs extends Core with Types with Xml{
 
     val PostfixExpr: P0 = P( PrefixExpr ~ ExprSuffix ~ PostfixSuffix )
 
-    val Parened = P ( "(" ~! Exprs.? ~ ")" )
+    val Parened = P ( "(" ~! TypeExpr.rep(0, "," ~!, end = ")") )
     val SimpleExpr: P0 = {
       val Path = P( (Id ~ ".").rep ~ `this` ~ ("." ~! Id).rep | StableId )
       val New = P( `new` ~! AnonTmpl )
@@ -90,8 +90,7 @@ trait Exprs extends Core with Types with Xml{
     val Guard : P0 = P( `if` ~! PostfixExpr )
   }
   val SimplePattern: P0 = {
-    val ExtractorArgs = P( Pattern.rep("," ~! Pass) )
-    val TupleEx = P( "(" ~! ExtractorArgs ~ ")" )
+    val TupleEx = P( "(" ~! Pattern.rep(sep = "," ~!, end = ")") )
     val Extractor = P( StableId ~ TypeArgs.? ~ TupleEx.? )
     val Thingy = P( `_` ~ (`:` ~! TypePat).? ~ !("*" ~ !syntax.Basic.OpChar) )
     P( XmlPattern | Thingy | PatLiteral | TupleEx | Extractor | VarId)
@@ -107,12 +106,12 @@ trait Exprs extends Core with Types with Xml{
 
   val Block: P0 = {
     val BlockEnd = P( Semis.? ~ &("}" | `case`) )
-    val Body = P( BlockStat.rep(Semis) )
+    val Body = P( BlockStat.rep(sep = Semis) )
     P( Semis.? ~ Body ~! BlockEnd )
   }
 
-  val Patterns: P0 = P( Pattern.rep1("," ~! Pass) )
-  val Pattern: P0 = P( TypeOrBindPattern.rep1("|" ~! Pass) )
+  val Patterns: P0 = P( Pattern.rep(1, sep = "," ~!) )
+  val Pattern: P0 = P( TypeOrBindPattern.rep(1, sep = "|" ~!) )
   val TypePattern = P( (`_` | VarId) ~ `:` ~ TypePat )
   val TypeOrBindPattern: P0 = P( TypePattern | BindPattern )
   val BindPattern: P0 = {
@@ -129,6 +128,6 @@ trait Exprs extends Core with Types with Xml{
     // Need to lookahead for `class` and `object` because
     // the block { case object X } is not a case clause!
     val CaseClause: P0 = P( `case` ~ !(`class` | `object`) ~! Pattern ~ ExprCtx.Guard.? ~ `=>` ~ Block )
-    P( CaseClause.rep1 )
+    P( CaseClause.rep(1) )
   }
 }

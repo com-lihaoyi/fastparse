@@ -59,12 +59,12 @@ object JsonTests extends TestSuite{
     P( space ~ "\"" ~! (strChars | escape).rep.! ~ "\"").map(Js.Str)
 
   val array =
-    P( "[" ~! jsonExpr.rep("," ~! Pass) ~ space ~ "]").map(Js.Arr(_:_*))
+    P( "[" ~! jsonExpr.rep(sep="," ~!, end=space ~ "]")).map(Js.Arr(_:_*))
 
   val pair = P( string.map(_.value) ~! ":" ~! jsonExpr )
 
   val obj =
-    P( "{" ~! pair.rep("," ~! Pass) ~ space ~ "}" ).map(Js.Obj(_:_*))
+    P( "{" ~! pair.rep(sep="," ~!, end = space ~ "}" )).map(Js.Obj(_:_*))
 
   val jsonExpr: P[Js.Val] = P(
     space ~ (obj | array | string | `true` | `false` | `null` | number) ~ space
@@ -178,7 +178,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / "}":23 ..."firstName\""
+          jsonExpr:0 / obj:9 / (pair | space ~ "}"):10 ..."\n         "
         """
       )
       * - check(
@@ -234,7 +234,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / "}":56 ..."lastName\":"
+          jsonExpr:0 / obj:9 / ("," ~ pair | space ~ "}"):56 ..."lastName\":"
         """
       )
       * - check(
@@ -262,7 +262,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / "}":154 ...": \"21 2nd "
+          jsonExpr:0 / obj:9 / ("," ~ pair | space ~ "}"):154 ...": \"21 2nd "
         """
       )
       * - check(
@@ -346,7 +346,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / pair:292 / jsonExpr:320 / array:321 / jsonExpr:322 / obj:339 / "}":411 ..."555-1234\n "
+          jsonExpr:0 / obj:9 / pair:292 / jsonExpr:320 / array:321 / jsonExpr:322 / obj:339 / ("," ~ pair | space ~ "}"):411 ..."555-1234\n "
         """
       )
       * - check(
@@ -374,7 +374,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / pair:292 / jsonExpr:320 / array:321 / jsonExpr:440 / obj:457 / "}":528 ..."555-4567\n "
+          jsonExpr:0 / obj:9 / pair:292 / jsonExpr:320 / array:321 / jsonExpr:440 / obj:457 / ("," ~ pair | space ~ "}"):528 ..."555-4567\n "
         """
       )
       * - check(
@@ -402,7 +402,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / pair:292 / jsonExpr:320 / array:321 / "]":566 ..."}\n        "
+          jsonExpr:0 / obj:9 / pair:292 / jsonExpr:320 / array:321 / ("," ~ jsonExpr | space ~ "]"):566 ..."}\n        "
         """
       )
     }

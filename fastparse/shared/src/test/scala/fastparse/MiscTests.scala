@@ -28,18 +28,18 @@ object MiscTests extends TestSuite{
         check("A" ~ ("B" ~ "C"), """("A" ~ ("B" ~ "C"))""")
       }
       'Mixed{
-        check(("A" ~ "B") | "C", """(("A" ~ "B") | "C")""")
+        check(("A" ~ "B") | "C", """("A" ~ "B" | "C")""")
         check("A" ~ ("B" | "C"), """("A" ~ ("B" | "C"))""")
         check(("A" | "B") ~ "C", """(("A" | "B") ~ "C")""")
-        check("A" | ("B" ~ "C"), """("A" | ("B" ~ "C"))""")
+        check("A" | ("B" ~ "C"), """("A" | "B" ~ "C")""")
       }
       'rep{
         check("A".rep, """ "A".rep """)
         check(("A" | "B").rep, """ ("A" | "B").rep """)
         check(("A".? | "B").rep, """ ("A".? | "B").rep """)
-        check(("A".? | "B").rep1, """ ("A".? | "B").rep1 """)
-        check(("A".? | "B").rep("C"), """ ("A".? | "B").rep("C") """)
-        check(("A".? | "B").rep1("C" ~ "D" | "E"), """ ("A".? | "B").rep1((("C" ~ "D") | "E")) """)
+        check(("A".? | "B").rep(1), """ ("A".? | "B").rep1 """)
+        check(("A".? | "B").rep(sep="C"), """ ("A".? | "B").rep("C") """)
+        check(("A".? | "B").rep(1, sep="C" ~ "D" | "E"), """ ("A".? | "B").rep1(("C" ~ "D" | "E")) """)
       }
       'lookahead{
         check(&("A") ~ "ABC", """(&("A") ~ "ABC")""")

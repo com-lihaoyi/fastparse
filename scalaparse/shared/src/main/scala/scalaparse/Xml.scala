@@ -94,12 +94,12 @@ trait Xml extends Core {
 
     val PI = P( "<?" ~ PITarget ~ (WL ~ (!"?>" ~ Char).rep).? ~ "?>" )
     val PITarget = P( !(("X" | "x") ~ ("M" | "m") ~ ("L" | "l")) ~ Name )
-    val CharRef = P( "&#" ~ CharIn('0' to '9').rep1 ~ ";" | "&#x" ~ Basic.HexNum ~ ";" )
+    val CharRef = P( "&#" ~ CharIn('0' to '9').rep(1) ~ ";" | "&#x" ~ Basic.HexNum ~ ";" )
     val Reference = P( EntityRef | CharRef )
     val EntityRef = P( "&" ~ Name ~ ";" )
     val ScalaExpr = P("{" ~ WS ~ Block ~ WS ~ "}")
     val Char = P( AnyChar )
-    val CharData = P( (!("{" | "]]>" | CharRef) ~ Char1 | "{{").rep1 )
+    val CharData = P( (!("{" | "]]>" | CharRef) ~ Char1 | "{{").rep(1) )
 
     val Char1  = P( !("<" | "&") ~ Char )
     val CharQ = P( !"\"" ~ Char1 )

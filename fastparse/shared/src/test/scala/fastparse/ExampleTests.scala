@@ -40,7 +40,7 @@ object ExampleTests extends TestSuite{
         val Result.Success(_, 8) = ab.parse("aaaaaaab")
         val Result.Success(_, 4) = ab.parse("aaaba")
 
-        val abc = P( "a".rep("b") ~ "c").log("A")
+        val abc = P( "a".rep(sep="b") ~ "c").log("A")
 
         val Result.Success(_, 8) = abc.parse("abababac")
 
@@ -48,7 +48,7 @@ object ExampleTests extends TestSuite{
       }
 
       'option{
-        val option = P( "c".? ~ "a".rep("b").! ~ End)
+        val option = P( "c".? ~ "a".rep(sep="b").! ~ End)
 
         val Result.Success("aba", 3) = option.parse("aba")
         val Result.Success("aba", 3) = option.parse("aba")
@@ -146,7 +146,7 @@ object ExampleTests extends TestSuite{
         val Result.Success(12, _) = binaryNum.parse("1100")
       }
       'flatMap{
-        val leftTag = P( "<" ~ (!">" ~ AnyChar).rep1.! ~ ">" )
+        val leftTag = P( "<" ~ (!">" ~ AnyChar).rep(1).! ~ ">" )
         def rightTag(s: String) = P( "</" ~ s.! ~ ">" )
         val xml = P( leftTag.flatMap(rightTag) )
 
@@ -193,7 +193,7 @@ object ExampleTests extends TestSuite{
     'cuts{
       'nocut{
         val alpha = P( CharIn('a' to 'z') )
-        val nocut = P( "val " ~ alpha.rep1.! | "def " ~ alpha.rep1.!)
+        val nocut = P( "val " ~ alpha.rep(1).! | "def " ~ alpha.rep(1).!)
 
         val Result.Success("abcd", _) = nocut.parse("val abcd")
 
@@ -201,12 +201,12 @@ object ExampleTests extends TestSuite{
         assert(
           failure.index == 0,
           failure.trace ==
-          """nocut:0 / (("val " ~ alpha.rep1) | ("def " ~ alpha.rep1)):0 ..."val 1234""""
+          """nocut:0 / ("val " ~ alpha.rep1 | "def " ~ alpha.rep1):0 ..."val 1234""""
         )
       }
       'withcut{
         val alpha = P( CharIn('a' to 'z') )
-        val nocut = P( "val " ~! alpha.rep1.! | "def " ~! alpha.rep1.!)
+        val nocut = P( "val " ~! alpha.rep(1).! | "def " ~! alpha.rep(1).!)
 
         val Result.Success("abcd", _) = nocut.parse("val abcd")
 
@@ -219,8 +219,8 @@ object ExampleTests extends TestSuite{
       }
       'repnocut{
         val alpha = P( CharIn('a' to 'z') )
-        val stmt = P( "val " ~ alpha.rep1.! ~ ";" ~ " ".rep )
-        val stmts = P( stmt.rep1 ~ End )
+        val stmt = P( "val " ~ alpha.rep(1).! ~ ";" ~ " ".rep )
+        val stmts = P( stmt.rep(1) ~ End )
 
         val Result.Success(Seq("abcd"), _) = stmts.parse("val abcd;")
         val Result.Success(Seq("abcd", "efg"), _) = stmts.parse("val abcd; val efg;")
@@ -233,8 +233,8 @@ object ExampleTests extends TestSuite{
       }
       'repcut{
         val alpha = P( CharIn('a' to 'z') )
-        val stmt = P( "val " ~! alpha.rep1.! ~ ";" ~ " ".rep )
-        val stmts = P( stmt.rep1 ~ End )
+        val stmt = P( "val " ~! alpha.rep(1).! ~ ";" ~ " ".rep )
+        val stmts = P( stmt.rep(1) ~ End )
 
         val Result.Success(Seq("abcd"), _) = stmts.parse("val abcd;")
         val Result.Success(Seq("abcd", "efg"), _) = stmts.parse("val abcd; val efg;")
@@ -247,8 +247,8 @@ object ExampleTests extends TestSuite{
         )
       }
       'delimiternocut{
-        val digits = P( CharIn('0' to '9').rep1 )
-        val tuple = P( "(" ~ digits.!.rep(",") ~ ")" )
+        val digits = P( CharIn('0' to '9').rep(1) )
+        val tuple = P( "(" ~ digits.!.rep(sep=",") ~ ")" )
 
         val Result.Success(Seq("1", "23"), _) = tuple.parse("(1,23)")
 
@@ -259,8 +259,8 @@ object ExampleTests extends TestSuite{
         )
       }
       'delimitercut{
-        val digits = P( CharIn('0' to '9').rep1 )
-        val tuple = P( "(" ~ digits.!.rep("," ~! Pass) ~ ")" )
+        val digits = P( CharIn('0' to '9').rep(1) )
+        val tuple = P( "(" ~ digits.!.rep(sep="," ~! Pass) ~ ")" )
 
         val Result.Success(Seq("1", "23"), _) = tuple.parse("(1,23)")
 

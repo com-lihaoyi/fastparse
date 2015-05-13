@@ -33,8 +33,9 @@ object ParsingTests extends TestSuite{
       check("Hello".!.rep, ("HelloHello!", 0), Success.Mutable(Seq("Hello", "Hello"), 10))
       check("Hello".!.rep, ("HelloHello!", 2), Success.Mutable(Seq(), 2))
       check("Hello".!.rep, ("HelloHello!", 5), Success.Mutable(Seq("Hello"), 10))
-      check("Hello".!.rep1, ("HelloHello!", 0), Success.Mutable(Seq("Hello", "Hello"), 10))
-      checkFail("Hello".rep1, ("HelloHello!", 2), 2)
+      check("Hello".!.rep(1), ("HelloHello!", 0), Success.Mutable(Seq("Hello", "Hello"), 10))
+      checkFail("Hello".rep(1), ("HelloHello!", 2), 2)
+      checkFail("Hello".rep(end="Bye") ~ End, ("HelloHello!", 0), 10)
     }
     'either{
       check("Hello".! | "Bye".!, ("HelloBye", 0), Success.Mutable("Hello", 5))
@@ -67,7 +68,7 @@ object ParsingTests extends TestSuite{
         check(("Hello" ~ "Bye").rep, ("HelloByeHello", 0), Success.Mutable((), 8))
         checkFail(("Hello" ~! "Bye").rep, ("HelloByeHello", 0), 13)
         check(("Hello" ~ "Bye").rep, ("HelloByeHello", 0), Success.Mutable((), 8))
-        checkFail("Hello".rep(("Bye" ~! Pass)), ("HelloBye", 0), 8)
+        checkFail("Hello".rep(sep = "Bye" ~! Pass), ("HelloBye", 0), 8)
       }
       'optional{
         check(("Hello" ~ "Bye").?, ("HelloBoo", 0), Success.Mutable((), 0))

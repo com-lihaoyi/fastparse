@@ -17,18 +17,10 @@ trait ParserApi[+T]{
    * Repeats this parser 0 or more times
    */
   def rep[R](implicit ev: Repeater[T, R]): Parser[R]
-  /**
-   * Repeats this parser 1 or more times
-   */
-  def rep1[R](implicit ev: Repeater[T, R]): Parser[R]
-  /**
-   * Repeats this parser 0 or more times, with a delimiter
-   */
-  def rep[R](delimiter: Parser[_])(implicit ev: Repeater[T, R]): Parser[R]
-  /**
-   * Repeats this parser 1 or more times, with a delimiter
-   */
-  def rep1[R](delimiter: Parser[_])(implicit ev: Repeater[T, R]): Parser[R]
+  def rep[R](min: Int = 0,
+             sep: Parser[_] = Pass,
+             until: Parser[_] = Pass)
+            (implicit ev: Repeater[T, R]): Parser[R]
 
   /**
    * Parses using this or the parser `p`
@@ -49,6 +41,10 @@ trait ParserApi[+T]{
    */
   def ~![V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R]
 
+  /**
+   * Performs a cut if this parses successfully.
+   */
+  def ~! : Parser[T]
   /**
    * Parses this, optionally
    */
@@ -74,17 +70,16 @@ trait ParserApi[+T]{
    */
   def flatMap[V](f: T => Parser[V]): Parser[V]
 }
-
+import parsers.Terminals.Pass
 trait ParserApiImpl[+T] extends ParserApi[T]{ this: Parser[T] =>
 
   def parseRec(cfg: ParseCtx, index: Int): Result[T]
 
   def log(msg: String)(implicit output: Logger) = Logged(this, msg, output.f)
 
-  def rep[R](implicit ev: Repeater[T, R]): Parser[R] = Repeat(this, 0, parsers.Terminals.Pass)
-  def rep1[R](implicit ev: Repeater[T, R]): Parser[R] = Repeat(this, 1, parsers.Terminals.Pass)
-  def rep[R](delimiter: Parser[_])(implicit ev: Repeater[T, R]): Parser[R] = Repeat(this, 0, delimiter)
-  def rep1[R](delimiter: Parser[_])(implicit ev: Repeater[T, R]): Parser[R] = Repeat(this, 1, delimiter)
+  def rep[R](implicit ev: Repeater[T, R]): Parser[R] = Repeat(this, 0, Pass, Pass)
+  def rep[R](min: Int = 0, sep: Parser[_] = Pass, end: Parser[_] = Pass)
+            (implicit ev: Repeater[T, R]): Parser[R] = Repeat(this, min, sep, end)
 
   def |[V >: T](p: Parser[V]): Parser[V] = Either[V](Either.flatten(Vector(this, p)):_*)
 
@@ -96,6 +91,8 @@ trait ParserApiImpl[+T] extends ParserApi[T]{ this: Parser[T] =>
   def ?[R](implicit ev: Optioner[T, R]) = Optional(this)
 
   def unary_! = Not(this)
+
+  def ~! : Parser[T] = Cut[T](this)
 
   def ! = Capturing(this)
 

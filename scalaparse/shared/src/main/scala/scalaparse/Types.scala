@@ -20,7 +20,7 @@ trait Types extends Core{
   val Mod: P0 = P( LocalMod | AccessMod | `override` )
 
   val Type: P0 = {
-    val ExistentialClause = P( `forSome` ~! `{` ~ Dcl.rep1(Semis) ~ `}` )
+    val ExistentialClause = P( `forSome` ~! `{` ~ Dcl.rep(1, Semis) ~ `}` )
     val PostfixType = P( InfixType ~ (`=>` ~! Type | ExistentialClause).? )
     val Unbounded = P( `_` | PostfixType )
     P( `=>`.? ~ Unbounded ~ TypeBounds ~ "*".? )
@@ -29,10 +29,10 @@ trait Types extends Core{
   val InfixType = P( CompoundType ~ (NotNewline ~ Id ~ OneNLMax ~ CompoundType).rep )
 
   val CompoundType = {
-    val Refinement = P( OneNLMax ~ `{` ~ Dcl.rep(Semis) ~ `}` )
-    P( AnnotType.rep1(`with` ~! Pass) ~ Refinement.? | Refinement )
+    val Refinement = P( OneNLMax ~ `{` ~ Dcl.rep(sep=Semis) ~ `}` )
+    P( AnnotType.rep(1, `with` ~! Pass) ~ Refinement.? | Refinement )
   }
-  val AnnotType = P(SimpleType ~ (NotNewline ~ (NotNewline ~ Annot).rep1).? )
+  val AnnotType = P(SimpleType ~ (NotNewline ~ (NotNewline ~ Annot).rep(1)).? )
 
   val SimpleType: P0 = {
     // Can't `cut` after the opening paren, because we might be trying to parse `()`
@@ -46,9 +46,9 @@ trait Types extends Core{
 
   val FunSig: P0 = {
     val FunArg = P( Annot.rep ~ Id ~ (`:` ~! Type).? ~ (`=` ~! TypeExpr).? )
-    val Args = P( FunArg.rep1("," ~! Pass) )
+    val Args = P( FunArg.rep(1, "," ~!) )
     val FunArgs = P( OneNLMax ~ "(" ~! `implicit`.? ~ Args.? ~ ")" )
-    val FunTypeArgs = P( "[" ~! (Annot.rep ~ TypeArg).rep1("," ~! Pass) ~ "]" )
+    val FunTypeArgs = P( "[" ~! (Annot.rep ~ TypeArg).rep(1, "," ~!) ~ "]" )
     P( (Id | `this`) ~ FunTypeArgs.? ~ FunArgs.rep )
   }
 
@@ -62,8 +62,8 @@ trait Types extends Core{
 
   val TypeArgList: P0 = {
     val Variant: P0 = P( Annot.rep ~ (WL ~ CharIn("+-")).? ~ TypeArg )
-    P( "[" ~! Variant.rep1("," ~! Pass) ~ "]" )
+    P( "[" ~! Variant.rep(1, "," ~! ) ~ "]" )
   }
-  val Exprs: P0 = P( TypeExpr.rep1("," ~! Pass) )
+  val Exprs: P0 = P( TypeExpr.rep(1, "," ~! Pass) )
   val TypeDef: P0 = P( Id ~ TypeArgList.? ~ (`=` ~! Type | TypeBounds) )
 }

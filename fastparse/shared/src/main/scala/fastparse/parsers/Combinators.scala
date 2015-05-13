@@ -190,6 +190,15 @@ object Combinators {
     }
   }
 
+  case class Cut[T](p: Parser[T]) extends Parser[T]{
+    def parseRec(cfg: ParseCtx, index: Int) = {
+      p.parseRec(cfg, index) match{
+        case f: Failure.Mutable => failMore(f, index, cfg.trace, false)
+        case s: Success.Mutable[T] => success(s, s.value, s.index, true)
+      }
+    }
+    override def toString = p.toString
+  }
   /**
    * Parsers two things in a row, returning a tuple of the two
    * results if both things succeed
@@ -214,7 +223,7 @@ object Combinators {
     override def toString = {
       def rec(p: Parser[_]): String = p match {
         case p: Sequence[_, _, _] =>
-          val op = if(cut) "~!" else "~"
+          val op = if(cut || p1.isInstanceOf[Cut[_]]) "~!" else "~"
           rec(p.p1) + " " + op + " " + rec(p.p2)
         case p => p.toString
       }
@@ -228,8 +237,18 @@ object Combinators {
    * if there are more than [[min]] successful parses. uses the [[delimiter]]
    * between parses and discards its results
    */
-  case class Repeat[T, +R](p: Parser[T], min: Int, delimiter: Parser[_])
+  case class Repeat[T, +R](p: Parser[T], min: Int, delimiter: Parser[_], until: Parser[_])
                           (implicit ev: Implicits.Repeater[T, R]) extends Parser[R]{
+
+    private[this] val Sentinel = new Object()
+    private[this] val FirstStep = if (until != Pass) p | until else p
+    private[this] val Step = {
+      var step: P[_] = p
+      if (delimiter != Pass) step = delimiter ~ p
+      if (until != Pass) step = step | until
+      step
+    }
+
     def parseRec(cfg: ParseCtx, index: Int) = {
       @tailrec def rec(index: Int,
                        del: Parser[_],
@@ -239,16 +258,27 @@ object Combinators {
                        count: Int): Result[R] = {
         del.parseRec(cfg, index) match{
           case f1: Failure.Mutable =>
+            val cut1 = f1.cut
             if (f1.cut) failMore(f1, index, cfg.trace, true)
-            else passIfMin(cut, f1, index, ev.result(acc), count)
-
+            else until.parseRec(cfg, index) match {
+              case f: Failure.Mutable =>
+                Step.fail(cfg.failure, index, cut1 | f.cut)
+              case s: Success[_] => passIfMin(cut, f1, s.index, ev.result(acc), count)
+            }
           case s1: Success.Mutable[_] =>
             val cut1 = s1.cut
             val index1 = s1.index
             p.parseRec(cfg, index1) match{
               case f2: Failure.Mutable =>
-                if (f2.cut | cut1) failMore(f2, index1, cfg.trace, true)
-                else passIfMin(cut | s1.cut, f2, index, ev.result(acc), count)
+                val cut2 = f2.cut
+                if (cut2 | cut1) failMore(f2, index1, cfg.trace, true)
+                else if(del != Pass) passIfMin(cut | s1.cut, f2, index, ev.result(acc), count)
+                else until.parseRec(cfg, index1) match {
+                  case f: Failure.Mutable =>
+                    (if (del == Pass) FirstStep else Step).fail(cfg.failure, index, cut1 | cut2 | f.cut)
+                  case s: Success[_] =>
+                    passIfMin(cut | s1.cut, f2, s.index, ev.result(acc), count)
+                }
 
               case s2: Success.Mutable[T] =>
                 ev.accumulate(s2.value, acc)
@@ -296,6 +326,7 @@ object Combinators {
     override def toString = {
       def rec(p: Parser[_]): String = p match {
         case p: Either[_] => p.ps.map(rec).mkString(" | ")
+        case p: Sequence.Flat[_] => p.toString.drop(1).dropRight(1)
         case p => p.toString
       }
       "(" + rec(this) + ")"
