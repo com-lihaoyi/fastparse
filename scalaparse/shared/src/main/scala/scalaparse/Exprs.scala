@@ -30,11 +30,11 @@ trait Exprs extends Core with Types with Xml{
     val NoSemis = if (curlyBlock) NotNewline else Pass
 
 
-    val Enumerators = {
+    def Enumerators(end: P0) = {
       val Generator = P( `<-` ~! Expr ~ Guard.? )
       val Assign = P( `=` ~! Expr )
       val Enumerator = P( Semis ~ TypeOrBindPattern ~! (Generator | Assign) | Semis.? ~ Guard  )
-      P( TypeOrBindPattern ~ Generator ~ Enumerator.rep ~ WL )
+      P( TypeOrBindPattern ~ Generator ~ Enumerator.rep(end = WL ~ end) )
     }
 
     val Expr: P0 = {
@@ -51,7 +51,7 @@ trait Exprs extends Core with Types with Xml{
       val DoWhile = P( `do` ~! Expr ~ Semi.? ~ `while` ~ "(" ~ ExprCtx.Expr ~ ")" )
 
       val For = {
-        val Body = P( "(" ~! ExprCtx.Enumerators ~ ")" | "{" ~! StatCtx.Enumerators ~ "}" )
+        val Body = P( "(" ~! ExprCtx.Enumerators(")") | "{" ~! StatCtx.Enumerators("}") )
         P( `for` ~! Body ~ `yield`.? ~ Expr )
       }
       val Throw = P( `throw` ~! Expr )
@@ -70,7 +70,7 @@ trait Exprs extends Core with Types with Xml{
     }
     val AscriptionType = if (curlyBlock) P( InfixType ) else P( Type )
     val Ascription = P( `:` ~! (`_*` |  AscriptionType | Annot.rep(1)) )
-    val MatchAscriptionSuffix = P(`match` ~! "{" ~ CaseClauses ~ "}" | Ascription)
+    val MatchAscriptionSuffix = P(`match` ~! "{" ~ CaseClauses | Ascription)
     val ExprPrefix = P( WL ~ CharIn("-+~!") ~ WS ~ !syntax.Basic.OpChar )
     val ExprSuffix = P( ("." ~! Id | TypeArgs | NoSemis ~ ArgList).rep ~ (NoSemis  ~ `_`).? )
     val PrefixExpr = P( ExprPrefix.? ~ SimpleExpr )
@@ -96,7 +96,7 @@ trait Exprs extends Core with Types with Xml{
     P( XmlPattern | Thingy | PatLiteral | TupleEx | Extractor | VarId)
   }
 
-  val BlockExpr: P0 = P( "{" ~! (CaseClauses | Block) ~ `}` )
+  val BlockExpr: P0 = P( "{" ~! (CaseClauses | Block ~ "}") )
 
   val BlockStat = {
     val Prelude = P( Annot.rep ~ `implicit`.? ~ `lazy`.? ~ LocalMod.rep )
@@ -128,6 +128,6 @@ trait Exprs extends Core with Types with Xml{
     // Need to lookahead for `class` and `object` because
     // the block { case object X } is not a case clause!
     val CaseClause: P0 = P( `case` ~ !(`class` | `object`) ~! Pattern ~ ExprCtx.Guard.? ~ `=>` ~ Block )
-    P( CaseClause.rep(1) )
+    P( CaseClause.rep(1, end = "}") )
   }
 }

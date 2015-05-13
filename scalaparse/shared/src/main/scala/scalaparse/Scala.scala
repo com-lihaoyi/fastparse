@@ -34,10 +34,10 @@ object Scala extends Core with Types with Exprs with Xml{
     val ClsArgMod = P( (Mod.rep ~ (`val` | `var`)) )
     val ClsArg = P( Annot.rep ~ ClsArgMod.? ~ Id ~ `:` ~ Type ~ (`=` ~ ExprCtx.Expr).? )
 
-    val Implicit = P( OneNLMax ~ "(" ~ `implicit` ~ ClsArg.rep(1, ",") ~ ")" )
-    val ClsArgs = P( OneNLMax ~ "(" ~ ClsArg.rep(sep = ",") ~ ")" )
-    val AllArgs = P( ClsArgs.rep(1) ~ Implicit.? | Implicit )
-    P( `case`.? ~ `class` ~! Id ~ TypeArgList.? ~ Prelude.? ~ AllArgs.? ~ DefTmpl.? )
+
+    val ClsArgs = P( OneNLMax ~ "(" ~! `implicit`.? ~ ClsArg.rep(sep = ",", end = ")") )
+    val AllArgs = P( ClsArgs.rep)
+    P( `case`.? ~ `class` ~! Id ~ TypeArgList.? ~ Prelude.? ~ AllArgs ~ DefTmpl.? )
   }
 
   val Constrs = P( Constr.rep(1, `with` ~!) )

@@ -347,8 +347,8 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      expected = """ "case" """,
-      found = "stats :+ e"
+      expected = """(CaseClause | "}")""",
+      found = "\n    stats"
     )
     * - checkNeg(
       """
@@ -426,6 +426,23 @@ object FailureTests extends TestSuite{
       """.stripMargin,
       expected = """(Expr | ")")""",
       found = " => }"
+    )
+    * - checkNeg(
+      """
+        |class Parser([
+        |
+      """.stripMargin,
+      expected = """(ClsArg | ")")""",
+      found = "["
+    )
+    * - checkNeg(
+      """
+        |class Parser{
+        | @mog
+        |}
+      """.stripMargin,
+      expected = """(Dcl | TraitDef | ClsDef | ObjDef)""",
+      found = "}"
     )
     * - checkNeg(
       """class C
@@ -532,6 +549,18 @@ object FailureTests extends TestSuite{
       """.stripMargin,
       expected = """(Generator | Assign)""",
       found = "\n  } yield"
+    )
+    * - checkNeg(
+      """
+        |object O{
+        |  for{
+        |    x <- Nil
+        |    {
+        |  } yield x
+        |}
+      """.stripMargin,
+      expected = """(Enumerator | WL ~ "}")""",
+      found = "\n    {"
     )
       * - checkNeg(
         """
