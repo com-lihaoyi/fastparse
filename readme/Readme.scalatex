@@ -70,7 +70,7 @@
                 @hl.ref(tests/"ExampleTests.scala", Seq("'repeat", ""))
 
                 @p
-                    The @hl.scala{.rep} method creates a new parser that attempts to parse the given parser zero or more times. You can optionally provide an argument to @hl.scala{.rep} which acts as a separator between the usages of the original parser, or use @hl.scala{.rep1} if you want to parse something one or more times.
+                    The @hl.scala{.rep} method creates a new parser that attempts to parse the given parser zero or more times. You can optionally provide an argument to @hl.scala{.rep} which acts as a separator between the usages of the original parser, or use @hl.scala{.rep(1)} if you want to parse something one or more times.
 
             @sect{Optional}
                 @hl.ref(tests/"ExampleTests.scala", Seq("'option", ""))
