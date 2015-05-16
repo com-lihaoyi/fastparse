@@ -201,7 +201,7 @@ object ExampleTests extends TestSuite{
         assert(
           failure.index == 0,
           failure.trace ==
-          """nocut:0 / ("val " ~ alpha.rep1 | "def " ~ alpha.rep1):0 ..."val 1234""""
+          """nocut:0 / ("val " ~ alpha.rep(1) | "def " ~ alpha.rep(1)):0 ..."val 1234""""
         )
       }
       'withcut{

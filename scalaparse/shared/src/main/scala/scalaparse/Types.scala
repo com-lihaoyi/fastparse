@@ -30,19 +30,19 @@ trait Types extends Core{
 
   val CompoundType = {
     val Refinement = P( OneNLMax ~ `{` ~ Dcl.rep(sep=Semis) ~ `}` )
-    P( AnnotType.rep(1, `with` ~! Pass) ~ Refinement.? | Refinement )
+    P( AnnotType.rep(1, `with` ~!) ~ Refinement.? | Refinement )
   }
   val AnnotType = P(SimpleType ~ (NotNewline ~ (NotNewline ~ Annot).rep(1)).? )
 
   val SimpleType: P0 = {
     // Can't `cut` after the opening paren, because we might be trying to parse `()`
     // or `() => T`! only cut after parsing one type
-    val BasicType = P( "(" ~ Types.? ~ ")"  | StableId ~ ("." ~ `type`).?)
+    val BasicType = P( "(" ~ Type.rep(sep="," ~!, end = ")") | StableId ~ ("." ~ `type`).?)
     P( BasicType ~ (TypeArgs | `#` ~! Id).rep )
   }
 
-  val TypeArgs = P( "[" ~! Types ~ "]" )
-  val Types = P( Type ~ ("," ~! Type).rep )
+  val TypeArgs = P( "[" ~! Type.rep(sep="," ~!, end = "]") )
+
 
   val FunSig: P0 = {
     val FunArg = P( Annot.rep ~ Id ~ (`:` ~! Type).? ~ (`=` ~! TypeExpr).? )

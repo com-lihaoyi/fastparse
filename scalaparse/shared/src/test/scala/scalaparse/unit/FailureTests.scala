@@ -336,8 +336,26 @@ object FailureTests extends TestSuite{
         |  )
         |}
       """.stripMargin,
-      expected = "(_* | AscriptionType | Annot.rep1)",
+      expected = "(_* | AscriptionType | Annot.rep(1))",
       found = "\n  )\n}"
+    )
+    * - checkNeg(
+      """
+        |object K{
+        |  a[)
+        |}
+      """.stripMargin,
+      expected = """(Type | "]")""",
+      found = ")"
+    )
+    * - checkNeg(
+      """
+        |object K{
+        |  a[b)
+        |}
+      """.stripMargin,
+      expected = """("," ~ Type | "]")""",
+      found = ")"
     )
     * - checkNeg(
       """
@@ -350,6 +368,7 @@ object FailureTests extends TestSuite{
       expected = """(CaseClause | "}")""",
       found = "\n    stats"
     )
+
     * - checkNeg(
       """
         |object K
@@ -460,7 +479,7 @@ object FailureTests extends TestSuite{
         |  code: @ 12
         |}
       """.stripMargin,
-      expected = """("(" ~ Types.? ~ ")" | StableId ~ ("." ~ `type`).?)""",
+      expected = """("(" ~ Type.rep(sep = ",", end = ")") | StableId ~ ("." ~ `type`).?)""",
       found = " 12"
     )
 
@@ -694,7 +713,7 @@ object FailureTests extends TestSuite{
       s"""
          |object X{ val (_:) = 1 }
         """.stripMargin,
-      expected = "(AnnotType.rep1((`with` ~! Pass)) ~ Refinement.? | Refinement)",
+      expected = "(AnnotType.rep(1, sep = `with`) ~ Refinement.? | Refinement)",
       found = ") = 1"
     )
     * - checkNeg(
@@ -715,7 +734,7 @@ object FailureTests extends TestSuite{
       s"""
          |object X{type T = A with}
         """.stripMargin,
-      expected = """("(" ~ Types.? ~ ")" | StableId ~ ("." ~ `type`).?)""",
+      expected = """("(" ~ Type.rep(sep = ",", end = ")") | StableId ~ ("." ~ `type`).?)""",
       found = "}"
     )
     * - checkNeg(

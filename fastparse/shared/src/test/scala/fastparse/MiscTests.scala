@@ -37,9 +37,9 @@ object MiscTests extends TestSuite{
         check("A".rep, """ "A".rep """)
         check(("A" | "B").rep, """ ("A" | "B").rep """)
         check(("A".? | "B").rep, """ ("A".? | "B").rep """)
-        check(("A".? | "B").rep(1), """ ("A".? | "B").rep1 """)
-        check(("A".? | "B").rep(sep="C"), """ ("A".? | "B").rep("C") """)
-        check(("A".? | "B").rep(1, sep="C" ~ "D" | "E"), """ ("A".? | "B").rep1(("C" ~ "D" | "E")) """)
+        check(("A".? | "B").rep(1), """ ("A".? | "B").rep(1) """)
+        check(("A".? | "B").rep(sep = "C"), """ ("A".? | "B").rep(sep = "C") """)
+        check(("A".? | "B").rep(1, sep="C" ~ "D" | "E"), """ ("A".? | "B").rep(1, sep = ("C" ~ "D" | "E")) """)
       }
       'lookahead{
         check(&("A") ~ "ABC", """(&("A") ~ "ABC")""")

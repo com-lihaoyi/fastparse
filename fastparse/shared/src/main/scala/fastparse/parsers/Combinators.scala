@@ -295,7 +295,15 @@ object Combinators {
     }
 
     override def toString = {
-      p + ".rep" + (if (min == 0) "" else min) + (if (delimiter == Pass) "" else s"($delimiter)")
+      if (min == 0 && delimiter == Pass && until == Pass) p + ".rep"
+      else{
+        val things = Seq(
+          if (min == 0) None else Some(min),
+          if (delimiter == Pass) None else Some("sep = " + delimiter),
+          if (until == Pass) None else Some("end = " + until)
+        ).flatten.mkString(", ")
+        s"$p.rep($things)"
+      }
     }
   }
 

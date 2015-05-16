@@ -29,7 +29,7 @@ object Identifiers{
     "for", "if", "implicit", "import", "lazy", "match", "new",
     "null", "object", "override", "package", "private", "protected",
     "return", "sealed", "super", "this", "throw", "trait", "try",
-    "true", "type", "val", "var", "while", "with", "yield", "_"
+    "true", "type", "val", "var", "while", "with", "yield", "_", "macro"
   )
 
   val AlphabetKeywords = P {
