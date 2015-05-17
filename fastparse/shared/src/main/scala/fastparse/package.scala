@@ -13,6 +13,7 @@ package object fastparse {
   val End = parsers.Terminals.End
   val Index = parsers.Terminals.Index
   val AnyChar = parsers.Terminals.AnyChar
+  val IgnoreCase = parsers.Terminals.LiteralIgnoreCase
 
   val CharPred = Intrinsics.CharPred
   val CharIn = Intrinsics.CharIn
