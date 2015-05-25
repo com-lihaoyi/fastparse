@@ -29,6 +29,14 @@ object ParsingTests extends TestSuite{
       checkFail("Hello", ("Hello WOrld!", 5), 5)
       check(" WO".!, ("Hello WOrld!", 5), Success.Mutable(" WO", 8))
     }
+    'literalIgnoreCase{
+      checkFail(IgnoreCase("Hello WOrld!"), ("hElLo", 0), 0)
+      check(IgnoreCase("Hello"), ("hElLo WOrld!", 0), Success.Mutable((), 5))
+      check(IgnoreCase("Hello").!, ("hElLo WOrld!", 0), Success.Mutable("hElLo", 5))
+      checkFail(IgnoreCase("Hello"), ("hElLo WOrld!", 5), 5)
+      check(IgnoreCase(" wo").!, ("Hello WOrld!", 5), Success.Mutable(" WO", 8))
+      check(IgnoreCase("`~!@3#$4%^&*()-_=+[{]}|\\,.? Hello World"), ("`~!@3#$4%^&*()-_=+[{]}|\\,.? hElLo wOrLd", 0), Success.Mutable((), 39))
+    }
     'repeat{
       check("Hello".!.rep, ("HelloHello!", 0), Success.Mutable(Seq("Hello", "Hello"), 10))
       check("Hello".!.rep, ("HelloHello!", 2), Success.Mutable(Seq(), 2))

@@ -69,6 +69,22 @@ object Terminals {
     }
     rec(0)
   }
+
+  def startsWithIgnoreCase(src: String, prefix: String, offset: Int) = {
+    val max = prefix.length
+    @tailrec def rec(i: Int): Boolean = {
+      if (i >= prefix.length) true
+      else if (i + offset >= src.length) false
+      else {
+        val c1: Char = src.charAt(i + offset)
+        val c2: Char = prefix.charAt(i)
+        if (c1 != c2 && c1.toLower != c2.toLower) false
+        else rec(i + 1)
+      }
+    }
+    rec(0)
+  }
+
   /**
    * Parses a literal `String`
    */
@@ -76,6 +92,18 @@ object Terminals {
     def parseRec(cfg: ParseCtx, index: Int) = {
 
       if (startsWith(cfg.input, s, index)) success(cfg.success, (), index + s.length, false)
+      else fail(cfg.failure, index)
+    }
+    override def toString = literalize(s).toString
+  }
+
+  /**
+   * Parses a literal `String` ignoring case
+   */
+  case class LiteralIgnoreCase(s: String) extends Parser[Unit]{
+
+    def parseRec(cfg: ParseCtx, index: Int) = {
+      if (startsWithIgnoreCase(cfg.input, s, index)) success(cfg.success, (), index + s.length, false)
       else fail(cfg.failure, index)
     }
     override def toString = literalize(s).toString
