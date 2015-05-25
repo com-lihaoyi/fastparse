@@ -23,7 +23,7 @@ package object fastparse {
   val & = parsers.Combinators.Lookahead
 
   implicit def wspStr(s: String) =
-    if (s.length == 0) parsers.Terminals.CharLiteral(s(0))
+    if (s.length == 1) parsers.Terminals.CharLiteral(s(0))
     else parsers.Terminals.Literal(s)
 
   def P[T](p: => Parser[T])(implicit name: Utils.FuncName): Parser[T] =

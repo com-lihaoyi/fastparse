@@ -96,5 +96,13 @@ object MiscTests extends TestSuite{
         )
       }
     }
+    'wspStr{
+      val literal = wspStr("ab")
+      val charLiteral = wspStr("a")
+      assert(
+        literal.isInstanceOf[parsers.Terminals.Literal],
+        charLiteral.isInstanceOf[parsers.Terminals.CharLiteral]
+      )
+    }
   }
 }
