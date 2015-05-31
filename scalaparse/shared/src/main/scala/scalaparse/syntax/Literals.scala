@@ -48,8 +48,8 @@ trait Literals { l =>
     class InterpCtx(interp: Option[P0]){
       val Literal = P( ("-".? ~ (Float | Int)) | Bool | String | "'" ~! (Char | Symbol) | Null )
       val Interp = interp match{
-        case None => Fail
-        case Some(p) => "$" ~ Identifiers.PlainIdNoDollar | ("${" ~ p ~ WL ~ "}") | "$$"
+        case None => P ( Fail )
+        case Some(p) => P( "$" ~ Identifiers.PlainIdNoDollar | ("${" ~ p ~ WL ~ "}") | "$$" )
       }
 
 
@@ -60,7 +60,7 @@ trait Literals { l =>
        * it's a "real" escape sequence: worst come to worst it turns out
        * to be a dud and we go back into a CharsChunk next rep
        */
-      val CharsChunk = CharsWhile(!"\n\"\\$".contains(_))
+      val CharsChunk = P( CharsWhile(!"\n\"\\$".contains(_)) )
       val TripleChars = P( (CharsChunk | Interp | "\"".? ~ "\"".? ~ !"\"" ~ AnyChar).rep )
       val TripleTail = P( TQ ~ "\"".rep )
       val SingleChars = P( (CharsChunk | Interp | EscapedChars | !CharIn("\n\"") ~ AnyChar).rep )

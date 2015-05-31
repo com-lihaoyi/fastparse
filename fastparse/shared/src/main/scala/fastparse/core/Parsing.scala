@@ -5,7 +5,12 @@ import fastparse.Utils._
 /**
  * Result of a parse, whether successful or failed
  */
-sealed trait Result[+T]
+sealed trait Result[+T]{
+  /**
+   * Where the parser ended up, whether the result was a success or failure
+   */
+  def index: Int
+}
 
 object Result{
   case class Frame(index: Int, parser: Parser[_])
@@ -125,7 +130,10 @@ import fastparse.core.Result._
  * @param logDepth
  * @param trace
  */
-case class ParseCtx(input: String, logDepth: Int, trace: Boolean){
+case class ParseCtx(input: String,
+                    logDepth: Int,
+                    trace: Boolean,
+                    instrument: (Parser[_], Int, () => Result[_]) => Unit){
   val failure = Failure.Mutable(input, Nil, 0, null, false)
   val success = Success.Mutable(null, 0, false)
 }
@@ -163,9 +171,21 @@ trait Parser[+T] extends ParserApi[T]{
    *              parser in the call-stack when it failed, and its index. With
    *              `trace`, you get every parser all the way to the top, though
    *              this comes with a ~20-40% slowdown.
+   *
+   * @param instrument Allows you to pass in a callback that will get called
+   *                   by every named rule, its index, as it itself given a
+   *                   callback that can be used to recurse into the parse and
+   *                   return the result. Very useful for extracting auxiliary
+   *                   information from the parse, e.g. counting rule
+   *                   invocations to locate bottlenecks or unwanted
+   *                   backtracking in the parser.
    */
-  def parse(input: String, index: Int = 0, trace: Boolean = true): Result[T] = {
-    parseRec(ParseCtx(input, 0, trace), index)
+  def parse(input: String,
+            index: Int = 0,
+            trace: Boolean = true,
+            instrument: (Parser[_], Int, () => Result[_]) => Unit = null)
+            : Result[T] = {
+    parseRec(ParseCtx(input, 0, trace, instrument), index)
   }
 
   /**
