@@ -98,6 +98,9 @@ trait Exprs extends Core with Types with Xml{
 
   val BlockExpr: P0 = P( "{" ~! (CaseClauses | Block ~ "}") )
 
+//  val BlockLambda = P( Id ~ (":" ~ InfixType).? ~ `=>`.? )
+      val BlockLambda = Pass
+
   val BlockStat = {
     val Prelude = P( Annot.rep ~ `implicit`.? ~ `lazy`.? ~ LocalMod.rep )
     val Tmpl = P( Prelude ~ BlockDef )

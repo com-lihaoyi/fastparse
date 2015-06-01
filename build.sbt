@@ -2,6 +2,8 @@ publishArtifact := false
 
 publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
 
+crossScalaVersions := Seq("2.10.4", "2.11.5")
+
 val shared = Seq(
   libraryDependencies ++= Seq(
     "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
@@ -67,7 +69,9 @@ lazy val scalaparse = crossProject.dependsOn(fastparse).settings(
   name := "scalaparse"
 ).settings(shared:_*)
 .jvmSettings(
-  libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"
+  libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"/*,
+  fork in (Test, testOnly) := true,
+  fork in (Test, test) := true*/
 )
 lazy val scalaparseJS = scalaparse.js
 lazy val scalaparseJVM = scalaparse.jvm

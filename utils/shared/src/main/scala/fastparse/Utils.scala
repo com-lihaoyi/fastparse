@@ -20,7 +20,7 @@ object Utils {
       import c.universe._
 
       val sym = Compat.enclosingName(c)
-      val simpleName = sym.name.decodedName.toString.trim
+      val simpleName = sym.name.decoded.toString.trim
       val fullName = sym.fullName.trim
 
       val name = q"$simpleName"
@@ -143,10 +143,11 @@ object Utils {
    * performance improvements.
    */
   final class TrieNode{
-    val children: mutable.LongMap[TrieNode] = mutable.LongMap.empty
+    val children = mutable.HashMap.empty[Char, TrieNode]
     var word: String = null
     def apply(c: Char) = {
-      children.getOrNull(c)
+      if (children.contains(c)) children(c)
+      else null
     }
   }
 }

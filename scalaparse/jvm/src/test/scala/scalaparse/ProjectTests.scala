@@ -3,14 +3,11 @@ package scalaparse
 import java.nio.file.{Paths, Path, Files}
 import concurrent.ExecutionContext.Implicits.global
 import utest._
-import utest.framework.Test
-import utest.util.Tree
 
 import scala.collection.mutable
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
-import scala.util.{Failure, Success}
-import TestUtil._
+import scalaparse.PerfTests._
 
 object ProjectTests extends TestSuite{
 
@@ -18,24 +15,25 @@ object ProjectTests extends TestSuite{
   def tests = TestSuite{
 
     def checkDir(path: String, filter: String => Boolean = _ => true) = {
-
-      val failures = mutable.Buffer.empty[String]
       def listFiles(s: java.io.File): Iterator[String] = {
         val (dirs, files) = Option(s.listFiles()).toIterator
                                                  .flatMap(_.toIterator)
                                                  .partition(_.isDirectory)
+
         files.map(_.getPath) ++ dirs.flatMap(listFiles)
       }
+
       val files = for{
         f0 <- Option(listFiles(new java.io.File(path))).toVector
         filename <- f0
-        if filename.endsWith(".scala")
-        if filter(filename)
-        code = io.Source.fromFile(filename).mkString
-        if !ScalacParser.checkParseFails(code)
       } yield Future{
-        println("Checking: " + filename)
-        TestUtil.check(code)
+        if (filename.endsWith(".scala") && filter(filename)) {
+          val code = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(filename)))
+          if (!ScalacParser.checkParseFails(code)) {
+            println("Checking: " + filename)
+            TestUtil.check(code, tag = filename)
+          }
+        }
       }
 
 
@@ -43,7 +41,12 @@ object ProjectTests extends TestSuite{
 
     }
 
-    'test - checkDir("scalaparse/shared/src/test/resources")
+    'test - {
+      val testSource = scala.io.Source.fromInputStream(
+        getClass.getResourceAsStream("/scalaparse/Test.scala")
+      ).mkString
+      TestUtil.check(testSource)
+    }
     def checkRepo(url: String, filter: String => Boolean = _ => true) = {
       import sys.process._
       val name = url.split("/").last
@@ -66,10 +69,13 @@ object ProjectTests extends TestSuite{
     'PredictionIO - checkRepo("https://github.com/PredictionIO/PredictionIO")
     'spark - checkRepo("https://github.com/apache/spark")
     'sbt - checkRepo("https://github.com/sbt/sbt",
-      !Seq(
+      x => !Seq(
         // Unicode escapes in weird places
-        "target/repos/sbt/main/settings/src/main/scala/sbt/std/InputWrapper.scala"
-      ).contains(_)
+        "target/repos/sbt/main/settings/src/main/scala/sbt/std/InputWrapper.scala",
+        // uses a package called `macro`
+        "target/repos/sbt/sbt/src/sbt-test/source-dependencies/inherited-macros",
+        "target/repos/sbt/sbt/src/sbt-test/source-dependencies/macro"
+      ).exists(x.startsWith)
     )
     'cats - checkRepo("https://github.com/non/cats")
     'finagle - checkRepo("https://github.com/twitter/finagle")
@@ -77,9 +83,14 @@ object ProjectTests extends TestSuite{
     'breeze - checkRepo("https://github.com/scalanlp/breeze")
     'spire - checkRepo("https://github.com/non/spire")
     'saddle - checkRepo("https://github.com/saddle/saddle")
+    'scalaIDE - checkRepo("https://github.com/scala-ide/scala-ide")
+    'gitbucket - checkRepo("https://github.com/takezoe/gitbucket")
+    'scalding - checkRepo("https://github.com/twitter/scalding")
+    'scaloid - checkRepo("https://github.com/pocorall/scaloid")
+    'marathon - checkRepo("https://github.com/mesosphere/marathon")
     'scala - checkRepo(
       "https://github.com/scala/scala",
-      !Seq(
+      x => !Seq(
         // This fella seems to make the scalac parser hang (???)
         "target/repos/scala/test/files/neg/t5510.scala",
         // Unicode escapes in weird places
@@ -88,9 +99,14 @@ object ProjectTests extends TestSuite{
         "target/repos/scala/test/files/run/literals.scala",
         "target/repos/scala/test/files/run/t3835.scala",
         // Scalac parser seems to accept this, though it blows up later
-        "target/repos/scala/test/files/neg/t8266-invalid-interp.scala"
+        "target/repos/scala/test/files/neg/t8266-invalid-interp.scala",
+        "target/repos/scala/test/disabled/",
+        "target/repos/scala/test/files/neg/",
+        // trailing dot
+        "target/repos/scala/test/files/presentation/infix-completion/src/Snippet.scala"
 
-      ).contains(_)
+
+      ).exists(x.startsWith)
     )
 
   }

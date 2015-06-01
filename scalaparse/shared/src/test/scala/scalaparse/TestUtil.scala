@@ -35,7 +35,7 @@ object TestUtil {
       case f: Result.Failure =>
         //        println(f.formatExpectedAsString)
         //        println(f.formatTraces)
-        throw new Exception({input + "\n" + f.toString})
+        throw new Exception(tag + "\n" + input + "\n" + f.toString)
       case s: Result.Success[_] =>
         //        println(parsed)
         val inputLength = input.length

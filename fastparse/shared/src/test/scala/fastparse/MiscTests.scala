@@ -79,20 +79,26 @@ object MiscTests extends TestSuite{
       val expected2 = expected("undefined")
       assert(logged == expected1 || logged == expected2)
     }
+
     'flattening{
       'either{
         val E = parsers.Combinators.Either
-        assert(("A" | "B" | "C" | "D") == E("A", "B", "C", "D"))
-        assert((("A" | "B") | ("C" | "D")) == E("A", "B", "C", "D"))
-        assert(("A" | ("B" | ("C" | "D"))) == E("A", "B", "C", "D"))
+        // Need to be pulled out because it makes utest crash
+        val expected = E("A", "B", "C", "D")
+        assert(("A" | "B" | "C" | "D") == expected)
+        assert((("A" | "B") | ("C" | "D")) == expected)
+        assert(("A" | ("B" | ("C" | "D"))) == expected)
       }
       'sequence{
         val S = parsers.Combinators.Sequence
         val F = parsers.Combinators.Sequence.Flat
         def C(p: P0, b: Boolean = false) = parsers.Combinators.Sequence.Chain(p, b)(null)
+        // Need to be pulled out because it makes utest crash
+        val expected1 = F("A", Vector(C("B"), C("C"), C("D")))
+        val expected2 = F("A", Vector(C("B"), C(F("C", Vector(C("D"))))))
         assert(
-          ("A" ~ "B" ~ "C" ~ "D") == F("A", Vector(C("B"), C("C"), C("D"))),
-          (("A" ~ "B") ~ ("C" ~ "D")) == F("A", Vector(C("B"), C(F("C", Vector(C("D"))))))
+          ("A" ~ "B" ~ "C" ~ "D") == expected1,
+          (("A" ~ "B") ~ ("C" ~ "D")) == expected2
         )
       }
     }

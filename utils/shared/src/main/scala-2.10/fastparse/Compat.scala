@@ -7,7 +7,5 @@ object Compat{
       .context
       .owner
       .asInstanceOf[c.Symbol]
-      .name
-      .decoded
   }
 }

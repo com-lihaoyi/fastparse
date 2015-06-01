@@ -22,14 +22,14 @@ object ScalacParser{
   val settings = new Settings()
   settings.usejavacp.value = true
   settings.classpath.append(files.mkString(":"))
-
+  println("ClassPath\n" + files.mkString("\n"))
   val global = new Global(settings)
 
-  def checkParseFails(input: String) = {
+  def checkParseFails(input: String) = this.synchronized{
     val run = new global.Run()
     var fail = false
     import global.syntaxAnalyzer.Offset
-    val cu = new global.CompilationUnit(global.newSourceFile(input, "<test"))
+    val cu = new global.CompilationUnit(global.newSourceFile(input))
     val parser = new global.syntaxAnalyzer.UnitParser(cu, Nil){
       override def newScanner() = new global.syntaxAnalyzer.UnitScanner(cu, Nil){
         override def error(off: Offset, msg: String) = {
@@ -39,7 +39,6 @@ object ScalacParser{
           fail = true
         }
         override def incompleteInputError(off: Offset, msg: String) = {
-          println("LOL")
           fail = true
         }
       }
@@ -51,7 +50,7 @@ object ScalacParser{
       }
     }
     parser.parse()
-
+//    println("Scalac Parser fail " + fail)
     fail
   }
 }

@@ -19,9 +19,9 @@ trait Types extends Core{
 
   val Mod: P0 = P( LocalMod | AccessMod | `override` )
 
+  val ExistentialClause = P( `forSome` ~! `{` ~ Dcl.rep(1, Semis) ~ `}` )
+  val PostfixType = P( InfixType ~ (`=>` ~! Type | ExistentialClause).? )
   val Type: P0 = {
-    val ExistentialClause = P( `forSome` ~! `{` ~ Dcl.rep(1, Semis) ~ `}` )
-    val PostfixType = P( InfixType ~ (`=>` ~! Type | ExistentialClause).? )
     val Unbounded = P( `_` | PostfixType )
     P( `=>`.? ~ Unbounded ~ TypeBounds ~ "*".? )
   }

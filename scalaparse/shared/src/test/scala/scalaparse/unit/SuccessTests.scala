@@ -4,7 +4,7 @@ import scalaparse.{TestUtil, Scala}
 import fastparse._
 import utest._
 import TestUtil._
-object UnitTests extends TestSuite{
+object SuccessTests extends TestSuite{
 
   println("running")
   def tests = TestSuite{
@@ -22,6 +22,12 @@ object UnitTests extends TestSuite{
       """package torimatomeru
         |import a
         |import b
+      """.stripMargin
+    )
+    * - check(
+      """object Foo{
+        |  val a = (null): Int => Int
+        |}
       """.stripMargin
     )
     * - check(
@@ -797,6 +803,13 @@ object UnitTests extends TestSuite{
       """.stripMargin
     )
     * - check(
+      """class ScalaJavaCompletionProposalComputer {
+        |  completionProposals: java.util.List[ICompletionProposal]
+        |}
+        |
+      """.stripMargin
+    )
+    * - check(
       """object Test {
         |  def countingDownActor = {
         |    val ms = 1
@@ -948,8 +961,7 @@ object UnitTests extends TestSuite{
     )
     * - check(
       """object X{
-        |  (x: Int => List[Int])
-        |  {x: Int => x()}
+        |  {x: Int => 1}
         |}
       """.stripMargin
     )
