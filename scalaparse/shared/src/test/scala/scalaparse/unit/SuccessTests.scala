@@ -31,6 +31,22 @@ object SuccessTests extends TestSuite{
       """.stripMargin
     )
     * - check(
+      """class GroupManager @Singleton @Inject() ()""".stripMargin
+    )
+    * - check(
+      """object O{
+        |  val service = Service.mk { _: Request => Future.value(res) }
+        |  val service2 = Service.mk { _ => Future.value(res) }
+        |}
+      """.stripMargin
+    )
+    * - check(
+      """object Foo{
+        |  q"\$result.putExtra(\${toName(c)(value)}, \$value)"
+        |}
+      """.stripMargin
+    )
+    * - check(
       """
         |package torimatomeru
         |
@@ -562,6 +578,16 @@ object SuccessTests extends TestSuite{
     * - check(
       """trait Writer{
         | '\f'
+        |}
+      """.stripMargin
+    )
+    * - check(
+      """import com.twitter.scalding.macros.{ _ => _ }
+      """.stripMargin
+    )
+    * - check(
+      """object CyclicDependencyException {
+        |  s"${info.resourceName}"
         |}
       """.stripMargin
     )

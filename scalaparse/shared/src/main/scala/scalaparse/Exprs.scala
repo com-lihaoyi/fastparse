@@ -13,8 +13,8 @@ trait Exprs extends Core with Types with Xml{
   def BlockDef: P0
 
   val Import: P0 = {
-    val Selector: P0 = P( Id ~ (`=>` ~! (Id | `_`)).? )
-    val Selectors: P0 = P( "{" ~! (Selector | `_` ).rep(sep = "," ~!) ~ "}" )
+    val Selector: P0 = P( (Id | `_`) ~ (`=>` ~! (Id | `_`)).? )
+    val Selectors: P0 = P( "{" ~! Selector.rep(sep = "," ~!) ~ "}" )
     val ImportExpr: P0 = P( StableId ~ ("." ~! (`_` | Selectors)).? )
     P( `import` ~! ImportExpr.rep(1, sep = "," ~!) )
   }
@@ -68,7 +68,7 @@ trait Exprs extends Core with Types with Xml{
         ImplicitLambda | SmallerExprOrLambda
       )
     }
-    val AscriptionType = if (curlyBlock) P( InfixType ) else P( Type )
+    val AscriptionType = if (curlyBlock) P( PostfixType ) else P( Type )
     val Ascription = P( `:` ~! (`_*` |  AscriptionType | Annot.rep(1)) )
     val MatchAscriptionSuffix = P(`match` ~! "{" ~ CaseClauses | Ascription)
     val ExprPrefix = P( WL ~ CharIn("-+~!") ~ WS ~ !syntax.Basic.OpChar )
@@ -98,19 +98,19 @@ trait Exprs extends Core with Types with Xml{
 
   val BlockExpr: P0 = P( "{" ~! (CaseClauses | Block ~ "}") )
 
-//  val BlockLambda = P( Id ~ (":" ~ InfixType).? ~ `=>`.? )
-      val BlockLambda = Pass
+  val BlockLambda = P( (Id | `_`) ~ (`=>` | `:` ~ InfixType ~ `=>`.?) )
+//      val BlockLambda = Pass
 
   val BlockStat = {
     val Prelude = P( Annot.rep ~ `implicit`.? ~ `lazy`.? ~ LocalMod.rep )
     val Tmpl = P( Prelude ~ BlockDef )
-    P( Import | Tmpl | StatCtx.Expr )
+    P( BlockLambda ~ (Import | Tmpl | StatCtx.Expr).? | BlockLambda.? ~ (Import | Tmpl | StatCtx.Expr) )
   }
 
   val Block: P0 = {
     val BlockEnd = P( Semis.? ~ &("}" | `case`) )
     val Body = P( BlockStat.rep(sep = Semis) )
-    P( Semis.? ~ Body ~! BlockEnd )
+    P( Semis.? ~ BlockLambda.? ~ Body ~! BlockEnd )
   }
 
   val Patterns: P0 = P( Pattern.rep(1, sep = "," ~!) )

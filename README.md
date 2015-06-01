@@ -1,5 +1,7 @@
 [Documentation](https://lihaoyi.github.io/fastparse)
 
+[![Build Status](https://travis-ci.org/lihaoyi/fastparse.svg?branch=master)](https://travis-ci.org/lihaoyi/fastparse)
+
 License
 =======
 

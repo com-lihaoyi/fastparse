@@ -63,13 +63,16 @@ trait Literals { l =>
       val CharsChunk = P( CharsWhile(!"\n\"\\$".contains(_)) )
       val TripleChars = P( (CharsChunk | Interp | "\"".? ~ "\"".? ~ !"\"" ~ AnyChar).rep )
       val TripleTail = P( TQ ~ "\"".rep )
-      val SingleChars = P( (CharsChunk | Interp | EscapedChars | !CharIn("\n\"") ~ AnyChar).rep )
+      def SingleChars(allowSlash: Boolean) = {
+        val LiteralSlash = P( if(allowSlash) "\\" else Fail )
+        P( (CharsChunk | Interp | LiteralSlash | EscapedChars | !CharIn("\n\"") ~ AnyChar).rep )
+      }
       val String = {
         P {
           (Id ~ TQ ~! TripleChars ~ TripleTail) |
-          (Id ~ "\"" ~! SingleChars  ~ "\"") |
+          (Id ~ "\"" ~! SingleChars(true)  ~ "\"") |
           (TQ ~! NoInterp.TripleChars ~ TripleTail) |
-          ("\"" ~! NoInterp.SingleChars ~ "\"")
+          ("\"" ~! NoInterp.SingleChars(false) ~ "\"")
         }
       }
 
