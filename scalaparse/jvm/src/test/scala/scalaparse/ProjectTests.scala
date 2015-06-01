@@ -26,7 +26,7 @@ object ProjectTests extends TestSuite{
       val files = for{
         f0 <- Option(listFiles(new java.io.File(path))).toVector
         filename <- f0
-      } yield Future{
+      } yield {
         if (filename.endsWith(".scala") && filter(filename)) {
           val code = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(filename)))
           if (!ScalacParser.checkParseFails(code)) {
@@ -37,7 +37,7 @@ object ProjectTests extends TestSuite{
       }
 
 
-      files.foreach(Await.result(_, Duration.Inf))
+//      files.foreach(Await.result(_, Duration.Inf))
 
     }
 
