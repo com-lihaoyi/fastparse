@@ -1,3 +1,5 @@
+import sbt.Keys._
+
 publishArtifact := false
 
 publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
@@ -80,7 +82,12 @@ lazy val modules = project.aggregate(
   fastparseJS,
   fastparseJVM,
   scalaparseJS,
-  scalaparseJVM
+  scalaparseJVM,
+  utilsJS,
+  utilsJVM
+).settings(
+  publishArtifact := false,
+  publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
 )
 
 lazy val demo = project.enablePlugins(ScalaJSPlugin)
