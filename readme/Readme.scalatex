@@ -464,44 +464,58 @@
             @li
                 @a("scala-parser-combinators", href:="https://github.com/scala/scala-parser-combinators") is similar, but poorly executed. It is ~100x slower than FastParse, has an awkward inheritance-based API, and is full of bugs despite being half a decade old. FastParse is faster, has self-contained pure-functional parsers, and fixes bugs e.g. by having the @hl.scala{.log} operator actually work.
 
-    @sect{ScalaParse}
-        
-        @div(id := "scaladiv")
-        @script(raw("""demo.DemoMain().scalaparser(document.getElementById("scaladiv"))"""))
+@sect{ScalaParse}
+    
+    @div(id := "scaladiv")
+    @script(raw("""demo.DemoMain().scalaparser(document.getElementById("scaladiv"))"""))
+
+    @p
+        ScalaParse is a parser for the entire Scala programming language, written using FastParse. This is notable for a few reasons:
+
+    @ul
+        @li
+            ScalaParse is about 700 lines of code, making it about 1/10th the size of the default parser in @hl.scala{tools.nsc.Global}
+        @li
+            ScalaParse runs about @sect.ref("Performance", "1/8th the speed") of of the default parser in @hl.scala{tools.nsc.Global}
+        @li
+            ScalaParse has excellent error reporting due to proper use of @sect.ref{Cuts}, without any code explicitly dedicated to error reporting
+    @p
+        ScalaParse does not currently generate an AST. As you can see, the parse result above is listed as @hl.scala{undefined}. However, that does not make it useless! Even without generating an AST, ScalaParse can be used to:
+
+    @ul
+        @li
+            Check for errors! ScalaParse provides excellent error reporting on parses, equal or better than that provided by the tools.nsc.Global parser, entirely for free.
+        @li
+            Prototype extensions to the Scala grammar! Unlike the default tools.nsc.Global parser, ScalaParse makes it trivial to add new rules at various sections of the grammar.
+        @li
+            Manipulate Scala code sections! It's trivial to wrap various rules in ScalaParse in an @sect.ref{Capture} and use it to pull out the relevant bits of a Scala file for you to use.
+        @li
+            Learn how
+
+    @sect{Using ScalaParse}
+        @p
+        To begin using ScalaParse, add
+
+        @hl.scala
+            "com.lihaoyi" %% "scalaparse" % "@fastparse.Constants.version"
 
         @p
-            ScalaParse is a parser for the entire Scala programming language, written using FastParse. This is notable for a few reasons:
+            To your SBT configuration. To use with Scala.js, you'll need
 
+        @hl.scala
+            "com.lihaoyi" %%% "scalaparse" % "@fastparse.Constants.version"
+
+@sect{Change Log}
+    @sect{0.1.6}
         @ul
             @li
-                ScalaParse is about 700 lines of code, making it about 1/10th the size of the default parser in @hl.scala{tools.nsc.Global}
+                Introduced five new projects into the test suite: ScalaIDE, GitBucket, Scalding, Scaloid, Marathon
             @li
-                ScalaParse runs about @sect.ref("Performance", "1/8th the speed") of of the default parser in @hl.scala{tools.nsc.Global}
+                Fixed bug in ScalaParse around using function @hl.scala{=>} types as type ascriptions
             @li
-                ScalaParse has excellent error reporting due to proper use of @sect.ref{Cuts}, without any code explicitly dedicated to error reporting
-        @p
-            ScalaParse does not currently generate an AST. As you can see, the parse result above is listed as @hl.scala{undefined}. However, that does not make it useless! Even without generating an AST, ScalaParse can be used to:
-
-        @ul
+                Added ability to @hl.scala{instrument} parsers, in order to gather out-of-band information about them e.g. for debugging or profiling
             @li
-                Check for errors! ScalaParse provides excellent error reporting on parses, equal or better than that provided by the tools.nsc.Global parser, entirely for free.
+                Added @hl.scala{LiteralIgnoreCase} combinator, for case-insensitive string matching
             @li
-                Prototype extensions to the Scala grammar! Unlike the default tools.nsc.Global parser, ScalaParse makes it trivial to add new rules at various sections of the grammar.
-            @li
-                Manipulate Scala code sections! It's trivial to wrap various rules in ScalaParse in an @sect.ref{Capture} and use it to pull out the relevant bits of a Scala file for you to use.
-            @li
-                Learn how
-
-        @sect{Using ScalaParse}
-            @p
-            To begin using ScalaParse, add
-
-            @hl.scala
-                "com.lihaoyi" %% "scalaparse" % "@fastparse.Constants.version"
-
-            @p
-                To your SBT configuration. To use with Scala.js, you'll need
-
-            @hl.scala
-                "com.lihaoyi" %%% "scalaparse" % "@fastparse.Constants.version"
+                Cross-published for Scala 2.10
 
