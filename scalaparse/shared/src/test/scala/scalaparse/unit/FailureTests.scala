@@ -133,7 +133,7 @@ object FailureTests extends TestSuite{
         |}
       """.stripMargin,
       expected = "(Dcl | TraitDef | ClsDef | ObjDef)",
-      found = " applyM"
+      found = "applyM"
     )
     * - checkNeg(
       """
@@ -226,7 +226,7 @@ object FailureTests extends TestSuite{
         |}
       """.stripMargin,
       expected = "(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | SmallerExprOrLambda)",
-      found = "\n}"
+      found = "}"
     )
     * - checkNeg(
       """
@@ -264,7 +264,7 @@ object FailureTests extends TestSuite{
         |}
       """.stripMargin,
       expected = "(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | SmallerExprOrLambda)",
-      found = "\n}"
+      found = "}"
     )
     * - checkNeg(
       """
@@ -273,7 +273,7 @@ object FailureTests extends TestSuite{
         |}
       """.stripMargin,
       expected = "(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | SmallerExprOrLambda)",
-      found = " catch {"
+      found = "catch {"
     )
     * - checkNeg(
       """
@@ -540,7 +540,7 @@ object FailureTests extends TestSuite{
           |}
         """.stripMargin,
         expected = "(Dcl | TraitDef | ClsDef | ObjDef)",
-        found = " O\n"
+        found = "O\n"
       )
       * - checkNeg(
         """object O{
@@ -601,7 +601,7 @@ object FailureTests extends TestSuite{
           |}
         """.stripMargin,
         expected = "(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | SmallerExprOrLambda)",
-        found = "\n}"
+        found = "}"
       )
       * - checkNeg(
         """
@@ -621,7 +621,7 @@ object FailureTests extends TestSuite{
           |
         """.stripMargin,
         expected = "(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | SmallerExprOrLambda)",
-        found = " )\n"
+        found = ")\n"
 
       )
       * - checkNeg(
