@@ -158,6 +158,16 @@ object ExampleTests extends TestSuite{
           failure.trace == """xml:0 / rightTag:7 / "abcde":9 ..."edcba>""""
         )
       }
+      'filter{
+        val digits = P(CharIn('0' to '9').rep(1).!).map(_.toInt)
+        val even = digits.filter(_ % 2 == 0)
+        val Result.Success(12, _) = even.parse("12")
+        val failure = even.parse("123").asInstanceOf[Result.Failure]
+        println(failure.trace)
+        assert(
+          failure.input == "123"
+        )
+      }
     }
     'charX{
       'charPred{
