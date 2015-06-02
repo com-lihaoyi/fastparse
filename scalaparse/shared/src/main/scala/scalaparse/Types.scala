@@ -14,7 +14,7 @@ trait Types extends Core{
     P( (`private` | `protected`) ~ AccessQualifier.? )
   }
   val Dcl: P0 = {
-    P( (`val` | `var`) ~! ValVarDef | `def` ~! FunDef | `type` ~! TypeDef )
+    P( WL ~ ((`val` | `var`) ~! ValVarDef | `def` ~! FunDef | `type` ~! TypeDef) )
   }
 
   val Mod: P0 = P( LocalMod | AccessMod | `override` )
@@ -22,22 +22,27 @@ trait Types extends Core{
   val ExistentialClause = P( `forSome` ~! `{` ~ Dcl.rep(1, Semis) ~ `}` )
   val PostfixType = P( InfixType ~ (`=>` ~! Type | ExistentialClause).? )
   val Type: P0 = {
-    val Unbounded = P( `_` | PostfixType )
-    P( `=>`.? ~ Unbounded ~ TypeBounds ~ "*".? )
+    val Unbounded = P( PostfixType )
+    P( `=>`.? ~ Unbounded ~ TypeBounds ~ `*`.? )
   }
 
+  // Can't cut after `Id` because it may be a `*`, in which case
+  // we may need to backtrack and settle for the `*`-postfix rather than
+  // an infix type
   val InfixType = P( CompoundType ~ (NotNewline ~ Id ~ OneNLMax ~ CompoundType).rep )
 
   val CompoundType = {
     val Refinement = P( OneNLMax ~ `{` ~ Dcl.rep(sep=Semis) ~ `}` )
-    P( AnnotType.rep(1, `with` ~!) ~ Refinement.? | Refinement )
+    val NamedRefinement = P( AnnotType.rep(1, `with` ~!) ~ Refinement.? )
+    P( NamedRefinement | Refinement )
   }
   val AnnotType = P(SimpleType ~ (NotNewline ~ (NotNewline ~ Annot).rep(1)).? )
 
   val SimpleType: P0 = {
     // Can't `cut` after the opening paren, because we might be trying to parse `()`
     // or `() => T`! only cut after parsing one type
-    val BasicType = P( "(" ~ Type.rep(sep="," ~!, end = ")") | StableId ~ ("." ~ `type`).?)
+    val TupleType = P( "(" ~ Type.rep(sep="," ~!, end = ")") )
+    val BasicType = P( TupleType | StableId ~ ("." ~ `type`).? | `_` )
     P( BasicType ~ (TypeArgs | `#` ~! Id).rep )
   }
 

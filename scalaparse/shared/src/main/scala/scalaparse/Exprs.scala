@@ -33,7 +33,7 @@ trait Exprs extends Core with Types with Xml{
     def Enumerators(end: P0) = {
       val Generator = P( `<-` ~! Expr ~ Guard.? )
       val Assign = P( `=` ~! Expr )
-      val Enumerator = P( Semis ~ TypeOrBindPattern ~! (Generator | Assign) | Semis.? ~ Guard  )
+      val Enumerator = P( Semis ~ `val`.? ~ TypeOrBindPattern ~! (Generator | Assign) | Semis.? ~ Guard  )
       P( TypeOrBindPattern ~ Generator ~ Enumerator.rep(end = WL ~ end) )
     }
 
@@ -64,14 +64,16 @@ trait Exprs extends Core with Types with Xml{
       val PostfixLambda = P( PostfixExpr ~ (`=>` ~ LambdaRhs.?).? )
       val SmallerExprOrLambda = P( ParenedLambda | PostfixLambda )
       P(
-        If | While | Try | DoWhile | For | Throw | Return |
-        ImplicitLambda | SmallerExprOrLambda
+        WL ~ (
+          If | While | Try | DoWhile | For | Throw | Return |
+          ImplicitLambda | SmallerExprOrLambda
+        )
       )
     }
     val AscriptionType = if (curlyBlock) P( PostfixType ) else P( Type )
     val Ascription = P( `:` ~! (`_*` |  AscriptionType | Annot.rep(1)) )
     val MatchAscriptionSuffix = P(`match` ~! "{" ~ CaseClauses | Ascription)
-    val ExprPrefix = P( WL ~ CharIn("-+~!") ~ WS ~ !syntax.Basic.OpChar )
+    val ExprPrefix = P( WL ~ CharIn("-+~!") ~ !syntax.Basic.OpChar ~ WS)
     val ExprSuffix = P( ("." ~! Id | TypeArgs | NoSemis ~ ArgList).rep ~ (NoSemis  ~ `_`).? )
     val PrefixExpr = P( ExprPrefix.? ~ SimpleExpr )
     val InfixSuffix = P( NoSemis ~ Id ~ TypeArgs.? ~ OneSemiMax ~ PrefixExpr ~ ExprSuffix)
@@ -98,7 +100,8 @@ trait Exprs extends Core with Types with Xml{
 
   val BlockExpr: P0 = P( "{" ~! (CaseClauses | Block ~ "}") )
 
-  val BlockLambda = P( (Id | `_`) ~ (`=>` | `:` ~ InfixType ~ `=>`.?) )
+  val BlockLambdaHead: P0 = P( "(" ~ BlockLambdaHead ~ ")" | `this` | Id | `_` )
+  val BlockLambda = P( BlockLambdaHead  ~ (`=>` | `:` ~ InfixType ~ `=>`.?) )
 //      val BlockLambda = Pass
 
   val BlockStat = {
@@ -114,11 +117,11 @@ trait Exprs extends Core with Types with Xml{
   }
 
   val Patterns: P0 = P( Pattern.rep(1, sep = "," ~!) )
-  val Pattern: P0 = P( TypeOrBindPattern.rep(1, sep = "|" ~!) )
+  val Pattern: P0 = P( WL ~ TypeOrBindPattern.rep(1, sep = "|" ~!) )
   val TypePattern = P( (`_` | VarId) ~ `:` ~ TypePat )
   val TypeOrBindPattern: P0 = P( TypePattern | BindPattern )
   val BindPattern: P0 = {
-    val InfixPattern = P( SimplePattern ~ (Id ~ SimplePattern).rep | `_*` )
+    val InfixPattern = P( SimplePattern ~ (Id ~! SimplePattern).rep | `_*` )
     val Binding = P( (VarId | `_`) ~ `@` )
     P( Binding ~ InfixPattern | InfixPattern | VarId )
   }

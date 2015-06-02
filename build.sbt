@@ -63,10 +63,38 @@ lazy val utilsJVM= utils.jvm
 
 
 lazy val fastparse = crossProject.dependsOn(utils).settings(
-  name := "fastparse"
+  name := "fastparse",
+  sourceGenerators in Compile <+= sourceManaged in Compile map { dir =>
+    val file = dir/"fastparse"/"SequencerGen.scala"
+    val tuples = (2 to 10).map{ i =>
+      val ts = (1 to i) map ("T" + _)
+      val chunks = (1 to i) map { n =>
+        s"t._$n"
+      }
+      val tsD = (ts :+ "D").mkString(",")
+      s"""
+        implicit def Sequencer$i[$tsD]: Sequencer[(${ts.mkString(", ")}), D, ($tsD)] =
+          Sequencer0((t, d) => (${chunks.mkString(", ")}, d))
+        """
+    }
+    val output = s"""
+        package fastparse
+        trait SequencerGen[Sequencer[_, _, _]] extends LowestPriSequencer[Sequencer]{
+          protected[this] def Sequencer0[A, B, C](f: (A, B) => C): Sequencer[A, B, C]
+          ${tuples.mkString("\n")}
+        }
+        trait LowestPriSequencer[Sequencer[_, _, _]]{
+          protected[this] def Sequencer0[A, B, C](f: (A, B) => C): Sequencer[A, B, C]
+          implicit def Sequencer1[T1, T2]: Sequencer[T1, T2, (T1, T2)] = Sequencer0{case (t1, t2) => (t1, t2)}
+        }
+      """.stripMargin
+    IO.write(file, output)
+    Seq(file)
+  }
 ).settings(shared:_*)
 lazy val fastparseJS = fastparse.js
 lazy val fastparseJVM = fastparse.jvm
+
 lazy val scalaparse = crossProject.dependsOn(fastparse).settings(
   name := "scalaparse"
 ).settings(shared:_*)
@@ -75,6 +103,7 @@ lazy val scalaparse = crossProject.dependsOn(fastparse).settings(
   fork in (Test, testOnly) := true,
   fork in (Test, test) := true
 )
+
 lazy val scalaparseJS = scalaparse.js
 lazy val scalaparseJVM = scalaparse.jvm
 
@@ -115,4 +144,3 @@ lazy val readme = scalatex.ScalatexReadme(
   publishArtifact := false,
   publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
 )
-

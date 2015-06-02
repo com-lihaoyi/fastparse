@@ -32,6 +32,14 @@ object FailureTests extends TestSuite{
     )
     * - checkNeg(
       """object O{
+        |  type T = (A B)
+        |}
+      """.stripMargin,
+      expected = """ (NamedRefinement | Refinement)""",
+      found = " (A B)"
+    )
+    * - checkNeg(
+      """object O{
         | def from(n: Long, c: Int = 0): Int =
         |  if (n == 1) c + 1 else
         |}
@@ -138,7 +146,7 @@ object FailureTests extends TestSuite{
         |                      }
         |}
       """.stripMargin,
-      expected = "(`_` | PostfixType)",
+      expected = "(NamedRefinement | Refinement)",
       found = "  ="
     )
     * - checkNeg(
@@ -172,8 +180,8 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      expected = "(`=>` | `⇒`)",
-      found = " B =>"
+      expected = "(XmlPattern | Thingy | PatLiteral | TupleEx | Extractor | VarId)",
+      found = " => 0"
     )
     * - checkNeg(
       """
@@ -284,8 +292,8 @@ object FailureTests extends TestSuite{
         |    val c = f
         |}
       """.stripMargin,
-      expected = """ "}" """,
-      found = "d // g"
+      expected = """(XmlPattern | Thingy | PatLiteral | TupleEx | Extractor | VarId)""",
+      found = " // g"
     )
     * - checkNeg(
       """
@@ -307,7 +315,7 @@ object FailureTests extends TestSuite{
         |  1
         |}
       """.stripMargin,
-      expected = "(`_` | PostfixType)",
+      expected = "(NamedRefinement | Refinement)",
       found = "\n    val c"
     )
     * - checkNeg(
@@ -414,7 +422,7 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      expected = """(TypePattern | BindPattern)""",
+      expected = """(XmlPattern | Thingy | PatLiteral | TupleEx | Extractor | VarId)""",
       found = "  => 1"
     )
     * - checkNeg(
@@ -479,7 +487,7 @@ object FailureTests extends TestSuite{
         |  code: @ 12
         |}
       """.stripMargin,
-      expected = """("(" ~ Type.rep(sep = ",", end = ")") | StableId ~ ("." ~ `type`).?)""",
+      expected = """(TupleType | StableId ~ ("." ~ `type`).? | `_`)""",
       found = " 12"
     )
 
@@ -496,7 +504,7 @@ object FailureTests extends TestSuite{
         |    (i: Int => 10)
         |}
       """.stripMargin,
-      expected = "(`_` | PostfixType)",
+      expected = "(NamedRefinement | Refinement)",
       found = " 10)"
     )
       * - checkNeg(
@@ -602,7 +610,7 @@ object FailureTests extends TestSuite{
           |}
           |
         """.stripMargin,
-        expected = "(`_` | PostfixType)",
+        expected = "(NamedRefinement | Refinement)",
         found = " ]) = 1"
       )
       * - checkNeg(
@@ -713,7 +721,7 @@ object FailureTests extends TestSuite{
       s"""
          |object X{ val (_:) = 1 }
         """.stripMargin,
-      expected = "(AnnotType.rep(1, sep = `with`) ~ Refinement.? | Refinement)",
+      expected = "(NamedRefinement | Refinement)",
       found = ") = 1"
     )
     * - checkNeg(
@@ -734,7 +742,7 @@ object FailureTests extends TestSuite{
       s"""
          |object X{type T = A with}
         """.stripMargin,
-      expected = """("(" ~ Type.rep(sep = ",", end = ")") | StableId ~ ("." ~ `type`).?)""",
+      expected = """(TupleType | StableId ~ ("." ~ `type`).? | `_`)""",
       found = "}"
     )
     * - checkNeg(
@@ -755,14 +763,14 @@ object FailureTests extends TestSuite{
       s"""
          |object X{f[A,]}
         """.stripMargin,
-      expected = """(`_` | PostfixType)""",
+      expected = """(NamedRefinement | Refinement)""",
       found = "]"
     )
     * - checkNeg(
       s"""
          |object X{def f[T <% A <%] = 1}
         """.stripMargin,
-      expected = """(`_` | PostfixType)""",
+      expected = """(NamedRefinement | Refinement)""",
       found = "]"
     )
     * - checkNeg(
@@ -798,7 +806,7 @@ object FailureTests extends TestSuite{
       s"""
          |object X{type T = }
         """.stripMargin,
-      expected = """(`_` | PostfixType)""",
+      expected = """(NamedRefinement | Refinement)""",
       found = " }"
     )
     * - checkNeg(
@@ -812,7 +820,7 @@ object FailureTests extends TestSuite{
       s"""
          |object X{type T <: }
         """.stripMargin,
-      expected = """(`_` | PostfixType)""",
+      expected = """(NamedRefinement | Refinement)""",
       found = " }"
     )
       * - checkNeg(

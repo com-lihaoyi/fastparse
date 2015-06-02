@@ -5,12 +5,14 @@ import fastparse._
 import Basic._
 object Identifiers{
 
-  val Operator = P( !Keywords ~ CharsWhile(isOpChar) )
+  val Operator = P(
+    !Keywords ~ (!("/*" | "//") ~ (CharsWhile(x => isOpChar(x) && x != '/') | "/")).rep(1)
+  )
 
   val VarId = VarId0(true)
 
   def VarId0(dollar: Boolean) = P( !Keywords ~ Lower ~ IdRest(dollar) )
-  val PlainId = P( !Keywords ~ Upper ~ IdRest(true) | VarId | Operator ~ !OpChar )
+  val PlainId = P( !Keywords ~ Upper ~ IdRest(true) | VarId | Operator ~ (!OpChar | &("/*" | "//")) )
   val PlainIdNoDollar = P( !Keywords ~ Upper ~ IdRest(false) | VarId0(false) | Operator )
   val BacktickId = P( "`" ~ CharsWhile(_ != '`') ~ "`" )
   val Id: P0 = P( BacktickId | PlainId )

@@ -91,9 +91,11 @@ trait Core extends syntax.Literals{
   val `private` = W("private")
   val `protected` = W("protected")
 
+
   // kinda-sorta keywords that are common patterns even if not
   // really-truly keywords
-  val `_*` = P( `_` ~ "*" )
+  val `*` = O("*")
+  val `_*` = P( `_` ~ `*` )
   val `}` = P( Semis.? ~ "}" )
   val `{` = P( "{" ~ Semis.? )
   /**

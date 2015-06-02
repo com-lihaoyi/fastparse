@@ -14,9 +14,9 @@ object Scala extends Core with Types with Exprs with Xml{
 
   val TmplBody: P0 = {
     val Prelude = P( (Annot ~ OneNLMax).rep ~ (Mod ~! Pass).rep )
-    val TmplStat = P( Import | Prelude ~ BlockDef | StatCtx.Expr )
-    val SelfType = P( (`this` | Id | `_`) ~ (`=>` | `:` ~ InfixType ~ `=>`.?) )
-    P( "{" ~! SelfType.? ~ Semis.? ~ TmplStat.rep(sep = Semis) ~ `}` )
+    val TmplStat = P( WL ~ (Import | Prelude ~ BlockDef | StatCtx.Expr) )
+
+    P( "{" ~! BlockLambda.? ~ Semis.? ~ TmplStat.rep(sep = Semis) ~ `}` )
   }
 
   val ValVarDef = P( BindPattern.rep(1, "," ~!) ~ (`:` ~! Type).? ~ (`=` ~! StatCtx.Expr).? )
@@ -26,16 +26,15 @@ object Scala extends Core with Types with Exprs with Xml{
     P( FunSig ~ (`:` ~! Type).? ~ Body.? )
   }
 
-  val BlockDef: P0 = P( Dcl | TraitDef | ClsDef | ObjDef )
+  val BlockDef: P0 = P( WL ~ (Dcl | TraitDef | ClsDef | ObjDef) )
 
   val ClsDef = {
     val ClsAnnot = P( `@` ~ SimpleType ~ ArgList.? )
     val Prelude = P( NotNewline ~ ( ClsAnnot.rep(1) ~ AccessMod.? | ClsAnnot.rep ~ AccessMod) )
-    val ClsArgMod = P( (Mod.rep ~ (`val` | `var`)) )
+    val ClsArgMod = P( Mod.rep ~ (`val` | `var`) )
     val ClsArg = P( Annot.rep ~ ClsArgMod.? ~ Id ~ `:` ~ Type ~ (`=` ~ ExprCtx.Expr).? )
 
-
-    val ClsArgs = P( OneNLMax ~ "(" ~! `implicit`.? ~ ClsArg.rep(sep = ",", end = ")") )
+    val ClsArgs = P( OneNLMax ~ "(" ~! `implicit`.? ~ ClsArg.rep(sep = "," ~!, end = ")") )
     val AllArgs = P( ClsArgs.rep)
     P( `case`.? ~ `class` ~! Id ~ TypeArgList.? ~ Prelude.? ~ AllArgs ~ DefTmpl.? )
   }
@@ -58,7 +57,7 @@ object Scala extends Core with Types with Exprs with Xml{
   val TopStatSeq: P0 = {
     val Tmpl = P( (Annot ~ OneNLMax).rep ~ Mod.rep ~ (TraitDef | ClsDef | ObjDef) )
     val TopStat = P( `package` ~! (PkgBlock | PkgObj) | Import | Tmpl )
-    P( TopStat.rep(1, Semis) )
+    P( (WL ~ TopStat).rep(1, Semis) )
   }
   val TopPkgSeq = P( (`package` ~ QualId ~ !(WS ~ "{")).rep(1, Semis) )
   val CompilationUnit: P0 = {

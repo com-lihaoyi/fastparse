@@ -22,7 +22,6 @@ object ScalacParser{
   val settings = new Settings()
   settings.usejavacp.value = true
   settings.classpath.append(files.mkString(":"))
-  println("ClassPath\n" + files.mkString("\n"))
   val global = new Global(settings)
 
   def checkParseFails(input: String) = this.synchronized{

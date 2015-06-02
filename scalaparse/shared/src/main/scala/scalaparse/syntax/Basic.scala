@@ -41,5 +41,6 @@ object Basic {
  */
 object Key {
   def W(s: String) = P( s ~ !Basic.LetterDigitDollarUnderscore )
-  def O(s: String) = P( s ~ !Basic.OpChar )
+  // If the operator is followed by a comment, stop early so we can parse the comment
+  def O(s: String) = P( s ~ (!Basic.OpChar | &("/*" | "//")) )
 }

@@ -70,10 +70,89 @@ object SuccessTests extends TestSuite{
       """.stripMargin
     )
     * - check(
+      """class JSCodePhase{
+        |  def genRTCall(args: Tree*)
+        |}
+      """.stripMargin
+    )
+    * - check(
+      """object X{
+        |  {
+        |    ((newEntries)): Int => 1
+        |  }
+        |}
+        |
+      """.stripMargin
+    )
+    * - check(
+      """object X{ ((newEntries)): Int => 1
+        |
+        |}
+        |
+      """.stripMargin
+    )
+    * - check(
+      """class NodexSpec extends Spec {
+        |  val x = ! <a/>.isSpaceNode
+        |}
+      """.stripMargin
+    )
+    * - check(
+      """object O {
+        |  def x: Q.type#/* line: 2 */Inner
+        |}
+      """.stripMargin
+    )
+    * - check(
+      """object O {
+        |  def x: Q.type#/* line: 2 */Inner
+        |}
+      """.stripMargin
+    )
+    * - check(
+      """object O {
+        |  val x = (x +/* */ 1)
+        |}
+      """.stripMargin
+    )
+    * - check(
+      """object O {
+        |  val x = x +// {
+        |}
+      """.stripMargin
+    )
+    * - check(
+      """object O {
+        |  val x:// {{{
+        |    Int
+        |}
+      """.stripMargin
+    )
+    * - check(
+      """object O {
+        |  val x: A +// {{{
+        |    Int
+        |}
+      """.stripMargin
+    )
+    * - check(
+      """class OptionLikeMatcher{
+        |  type A = _ \/ B
+        |}
+      """.stripMargin
+    )
+    * - check(
       """
         |object SyntaxTest{
         |  a()
         |  throw 1
+        |}
+      """.stripMargin
+    )
+    * - check(
+      """class NodexSpec {
+        |  (! <a/>.isSpaceNode)
+        |  ! <a/>.isSpaceNode
         |}
       """.stripMargin
     )

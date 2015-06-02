@@ -15,6 +15,7 @@ object ProjectTests extends TestSuite{
   def tests = TestSuite{
 
     def checkDir(path: String, filter: String => Boolean = _ => true) = {
+      println("Checking Dir " + path)
       def listFiles(s: java.io.File): Iterator[String] = {
         val (dirs, files) = Option(s.listFiles()).toIterator
                                                  .flatMap(_.toIterator)
@@ -30,7 +31,7 @@ object ProjectTests extends TestSuite{
         if (filename.endsWith(".scala") && filter(filename)) {
           val code = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(filename)))
           if (!ScalacParser.checkParseFails(code)) {
-            println("Checking: " + filename)
+            print(".")
             TestUtil.check(code, tag = filename)
           }
         }
@@ -38,7 +39,7 @@ object ProjectTests extends TestSuite{
 
 
       files.foreach(Await.result(_, Duration.Inf))
-
+      println()
     }
 
     'test - {
@@ -88,6 +89,28 @@ object ProjectTests extends TestSuite{
     'scalding - checkRepo("https://github.com/twitter/scalding")
     'scaloid - checkRepo("https://github.com/pocorall/scaloid")
     'marathon - checkRepo("https://github.com/mesosphere/marathon")
+    'scalatra - checkRepo("https://github.com/scalatra/scalatra")
+    'summingbird - checkRepo("https://github.com/twitter/summingbird")
+    'slick - checkRepo("https://github.com/slick/slick")
+    'ensime - checkRepo("https://github.com/ensime/ensime-server")
+    'goose - checkRepo("https://github.com/GravityLabs/goose")
+    'lila - checkRepo("https://github.com/ornicar/lila")
+    'precog - checkRepo("https://github.com/precog/platform")
+    'twitterUtil - checkRepo("https://github.com/twitter/util")
+    'pickling - checkRepo("https://github.com/scala/pickling")
+    // takes forever to clone on crappy internet =/
+    'intellij - checkRepo("https://github.com/JetBrains/intellij-scala")
+    'scalatest - checkRepo("https://github.com/scalatest/scalatest",
+      x => !Seq(
+        // Unicode escapes in weird places
+        "target/repos/scalatest/common-test/src/main/scala/org/scalatest/OperatorNames.scala",
+        "target/repos/scalatest/scalatest-test/src/test/scala/org/scalatest/OperatorNames.scala"
+      ).exists(x.startsWith)
+    )
+    'macroid - checkRepo("https://github.com/macroid/macroid")
+    'delite- checkRepo("https://github.com/stanford-ppl/Delite")
+    'chisel - checkRepo("https://github.com/ucb-bar/chisel")
+    'specs2 - checkRepo("https://github.com/etorreborre/specs2")
     'scala - checkRepo(
       "https://github.com/scala/scala",
       x => !Seq(
