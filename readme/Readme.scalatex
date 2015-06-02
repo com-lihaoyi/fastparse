@@ -509,6 +509,14 @@
             "com.lihaoyi" %%% "scalaparse" % "@fastparse.Constants.version"
 
 @sect{Change Log}
+    @sect{0.1.7}
+        @ul
+            @li
+                More fixes for ScalaParse, added more projects to test suite
+            @li
+                Auto-generate @hl.scala{Sequencer} instances up to 22
+            @li
+                Removed unnecessary runtime utest dependency
     @sect{0.1.6}
         @ul
             @li
@@ -518,7 +526,7 @@
             @li
                 Added ability to @hl.scala{instrument} parsers, in order to gather out-of-band information about them e.g. for debugging or profiling
             @li
-                Added @hl.scala{LiteralIgnoreCase} combinator, for case-insensitive string matching
+                Added @hl.scala{IgnoreCase} combinator, for case-insensitive string matching
             @li
                 Cross-published for Scala 2.10
 
