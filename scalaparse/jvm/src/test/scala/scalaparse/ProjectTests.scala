@@ -108,7 +108,11 @@ object ProjectTests extends TestSuite{
       ).exists(x.startsWith)
     )
     'macroid - checkRepo("https://github.com/macroid/macroid")
-    'delite- checkRepo("https://github.com/stanford-ppl/Delite")
+    'delite- checkRepo("https://github.com/stanford-ppl/Delite",
+      x => !Seq(
+        // trailing . after number
+        "target/repos/Delite/apps/multi-dsl/src/ppl/apps/interop/CustomerPricing.scala"
+      ).exists(x.startsWith))
     'chisel - checkRepo("https://github.com/ucb-bar/chisel")
     'specs2 - checkRepo("https://github.com/etorreborre/specs2")
     'scala - checkRepo(
@@ -125,7 +129,7 @@ object ProjectTests extends TestSuite{
         "target/repos/scala/test/files/neg/t8266-invalid-interp.scala",
         "target/repos/scala/test/disabled/",
         "target/repos/scala/test/files/neg/",
-        // trailing dot
+        // trailing . after number
         "target/repos/scala/test/files/presentation/infix-completion/src/Snippet.scala"
 
 
