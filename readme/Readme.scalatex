@@ -56,7 +56,10 @@
             @p
                 Such a parser returns a @hl.scala{Result.Success} if the input matches the string, and otherwise returns a @hl.scala{Result.Failure}.
             @p
-                As you can se, by default the @hl.scala{Success} contains a @hl.scala{(): Unit}, unless you use @sect.ref{Capturing} or @sect.ref{Map} described below. Also, apart from the structured data of the failure, @hl.scala{Failure} also contains a nice human-readable trace of the parse showing the stack of parsers which were in progress when the parse failed.
+                As you can see, by default the @hl.scala{Success} contains a @hl.scala{(): Unit}, unless you use @sect.ref{Capturing} or @sect.ref{Map} described below. Also, apart from the structured data of the failure, @hl.scala{Failure} also contains a nice human-readable trace of the parse showing the stack of parsers which were in progress when the parse failed.
+
+            @p
+                You can also wrap the strings in an @hl.scala{IgnoreCase("...")} if you want the matching to be case-insensitive.
 
             @sect{Sequence}
 

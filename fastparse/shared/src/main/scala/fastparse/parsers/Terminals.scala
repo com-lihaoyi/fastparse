@@ -100,7 +100,7 @@ object Terminals {
   /**
    * Parses a literal `String` ignoring case
    */
-  case class LiteralIgnoreCase(s: String) extends Parser[Unit]{
+  case class IgnoreCase(s: String) extends Parser[Unit]{
 
     def parseRec(cfg: ParseCtx, index: Int) = {
       if (startsWithIgnoreCase(cfg.input, s, index)) success(cfg.success, (), index + s.length, false)
