@@ -164,9 +164,9 @@ object ExampleTests extends TestSuite{
         val Result.Success(12, _) = even.parse("12")
         val failure = even.parse("123").asInstanceOf[Result.Failure]
         println(failure.trace)
-        assert(
-          failure.input == "123"
-        )
+        assert(failure.input == "123")
+        assert(even.toString == "Filtered(digits,<function1>)")
+        assert(failure.trace == "Filtered(digits,<function1>):0 ...\"123\"")
       }
     }
     'charX{
