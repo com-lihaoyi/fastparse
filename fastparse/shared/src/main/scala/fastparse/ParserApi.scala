@@ -69,8 +69,9 @@ trait ParserApi[+T]{
    * will be used for the next parse
    */
   def flatMap[V](f: T => Parser[V]): Parser[V]
+
+  def filter(predicate: T => Boolean): Parser[T]
 }
-import parsers.Terminals.Pass
 trait ParserApiImpl[+T] extends ParserApi[T]{ this: Parser[T] =>
 
   def parseRec(cfg: ParseCtx, index: Int): Result[T]
