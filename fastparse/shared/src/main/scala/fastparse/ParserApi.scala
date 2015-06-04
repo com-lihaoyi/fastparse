@@ -70,6 +70,9 @@ trait ParserApi[+T]{
    */
   def flatMap[V](f: T => Parser[V]): Parser[V]
 
+  /**
+   * applies the supplied predicate to the current parser succeeding on true failing on false
+   */
   def filter(predicate: T => Boolean): Parser[T]
 }
 trait ParserApiImpl[+T] extends ParserApi[T]{ this: Parser[T] =>
