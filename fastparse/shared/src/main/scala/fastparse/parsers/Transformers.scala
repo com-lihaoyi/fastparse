@@ -32,16 +32,17 @@ object Transformers {
     }
   }
 
-  case class Filtered[T](p1: fastparse.Parser[T],
+  case class Filtered[T](p: fastparse.Parser[T],
                             predicate: T => Boolean)
     extends fastparse.Parser[T] {
     override def parseRec(cfg: ParseCtx, index: Int): Result[T] = {
-      p1.parseRec(cfg, index) match{
+      p.parseRec(cfg, index) match{
         case f: Result.Failure.Mutable => failMore(f, index, cfg.trace, false)
-        case s: Result.Success.Mutable[T] => {
+        case s: Result.Success.Mutable[T] =>
           if (predicate(s.value)) s else fail(cfg.failure,index,false)
-        }
       }
     }
+
+    override def toString: String = s"$p.filter($predicate)"
   }
 }
