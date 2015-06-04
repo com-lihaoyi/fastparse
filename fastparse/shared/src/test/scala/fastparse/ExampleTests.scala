@@ -163,8 +163,6 @@ object ExampleTests extends TestSuite{
         val even = digits.filter(_ % 2 == 0)
         val Result.Success(12, _) = even.parse("12")
         val failure = even.parse("123").asInstanceOf[Result.Failure]
-        println(failure.trace)
-        assert(failure.input == "123")
         assert(even.toString == "digits.filter(<function1>)")
         assert(failure.trace == "digits.filter(<function1>):0 ...\"123\"")
       }

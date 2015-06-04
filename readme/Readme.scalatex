@@ -169,7 +169,7 @@
                 @hl.ref(tests/"ExampleTests.scala", Seq("'filter", ""))
 
                 @p
-                    @hl.scala{.filter} allows you to supply a predicate @hl.scala{T => Boolean} which is evaluated on Success. If the result of the predicate is true the parser succeeds - otherwise it fails. The example above uses it to parse only even numbers.
+                    @hl.scala{.filter} allows you to supply a predicate @hl.scala{T => Boolean} which is applied to the successful Result of the current parser. If the result of the predicate is true the filtered parser succeeds - otherwise it fails. The example above uses @hl.scala{.filter} to parse only even numbers - odd number will fail. If the current parser fails then that failure is simply passed along.
 
         @sect{Intrinsics}
             @p
