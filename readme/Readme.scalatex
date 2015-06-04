@@ -165,6 +165,12 @@
 
                 @p
                     Note that the function given to @hl.scala{.flatMap} is evaluated every time this parser is tried. You should be conscious of the cost of re-creating the resultant parser every time, since FastParse parsers are somewhat expensive to initialize despite being fast per-run. If possible, store the parsers somewhere before-hand or memo-ize/cache them to avoid initializing them wastefully.
+            @sect{Filter}
+                @hl.ref(tests/"ExampleTests.scala", Seq("'filter", ""))
+
+                @p
+                    @hl.scala{.filter} allows you to supply a predicate @hl.scala{T => Boolean} which is applied to the successful result of the current parser. If the predicate is true the filtered parser succeeds otherwise it fails. The example above uses @hl.scala{.filter} on digits to parse only even numbers successfully while odd numbers will fail. If the current parser fails then that failure is simply passed along.
+
         @sect{Intrinsics}
             @p
                 In theory, all possible parsers can be put together using the above tools. In practice, a few more tools are provided for convenience or performance:
