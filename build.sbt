@@ -66,7 +66,7 @@ lazy val fastparse = crossProject.dependsOn(utils).settings(
   name := "fastparse",
   sourceGenerators in Compile <+= sourceManaged in Compile map { dir =>
     val file = dir/"fastparse"/"SequencerGen.scala"
-    val tuples = (2 to 10).map{ i =>
+    val tuples = (2 to 22).map{ i =>
       val ts = (1 to i) map ("T" + _)
       val chunks = (1 to i) map { n =>
         s"t._$n"
