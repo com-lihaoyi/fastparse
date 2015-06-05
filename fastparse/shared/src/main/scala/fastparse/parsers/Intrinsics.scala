@@ -58,37 +58,12 @@ object Intrinsics {
    */
   case class StringIn(strings: String*) extends Parser[Unit]{
 
-    private[this] val bitSet = new TrieNode
-    for(string <- strings){
-      var current = bitSet
-      for(char <- string){
-        val next = current.children.getOrElse(char, null)
-        if (next == null) {
-          current.children(char) = new TrieNode
-        }
-        current = current.children(char)
-      }
-      current.word = string
-    }
+    private[this] val trie = new TrieNode(strings)
 
     def parseRec(cfg: ParseCtx, index: Int) = {
-      val input = cfg.input
-      @tailrec def rec(offset: Int, currentNode: TrieNode, currentRes: Result[Unit]): Result[Unit] = {
-        if (index + offset >= input.length) currentRes
-        else {
-          val char = input(index + offset)
-          val next = currentNode(char)
-          if (next == null) currentRes
-          else {
-            rec(
-              offset + 1,
-              next,
-              if (next.word != null) success(cfg.success, (), index + offset + 1, false) else currentRes
-            )
-          }
-        }
-      }
-      rec(0, bitSet, fail(cfg.failure, index))
+      val length = trie.query(cfg.input, index)
+      if (length != -1) success(cfg.success, (), index + length + 1, false)
+      else fail(cfg.failure, index)
     }
     override def toString = {
       s"StringIn(${strings.map(literalize(_)).mkString(", ")})"

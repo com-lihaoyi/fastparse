@@ -1,6 +1,6 @@
 package fastparse
 
-import scala.annotation.switch
+import scala.annotation.{tailrec, switch}
 import acyclic.file
 import scala.collection.mutable
 
@@ -137,17 +137,47 @@ object Utils {
   /**
    * An trie node for quickly matching multiple strings which
    * share the same prefix, one char at a time.
-   *
-   * The `LongMap` could be pretty easily replaced by a lookup-table
-   * `Array[TrieNode]`, but empirically that doesn't seem to give any
-   * performance improvements.
    */
-  final class TrieNode{
-    val children = mutable.HashMap.empty[Char, TrieNode]
-    var word: String = null
-    def apply(c: Char) = {
-      if (children.contains(c)) children(c)
-      else null
+  final class TrieNode(strings: Seq[String]){
+
+    val (min, max, arr) = {
+      val children = strings.filter(!_.isEmpty)
+                            .groupBy(_(0))
+                            .mapValues(ss => new TrieNode(ss.map(_.tail)))
+      if (children.size == 0) (0.toChar, 0.toChar, new Array[TrieNode](0))
+      else {
+        val min = children.keysIterator.min
+        val max = children.keysIterator.max
+        val arr = new Array[TrieNode](max - min + 1)
+        for ((k, v) <- children) arr(k - min) = v
+        (min, max, arr)
+      }
+    }
+    val word: Boolean = strings.exists(_.isEmpty) || arr.isEmpty
+    def apply(c: Char): TrieNode = {
+      if (c > max || c < min) null
+      else arr(c - min)
+    }
+
+    /**
+     * Returns the length of the matching string, or -1 if not found
+     */
+    def query(input: String, index: Int): Int = {
+      @tailrec def rec(offset: Int, currentNode: TrieNode, currentRes: Int): Int = {
+        if (index + offset >= input.length) currentRes
+        else {
+          val char = input(index + offset)
+          val next = currentNode(char)
+          if (next == null) currentRes
+          else rec(
+            offset + 1,
+            next,
+            if (next.word) offset
+            else currentRes
+          )
+        }
+      }
+      rec(0, this, -1)
     }
   }
 }

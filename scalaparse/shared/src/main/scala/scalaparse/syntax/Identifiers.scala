@@ -43,5 +43,8 @@ object Identifiers{
   val SymbolicKeywords = P{
     StringIn(symbolKeywords:_*) ~ !OpChar
   }
+
+  val keywords = alphaKeywords ++ symbolKeywords
+
   val Keywords = P( AlphabetKeywords | SymbolicKeywords )
 }
