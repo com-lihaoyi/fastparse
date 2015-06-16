@@ -42,6 +42,8 @@ object ParsingTests extends TestSuite{
       check("Hello".!.rep, ("HelloHello!", 2), Success.Mutable(Seq(), 2))
       check("Hello".!.rep, ("HelloHello!", 5), Success.Mutable(Seq("Hello"), 10))
       check("Hello".!.rep(1), ("HelloHello!", 0), Success.Mutable(Seq("Hello", "Hello"), 10))
+      check(CharIn("abc").!.rep(end=P(&("XYZ"))), ("caXYZaa", 0), Success.Mutable(Seq("c","a"), 2))
+      check(CharIn("abc").!.rep(end=P(&("cba"))), ("cacbaaa", 0), Success.Mutable(Seq("c","a"), 2))
       checkFail("Hello".rep(1), ("HelloHello!", 2), 2)
       checkFail("Hello".rep(end="Bye") ~ End, ("HelloHello!", 0), 10)
     }
