@@ -6,27 +6,28 @@ import scala.collection.mutable
 
 import scala.language.experimental.macros
 
+/**
+ * Type, which when summoned implicitly, provides the
+ * name of the nearest enclosing method for your perusal
+ */
+case class FuncName(name: String, fullName: String)
+object FuncName{
+  implicit def strToFuncName(s: String) = FuncName(s, s)
+
+}
 
 object Utils {
-  /**
-   * Type, which when summoned implicitly, provides the
-   * name of the nearest enclosing method for your perusal
-   */
-  case class FuncName(name: String, fullName: String)
-  object FuncName{
-    implicit def strToFuncName(s: String) = FuncName(s, s)
 
-    def impl(c: Compat.Context): c.Expr[FuncName] = {
-      import c.universe._
+  def funcNameImpl(c: Compat.Context): c.Expr[FuncName] = {
+    import c.universe._
 
-      val sym = Compat.enclosingName(c)
-      val simpleName = sym.name.decoded.toString.trim
-      val fullName = sym.fullName.trim
+    val sym = Compat.enclosingName(c)
+    val simpleName = sym.name.decoded.toString.trim
+    val fullName = sym.fullName.trim
 
-      val name = q"$simpleName"
+    val name = q"$simpleName"
 
-      c.Expr[FuncName](q"fastparse.Utils.FuncName($name, $fullName)")
-    }
+    c.Expr[FuncName](q"fastparse.FuncName($name, $fullName)")
   }
 
   /**

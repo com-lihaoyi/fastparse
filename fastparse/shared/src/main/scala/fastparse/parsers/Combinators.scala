@@ -1,6 +1,5 @@
 package fastparse.parsers
 
-import fastparse.Utils.FuncName
 import fastparse._
 import fastparse.core.Result._
 import fastparse.core.{ParseCtx, Result}
