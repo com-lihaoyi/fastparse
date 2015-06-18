@@ -3,7 +3,7 @@ import fastparse.parsers.Intrinsics
 
 import scala.language.experimental.macros
 package object fastparse {
-  implicit def enclosingFunctionName: FuncName = macro Utils.funcNameImpl
+  implicit def enclosingFunctionName: FuncName = macro MacroUtils.funcNameImpl
 
   val Result = core.Result
 
