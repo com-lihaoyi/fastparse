@@ -4,48 +4,21 @@ import scala.annotation.{tailrec, switch}
 import acyclic.file
 import scala.collection.mutable
 
-import scala.language.experimental.macros
+
+/**
+ * Type, which when summoned implicitly, provides the
+ * name of the nearest enclosing method for your perusal
+ */
+case class FuncName(name: String, fullName: String)
+object FuncName{
+  implicit def strToFuncName(s: String) = FuncName(s, s)
+
+}
+
 
 
 object Utils {
-  /**
-   * Type, which when summoned implicitly, provides the
-   * name of the nearest enclosing method for your perusal
-   */
-  case class FuncName(name: String, fullName: String)
-  object FuncName{
-    implicit def strToFuncName(s: String) = FuncName(s, s)
 
-    def impl(c: Compat.Context): c.Expr[FuncName] = {
-      import c.universe._
-
-      val sym = Compat.enclosingName(c)
-      val simpleName = sym.name.decoded.toString.trim
-      val fullName = sym.fullName.trim
-
-      val name = q"$simpleName"
-
-      c.Expr[FuncName](q"fastparse.Utils.FuncName($name, $fullName)")
-    }
-  }
-
-  /**
-   * Takes a predicate and pre-generates a base64 encoded bit-set, that 
-   * evaluates at run-time to create a [[CharBitSet]]. Useful for pre-computing
-   * Char predicates that are unfeasible at runtime, e.g. because they're too
-   * slow or because they don't work in Scala.js
-   */
-  def preCompute(pred: Char => Boolean): fastparse.Utils.CharBitSet = macro preComputeImpl
-
-  def preComputeImpl(c: Compat.Context)(pred: c.Expr[Char => Boolean]): c.Expr[CharBitSet] = {
-    import c.universe._
-    val evaled = c.eval(c.Expr[Char => Boolean](c.resetLocalAttrs(pred.tree.duplicate)))
-    val (first, last, array) = CharBitSet.compute((Char.MinValue to Char.MaxValue).filter(evaled))
-    val txt = CharBitSet.ints2Hex(array)
-    c.Expr[CharBitSet](q"""
-      new fastparse.Utils.CharBitSet(fastparse.Utils.CharBitSet.hex2Ints($txt), $first, $last)
-    """)
-  }
   /**
    * Convert a string to a C&P-able literal. Basically
    * copied verbatim from the uPickle source code.

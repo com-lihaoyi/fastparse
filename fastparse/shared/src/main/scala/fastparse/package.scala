@@ -3,7 +3,7 @@ import fastparse.parsers.Intrinsics
 
 import scala.language.experimental.macros
 package object fastparse {
-  implicit def enclosingFunctionName: Utils.FuncName = macro Utils.FuncName.impl
+  implicit def enclosingFunctionName: FuncName = macro MacroUtils.funcNameImpl
 
   val Result = core.Result
 
@@ -26,8 +26,8 @@ package object fastparse {
     if (s.length == 1) parsers.Terminals.CharLiteral(s(0))
     else parsers.Terminals.Literal(s)
 
-  def P[T](p: => Parser[T])(implicit name: Utils.FuncName): Parser[T] =
-    parsers.Combinators.Rule(name.name, () => p)
+  def P[T](p: => Parser[T])(implicit name: FuncName): Parser[T] =
+    parsers.Combinators.Rule(name, () => p) //todo: Should this be name or name.name?
 
   type P0 = Parser[Unit]
 
