@@ -6,7 +6,7 @@ import fastparse.core.Result._
 import fastparse.core.{ParseCtx, Result}
 
 import scala.annotation.tailrec
-
+import core.Parser
 /**
  * Parsers which are made up of other parsers,
  * adding to or combining their behavior

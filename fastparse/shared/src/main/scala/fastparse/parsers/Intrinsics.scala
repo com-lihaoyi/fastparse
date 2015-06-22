@@ -2,10 +2,10 @@ package fastparse.parsers
 
 import fastparse.Utils._
 import fastparse.core.{ParseCtx, Result}
-import fastparse.{Parser, Utils}
+import fastparse.Utils
 
 import scala.annotation.tailrec
-
+import fastparse.core.Parser
 /**
  * High-performance intrinsics for parsing common patterns. All
  * of these have equivalent to constructs that can be put together

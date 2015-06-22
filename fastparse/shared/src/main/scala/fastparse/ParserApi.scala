@@ -4,8 +4,8 @@ import fastparse.core.{ParseCtx, Result}
 import parsers.Combinators._
 import parsers.Transformers._
 import Implicits._
-trait Parser[+T] extends core.Parser[T] with ParserApi[T] with ParserApiImpl[T]
-trait ParserApi[+T]{
+import core.Parser
+trait ParserApi[+T] {
   import Implicits._
 
   /**
@@ -19,7 +19,7 @@ trait ParserApi[+T]{
   def rep[R](implicit ev: Repeater[T, R]): Parser[R]
   def rep[R](min: Int = 0,
              sep: Parser[_] = Pass,
-             until: Parser[_] = Pass)
+             end: Parser[_] = Pass)
             (implicit ev: Repeater[T, R]): Parser[R]
 
   /**
@@ -58,7 +58,7 @@ trait ParserApi[+T]{
   /**
    * Used to capture the text parsed by this as a `String`
    */
-  def ! : Parser[_]
+  def ! : Parser[String]
 
   /**
    * Transforms the result of this Parser with the given function
@@ -75,34 +75,33 @@ trait ParserApi[+T]{
    */
   def filter(predicate: T => Boolean): Parser[T]
 }
-trait ParserApiImpl[+T] extends ParserApi[T]{ this: Parser[T] =>
+class ParserApiImpl[+T](self: Parser[T]) extends ParserApi[T] {
 
-  def parseRec(cfg: ParseCtx, index: Int): Result[T]
 
-  def log(msg: String)(implicit output: Logger) = Logged(this, msg, output.f)
+  def log(msg: String)(implicit output: Logger) = Logged(self, msg, output.f)
 
-  def rep[R](implicit ev: Repeater[T, R]): Parser[R] = Repeat(this, 0, Pass, Pass)
+  def rep[R](implicit ev: Repeater[T, R]): Parser[R] = Repeat(self, 0, Pass, Pass)
   def rep[R](min: Int = 0, sep: Parser[_] = Pass, end: Parser[_] = Pass)
-            (implicit ev: Repeater[T, R]): Parser[R] = Repeat(this, min, sep, end)
+            (implicit ev: Repeater[T, R]): Parser[R] = Repeat(self, min, sep, end)
 
-  def |[V >: T](p: Parser[V]): Parser[V] = Either[V](Either.flatten(Vector(this, p)):_*)
+  def |[V >: T](p: Parser[V]): Parser[V] = Either[V](Either.flatten(Vector(self, p)):_*)
 
   def ~[V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R] =
-    Sequence.flatten(Sequence(this, p, cut=false).asInstanceOf[Sequence[R, R, R]])
+    Sequence.flatten(Sequence(self, p, cut=false).asInstanceOf[Sequence[R, R, R]])
   def ~![V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R] =
-    Sequence.flatten(Sequence(this, p, cut=true).asInstanceOf[Sequence[R, R, R]])
+    Sequence.flatten(Sequence(self, p, cut=true).asInstanceOf[Sequence[R, R, R]])
 
-  def ?[R](implicit ev: Optioner[T, R]) = Optional(this)
+  def ?[R](implicit ev: Optioner[T, R]) = Optional(self)
 
-  def unary_! = Not(this)
+  def unary_! = Not(self)
 
-  def ~! : Parser[T] = Cut[T](this)
+  def ~! : Parser[T] = Cut[T](self)
 
-  def ! = Capturing(this)
+  def ! = Capturing(self)
 
-  def map[V](f: T => V): Parser[V] = Mapper(this, f)
+  def map[V](f: T => V): Parser[V] = Mapper(self, f)
 
-  def flatMap[V](f: T => Parser[V]): Parser[V] = FlatMapped(this, f)
+  def flatMap[V](f: T => Parser[V]): Parser[V] = FlatMapped(self, f)
 
-  def filter(predicate: T => Boolean): Parser[T] = Filtered(this,predicate)
+  def filter(predicate: T => Boolean): Parser[T] = Filtered(self,predicate)
 }

@@ -1,6 +1,6 @@
 package fastparse.parsers
 
-import fastparse.Parser
+import fastparse.core.Parser
 import fastparse.core.Result.{Failure, Success}
 import fastparse.core.{ParseCtx, Result}
 
@@ -21,9 +21,9 @@ object Transformers {
     override def toString = p.toString
   }
 
-  case class FlatMapped[T, V](p1: fastparse.Parser[T],
-                              func: T => fastparse.Parser[V])
-    extends fastparse.Parser[V] {
+  case class FlatMapped[T, V](p1: Parser[T],
+                              func: T => Parser[V])
+    extends Parser[V] {
     def parseRec(cfg: ParseCtx, index: Int): Result[V] = {
       p1.parseRec(cfg, index) match{
         case f: Result.Failure.Mutable => failMore(f, index, cfg.trace, false)
@@ -32,9 +32,9 @@ object Transformers {
     }
   }
 
-  case class Filtered[T](p: fastparse.Parser[T],
+  case class Filtered[T](p: Parser[T],
                             predicate: T => Boolean)
-    extends fastparse.Parser[T] {
+    extends Parser[T] {
     override def parseRec(cfg: ParseCtx, index: Int): Result[T] = {
       p.parseRec(cfg, index) match{
         case f: Result.Failure.Mutable => failMore(f, index, cfg.trace, false)

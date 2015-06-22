@@ -43,7 +43,7 @@ object ParsingTests extends TestSuite{
       check("Hello".!.rep, ("HelloHello!", 5), Success.Mutable(Seq("Hello"), 10))
       check("Hello".!.rep(1), ("HelloHello!", 0), Success.Mutable(Seq("Hello", "Hello"), 10))
       checkFail("Hello".rep(1), ("HelloHello!", 2), 2)
-      checkFail("Hello".rep(end="Bye") ~ End, ("HelloHello!", 0), 10)
+      checkFail("Hello".rep(end=wspStr("Bye")) ~ End, ("HelloHello!", 0), 10)
     }
     'either{
       check("Hello".! | "Bye".!, ("HelloBye", 0), Success.Mutable("Hello", 5))

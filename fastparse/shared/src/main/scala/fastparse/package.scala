@@ -1,3 +1,4 @@
+import fastparse.core.{Result, ParseCtx}
 import fastparse.parsers.Intrinsics
 
 
@@ -22,14 +23,17 @@ package object fastparse {
 
   val & = parsers.Combinators.Lookahead
 
-  implicit def wspStr(s: String) =
+  implicit def wspStr(s: String): P0 =
     if (s.length == 1) parsers.Terminals.CharLiteral(s(0))
     else parsers.Terminals.Literal(s)
-
+  import core.Parser
   def P[T](p: => Parser[T])(implicit name: Utils.FuncName): Parser[T] =
     parsers.Combinators.Rule(name.name, () => p)
 
   type P0 = Parser[Unit]
 
   type P[+T] = Parser[T]
+
+  implicit def parserApi[T, V](p: T)(implicit c: T => Parser[V]): ParserApi[V] =
+    new ParserApiImpl[V](p)
 }

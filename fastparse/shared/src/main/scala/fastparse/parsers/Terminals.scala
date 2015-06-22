@@ -1,11 +1,10 @@
 package fastparse.parsers
 
-import fastparse.Parser
 import fastparse.Utils._
 import fastparse.core.ParseCtx
 
 import scala.annotation.tailrec
-
+import fastparse.core.Parser
 /**
  * Leaf parsers which do not contain any other
  * parsers, and do simple things
@@ -127,7 +126,7 @@ object Terminals {
    * parse into the input string. e.g. useful for providing
    * source locations for AST nodes. Consumes no input.
    */
-  case object Index extends fastparse.Parser[Int]{
+  case object Index extends Parser[Int]{
     def parseRec(cfg: ParseCtx, index: Int) = {
       success(cfg.success, index, index, false)
     }
