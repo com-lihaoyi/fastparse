@@ -16,12 +16,20 @@ object IndentationTests extends TestSuite{
     case ("/", nums) => nums.reduceLeft(_/_)
   }
 
+  /**
+   * Parser for an indentation-based math syntax. Parens are no longer
+   * necessary, and the whole parser is parametrized with the current
+   * depth of indentation
+   */
   class Parser(indent: Int){
     val number: P[Int] = P( CharIn('0'to'9').rep(1).!.map(_.toInt) )
-    val factor: P[Int] = P( " ".rep(indent) ~ (number | op) )
-    val indented: P[Int] = P( new Parser(indent+2).factor )
-    val op: P[Int] = P( CharIn("+-*/").! ~! ("\n" ~ indented).rep(1) ).map(eval)
-    val expr: P[Int]   = P( op ~ End )
+    val deeper: P[Int] = P( " ".rep(indent + 1).!.map(_.length) )
+    val factor: P[Int] = P( number | block )
+    val blockBody: P[Seq[Int]] = "\n" ~ deeper.flatMap(i =>
+      new Parser(i).factor.rep(1, sep = ("\n" + " " * i) ~!)
+    )
+    val block: P[Int] = P( CharIn("+-*/").! ~! blockBody).map(eval)
+    val expr: P[Int]   = P( block ~ End )
   }
   val expr = new Parser(0).expr
   val tests = TestSuite{
@@ -124,6 +132,13 @@ object IndentationTests extends TestSuite{
           |1
         """.stripMargin.trim,
         """End:5 ..."\n1""""
+      )
+      check(
+        """+
+          |  1
+          |   1
+        """.stripMargin.trim,
+        """(number | block):8 ..." 1""""
       )
     }
   }

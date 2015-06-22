@@ -5,6 +5,10 @@ import fastparse.core.Parser
 import fastparse.parsers.Combinators.Sequence
 import utest._
 
+/**
+ * Custom version of `ParserApi`, that behaves the same as the
+ * default but injects whitespace in between every pair of tokens
+ */
 class ParserApiImpl2[+T](p0: Parser[T]) extends ParserApiImpl(p0){
   override def ~[V, R](p: P[V])
                       (implicit ev: Sequencer[T, V, R])
@@ -29,7 +33,7 @@ object WhiteSpaceMathTests extends TestSuite{
   def eval(tree: (Int, Seq[(String, Int)])) = {
     val (base, ops) = tree
     ops.foldLeft(base){ case (left, (op, right)) => op match{
-      case "+" => left + right  case "-" => left - right
+      case "+" => left + right case "-" => left - right
       case "*" => left * right case "/" => left / right
     }}
   }
