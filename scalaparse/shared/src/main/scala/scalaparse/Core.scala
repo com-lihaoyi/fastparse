@@ -1,6 +1,8 @@
 package scalaparse
 
 import acyclic.file
+import fastparse.Implicits.{Optioner, Sequencer}
+import fastparse.parsers.Combinators.Optional
 import syntax.{Identifiers, Key, Basic}
 
 import scala.language.implicitConversions
@@ -130,4 +132,34 @@ trait Core extends syntax.Literals{
     val IdPath: P0 = P( Id ~ ("." ~ PostDotCheck ~! Id).rep ~ ("." ~ ThisPath).? )
     P( ThisPath | IdPath )
   }
+}
+
+/**
+ * Custom version of `ParserApi`, that behaves the same as the
+ * default but injects whitespace in between every pair of tokens
+ */
+class ParserApiImpl2[+T](p0: P[T], WL: P0) extends ParserApiImpl(p0)  {
+  def ??[R](implicit ev: Optioner[T, R]): P[R] = p0.?
+  override def ?[R](implicit ev: Optioner[T, R]): P[R] = (WL ~ p0).?
+
+  def ~~[V, R](p: P[V])
+              (implicit ev: Sequencer[T, V, R])
+              : P[R] =
+    p0 ~ p
+
+  override def ~[V, R](p: P[V])
+                      (implicit ev: Sequencer[T, V, R])
+                      : P[R] =
+
+    p0 ~ WL ~ p
+
+  override def ~![V, R](p: P[V])
+                       (implicit ev: Sequencer[T, V, R])
+                       : P[R] =
+    p0 ~! WL ~ p
+
+  def ~~![V, R](p: P[V])
+                       (implicit ev: Sequencer[T, V, R])
+                       : P[R] =
+    p0 ~! p
 }

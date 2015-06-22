@@ -91,13 +91,13 @@ class ParserApiImpl[+T](self: Parser[T]) extends ParserApi[T] {
   def ~![V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R] =
     Sequence.flatten(Sequence(self, p, cut=true).asInstanceOf[Sequence[R, R, R]])
 
-  def ?[R](implicit ev: Optioner[T, R]) = Optional(self)
+  def ?[R](implicit ev: Optioner[T, R]): Parser[R] = Optional(self)
 
-  def unary_! = Not(self)
+  def unary_! : Parser[Unit] = Not(self)
 
   def ~! : Parser[T] = Cut[T](self)
 
-  def ! = Capturing(self)
+  def ! : Parser[String] = Capturing(self)
 
   def map[V](f: T => V): Parser[V] = Mapper(self, f)
 

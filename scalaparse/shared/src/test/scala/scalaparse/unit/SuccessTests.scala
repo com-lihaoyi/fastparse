@@ -620,9 +620,6 @@ object SuccessTests extends TestSuite{
     )
     * - check(
       """object K{
-        |  def newBuilder =
-        |    new B
-        |
         |  @inline def a = 1
         |}
       """.stripMargin
@@ -765,9 +762,9 @@ object SuccessTests extends TestSuite{
     )
 
     * - check(
-      """object immutable {
-        |  new (((String)))
-        |}
+        """object immutable {
+          |  new (((String)))
+          |}
       """.stripMargin
     )
     * - check(
@@ -801,8 +798,7 @@ object SuccessTests extends TestSuite{
     )
     * - check(
       """object Test4 {
-        |    type T = F @field
-        |    @BeanProperty val x = 1
+        |  @BeanProperty val x
         |}
       """.stripMargin
     )
@@ -854,7 +850,6 @@ object SuccessTests extends TestSuite{
         |  for {
         |    n <- A
         |    a <- B
-        |    _ <- C
         |  } yield n
         |}
       """.stripMargin
