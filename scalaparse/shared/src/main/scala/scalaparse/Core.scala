@@ -122,12 +122,12 @@ trait Core extends syntax.Literals{
    * Sketchy way to whitelist a few suffixes that come after a . select;
    * apart from these and IDs, everything else is illegal
    */
-  val PostDotCheck = P( WL ~ !(`super` | `this` | "{" | `_` | `type`) )
+  val PostDotCheck: P0 = P( WL ~ !(`super` | `this` | "{" | `_` | `type`) )
   val StableId: P0 = {
     val ClassQualifier = P( "[" ~ Id ~ "]" )
     val ThisSuper = P( `this` | `super` ~ ClassQualifier.? )
-    val ThisPath = P( ThisSuper ~ ("." ~ PostDotCheck ~! Id).rep )
-    val IdPath = P( Id ~ ("." ~ PostDotCheck ~! Id).rep ~ ("." ~ ThisPath).? )
+    val ThisPath: P0 = P( ThisSuper ~ ("." ~ PostDotCheck ~! Id).rep )
+    val IdPath: P0 = P( Id ~ ("." ~ PostDotCheck ~! Id).rep ~ ("." ~ ThisPath).? )
     P( ThisPath | IdPath )
   }
 }

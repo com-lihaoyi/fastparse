@@ -53,7 +53,7 @@ trait ParserApi[+T] {
   /**
    * Wraps this in a [[Not]] for negative lookaheak
    */
-  def unary_! : Parser[_]
+  def unary_! : Parser[Unit]
 
   /**
    * Used to capture the text parsed by this as a `String`
