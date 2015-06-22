@@ -63,12 +63,12 @@ object WhiteSpaceMathTests extends TestSuite{
         assert(trace == failure.trace)
       }
       check(
-        "(+)",
-        """(number | parens):1 ..."+)""""
+        "(  +  )",
+        """(number | parens):3 ..."+  )""""
       )
       check(
-        "1+-",
-        """(number | parens):2 ..."-""""
+        "1  +  - ",
+        """(number | parens):6 ..."- """"
       )
     }
   }

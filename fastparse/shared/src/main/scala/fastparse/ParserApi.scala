@@ -75,8 +75,8 @@ trait ParserApi[+T] {
    */
   def filter(predicate: T => Boolean): Parser[T]
 }
-class ParserApiImpl[+T](self: Parser[T]) extends ParserApi[T] {
 
+class ParserApiImpl[+T](self: Parser[T]) extends ParserApi[T] {
 
   def log(msg: String)(implicit output: Logger) = Logged(self, msg, output.f)
 
