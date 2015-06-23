@@ -21,7 +21,9 @@ object ScalacParser{
 
   val settings = new Settings()
   settings.usejavacp.value = true
+  settings.embeddedDefaults[scala.annotation.Annotation]
   settings.classpath.append(files.mkString(":"))
+
   val global = new Global(settings)
 
   def checkParseFails(input: String) = this.synchronized{
