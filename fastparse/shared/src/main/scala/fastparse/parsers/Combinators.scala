@@ -3,10 +3,9 @@ package fastparse.parsers
 import fastparse.Utils.FuncName
 import fastparse._
 import fastparse.core.Result._
-import fastparse.core.{ParseCtx, Result}
+import fastparse.core.{Precedence, ParseCtx, Result, Parser}
 
 import scala.annotation.tailrec
-import core.Parser
 /**
  * Parsers which are made up of other parsers,
  * adding to or combining their behavior
@@ -88,6 +87,7 @@ object Combinators {
       }
       res
     }
+    override def opPred = Precedence.PrefixOp
     override def toString = s"!($p)"
   }
 
@@ -106,7 +106,7 @@ object Combinators {
         case _ => success(cfg.success, ev.none, index, false)
       }
     }
-    override def toString = s"$p.?"
+    override def toString = s"${opWrap(p)}.?"
   }
 
 
@@ -160,12 +160,13 @@ object Combinators {
           case s: Success.Mutable[R] => rec(s.value, s.index, s.cut, 0)
         }
       }
+      override def opPred = Precedence.OtherOp
       override def toString = {
 
         val rhs = for(c <- ps) yield {
-          " ~" + (if (c.cut) "!" else "") + " " + c.p
+          " ~" + (if (c.cut) "!" else "") + " " + opWrap(c.p)
         }
-        s"($p0${rhs.mkString})"
+        s"${opWrap(p0)}${rhs.mkString}"
       }
     }
 
@@ -200,6 +201,7 @@ object Combinators {
         case s: Success.Mutable[T] => success(s, s.value, s.index, true)
       }
     }
+    override def opPred = Precedence.OtherOp
     override def toString = p.toString
   }
   /**
@@ -222,15 +224,10 @@ object Combinators {
           }
       }
     }
-
+    override def opPred = Precedence.OtherOp
     override def toString = {
-      def rec(p: Parser[_]): String = p match {
-        case p: Sequence[_, _, _] =>
-          val op = if(cut || p1.isInstanceOf[Cut[_]]) "~!" else "~"
-          rec(p.p1) + " " + op + " " + rec(p.p2)
-        case p => p.toString
-      }
-      "(" + rec(this) + ")"
+      val op = if(cut) "~!" else "~"
+      opWrap(p1) + " " + op + " " + opWrap(p2)
     }
   }
 
@@ -296,16 +293,16 @@ object Combinators {
       }
       rec(index, Pass, null, ev.initial, false, 0)
     }
-
+    override def opPred = Precedence.Max
     override def toString = {
-      if (min == 0 && delimiter == Pass && until == Pass) p + ".rep"
+      if (min == 0 && delimiter == Pass && until == Pass) opWrap(p) + ".rep"
       else{
         val things = Seq(
           if (min == 0) None else Some(min),
           if (delimiter == Pass) None else Some("sep = " + delimiter),
           if (until == Pass) None else Some("end = " + until)
         ).flatten.mkString(", ")
-        s"$p.rep($things)"
+        s"${opWrap(p)}.rep($things)"
       }
     }
   }
@@ -334,13 +331,9 @@ object Combinators {
       }
       rec(0)
     }
+    override def opPred = Precedence.|
     override def toString = {
-      def rec(p: Parser[_]): String = p match {
-        case p: Either[_] => p.ps.map(rec).mkString(" | ")
-        case p: Sequence.Flat[_] => p.toString.drop(1).dropRight(1)
-        case p => p.toString
-      }
-      "(" + rec(this) + ")"
+      ps.map(opWrap).mkString(" | ")
     }
   }
 

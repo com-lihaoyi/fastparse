@@ -76,7 +76,7 @@ trait Exprs extends Core with Types with Xml{
     val ExprPrefix = P( WL ~ CharIn("-+~!") ~~ !syntax.Basic.OpChar ~ WS)
     val ExprSuffix = P( (WL ~ "." ~! Id | WL ~ TypeArgs | NoSemis ~ ArgList).rep ~~ (NoSemis  ~ `_`).? )
     val PrefixExpr = P( ExprPrefix.? ~ SimpleExpr )
-    val InfixSuffix = P( NoSemis ~ Id ~ TypeArgs.? ~ OneSemiMax ~ PrefixExpr ~~ ExprSuffix)
+    val InfixSuffix = P( NoSemis ~ Id ~ TypeArgs.? ~~ OneSemiMax ~ PrefixExpr ~~ ExprSuffix)
     val PostFix = P( NoSemis ~ Id ~ Newline.? )
     val PostfixSuffix = P( InfixSuffix.rep ~~ PostFix.? ~ (`=` ~! Expr).? ~ MatchAscriptionSuffix.?)
 

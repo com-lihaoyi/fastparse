@@ -12,26 +12,26 @@ object MiscTests extends TestSuite{
         assert(p.toString == s.trim)
       }
       'Either {
-        check("A" | "B", """("A" | "B")""")
-        check("A" | "B" | "C", """("A" | "B" | "C")""")
-        check(("A" | "B") | "C", """("A" | "B" | "C")""")
-        check("A" | ("B" | "C"), """("A" | "B" | "C")""")
+        check("A" | "B", """ "A" | "B" """)
+        check("A" | "B" | "C", """ "A" | "B" | "C" """)
+        check(("A" | "B") | "C", """ "A" | "B" | "C" """)
+        check("A" | ("B" | "C"), """ "A" | "B" | "C" """)
       }
       'Sequence {
-        check("A" ~ "BBB", """("A" ~ "BBB")""")
-        check("A" ~ "B" ~ "C", """("A" ~ "B" ~ "C")""")
-        check(("A" ~ "B") ~ "C", """("A" ~ "B" ~ "C")""")
+        check("A" ~ "BBB", """ "A" ~ "BBB" """)
+        check("A" ~ "B" ~ "C", """ "A" ~ "B" ~ "C" """)
+        check(("A" ~ "B") ~ "C", """ "A" ~ "B" ~ "C" """)
         // Not that this prints differently from the others; we
         // only collapse Sequence nodes on the left, and sequence
         // nodes on the right are harder to extract because of the
         // way each node's `ev` is called
-        check("A" ~ ("B" ~ "C"), """("A" ~ ("B" ~ "C"))""")
+        check("A" ~ ("B" ~ "C"), """ "A" ~ "B" ~ "C" """)
       }
       'Mixed{
-        check(("A" ~ "B") | "C", """("A" ~ "B" | "C")""")
-        check("A" ~ ("B" | "C"), """("A" ~ ("B" | "C"))""")
-        check(("A" | "B") ~ "C", """(("A" | "B") ~ "C")""")
-        check("A" | ("B" ~ "C"), """("A" | "B" ~ "C")""")
+        check(("A" ~ "B") | "C", """ "A" ~ "B" | "C" """)
+        check("A" ~ ("B" | "C"), """ "A" ~ ("B" | "C")""")
+        check(("A" | "B") ~ "C", """("A" | "B") ~ "C" """)
+        check("A" | ("B" ~ "C"), """ "A" | "B" ~ "C" """)
       }
       'rep{
         check("A".rep, """ "A".rep """)
@@ -39,12 +39,12 @@ object MiscTests extends TestSuite{
         check(("A".? | "B").rep, """ ("A".? | "B").rep """)
         check(("A".? | "B").rep(1), """ ("A".? | "B").rep(1) """)
         check(("A".? | "B").rep(sep = "C"), """ ("A".? | "B").rep(sep = "C") """)
-        check(("A".? | "B").rep(1, sep="C" ~ "D" | "E"), """ ("A".? | "B").rep(1, sep = ("C" ~ "D" | "E")) """)
+        check(("A".? | "B").rep(1, sep="C" ~ "D" | "E"), """("A".? | "B").rep(1, sep = "C" ~ "D" | "E")""")
       }
       'lookahead{
-        check(&("A") ~ "ABC", """(&("A") ~ "ABC")""")
-        check(!"A" ~ "ABC", """(!("A") ~ "ABC")""")
-        check("A".! ~ "ABC".!, """("A" ~ "ABC")""")
+        check(&("A") ~ "ABC", """&("A") ~ "ABC" """)
+        check(!"A" ~ "ABC", """!("A") ~ "ABC" """)
+        check("A".! ~ "ABC".!, """ "A" ~ "ABC" """)
       }
       'named{
         val Foo = P( "A" )

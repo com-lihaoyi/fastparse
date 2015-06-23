@@ -2,7 +2,7 @@ package scalaparse
 
 import acyclic.file
 import fastparse.Implicits.{Optioner, Sequencer}
-import fastparse.core.{Result, ParseCtx}
+import fastparse.core.{Precedence, Parser, Result, ParseCtx}
 import fastparse.parsers.Combinators.{Logged, Optional}
 import syntax.{Identifiers, Key, Basic}
 
@@ -134,21 +134,11 @@ trait Core extends syntax.Literals{
     P( ThisPath | IdPath )
   }
 }
+object ParserApiImpl2 {
 
-/**
- * Custom version of `ParserApi`, that behaves the same as the
- * default but injects whitespace in between every pair of tokens
- */
-class ParserApiImpl2[+T](p0: P[T], WL: P0) extends ParserApiImpl(p0)  {
-
-  def ~~[V, R](p: P[V])
-              (implicit ev: Sequencer[T, V, R])
-              : P[R] =
-    p0 ~ p
-
-  class CustomParser[+R, +V](p: P[V], cut: Boolean)(implicit ev: Sequencer[T, V, R]) extends P[R]{
+  case class CustomSequence[+T, +R, +V](WL: P0, p0: P[T], p: P[V], cut: Boolean)(implicit ev: Sequencer[T, V, R]) extends P[R] {
     def parseRec(cfg: ParseCtx, index: Int) = {
-      p0.parseRec(cfg, index) match{
+      p0.parseRec(cfg, index) match {
         case f: Result.Failure.Mutable => failMore(f, index, cfg.trace, false)
         case s: Result.Success.Mutable[T] =>
           val index0 = s.index
@@ -156,7 +146,7 @@ class ParserApiImpl2[+T](p0: P[T], WL: P0) extends ParserApiImpl(p0)  {
           WL.parseRec(cfg, s.index) match {
             case s1: Result.Success[Unit] =>
               val index1 = s1.index
-              p.parseRec(cfg, s1.index) match{
+              p.parseRec(cfg, s1.index) match {
                 case f: Result.Failure.Mutable => failMore(f, s.index, cfg.trace, cut | cut0)
                 case s2: Result.Success.Mutable[V] =>
                   val index2 = s2.index
@@ -172,18 +162,34 @@ class ParserApiImpl2[+T](p0: P[T], WL: P0) extends ParserApiImpl(p0)  {
           }
       }
     }
+
     override def toString = {
       val op = if(cut) "~!" else "~"
-      s"$p0 $op $p"
+      opWrap(p0) + " " + op + " " + opWrap(p)
     }
+    override def opPred = Precedence.OtherOp
   }
+
+}
+/**
+ * Custom version of `ParserApi`, that behaves the same as the
+ * default but injects whitespace in between every pair of tokens
+ */
+class ParserApiImpl2[+T](p0: P[T], WL: P0) extends ParserApiImpl(p0)  {
+
+  def ~~[V, R](p: P[V])
+              (implicit ev: Sequencer[T, V, R])
+              : P[R] =
+    p0 ~ p
+
+
   override def ~[V, R](p: P[V])
                       (implicit ev: Sequencer[T, V, R])
-                      : P[R] = new CustomParser(p, cut=false)(ev)
+                      : P[R] = new ParserApiImpl2.CustomSequence(WL, p0, p, cut=false)(ev)
 
 
   override def ~![V, R](p: P[V])
                        (implicit ev: Sequencer[T, V, R])
-                       : P[R] = new CustomParser(p, cut=true)(ev)
+                       : P[R] = new ParserApiImpl2.CustomSequence(WL, p0, p, cut=true)(ev)
 
 }

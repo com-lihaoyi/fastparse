@@ -110,7 +110,7 @@ object Result{
       def trace = {
         val body =
           for (Frame(index, p) <- stack)
-            yield s"$p:$index"
+            yield s"${Precedence.opWrap(p, Precedence.`:`)}:$index"
 
         body.mkString(" / ") + " ..." + literalize(input.slice(index, index + 10))
       }
@@ -156,7 +156,7 @@ case class ParseCtx(input: String,
  * none       true    84 /79 /80
  * none       false   96 /99 /97
  */
-trait Parser[+T] extends ParserApi[T]{
+trait Parser[+T] extends ParserApi[T] with Precedence{
   /**
    * Parses the given `input` starting from the given `index`
    *
@@ -197,6 +197,14 @@ trait Parser[+T] extends ParserApi[T]{
    * Whether or not this parser should show up when [[Failure.trace]] is called
    */
   def shortTraced: Boolean = false
+
+  /**
+   * Whether or not to surround this parser with parentheses when printing.
+   * By default a top-level parser is always left without parentheses, but
+   * if a sub-parser is embedded inside with lower precedence, it will be
+   * surrounded. Set to `Integer.MaxValue` to never be parenthesized
+   */
+  def opPred: Int = Precedence.Max
 }
 
 trait ParserApi[+T]{ this: Parser[T] =>

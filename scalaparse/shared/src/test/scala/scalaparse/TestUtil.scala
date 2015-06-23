@@ -24,7 +24,7 @@ object TestUtil {
           implicitly(stack);
           parser.toString == expected.trim && parsedFound.startsWith(found)}
         )
-      case s: Result.Success[_] => assert(false)
+      case s: Result.Success[_] => assert{implicitly(input); false}
     }
   }
 

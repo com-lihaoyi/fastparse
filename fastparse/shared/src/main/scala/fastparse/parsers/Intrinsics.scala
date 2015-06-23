@@ -1,11 +1,10 @@
 package fastparse.parsers
 
 import fastparse.Utils._
-import fastparse.core.{ParseCtx, Result}
+import fastparse.core.{Precedence, ParseCtx, Result, Parser}
 import fastparse.Utils
 
 import scala.annotation.tailrec
-import fastparse.core.Parser
 /**
  * High-performance intrinsics for parsing common patterns. All
  * of these have equivalent to constructs that can be put together
@@ -27,7 +26,7 @@ object Intrinsics {
    * Parses a single character if it passes the predicate
    */
   case class CharPred(predicate: Char => Boolean)
-    extends CharSet((Char.MinValue to Char.MaxValue).filter(predicate))
+    extends CharSet((Char.MinValue to Char.MaxValue).filter(predicate)){}
 
   /**
    * Parses a single character if its contained in the lists of allowed characters
