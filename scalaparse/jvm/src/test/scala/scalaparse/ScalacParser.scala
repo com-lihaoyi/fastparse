@@ -21,7 +21,7 @@ object ScalacParser{
 
   val settings = new Settings()
   settings.usejavacp.value = true
-  settings.embeddedDefaults[scala.annotation.Annotation]
+  settings.embeddedDefaults[ScalacParser.type]
   settings.classpath.append(files.mkString(":"))
 
   val global = new Global(settings)
