@@ -97,7 +97,7 @@ trait Xml extends Core {
     val CharRef = P( "&#" ~ CharIn('0' to '9').rep(1) ~ ";" | "&#x" ~ Basic.HexNum ~ ";" )
     val Reference = P( EntityRef | CharRef )
     val EntityRef = P( "&" ~ Name ~ ";" )
-    val ScalaExpr = P("{" ~ WS ~ Block ~ WS ~ "}")
+    val ScalaExpr = P("{" ~ WS ~ Block ~ WL ~ "}")
     val Char = P( AnyChar )
     val CharData = P( (!("{" | "]]>" | CharRef) ~ Char1 | "{{").rep(1) )
 

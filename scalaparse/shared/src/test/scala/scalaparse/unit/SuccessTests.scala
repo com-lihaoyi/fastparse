@@ -518,6 +518,49 @@ object SuccessTests extends TestSuite{
       """.stripMargin
     )
     * - check(
+      """object X {
+        |  val a = (1, 1)
+        |
+        |  ResultLogicalCombinators.mapMessage{}
+        |}
+      """.stripMargin
+    )
+    * - check(
+      """
+        |
+        |object Go {
+        |  trait Position extends Core
+        |
+        |  (1) match{ case x => x}
+        |}
+        |
+      """.stripMargin
+    )
+    * - check(
+      """
+        |object build {
+        |
+        |  <developers>
+        |    {map
+        |    }
+        |  </developers>
+        |
+        |
+        |}
+        |
+      """.stripMargin
+    )
+    * - check(
+      """
+        |class MemAccess{
+        |  def cond: Node
+        |  inputs += addri
+        |
+        |}
+        |
+      """.stripMargin
+    )
+    * - check(
       """object O{
         |  if (eqeq &&
         |

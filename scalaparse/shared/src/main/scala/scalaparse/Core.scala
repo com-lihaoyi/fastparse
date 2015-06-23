@@ -2,7 +2,8 @@ package scalaparse
 
 import acyclic.file
 import fastparse.Implicits.{Optioner, Sequencer}
-import fastparse.parsers.Combinators.Optional
+import fastparse.core.{Result, ParseCtx}
+import fastparse.parsers.Combinators.{Logged, Optional}
 import syntax.{Identifiers, Key, Basic}
 
 import scala.language.implicitConversions
@@ -139,27 +140,50 @@ trait Core extends syntax.Literals{
  * default but injects whitespace in between every pair of tokens
  */
 class ParserApiImpl2[+T](p0: P[T], WL: P0) extends ParserApiImpl(p0)  {
-  def ??[R](implicit ev: Optioner[T, R]): P[R] = p0.?
-  override def ?[R](implicit ev: Optioner[T, R]): P[R] = (WL ~ p0).?
 
   def ~~[V, R](p: P[V])
               (implicit ev: Sequencer[T, V, R])
               : P[R] =
     p0 ~ p
 
+  class CustomParser[+R, +V](p: P[V], cut: Boolean)(implicit ev: Sequencer[T, V, R]) extends P[R]{
+    def parseRec(cfg: ParseCtx, index: Int) = {
+      p0.parseRec(cfg, index) match{
+        case f: Result.Failure.Mutable => failMore(f, index, cfg.trace, false)
+        case s: Result.Success.Mutable[T] =>
+          val index0 = s.index
+          val cut0 = s.cut
+          WL.parseRec(cfg, s.index) match {
+            case s1: Result.Success[Unit] =>
+              val index1 = s1.index
+              p.parseRec(cfg, s1.index) match{
+                case f: Result.Failure.Mutable => failMore(f, s.index, cfg.trace, cut | cut0)
+                case s2: Result.Success.Mutable[V] =>
+                  val index2 = s2.index
+                  val cut2 = s2.cut
+                  val newIndex = if (index2 > index1 || index1 == cfg.input.length) index2 else index0
+                  success(
+                    s,
+                    ev.apply(s.value, s2.value),
+                    newIndex,
+                    cut | cut0 | cut2
+                  )
+              }
+          }
+      }
+    }
+    override def toString = {
+      val op = if(cut) "~!" else "~"
+      s"$p0 $op $p"
+    }
+  }
   override def ~[V, R](p: P[V])
                       (implicit ev: Sequencer[T, V, R])
-                      : P[R] =
+                      : P[R] = new CustomParser(p, cut=false)(ev)
 
-    p0 ~ WL ~ p
 
   override def ~![V, R](p: P[V])
                        (implicit ev: Sequencer[T, V, R])
-                       : P[R] =
-    p0 ~! WL ~ p
+                       : P[R] = new CustomParser(p, cut=true)(ev)
 
-  def ~~![V, R](p: P[V])
-                       (implicit ev: Sequencer[T, V, R])
-                       : P[R] =
-    p0 ~! p
 }

@@ -6,7 +6,7 @@ import TestUtil._
 object FailureTests extends TestSuite{
   val tests = TestSuite{
 
-    * - checkNeg("package package", "(PkgBlock | PkgObj)", " package")
+    * - checkNeg("package package", "(PkgBlock | PkgObj)", "package")
 
     * - checkNeg(
       """package torimatomeru
@@ -14,7 +14,7 @@ object FailureTests extends TestSuite{
         |import import
       """.stripMargin,
       expected = """(ThisPath | IdPath)""",
-      found = " import"
+      found = "import"
     )
 
     * - checkNeg(
@@ -36,7 +36,7 @@ object FailureTests extends TestSuite{
         |}
       """.stripMargin,
       expected = """ (NamedRefinement | Refinement)""",
-      found = " (A B)"
+      found = "(A B)"
     )
     * - checkNeg(
       """object O{
@@ -82,7 +82,7 @@ object FailureTests extends TestSuite{
         |}
       """.stripMargin,
       expected = """("}" | `case`)""",
-      found ="   1"
+      found ="1\n"
     )
     * - checkNeg(
       """package scalatex
@@ -91,7 +91,7 @@ object FailureTests extends TestSuite{
         |}
       """.stripMargin,
       expected = """(EarlyDefTmpl | NamedTmpl | TmplBody)""",
-      found = " (1)"
+      found = "(1)"
     )
     * - checkNeg(
       """
@@ -147,7 +147,7 @@ object FailureTests extends TestSuite{
         |}
       """.stripMargin,
       expected = "(NamedRefinement | Refinement)",
-      found = "  ="
+      found = "= {"
     )
     * - checkNeg(
       """
@@ -181,7 +181,7 @@ object FailureTests extends TestSuite{
         |}
       """.stripMargin,
       expected = "(XmlPattern | Thingy | PatLiteral | TupleEx | Extractor | VarId)",
-      found = " => 0"
+      found = "=> 0"
     )
     * - checkNeg(
       """
@@ -282,7 +282,7 @@ object FailureTests extends TestSuite{
         |}
       """.stripMargin,
       expected = "(`=>` | `⇒`)",
-      found = " = fail"
+      found = "= fail"
     )
     * - checkNeg(
       """
@@ -293,7 +293,7 @@ object FailureTests extends TestSuite{
         |}
       """.stripMargin,
       expected = """(XmlPattern | Thingy | PatLiteral | TupleEx | Extractor | VarId)""",
-      found = " // g"
+      found = "val b = e"
     )
     * - checkNeg(
       """
@@ -316,7 +316,7 @@ object FailureTests extends TestSuite{
         |}
       """.stripMargin,
       expected = "(NamedRefinement | Refinement)",
-      found = "\n    val c"
+      found = "val c"
     )
     * - checkNeg(
       """
@@ -345,7 +345,7 @@ object FailureTests extends TestSuite{
         |}
       """.stripMargin,
       expected = "(_* | AscriptionType | Annot.rep(1))",
-      found = "\n  )\n}"
+      found = ")\n}"
     )
     * - checkNeg(
       """
@@ -374,7 +374,7 @@ object FailureTests extends TestSuite{
         |}
       """.stripMargin,
       expected = """(CaseClause | "}")""",
-      found = "\n    stats"
+      found = "stats :+ e"
     )
 
     * - checkNeg(
@@ -412,7 +412,7 @@ object FailureTests extends TestSuite{
         |}
       """.stripMargin,
       expected = """(Binding ~ InfixPattern | InfixPattern | VarId)""",
-      found = " = 2"
+      found = "= 2"
     )
     * - checkNeg(
       """
@@ -423,7 +423,7 @@ object FailureTests extends TestSuite{
         |}
       """.stripMargin,
       expected = """(XmlPattern | Thingy | PatLiteral | TupleEx | Extractor | VarId)""",
-      found = "  => 1"
+      found = "=> 1"
     )
     * - checkNeg(
       """
@@ -434,7 +434,7 @@ object FailureTests extends TestSuite{
         |}
       """.stripMargin,
       expected = "(`=>` | `⇒`)",
-      found = " case"
+      found = "case"
     )
     * - checkNeg(
       """trait Basic{
@@ -452,7 +452,7 @@ object FailureTests extends TestSuite{
         |
       """.stripMargin,
       expected = """(Expr | ")")""",
-      found = " => }"
+      found = "=> }"
     )
     * - checkNeg(
       """
@@ -497,7 +497,7 @@ object FailureTests extends TestSuite{
         |}
       """.stripMargin,
       expected = """ ("}" | `case`) """,
-      found = " = }"
+      found = "= }"
     )
     * - checkNeg(
       """object O{
@@ -505,7 +505,7 @@ object FailureTests extends TestSuite{
         |}
       """.stripMargin,
       expected = "(NamedRefinement | Refinement)",
-      found = " 10)"
+      found = "10)"
     )
       * - checkNeg(
         """object GenJSCode{
@@ -575,7 +575,7 @@ object FailureTests extends TestSuite{
         |}
       """.stripMargin,
       expected = """(Generator | Assign)""",
-      found = "\n  } yield"
+      found = "} yield"
     )
     * - checkNeg(
       """
@@ -807,7 +807,7 @@ object FailureTests extends TestSuite{
          |object X{type T = }
         """.stripMargin,
       expected = """(NamedRefinement | Refinement)""",
-      found = " }"
+      found = "}\n"
     )
     * - checkNeg(
       s"""
@@ -821,7 +821,7 @@ object FailureTests extends TestSuite{
          |object X{type T <: }
         """.stripMargin,
       expected = """(NamedRefinement | Refinement)""",
-      found = " }"
+      found = "}\n"
     )
       * - checkNeg(
         """

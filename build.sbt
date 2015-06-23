@@ -106,6 +106,7 @@ lazy val scalaparse = crossProject.dependsOn(fastparse).settings(
 )
 
 lazy val scalaparseJS = scalaparse.js
+
 lazy val scalaparseJVM = scalaparse.jvm
 
 lazy val modules = project.aggregate(

@@ -78,7 +78,7 @@ trait ParserApi[+T] {
 
 class ParserApiImpl[+T](self: Parser[T]) extends ParserApi[T] {
 
-  def log(msg: String)(implicit output: Logger) = Logged(self, msg, output.f)
+  def log(msg: String = self.toString)(implicit output: Logger) = Logged(self, msg, output.f)
 
   def rep[R](implicit ev: Repeater[T, R]): Parser[R] = Repeat(self, 0, Pass, Pass)
   def rep[R](min: Int = 0, sep: Parser[_] = Pass, end: Parser[_] = Pass)

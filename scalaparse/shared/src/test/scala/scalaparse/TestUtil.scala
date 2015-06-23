@@ -20,8 +20,9 @@ object TestUtil {
         val parsedFound = input.slice(index, index + 10)
         val stack = f.trace
         assert(
-        {input; stack; parser.toString == expected.trim},
-        {input; stack; parsedFound.startsWith(found)}
+        { implicitly(input);
+          implicitly(stack);
+          parser.toString == expected.trim && parsedFound.startsWith(found)}
         )
       case s: Result.Success[_] => assert(false)
     }
