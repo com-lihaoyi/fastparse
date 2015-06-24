@@ -262,9 +262,7 @@ object Combinators {
               case f2: Failure.Mutable =>
                 val cut2 = f2.cut
                 if (cut2 | cut1) failMore(f2, index1, cfg.trace, true)
-                else if(del != Pass) passIfMin(cut | s1.cut, f2, index, ev.result(acc), count)
-                else passIfMin(cut | s1.cut, f2, index1, ev.result(acc), count)
-
+                else passIfMin(cut | s1.cut, f2, index, ev.result(acc), count)
 
               case s2: Success.Mutable[T] =>
                 ev.accumulate(s2.value, acc)
