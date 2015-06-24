@@ -277,7 +277,6 @@ object Combinators {
       }
       rec(index, Pass, null, ev.initial, false, 0)
     }
-    override def opPred = Precedence.Max
     override def toString = {
       if (min == 0 && delimiter == Pass) opWrap(p) + ".rep"
       else{
