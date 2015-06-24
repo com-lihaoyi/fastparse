@@ -69,11 +69,11 @@ object WhiteSpaceMathTests extends TestSuite{
       }
       check(
         "(  +  )",
-        """(number | parens):3 ..."+  )""""
+        """(number | parens | "(" | CharIn("0123456789") | " "):3 ..."+  )""""
       )
       check(
         "1  +  - ",
-        """(number | parens):6 ..."- """"
+        """(number | parens | "(" | CharIn("0123456789") | " "):6 ..."- """"
       )
     }
   }

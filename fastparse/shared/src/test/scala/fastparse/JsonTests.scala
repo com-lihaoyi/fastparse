@@ -34,9 +34,18 @@ object JsonTests extends TestSuite{
     }
   }
 
+  case class NamedFunction[T, V](f: T => V, name: String) extends (T => V){
+    def apply(t: T) = f(t)
+    override def toString() = name
+
+  }
   // Here is the parser
-  val space         = P( CharsWhile(" \n".contains(_)).? )
-  val digits        = P( CharsWhile('0' to '9' contains (_)))
+  val Whitespace = NamedFunction(" \n".contains(_: Char), "Whitespace")
+  val Digits = NamedFunction('0' to '9' contains (_: Char), "Digits")
+  val StringChars = NamedFunction(!"\"\\".contains(_: Char), "StringChars")
+
+  val space         = P( CharsWhile(Whitespace).? )
+  val digits        = P( CharsWhile(Digits))
   val exponent      = P( CharIn("eE") ~ CharIn("+-").? ~ digits )
   val fractional    = P( "." ~ digits )
   val integral      = P( "0" | CharIn('1' to '9') ~ digits.? )
@@ -53,7 +62,7 @@ object JsonTests extends TestSuite{
   val unicodeEscape = P( "u" ~ hexDigit ~ hexDigit ~ hexDigit ~ hexDigit )
   val escape        = P( "\\" ~ (CharIn("\"/\\bfnrt") | unicodeEscape) )
 
-  val strChars = P( CharsWhile(!"\"\\".contains(_)) )
+  val strChars = P( CharsWhile(StringChars) )
   val string =
     P( space ~ "\"" ~! (strChars | escape).rep.! ~ "\"").map(Js.Str)
 
@@ -149,7 +158,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / (obj | array | string | true | false | null | number):9 ..."}\n        "
+          jsonExpr:0 / (obj | array | string | true | false | null | number | "0" | CharIn("123456789") ~ digits.? | CharIn("123456789") | "0" | CharIn("+-") | "null" | "false" | "true" | "\"" | CharsWhile(Whitespace,1) | "[" | "{"):9 ..."}\n        "
         """
       )
       * - check(
@@ -177,7 +186,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / (pair | space ~ "}"):10 ..."\n         "
+          jsonExpr:0 / obj:9 / ("}" | "\""):23 ..."firstName\""
         """
       )
       * - check(
@@ -233,7 +242,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / ("," ~ pair | space ~ "}"):56 ..."lastName\":"
+          jsonExpr:0 / obj:9 / ("}" | CharsWhile(Whitespace,1) | ","):56 ..."lastName\":"
         """
       )
       * - check(
@@ -261,7 +270,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / ("," ~ pair | space ~ "}"):154 ...": \"21 2nd "
+          jsonExpr:0 / obj:9 / ("}" | CharsWhile(Whitespace,1) | ","):154 ...": \"21 2nd "
         """
       )
       * - check(
@@ -345,7 +354,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / pair:292 / jsonExpr:320 / array:321 / jsonExpr:322 / obj:339 / ("," ~ pair | space ~ "}"):411 ..."555-1234\n "
+          jsonExpr:0 / obj:9 / pair:292 / jsonExpr:320 / array:321 / jsonExpr:322 / obj:339 / ("}" | CharsWhile(Whitespace,1) | ","):411 ..."555-1234\n "
         """
       )
       * - check(
@@ -373,7 +382,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / pair:292 / jsonExpr:320 / array:321 / jsonExpr:440 / obj:457 / ("," ~ pair | space ~ "}"):528 ..."555-4567\n "
+          jsonExpr:0 / obj:9 / pair:292 / jsonExpr:320 / array:321 / jsonExpr:440 / obj:457 / ("}" | CharsWhile(Whitespace,1) | ","):528 ..."555-4567\n "
         """
       )
       * - check(
@@ -401,7 +410,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / pair:292 / jsonExpr:320 / array:321 / ("," ~ jsonExpr | space ~ "]"):566 ..."}\n        "
+          jsonExpr:0 / obj:9 / pair:292 / jsonExpr:320 / array:321 / ("]" | CharsWhile(Whitespace,1) | ","):566 ..."}\n        "
         """
       )
     }

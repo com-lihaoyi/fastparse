@@ -128,14 +128,14 @@ object IndentationTests extends TestSuite{
           |  1
           |1
         """.stripMargin.trim,
-        """End:5 ..."\n1""""
+        """(End | "\n  " | CharIn("0123456789")):5 ..."\n1""""
       )
       check(
         """+
           |  1
           |   1
         """.stripMargin.trim,
-        """(number | block):8 ..." 1""""
+        """(number | block | CharIn("+-*/") | CharIn("0123456789")):8 ..." 1""""
       )
     }
   }

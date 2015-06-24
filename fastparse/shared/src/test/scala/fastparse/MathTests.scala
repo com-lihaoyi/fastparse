@@ -46,11 +46,11 @@ object MathTests extends TestSuite{
       }
       check(
         "(+)",
-        """(number | parens):1 ..."+)""""
+        """(number | parens | "(" | CharIn("0123456789")):1 ..."+)""""
       )
       check(
         "1+-",
-        """(number | parens):2 ..."-""""
+        """(number | parens | "(" | CharIn("0123456789")):2 ..."-""""
       )
     }
   }

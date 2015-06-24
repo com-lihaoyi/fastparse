@@ -313,7 +313,7 @@ object Combinators {
       }
       rec(0)
     }
-    override def opPred = Precedence.|
+    override def opPred = if (ps.length == 1) ps(0).opPred else Precedence.|
     override def toString = {
       ps.map(opWrap).mkString(" | ")
     }

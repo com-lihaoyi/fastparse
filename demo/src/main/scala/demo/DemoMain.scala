@@ -84,7 +84,7 @@ object DemoMain {
             tr(td("Failure!")),
             tr(td("at index:"), td(code(f.index))),
             tr(td("found:"), td("...", code(pretty))),
-            tr(td("expected:"), td(code(f.parser.toString)))
+            tr(td("expected:"), td(code(f.lastParser.toString)))
           )
       }
       outputBox.innerHTML = ""

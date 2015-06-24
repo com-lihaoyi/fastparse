@@ -67,7 +67,7 @@ object Result{
     /**
      * The deepest parser in the parse which failed
      */
-    def parser: Parser[_]
+    def lastParser: Parser[_]
 
     /**
      * A one-line snippet that tells you what the state of the
@@ -87,18 +87,33 @@ object Result{
   }
   object Failure {
     def unapply[T](x: Result[T]) = x match{
-      case s: Failure => Some((s.parser, s.index))
+      case s: Failure => Some((s.lastParser, s.index))
       case _ => None
     }
     case class Mutable(var input: String,
                        var fullStack: List[Frame],
                        var index: Int,
-                       var parser: Parser[_],
+                       var lastParser: Parser[_],
+                       originalParser: Parser[_],
+                       originalIndex: Int,
+                       traceIndex: Int,
+                       var traceParsers: List[Parser[_]],
                        var cut: Boolean) extends Failure {
+
+      def fullTrace = {
+        if (traceParsers != Nil) traceParsers
+        else originalParser.parse(input, originalIndex, true, index, null)
+                           .asInstanceOf[Failure.Mutable]
+                           .traceParsers
+      }
+      
 
       def stack = fullStack.collect {
         case f@Frame(i, p) if p.shortTraced => f
-      } :+ Frame(index, parser)
+      } :+ Frame(
+        index,
+        fastparse.parsers.Combinators.Either(fullTrace.distinct:_*)
+      )
 
       def verboseTrace = {
         val body =
@@ -133,8 +148,11 @@ import fastparse.core.Result._
 case class ParseCtx(input: String,
                     logDepth: Int,
                     trace: Boolean,
+                    traceIndex: Int,
+                    originalParser: Parser[_],
+                    originalIndex: Int,
                     instrument: (Parser[_], Int, () => Result[_]) => Unit){
-  val failure = Failure.Mutable(input, Nil, 0, null, false)
+  val failure = Failure.Mutable(input, Nil, 0, null, originalParser, originalIndex, traceIndex, Nil, false)
   val success = Success.Mutable(null, 0, false)
 }
 
@@ -175,9 +193,10 @@ trait Parser[+T] extends ParserApi[T] with Precedence{
   def parse(input: String,
             index: Int = 0,
             trace: Boolean = true,
+            traceIndex: Int = -1,
             instrument: (Parser[_], Int, () => Result[_]) => Unit = null)
             : Result[T] = {
-    parseRec(ParseCtx(input, 0, trace, instrument), index)
+    parseRec(ParseCtx(input, 0, trace, traceIndex, this, index, instrument), index)
   }
 
   /**
@@ -204,7 +223,10 @@ trait ParserApi[+T]{ this: Parser[T] =>
     f.index = index
     f.cut = cut
     f.fullStack = Nil
-    f.parser = this
+    if (f.traceIndex == index){
+      f.traceParsers = this :: f.traceParsers
+    }
+    f.lastParser = this
     f
   }
 
