@@ -586,7 +586,7 @@ object FailureTests extends TestSuite{
         |  } yield x
         |}
       """.stripMargin,
-      expected = """Enumerator | WL ~ "}"""",
+      expected = """Enumerator | "}" """,
       found = "\n    {"
     )
       * - checkNeg(

@@ -80,11 +80,11 @@ object PerfTests extends TestSuite{
 
       (
         time(() => parser.parse(genJsCodeSource, trace = false)),
-//        time(() => parser.parse(genJsCodeSource, trace = true)),
-        time(() => global.newUnitParser(genJsCodeSource).parse())//,
-//        time(() => parser.parse(genJsCodeSource, trace = false)),
-//        time(() => parser.parse(genJsCodeSource, trace = true)),
-//        time(() => global.newUnitParser(genJsCodeSource).parse()),
+        time(() => parser.parse(genJsCodeSource, trace = true)),
+        time(() => global.newUnitParser(genJsCodeSource).parse()),
+        time(() => parser.parse(genJsCodeSource, trace = false)),
+        time(() => parser.parse(genJsCodeSource, trace = true)),
+        time(() => global.newUnitParser(genJsCodeSource).parse())
 //        time(() => parser.parse(genJsCodeSource, trace = false)),
 //        time(() => parser.parse(genJsCodeSource, trace = true)),
 //        time(() => global.newUnitParser(genJsCodeSource).parse()),

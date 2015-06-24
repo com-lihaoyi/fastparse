@@ -1,9 +1,9 @@
 package scalaparse
 
 import acyclic.file
-import fastparse.Implicits.{Optioner, Sequencer}
+import fastparse.Implicits.{Repeater, Optioner, Sequencer}
 import fastparse.core.{Precedence, Parser, Result, ParseCtx}
-import fastparse.parsers.Combinators.{Logged, Optional}
+import fastparse.parsers.Combinators.{Repeat, Logged, Optional}
 import syntax.{Identifiers, Key, Basic}
 
 import scala.language.implicitConversions
@@ -164,8 +164,11 @@ object ParserApiImpl2 {
     }
 
     override def toString = {
-      val op = if(cut) "~!" else "~"
-      opWrap(p0) + " " + op + " " + opWrap(p)
+      if (!cut && p0 == Pass) p.toString
+      else {
+        val op = if (cut) "~!" else "~"
+        opWrap(p0) + " " + op + " " + opWrap(p)
+      }
     }
     override def opPred = Precedence.OtherOp
   }
@@ -185,11 +188,13 @@ class ParserApiImpl2[+T](p0: P[T], WL: P0) extends ParserApiImpl(p0)  {
 
   override def ~[V, R](p: P[V])
                       (implicit ev: Sequencer[T, V, R])
-                      : P[R] = new ParserApiImpl2.CustomSequence(WL, p0, p, cut=false)(ev)
+                      : P[R] = {
+    new ParserApiImpl2.CustomSequence(WL, if (p0 != WL) p0 else Pass.asInstanceOf[P[T]], p, cut=false)(ev)
+  }
 
 
   override def ~![V, R](p: P[V])
                        (implicit ev: Sequencer[T, V, R])
-                       : P[R] = new ParserApiImpl2.CustomSequence(WL, p0, p, cut=true)(ev)
+                       : P[R] = new ParserApiImpl2.CustomSequence(WL, if (p0 != WL) p0 else Pass.asInstanceOf[P[T]], p, cut=true)(ev)
 
 }

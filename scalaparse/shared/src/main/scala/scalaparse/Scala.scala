@@ -9,7 +9,6 @@ import fastparse._
  */
 object Scala extends Core with Types with Exprs with Xml{
 
-  private implicit def wspStr(s: String) = P(WL ~ s)(Utils.literalize(s).toString)
   private implicit def parserApi[T, V](p0: T)
                                       (implicit c: T => P[V]) =
     new ParserApiImpl2[V](p0, WL)
@@ -21,7 +20,7 @@ object Scala extends Core with Types with Exprs with Xml{
     P( "{" ~! BlockLambda.? ~ Semis.? ~ TmplStat.rep(sep = Semis) ~ `}` )
   }
 
-  val ValVarDef = P( BindPattern.rep(1, "," ~!) ~ (`:` ~! Type).? ~ (`=` ~! StatCtx.Expr).? )
+  val ValVarDef = P( BindPattern.rep(1, WL ~ "," ~!) ~ (`:` ~! Type).? ~ (`=` ~! StatCtx.Expr).? )
 
   val FunDef = {
     val Body = P( WL ~ `=` ~! `macro`.? ~ StatCtx.Expr | OneNLMax ~ "{" ~ Block ~ "}" )
@@ -36,11 +35,11 @@ object Scala extends Core with Types with Exprs with Xml{
     val ClsArgMod = P( Mod.rep ~ (`val` | `var`) )
     val ClsArg = P( Annot.rep ~ ClsArgMod.? ~ Id ~ `:` ~ Type ~ (`=` ~ ExprCtx.Expr).? )
 
-    val ClsArgs = P( OneNLMax ~ "(" ~! `implicit`.? ~~ ClsArg.rep(sep = "," ~!, end = ")") )
+    val ClsArgs = P( OneNLMax ~ "(" ~! `implicit`.? ~~ ClsArg.rep(sep = WL ~ "," ~!, end = WL ~ ")") )
     P( `case`.? ~ `class` ~! Id ~ TypeArgList.? ~~ Prelude.? ~~ ClsArgs.rep ~ DefTmpl.? )
   }
 
-  val Constrs = P( Constr.rep(1, `with` ~!) )
+  val Constrs = P( (WL ~ Constr).rep(1, WL ~ `with` ~! ) )
   val EarlyDefTmpl = P( TmplBody ~ (`with` ~! Constr).rep ~ TmplBody.? )
   val NamedTmpl = P( Constrs ~ TmplBody.? )
 

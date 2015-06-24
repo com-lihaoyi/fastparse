@@ -1,7 +1,4 @@
 
-
-object Go {
-  trait Position extends Core
-
-  (1) match{ case x => x}
+object Test {
+  ucheck(id_TSa_T [Unit   , Array[Unit   ]](uarray));
 }

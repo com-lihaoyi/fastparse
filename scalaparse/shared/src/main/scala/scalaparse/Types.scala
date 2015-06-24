@@ -8,7 +8,6 @@ trait Types extends Core{
   def TypeExpr: P0
   def ValVarDef: P0
   def FunDef: P0
-  private implicit def wspStr(s: String) = P(WL ~ s)(Utils.literalize(s).toString)
 
   val LocalMod: P0 = P( `abstract` | `final` | `sealed` | `implicit` | `lazy` )
   val AccessMod: P0 = {
@@ -33,7 +32,7 @@ trait Types extends Core{
 
   val CompoundType = {
     val Refinement = P( OneNLMax ~ `{` ~ Dcl.rep(sep=Semis) ~ `}` )
-    val NamedRefinement = P( WL ~ AnnotType.rep(1, `with` ~!) ~~ Refinement.? )
+    val NamedRefinement = P( (WL ~ AnnotType).rep(1, WL ~ `with` ~!) ~~ Refinement.? )
     P( NamedRefinement | Refinement )
   }
   val AnnotType = P(SimpleType ~~ (NotNewline ~~ (NotNewline ~ Annot).rep(1)).? )
@@ -41,19 +40,19 @@ trait Types extends Core{
   val SimpleType: P0 = {
     // Can't `cut` after the opening paren, because we might be trying to parse `()`
     // or `() => T`! only cut after parsing one type
-    val TupleType = P( "(" ~ Type.rep(sep="," ~!, end = ")") )
+    val TupleType = P( "(" ~ Type.rep(sep= WL ~ "," ~!, end = WL ~ ")") )
     val BasicType = P( TupleType | StableId ~ ("." ~ `type`).? | `_` )
     P( BasicType ~ (WL ~ (TypeArgs | `#` ~! Id)).rep )
   }
 
-  val TypeArgs = P( "[" ~! Type.rep(sep="," ~!, end = "]") )
+  val TypeArgs = P( "[" ~! Type.rep(sep=WL ~ "," ~!, end = WL ~ "]") )
 
 
   val FunSig: P0 = {
     val FunArg = P( Annot.rep ~ Id ~ (`:` ~! Type).? ~ (`=` ~! TypeExpr).? )
-    val Args = P( FunArg.rep(1, "," ~!) )
+    val Args = P( FunArg.rep(1, WL ~ "," ~!) )
     val FunArgs = P( OneNLMax ~ "(" ~! (WL ~ `implicit`).? ~ Args.? ~ ")" )
-    val FunTypeArgs = P( "[" ~! (Annot.rep ~ TypeArg).rep(1, "," ~!) ~ "]" )
+    val FunTypeArgs = P( "[" ~! (Annot.rep ~ TypeArg).rep(1, WL ~ "," ~!) ~ "]" )
     P( (Id | `this`) ~ (WL ~ FunTypeArgs).? ~~ FunArgs.rep )
   }
 
@@ -67,8 +66,8 @@ trait Types extends Core{
 
   val TypeArgList: P0 = {
     val Variant: P0 = P( Annot.rep ~ CharIn("+-").? ~ TypeArg )
-    P( "[" ~! Variant.rep(1, "," ~! ) ~ "]" )
+    P( "[" ~! Variant.rep(1, WL ~ "," ~! ) ~ "]" )
   }
-  val Exprs: P0 = P( TypeExpr.rep(1, "," ~! Pass) )
+  val Exprs: P0 = P( TypeExpr.rep(1, WL ~ "," ~! Pass) )
   val TypeDef: P0 = P( Id ~ TypeArgList.? ~ (`=` ~! Type | TypeBounds) )
 }

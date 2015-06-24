@@ -488,6 +488,34 @@ object SuccessTests extends TestSuite{
       """.stripMargin
     )
     * - check(
+      """
+        |object Test {
+        |  ucheck(id_TSa_T [Unit   , Array[Unit   ]](uarray));
+        |}
+        |
+      """.stripMargin
+    )
+    * - check(
+      """class SymbolicXMLBuilder {
+        |  (_scala_xml_PrefixedAttribute  , 1)
+        |}
+      """.stripMargin
+    )
+    * - check(
+      """
+        |object Implicits {
+        |  x: Sequencer[D, (T1)]
+        |}
+        |
+      """.stripMargin
+    )
+    * - check(
+      """
+        |object A extends B with (C)
+        |
+      """.stripMargin
+    )
+    * - check(
       """object B {
         |  { a: L => }
         |}
@@ -508,6 +536,12 @@ object SuccessTests extends TestSuite{
         |  val g: G.this.g.type
         |}
         |
+      """.stripMargin
+    )
+    * - check(
+      """object ThreadPoolConfig {
+        |     { case _: SecurityException | 1 => None }
+        |}
       """.stripMargin
     )
     * - check(
