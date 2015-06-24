@@ -146,15 +146,7 @@ case class ParseCtx(input: String,
  * Some small optimizations are performed in-line: collapsing [[parsers.Combinators.Either]]
  * cells into large ones and collapsing [[parsers.Combinators.Sequence]] cells into
  * [[parsers.Combinators.Sequence.Flat]]s. These optimizations together appear to make
- * things faster but any 10%, whether or not you activate tracing
- *
- * Collapsed, Trace   Timings
- * all        true    87 /97 /94
- * all        false   112/111/104
- * either     true    89 /84 /81
- * either     false   97 /102/97
- * none       true    84 /79 /80
- * none       false   96 /99 /97
+ * things faster but any 10%, whether or not you activate tracing.
  */
 trait Parser[+T] extends ParserApi[T] with Precedence{
   /**

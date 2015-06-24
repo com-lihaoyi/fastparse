@@ -1,7 +1,7 @@
 package scalaparse.syntax
 
 import acyclic.file
-import fastparse._
+import fastparse.all._
 import Basic._
 object Identifiers{
 

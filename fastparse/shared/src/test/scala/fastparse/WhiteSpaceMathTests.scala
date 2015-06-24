@@ -1,5 +1,5 @@
 package fastparse
-
+import noApi._
 import fastparse.Implicits.Sequencer
 import fastparse.core.Parser
 import fastparse.parsers.Combinators.Sequence
@@ -10,6 +10,7 @@ import utest._
  * default but injects whitespace in between every pair of tokens
  */
 class ParserApiImpl2[+T](p0: Parser[T]) extends ParserApiImpl(p0){
+  import fastparse.all._
   override def ~[V, R](p: P[V])
                       (implicit ev: Sequencer[T, V, R])
                       : Parser[R] =

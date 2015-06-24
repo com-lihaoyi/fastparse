@@ -1,9 +1,8 @@
-import fastparse.core.{Result, ParseCtx}
+package fastparse
+import language.experimental.macros
 import fastparse.parsers.Intrinsics
 
-
-import scala.language.experimental.macros
-package object fastparse {
+trait pkg{
   implicit def enclosingFunctionName: Utils.FuncName = macro Utils.FuncName.impl
 
   val Result = core.Result
@@ -19,6 +18,7 @@ package object fastparse {
   val CharPred = Intrinsics.CharPred
   val CharIn = Intrinsics.CharIn
   val CharsWhile = Intrinsics.CharsWhile
+  val CharPredicates = fastparse.CharPredicates
   val StringIn = Intrinsics.StringIn
 
   val & = parsers.Combinators.Lookahead
@@ -33,7 +33,9 @@ package object fastparse {
   type P0 = Parser[Unit]
 
   type P[+T] = Parser[T]
-
-  implicit def parserApi[T, V](p: T)(implicit c: T => Parser[V]): ParserApi[V] =
+}
+object all extends pkg{
+  implicit def parserApi[T, V](p: T)(implicit c: T => core.Parser[V]): ParserApi[V] =
     new ParserApiImpl[V](p)
 }
+object noApi extends pkg

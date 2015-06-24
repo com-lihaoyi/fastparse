@@ -1,7 +1,6 @@
 package fastparse
 
-
-import fastparse.core.Result
+import all._
 import utest._
 
 /**
@@ -59,12 +58,12 @@ object JsonTests extends TestSuite{
     P( space ~ "\"" ~! (strChars | escape).rep.! ~ "\"").map(Js.Str)
 
   val array =
-    P( "[" ~! jsonExpr.rep(sep="," ~!, end=space ~ "]")).map(Js.Arr(_:_*))
+    P( "[" ~! jsonExpr.rep(sep="," ~!) ~ space ~ "]").map(Js.Arr(_:_*))
 
   val pair = P( string.map(_.value) ~! ":" ~! jsonExpr )
 
   val obj =
-    P( "{" ~! pair.rep(sep="," ~!, end = space ~ "}" )).map(Js.Obj(_:_*))
+    P( "{" ~! pair.rep(sep="," ~!) ~ space ~ "}").map(Js.Obj(_:_*))
 
   val jsonExpr: P[Js.Val] = P(
     space ~ (obj | array | string | `true` | `false` | `null` | number) ~ space

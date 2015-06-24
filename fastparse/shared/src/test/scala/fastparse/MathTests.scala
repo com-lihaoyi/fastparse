@@ -1,5 +1,5 @@
 package fastparse
-
+import all._
 import fastparse.core.Result
 import utest._
 

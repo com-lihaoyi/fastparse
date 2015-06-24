@@ -1,13 +1,35 @@
 package scalaparse.syntax
 
 import acyclic.file
-import fastparse._
+import fastparse.all._
 import Basic._
 import Identifiers._
 
 trait Literals { l =>
   def Block: P0
-  def WL: P0
+
+  /**
+   * Parses all whitespace, excluding newlines. This is only
+   * really useful in e.g. {} blocks, where we want to avoid
+   * capturing newlines so semicolon-inference would work
+   */
+  val WS = P( (Basic.WSChars | Literals.Comment).rep )
+
+  /**
+   * Parses whitespace, including newlines.
+   * This is the default for most things
+   */
+  val WL = P( (Basic.WSChars | Literals.Comment | Basic.Newline).rep )
+
+  val Semi = P( WS ~ Basic.Semi )
+  val Semis = P( Semi.rep(1) ~ WS )
+  val Newline = P( WL ~ Basic.Newline )
+
+  val NotNewline: P0 = P( &( WS ~ !Basic.Newline ) )
+  val OneNLMax: P0 = {
+    val ConsumeComments = P( (Basic.WSChars.? ~ Literals.Comment ~ Basic.WSChars.? ~ Basic.Newline).rep )
+    P( WS ~ Basic.Newline.? ~ ConsumeComments ~ NotNewline )
+  }
   def Pattern: P0
   object Literals{
     import Basic._

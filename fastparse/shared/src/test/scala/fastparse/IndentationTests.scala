@@ -1,10 +1,7 @@
 package fastparse
 
-import fastparse.Implicits.Sequencer
-import fastparse.core.Parser
-import fastparse.parsers.Combinators.Sequence
 import utest._
-
+import all._
 /**
  * Same as MathTests, but demonstrating the use of whitespace
  */

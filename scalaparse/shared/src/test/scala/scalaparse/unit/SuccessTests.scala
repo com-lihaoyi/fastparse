@@ -169,6 +169,26 @@ object SuccessTests extends TestSuite{
       """.stripMargin
     )
     * - check(
+      """
+        |class TracingFilterBenchmark {
+        |  ZipkinTracer(
+        |    a,
+        |    if (on) 1.0f else 0.0f
+        |  )
+        |}
+        |
+      """.stripMargin
+    )
+    * - check(
+      """
+        |class A(
+        |       @volatile var getCollectionCount: Long,
+        |       @volatile var getCollectionTime: Long
+        |       )
+        |
+      """.stripMargin
+    )
+    * - check(
       """class NodexSpec {
         |  (! <a/>.isSpaceNode)
         |  ! <a/>.isSpaceNode
@@ -1218,6 +1238,15 @@ object SuccessTests extends TestSuite{
         |class Foo1 {
         |  trait Inner extends { val x : Int = 3 }
         |  class Inner extends { val x : Int = 3 }
+        |}
+      """.stripMargin
+    )
+
+    * - check(
+      """class ScalaSdkData {
+        |    <library type="Scala">
+        |
+        |    </library>
         |}
       """.stripMargin
     )

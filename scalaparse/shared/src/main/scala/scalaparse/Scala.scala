@@ -3,14 +3,13 @@ package scalaparse
 import acyclic.file
 import language.implicitConversions
 import syntax._
-import fastparse._
+import fastparse.noApi._
 /**
  * Parser for Scala syntax.
  */
 object Scala extends Core with Types with Exprs with Xml{
-
-  private implicit def parserApi[T, V](p0: T)
-                                      (implicit c: T => P[V]) =
+  private[this] implicit def parserApi[T, V](p0: T)(implicit c: T => P[V])
+  : ParserApiImpl2[V] =
     new ParserApiImpl2[V](p0, WL)
 
   val TmplBody: P0 = {
@@ -27,7 +26,7 @@ object Scala extends Core with Types with Exprs with Xml{
     P( FunSig ~ (`:` ~! Type).? ~~ Body.? )
   }
 
-  val BlockDef: P0 = P( Dcl | TraitDef | ClsDef | ObjDef )
+  val BlockDef: P0 = P( Dcl | TraitDef  | ClsDef | ObjDef )
 
   val ClsDef = {
     val ClsAnnot = P( `@` ~ SimpleType ~ ArgList.? )
@@ -35,7 +34,7 @@ object Scala extends Core with Types with Exprs with Xml{
     val ClsArgMod = P( Mod.rep ~ (`val` | `var`) )
     val ClsArg = P( Annot.rep ~ ClsArgMod.? ~ Id ~ `:` ~ Type ~ (`=` ~ ExprCtx.Expr).? )
 
-    val ClsArgs = P( OneNLMax ~ "(" ~! `implicit`.? ~~ ClsArg.rep(sep = "," ~!)~ ")" )
+    val ClsArgs = P( OneNLMax ~ "(" ~! `implicit`.? ~ ClsArg.rep(sep = "," ~!)~ ")" )
     P( `case`.? ~ `class` ~! Id ~ TypeArgList.? ~~ Prelude.? ~~ ClsArgs.repX ~ DefTmpl.? )
   }
 

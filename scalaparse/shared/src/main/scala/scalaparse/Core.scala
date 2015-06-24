@@ -1,38 +1,21 @@
 package scalaparse
 
 import acyclic.file
-import fastparse.Implicits.{Repeater, Optioner, Sequencer}
-import fastparse.core.{Precedence, Parser, Result, ParseCtx}
-import fastparse.parsers.Combinators.{Repeat, Logged, Optional}
-import syntax.{Identifiers, Key, Basic}
+import syntax.{Key, Basic}
 
 import scala.language.implicitConversions
-import syntax.Basic._
 import syntax.Identifiers
-import fastparse._
+import fastparse.noApi._
 trait Core extends syntax.Literals{
+  import fastparse.noApi._
+
+  private[this] implicit def parserApi[T, V](p0: T)(implicit c: T => P[V])
+  : ParserApiImpl2[V] =
+    new ParserApiImpl2[V](c(p0), WL)
+
+
   // Aliases for common things. These things are used in almost every parser
   // in the file, so it makes sense to keep them short.
-
-  /**
-   * Parses all whitespace, excluding newlines. This is only
-   * really useful in e.g. {} blocks, where we want to avoid
-   * capturing newlines so semicolon-inference would work
-   */
-  val WS = P( (Basic.WSChars | Literals.Comment).rep )
-
-  /**
-   * Parses whitespace, including newlines.
-   * This is the default for most things
-   */
-  val WL = P( (Basic.WSChars | Literals.Comment | Basic.Newline).rep )
-
-
-  /**
-   * By default, all strings and characters greedily
-   * capture all whitespace immediately before the token.
-   */
-  private implicit def wspStr(s: String) = WL ~ s
 
   /**
    * Most keywords don't just require the correct characters to match,
@@ -41,8 +24,8 @@ trait Core extends syntax.Literals{
    * (W) and key-operators (O) which have different non-match criteria.
    */
   object KeyWordOperators {
-    def W(s: String) = P( WL ~ Key.W(s) )(s"`$s`")
-    def O(s: String) = P( WL ~ Key.O(s) )(s"`$s`")
+    def W(s: String) = P( Key.W(s) )(s"`$s`")
+    def O(s: String) = P( Key.O(s) )(s"`$s`")
   }
   import KeyWordOperators._
   // Keywords that match themselves and nothing else
@@ -109,18 +92,10 @@ trait Core extends syntax.Literals{
   val VarId = P( WL ~ Identifiers.VarId )
   val ExprLiteral = P( WL ~ Literals.Expr.Literal )
   val PatLiteral = P( WL ~ Literals.Pat.Literal )
-  val Semi = P( WS ~ Basic.Semi )
-  val Semis = P( Semi.rep(1) )
-  val Newline = P( WL ~ Basic.Newline )
 
   val QualId = P( WL ~ Id.rep(1, sep = ".") )
   val Ids = P( Id.rep(1, sep = ",") )
 
-  val NotNewline: P0 = P( &( WS ~ !Basic.Newline ) )
-  val OneNLMax: P0 = {
-    val ConsumeComments = P( (Basic.WSChars.? ~ Literals.Comment ~ Basic.WSChars.? ~ Basic.Newline).rep )
-    P( WS ~ Basic.Newline.? ~ ConsumeComments ~ NotNewline )
-  }
   /**
    * Sketchy way to whitelist a few suffixes that come after a . select;
    * apart from these and IDs, everything else is illegal
@@ -133,79 +108,4 @@ trait Core extends syntax.Literals{
     val IdPath: P0 = P( Id ~ ("." ~ PostDotCheck ~! Id).rep ~ ("." ~ ThisPath).? )
     P( ThisPath | IdPath )
   }
-}
-object ParserApiImpl2 {
-
-  case class CustomSequence[+T, +R, +V](WL: P0, p0: P[T], p: P[V], cut: Boolean)(implicit ev: Sequencer[T, V, R]) extends P[R] {
-    def parseRec(cfg: ParseCtx, index: Int) = {
-      p0.parseRec(cfg, index) match {
-        case f: Result.Failure.Mutable => failMore(f, index, cfg.trace, false)
-        case s: Result.Success.Mutable[T] =>
-          val index0 = s.index
-          val cut0 = s.cut
-          WL.parseRec(cfg, s.index) match {
-            case s1: Result.Success[Unit] =>
-              val index1 = s1.index
-              p.parseRec(cfg, s1.index) match {
-                case f: Result.Failure.Mutable => failMore(f, s.index, cfg.trace, cut | cut0)
-                case s2: Result.Success.Mutable[V] =>
-                  val index2 = s2.index
-                  val cut2 = s2.cut
-                  val newIndex = if (index2 > index1 || index1 == cfg.input.length) index2 else index0
-                  success(
-                    s,
-                    ev.apply(s.value, s2.value),
-                    newIndex,
-                    cut | cut0 | cut2
-                  )
-              }
-          }
-      }
-    }
-
-    override def toString = {
-      if (!cut && p0 == Pass) p.toString
-      else {
-        val op = if (cut) "~!" else "~"
-        opWrap(p0) + " " + op + " " + opWrap(p)
-      }
-    }
-    override def opPred = Precedence.OtherOp
-  }
-
-}
-/**
- * Custom version of `ParserApi`, that behaves the same as the
- * default but injects whitespace in between every pair of tokens
- */
-class ParserApiImpl2[+T](p0: P[T], WL: P0) extends ParserApiImpl(p0)  {
-
-
-  def repX[R](implicit ev: Repeater[T, R]): P[R] = Repeat(p0, 0, Pass, Pass)
-
-  override def rep[R](implicit ev: Repeater[T, R]): P[R] = Repeat(p0, 0, WL, Pass)
-
-  def repX[R](min: Int = 0, sep: Parser[_] = Pass)
-             (implicit ev: Repeater[T, R]): P[R] = Repeat(p0, min, sep, Pass)
-
-  override def rep[R](min: Int = 0, sep: Parser[_] = Pass)
-                     (implicit ev: Repeater[T, R]): P[R] = Repeat(p0, min, WL ~ sep, Pass)
-
-  def ~~[V, R](p: P[V])
-              (implicit ev: Sequencer[T, V, R])
-              : P[R] =
-    p0 ~ p
-
-
-  override def ~[V, R](p: P[V])
-                      (implicit ev: Sequencer[T, V, R])
-                      : P[R] = {
-    new ParserApiImpl2.CustomSequence(WL, if (p0 != WL) p0 else Pass.asInstanceOf[P[T]], p, cut=false)(ev)
-  }
-
-
-  override def ~![V, R](p: P[V])
-                       (implicit ev: Sequencer[T, V, R])
-                       : P[R] = new ParserApiImpl2.CustomSequence(WL, if (p0 != WL) p0 else Pass.asInstanceOf[P[T]], p, cut=true)(ev)
-
 }

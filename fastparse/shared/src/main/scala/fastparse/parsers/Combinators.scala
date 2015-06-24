@@ -1,7 +1,8 @@
 package fastparse.parsers
 
+import fastparse.Implicits
 import fastparse.Utils.FuncName
-import fastparse._
+import Terminals._
 import fastparse.core.Result._
 import fastparse.core.{Precedence, ParseCtx, Result, Parser}
 
@@ -237,17 +238,9 @@ object Combinators {
    * if there are more than [[min]] successful parses. uses the [[delimiter]]
    * between parses and discards its results
    */
-  case class Repeat[T, +R](p: Parser[T], min: Int, delimiter: Parser[_], end: Parser[_])
+  case class Repeat[T, +R](p: Parser[T], min: Int, delimiter: Parser[_])
                           (implicit ev: Implicits.Repeater[T, R]) extends Parser[R]{
 
-    private[this] val Sentinel = new Object()
-    private[this] val FirstStep = if (end != Pass) p | end else p
-    private[this] val Step = {
-      var step: P[_] = p
-      if (delimiter != Pass) step = delimiter ~ p
-      if (end != Pass) step = step | end
-      step
-    }
 
     def parseRec(cfg: ParseCtx, index: Int) = {
       @tailrec def rec(index: Int,
@@ -260,11 +253,8 @@ object Combinators {
           case f1: Failure.Mutable =>
             val cut1 = f1.cut
             if (f1.cut) failMore(f1, index, cfg.trace, true)
-            else end.parseRec(cfg, index) match {
-              case f: Failure.Mutable =>
-                Step.fail(cfg.failure, index, cut1 | f.cut)
-              case s: Success[_] => passIfMin(cut, f1, s.index, ev.result(acc), count)
-            }
+            else passIfMin(cut, f1, index, ev.result(acc), count)
+
           case s1: Success.Mutable[_] =>
             val cut1 = s1.cut
             val index1 = s1.index
@@ -273,12 +263,8 @@ object Combinators {
                 val cut2 = f2.cut
                 if (cut2 | cut1) failMore(f2, index1, cfg.trace, true)
                 else if(del != Pass) passIfMin(cut | s1.cut, f2, index, ev.result(acc), count)
-                else end.parseRec(cfg, index1) match {
-                  case f: Failure.Mutable =>
-                    (if (del == Pass) FirstStep else Step).fail(cfg.failure, index, cut1 | cut2 | f.cut)
-                  case s: Success[_] =>
-                    passIfMin(cut | s1.cut, f2, s.index, ev.result(acc), count)
-                }
+                else passIfMin(cut | s1.cut, f2, index1, ev.result(acc), count)
+
 
               case s2: Success.Mutable[T] =>
                 ev.accumulate(s2.value, acc)
@@ -295,12 +281,11 @@ object Combinators {
     }
     override def opPred = Precedence.Max
     override def toString = {
-      if (min == 0 && delimiter == Pass && end == Pass) opWrap(p) + ".rep"
+      if (min == 0 && delimiter == Pass) opWrap(p) + ".rep"
       else{
         val things = Seq(
           if (min == 0) None else Some(min),
-          if (delimiter == Pass) None else Some("sep = " + delimiter),
-          if (end == Pass) None else Some("end = " + end)
+          if (delimiter == Pass) None else Some("sep = " + delimiter)
         ).flatten.mkString(", ")
         s"${opWrap(p)}.rep($things)"
       }

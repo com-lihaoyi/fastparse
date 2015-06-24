@@ -1,10 +1,10 @@
 package scalaparse
 
-import fastparse._
+import fastparse.noApi._
 trait Types extends Core{
-  private implicit def parserApi[T, V](p0: T)
-                                      (implicit c: T => P[V]) =
-    new ParserApiImpl2[V](p0, WL)
+  private[this] implicit def parserApi[T, V](p0: T)(implicit c: T => P[V])
+  : ParserApiImpl2[V] =
+    new ParserApiImpl2[V](c(p0), WL)
   def TypeExpr: P0
   def ValVarDef: P0
   def FunDef: P0
@@ -32,8 +32,8 @@ trait Types extends Core{
 
   val CompoundType = {
     val Refinement = P( OneNLMax ~ `{` ~ Dcl.repX(sep=Semis) ~ `}` )
-    val NamedRefinement = P( (WL ~ AnnotType).rep(1, `with` ~!) ~~ Refinement.? )
-    P( NamedRefinement | Refinement )
+    val NamedType = P( (WL ~ AnnotType).rep(1, `with` ~!) )
+    P( NamedType ~~ Refinement.? | Refinement )
   }
   val AnnotType = P(SimpleType ~~ (NotNewline ~~ (NotNewline ~ Annot).repX(1)).? )
 

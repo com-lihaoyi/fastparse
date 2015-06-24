@@ -1,6 +1,7 @@
 package fastparse
 
 import fastparse.core.{ParseCtx, Result}
+import parsers.Terminals._
 import parsers.Combinators._
 import parsers.Transformers._
 import Implicits._
@@ -79,9 +80,9 @@ class ParserApiImpl[+T](self: Parser[T]) extends ParserApi[T] {
 
   def log(msg: String = self.toString)(implicit output: Logger) = Logged(self, msg, output.f)
 
-  def rep[R](implicit ev: Repeater[T, R]): Parser[R] = Repeat(self, 0, Pass, Pass)
+  def rep[R](implicit ev: Repeater[T, R]): Parser[R] = Repeat(self, 0, Pass)
   def rep[R](min: Int = 0, sep: Parser[_] = Pass)
-            (implicit ev: Repeater[T, R]): Parser[R] = Repeat(self, min, sep, Pass)
+            (implicit ev: Repeater[T, R]): Parser[R] = Repeat(self, min, sep)
 
   def |[V >: T](p: Parser[V]): Parser[V] = Either[V](Either.flatten(Vector(self, p)):_*)
 

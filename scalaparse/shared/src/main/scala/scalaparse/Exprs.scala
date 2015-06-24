@@ -1,13 +1,12 @@
 package scalaparse
 
 import acyclic.file
-import fastparse._
 
 import scalaparse.syntax.Identifiers
-
+import fastparse.noApi._
 trait Exprs extends Core with Types with Xml{
-  private implicit def parserApi[T, V](p0: T)
-                                      (implicit c: T => P[V]) =
+  private[this] implicit def parserApi[T, V](p0: T)(implicit c: T => P[V])
+  : ParserApiImpl2[V] =
     new ParserApiImpl2[V](p0, WL)
 
   def AnonTmpl: P0

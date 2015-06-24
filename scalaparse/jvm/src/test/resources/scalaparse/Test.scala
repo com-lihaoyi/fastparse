@@ -1,6 +1,6 @@
+class ScalaSdkData {
+    <library type="Scala">
 
-trait ColumnarTableCompanion {
-    class IndexedSource()
-
-    (1)
+    </library>
 }
+
