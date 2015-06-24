@@ -36,7 +36,7 @@ object Scala extends Core with Types with Exprs with Xml{
     val ClsArg = P( Annot.rep ~ ClsArgMod.? ~ Id ~ `:` ~ Type ~ (`=` ~ ExprCtx.Expr).? )
 
     val ClsArgs = P( OneNLMax ~ "(" ~! `implicit`.? ~~ ClsArg.rep(sep = "," ~!)~ ")" )
-    P( `case`.? ~ `class` ~! Id ~ TypeArgList.? ~~ Prelude.? ~~ ClsArgs.rep ~ DefTmpl.? )
+    P( `case`.? ~ `class` ~! Id ~ TypeArgList.? ~~ Prelude.? ~~ ClsArgs.repX ~ DefTmpl.? )
   }
 
   val Constrs = P( (WL ~ Constr).rep(1, `with` ~! ) )
@@ -50,7 +50,7 @@ object Scala extends Core with Types with Exprs with Xml{
 
   val ObjDef: P0 = P( `case`.? ~ `object` ~! Id ~ DefTmpl.? )
 
-  val Constr = P( AnnotType ~~ (NotNewline ~ ParenArgList ).rep )
+  val Constr = P( AnnotType ~~ (NotNewline ~ ParenArgList ).repX )
 
   val PkgObj = P( ObjDef )
   val PkgBlock = P( QualId ~! `{` ~ TopStatSeq.? ~ `}` )

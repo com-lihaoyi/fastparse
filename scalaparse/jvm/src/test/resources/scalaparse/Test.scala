@@ -1,6 +1,6 @@
 
-object Test{
-  {
-    case x => ()
-  }
+trait ColumnarTableCompanion {
+    class IndexedSource()
+
+    (1)
 }

@@ -20,7 +20,7 @@ trait Types extends Core{
 
   val Mod: P0 = P( LocalMod | AccessMod | `override` )
 
-  val ExistentialClause = P( `forSome` ~! `{` ~ Dcl.rep(1, Semis) ~ `}` )
+  val ExistentialClause = P( `forSome` ~! `{` ~ Dcl.repX(1, Semis) ~ `}` )
   val PostfixType = P( InfixType ~ (`=>` ~! Type | ExistentialClause).? )
   val Type: P0 = P( `=>`.? ~~ PostfixType ~ TypeBounds ~ `*`.? )
 
@@ -28,14 +28,14 @@ trait Types extends Core{
   // Can't cut after `Id` because it may be a `*`, in which case
   // we may need to backtrack and settle for the `*`-postfix rather than
   // an infix type
-  val InfixType = P( CompoundType ~~ (NotNewline ~ Id ~~ OneNLMax ~ CompoundType).rep )
+  val InfixType = P( CompoundType ~~ (NotNewline ~ Id ~~ OneNLMax ~ CompoundType).repX )
 
   val CompoundType = {
-    val Refinement = P( OneNLMax ~ `{` ~ Dcl.rep(sep=Semis) ~ `}` )
-    val NamedRefinement = P( (WL ~ AnnotType).rep(1, WL ~ `with` ~!) ~~ Refinement.? )
+    val Refinement = P( OneNLMax ~ `{` ~ Dcl.repX(sep=Semis) ~ `}` )
+    val NamedRefinement = P( (WL ~ AnnotType).rep(1, `with` ~!) ~~ Refinement.? )
     P( NamedRefinement | Refinement )
   }
-  val AnnotType = P(SimpleType ~~ (NotNewline ~~ (NotNewline ~ Annot).rep(1)).? )
+  val AnnotType = P(SimpleType ~~ (NotNewline ~~ (NotNewline ~ Annot).repX(1)).? )
 
   val SimpleType: P0 = {
     // Can't `cut` after the opening paren, because we might be trying to parse `()`

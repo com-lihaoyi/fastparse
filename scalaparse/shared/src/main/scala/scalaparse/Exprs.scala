@@ -35,7 +35,7 @@ trait Exprs extends Core with Types with Xml{
       val Generator = P( `<-` ~! Expr ~ Guard.? )
       val Assign = P( `=` ~! Expr )
       val Enumerator = P( Semis ~ `val`.? ~ TypeOrBindPattern ~! (Generator | Assign) | Semis.? ~ Guard  )
-      P( TypeOrBindPattern ~ Generator ~~ Enumerator.rep ~ end )
+      P( TypeOrBindPattern ~ Generator ~~ Enumerator.repX ~ end )
     }
 
     val Expr: P0 = {
@@ -73,11 +73,11 @@ trait Exprs extends Core with Types with Xml{
     val Ascription = P( `:` ~! (`_*` |  AscriptionType | Annot.rep(1)) )
     val MatchAscriptionSuffix = P(`match` ~! "{" ~ CaseClauses | Ascription)
     val ExprPrefix = P( WL ~ CharIn("-+~!") ~~ !syntax.Basic.OpChar ~ WS)
-    val ExprSuffix = P( (WL ~ "." ~! Id | WL ~ TypeArgs | NoSemis ~ ArgList).rep ~~ (NoSemis  ~ `_`).? )
+    val ExprSuffix = P( (WL ~ "." ~! Id | WL ~ TypeArgs | NoSemis ~ ArgList).repX ~~ (NoSemis  ~ `_`).? )
     val PrefixExpr = P( ExprPrefix.? ~ SimpleExpr )
     val InfixSuffix = P( NoSemis ~ Id ~ TypeArgs.? ~~ OneSemiMax ~ PrefixExpr ~~ ExprSuffix)
     val PostFix = P( NoSemis ~ Id ~ Newline.? )
-    val PostfixSuffix = P( InfixSuffix.rep ~~ PostFix.? ~ (`=` ~! Expr).? ~ MatchAscriptionSuffix.?)
+    val PostfixSuffix = P( InfixSuffix.repX ~~ PostFix.? ~ (`=` ~! Expr).? ~ MatchAscriptionSuffix.?)
 
     val PostfixExpr: P0 = P( PrefixExpr ~~ ExprSuffix ~~ PostfixSuffix )
 

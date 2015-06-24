@@ -19,6 +19,16 @@ object SuccessTests extends TestSuite{
       """.stripMargin
     )
     * - check(
+      """
+        |trait ColumnarTableCompanion {
+        |    class IndexedSource()
+        |
+        |    (1)
+        |}
+        |
+      """.stripMargin
+    )
+    * - check(
       """package torimatomeru
         |import a
         |import b
@@ -27,6 +37,15 @@ object SuccessTests extends TestSuite{
     * - check(
       """object Foo{
         |  val a = (null): Int => Int
+        |}
+      """.stripMargin
+    )
+    * - check(
+      """object X{
+        |  for {
+        |    A <- x()
+        |    (_, node) <- signature
+        |  } ()
         |}
       """.stripMargin
     )
@@ -1281,12 +1300,44 @@ object SuccessTests extends TestSuite{
       """.stripMargin
     )
     * - check(
+      s"""
+         |object ReflectiveCallTest {
+         |    type ObjNotifyLike = {
+         |      def notify: Unit
+         |      def notify2: Unit
+         |    }
+         |
+         |
+         |}
+         |
+      """.stripMargin
+    )
+    * - check(
       """class Toto extends Expr with Case1(12);
         |
       """.stripMargin
     )
     * - check(
+      """
+        |class CallGraph{
+        |  for {
+        |      a     <- a
+        |      b <- b
+        |      c =  c
+        |    } yield { }
+        |}
+      """.stripMargin
+    )
+    * - check(
       """class A extends B()""".stripMargin
+    )
+    * - check(
+      """
+        |object PopupDemo {
+        |  contents += new RadioMenuItem
+        |
+        |  contents += 1
+        |}""".stripMargin
     )
 
   }
