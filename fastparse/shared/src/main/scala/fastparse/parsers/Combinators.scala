@@ -237,15 +237,15 @@ object Combinators {
    * if there are more than [[min]] successful parses. uses the [[delimiter]]
    * between parses and discards its results
    */
-  case class Repeat[T, +R](p: Parser[T], min: Int, delimiter: Parser[_], until: Parser[_])
+  case class Repeat[T, +R](p: Parser[T], min: Int, delimiter: Parser[_], end: Parser[_])
                           (implicit ev: Implicits.Repeater[T, R]) extends Parser[R]{
 
     private[this] val Sentinel = new Object()
-    private[this] val FirstStep = if (until != Pass) p | until else p
+    private[this] val FirstStep = if (end != Pass) p | end else p
     private[this] val Step = {
       var step: P[_] = p
       if (delimiter != Pass) step = delimiter ~ p
-      if (until != Pass) step = step | until
+      if (end != Pass) step = step | end
       step
     }
 
@@ -260,7 +260,7 @@ object Combinators {
           case f1: Failure.Mutable =>
             val cut1 = f1.cut
             if (f1.cut) failMore(f1, index, cfg.trace, true)
-            else until.parseRec(cfg, index) match {
+            else end.parseRec(cfg, index) match {
               case f: Failure.Mutable =>
                 Step.fail(cfg.failure, index, cut1 | f.cut)
               case s: Success[_] => passIfMin(cut, f1, s.index, ev.result(acc), count)
@@ -273,7 +273,7 @@ object Combinators {
                 val cut2 = f2.cut
                 if (cut2 | cut1) failMore(f2, index1, cfg.trace, true)
                 else if(del != Pass) passIfMin(cut | s1.cut, f2, index, ev.result(acc), count)
-                else until.parseRec(cfg, index1) match {
+                else end.parseRec(cfg, index1) match {
                   case f: Failure.Mutable =>
                     (if (del == Pass) FirstStep else Step).fail(cfg.failure, index, cut1 | cut2 | f.cut)
                   case s: Success[_] =>
@@ -295,12 +295,12 @@ object Combinators {
     }
     override def opPred = Precedence.Max
     override def toString = {
-      if (min == 0 && delimiter == Pass && until == Pass) opWrap(p) + ".rep"
+      if (min == 0 && delimiter == Pass && end == Pass) opWrap(p) + ".rep"
       else{
         val things = Seq(
           if (min == 0) None else Some(min),
           if (delimiter == Pass) None else Some("sep = " + delimiter),
-          if (until == Pass) None else Some("end = " + until)
+          if (end == Pass) None else Some("end = " + end)
         ).flatten.mkString(", ")
         s"${opWrap(p)}.rep($things)"
       }

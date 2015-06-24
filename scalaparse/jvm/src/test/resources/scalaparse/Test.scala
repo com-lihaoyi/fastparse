@@ -1,3 +1,6 @@
-object O{
-  { case _: Int | () => 1 }
+
+object Test{
+  {
+    case x => ()
+  }
 }

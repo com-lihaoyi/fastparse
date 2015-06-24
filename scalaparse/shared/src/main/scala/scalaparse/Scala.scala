@@ -17,10 +17,10 @@ object Scala extends Core with Types with Exprs with Xml{
     val Prelude = P( (Annot ~ OneNLMax).rep ~ (Mod ~! Pass).rep )
     val TmplStat = P( Import | Prelude ~ BlockDef | StatCtx.Expr )
 
-    P( "{" ~! BlockLambda.? ~ Semis.? ~ TmplStat.rep(sep = Semis) ~ `}` )
+    P( "{" ~! BlockLambda.? ~ Semis.? ~ TmplStat.repX(sep = Semis) ~ Semis.? ~ `}` )
   }
 
-  val ValVarDef = P( BindPattern.rep(1, WL ~ "," ~!) ~ (`:` ~! Type).? ~ (`=` ~! StatCtx.Expr).? )
+  val ValVarDef = P( BindPattern.rep(1, "," ~!) ~ (`:` ~! Type).? ~ (`=` ~! StatCtx.Expr).? )
 
   val FunDef = {
     val Body = P( WL ~ `=` ~! `macro`.? ~ StatCtx.Expr | OneNLMax ~ "{" ~ Block ~ "}" )
@@ -35,11 +35,11 @@ object Scala extends Core with Types with Exprs with Xml{
     val ClsArgMod = P( Mod.rep ~ (`val` | `var`) )
     val ClsArg = P( Annot.rep ~ ClsArgMod.? ~ Id ~ `:` ~ Type ~ (`=` ~ ExprCtx.Expr).? )
 
-    val ClsArgs = P( OneNLMax ~ "(" ~! `implicit`.? ~~ ClsArg.rep(sep = WL ~ "," ~!, end = WL ~ ")") )
+    val ClsArgs = P( OneNLMax ~ "(" ~! `implicit`.? ~~ ClsArg.rep(sep = "," ~!)~ ")" )
     P( `case`.? ~ `class` ~! Id ~ TypeArgList.? ~~ Prelude.? ~~ ClsArgs.rep ~ DefTmpl.? )
   }
 
-  val Constrs = P( (WL ~ Constr).rep(1, WL ~ `with` ~! ) )
+  val Constrs = P( (WL ~ Constr).rep(1, `with` ~! ) )
   val EarlyDefTmpl = P( TmplBody ~ (`with` ~! Constr).rep ~ TmplBody.? )
   val NamedTmpl = P( Constrs ~ TmplBody.? )
 
@@ -57,9 +57,9 @@ object Scala extends Core with Types with Exprs with Xml{
   val TopStatSeq: P0 = {
     val Tmpl = P( (Annot ~~ OneNLMax).rep ~ Mod.rep ~ (TraitDef | ClsDef | ObjDef) )
     val TopStat = P( `package` ~! (PkgBlock | PkgObj) | Import | Tmpl )
-    P( TopStat.rep(1, Semis) )
+    P( TopStat.repX(1, Semis) )
   }
-  val TopPkgSeq = P( ((`package` ~ QualId) ~~ !(WS ~ "{")).rep(1, Semis) )
+  val TopPkgSeq = P( ((`package` ~ QualId) ~~ !(WS ~ "{")).repX(1, Semis) )
   val CompilationUnit: P0 = {
     val Body = P( TopPkgSeq ~~ (Semis ~ TopStatSeq).? | TopStatSeq )
     P( Semis.? ~ Body.? ~~ Semis.? ~ WL ~ End)

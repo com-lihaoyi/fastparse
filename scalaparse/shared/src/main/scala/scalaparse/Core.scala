@@ -180,6 +180,17 @@ object ParserApiImpl2 {
  */
 class ParserApiImpl2[+T](p0: P[T], WL: P0) extends ParserApiImpl(p0)  {
 
+
+  def repX[R](implicit ev: Repeater[T, R]): P[R] = Repeat(p0, 0, Pass, Pass)
+
+  override def rep[R](implicit ev: Repeater[T, R]): P[R] = Repeat(p0, 0, WL, Pass)
+
+  def repX[R](min: Int = 0, sep: Parser[_] = Pass)
+             (implicit ev: Repeater[T, R]): P[R] = Repeat(p0, min, sep, Pass)
+
+  override def rep[R](min: Int = 0, sep: Parser[_] = Pass)
+                     (implicit ev: Repeater[T, R]): P[R] = Repeat(p0, min, WL ~ sep, Pass)
+
   def ~~[V, R](p: P[V])
               (implicit ev: Sequencer[T, V, R])
               : P[R] =
