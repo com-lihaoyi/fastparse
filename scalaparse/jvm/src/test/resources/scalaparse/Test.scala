@@ -1,4 +1,3 @@
-
-object Test {
-  ucheck(id_TSa_T [Unit   , Array[Unit   ]](uarray));
+object O{
+  { case _: Int | () => 1 }
 }

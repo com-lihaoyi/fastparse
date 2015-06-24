@@ -488,6 +488,12 @@ object SuccessTests extends TestSuite{
       """.stripMargin
     )
     * - check(
+      """object O{
+        |  { case _: Int | () => 1 }
+        |}
+      """.stripMargin
+    )
+    * - check(
       """
         |object Test {
         |  ucheck(id_TSa_T [Unit   , Array[Unit   ]](uarray));
