@@ -28,6 +28,7 @@ object PerfTests extends TestSuite{
 
       val settings = new Settings()
       settings.usejavacp.value = true
+      settings.embeddedDefaults[ScalacParser.type]
       settings.classpath.append(files.mkString(":"))
       val global = new Global(settings)
       val run = new global.Run()
