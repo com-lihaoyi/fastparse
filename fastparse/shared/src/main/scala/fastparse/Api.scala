@@ -1,7 +1,7 @@
 package fastparse
 import language.experimental.macros
 import fastparse.parsers.Intrinsics
-
+import acyclic.file
 trait pkg{
   implicit def enclosingFunctionName: Utils.FuncName = macro Utils.FuncName.impl
 

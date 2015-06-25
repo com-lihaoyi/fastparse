@@ -1,5 +1,5 @@
 package fastparse.parsers
-
+import acyclic.file
 import fastparse.Implicits
 import fastparse.Utils.FuncName
 import Terminals._
@@ -41,11 +41,14 @@ object Combinators {
    */
   case class Logged[+T](p: Parser[T], msg: String, output: String => Unit) extends Parser[T]{
     def parseRec(cfg: ParseCtx, index: Int) = {
-      val indent = "  " * cfg.logDepth
-      if (cfg.traceIndex == -1) output(indent + "+" + msg + ":" + index)
-      val res = p.parseRec(cfg.copy(logDepth = cfg.logDepth+1), index)
-      if (cfg.traceIndex == -1) output(indent + "-" + msg + ":" + index + ":" + res)
-      res
+      if (cfg.logDepth == -1) p.parseRec(cfg, index)
+      else {
+        val indent = "  " * cfg.logDepth
+        output(indent + "+" + msg + ":" + index)
+        val res = p.parseRec(cfg.copy(logDepth = cfg.logDepth + 1), index)
+        output(indent + "-" + msg + ":" + index + ":" + res)
+        res
+      }
     }
   }
 
@@ -60,7 +63,7 @@ object Combinators {
     def parseRec(cfg: ParseCtx, index: Int) = {
       lazy val res  = pCached.parseRec(cfg, index) match{
         case f: Mutable.Failure =>
-          failMore(f, index, f.traceParsers)
+          failMore(f, index)
         case s: Mutable.Success[T] => s
       }
       if (cfg.instrument == null) res
@@ -79,7 +82,7 @@ object Combinators {
     def parseRec(cfg: ParseCtx, index: Int) = {
       p.parseRec(cfg, index) match{
         case s: Mutable.Success[_] => success(cfg.success, (), index, Nil, false)
-        case f: Mutable.Failure => failMore(f, index, f.traceParsers)
+        case f: Mutable.Failure => failMore(f, index)
       }
     }
     override def toString = s"&($p)"
@@ -112,7 +115,7 @@ object Combinators {
     def parseRec(cfg: ParseCtx, index: Int) = {
       p.parseRec(cfg, index) match{
         case s: Mutable.Success[_] => success(cfg.success, ev.some(s.value), s.index, s.traceParsers, s.cut)
-        case f: Mutable.Failure if f.cut => failMore(f, index, f.traceParsers)
+        case f: Mutable.Failure if f.cut => failMore(f, index)
         case _ => success(cfg.success, ev.none, index, Nil, false)
       }
     }
@@ -179,7 +182,7 @@ object Combinators {
         }
         p0.parseRec(cfg, index) match{
           case f: Mutable.Failure =>
-            failMore(f, index, traceParsers = f.traceParsers, cut = f.cut)
+            failMore(f, index, cut = f.cut)
           case s: Mutable.Success[R] => rec(s.value, s.index, s.cut, 0, s.traceParsers)
         }
       }
@@ -255,7 +258,7 @@ object Combinators {
   case class Cut[T](p: Parser[T]) extends Parser[T]{
     def parseRec(cfg: ParseCtx, index: Int) = {
       p.parseRec(cfg, index) match{
-        case f: Mutable.Failure => failMore(f, index, f.traceParsers, cut = false)
+        case f: Mutable.Failure => failMore(f, index, cut = false)
         case s: Mutable.Success[T] => success(s, s.value, s.index, null, cut = true)
       }
     }
@@ -281,7 +284,7 @@ object Combinators {
         del.parseRec(cfg, index) match{
           case f1: Mutable.Failure =>
             val cut1 = f1.cut
-            if (f1.cut) failMore(f1, index, f1.traceParsers, cut = true)
+            if (f1.cut) failMore(f1, index, cut = true)
             else passIfMin(cut, f1, index, ev.result(acc), count)
 
           case s1: Mutable.Success[_] =>
@@ -290,7 +293,7 @@ object Combinators {
             p.parseRec(cfg, index1) match{
               case f2: Mutable.Failure =>
                 val cut2 = f2.cut
-                if (cut2 | cut1) failMore(f2, index1, f2.traceParsers, cut = true)
+                if (cut2 | cut1) failMore(f2, index1, cut = true)
                 else passIfMin(cut | s1.cut, f2, index, ev.result(acc), count)
 
               case s2: Mutable.Success[T] =>
@@ -306,7 +309,7 @@ object Combinators {
                     acc: R,
                     count: Int) = {
         if (count >= min) success(cfg.success, acc, finalIndex, lastFailure.traceParsers, cut)
-        else  failMore(lastFailure, index, lastFailure.traceParsers, cut = cut)
+        else  failMore(lastFailure, index, cut = cut)
 
       }
       rec(index, Pass, null, ev.initial, false, 0)
@@ -343,7 +346,7 @@ object Combinators {
           case s: Mutable.Success[_] =>
             s.traceParsers :::= traceParsers
             s
-          case f: Mutable.Failure if f.cut => failMore(f, index, f.traceParsers)
+          case f: Mutable.Failure if f.cut => failMore(f, index)
           case f: Mutable.Failure => rec(parserIndex + 1, f.traceParsers ::: traceParsers)
         }
       }

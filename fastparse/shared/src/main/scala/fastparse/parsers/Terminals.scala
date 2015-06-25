@@ -1,5 +1,5 @@
 package fastparse.parsers
-
+import acyclic.file
 import fastparse.Utils._
 import fastparse.core.ParseCtx
 

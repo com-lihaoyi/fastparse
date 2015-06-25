@@ -1,5 +1,5 @@
 package fastparse.core
-
+import acyclic.file
 /**
  * Something which contains an operator precedence, which can be used
  * to correctly wrap other things which contain lower precedences in 
