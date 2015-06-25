@@ -119,23 +119,23 @@ object IndentationTests extends TestSuite{
         val failure = expr.parse(input, trace = false).asInstanceOf[Result.Failure]
         assert(trace.trim == failure.trace.trim)
       }
-      check(
+      * - check(
         "+",
-        """ expr:0 / block:0 / "\n":1 ..."" """"
+        """ expr:0 / block:0 / "\n":1 ..."" """
       )
-      check(
+      * - check(
         """+
           |  1
           |1
         """.stripMargin.trim,
-        """ expr:0 / addSub:0 / divMul:0 / factor:0 / parens:0 / addSub:3 / divMul:3 / factor:3 / (addSub | " "):3 ..."+  )" """
+        """ expr:0 / (End | "\n  "):5 ..."\n1" """
       )
-      check(
+      * - check(
         """+
           |  1
           |   1
         """.stripMargin.trim,
-        """(number | block | CharIn("+-*/") | CharIn("0123456789")):8 ..." 1""""
+        """ expr:0 / block:0 / factor:8 / (number | block):8 ..." 1" """
       )
     }
   }

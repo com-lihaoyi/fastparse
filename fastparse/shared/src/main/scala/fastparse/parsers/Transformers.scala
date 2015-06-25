@@ -15,7 +15,7 @@ object Transformers {
     def parseRec(cfg: ParseCtx, index: Int) = {
       p.parseRec(cfg, index) match{
         case s: Mutable.Success[T] => success(s, f(s.value), s.index, s.traceParsers, s.cut)
-        case f: Mutable.Failure => failMore(f, index, cfg.trace, f.traceParsers0)
+        case f: Mutable.Failure => failMore(f, index, cfg.trace, f.traceParsers)
       }
     }
     override def toString = p.toString
@@ -25,7 +25,7 @@ object Transformers {
     extends Parser[V] {
     def parseRec(cfg: ParseCtx, index: Int) = {
       p1.parseRec(cfg, index) match{
-        case f: Mutable.Failure => failMore(f, index, cfg.trace, f.traceParsers0, cut = false)
+        case f: Mutable.Failure => failMore(f, index, cfg.trace, f.traceParsers, cut = false)
         case s: Mutable.Success[T] => func(s.value).parseRec(cfg, s.index)
       }
     }
@@ -35,7 +35,7 @@ object Transformers {
     extends Parser[T] {
     override def parseRec(cfg: ParseCtx, index: Int) = {
       p.parseRec(cfg, index) match{
-        case f: Mutable.Failure => failMore(f, index, cfg.trace, f.traceParsers0, cut = false)
+        case f: Mutable.Failure => failMore(f, index, cfg.trace, f.traceParsers, cut = false)
         case s: Mutable.Success[T] =>
           if (predicate(s.value)) s else fail(cfg.failure,index, cfg.trace, s.traceParsers, cut = false)
       }

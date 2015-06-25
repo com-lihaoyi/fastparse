@@ -65,15 +65,15 @@ object WhiteSpaceMathTests extends TestSuite{
     'fail{
       def check(input: String, trace: String) = {
         val failure = expr.parse(input, trace = false).asInstanceOf[Result.Failure]
-        assert(trace == failure.trace)
+        assert(trace.trim == failure.trace.trim)
       }
-      check(
+      * - check(
         "(  +  )",
-        """(number | parens | "(" | CharIn("0123456789") | " "):3 ..."+  )""""
+        """ expr:0 / addSub:0 / divMul:0 / factor:0 / parens:0 / addSub:3 / divMul:3 / factor:3 / (number | parens | " "):3 ..."+  )" """
       )
-      check(
+      * - check(
         "1  +  - ",
-        """(number | parens | "(" | CharIn("0123456789") | " "):6 ..."- """"
+        """ expr:0 / addSub:0 / divMul:6 / factor:6 / (number | parens | " "):6 ..."- " """
       )
     }
   }

@@ -91,12 +91,7 @@ object Terminals {
     def parseRec(cfg: ParseCtx, index: Int) = {
 
       if (startsWith(cfg.input, s, index)) success(cfg.success, (), index + s.length, Nil, false)
-      else {
-        println("Literal f 0 " + cfg.failure.traceParsers0)
-        val f = fail(cfg.failure, index, cfg.trace)
-        println("Literal f 1 " + f.traceParsers0)
-        f
-      }
+      else fail(cfg.failure, index, cfg.trace)
     }
     override def toString = literalize(s).toString
   }

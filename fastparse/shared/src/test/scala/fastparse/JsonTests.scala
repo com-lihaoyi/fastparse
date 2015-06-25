@@ -158,7 +158,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / (obj | array | string | true | false | null | number | "0" | CharIn("123456789") ~ digits.? | CharIn("123456789") | "0" | CharIn("+-") | "null" | "false" | "true" | "\"" | CharsWhile(Whitespace,1) | "[" | "{"):9 ..."}\n        "
+          jsonExpr:0 / (obj | array | string | true | false | null | number):9 ..."}\n        "
         """
       )
       * - check(
@@ -242,7 +242,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / ("}" | CharsWhile(Whitespace,1) | ","):56 ..."lastName\":"
+          jsonExpr:0 / obj:9 / ("}" | ","):56 ..."lastName\":"
         """
       )
       * - check(
@@ -270,7 +270,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / ("}" | CharsWhile(Whitespace,1) | ","):154 ...": \"21 2nd "
+          jsonExpr:0 / obj:9 / ("}" | ","):154 ...": \"21 2nd "
         """
       )
       * - check(
@@ -354,7 +354,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / pair:292 / jsonExpr:320 / array:321 / jsonExpr:322 / obj:339 / ("}" | CharsWhile(Whitespace,1) | ","):411 ..."555-1234\n "
+          jsonExpr:0 / obj:9 / pair:292 / jsonExpr:320 / array:321 / jsonExpr:322 / obj:339 / ("}" | ","):411 ..."555-1234\n "
         """
       )
       * - check(
@@ -382,7 +382,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / pair:292 / jsonExpr:320 / array:321 / jsonExpr:440 / obj:457 / ("}" | CharsWhile(Whitespace,1) | ","):528 ..."555-4567\n "
+          jsonExpr:0 / obj:9 / pair:292 / jsonExpr:320 / array:321 / jsonExpr:440 / obj:457 / ("}" | ","):528 ..."555-4567\n "
         """
       )
       * - check(
@@ -410,7 +410,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / pair:292 / jsonExpr:320 / array:321 / ("]" | CharsWhile(Whitespace,1) | ","):566 ..."}\n        "
+          jsonExpr:0 / obj:9 / pair:292 / jsonExpr:320 / array:321 / ("]" | ","):566 ..."}\n        "
         """
       )
     }

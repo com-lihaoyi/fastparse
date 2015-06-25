@@ -17,6 +17,10 @@ sealed trait Result[+T]{
 
 }
 
+/**
+ * An internal mirror of the [[Result]] classes, except it contains far
+ * more data and is mutable to maximize performance
+ */
 trait Mutable[+T]{
   def toResult: Result[T]
 }
@@ -41,22 +45,20 @@ object Mutable{
                      originalParser: Parser[_],
                      originalIndex: Int,
                      traceIndex: Int,
-                     var traceParsers0: List[Parser[_]],
+                     var traceParsers: List[Parser[_]],
                      var cut: Boolean) extends Mutable[Nothing]{
-    def toResult = Result.Failure(input, fullStack1, index, lastParser, () => traceParsers)
-    lazy val fullStack1 = XXX._2
-    lazy val traceParsers = XXX._1
-
-    lazy val XXX: (List[Parser[_]], List[Frame]) = {
-      println("\n\ntraces " + System.identityHashCode(this))
-      if (traceParsers0 != Nil) (traceParsers0, fullStack)
-      else {
-        val traced = originalParser.parse(input, originalIndex, true, index, null)
-          .asInstanceOf[Result.Failure]
-
-        (traced.traceParsers(), traced.fullStack)
+    def toResult = {
+      val (fullStack1, traceParsers1) = {
+        if (traceParsers != Nil) (traceParsers, fullStack)
+        else {
+          val traced = originalParser.parse(input, originalIndex, true, index, null)
+            .asInstanceOf[Result.Failure]
+          //        ???
+          (traced.traceParsers, traced.fullStack)
+        }
       }
 
+      Result.Failure(input, traceParsers1, index, lastParser, fullStack1)
     }
   }
 }
@@ -84,7 +86,7 @@ object Result{
                      fullStack: List[Frame],
                      index: Int,
                      lastParser: Parser[_],
-                     traceParsers: () => List[Parser[_]]) extends Result[Nothing]{
+                     traceParsers: List[Parser[_]]) extends Result[Nothing]{
 
 
 
@@ -98,7 +100,7 @@ object Result{
         case f@Frame(i, p) if p.shortTraced => f
       } :+ Frame(
         index,
-        fastparse.parsers.Combinators.Either(traceParsers().distinct:_*)
+        fastparse.parsers.Combinators.Either(traceParsers.distinct:_*)
       )
     }
 
@@ -196,7 +198,6 @@ trait Parser[+T] extends ParserApi[T] with Precedence{
             traceIndex: Int = -1,
             instrument: (Parser[_], Int, () => Result[_]) => Unit = null)
             : Result[T] = {
-    println("PARSING " + trace + " " + traceIndex)
     parseRec(ParseCtx(input, 0, trace, traceIndex, this, index, instrument), index).toResult
 
   }
@@ -231,11 +232,11 @@ trait ParserApi[+T]{ this: Parser[T] =>
     f.fullStack = Nil
     if (trace && (f.traceIndex >= index || f.traceIndex == -1)) {
       if (f.traceIndex == index || f.traceIndex == -1) {
-        f.traceParsers0 = traceParsers
-        println("fail A")
+        f.traceParsers = traceParsers
+//        println("fail A")
       } else {
-        f.traceParsers0 = Nil
-        println("fail B")
+        f.traceParsers = Nil
+//        println("fail B")
       }
     }
     f.lastParser = this
@@ -250,12 +251,12 @@ trait ParserApi[+T]{ this: Parser[T] =>
 
     if (trace) {
       if (index >= f.traceIndex) {
-        f.traceParsers0 = traceParsers
-        println(Console.RED + "failMore " + Console.GREEN+ this + Console.RESET + " " + f.traceParsers0 + " " + f.traceIndex + " " + index)
+        f.traceParsers = traceParsers
+//        println(Console.RED + "failMore " + Console.GREEN+ this + Console.RESET + " " + f.traceParsers + " " + f.traceIndex + " " + index)
       } else{
-        println(Console.BLUE + "skip " + Console.GREEN + this + Console.RESET + " " + f.traceParsers0 + " " + f.traceIndex + " " + index)
+//        println(Console.BLUE + "skip " + Console.GREEN + this + Console.RESET + " " + f.traceParsers + " " + f.traceIndex + " " + index)
       }
-      println("AddFullStack " + this + " " + f.fullStack)
+//      println("AddFullStack " + this + " " + f.fullStack)
       f.fullStack = new Frame(index, this) :: f.fullStack
     }
     f.cut = f.cut | cut
@@ -267,7 +268,7 @@ trait ParserApi[+T]{ this: Parser[T] =>
                  index: Int,
                  traceParsers: List[Parser[_]],
                  cut: Boolean) = {
-    println(Console.CYAN + "success " + Console.GREEN+ this + Console.RESET + " " + traceParsers)
+//    println(Console.CYAN + "success " + Console.GREEN+ this + Console.RESET + " " + traceParsers)
     val s1 = s.asInstanceOf[Mutable.Success[T]]
 
     s1.value = value
