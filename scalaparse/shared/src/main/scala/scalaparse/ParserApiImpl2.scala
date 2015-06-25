@@ -13,16 +13,16 @@ object ParserApiImpl2 {
   case class CustomSequence[+T, +R, +V](WL: P0, p0: P[T], p: P[V], cut: Boolean)(implicit ev: Sequencer[T, V, R]) extends P[R] {
     def parseRec(cfg: ParseCtx, index: Int) = {
       p0.parseRec(cfg, index) match {
-        case f: Result.Failure.Mutable => failMore(f, index, cfg.trace, false)
-        case s: Result.Success.Mutable[T] =>
+        case f: Mutable.Failure => failMore(f, index, cfg.trace, false)
+        case s: Mutable.Success[T] =>
           val index0 = s.index
           val cut0 = s.cut
           WL.parseRec(cfg, s.index) match {
             case s1: Result.Success[Unit] =>
               val index1 = s1.index
               p.parseRec(cfg, s1.index) match {
-                case f: Result.Failure.Mutable => failMore(f, s.index, cfg.trace, cut | cut0)
-                case s2: Result.Success.Mutable[V] =>
+                case f: Mutable.Failure => failMore(f, s.index, cfg.trace, cut | cut0)
+                case s2: Mutable.Success[V] =>
                   val index2 = s2.index
                   val cut2 = s2.cut
                   val newIndex = if (index2 > index1 || index1 == cfg.input.length) index2 else index0

@@ -446,10 +446,10 @@
                 However, immutability poses a challenge: immutability usually involves lots of "copy & update" operations rather than "mutation" operations, and on the JVM that means excessive garbage generation and collection. This is harmful for performance.
 
             @p
-                Thus FastParse performs some tricks internally to save allocations: the immutable @hl.scala{Parser.Success} and @hl.scala{Parser.Failure} result types are actually interfaces hiding @hl.scala{Parser.Success.Mutable} and @hl.scala{Parser.Failure.Mutable} implementations, which have entirely mutable fields. 
+                Thus FastParse performs some tricks internally to save allocations: the immutable @hl.scala{Parser.Success} and @hl.scala{Parser.Failure} result types are actually interfaces hiding @hl.scala{Parser.Mutable.Success} and @hl.scala{Parser.Mutable.Failure} implementations, which have entirely mutable fields.
 
             @p
-                This means that the same @hl.scala{Parser.Success.Mutable} and @hl.scala{Parser.Failure.Mutable} objects are shared throughout an entire parsing run, mutated as the parse progresses, while the external user only sees an immutable facade. This also means that a run of the large-and-complex @sect.ref{ScalaParse} on a hundreds-of-kb source file results in exactly @i{three} allocations in all: one @hl.scala{Parser.Success.Mutable}, one @hl.scala{Parser.Failure.Mutable}, and one @hl.scala{Ctx} object holding them together.
+                This means that the same @hl.scala{Parser.Mutable.Success} and @hl.scala{Parser.Mutable.Failure} objects are shared throughout an entire parsing run, mutated as the parse progresses, while the external user only sees an immutable facade. This also means that a run of the large-and-complex @sect.ref{ScalaParse} on a hundreds-of-kb source file results in exactly @i{three} allocations in all: one @hl.scala{Parser.Mutable.Success}, one @hl.scala{Parser.Mutable.Failure}, and one @hl.scala{Ctx} object holding them together.
 
         @sect{Internal Optimizations}
             @p

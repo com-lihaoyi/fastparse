@@ -17,32 +17,59 @@ sealed trait Result[+T]{
 
 }
 
-object Result{
-  trait Mutable[+T]{
-    def toResult: Result[T]
+trait Mutable[+T]{
+  def toResult: Result[T]
+}
+object Mutable{
+  
+  case class Success[T](var value: T,
+                        var index: Int,
+                        var traceParsers: List[Parser[_]],
+                        var cut: Boolean = false) extends Mutable[T]{
+    override def toString = s"Success($value, $index)"
+    def toResult = Result.Success(value, index)
   }
-  case class Frame(index: Int, parser: Parser[_])
+  def unapply[T](x: Result[T]) = x match{
+    case s: Success[T] => Some((s.value, s.index))
+    case _ => None
+  }
+  
+  case class Failure(var input: String,
+                     var fullStack: List[Frame],
+                     var index: Int,
+                     var lastParser: Parser[_],
+                     originalParser: Parser[_],
+                     originalIndex: Int,
+                     traceIndex: Int,
+                     var traceParsers0: List[Parser[_]],
+                     var cut: Boolean) extends Mutable[Nothing]{
+    def toResult = Result.Failure(input, fullStack1, index, lastParser, () => traceParsers)
+    lazy val fullStack1 = XXX._2
+    lazy val traceParsers = XXX._1
 
+    lazy val XXX: (List[Parser[_]], List[Frame]) = {
+      println("\n\ntraces " + System.identityHashCode(this))
+      if (traceParsers0 != Nil) (traceParsers0, fullStack)
+      else {
+        val traced = originalParser.parse(input, originalIndex, true, index, null)
+          .asInstanceOf[Result.Failure]
+
+        (traced.traceParsers(), traced.fullStack)
+      }
+
+    }
+  }
+}
+
+case class Frame(index: Int, parser: Parser[_])
+
+object Result{
   /**
    * @param value The result of this parse
    * @param index The index where the parse completed; may be less than
    * the length of input
    */
   case class Success[+T](value: T, index: Int) extends Result[T]
-  object Success{
-    case class Mutable[T](var value: T,
-                           var index: Int,
-                           var traceParsers: List[Parser[_]],
-                           var cut: Boolean = false) extends Result.Mutable[T]{
-      override def toString = s"Success($value, $index)"
-      def toResult = Result.Success(value, index)
-    }
-    def unapply[T](x: Result[T]) = x match{
-      case s: Success[T] => Some((s.value, s.index))
-      case _ => None
-    }
-  }
-
   /**
    * @param input The input string for the failed parse. Useful so the [[Failure]]
    *              object can pretty-print snippet
@@ -105,31 +132,6 @@ object Result{
       case s: Failure => Some((s.lastParser, s.index))
       case _ => None
     }
-    case class Mutable(var input: String,
-                       var fullStack: List[Frame],
-                       var index: Int,
-                       var lastParser: Parser[_],
-                       originalParser: Parser[_],
-                       originalIndex: Int,
-                       traceIndex: Int,
-                       var traceParsers0: List[Parser[_]],
-                       var cut: Boolean) extends Result.Mutable[Nothing]{
-      def toResult = Result.Failure(input, fullStack1, index, lastParser, () => traceParsers)
-      lazy val fullStack1 = XXX._2
-      lazy val traceParsers = XXX._1
-
-      lazy val XXX: (List[Parser[_]], List[Frame]) = {
-        println("\n\ntraces " + System.identityHashCode(this))
-        if (traceParsers0 != Nil) (traceParsers0, fullStack)
-        else {
-          val traced = originalParser.parse(input, originalIndex, true, index, null)
-                                     .asInstanceOf[Failure]
-
-          (traced.traceParsers(), traced.fullStack)
-        }
-
-      }
-    }
 
   }
 }
@@ -150,8 +152,8 @@ case class ParseCtx(input: String,
                     originalParser: Parser[_],
                     originalIndex: Int,
                     instrument: (Parser[_], Int, () => Result[_]) => Unit){
-  val failure = Failure.Mutable(input, Nil, 0, null, originalParser, originalIndex, traceIndex, Nil, false)
-  val success = Success.Mutable(null, 0, Nil, false)
+  val failure = Mutable.Failure(input, Nil, 0, null, originalParser, originalIndex, traceIndex, Nil, false)
+  val success = Mutable.Success(null, 0, Nil, false)
 }
 
 
@@ -202,7 +204,7 @@ trait Parser[+T] extends ParserApi[T] with Precedence{
   /**
    * Parses the given `input` starting from the given `index` and `logDepth`
    */
-  def parseRec(cfg: ParseCtx, index: Int): Result.Mutable[T]
+  def parseRec(cfg: ParseCtx, index: Int): Mutable[T]
 
   /**
    * Whether or not this parser should show up when [[Failure.trace]] is called
@@ -219,7 +221,7 @@ trait Parser[+T] extends ParserApi[T] with Precedence{
 }
 
 trait ParserApi[+T]{ this: Parser[T] =>
-  def fail(f: Failure.Mutable,
+  def fail(f: Mutable.Failure,
            index: Int,
            trace: Boolean,
            traceParsers: List[Parser[_]] = List(this),
@@ -240,7 +242,7 @@ trait ParserApi[+T]{ this: Parser[T] =>
     f
   }
 
-  def failMore(f: Failure.Mutable,
+  def failMore(f: Mutable.Failure,
                index: Int,
                trace: Boolean,
                traceParsers: List[Parser[_]],
@@ -254,19 +256,19 @@ trait ParserApi[+T]{ this: Parser[T] =>
         println(Console.BLUE + "skip " + Console.GREEN + this + Console.RESET + " " + f.traceParsers0 + " " + f.traceIndex + " " + index)
       }
       println("AddFullStack " + this + " " + f.fullStack)
-      f.fullStack = new Result.Frame(index, this) :: f.fullStack
+      f.fullStack = new Frame(index, this) :: f.fullStack
     }
     f.cut = f.cut | cut
     f
   }
 
-  def success[T](s: Success.Mutable[_],
+  def success[T](s: Mutable.Success[_],
                  value: T,
                  index: Int,
                  traceParsers: List[Parser[_]],
                  cut: Boolean) = {
     println(Console.CYAN + "success " + Console.GREEN+ this + Console.RESET + " " + traceParsers)
-    val s1 = s.asInstanceOf[Success.Mutable[T]]
+    val s1 = s.asInstanceOf[Mutable.Success[T]]
 
     s1.value = value
     s1.index = index
