@@ -14,32 +14,30 @@ object Transformers {
   case class Mapper[T, V](p: Parser[T], f: T => V) extends Parser[V]{
     def parseRec(cfg: ParseCtx, index: Int) = {
       p.parseRec(cfg, index) match{
-        case s: Success.Mutable[T] => success(s, f(s.value), s.index, s.cut)
-        case f: Failure.Mutable => failMore(f, index, cfg.trace)
+        case s: Success.Mutable[T] => success(s, f(s.value), s.index, s.traceParsers, s.cut)
+        case f: Failure.Mutable => failMore(f, index, cfg.trace, f.traceParsers0)
       }
     }
     override def toString = p.toString
   }
 
-  case class FlatMapped[T, V](p1: Parser[T],
-                              func: T => Parser[V])
+  case class FlatMapped[T, V](p1: Parser[T], func: T => Parser[V])
     extends Parser[V] {
-    def parseRec(cfg: ParseCtx, index: Int): Result[V] = {
+    def parseRec(cfg: ParseCtx, index: Int) = {
       p1.parseRec(cfg, index) match{
-        case f: Result.Failure.Mutable => failMore(f, index, cfg.trace, false)
+        case f: Result.Failure.Mutable => failMore(f, index, cfg.trace, f.traceParsers0, cut = false)
         case s: Result.Success.Mutable[T] => func(s.value).parseRec(cfg, s.index)
       }
     }
   }
 
-  case class Filtered[T](p: Parser[T],
-                            predicate: T => Boolean)
+  case class Filtered[T](p: Parser[T], predicate: T => Boolean)
     extends Parser[T] {
-    override def parseRec(cfg: ParseCtx, index: Int): Result[T] = {
+    override def parseRec(cfg: ParseCtx, index: Int) = {
       p.parseRec(cfg, index) match{
-        case f: Result.Failure.Mutable => failMore(f, index, cfg.trace, false)
+        case f: Result.Failure.Mutable => failMore(f, index, cfg.trace, f.traceParsers0, cut = false)
         case s: Result.Success.Mutable[T] =>
-          if (predicate(s.value)) s else fail(cfg.failure,index,false)
+          if (predicate(s.value)) s else fail(cfg.failure,index, cfg.trace, s.traceParsers, cut = false)
       }
     }
 

@@ -42,15 +42,16 @@ object MathTests extends TestSuite{
     'fail{
       def check(input: String, trace: String) = {
         val failure = expr.parse(input, trace = false).asInstanceOf[Result.Failure]
-        assert(trace == failure.trace)
+        assert(trace.trim == failure.trace.trim)
       }
       check(
         "(+)",
-        """(number | parens | "(" | CharIn("0123456789")):1 ..."+)""""
+        """expr:0 / addSub:0 / divMul:0 / factor:0 / parens:0 / addSub:1""" +
+        """ / divMul:1 / factor:1 / (number | parens):1 ..."+)" """
       )
       check(
         "1+-",
-        """(number | parens | "(" | CharIn("0123456789")):2 ..."-""""
+        """ expr:0 / addSub:0 / divMul:2 / factor:2 / (number | parens):2 ..."-" """
       )
     }
   }

@@ -117,18 +117,18 @@ object IndentationTests extends TestSuite{
     'fail{
       def check(input: String, trace: String) = {
         val failure = expr.parse(input, trace = false).asInstanceOf[Result.Failure]
-        assert(trace == failure.trace)
+        assert(trace.trim == failure.trace.trim)
       }
       check(
         "+",
-        """"\n":1 ..."""""
+        """ expr:0 / block:0 / "\n":1 ..."" """"
       )
       check(
         """+
           |  1
           |1
         """.stripMargin.trim,
-        """(End | "\n  " | CharIn("0123456789")):5 ..."\n1""""
+        """ expr:0 / addSub:0 / divMul:0 / factor:0 / parens:0 / addSub:3 / divMul:3 / factor:3 / (addSub | " "):3 ..."+  )" """
       )
       check(
         """+
