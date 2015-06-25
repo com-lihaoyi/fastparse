@@ -64,7 +64,7 @@ object WhiteSpaceMathTests extends TestSuite{
     }
     'fail{
       def check(input: String, trace: String) = {
-        val failure = expr.parse(input, trace = false).asInstanceOf[Result.Failure]
+        val failure = expr.parse(input, traceFailure = false).asInstanceOf[Result.Failure]
         assert(trace.trim == failure.trace.trim)
       }
       * - check(

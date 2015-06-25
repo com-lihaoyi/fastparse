@@ -2,6 +2,15 @@ package fastparse
 package core
 import acyclic.file
 import fastparse.Utils._
+
+/**
+ * A single frame of the parser call stack
+ *
+ * @param index The index at which point this parse frame started
+ * @param parser The parser which was attempted at this index
+ */
+case class Frame(index: Int, parser: Parser[_])
+
 /**
  * Result of a parse, whether successful or failed
  */
@@ -17,59 +26,11 @@ sealed trait Result[+T]{
 
 }
 
-/**
- * An internal mirror of the [[Result]] classes, except it contains far
- * more data and is mutable to maximize performance
- */
-trait Mutable[+T]{
-  def toResult: Result[T]
-}
-object Mutable{
-  
-  case class Success[T](var value: T,
-                        var index: Int,
-                        var traceParsers: List[Parser[_]],
-                        var cut: Boolean = false) extends Mutable[T]{
-    override def toString = s"Success($value, $index)"
-    def toResult = Result.Success(value, index)
-  }
-  def unapply[T](x: Result[T]) = x match{
-    case s: Success[T] => Some((s.value, s.index))
-    case _ => None
-  }
-  
-  case class Failure(var input: String,
-                     var fullStack: List[Frame],
-                     var index: Int,
-                     var lastParser: Parser[_],
-                     originalParser: Parser[_],
-                     originalIndex: Int,
-                     traceIndex: Int,
-                     var traceParsers: List[Parser[_]],
-                     var cut: Boolean) extends Mutable[Nothing]{
-    def toResult = {
-      val (fullStack1, traceParsers1) = {
-        if (traceParsers != Nil) (traceParsers, fullStack)
-        else {
-          val traced = originalParser.parse(input, originalIndex, true, index, null)
-            .asInstanceOf[Result.Failure]
-          //        ???
-          (traced.traceParsers, traced.fullStack)
-        }
-      }
-
-      Result.Failure(input, traceParsers1, index, lastParser, fullStack1)
-    }
-  }
-}
-
-case class Frame(index: Int, parser: Parser[_])
-
 object Result{
   /**
    * @param value The result of this parse
    * @param index The index where the parse completed; may be less than
-   * the length of input
+   *              the length of input
    */
   case class Success[+T](value: T, index: Int) extends Result[T]
   /**
@@ -77,10 +38,12 @@ object Result{
    *              object can pretty-print snippet
    * @param fullStack The entire stack trace where the parse failed, containing every
    *                  parser in the stack and the index where the parser was used, excluding
-   *                  the final parser and index where the parse failed
-
+   *                  the final parser and index where the parse failed. Only set if
+   *                  `parse` is called with `trace = true`, otherwise empty
    * @param index The index in the parse where this parse failed
    * @param lastParser The deepest parser in the parse which failed
+   * @param traceParsers A list of parsers that could have succeeded at the location
+   *                     that this
    */
   case class Failure(input: String,
                      fullStack: List[Frame],
@@ -137,6 +100,81 @@ object Result{
 
   }
 }
+/**
+ * An internal mirror of the [[Result]] classes, except it contains far
+ * more data and is mutable to maximize performance
+ */
+trait Mutable[+T]{
+  /**
+   * Snapshots this mutable result and converts it into
+   * an immutable [[Result]] object
+   */
+  def toResult: Result[T]
+
+  /**
+   * A set of parsers which have failed to parse at
+   * the configured `traceIndex`. This is used to query,
+   * at any particular index, what parsers could have
+   * succeeded.
+   */
+  def traceParsers: List[Parser[_]]
+
+  /**
+   * Whether or not the parser encountered a Cut before reaching
+   * this success, which prevents backtracking.
+   */
+  def cut: Boolean
+}
+object Mutable{
+
+  case class Success[T](var value: T,
+                        var index: Int,
+                        var traceParsers: List[Parser[_]],
+                        var cut: Boolean = false) extends Mutable[T]{
+    override def toString = s"Success($value, $index)"
+    def toResult = Result.Success(value, index)
+  }
+  def unapply[T](x: Result[T]) = x match{
+    case s: Success[T] => Some((s.value, s.index))
+    case _ => None
+  }
+
+  /**
+   * A mutable version of [[Result.Failure]] with extra data.
+   * @param originalParser the original parser that was attempted and failed.
+   *                       Used to repeat the parse with tracing when
+   *                       generating error messages
+   * @param originalIndex The original index that [[originalParser]] was
+   *                      attemped at
+   * @param traceIndex The index at which parser traces are required; -1 if empty
+   */
+  case class Failure(var input: String,
+                     var fullStack: List[Frame],
+                     var index: Int,
+                     var lastParser: Parser[_],
+                     originalParser: Parser[_],
+                     originalIndex: Int,
+                     traceIndex: Int,
+                     var traceParsers: List[Parser[_]],
+                     var cut: Boolean) extends Mutable[Nothing]{
+    def toResult = {
+      val (fullStack1, traceParsers1) = {
+        if (traceParsers != Nil) (traceParsers, fullStack)
+        else {
+          val traced = originalParser.parseRec(
+            ParseCtx(input, 0, index, originalParser, originalIndex, (_, _, _) => ()),
+            originalIndex
+          ).asInstanceOf[Mutable.Failure]
+
+          (traced.traceParsers, traced.fullStack)
+        }
+      }
+
+      Result.Failure(input, traceParsers1, index, lastParser, fullStack1)
+    }
+  }
+}
+
 import fastparse.core.Result._
 
 /**
@@ -145,11 +183,9 @@ import fastparse.core.Result._
  *
  * @param input The string that is currently being parsed
  * @param logDepth
- * @param trace
  */
 case class ParseCtx(input: String,
                     logDepth: Int,
-                    trace: Boolean,
                     traceIndex: Int,
                     originalParser: Parser[_],
                     originalIndex: Int,
@@ -178,11 +214,15 @@ trait Parser[+T] extends ParserApi[T] with Precedence{
    *              starts from the beginning of a string, but you can start
    *              from halfway through the string if you want.
    *
-   * @param trace Whether or not you want a full trace of any error messages
-   *              that appear. Without it, you only get the single deepest
-   *              parser in the call-stack when it failed, and its index. With
-   *              `trace`, you get every parser all the way to the top, though
-   *              this comes with a ~20-40% slowdown.
+   * @param traceFailure Whether or not you want a full stack of any error
+   *                     messages that appear. Without it, you only get the
+   *                     single deepest parser in the call-stack when it
+   *                     failed, and its index. With `trace`, you get every
+   *                     parser all the way to the top, as well as every
+   *                     possible parser that could have succeeded at the
+   *                     location of the error. The downside is that it takes
+   *                     an extra parse to generate the error and thus slows
+   *                     down failed-parses by a factor of 2-3.
    *
    * @param instrument Allows you to pass in a callback that will get called
    *                   by every named rule, its index, as it itself given a
@@ -194,11 +234,10 @@ trait Parser[+T] extends ParserApi[T] with Precedence{
    */
   def parse(input: String,
             index: Int = 0,
-            trace: Boolean = false,
-            traceIndex: Int = -1,
+            traceFailure: Boolean = false,
             instrument: (Parser[_], Int, () => Result[_]) => Unit = null)
             : Result[T] = {
-    parseRec(ParseCtx(input, 0, trace, traceIndex, this, index, instrument), index).toResult
+    parseRec(ParseCtx(input, 0, -1, this, index, instrument), index).toResult
 
   }
 
@@ -224,19 +263,16 @@ trait Parser[+T] extends ParserApi[T] with Precedence{
 trait ParserApi[+T]{ this: Parser[T] =>
   def fail(f: Mutable.Failure,
            index: Int,
-           trace: Boolean,
            traceParsers: List[Parser[_]] = List(this),
            cut: Boolean = false) = {
     f.index = index
     f.cut = cut
     f.fullStack = Nil
-    if (trace && (f.traceIndex >= index || f.traceIndex == -1)) {
-      if (f.traceIndex == index || f.traceIndex == -1) {
+    if (f.traceIndex != -1 && f.traceIndex >= index) {
+      if (f.traceIndex == index) {
         f.traceParsers = traceParsers
-//        println("fail A")
       } else {
         f.traceParsers = Nil
-//        println("fail B")
       }
     }
     f.lastParser = this
@@ -245,18 +281,13 @@ trait ParserApi[+T]{ this: Parser[T] =>
 
   def failMore(f: Mutable.Failure,
                index: Int,
-               trace: Boolean,
                traceParsers: List[Parser[_]],
                cut: Boolean = false) = {
 
-    if (trace) {
+    if (f.traceIndex != -1) {
       if (index >= f.traceIndex) {
         f.traceParsers = traceParsers
-//        println(Console.RED + "failMore " + Console.GREEN+ this + Console.RESET + " " + f.traceParsers + " " + f.traceIndex + " " + index)
-      } else{
-//        println(Console.BLUE + "skip " + Console.GREEN + this + Console.RESET + " " + f.traceParsers + " " + f.traceIndex + " " + index)
       }
-//      println("AddFullStack " + this + " " + f.fullStack)
       f.fullStack = new Frame(index, this) :: f.fullStack
     }
     f.cut = f.cut | cut
@@ -268,7 +299,6 @@ trait ParserApi[+T]{ this: Parser[T] =>
                  index: Int,
                  traceParsers: List[Parser[_]],
                  cut: Boolean) = {
-//    println(Console.CYAN + "success " + Console.GREEN+ this + Console.RESET + " " + traceParsers)
     val s1 = s.asInstanceOf[Mutable.Success[T]]
 
     s1.value = value
