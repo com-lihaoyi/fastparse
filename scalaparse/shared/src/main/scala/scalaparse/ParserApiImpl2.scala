@@ -55,7 +55,9 @@ object ParserApiImpl2 {
 }
 /**
  * Custom version of `ParserApi`, that behaves the same as the
- * default but injects whitespace in between every pair of tokens
+ * default but injects whitespace in between every pair of tokens. Also
+ * provides replacement methods `repX` and `~~` if you wish to call the
+ * original un-modified versions of these operators.
  */
 class ParserApiImpl2[+T](p0: P[T], WL: P0) extends ParserApiImpl(p0)  {
 
@@ -67,8 +69,6 @@ class ParserApiImpl2[+T](p0: P[T], WL: P0) extends ParserApiImpl(p0)  {
   def repX[R](min: Int = 0, sep: P[_] = Pass)
              (implicit ev: Repeater[T, R]): P[R] = Repeat(p0, min, sep)
 
-  def pal2[T, V, R](p1: P[T], p2: P[V])(implicit ev: Sequencer[T, V, R]) =
-    new ParserApiImpl2(p1, WL) ~ p2
   override def rep[R](min: Int = 0, sep: P[_] = Pass)
                      (implicit ev: Repeater[T, R]): P[R] = {
     Repeat(p0, min, if (sep != Pass) WL ~ sep ~ WL else WL)

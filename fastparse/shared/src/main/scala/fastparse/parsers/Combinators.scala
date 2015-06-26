@@ -89,15 +89,23 @@ object Combinators {
    * dependencies between parsers.
    */
   case class Rule[+T](name: FuncName, p: () => Parser[T]) extends Parser[T]{
-    lazy val pCached = p()
+    private[this] lazy val pCached = p()
+
     def parseRec(cfg: ParseCtx, index: Int) = {
-      lazy val res  = pCached.parseRec(cfg, index) match{
-        case f: Mutable.Failure => failMore(f, index)
-        case s: Mutable.Success[T] => s
+
+      if (cfg.instrument == null) {
+        pCached.parseRec(cfg, index) match{
+          case f: Mutable.Failure => failMore(f, index)
+          case s: Mutable.Success[T] => s
+        }
+      } else {
+        lazy val res = pCached.parseRec(cfg, index) match{
+          case f: Mutable.Failure => failMore(f, index)
+          case s: Mutable.Success[T] => s
+        }
+        cfg.instrument(this, index, () => res.toResult)
+        res
       }
-      if (cfg.instrument == null) res
-      else cfg.instrument(this, index, () => res.toResult)
-      res
     }
     override def toString = name.name
     override def shortTraced = true
