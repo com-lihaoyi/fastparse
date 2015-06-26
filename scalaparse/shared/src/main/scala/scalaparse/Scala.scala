@@ -30,7 +30,7 @@ object Scala extends Core with Types with Exprs with Xml{
 
   val ClsDef = {
     val ClsAnnot = P( `@` ~ SimpleType ~ ArgList.? )
-    val Prelude = P( NotNewline ~ ( ClsAnnot.rep(1) ~ AccessMod.? | ClsAnnot.rep ~ AccessMod) )
+    val Prelude = P( NotNewline ~ ( ClsAnnot.rep(1) ~ AccessMod.? | AccessMod) )
     val ClsArgMod = P( Mod.rep ~ (`val` | `var`) )
     val ClsArg = P( Annot.rep ~ ClsArgMod.? ~ Id ~ `:` ~ Type ~ (`=` ~ ExprCtx.Expr).? )
 
@@ -53,9 +53,10 @@ object Scala extends Core with Types with Exprs with Xml{
 
   val PkgObj = P( ObjDef )
   val PkgBlock = P( QualId ~! `{` ~ TopStatSeq.? ~ `}` )
+  val Pkg = P( `package` ~! (PkgBlock | PkgObj) )
   val TopStatSeq: P0 = {
     val Tmpl = P( (Annot ~~ OneNLMax).rep ~ Mod.rep ~ (TraitDef | ClsDef | ObjDef) )
-    val TopStat = P( `package` ~! (PkgBlock | PkgObj) | Import | Tmpl )
+    val TopStat = P( Pkg | Import | Tmpl )
     P( TopStat.repX(1, Semis) )
   }
   val TopPkgSeq = P( ((`package` ~ QualId) ~~ !(WS ~ "{")).repX(1, Semis) )

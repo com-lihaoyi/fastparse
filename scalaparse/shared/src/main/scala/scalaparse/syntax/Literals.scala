@@ -13,13 +13,13 @@ trait Literals { l =>
    * really useful in e.g. {} blocks, where we want to avoid
    * capturing newlines so semicolon-inference would work
    */
-  val WS = P( (Basic.WSChars | Literals.Comment).rep )
+  val WS = P( NoTrace((Basic.WSChars | Literals.Comment).rep) )
 
   /**
    * Parses whitespace, including newlines.
    * This is the default for most things
    */
-  val WL = P( (Basic.WSChars | Literals.Comment | Basic.Newline).rep )
+  val WL = P( NoTrace((Basic.WSChars | Literals.Comment | Basic.Newline).rep) )
 
   val Semi = P( WS ~ Basic.Semi )
   val Semis = P( Semi.rep(1) ~ WS )
@@ -55,7 +55,7 @@ trait Literals { l =>
     val Null = Key.W("null")
 
     val OctalEscape = P( Digit ~ Digit.? ~ Digit.? )
-    val EscapedChars = P( "\\" ~! (CharIn("""btnfr'\"]""") | OctalEscape | UnicodeEscape ) )
+    val Escape = P( "\\" ~! (CharIn("""btnfr'\"]""") | OctalEscape | UnicodeEscape ) )
 
     // Note that symbols can take on the same values as keywords!
     val Symbol = P( Identifiers.PlainId | Identifiers.Keywords )
@@ -64,7 +64,7 @@ trait Literals { l =>
       // scalac 2.10 crashes if PrintableChar below is substituted by its body
       def PrintableChar = CharPred(CharPredicates.isPrintableChar)
 
-      P( (EscapedChars | PrintableChar) ~ "'" )
+      P( (Escape | PrintableChar) ~ "'" )
     }
 
     class InterpCtx(interp: Option[P0]){
@@ -82,12 +82,14 @@ trait Literals { l =>
        * it's a "real" escape sequence: worst come to worst it turns out
        * to be a dud and we go back into a CharsChunk next rep
        */
-      val CharsChunk = P( CharsWhile(!"\n\"\\$".contains(_)) )
-      val TripleChars = P( (CharsChunk | Interp | "\"".? ~ "\"".? ~ !"\"" ~ AnyChar).rep )
+      val StringChars = P( CharsWhile(!"\n\"\\$".contains(_)) )
+      val NonTripleQuoteChar = P( "\"".? ~ "\"".? ~ !"\"" ~ AnyChar )
+      val TripleChars = P( (StringChars | Interp | NonTripleQuoteChar).rep )
       val TripleTail = P( TQ ~ "\"".rep )
       def SingleChars(allowSlash: Boolean) = {
         val LiteralSlash = P( if(allowSlash) "\\" else Fail )
-        P( (CharsChunk | Interp | LiteralSlash | EscapedChars | !CharIn("\n\"") ~ AnyChar).rep )
+        val NonStringEnd = P( !CharIn("\n\"") ~ AnyChar )
+        P( (StringChars | Interp | LiteralSlash | Escape | NonStringEnd ).rep )
       }
       val String = {
         P {

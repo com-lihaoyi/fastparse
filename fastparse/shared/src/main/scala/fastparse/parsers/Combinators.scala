@@ -34,7 +34,22 @@ object Combinators {
     override def toString = p.toString
   }
 
-
+  /**
+   *
+   */
+  case class NoTrace[T](p: Parser[T]) extends Parser[T]{
+    def parseRec(cfg: ParseCtx, index: Int) = {
+      p.parseRec(cfg, index) match {
+        case s: Mutable.Success[_] =>
+          s.traceParsers = Nil
+          s
+        case f: Mutable.Failure =>
+          f.traceParsers = Nil
+          f
+      }
+    }
+    override def toString = p.toString
+  }
   /**
    * Wraps a parser and prints out the indices where it starts
    * and ends, together with its result
@@ -45,8 +60,23 @@ object Combinators {
       else {
         val indent = "  " * cfg.logDepth
         output(indent + "+" + msg + ":" + index)
-        val res = p.parseRec(cfg.copy(logDepth = cfg.logDepth + 1), index)
-        output(indent + "-" + msg + ":" + index + ":" + res)
+        val depth = cfg.logDepth
+        cfg.logDepth += 1
+        val res = p.parseRec(cfg, index)
+        cfg.logDepth = depth
+        val strRes = res match{
+          case s: Mutable.Success[T] => s"Success(${s.index}})"
+          case f: Mutable.Failure =>
+            val stack = Failure.filterFullStack(f.fullStack)
+            val trace = Failure.formatStackTrace(
+              stack,
+              f.input,
+              index,
+              Failure.formatParser(f.lastParser, index)
+            )
+            s"Failure($trace)"
+        }
+        output(indent + "-" + msg + ":" + index + ":" + strRes)
         res
       }
     }
@@ -62,8 +92,7 @@ object Combinators {
     lazy val pCached = p()
     def parseRec(cfg: ParseCtx, index: Int) = {
       lazy val res  = pCached.parseRec(cfg, index) match{
-        case f: Mutable.Failure =>
-          failMore(f, index)
+        case f: Mutable.Failure => failMore(f, index)
         case s: Mutable.Success[T] => s
       }
       if (cfg.instrument == null) res
@@ -81,7 +110,7 @@ object Combinators {
   case class Lookahead(p: Parser[_]) extends Parser[Unit]{
     def parseRec(cfg: ParseCtx, index: Int) = {
       p.parseRec(cfg, index) match{
-        case s: Mutable.Success[_] => success(cfg.success, (), index, Nil, false)
+        case s: Mutable.Success[_] => success(cfg.success, (), index, s.traceParsers, false)
         case f: Mutable.Failure => failMore(f, index)
       }
     }
@@ -181,8 +210,7 @@ object Combinators {
           }
         }
         p0.parseRec(cfg, index) match{
-          case f: Mutable.Failure =>
-            failMore(f, index, cut = f.cut)
+          case f: Mutable.Failure => failMore(f, index, cut = f.cut)
           case s: Mutable.Success[R] => rec(s.value, s.index, s.cut, 0, s.traceParsers)
         }
       }
@@ -259,7 +287,7 @@ object Combinators {
     def parseRec(cfg: ParseCtx, index: Int) = {
       p.parseRec(cfg, index) match{
         case f: Mutable.Failure => failMore(f, index, cut = false)
-        case s: Mutable.Success[T] => success(s, s.value, s.index, null, cut = true)
+        case s: Mutable.Success[T] => success(s, s.value, s.index, s.traceParsers, cut = true)
       }
     }
     override def opPred = Precedence.OtherOp

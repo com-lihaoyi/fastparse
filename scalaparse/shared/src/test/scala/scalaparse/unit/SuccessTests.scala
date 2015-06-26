@@ -50,6 +50,14 @@ object SuccessTests extends TestSuite{
       """.stripMargin
     )
     * - check(
+      """
+        |trait TaskExtra {
+        |  { x => x: A }
+        |}
+        |
+      """.stripMargin
+    )
+    * - check(
       """class GroupManager @Singleton @Inject() ()""".stripMargin
     )
     * - check(
@@ -574,6 +582,16 @@ object SuccessTests extends TestSuite{
         |    0
         |  }
         |}
+      """.stripMargin
+    )
+    * - check(
+      """
+        |trait BuiltinCommands {
+        |  val x = s => {}
+        |
+        |  @tailrec private[this] def doLoadFailed
+        |}
+        |
       """.stripMargin
     )
     * - check(

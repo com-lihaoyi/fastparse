@@ -56,7 +56,7 @@ trait Exprs extends Core with Types with Xml{
       }
       val Throw = P( `throw` ~! Expr )
       val Return = P( `return` ~! Expr.? )
-      val LambdaRhs = if (curlyBlock) P( BlockStat ) else P( Expr )
+      val LambdaRhs = if (curlyBlock) P( BlockChunk ) else P( Expr )
 
 
       val ImplicitLambda = P( `implicit` ~ (Id | `_`) ~ (`:` ~ InfixType).? ~ `=>` ~ LambdaRhs.? )
@@ -100,17 +100,16 @@ trait Exprs extends Core with Types with Xml{
 
   val BlockLambdaHead: P0 = P( "(" ~ BlockLambdaHead ~ ")" | `this` | Id | `_` )
   val BlockLambda = P( BlockLambdaHead  ~ (`=>` | `:` ~ InfixType ~ `=>`.?) )
-//      val BlockLambda = Pass
 
-  val BlockStat = {
+  val BlockChunk = {
     val Prelude = P( Annot.rep ~ `implicit`.? ~ `lazy`.? ~ LocalMod.rep )
-    val Tmpl = P( Prelude ~ BlockDef )
-    P( BlockLambda ~ (Import | Tmpl | StatCtx.Expr).? | BlockLambda.? ~ (Import | Tmpl | StatCtx.Expr) )
+    val BlockStat = P( Import | Prelude ~ BlockDef | StatCtx.Expr )
+    P( BlockLambda ~ BlockStat.? | BlockStat  )
   }
 
   val Block: P0 = {
     val BlockEnd = P( Semis.? ~ &("}" | `case`) )
-    val Body = P( BlockStat.repX(sep = Semis) )
+    val Body = P( BlockChunk.repX(sep = Semis) )
     P( Semis.? ~ BlockLambda.? ~ Body ~! BlockEnd )
   }
 

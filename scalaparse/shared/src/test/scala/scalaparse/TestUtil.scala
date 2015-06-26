@@ -16,13 +16,14 @@ object TestUtil {
 //    println(input)
     Scala.CompilationUnit.parse(input) match{
       case f: Result.Failure =>
-        val Result.Frame(index, parser) = f.stack.last
-        val parsedFound = input.slice(index, index + 10)
+
+        val parsedExpected = f.expected
+        val parsedFound = input.slice(f.index, f.index + 10)
         val stack = f.trace
         assert(
-        { implicitly(input);
-          implicitly(stack);
-          parser.toString == expected.trim && parsedFound.startsWith(found)}
+        { implicitly(input)
+          implicitly(stack)
+          parsedExpected.trim == expected.trim && parsedFound.startsWith(found)}
         )
       case s: Result.Success[_] => assert{implicitly(input); false}
     }

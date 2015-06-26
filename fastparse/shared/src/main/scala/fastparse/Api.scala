@@ -20,7 +20,7 @@ trait pkg{
   val CharsWhile = Intrinsics.CharsWhile
   val CharPredicates = fastparse.CharPredicates
   val StringIn = Intrinsics.StringIn
-
+  val NoTrace = parsers.Combinators.NoTrace
   val & = parsers.Combinators.Lookahead
 
   implicit def wspStr(s: String): P0 =
