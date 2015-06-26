@@ -104,7 +104,7 @@ trait Exprs extends Core with Types with Xml{
   val BlockChunk = {
     val Prelude = P( Annot.rep ~ `implicit`.? ~ `lazy`.? ~ LocalMod.rep )
     val BlockStat = P( Import | Prelude ~ BlockDef | StatCtx.Expr )
-    P( BlockLambda ~ BlockStat.? | BlockStat  )
+    P( BlockLambda.rep ~ BlockStat.rep(sep = Semis) )
   }
 
   val Block: P0 = {
