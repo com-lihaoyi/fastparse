@@ -4,7 +4,7 @@ import fastparse.noApi._
 trait Types extends Core{
   private[this] implicit def parserApi[T, V](p0: T)(implicit c: T => P[V])
   : ParserApiImpl2[V] =
-    new ParserApiImpl2[V](c(p0), WL)
+    new ParserApiImpl2[V](c(p0), WL0)
   def TypeExpr: P0
   def ValVarDef: P0
   def FunDef: P0
@@ -15,7 +15,7 @@ trait Types extends Core{
     P( (`private` | `protected`) ~ AccessQualifier.? )
   }
   val Dcl: P0 = {
-    P( WL ~ ((`val` | `var`) ~! ValVarDef | `def` ~! FunDef | `type` ~! TypeDef) )
+    P( Pass ~ ((`val` | `var`) ~! ValVarDef | `def` ~! FunDef | `type` ~! TypeDef) )
   }
 
   val Mod: P0 = P( LocalMod | AccessMod | `override` )
@@ -32,17 +32,18 @@ trait Types extends Core{
 
   val CompoundType = {
     val Refinement = P( OneNLMax ~ `{` ~ Dcl.repX(sep=Semis) ~ `}` )
-    val NamedType = P( (WL ~ AnnotType).rep(1, `with` ~!) )
+    val NamedType = P( (Pass ~ AnnotType).rep(1, `with` ~!) )
     P( NamedType ~~ Refinement.? | Refinement )
   }
-  val AnnotType = P(SimpleType ~~ (NotNewline ~~ (NotNewline ~ Annot).repX(1)).? )
+  val NLAnnot = P( NotNewline ~ Annot )
+  val AnnotType = P(SimpleType ~~ NLAnnot.repX )
 
   val SimpleType: P0 = {
     // Can't `cut` after the opening paren, because we might be trying to parse `()`
     // or `() => T`! only cut after parsing one type
     val TupleType = P( "(" ~ Type.rep(sep= "," ~!) ~ ")" )
     val BasicType = P( TupleType | StableId ~ ("." ~ `type`).? | `_` )
-    P( BasicType ~ (WL ~ (TypeArgs | `#` ~! Id)).rep )
+    P( BasicType ~ (Pass ~ (TypeArgs | `#` ~! Id)).rep )
   }
 
   val TypeArgs = P( "[" ~! Type.rep(sep="," ~!) ~ "]" )
@@ -51,12 +52,12 @@ trait Types extends Core{
   val FunSig: P0 = {
     val FunArg = P( Annot.rep ~ Id ~ (`:` ~! Type).? ~ (`=` ~! TypeExpr).? )
     val Args = P( FunArg.rep(1, "," ~!) )
-    val FunArgs = P( OneNLMax ~ "(" ~! (WL ~ `implicit`).? ~ Args.? ~ ")" )
+    val FunArgs = P( OneNLMax ~ "(" ~! (Pass ~ `implicit`).? ~ Args.? ~ ")" )
     val FunTypeArgs = P( "[" ~! (Annot.rep ~ TypeArg).rep(1, "," ~!) ~ "]" )
-    P( (Id | `this`) ~ (WL ~ FunTypeArgs).? ~~ FunArgs.rep )
+    P( (Id | `this`) ~ (Pass ~ FunTypeArgs).? ~~ FunArgs.rep )
   }
 
-  val TypeBounds: P0 = P( (WL ~ `>:` ~! Type).? ~ (`<:` ~! Type).? )
+  val TypeBounds: P0 = P( (Pass ~ `>:` ~! Type).? ~ (`<:` ~! Type).? )
   val TypeArg: P0 = {
     val CtxBounds = P((`<%` ~! Type).rep ~ (`:` ~! Type).rep)
     P((Id | `_`) ~ TypeArgList.? ~ TypeBounds ~ CtxBounds)

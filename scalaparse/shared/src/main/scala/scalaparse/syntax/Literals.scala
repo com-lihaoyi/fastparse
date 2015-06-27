@@ -13,13 +13,14 @@ trait Literals { l =>
    * really useful in e.g. {} blocks, where we want to avoid
    * capturing newlines so semicolon-inference would work
    */
-  val WS = P( NoTrace((Basic.WSChars | Literals.Comment).rep) )
+  val WS = P( NoCut(NoTrace((Basic.WSChars | Literals.Comment).rep)) )
 
   /**
    * Parses whitespace, including newlines.
    * This is the default for most things
    */
-  val WL = P( NoTrace((Basic.WSChars | Literals.Comment | Basic.Newline).rep) )
+  val WL0 = P( NoTrace((Basic.WSChars | Literals.Comment | Basic.Newline).rep) )("WL")
+  val WL = P( NoCut(WL0) )
 
   val Semi = P( WS ~ Basic.Semi )
   val Semis = P( Semi.rep(1) ~ WS )
@@ -28,7 +29,7 @@ trait Literals { l =>
   val NotNewline: P0 = P( &( WS ~ !Basic.Newline ) )
   val OneNLMax: P0 = {
     val ConsumeComments = P( (Basic.WSChars.? ~ Literals.Comment ~ Basic.WSChars.? ~ Basic.Newline).rep )
-    P( WS ~ Basic.Newline.? ~ ConsumeComments ~ NotNewline )
+    P( NoCut( WS ~ Basic.Newline.? ~ ConsumeComments ~ NotNewline) )
   }
   def Pattern: P0
   object Literals{
@@ -47,7 +48,7 @@ trait Literals { l =>
     // terminal node. That means that a comment before any terminal will
     // prevent any backtracking from working, which is not what we want!
     val CommentChunk = P( CharsWhile(!"/*".contains(_)) | MultilineComment | !"*/" ~ AnyChar )
-    val MultilineComment: P0 = P( "/*" ~ CommentChunk.rep ~ "*/" )
+    val MultilineComment: P0 = P( "/*" ~! CommentChunk.rep ~ "*/" )
     val SameLineCharChunks = P( CharsWhile(!"\n\r".contains(_))  | !Basic.Newline ~ AnyChar )
     val LineComment = P( "//" ~ SameLineCharChunks.rep ~ &(Basic.Newline | End) )
     val Comment: P0 = P( MultilineComment | LineComment )

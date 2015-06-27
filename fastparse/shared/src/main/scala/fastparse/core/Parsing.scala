@@ -26,7 +26,7 @@ sealed trait Result[+T]{
    */
   def get: Result.Success[T] = this match{
     case s: Result.Success[T] => s
-    case f: Result.Failure => throw new Exception(f.trace)
+    case f: Result.Failure => throw new Exception(f.traced.trace)
   }
 
 }
@@ -39,48 +39,37 @@ object Result{
    */
   case class Success[+T](value: T, index: Int) extends Result[T]
   /**
+   * Simple information about a parse failure. Also contains the original parse
+   * information necessary to construct the traced failure. That contains more
+   * information but is more costly to compute and is thus computed lazily on
+   * demand.
+   * 
    * @param input The input string for the failed parse. Useful so the [[Failure]]
    *              object can pretty-print snippet
-   * @param fullStack The entire stack trace where the parse failed, containing every
-   *                  parser in the stack and the index where the parser was used, excluding
-   *                  the final parser and index where the parse failed. Only set if
-   *                  `parse` is called with `trace = true`, otherwise empty
    * @param index The index in the parse where this parse failed
    * @param lastParser The deepest parser in the parse which failed
-   * @param traceParsers A list of parsers that could have succeeded at the location
-   *                     that this
    */
   case class Failure(input: String,
-                     fullStack: List[Frame],
                      index: Int,
                      lastParser: Parser[_],
-                     traceParsers: List[Parser[_]]) extends Result[Nothing]{
-    /**
-     * A slimmed down version of [[fullStack]], this only includes named
-     * [[parsers.Combinators.Rule]] objects as well as the final Parser (whether named or not)
-     * and index where the parse failed for easier reading.
-     */
-    lazy val stack = Failure.filterFullStack(fullStack)
+                     traceData: (Int, Parser[_])) extends Result[Nothing]{
+
+    lazy val traced = {
+      val (originalIndex, originalParser) = traceData
+
+      val mutFailure = originalParser.parseRec(
+        new ParseCtx(input, 0, index, originalParser, originalIndex, (_, _, _) => ()),
+        originalIndex
+      ).asInstanceOf[Mutable.Failure]
 
 
-
-    lazy val expected0 = new Precedence {
-      def opPred = if (traceParsers.length == 1) traceParsers(0).opPred else Precedence.|
-      override def toString = traceParsers.map(opWrap).mkString(" | ")
+      new TracedFailure(input, index, mutFailure.fullStack, mutFailure.traceParsers)
     }
 
-    def expected = expected0.toString
-    /**
-     * A one-line snippet that tells you what the state of the parser was
-     * when it failed. This message is completely derived from other values
-     * available on this object, so feel free to use the data yourself if
-     * the default error message isn't to your liking.
-     */
-    lazy val trace = {
-      Failure.formatStackTrace(stack, input, index, Failure.formatParser(expected0, index))
-    }
-
-    override def toString = s"Failure($trace)"
+    def msg = Failure.formatStackTrace(
+      Nil, input, index, Failure.formatParser(lastParser, index)
+    )
+    override def toString = s"Failure($msg)"
   }
   object Failure {
     def formatParser(p: Precedence, i: Int) = {
@@ -107,6 +96,50 @@ object Result{
       case s: Failure => Some((s.lastParser, s.index))
       case _ => None
     }
+
+  }
+
+  /**
+   * A failure containing detailed information about a parse failure. This is more
+   * expensive to compute than a simple error message and is thus not generated
+   * by default.
+   *
+   * @param fullStack The entire stack trace where the parse failed, containing every
+   *                  parser in the stack and the index where the parser was used, excluding
+   *                  the final parser and index where the parse failed. Only set if
+   *                  `parse` is called with `trace = true`, otherwise empty
+   * @param traceParsers A list of parsers that could have succeeded at the location
+   *                     that this
+   */
+  case class TracedFailure(input: String,
+                           index: Int,
+                           fullStack: List[Frame],
+                           traceParsers: List[Parser[_]]){
+
+    lazy val expected0 = new Precedence {
+      def opPred = if (traceParsers.length == 1) traceParsers(0).opPred else Precedence.|
+      override def toString = traceParsers.map(opWrap).mkString(" | ")
+    }
+
+    def expected = expected0.toString
+
+    /**
+     * A slimmed down version of [[fullStack]], this only includes named
+     * [[parsers.Combinators.Rule]] objects as well as the final Parser (whether named or not)
+     * and index where the parse failed for easier reading.
+     */
+    lazy val stack = Failure.filterFullStack(fullStack)
+    
+    /**
+     * A one-line snippet that tells you what the state of the parser was
+     * when it failed. This message is completely derived from other values
+     * available on this object, so feel free to use the data yourself if
+     * the default error message isn't to your liking.
+     */
+    lazy val trace = {
+      Failure.formatStackTrace(stack, input, index, Failure.formatParser(expected0, index))
+    }
+  
 
   }
 }
@@ -180,19 +213,7 @@ object Mutable{
       traceParsers0 = x
     }
     def toResult = {
-      val (fullStack1, traceParsers1) = {
-        if (traceParsers != Nil) (fullStack, traceParsers)
-        else {
-          val traced = originalParser.parseRec(
-            new ParseCtx(input, 0, index, originalParser, originalIndex, (_, _, _) => ()),
-            originalIndex
-          ).asInstanceOf[Mutable.Failure]
-
-          (traced.fullStack, traced.traceParsers)
-        }
-      }
-
-      Result.Failure(input, fullStack1, index, lastParser, traceParsers1.distinct)
+      Result.Failure(input, index, lastParser, (originalIndex, originalParser))
     }
   }
 }
@@ -266,7 +287,6 @@ trait Parser[+T] extends ParserResults[T] with Precedence{
             instrument: (Parser[_], Int, () => Result[_]) => Unit = null)
             : Result[T] = {
     parseRec(new ParseCtx(input, 0, -1, this, index, instrument), index).toResult
-
   }
 
   /**
@@ -275,8 +295,8 @@ trait Parser[+T] extends ParserResults[T] with Precedence{
   def parseRec(cfg: ParseCtx, index: Int): Mutable[T]
 
   /**
-   * Whether or not this parser should show up when [[Failure.trace]] is
-   * called. If not set, the parser will only show up in [[Failure.fullStack]]
+   * Whether or not this parser should show up when [[TracedFailure.trace]] is
+   * called. If not set, the parser will only show up in [[TracedFailure.fullStack]]
    */
   def shortTraced: Boolean = false
 

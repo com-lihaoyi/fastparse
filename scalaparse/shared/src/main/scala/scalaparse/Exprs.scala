@@ -7,7 +7,7 @@ import fastparse.noApi._
 trait Exprs extends Core with Types with Xml{
   private[this] implicit def parserApi[T, V](p0: T)(implicit c: T => P[V])
   : ParserApiImpl2[V] =
-    new ParserApiImpl2[V](p0, WL)
+    new ParserApiImpl2[V](p0, WL0)
 
   def AnonTmpl: P0
   def BlockDef: P0
@@ -74,18 +74,21 @@ trait Exprs extends Core with Types with Xml{
     val ExprPrefix = P( WL ~ CharIn("-+~!") ~~ !syntax.Basic.OpChar ~ WS)
     val ExprSuffix = P( (WL ~ "." ~! Id | WL ~ TypeArgs | NoSemis ~ ArgList).repX ~~ (NoSemis  ~ `_`).? )
     val PrefixExpr = P( ExprPrefix.? ~ SimpleExpr )
-    val InfixSuffix = P( NoSemis ~ Id ~ TypeArgs.? ~~ OneSemiMax ~ PrefixExpr ~~ ExprSuffix)
-    val PostFix = P( NoSemis ~ Id ~ Newline.? )
+    
+    // Intermediate `WL` needs to always be non-cutting, because you need to
+    // backtrack out of `InfixSuffix` into `PostFixSuffix` if it doesn't work out
+    val InfixSuffix = P( NoSemis ~~ WL ~~ Id ~ TypeArgs.? ~~ OneSemiMax ~ PrefixExpr ~~ ExprSuffix)
+    val PostFix = P( NoSemis ~~ WL ~~ Id ~ Newline.? )
+
     val PostfixSuffix = P( InfixSuffix.repX ~~ PostFix.? ~ (`=` ~! Expr).? ~ MatchAscriptionSuffix.?)
 
     val PostfixExpr: P0 = P( PrefixExpr ~~ ExprSuffix ~~ PostfixSuffix )
 
     val Parened = P ( "(" ~! TypeExpr.rep(0, "," ~!) ~ ")" )
     val SimpleExpr: P0 = {
-      val Path = P( (Id ~ ".").rep ~ `this` ~ ("." ~! Id).rep | StableId )
       val New = P( `new` ~! AnonTmpl )
 
-      P( XmlExpr | New | BlockExpr | ExprLiteral | Path | `_` | Parened )
+      P( XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | Parened )
     }
     val Guard : P0 = P( `if` ~! PostfixExpr )
   }

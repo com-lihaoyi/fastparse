@@ -12,7 +12,7 @@ trait ParserApi[+T] {
    * Wraps this in a [[Logged]]. This prints out information
    * where a parser was tried and its result, which is useful for debugging
    */
-  def log(msg: String)(implicit output: Logger): Parser[T]
+  def log(msg: String = this.toString)(implicit output: Logger): Parser[T]
   /**
    * Repeats this parser 0 or more times
    */

@@ -58,6 +58,16 @@ object SuccessTests extends TestSuite{
       """.stripMargin
     )
     * - check(
+      """class ScProjectionType (val x: Boolean /* todo*/)""".stripMargin
+    )
+    * - check(
+      """
+        |class Baz {
+        |    ba /*caret*/r
+        |}
+        |""".stripMargin
+    )
+    * - check(
       """class GroupManager @Singleton @Inject() ()""".stripMargin
     )
     * - check(
@@ -599,6 +609,14 @@ object SuccessTests extends TestSuite{
         |  val g: G.this.g.type
         |}
         |
+      """.stripMargin
+    )
+    * - check(
+      """trait ParserApi{
+        |  def map: X
+        |  /** */
+        |  def flatMap: Y
+        |}
       """.stripMargin
     )
     * - check(

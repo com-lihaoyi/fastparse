@@ -103,7 +103,7 @@ object FailureTests extends TestSuite{
         |  .
         |}
       """.stripMargin,
-      expected = """ BacktickId | PlainId""",
+      expected = """`this` | Id""",
       found = "."
     )
     * - checkNeg(
@@ -238,22 +238,24 @@ object FailureTests extends TestSuite{
       expected = """ ";" | Newline.rep(1) | "}" """,
       found = ""
     )
-    //    Not sure how to properly put cuts on comments nodes
-    //      * - checkNeg(
-    //        """/*                     __                                               *\
-    //          |**     ________ ___   / /  ___      __ ____  Scala.js CLI               **
-    //          |**    / __/ __// _ | / /  / _ | __ / // __/  (c) 2013-2014, LAMP/EPFL   **
-    //          |**  __\ \/ /__/ __ |/ /__/ __ |/_// /_\ \    http://scala-js.org/       **
-    //          |** /____/\___/_/ |_/____/_/ | |__/ /____/                               **
-    //          |**                          |/____/                                     **
-    //          |\*                                                                      *
-    //          |
-    //          |package scala.scalajs.cli
-    //          |
-    //        """.stripMargin,
-    //        expected = """ "*/" """,
-    //        found = ""
-    //      )
+    * - checkNeg(
+      """/*
+        |
+        |package scala.scalajs.cli
+        |
+      """.stripMargin,
+      expected = """ "*/" """,
+      found = ""
+    )
+    * - checkNeg(
+      """/*/*
+        |*/
+        |package scala.scalajs.cli
+        |
+      """.stripMargin,
+      expected = """ "*/" """,
+      found = ""
+    )
     * - checkNeg(
       """
         |object O{
@@ -513,7 +515,7 @@ object FailureTests extends TestSuite{
           |}
           |
         """.stripMargin,
-        expected = """ BacktickId | PlainId""",
+        expected = """`this` | Id""",
         found = "()"
       )
     * - checkNeg(
@@ -522,7 +524,7 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      expected = """ BacktickId | PlainId""",
+      expected = """BacktickId | PlainId""",
       found = "this"
     )
     * - checkNeg(
@@ -531,7 +533,7 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      expected = """ BacktickId | PlainId""",
+      expected = """`this` | Id""",
       found = "()"
     )
       * - checkNeg(

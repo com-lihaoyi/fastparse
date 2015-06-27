@@ -70,10 +70,10 @@ object MiscTests extends TestSuite{
       def expected(unit: String) = mutable.Buffer(
         "+AB:0",
         "  +A:0",
-        s"  -A:0:Success($unit, 1)",
+        s"  -A:0:Success(1, false)",
         "  +B:1",
-        "  -B:1:Success(B, 2)",
-        "-AB:0:Success(B, 2)"
+        "  -B:1:Success(2, false)",
+        "-AB:0:Success(2, false)"
       )
       val expected1 = expected("()")
       val expected2 = expected("undefined")

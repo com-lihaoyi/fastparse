@@ -35,7 +35,7 @@ object Combinators {
   }
 
   /**
-   *
+   * Wrap a parser in this if you don't want for it to show up in a stack trace
    */
   case class NoTrace[T](p: Parser[T]) extends Parser[T]{
     def parseRec(cfg: ParseCtx, index: Int) = {
@@ -45,6 +45,22 @@ object Combinators {
           s
         case f: Mutable.Failure =>
           f.traceParsers = Nil
+          f
+      }
+    }
+    override def toString = p.toString
+  }
+  /**
+   *
+   */
+  case class NoCut[T](p: Parser[T]) extends Parser[T]{
+    def parseRec(cfg: ParseCtx, index: Int) = {
+      p.parseRec(cfg, index) match {
+        case s: Mutable.Success[_] =>
+          s.cut = false
+          s
+        case f: Mutable.Failure =>
+          f.cut = false
           f
       }
     }
@@ -65,7 +81,7 @@ object Combinators {
         val res = p.parseRec(cfg, index)
         cfg.logDepth = depth
         val strRes = res match{
-          case s: Mutable.Success[T] => s"Success(${s.index}})"
+          case s: Mutable.Success[T] => s"Success(${s.index}, ${s.cut})"
           case f: Mutable.Failure =>
             val stack = Failure.filterFullStack(f.fullStack)
             val trace = Failure.formatStackTrace(
@@ -74,7 +90,7 @@ object Combinators {
               index,
               Failure.formatParser(f.lastParser, index)
             )
-            s"Failure($trace)"
+            s"Failure($trace, ${f.cut})"
         }
         output(indent + "-" + msg + ":" + index + ":" + strRes)
         res
@@ -118,8 +134,12 @@ object Combinators {
   case class Lookahead(p: Parser[_]) extends Parser[Unit]{
     def parseRec(cfg: ParseCtx, index: Int) = {
       p.parseRec(cfg, index) match{
-        case s: Mutable.Success[_] => success(cfg.success, (), index, s.traceParsers, false)
-        case f: Mutable.Failure => failMore(f, index)
+        case s: Mutable.Success[_] =>
+          s.cut = false
+          success(cfg.success, (), index, s.traceParsers, false)
+        case f: Mutable.Failure =>
+          f.cut = false
+          failMore(f, index)
       }
     }
     override def toString = s"&($p)"

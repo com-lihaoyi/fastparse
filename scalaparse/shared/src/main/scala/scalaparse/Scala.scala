@@ -10,7 +10,7 @@ import fastparse.noApi._
 object Scala extends Core with Types with Exprs with Xml{
   private[this] implicit def parserApi[T, V](p0: T)(implicit c: T => P[V])
   : ParserApiImpl2[V] =
-    new ParserApiImpl2[V](p0, WL)
+    new ParserApiImpl2[V](p0, WL0)
 
   val TmplBody: P0 = {
     val Prelude = P( (Annot ~ OneNLMax).rep ~ (Mod ~! Pass).rep )

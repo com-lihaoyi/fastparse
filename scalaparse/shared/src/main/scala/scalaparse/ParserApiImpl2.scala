@@ -10,7 +10,17 @@ import scala.Mutable
 
 object ParserApiImpl2 {
 
-
+  /**
+   * Custom whitespace-aware semicolon-inference-friendly version of
+   * [[fastparse.parsers.Combinators.Sequence]]. Consumes whitespace
+   * between the LHS [[p0]] and RHS [[p]] parsers.
+   *
+   * If the whitespace succeeds but the parser on the right succeeds
+   * *with no input*, then backtrack to the start of the whitespace
+   * and ignore any `cut`s that came from it. This it meant to avoid
+   * capturing trailing whitespace, which needs to be present for
+   * semi-colon inference to work properly
+   */
   case class CustomSequence[+T, +R, +V](WL: P0, p0: P[T], p: P[V], cut: Boolean)
                                        (implicit ev: Sequencer[T, V, R]) extends P[R] {
     def parseRec(cfg: ParseCtx, index: Int) = {
@@ -21,21 +31,26 @@ object ParserApiImpl2 {
           val cut0 = s.cut
           val traceParsers0 = s.traceParsers
           WL.parseRec(cfg, s.index) match {
+            case f1: Mutable.Failure => failMore(f1, index)
             case s1: Mutable.Success[Unit] =>
               val index1 = s1.index
+              val cut1 = s1.cut
               p.parseRec(cfg, s1.index) match {
                 case f: Mutable.Failure => failMore(f, s.index, traceParsers0 ::: f.traceParsers, cut | cut0)
                 case s2: Mutable.Success[V] =>
                   val index2 = s2.index
                   val cut2 = s2.cut
                   val traceParsers2 = s2.traceParsers
-                  val newIndex = if (index2 > index1 || index1 == cfg.input.length) index2 else index0
+                  val (newIndex, newCut) =
+                    if (index2 > index1 || index1 == cfg.input.length) (index2, cut | cut0 | cut1 | cut2)
+                    else (index0, cut | cut0 | cut2)
+
                   success(
                     s,
                     ev.apply(s.value, s2.value),
                     newIndex,
                     traceParsers0 ::: traceParsers2,
-                    cut | cut0 | cut2
+                    newCut
                   )
               }
           }
@@ -64,14 +79,14 @@ class ParserApiImpl2[+T](p0: P[T], WL: P0) extends ParserApiImpl(p0)  {
 
   def repX[R](implicit ev: Repeater[T, R]): P[R] = Repeat(p0, 0, Pass)
 
-  override def rep[R](implicit ev: Repeater[T, R]): P[R] = Repeat(p0, 0, WL)
+  override def rep[R](implicit ev: Repeater[T, R]): P[R] = Repeat(p0, 0, NoCut(WL))
 
   def repX[R](min: Int = 0, sep: P[_] = Pass)
              (implicit ev: Repeater[T, R]): P[R] = Repeat(p0, min, sep)
 
   override def rep[R](min: Int = 0, sep: P[_] = Pass)
                      (implicit ev: Repeater[T, R]): P[R] = {
-    Repeat(p0, min, if (sep != Pass) WL ~ sep ~ WL else WL)
+    Repeat(p0, min, if (sep != Pass) NoCut(WL) ~ sep ~ NoCut(WL) else NoCut(WL))
   }
 
   def ~~[V, R](p: P[V])

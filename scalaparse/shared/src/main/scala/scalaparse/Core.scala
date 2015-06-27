@@ -11,7 +11,7 @@ trait Core extends syntax.Literals{
 
   private[this] implicit def parserApi[T, V](p0: T)(implicit c: T => P[V])
   : ParserApiImpl2[V] =
-    new ParserApiImpl2[V](c(p0), WL)
+    new ParserApiImpl2[V](c(p0), WL0)
 
 
   // Aliases for common things. These things are used in almost every parser
@@ -105,7 +105,7 @@ trait Core extends syntax.Literals{
     val ClassQualifier = P( "[" ~ Id ~ "]" )
     val ThisSuper = P( `this` | `super` ~ ClassQualifier.? )
     val ThisPath: P0 = P( ThisSuper ~ ("." ~ PostDotCheck ~! Id).rep )
-    val IdPath: P0 = P( Id ~ ("." ~ PostDotCheck ~! Id).rep ~ ("." ~ ThisPath).? )
+    val IdPath: P0 = P( Id ~ ("." ~ PostDotCheck ~! (`this` | Id)).rep ~ ("." ~ ThisPath).? )
     P( ThisPath | IdPath )
   }
 }
