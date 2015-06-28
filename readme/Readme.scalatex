@@ -606,6 +606,8 @@
             @li
                 Simplified ScalaParse internals slightly
             @li
+                @hl.scala{Parser#get} now throws a custom @hl.scala{SyntaxError} with relevant metadata, instead of a plain @hl.scala{Exception}
+            @li
                 @hl.scala{WhitespaceApi}'s @hl.scala{WL} value no longer leaks out when you import from it
     @sect{0.2.0}
         @ul

@@ -26,10 +26,28 @@ sealed trait Result[+T]{
    */
   def get: Result.Success[T] = this match{
     case s: Result.Success[T] => s
-    case f: Result.Failure => throw new Exception(f.traced.trace)
+    case f: Result.Failure => throw new SyntaxError(f)
   }
-
 }
+
+case class SyntaxError(failure: Result.Failure) extends Exception{
+  override def toString() = SyntaxError.msg(failure.input, failure.traced.expected, failure.index)
+}
+
+object SyntaxError{
+  def msg(code: String, expected: String, idx: Int) = {
+    val locationString = {
+      val (first, last) = code.splitAt(idx)
+      val lastSnippet = last.split('\n').headOption.getOrElse("")
+      val firstSnippet = first.reverse.split('\n').lift(0).getOrElse("").reverse
+      firstSnippet + lastSnippet + "\n" + (" " * firstSnippet.length) + "^"
+    }
+    val literal = fastparse.Utils.literalize(code.slice(idx, idx + 20))
+    s"SyntaxError: found $literal, expected $expected in\n$locationString"
+  }
+}
+
+
 
 object Result{
   /**

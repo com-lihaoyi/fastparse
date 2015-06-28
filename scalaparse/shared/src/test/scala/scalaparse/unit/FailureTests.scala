@@ -489,7 +489,7 @@ object FailureTests extends TestSuite{
         |  code: @ 12
         |}
       """.stripMargin,
-      expected = """TupleType | StableId ~ ("." ~ `type`).? | `_`""",
+      expected = """TupleType | TypeId ~ ("." ~ `type`).? | `_`""",
       found = "12\n}"
     )
 
@@ -744,7 +744,7 @@ object FailureTests extends TestSuite{
       s"""
          |object X{type T = A with}
         """.stripMargin,
-      expected = """TupleType | StableId ~ ("." ~ `type`).? | `_`""",
+      expected = """TupleType | TypeId ~ ("." ~ `type`).? | `_`""",
       found = "}"
     )
     * - checkNeg(
