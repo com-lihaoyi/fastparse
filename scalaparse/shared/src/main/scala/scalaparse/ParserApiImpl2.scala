@@ -25,18 +25,18 @@ object ParserApiImpl2 {
                                        (implicit ev: Sequencer[T, V, R]) extends P[R] {
     def parseRec(cfg: ParseCtx, index: Int) = {
       p0.parseRec(cfg, index) match {
-        case f: Mutable.Failure => failMore(f, index, f.traceParsers, false)
+        case f: Mutable.Failure => failMore(f, index, cfg.logDepth, f.traceParsers, false)
         case s: Mutable.Success[T] =>
           val index0 = s.index
           val cut0 = s.cut
           val traceParsers0 = s.traceParsers
           WL.parseRec(cfg, s.index) match {
-            case f1: Mutable.Failure => failMore(f1, index)
+            case f1: Mutable.Failure => failMore(f1, index, cfg.logDepth)
             case s1: Mutable.Success[Unit] =>
               val index1 = s1.index
               val cut1 = s1.cut
               p.parseRec(cfg, s1.index) match {
-                case f: Mutable.Failure => failMore(f, s.index, traceParsers0 ::: f.traceParsers, cut | cut0)
+                case f: Mutable.Failure => failMore(f, s.index, cfg.logDepth, traceParsers0 ::: f.traceParsers, cut | cut0)
                 case s2: Mutable.Success[V] =>
                   val index2 = s2.index
                   val cut2 = s2.cut

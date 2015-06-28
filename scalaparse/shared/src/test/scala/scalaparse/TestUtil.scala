@@ -17,9 +17,9 @@ object TestUtil {
     Scala.CompilationUnit.parse(input) match{
       case f: Result.Failure =>
 
-        val parsedExpected = f.expected
+        val parsedExpected = f.traced.expected
         val parsedFound = input.slice(f.index, f.index + 10)
-        val stack = f.trace
+        val stack = f.traced.trace
         assert(
         { implicitly(input)
           implicitly(stack)

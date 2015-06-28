@@ -63,7 +63,7 @@ object Result{
       ).asInstanceOf[Mutable.Failure]
 
 
-      new TracedFailure(input, index, mutFailure.fullStack, mutFailure.traceParsers)
+      new TracedFailure(input, index, mutFailure.fullStack, (mutFailure.traceParsers :+ lastParser).distinct)
     }
 
     def msg = Failure.formatStackTrace(
@@ -170,16 +170,22 @@ trait Mutable[+T]{
 }
 object Mutable{
 
+  /**
+   * A mutable version of [[Result.Success]] with extra data.
+   * @param traceParsers If a `traceIndex` is provided, this will contain any
+   *                     parsers within this [[Success]] that failed at exactly
+   *                     that index, which will be used for error reporting.
+   *                     If you are writing your own custom [[Parser]] and it
+   *                     contains sub-parsers, you should generally aggregate
+   *                     any the [[traceParsers]] of any of their results.
+   * @param cut Whether or not this parser crossed a cut and can not longer
+   *            backtrack
+   */
   case class Success[T](var value: T,
                         var index: Int,
-                        var traceParsers0: List[Parser[_]],
+                        var traceParsers: List[Parser[_]],
                         var cut: Boolean = false) extends Mutable[T]{
-    assert(traceParsers != null)
-    def traceParsers = traceParsers0
-    def traceParsers_=(x: List[Parser[_]]) = {
-      assert(x != null)
-      traceParsers0 = x
-    }
+
     override def toString = s"Success($value, $index)"
     def toResult = Result.Success(value, index)
   }
@@ -196,6 +202,12 @@ object Mutable{
    * @param originalIndex The original index that [[originalParser]] was
    *                      attemped at
    * @param traceIndex The index at which parser traces are required; -1 if empty
+   * @param traceParsers If a `traceIndex` is provided, this will contain any
+   *                     parsers within this [[Failure]] that failed at exactly
+   *                     that index, which will be used for error reporting.
+   *                     If you are writing your own custom [[Parser]] and it
+   *                     contains sub-parsers, you should generally aggregate
+   *                     any the [[traceParsers]] of any of their results.
    */
   case class Failure(var input: String,
                      var fullStack: List[Frame],
@@ -204,14 +216,8 @@ object Mutable{
                      originalParser: Parser[_],
                      originalIndex: Int,
                      traceIndex: Int,
-                     var traceParsers0: List[Parser[_]],
+                     var traceParsers: List[Parser[_]],
                      var cut: Boolean) extends Mutable[Nothing]{
-    assert(traceParsers0 != null)
-    def traceParsers = traceParsers0
-    def traceParsers_=(x: List[Parser[_]]) = {
-      assert(x != null)
-      traceParsers0 = x
-    }
     def toResult = {
       Result.Failure(input, index, lastParser, (originalIndex, originalParser))
     }
@@ -359,6 +365,7 @@ trait ParserResults[+T]{ this: Parser[T] =>
    */
   def failMore(f: Mutable.Failure,
                index: Int,
+               logDepth: Int,
                traceParsers: List[Parser[_]] = null,
                cut: Boolean = false) = {
 
@@ -366,6 +373,10 @@ trait ParserResults[+T]{ this: Parser[T] =>
       if (index >= f.traceIndex && traceParsers != null) {
         f.traceParsers = traceParsers
       }
+    }
+    // Record the failure stack if we're tracing or if
+    // we're logging, otherwise ignore it for performance.
+    if (f.traceIndex != -1 || logDepth > 0){
       f.fullStack = new Frame(index, this) :: f.fullStack
     }
     f.cut = f.cut | cut
