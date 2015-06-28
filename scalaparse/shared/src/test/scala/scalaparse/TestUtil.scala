@@ -18,6 +18,7 @@ object TestUtil {
       case f: Result.Failure =>
 
         val parsedExpected = f.traced.expected
+        println("XXX " + f.lastParser)
         val parsedFound = input.slice(f.index, f.index + 10)
         val stack = f.traced.trace
         assert(

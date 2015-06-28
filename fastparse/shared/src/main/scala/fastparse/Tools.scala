@@ -1,5 +1,4 @@
 package fastparse
-import acyclic._
 
 import fastparse.Implicits.{Repeater, Sequencer}
 import fastparse.ParserApiImpl
@@ -7,6 +6,7 @@ import fastparse.core._
 import fastparse.all._
 import fastparse.parsers.Combinators.Repeat
 
+import scala.Mutable
 
 object WhitespaceApi {
 
@@ -31,7 +31,7 @@ object WhitespaceApi {
             case f1: Mutable.Failure => failMore(f1, index, cfg.logDepth)
             case Mutable.Success(value1, index1, traceParsers1, cut1) =>
               p.parseRec(cfg, index1) match {
-                case f: Mutable.Failure => failMore(f, index0, cfg.logDepth, traceParsers0 ::: f.traceParsers, cut | cut0)
+                case f: Mutable.Failure => failMore(f, index1, cfg.logDepth, traceParsers0 ::: f.traceParsers, cut | cut0)
                 case Mutable.Success(value2, index2, traceParsers2, cut2) =>
                   val (newIndex, newCut) =
                     if (index2 > index1 || index1 == cfg.input.length) (index2, cut | cut0 | cut1 | cut2)
@@ -106,4 +106,3 @@ class WhitespaceApi[+T](p0: P[T], WL: P0) extends ParserApiImpl(p0)  {
   }
 
 }
-
