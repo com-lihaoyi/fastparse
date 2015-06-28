@@ -450,7 +450,7 @@
             @p
                 Note how @hl.scala{Failure} only contains a single index for where the parse failed, and the parser at that index which failed. Further debugging information is available in the lazily-computer @hl.scala{traced} value, which performs a whole new parse on the input data with additional instrumentation, and provides additional insight into why the parse failed:
 
-            @hl.ref(main/'core/"Parsing.scala", Seq("// TraceFailure", "/*", "object TracedFailure"))
+            @hl.ref(main/'core/"Parsing.scala", Seq("// TraceFailure", "/*"), "object TracedFailure")
             @p
                 Computing the @hl.scala{traced} data is not done by default for performance reasons: the additional run takes about 3x longer than the initial run due to the instrumentation, for a total of 4x slowdown. If you want the information for debugging, though, it will be there.
 
