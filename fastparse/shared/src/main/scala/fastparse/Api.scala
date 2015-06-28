@@ -7,7 +7,7 @@ import acyclic.file
  * This is basically a trait which contains
  * the "public" API to fastparse packages
  */
-trait pkg{
+trait Api{
   implicit def enclosingFunctionName: Utils.FuncName = macro MacroUtils.impl
 
   val Result = core.Result
@@ -41,9 +41,10 @@ trait pkg{
   type P0 = Parser[Unit]
   type Parser[+T] = core.Parser[T]
   type P[+T] = Parser[T]
+
 }
-object all extends pkg{
+object all extends Api{
   implicit def parserApi[T, V](p: T)(implicit c: T => core.Parser[V]): ParserApi[V] =
     new ParserApiImpl[V](p)
 }
-object noApi extends pkg
+object noApi extends Api

@@ -15,17 +15,7 @@ trait Core extends syntax.Literals{
   // Aliases for common things. These things are used in almost every parser
   // in the file, so it makes sense to keep them short.
 
-  /**
-   * Most keywords don't just require the correct characters to match,
-   * they have to ensure that subsequent characters *don't* match in
-   * order for it to be a keyword. This enforces that rule for key-words
-   * (W) and key-operators (O) which have different non-match criteria.
-   */
-  object KeyWordOperators {
-    def W(s: String) = P( Key.W(s) )(s"`$s`")
-    def O(s: String) = P( Key.O(s) )(s"`$s`")
-  }
-  import KeyWordOperators._
+  import Key._
   // Keywords that match themselves and nothing else
   val `=>` = O("=>") | O("⇒")
   val `<-` = O("<-") | O("←")

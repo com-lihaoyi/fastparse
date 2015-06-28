@@ -36,11 +36,12 @@ trait Types extends Core{
   val NLAnnot = P( NotNewline ~ Annot )
   val AnnotType = P(SimpleType ~~ NLAnnot.repX )
 
+  val TypeId = P( StableId )
   val SimpleType: P0 = {
     // Can't `cut` after the opening paren, because we might be trying to parse `()`
     // or `() => T`! only cut after parsing one type
     val TupleType = P( "(" ~ Type.rep(sep= "," ~!) ~ ")" )
-    val BasicType = P( TupleType | StableId ~ ("." ~ `type`).? | `_` )
+    val BasicType = P( TupleType | TypeId ~ ("." ~ `type`).? | `_` )
     P( BasicType ~ (Pass ~ (TypeArgs | `#` ~! Id)).rep )
   }
 

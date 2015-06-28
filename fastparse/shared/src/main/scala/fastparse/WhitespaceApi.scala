@@ -57,7 +57,8 @@ object WhitespaceApi {
     }
     override def opPred = Precedence.OtherOp
   }
-  case class Wrapper(WL: P0){
+  def Wrapper(WL: P0) = new Wrapper(WL)
+  class Wrapper(WL: P0){
     implicit def parserApi[T, V](p0: T)(implicit c: T => P[V]): WhitespaceApi[V] =
       new WhitespaceApi[V](p0, WL)
   }
