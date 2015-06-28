@@ -28,11 +28,11 @@ trait Exprs extends Core with Types with Xml{
     val NoSemis = if (curlyBlock) NotNewline else Pass
 
 
-    def Enumerators(end: P0) = {
+    val Enumerators = {
       val Generator = P( `<-` ~! Expr ~ Guard.? )
       val Assign = P( `=` ~! Expr )
       val Enumerator = P( Semis ~ `val`.? ~ TypeOrBindPattern ~! (Generator | Assign) | Semis.? ~ Guard  )
-      P( TypeOrBindPattern ~ Generator ~~ Enumerator.repX ~ end )
+      P( TypeOrBindPattern ~ Generator ~~ Enumerator.repX )
     }
 
     val Expr: P0 = {
@@ -49,7 +49,7 @@ trait Exprs extends Core with Types with Xml{
       val DoWhile = P( `do` ~! Expr ~ Semi.? ~ `while` ~ "(" ~ ExprCtx.Expr ~ ")" )
 
       val For = {
-        val Body = P( "(" ~! ExprCtx.Enumerators(")") | "{" ~! StatCtx.Enumerators("}") )
+        val Body = P( "(" ~! ExprCtx.Enumerators ~ ")" | "{" ~! StatCtx.Enumerators ~ "}" )
         P( `for` ~! Body ~ `yield`.? ~ Expr )
       }
       val Throw = P( `throw` ~! Expr )
