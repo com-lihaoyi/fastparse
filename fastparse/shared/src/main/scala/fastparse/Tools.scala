@@ -1,4 +1,5 @@
-package scalaparse
+package fastparse
+import acyclic._
 
 import fastparse.Implicits.{Repeater, Sequencer}
 import fastparse.ParserApiImpl
@@ -6,9 +7,8 @@ import fastparse.core._
 import fastparse.all._
 import fastparse.parsers.Combinators.Repeat
 
-import scala.Mutable
 
-object ParserApiImpl2 {
+object WhitespaceApi {
 
   /**
    * Custom whitespace-aware semicolon-inference-friendly version of
@@ -26,28 +26,20 @@ object ParserApiImpl2 {
     def parseRec(cfg: ParseCtx, index: Int) = {
       p0.parseRec(cfg, index) match {
         case f: Mutable.Failure => failMore(f, index, cfg.logDepth, f.traceParsers, false)
-        case s: Mutable.Success[T] =>
-          val index0 = s.index
-          val cut0 = s.cut
-          val traceParsers0 = s.traceParsers
-          WL.parseRec(cfg, s.index) match {
+        case Mutable.Success(value0, index0, traceParsers0, cut0) =>
+          WL.parseRec(cfg, index0) match {
             case f1: Mutable.Failure => failMore(f1, index, cfg.logDepth)
-            case s1: Mutable.Success[Unit] =>
-              val index1 = s1.index
-              val cut1 = s1.cut
-              p.parseRec(cfg, s1.index) match {
-                case f: Mutable.Failure => failMore(f, s.index, cfg.logDepth, traceParsers0 ::: f.traceParsers, cut | cut0)
-                case s2: Mutable.Success[V] =>
-                  val index2 = s2.index
-                  val cut2 = s2.cut
-                  val traceParsers2 = s2.traceParsers
+            case Mutable.Success(value1, index1, traceParsers1, cut1) =>
+              p.parseRec(cfg, index1) match {
+                case f: Mutable.Failure => failMore(f, index0, cfg.logDepth, traceParsers0 ::: f.traceParsers, cut | cut0)
+                case Mutable.Success(value2, index2, traceParsers2, cut2) =>
                   val (newIndex, newCut) =
                     if (index2 > index1 || index1 == cfg.input.length) (index2, cut | cut0 | cut1 | cut2)
                     else (index0, cut | cut0 | cut2)
 
                   success(
-                    s,
-                    ev.apply(s.value, s2.value),
+                    cfg.success,
+                    ev.apply(value0, value2),
                     newIndex,
                     traceParsers0 ::: traceParsers2,
                     newCut
@@ -66,7 +58,10 @@ object ParserApiImpl2 {
     }
     override def opPred = Precedence.OtherOp
   }
-
+  case class Wrapper(WL: P0){
+    implicit def parserApi[T, V](p0: T)(implicit c: T => P[V]): WhitespaceApi[V] =
+      new WhitespaceApi[V](p0, WL)
+  }
 }
 /**
  * Custom version of `ParserApi`, that behaves the same as the
@@ -74,7 +69,7 @@ object ParserApiImpl2 {
  * provides replacement methods `repX` and `~~` if you wish to call the
  * original un-modified versions of these operators.
  */
-class ParserApiImpl2[+T](p0: P[T], WL: P0) extends ParserApiImpl(p0)  {
+class WhitespaceApi[+T](p0: P[T], WL: P0) extends ParserApiImpl(p0)  {
 
 
   def repX[R](implicit ev: Repeater[T, R]): P[R] = Repeat(p0, 0, Pass)
@@ -99,7 +94,7 @@ class ParserApiImpl2[+T](p0: P[T], WL: P0) extends ParserApiImpl(p0)  {
                       (implicit ev: Sequencer[T, V, R])
   : P[R] = {
     assert(p != null)
-    new ParserApiImpl2.CustomSequence(WL, if (p0 != WL) p0 else Pass.asInstanceOf[P[T]], p, cut=false)(ev)
+    new WhitespaceApi.CustomSequence(WL, if (p0 != WL) p0 else Pass.asInstanceOf[P[T]], p, cut=false)(ev)
   }
 
 
@@ -107,7 +102,8 @@ class ParserApiImpl2[+T](p0: P[T], WL: P0) extends ParserApiImpl(p0)  {
                        (implicit ev: Sequencer[T, V, R])
   : P[R] = {
     assert(p != null)
-    new ParserApiImpl2.CustomSequence(WL, if (p0 != WL) p0 else Pass.asInstanceOf[P[T]], p, cut=true)(ev)
+    new WhitespaceApi.CustomSequence(WL, if (p0 != WL) p0 else Pass.asInstanceOf[P[T]], p, cut=true)(ev)
   }
 
 }
+

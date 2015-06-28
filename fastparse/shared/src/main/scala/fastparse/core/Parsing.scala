@@ -63,7 +63,12 @@ object Result{
       ).asInstanceOf[Mutable.Failure]
 
 
-      new TracedFailure(input, index, mutFailure.fullStack, (mutFailure.traceParsers :+ lastParser).distinct)
+      new TracedFailure(
+        input,
+        index,
+        mutFailure.fullStack,
+        (mutFailure.traceParsers :+ lastParser).distinct
+      )
     }
 
     def msg = Failure.formatStackTrace(
@@ -118,7 +123,7 @@ object Result{
 
     lazy val expected0 = new Precedence {
       def opPred = if (traceParsers.length == 1) traceParsers(0).opPred else Precedence.|
-      override def toString = traceParsers.map(opWrap).mkString(" | ")
+      override def toString = traceParsers.map(opWrap).distinct.mkString(" | ")
     }
 
     def expected = expected0.toString
@@ -189,10 +194,7 @@ object Mutable{
     override def toString = s"Success($value, $index)"
     def toResult = Result.Success(value, index)
   }
-  def unapply[T](x: Result[T]) = x match{
-    case s: Success[T] => Some((s.value, s.index))
-    case _ => None
-  }
+
 
   /**
    * A mutable version of [[Result.Failure]] with extra data.
@@ -269,16 +271,6 @@ trait Parser[+T] extends ParserResults[T] with Precedence{
    *              starts from the beginning of a string, but you can start
    *              from halfway through the string if you want.
    *
-   * @param traceFailure Whether or not you want a full stack of any error
-   *                     messages that appear. Without it, you only get the
-   *                     single deepest parser in the call-stack when it
-   *                     failed, and its index. With `trace`, you get every
-   *                     parser all the way to the top, as well as every
-   *                     possible parser that could have succeeded at the
-   *                     location of the error. The downside is that it takes
-   *                     an extra parse to generate the error and thus slows
-   *                     down failed-parses by a factor of 2-3.
-   *
    * @param instrument Allows you to pass in a callback that will get called
    *                   by every named rule, its index, as it itself given a
    *                   callback that can be used to recurse into the parse and
@@ -289,7 +281,6 @@ trait Parser[+T] extends ParserResults[T] with Precedence{
    */
   def parse(input: String,
             index: Int = 0,
-            traceFailure: Boolean = false,
             instrument: (Parser[_], Int, () => Result[_]) => Unit = null)
             : Result[T] = {
     parseRec(new ParseCtx(input, 0, -1, this, index, instrument), index).toResult

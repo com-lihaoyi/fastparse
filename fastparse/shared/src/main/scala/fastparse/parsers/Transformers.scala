@@ -38,7 +38,8 @@ object Transformers {
       p.parseRec(cfg, index) match{
         case f: Mutable.Failure => failMore(f, index, cfg.logDepth, cut = false)
         case s: Mutable.Success[T] =>
-          if (predicate(s.value)) s else fail(cfg.failure,index, s.traceParsers, cut = false)
+          if (predicate(s.value)) s
+          else fail(cfg.failure,index, s.traceParsers, cut = false)
       }
     }
 

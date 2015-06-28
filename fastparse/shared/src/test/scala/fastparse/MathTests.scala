@@ -40,9 +40,10 @@ object MathTests extends TestSuite{
       check("((1+1*2)+(3*4*5))/3", 21)
     }
     'fail{
-      def check(input: String, trace: String) = {
-        val failure = expr.parse(input, traceFailure = false).asInstanceOf[Result.Failure]
-        assert(trace.trim == failure.traced.trace.trim)
+      def check(input: String, expectedTrace: String) = {
+        val failure = expr.parse(input).asInstanceOf[Result.Failure]
+        val actualTrace = failure.traced.trace
+        assert(expectedTrace.trim == actualTrace.trim)
       }
       check(
         "(+)",

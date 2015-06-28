@@ -2,9 +2,7 @@ package scalaparse
 
 import fastparse.noApi._
 trait Types extends Core{
-  private[this] implicit def parserApi[T, V](p0: T)(implicit c: T => P[V])
-  : ParserApiImpl2[V] =
-    new ParserApiImpl2[V](c(p0), WL0)
+  import WhitespaceApi._
   def TypeExpr: P0
   def ValVarDef: P0
   def FunDef: P0

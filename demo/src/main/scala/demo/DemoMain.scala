@@ -1,7 +1,6 @@
 package demo
 
-import fastparse.Parser
-import fastparse.core.Result
+import fastparse.all._
 import org.scalajs.dom
 import org.scalajs.dom.html
 

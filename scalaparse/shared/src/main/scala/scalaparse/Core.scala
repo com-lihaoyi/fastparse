@@ -8,10 +8,8 @@ import syntax.Identifiers
 import fastparse.noApi._
 trait Core extends syntax.Literals{
   import fastparse.noApi._
-
-  private[this] implicit def parserApi[T, V](p0: T)(implicit c: T => P[V])
-  : ParserApiImpl2[V] =
-    new ParserApiImpl2[V](c(p0), WL0)
+  val WhitespaceApi = new fastparse.WhitespaceApi.Wrapper(WL0)
+  import WhitespaceApi._
 
 
   // Aliases for common things. These things are used in almost every parser

@@ -2,6 +2,11 @@ package fastparse
 import language.experimental.macros
 import fastparse.parsers.Intrinsics
 import acyclic.file
+
+/**
+ * This is basically a trait which contains
+ * the "public" API to fastparse packages
+ */
 trait pkg{
   implicit def enclosingFunctionName: Utils.FuncName = macro Utils.FuncName.impl
 
@@ -29,12 +34,12 @@ trait pkg{
   implicit def wspStr(s: String): P0 =
     if (s.length == 1) parsers.Terminals.CharLiteral(s(0))
     else parsers.Terminals.Literal(s)
-  import core.Parser
+
   def P[T](p: => Parser[T])(implicit name: Utils.FuncName): Parser[T] =
     parsers.Combinators.Rule(name.name, () => p)
 
   type P0 = Parser[Unit]
-
+  type Parser[+T] = core.Parser[T]
   type P[+T] = Parser[T]
 }
 object all extends pkg{
