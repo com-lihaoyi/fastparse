@@ -20,15 +20,18 @@ object IndentationTests extends TestSuite{
    */
   class Parser(indent: Int){
     val number: P[Int] = P( CharIn('0'to'9').rep(1).!.map(_.toInt) )
+
     val deeper: P[Int] = P( " ".rep(indent + 1).!.map(_.length) )
-    val factor: P[Int] = P( number | block )
     val blockBody: P[Seq[Int]] = "\n" ~ deeper.flatMap(i =>
-      new Parser(i).factor.rep(1, sep = ("\n" + " " * i) ~!)
+      new Parser(indent = i).factor.rep(1, sep = ("\n" + " " * i) ~!)
     )
     val block: P[Int] = P( CharIn("+-*/").! ~! blockBody).map(eval)
+
+    val factor: P[Int] = P( number | block )
+
     val expr: P[Int]   = P( block ~ End )
   }
-  val expr = new Parser(0).expr
+  val expr = new Parser(indent = 0).expr
   val tests = TestSuite{
     'pass {
       def check(str: String, num: Int) = {
@@ -52,6 +55,7 @@ object IndentationTests extends TestSuite{
         """.stripMargin.trim,
         3
       )
+
       check(
         """+
           |  +

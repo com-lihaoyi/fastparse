@@ -30,6 +30,27 @@ object DemoMain {
     helper(container, fastparse.MathTests.expr, "((1+1*2)+(3*4*5))/3")
   }
   @JSExport
+  def whitespaceMath(container: html.Div) = {
+    helper(container, fastparse.WhiteSpaceMathTests.expr, "  (  (  1+1  * 2   ) +( 3* 4  *5  )  )/3")
+  }
+  @JSExport
+  def indentation(container: html.Div) = {
+    helper(
+      container,
+      fastparse.IndentationTests.expr,
+      """+
+        |  +
+        |    1
+        |    *
+        |      1
+        |      2
+        |  *
+        |    3
+        |    4
+        |    5""".stripMargin
+    )
+  }
+  @JSExport
   def json(container: html.Div) = {
     helper(container, fastparse.JsonTests.jsonExpr,
       """{

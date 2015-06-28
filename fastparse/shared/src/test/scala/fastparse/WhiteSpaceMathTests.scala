@@ -26,7 +26,7 @@ object WhiteSpaceMathTests extends TestSuite{
 
   val divMul: P[Int] = P( factor ~ (CharIn("*/").! ~! factor).rep ).map(eval)
   val addSub: P[Int] = P( divMul ~ (CharIn("+-").! ~! divMul).rep ).map(eval)
-  val expr: P[Int]   = P( addSub ~ End )
+  val expr: P[Int]   = P( " ".rep ~ addSub ~ " ".rep ~ End )
 
   val tests = TestSuite{
     'pass {

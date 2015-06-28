@@ -54,22 +54,7 @@ object Result{
                      lastParser: Parser[_],
                      traceData: (Int, Parser[_])) extends Result[Nothing]{
 
-    lazy val traced = {
-      val (originalIndex, originalParser) = traceData
-
-      val mutFailure = originalParser.parseRec(
-        new ParseCtx(input, 0, index, originalParser, originalIndex, (_, _, _) => ()),
-        originalIndex
-      ).asInstanceOf[Mutable.Failure]
-
-
-      new TracedFailure(
-        input,
-        index,
-        mutFailure.fullStack,
-        (mutFailure.traceParsers :+ lastParser).distinct
-      )
-    }
+    lazy val traced = TracedFailure(input, index, lastParser, traceData)
 
     def msg = Failure.formatStackTrace(
       Nil, input, index, Failure.formatParser(lastParser, index)
@@ -103,7 +88,7 @@ object Result{
     }
 
   }
-
+  // TraceFailure
   /**
    * A failure containing detailed information about a parse failure. This is more
    * expensive to compute than a simple error message and is thus not generated
@@ -121,11 +106,15 @@ object Result{
                            fullStack: List[Frame],
                            traceParsers: List[Parser[_]]){
 
-    lazy val expected0 = new Precedence {
+    private[this] lazy val expected0 = new Precedence {
       def opPred = if (traceParsers.length == 1) traceParsers(0).opPred else Precedence.|
       override def toString = traceParsers.map(opWrap).distinct.mkString(" | ")
     }
 
+    /**
+     * A short string describing the parsers which were expected at the point
+     * of failure.
+     */
     def expected = expected0.toString
 
     /**
@@ -144,8 +133,24 @@ object Result{
     lazy val trace = {
       Failure.formatStackTrace(stack, input, index, Failure.formatParser(expected0, index))
     }
-  
+  }
+  object TracedFailure{
+    def apply(input: String, index: Int, lastParser: Parser[_], traceData: (Int, Parser[_])) = {
+      val (originalIndex, originalParser) = traceData
 
+      val mutFailure = originalParser.parseRec(
+        new ParseCtx(input, 0, index, originalParser, originalIndex, (_, _, _) => ()),
+        originalIndex
+      ).asInstanceOf[Mutable.Failure]
+
+
+      new TracedFailure(
+        input,
+        index,
+        mutFailure.fullStack,
+        (mutFailure.traceParsers :+ lastParser).distinct
+      )
+    }
   }
 }
 /**
@@ -226,7 +231,6 @@ object Mutable{
   }
 }
 
-import fastparse.core.Result._
 
 /**
  * Things which get passed through the entire parse run, but almost never
@@ -251,7 +255,7 @@ class ParseCtx(val input: String,
   val success = Mutable.Success(null, 0, Nil, false)
 }
 
-
+// Parser
 /**
  * A single, self-contained, immutable parser. The primary method is
  * `parse`, which returns a [[T]] on success and a stack trace on failure.
@@ -305,7 +309,7 @@ trait Parser[+T] extends ParserResults[T] with Precedence{
    */
   def opPred: Int = Precedence.Max
 }
-
+// End Parser
 /**
  * Convenience methods to be used internally inside [[Parser]]s
  */

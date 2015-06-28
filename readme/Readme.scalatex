@@ -292,6 +292,60 @@
 
             @div(id := "mathdiv")
             @script(raw("""demo.DemoMain().math(document.getElementById("mathdiv"))"""))
+        @sect{Whitespace Handling}
+            @hl.ref(tests/"WhiteSpaceMathTests.scala", "val White", "val tests")
+
+            @p
+                To handle whitespace and other non-significant characters with FastParse, use the @hl.scala{WhitespaceApi} as a substitue for the normal API that is provided for parsers. This modifies the @hl.scala{~} and @hl.scala{.rep} operators to consume all non-trailing whitespace and ignoring it. 
+
+            @p
+                Note how you can pass in whatever definition of whitespace you want: here we're passing in a simple @hl.scala{" ".rep}, but in a more sophisticated parser you may wish to include tabs, newlines, comments or even nested comments. The whitespace parser can be arbitrarily complex.
+
+            @p
+                Note also how we're importing from @hl.scala{fastparse.noApi} instead of @hl.scala{fastparse.all}, and then substituting it with our one whitespace-consuming parser API. Other than that, the parser is identical except for added whitespace parsers at the start and end of the @hl.scala{expr} rule.
+
+            @p
+                Here it is in action:
+
+            @hl.ref(tests/"WhiteSpaceMathTests.scala", "def check")
+
+            @p
+                Or try it yourself:
+
+            @div(id := "wsmathdiv")
+            @script(raw("""demo.DemoMain().whitespaceMath(document.getElementById("wsmathdiv"))"""))
+
+        @sect{Indentation Grammars}
+            @hl.ref(tests/"IndentationTests.scala", "def eval", "val tests")
+            @p
+                Here is a grammar that is used to parse a simple indentation-based math grammar. To understand the grammar it is trying to parse, it is worth looking at the test data:
+
+            @hl.ref(tests/"IndentationTests.scala", "def check", Seq("check(", "check(", "check("))
+
+            @p
+                As you can see, it is basically a prefix math evaluator, where you use indentation to pass the numbers or expressions to each operator to operate on. 
+
+            @p
+                As for the parser, the novel things are:
+
+            @ul
+                @li
+                    All the rules live in a class parametrized on the @hl.scala{indent} that is currently in place
+                @li
+                    At each level, the @hl.scala{factor}s (@hl.scala{number}s or further @hl.scala{block}s) inside a block are separated by a newline and @hl.scala{indent} spaces
+                @li
+                    The initial top-level @hl.scala{expr} rule starts off with indentation @hl.scala{0}
+                @li
+                    After parsing an operator, we use @hl.scala{deeper} to figure out how deep the first line of the indented block is.
+                @li
+                    We then use @hl.scala{.flatMap} to increment the indentation to the new value and parse the @hl.scala{factor}s at that indentation.
+
+            @p
+                Note how there is no pre-processing, and no lexining phase where the lexer has to guess where in the token stream to inject synthetic indent and dedent tokens, Everything happens in a single pass.
+            @p
+                Try it out!
+            @div(id := "indentdiv")
+            @script(raw("""demo.DemoMain().indentation(document.getElementById("indentdiv"))"""))
 
         @sect{Json}          
             @hl.ref(tests/"JsonTests.scala", "Here is the parser", "val tests")
@@ -343,7 +397,7 @@
             @p
                 Fastparse revolves around @hl.scala{Parser[T]}s: a parser that can attempt to parser a value @hl.scala{T} from an input string. These are defined as:
 
-            @hl.ref(main/'core/"Parsing.scala", "trait Parser", "trait ParserApi")
+            @hl.ref(main/'core/"Parsing.scala", Seq("// Parser", "/*"), "// End Parser")
             @p
                 The main external API is @hl.scala{.parse}. As you can see, apart from the @hl.scala{input} parameter, there are a few parameters that you can use to configure the parse. Apart from that, each @hl.scala{Parser[T]} needs to implement @hl.scala{parseRec} which is a less-convenient but more-performant version that FastParse uses internally when performing a parse.
             @p
@@ -353,11 +407,12 @@
             @p
                 Apart from the core @hl.scala{Parser}, FastParse includes a large set of operations that you can perform on a @hl.scala{Parser} to make composing them more pleasant. These all live in @hl.scala{ParserApi}:
 
-            @hl.ref(main/'core/"Parsing.scala", "trait ParserApi", "trait ParserApiImpl")
+            @hl.ref(main/"ParserApi.scala", "trait ParserApi", "class ParserApiImpl")
             
             @p
                 There are essentially all short-hand constructors for the parsers in the @hl.scala{object Parser} companion. This is the list of operators that you have available when writing your own parsers using FastParse.
-
+            @p
+                As mentioned in @sect.ref("Whitespace Handling"), you can choose to ignore the default set of operators by using @hl.scala{import fastparse.noApi} instead of @hl.scala{import fastparse.all}. That way you can use your own set of operators, e.g. the whitespace-sensitive operators described in that section.
         @sect{Results}
             @p
                 The two kinds of @hl.scala{Result}s let you pattern match to extract the most commonly-used values: for a success, you can extract the resultant value, while a failure provides the last parser which failed. Both also provide the index into the string where the parse succeeded or failed.
@@ -365,9 +420,15 @@
             @p
                 Apart from that, @hl.scala{Result}s also provide other useful information about a parse:
 
-            @hl.ref(main/'core/"Parsing.scala", "trait Success", "object Success")
-            @hl.ref(main/'core/"Parsing.scala", "trait Failure", "object Failure")
+            @hl.ref(main/'core/"Parsing.scala", Seq("object Result", "/*"), "/*")
+            @hl.ref(main/'core/"Parsing.scala", Seq("case class Success", "/*"), "object Failure")
 
+            @p
+                Note how @hl.scala{Failure} only contains a single index for where the parse failed, and the parser at that index which failed. Further debugging information is available in the lazily-computer @hl.scala{traced} value, which performs a whole new parse on the input data with additional instrumentation, and provides additional insight into why the parse failed:
+
+            @hl.ref(main/'core/"Parsing.scala", Seq("// TraceFailure", "/*", "object TracedFailure"))
+            @p
+                Computing the @hl.scala{traced} data is not done by default for performance reasons (the additional run takes longer than the initial run due to the instrumentation) but if you want the information for debugging, it will be there.
     @sect{Performance}
         @p
             FastParse will never be able to compete with hand-written recursive descent parsers for speed. However, it's no slouch either; here's a comparison of FastParse with alternatives, using Parboiled2's JSON parsing benchmark, which parses a ~21,500 line JSON file:

@@ -5,8 +5,9 @@ import parsers.Combinators._
 import parsers.Transformers._
 import Implicits._
 import core.Parser
+
 trait ParserApi[+T] {
-  import Implicits._
+
 
   /**
    * Wraps this in a [[Logged]]. This prints out information
