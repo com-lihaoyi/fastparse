@@ -12,7 +12,7 @@ object ExampleTests extends TestSuite{
   val tests = TestSuite{
     'basic{
       'simple {
-        import fastparse._
+        import fastparse.all._
         val parseA = P( "a" )
 
         val Result.Success(value, successIndex) = parseA.parse("a")

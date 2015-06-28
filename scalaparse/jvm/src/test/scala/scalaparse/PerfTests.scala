@@ -1,5 +1,6 @@
 package scalaparse
 
+import fastparse.core.Result
 import utest._
 
 import scala.tools.nsc.{Global, Settings}
@@ -77,37 +78,36 @@ object PerfTests extends TestSuite{
        * 4769
        * 4825
        */
-
-      (
-        time(() => parser.parse(genJsCodeSource)),
-//        time(() => parser.parse(genJsCodeSource, traceFailure = true)),
-        time(() => global.newUnitParser(genJsCodeSource).parse()),
-        time(() => parser.parse(genJsCodeSource)),
-//        time(() => parser.parse(genJsCodeSource, traceFailure = true)),
-        time(() => global.newUnitParser(genJsCodeSource).parse())
-//        time(() => parser.parse(genJsCodeSource, trace = false)),
-//        time(() => parser.parse(genJsCodeSource, trace = true)),
-//        time(() => global.newUnitParser(genJsCodeSource).parse()),
-//        time(() => parser.parse(genJsCodeSource, trace = false)),
-//        time(() => parser.parse(genJsCodeSource, trace = true)),
-//        time(() => global.newUnitParser(genJsCodeSource).parse()),
-//        time(() => parser.parse(genJsCodeSource, trace = false)),
-//        time(() => parser.parse(genJsCodeSource, trace = true)),
-//        time(() => global.newUnitParser(genJsCodeSource).parse()),
-//        time(() => parser.parse(genJsCodeSource, trace = false)),
-//        time(() => parser.parse(genJsCodeSource, trace = true)),
+//
+//
+//        time(() => parser.parse(genJsCodeSource))
+//        time(() => parser.parse(genJsCodeSource + "*/").asInstanceOf[Result.Failure].traced)
 //        time(() => global.newUnitParser(genJsCodeSource).parse())
-      )
+//        time(() => parser.parse(genJsCodeSource))
+//        time(() => parser.parse(genJsCodeSource + "*/").asInstanceOf[Result.Failure].traced)
+//        time(() => global.newUnitParser(genJsCodeSource).parse())
+//        time(() => parser.parse(genJsCodeSource))
+//        time(() => parser.parse(genJsCodeSource + "*/").asInstanceOf[Result.Failure].traced)
+//        time(() => global.newUnitParser(genJsCodeSource).parse())
+//        time(() => parser.parse(genJsCodeSource))
+//        time(() => parser.parse(genJsCodeSource + "*/").asInstanceOf[Result.Failure].traced)
+//        time(() => global.newUnitParser(genJsCodeSource).parse())
+//        time(() => parser.parse(genJsCodeSource))
+//        time(() => parser.parse(genJsCodeSource + "*/").asInstanceOf[Result.Failure].traced)
+//        time(() => global.newUnitParser(genJsCodeSource).parse())
+//        time(() => parser.parse(genJsCodeSource))
+//        time(() => parser.parse(genJsCodeSource + "*/").asInstanceOf[Result.Failure].traced)
+//        time(() => global.newUnitParser(genJsCodeSource).parse())
     }
   }
   def time(f: () => Unit) = {
     val start = System.currentTimeMillis()
     var count = 0
-    while(System.currentTimeMillis() - start < 10000){
+    while(System.currentTimeMillis() - start < 30000){
       f()
       count += 1
     }
-    count
+    println(count)
   }
 }
 

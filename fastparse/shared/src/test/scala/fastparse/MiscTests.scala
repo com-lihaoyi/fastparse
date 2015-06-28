@@ -65,10 +65,14 @@ object MiscTests extends TestSuite{
     'logging{
       val logged = mutable.Buffer.empty[String]
       implicit val logger = fastparse.Logger(logged.append(_))
+
       val DeepFailure = P( "C" )
       val Foo = P( (DeepFailure.log() | "A".log()) ~ "B".!.log() ).log()
+
       Foo.parse("AB")
+
       val allLogged = logged.mkString("\n")
+
       val expected =
         """+Foo:0
           |  +DeepFailure:0

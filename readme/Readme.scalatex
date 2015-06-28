@@ -170,6 +170,30 @@
 
                 @p
                     @hl.scala{.filter} allows you to supply a predicate @hl.scala{T => Boolean} which is applied to the successful result of the current parser. If the predicate is true the filtered parser succeeds otherwise it fails. The example above uses @hl.scala{.filter} on digits to parse only even numbers successfully while odd numbers will fail. If the current parser fails then that failure is simply passed along.
+            @sect{Log}
+                @hl.ref(tests/"MiscTests.scala", Seq("'logging", ""))
+
+                @p
+                    Debugging of parsers is normally done with the @hl.scala{.log()} method, which logs output whenever the parser is tried, and when it succeeds or fails, together with the location and other data when these things happen (traces on failures, results on successes, the presence of @sect.ref{Cuts}, ...). You can define custom loggers as we've done here, or you can just leave it to by default print to stdout.
+
+                @p
+                    Generally, if a parser is doing something wrong, the workflow is:
+
+                @ul
+                    @li
+                        Add a @hl.scala{.log()} to the parser which is misbehaving
+                    @li
+                        See where it's being tried, and what it's result (success/failure) is, and confirm that it is misbehaving.
+                    @li
+                        Look at the parsers it's made of; which one of them is misbehaving and causing the larger parser to misbehave?
+                    @li
+                        Add @hl.scala{.log()}s to all of them
+                    @li
+                        Identify which of the sub-parsers is misbehaving
+                    @li
+                        Repeat
+                @p
+                    It's a non-trivial process, but it is generally not hard to figure out what's happening this way.
 
         @sect{Intrinsics}
             @p
@@ -428,7 +452,8 @@
 
             @hl.ref(main/'core/"Parsing.scala", Seq("// TraceFailure", "/*", "object TracedFailure"))
             @p
-                Computing the @hl.scala{traced} data is not done by default for performance reasons (the additional run takes longer than the initial run due to the instrumentation) but if you want the information for debugging, it will be there.
+                Computing the @hl.scala{traced} data is not done by default for performance reasons: the additional run takes about 3x longer than the initial run due to the instrumentation, for a total of 4x slowdown. If you want the information for debugging, though, it will be there.
+
     @sect{Performance}
         @p
             FastParse will never be able to compete with hand-written recursive descent parsers for speed. However, it's no slouch either; here's a comparison of FastParse with alternatives, using Parboiled2's JSON parsing benchmark, which parses a ~21,500 line JSON file:
@@ -576,6 +601,28 @@
             "com.lihaoyi" %%% "scalaparse" % "@fastparse.Constants.version"
 
 @sect{Change Log}
+    @sect{0.2.0}
+        @ul
+            @li
+                Default import changed from @hl.scala{import fastparse._} to @hl.scala{import fastparse.all._}, to make space for @hl.scala{import fastparse.noApi._}
+            @li
+                Major changes to parser internals: the internal representation of parse results in @hl.scala("Mutable.{Success, Failure}") has been split off from the immutable external represenation @hl.scala("Result.{Success, Failure}")
+            @li
+                Error-reporting has been overhauled, and is greatly improved at the cost of being more expensive. Detailed errors now require a second parse with instrumentation
+            @li
+                The cheap & spartan error data in @hl.scala{Result.Failure} has been split out from the expensive but detailed error traces in @hl.scala{Result.Failure#traced}. 
+            @li
+                @hl.scala{.log()} now uses the parser's own @hl.scala{.toString} by default if you don't pass in a tag, for convenience.
+            @li
+                Added the ability to exclude the default parser operators via @hl.scala{import fastparse.noApi._}, allowing you to import custom sets of operators tailored to your needs. 
+            @li
+                Introduced the @hl.scala{fastparse.WhitespaceApi} class, which replaces the default set of operators with a new set which eagerly consumes whitespace between parsers.
+            @li
+                Updated ScalaParse to use @hl.scala{fastparse.WhitespaceApi}, resulting in much more precise error locations. Errors are now positioned before the characters which failed, rather than before the preceding whitespace, and syntax errors in comments now provide better errors
+            @li
+                Added unit tests and examples/demos of @sect.ref{Whitespace Handling} and @sect.ref{Indentation Grammars}
+            @li
+                Added @sect.ref{Filter} to the API, to complement @sect.ref{Map} and @sect.ref{FlatMap}
     @sect{0.1.7}
         @ul
             @li

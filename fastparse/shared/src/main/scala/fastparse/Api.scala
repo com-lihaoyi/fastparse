@@ -8,7 +8,7 @@ import acyclic.file
  * the "public" API to fastparse packages
  */
 trait pkg{
-  implicit def enclosingFunctionName: Utils.FuncName = macro Utils.FuncName.impl
+  implicit def enclosingFunctionName: Utils.FuncName = macro MacroUtils.impl
 
   val Result = core.Result
 
