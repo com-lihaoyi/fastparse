@@ -1,5 +1,6 @@
 package fastparse
 import all._
+import fastparse.core.ParseError$
 import utest._
 
 import scala.collection.mutable
@@ -116,6 +117,13 @@ object MiscTests extends TestSuite{
         literal.isInstanceOf[parsers.Terminals.Literal],
         charLiteral.isInstanceOf[parsers.Terminals.CharLiteral]
       )
+    }
+    'failureget{
+      val p = "A"
+      intercept[ParseError]{
+
+      }
+
     }
   }
 }

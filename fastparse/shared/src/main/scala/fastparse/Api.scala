@@ -41,7 +41,8 @@ trait Api{
   type P0 = Parser[Unit]
   type Parser[+T] = core.Parser[T]
   type P[+T] = Parser[T]
-
+  val ParseError = core.ParseError
+  type ParseError = core.ParseError
 }
 object all extends Api{
   implicit def parserApi[T, V](p: T)(implicit c: T => core.Parser[V]): ParserApi[V] =

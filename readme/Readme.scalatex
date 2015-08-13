@@ -584,8 +584,7 @@
             Prototype extensions to the Scala grammar! Unlike the default tools.nsc.Global parser, ScalaParse makes it trivial to add new rules at various sections of the grammar.
         @li
             Manipulate Scala code sections! It's trivial to wrap various rules in ScalaParse in an @sect.ref{Capture} and use it to pull out the relevant bits of a Scala file for you to use.
-        @li
-            Learn how
+
 
     @sect{Using ScalaParse}
         @p
