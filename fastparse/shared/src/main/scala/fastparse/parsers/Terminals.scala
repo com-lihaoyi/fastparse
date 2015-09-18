@@ -3,6 +3,7 @@ import acyclic.file
 import fastparse.Utils._
 import fastparse.core.ParseCtx
 
+import scala.util.Try
 import scala.annotation.tailrec
 import fastparse.core.Parser
 /**
@@ -31,7 +32,7 @@ object Terminals {
     def parseRec(cfg: ParseCtx, index: Int) = {
       val input = cfg.input
       if (index >= input.length) fail(cfg.failure, index)
-      else success(cfg.success, input(index), index+1, Nil, false)
+      else success(cfg.success, input.charAt(index), index+1, Nil, false)
     }
   }
 
@@ -58,7 +59,7 @@ object Terminals {
    * Workaround https://github.com/scala-js/scala-js/issues/1603
    * by implementing startsWith myself
    */
-  def startsWith(src: String, prefix: String, offset: Int) = {
+  def startsWith(src: CharSequence, prefix: String, offset: Int) = {
     val max = prefix.length
     @tailrec def rec(i: Int): Boolean = {
       if (i >= prefix.length) true
@@ -69,7 +70,7 @@ object Terminals {
     rec(0)
   }
 
-  def startsWithIgnoreCase(src: String, prefix: String, offset: Int) = {
+  def startsWithIgnoreCase(src: CharSequence, prefix: String, offset: Int) = {
     val max = prefix.length
     @tailrec def rec(i: Int): Boolean = {
       if (i >= prefix.length) true
@@ -114,8 +115,8 @@ object Terminals {
   case class CharLiteral(c: Char) extends Parser[Unit]{
     def parseRec(cfg: ParseCtx, index: Int) = {
       val input = cfg.input
-      if (index >= input.length) fail(cfg.failure, index)
-      else if (input(index) == c) success(cfg.success, c.toString, index + 1, Nil, false)
+      if (Try(input.charAt(index)).isFailure) fail(cfg.failure, index)
+      else if (input.charAt(index) == c) success(cfg.success, c.toString, index + 1, Nil, false)
       else fail(cfg.failure, index)
     }
     override def toString = literalize(c.toString).toString

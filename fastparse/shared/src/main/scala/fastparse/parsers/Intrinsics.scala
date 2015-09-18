@@ -3,6 +3,7 @@ import acyclic.file
 import fastparse.Utils._
 import fastparse.core.{Precedence, ParseCtx, Result, Parser}
 import fastparse.Utils
+import scala.util.Try
 
 /**
  * High-performance intrinsics for parsing common patterns. All
@@ -16,8 +17,8 @@ object Intrinsics {
     private[this] val uberSet = CharBitSet(chars)
     def parseRec(cfg: ParseCtx, index: Int) = {
       val input = cfg.input
-      if (index >= input.length) fail(cfg.failure, index)
-      else if (uberSet(input(index))) success(cfg.success, (), index + 1, Nil, false)
+      if (Try(input.charAt(index)).isFailure) fail(cfg.failure, index)
+      else if (uberSet(input.charAt(index))) success(cfg.success, (), index + 1, Nil, false)
       else fail(cfg.failure, index)
     }
   }
@@ -44,7 +45,7 @@ object Intrinsics {
     def parseRec(cfg: ParseCtx, index: Int) = {
       var curr = index
       val input = cfg.input
-      while(curr < input.length && uberSet(input(curr))) curr += 1
+      while(curr < input.length && uberSet(input.charAt(curr))) curr += 1
       if (curr - index < min) fail(cfg.failure, curr)
       else success(cfg.success, (), curr, Nil, false)
     }

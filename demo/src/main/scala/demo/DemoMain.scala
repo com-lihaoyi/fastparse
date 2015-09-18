@@ -1,6 +1,7 @@
 package demo
 
 import fastparse.all._
+import fastparse.Utils.CharSequenceSlice
 import org.scalajs.dom
 import org.scalajs.dom.html
 

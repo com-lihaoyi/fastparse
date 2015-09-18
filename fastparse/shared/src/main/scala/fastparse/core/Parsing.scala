@@ -35,9 +35,9 @@ case class SyntaxError(failure: Result.Failure) extends Exception{
 }
 
 object SyntaxError{
-  def msg(code: String, expected: String, idx: Int) = {
+  def msg(code: CharSequence, expected: String, idx: Int) = {
     val locationString = {
-      val (first, last) = code.splitAt(idx)
+      val (first, last) = code.toString.splitAt(idx)
       val lastSnippet = last.split('\n').headOption.getOrElse("")
       val firstSnippet = first.reverse.split('\n').lift(0).getOrElse("").reverse
       firstSnippet + lastSnippet + "\n" + (" " * firstSnippet.length) + "^"
@@ -67,7 +67,7 @@ object Result{
    * @param index The index in the parse where this parse failed
    * @param lastParser The deepest parser in the parse which failed
    */
-  case class Failure(input: String,
+  case class Failure(input: CharSequence,
                      index: Int,
                      lastParser: Parser[_],
                      traceData: (Int, Parser[_])) extends Result[Nothing]{
@@ -84,7 +84,7 @@ object Result{
       Precedence.opWrap(p, Precedence.`:`) + ":" + i
     }
     def formatStackTrace(stack: Seq[Frame],
-                          input: String,
+                          input: CharSequence,
                           index: Int,
                           last: String) = {
       val body =
@@ -119,7 +119,7 @@ object Result{
    * @param traceParsers A list of parsers that could have succeeded at the location
    *                     that this
    */
-  case class TracedFailure(input: String,
+  case class TracedFailure(input: CharSequence,
                            index: Int,
                            fullStack: List[Frame],
                            traceParsers: List[Parser[_]]){
@@ -153,7 +153,7 @@ object Result{
     }
   }
   object TracedFailure{
-    def apply(input: String, index: Int, lastParser: Parser[_], traceData: (Int, Parser[_])) = {
+    def apply(input: CharSequence, index: Int, lastParser: Parser[_], traceData: (Int, Parser[_])) = {
       val (originalIndex, originalParser) = traceData
 
       val mutFailure = originalParser.parseRec(
@@ -234,7 +234,7 @@ object Mutable{
    *                     contains sub-parsers, you should generally aggregate
    *                     any the [[traceParsers]] of any of their results.
    */
-  case class Failure(var input: String,
+  case class Failure(var input: CharSequence,
                      var fullStack: List[Frame],
                      var index: Int,
                      var lastParser: Parser[_],
@@ -261,7 +261,7 @@ object Mutable{
  *                   reporting. `-1` disables tracing, and any other number
  *                   enables recording of stack-traces and
  */
-class ParseCtx(val input: String,
+class ParseCtx(val input: CharSequence,
                var logDepth: Int,
                val traceIndex: Int,
                val originalParser: Parser[_],
@@ -301,7 +301,7 @@ trait Parser[+T] extends ParserResults[T] with Precedence{
    *                   invocations to locate bottlenecks or unwanted
    *                   backtracking in the parser.
    */
-  def parse(input: String,
+  def parse(input: CharSequence,
             index: Int = 0,
             instrument: (Parser[_], Int, () => Result[_]) => Unit = null)
             : Result[T] = {

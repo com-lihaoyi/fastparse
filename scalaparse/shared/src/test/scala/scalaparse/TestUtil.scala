@@ -6,12 +6,13 @@ import utest._
 
 
 import scalaparse.Scala._
+import Utils.CharSequenceSlice
 
 /**
  * Created by haoyi on 5/3/15.
  */
 object TestUtil {
-  def checkNeg[T](input: String, expected: String = "ADA???D", found: String = "ADQW??") = {
+  def checkNeg[T](input: CharSequence, expected: String = "ADA???D", found: String = "ADQW??") = {
 //    println("Checking Neg...\n" )
 //    println(input)
     Scala.CompilationUnit.parse(input) match{
@@ -29,7 +30,7 @@ object TestUtil {
     }
   }
 
-  def check[T](input: String, tag: String = "") = {
+  def check[T](input: CharSequence, tag: String = "") = {
 //    println("Checking...\n" )
 //    println(input)
     val res = Scala.CompilationUnit.parse(input)

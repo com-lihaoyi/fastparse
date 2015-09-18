@@ -24,10 +24,19 @@ object MathTests extends TestSuite{
   val addSub: P[Int] = P( divMul ~ (CharIn("+-").! ~! divMul).rep ).map(eval)
   val expr: P[Int]   = P( addSub ~ End )
 
+  val incompleteStream = new StreamCharSequence({
+    def tooEager = throw new Exception("Shouldn't try to access values ahead of what it needs to in order to play nicely with streams.")
+    "((1+1*2)+(3*4*5))/".toStream ++ ('3' #:: tooEager #:: Stream[Char]())
+  })  
+
   val tests = TestSuite{
     'pass {
-      def check(str: String, num: Int) = {
+      def check(str: CharSequence, num: Int) = {
         val Result.Success(value, _) = expr.parse(str)
+        assert(value == num)
+      }
+      def checkLazy(str: CharSequence, num: Int) = {
+        val Result.Success(value, _) = addSub.parse(str)
         assert(value == num)
       }
 
@@ -38,9 +47,10 @@ object MathTests extends TestSuite{
       check("63/3", 21)
       check("(1+1*2)+(3*4*5)/20", 6)
       check("((1+1*2)+(3*4*5))/3", 21)
+      checkLazy( incompleteStream, 21 )
     }
     'fail{
-      def check(input: String, expectedTrace: String) = {
+      def check(input: CharSequence, expectedTrace: String) = {
         val failure = expr.parse(input).asInstanceOf[Result.Failure]
         val actualTrace = failure.traced.trace
         assert(expectedTrace.trim == actualTrace.trim)
@@ -56,5 +66,11 @@ object MathTests extends TestSuite{
       )
     }
   }
+}
 
+final case class StreamCharSequence(_chars: Stream[Char]) extends CharSequence {
+  def length: Int                                     = _chars.length
+  def charAt(index: Int): Char                        = _chars(index)
+  def subSequence(start: Int, end: Int): CharSequence = new StreamCharSequence(_chars.slice(start, end))
+  override def toString                               = _chars.mkString
 }

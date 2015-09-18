@@ -51,7 +51,7 @@ object Utils {
    * Convert a string to a C&P-able literal. Basically
    * copied verbatim from the uPickle source code.
    */
-  def literalize(s: String, unicode: Boolean = true) = {
+  def literalize(s: CharSequence, unicode: Boolean = true) = {
     val sb = new StringBuilder
     sb.append('"')
     var i = 0
@@ -73,6 +73,22 @@ object Utils {
     }
     sb.append('"')
 
+  }
+
+  implicit class CharSequenceSlice(val cs: CharSequence) extends AnyVal{
+    def slice(from: Int, until: Int): String = {
+      try{
+        cs.subSequence(from, until).toString
+      } catch {
+        case e: StringIndexOutOfBoundsException =>
+          if(0 <= from && from <= until){          
+            // when asking for more than the cs is long, it should be safe to call .length on the potentially lazy CharSequence
+            val length = cs.length
+            assert(until > length) // should be true now
+            cs.subSequence(from, length).toString
+          } else ""
+      }
+    }
   }
 
   object CharBitSet{
@@ -163,11 +179,11 @@ object Utils {
     /**
      * Returns the length of the matching string, or -1 if not found
      */
-    def query(input: String, index: Int): Int = {
+    def query(input: CharSequence, index: Int): Int = {
       @tailrec def rec(offset: Int, currentNode: TrieNode, currentRes: Int): Int = {
         if (index + offset >= input.length) currentRes
         else {
-          val char = input(index + offset)
+          val char = input.charAt(index + offset)
           val next = currentNode(char)
           if (next == null) currentRes
           else rec(
