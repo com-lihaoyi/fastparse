@@ -124,7 +124,7 @@ object JsonTests extends TestSuite{
       """)
     }
     'fail{
-      def check(s: String, expectedError: String) = {
+      def check(s: CharSequence, expectedError: String) = {
         jsonExpr.parse(s) match{
           case s: Result.Success[_] => throw new Exception("Parsing should have failed:")
           case f: Result.Failure =>

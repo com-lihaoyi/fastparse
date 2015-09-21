@@ -23,7 +23,7 @@ object Combinators {
         case Mutable.Success(value0, index0, traceParsers0, cut0) =>
           success(
             cfg.success,
-            cfg.input.substring(index, index0),
+            cfg.input.subSequence(index, index0).toString,
             index0,
             traceParsers0,
             cut0
