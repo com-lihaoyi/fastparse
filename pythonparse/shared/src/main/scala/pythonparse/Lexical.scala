@@ -1,4 +1,4 @@
-package mypy
+package pythonparse
 import acyclic.file
 object  WsApi extends fastparse.WhitespaceApi.Wrapper(Lexical.wscomment)
 /**

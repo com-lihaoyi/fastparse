@@ -1,4 +1,4 @@
-package mypy
+package pythonparse
 import fastparse.noApi._
 import WsApi._
 import Expressions._
@@ -13,6 +13,7 @@ object Statements extends Statements(0)
  */
 class Statements(indent: Int){
 
+  val space = P( CharIn(" \n") )
   val NEWLINE: P0 = P( "\n" | End )
   val ENDMARKER: P0 = P( End )
 
@@ -141,7 +142,7 @@ class Statements(indent: Int){
     }
   }
   val space_indents = P( spaces.repX ~~ " ".repX(indent) )
-  val while_stmt: P[Ast.stmt.While] = P( kw("while") ~! test ~ ":" ~~ suite ~ (kw("else") ~! ":" ~~ suite).?.map(_.toSeq.flatten) ).map(Ast.stmt.While.tupled)
+  val while_stmt = P( kw("while") ~! test ~ ":" ~~ suite ~~ (space_indents ~~ kw("else") ~! ":" ~~ suite).?.map(_.toSeq.flatten) ).map(Ast.stmt.While.tupled)
   val for_stmt: P[Ast.stmt.For] = P( kw("for") ~! exprlist ~ kw("in") ~ testlist ~ ":" ~~ suite ~~ (space_indents ~ kw("else") ~! ":" ~~ suite).? ).map {
     case (itervars, generator, body, orelse) =>
       Ast.stmt.For(tuplize(itervars), tuplize(generator), body, orelse.toSeq.flatten)
@@ -183,13 +184,13 @@ class Statements(indent: Int){
   val suite: P[Seq[Ast.stmt]] = {
     val deeper: P[Int] = {
       val commentLine = P("\n" ~~ Lexical.nonewlinewscomment.?.map(_ => 0)).map((_, Some("")))
-      val endLine = P("\n" ~~ " ".repX(indent + 1).!.map(_.length) ~~ Lexical.comment.!.? )
+      val endLine = P("\n" ~~ (" "|"\t").repX(indent + 1).!.map(_.length) ~~ Lexical.comment.!.? )
       P( Lexical.nonewlinewscomment.? ~~ ( endLine | commentLine ).repX(1) ).map{
-        _.collectFirst{ case (s, None) => s}.get
-      }
+        _.collectFirst{ case (s, None) => s}
+      }.filter(_.isDefined).map(_.get)
     }
     val indented = P( deeper.flatMap{ nextIndent =>
-      new Statements(nextIndent).stmt.repX(1, spaces.repX(1) ~~ (" " * nextIndent)).map(_.flatten)
+      new Statements(nextIndent).stmt.repX(1, spaces.repX(1) ~~ (" " * nextIndent | "\t" * nextIndent)).map(_.flatten)
     } )
     P( indented | " ".rep ~ simple_stmt )
   }

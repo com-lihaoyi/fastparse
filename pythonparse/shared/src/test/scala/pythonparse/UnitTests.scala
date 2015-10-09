@@ -1,4 +1,4 @@
-package mypy
+package pythonparse
 
 import utest._
 

@@ -1,4 +1,4 @@
-package mypy
+package pythonparse
 
 import fastparse.Implicits.Sequencer
 import fastparse.noApi._

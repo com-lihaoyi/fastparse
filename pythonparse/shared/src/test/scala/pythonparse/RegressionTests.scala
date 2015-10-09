@@ -1,7 +1,7 @@
-package mypy
+package pythonparse
 import utest._
 import fastparse.all._
-import ammonite.ops._
+
 object RegressionTests extends TestSuite{
   import Ast.expr._
   import Ast.stmt._
@@ -215,10 +215,23 @@ object RegressionTests extends TestSuite{
         |    3
         |""".stripMargin
     )
+    'while_in_if - TestUtils.check(
+      Statements.file_input,
+      Seq(If(Num(1), Seq(While(Num(0), Seq(Pass), Nil)), Seq(Pass))),
+      """if 1:
+        |    while 0:
+        |        pass
+        |else:
+        |    pass
+        |""".stripMargin
+    )
 
-    'bench - {
-      (Statements.file_input ~ End).parse(read! cwd/'src/'test/'resources/'mypy/"bench.py").get
-    }
+    'tab_indent - TestUtils.check(
+      Statements.file_input,
+      Seq(While(Num(1), Seq(Pass), Nil)),
+      "while 1:\n\tpass"
+    )
+
   }
 }
 
