@@ -100,14 +100,21 @@ lazy val scalaparse = crossProject.dependsOn(fastparse).settings(
   name := "scalaparse"
 ).settings(shared:_*)
 .jvmSettings(
-  libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"//,
-//  fork in (Test, testOnly) := true,
-//  fork in (Test, test) := true
+  libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"
 )
 
 lazy val scalaparseJS = scalaparse.js
 
 lazy val scalaparseJVM = scalaparse.jvm
+
+
+lazy val pythonparse = crossProject.dependsOn(fastparse).settings(
+  name := "pythonparse"
+).settings(shared:_*)
+.jvmSettings()
+
+lazy val pythonparseJVM = pythonparse.jvm
+lazy val pythonparseJS = pythonparse.js
 
 lazy val modules = project.aggregate(
   fastparseJS,
