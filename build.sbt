@@ -119,6 +119,8 @@ lazy val pythonparseJS = pythonparse.js
 lazy val modules = project.aggregate(
   fastparseJS,
   fastparseJVM,
+  pythonparseJS,
+  pythonparseJVM
   scalaparseJS,
   scalaparseJVM,
   utilsJS,
