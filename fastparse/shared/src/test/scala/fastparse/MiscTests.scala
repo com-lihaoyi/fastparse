@@ -121,7 +121,7 @@ object MiscTests extends TestSuite{
     'failureget{
       val p = "A"
       intercept[ParseError]{
-
+        p.parse("B").get
       }
 
     }

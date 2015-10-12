@@ -174,7 +174,7 @@
                 @hl.ref(tests/"MiscTests.scala", Seq("'logging", ""))
 
                 @p
-                    Debugging of parsers is normally done with the @hl.scala{.log()} method, which logs output whenever the parser is tried, and when it succeeds or fails, together with the location and other data when these things happen (traces on failures, results on successes, the presence of @sect.ref{Cuts}, ...). You can define custom loggers as we've done here, or you can just leave it to by default print to stdout.
+                    @sect.ref{Debugging Parsers} is often done with the @hl.scala{.log()} method, which logs output whenever the parser is tried, and when it succeeds or fails, together with the location and other data when these things happen (traces on failures, results on successes, the presence of @sect.ref{Cuts}, ...). You can define custom loggers as we've done here, or you can just leave it to by default print to stdout.
 
                 @p
                     Generally, if a parser is doing something wrong, the workflow is:
@@ -414,6 +414,12 @@
 
             @div(id := "jsondiv")
             @script(raw("""demo.DemoMain().json(document.getElementById("jsondiv"))"""))
+        @sect{PythonParse}
+            @p
+                There is now an @a("example Python parser", href:="https://github.com/lihaoyi/fastparse/tree/master/pythonparse/shared/src/main/scala/pythonparse") available under a subproject in the repo. This is a good example of a real-world parser: parsing knotty syntax (including indentation-delimited blocks!), building an AST, and with heavy unit tests.
+
+            @p
+                PythonParse is currently compatible enough to parse all the python sources in Zulip, Ansible, Changes, Django, and Flask. It isn't published yet on maven central, but feel free to look at it if you want an idea of how to write a complex, real parser.
 
     @sect{API Highlights}
 
@@ -453,6 +459,172 @@
             @hl.ref(main/'core/"Parsing.scala", Seq("// TraceFailure", "/*"), "object TracedFailure")
             @p
                 Computing the @hl.scala{traced} data is not done by default for performance reasons: the additional run takes about 3x longer than the initial run due to the instrumentation, for a total of 4x slowdown. If you want the information for debugging, though, it will be there.
+    @sect{Debugging Parsers}
+        @p
+            The vast majority of your time working with FastParse, your parsers will be incorrect. This is almost by definition, because cnce your parser is correct, you'll be done and can go do something else with your life! Thus FastParse puts a lot of effort into making working with broken parsers as easy as possible
+
+        @p
+            Let's take an example Parser:
+        @hl.scala
+            object Foo{
+              import fastparse.all._
+              val plus = P( "+" )
+              val num = P( CharIn('0' to '9').rep(1) ).!.map(_.toInt)
+              val side = P( "(" ~ expr ~ ")" | num )
+              val expr: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}
+            }
+        @p
+            This is a simple parser that parses some basic arithmetic expressions: @hl.scala{1+2}, @hl.scala{(1+2)+(3+4)}, etc.
+
+        @p
+            If we run the parser on a bad input, though, we get this:
+        @hl.scala
+            Foo.expr.parse("(1+(2+3x))+4")
+            // Failure(("(" ~ expr ~ ")" | num):0 ..."(1+(2+3x))")
+
+        @p
+            As you can see, the error message is pretty generic: "i tried to parse @hl.scala{"(" ~ expr ~ ")"} or a @hl.scala{num} at index @hl.scala{0}". Why does it tell us that?
+
+        @sect{Using Cuts}
+            @p
+                The answer is that as far as FastParse knows, you could have wanted either the @hl.scala{"(" ~ expr ~ ")"} or the @hl.scala{num} at that position, and it doesn't know which one. Thus even though it starts off parsing a paren, when that branch eventually fails (it tries to parse a @hl.scala{")"} at index 7, but finds a @hl.scala{"x"}) it backtracks out of the @hl.scala{"(" ~ expr ~ ")"} parser and then tries to parse @hl.scala{num}. When that fails, it doesn't know which side was "meant" to succeed, and so it gives up and just tells you both sides failed to parse.
+            @p
+                Although FastParse doesn't know which branch was meant to succeed, @i{we} know that once we've parsed a @hl.scala{"("}, it can no longer parse a number! Thus there's no point in backtracking and trying that side of the @hl.scala{|}. If we tell FastParse this by adding @sect.ref{Cuts} @hl.scala{~!} after @hl.scala{"("}
+
+            @hl.scala
+                object Foo{
+                  import fastparse.all._
+                  val plus = P( "+" )
+                  val num = P( CharIn('0' to '9').rep(1) ).!.map(_.toInt)
+                  val side = P( "(" ~! expr ~! ")" | num )
+                  val expr: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}
+                }
+            @p
+                Now, once FastParse sees a @hl.scala{"("}, it can no longer backtrack! Thus it knows that whatever error occurs later, it @i{must} be because it failed to parse a @hl.scala{")"} and not because @hl.scala{num} failed. Then the error message becomes much more precise and useful:
+            @hl.scala
+                Foo.expr.parse("(1+(2+3x))+4")
+                // Failure(")":7 ..."x))+4")
+
+        @sect{Using Log}
+            @p
+                We can add @sect.ref{Log} calls to make FastParse tell us a lot more about what a parser is doing. For example, if we want to know whenever a @hl.scala{side} or @hl.scala{expr} is being attempted, we can add @hl.scala{.log()} to those to parsers to find out:
+            @hl.scala
+                object Foo{
+                  import fastparse.all._
+                  val plus = P( "+" )
+                  val num = P( CharIn('0' to '9').rep(1) ).!.map(_.toInt)
+                  val side = P( "(" ~! expr ~! ")" | num ).log()
+                  val expr:P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}.log()
+                }
+            @p
+                Then when you run it on an invalid input:
+            @hl.scala
+                Foo.expr.parse("(1+(2+3x))+4")
+            @p
+                You get a dump of everything the logged parsers are trying to do
+            @hl.scala
+                +expr:0
+                 +side:0
+                   +expr:1
+                     +side:1
+                     -side:1:Success(2)
+                     +side:3
+                       +expr:4
+                         +side:4
+                         -side:4:Success(5)
+                         +side:6
+                         -side:6:Success(7)
+                       -expr:4:Success(7)
+                     -side:3:Failure(side:3 / ")":3 ..."(2+3x))+4", cut)
+                   -expr:1:Failure(expr:1 / side:3 / ")":1 ..."1+(2+3x))+", cut)
+                 -side:0:Failure(side:0 / expr:1 / side:3 / ")":0 ..."(1+(2+3x))", cut)
+                -expr:0:Failure(expr:0 / side:0 / expr:1 / side:3 / ")":0 ..."(1+(2+3x))"
+
+            @p
+                @hl.scala{+} is when a parser is started, @hl.scala{-} is when it finishes with either a success or a failure. In the case of failure, it tells you what the stack was when it failed.
+            @p
+                The general strategy for adding @hl.scala{.log}s is:
+
+            @ol
+                @li
+                    Is my parser misbehaving? This is usually obvious from seeing parse failures when there shouldn't be
+                @li
+                    Are any sub-parsers which I believe should be succeeding/failing/getting-called, aren't? Add logging to the sub-parsers. You can do this at the definition-site of the sub-parsers as shown above, or to the use-site e.g. @hl.scala{side.log("SIDE 1") ~ plus ~ side.log("SIDE 2")} if the parser is used in multiple places and you only want to log this usage.
+                @li
+                    Look at the logging, see some parser behaving strangely. Go to 1.
+
+            @p
+
+
+        @sect{Tracing}
+            @p
+                By default, on failure, FastParse only provides the index and the last parser which failed at that index. This is information FastParse already has and is thus cheap to provide, and often is enough to show what went wrong, and where. If you prefer row & column, you can trivially compute that from the input & index by counting newlines inside the input string.
+            @p
+                Often you want something more, though, and for that FastParse provides tracing, as described in the documentation of @sect.ref{Results}. By accessing the @hl.scala{.traced} lazy val on a @hl.scala{Failure}, FastParse will perform a whole second parse on the original input, starting from the same index, but with additional tracing code to keep track of what's happening. This typically costs ~2x as much as the original parse, so isn't done by default, but it's trivial to ask for it.
+            @p
+                For example, this is tracing being done on an invalid input we know will fail:
+
+            @hl.scala
+                val fail = Foo.expr.parse("(1+(2+3x))+4").asInstanceOf[fastparse.core.Result.Failure]
+            @p
+                We know that this input will fail, because our grammar (defined earlier) does not contain an @hl.scala{"x"} in it! It only handles numbers and @hl.scala{"+"} and parentheses. Let's see what information @hl.scala{.traced} gives us:
+
+            @hl.scala
+                > fail.traced.trace // The named parsers in the stack when it failed
+                expr:0 / side:0 / expr:1 / side:3 / (")" | CharIn("0123456789")):7 ..."x))+4"
+
+                > fail.traced.stack // Same as .trace, but as a List[Frame] rather than String
+                List(
+                 Frame(0,expr), // (1+(2+3x))+4
+                 Frame(0,side), // (1+(2+3x))+4
+                 Frame(1,expr), //  1+(2+3x))+4
+                 Frame(3,side)  //    (2+3x))+4
+                )
+
+                > (fail.index, fail.lastParser) // Last index and last parser at which it failed
+                (7, ")")         //        x))+4
+
+
+            @p
+                As you can see, tracing gives us a much more detailed view: every parser in the stack when the parse failed, what indices they were tried at. Apart from getting it as a readable string via @hl.scala{.trace}, you can also get it as structured data via @hl.scala{.stacK} in case you want to manipulate it programmatically.
+            @p
+                FastParse also provides the @hl.scala{.traceParsers} value, which tells you every single parser which @i{could} have succeeded at the index parsing failed. In thi
+            @hl.scala
+                > fail.traced.traceParsers // Every parser that could have succeeded at Failure#index
+                List(")", CharIn("0123456789"))
+            @p
+                Thus, we can see that although FastParse last tried the @hl.scala{")"} parser, it earlier @i{also} tried the @hl.scala{CharIn("0123456789")} parser at the same spot. This makes perfect sense: if instead of @hl.scala{x} we had a digit of some kind, parsing could have continued! And we do not need to figure this out ourselves; FastParse knows and can tell you.
+            @p
+                Lastly, tracing gives you access to the @hl.scala{.fullStack} of the failure, which contains @i{every} parser in the stack when it failed, not just the ones with names!
+            @p
+                Every expression in a fastparse parser is itself a parser: @hl.scala{"("} is a parser, @hl.scala{"(" ~ expr ~ ")"} is a parser, and so on. With @hl.scala{.fullStack}, we can see in great detail what FastParse was trying to do when it failed:
+
+            @hl.scala
+                > fail.traced.fullStack // Every single parser in the stack when it failed
+                List(
+                 Frame(0,expr),       Frame(0,expr), Frame(0,side ~ plus ~ side),
+                 Frame(0,side),       Frame(0,"(" ~! expr ~! ")" | num), Frame(1,"(" ~! expr ~! ")"),
+                 Frame(1,expr),       Frame(1,expr), Frame(3,side ~ plus ~ side),
+                 Frame(3,side),       Frame(3,"(" ~! expr ~! ")" | num), Frame(7,"(" ~! expr ~! ")")
+                )
+                > (fail.index, fail.lastParser) // Last index and last parser at which it failed
+                (7, ")")         //        x))+4
+
+
+            @p
+                What's the purpose of all this detailed error reporting? The goal is three-fold:
+            @ul
+                @li
+                    You will want to know why parsers as misbehaving while you're writing them so you can fix bugs. Often @hl.scala{.traced.trace} is enough, but you can dig in more deeply if you wish to.
+                @li
+                    You can use the detailed error traces to your users when they enter invalid input. For example, instead of just @i{"Syntax error at column 7"} You can say @i{"Syntax error at column 7, expected @hl.scala{(")" | CharIn("0123456789")}, while trying to parse a @hl.scala{side} at line @hl.scala{3}, while trying to parse an @hl.scala{expr} at column 1, ..."}. Naturally, you do not need to overwhelm the user with debug information, but now you have the power to reveal as much or as little as you want.
+
+                @li
+                    You can customize the experience of your users when they enter invalid input! For example, if I know that the rule @hl.scala{side} failing @i{usually} means the user made some common mistake, I can easily check for that via @hl.scala{fail.traced.stack.contains(_.parser == Foo.side)} and display a more helpful error "Maybe try X?" if it's found. No need to embed your error-reporting deep in the parser, just inspect the @hl.scala{stack} and find out after the fact.
+            @p
+                In general, FastParse's error reporting is detailed and structured. As a @i{developer}, most of your time spent interacting with your parser is when it is incorrect and throwing errors at you. As a @i{user}, most of your time spent interacting with the parser is when your input is incorrect and it is throwing errors at you. This is almost self-evident, since once your parser is correct or your input is correct you're done and go do other things
+            @p
+                Thus, FastParse makes an effort to make the error reporting both detailed and structured. This means as a developer you can quickly diagnose problems, and (if you wish to) put in effort to use the structured errors to help @i{your users} diagnose problems. That makes life better for everybody.
 
     @sect{Performance}
         @p

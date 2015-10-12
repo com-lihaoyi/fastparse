@@ -46,7 +46,7 @@ object ParseError{
       firstSnippet + lastSnippet + "\n" + (" " * firstSnippet.length) + "^"
     }
     val literal = fastparse.Utils.literalize(code.slice(idx, idx + 20))
-    s"found $literal, expected $expected in\n$locationString"
+    s"found $literal, expected $expected at index $idx\n$locationString"
   }
 }
 
