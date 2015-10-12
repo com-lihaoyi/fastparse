@@ -7,4 +7,4 @@ jdk:
 - oraclejdk8
 script:
 - sbt ++$TRAVIS_SCALA_VERSION modules/compile; sbt ++$TRAVIS_SCALA_VERSION modules/test
-sudo: true
+sudo: false
