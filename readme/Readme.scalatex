@@ -602,10 +602,10 @@
             @hl.scala
                 > fail.traced.fullStack // Every single parser in the stack when it failed
                 List(
-                 Frame(0,expr),       Frame(0,expr), Frame(0,side ~ plus ~ side),
-                 Frame(0,side),       Frame(0,"(" ~! expr ~! ")" | num), Frame(1,"(" ~! expr ~! ")"),
-                 Frame(1,expr),       Frame(1,expr), Frame(3,side ~ plus ~ side),
-                 Frame(3,side),       Frame(3,"(" ~! expr ~! ")" | num), Frame(7,"(" ~! expr ~! ")")
+                 Frame(0,expr),   Frame(0,expr), Frame(0,side ~ plus ~ side),
+                 Frame(0,side),   Frame(0,"(" ~! expr ~! ")" | num), Frame(1,"(" ~! expr ~! ")"),
+                 Frame(1,expr),   Frame(1,expr), Frame(3,side ~ plus ~ side),
+                 Frame(3,side),   Frame(3,"(" ~! expr ~! ")" | num), Frame(7,"(" ~! expr ~! ")")
                 )
                 > (fail.index, fail.lastParser) // Last index and last parser at which it failed
                 (7, ")")         //        x))+4
