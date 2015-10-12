@@ -461,7 +461,7 @@
                 Computing the @hl.scala{traced} data is not done by default for performance reasons: the additional run takes about 3x longer than the initial run due to the instrumentation, for a total of 4x slowdown. If you want the information for debugging, though, it will be there.
     @sect{Debugging Parsers}
         @p
-            The vast majority of your time working with FastParse, your parsers will be incorrect. This is almost by definition, because cnce your parser is correct, you'll be done and can go do something else with your life! Thus FastParse puts a lot of effort into making working with broken parsers as easy as possible
+            The vast majority of your time working with FastParse, your parsers will be incorrect. This is almost by definition, because once your parser is correct, you'll be done and can go do something else with your life! Thus FastParse puts a lot of effort into making working with broken parsers as easy as possible
 
         @p
             Let's take an example Parser:
@@ -610,7 +610,7 @@
                 > (fail.index, fail.lastParser) // Last index and last parser at which it failed
                 (7, ")")         //        x))+4
 
-
+        @sect{Use Cases}
             @p
                 What's the purpose of all this detailed error reporting? The goal is three-fold:
             @ul
