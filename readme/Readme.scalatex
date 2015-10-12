@@ -593,7 +593,7 @@
                 > fail.traced.traceParsers // Every parser that could have succeeded at Failure#index
                 List(")", CharIn("0123456789"))
             @p
-                Thus, we can see that although FastParse last tried the @hl.scala{")"} parser, it earlier @i{also} tried the @hl.scala{CharIn("0123456789")} parser at the same spot. This makes perfect sense: if instead of @hl.scala{x} we had a digit of some kind, parsing could have continued! And we do not need to figure this out ourselves; FastParse knows and can tell you.
+                Thus, we can see that although FastParse last tried the @hl.scala{")"} parser, it earlier @i{also} tried the @hl.scala{CharIn("0123456789")} parser at the same spot. This makes perfect sense: if instead of @hl.scala{"x"} we had a digit of some kind, parsing could have continued! And we do not need to figure this out ourselves; FastParse knows and can tell you.
             @p
                 Lastly, tracing gives you access to the @hl.scala{.fullStack} of the failure, which contains @i{every} parser in the stack when it failed, not just the ones with names!
             @p
@@ -617,10 +617,10 @@
                 @li
                     You will want to know why parsers as misbehaving while you're writing them so you can fix bugs. Often @hl.scala{.traced.trace} is enough, but you can dig in more deeply if you wish to.
                 @li
-                    You can use the detailed error traces to your users when they enter invalid input. For example, instead of just @i{"Syntax error at column 7"} You can say @i{"Syntax error at column 7, expected @hl.scala{(")" | CharIn("0123456789")}, while trying to parse a @hl.scala{side} at line @hl.scala{3}, while trying to parse an @hl.scala{expr} at column 1, ..."}. Naturally, you do not need to overwhelm the user with debug information, but now you have the power to reveal as much or as little as you want.
+                    You can use the detailed error traces to your users when they enter invalid input. For example, instead of just @i{"Syntax error at column @hl.scala{7}"} You can say @i{"Syntax error at column @hl.scala{7}, expected @hl.scala{(")" | CharIn("0123456789")}, while trying to parse a @hl.scala{side} at column @hl.scala{3}, while trying to parse an @hl.scala{expr} at column @hl.scala{1}, ..."}. Naturally, you do not need to overwhelm the user with debug information, but now you have the power to reveal as much or as little as you want.
 
                 @li
-                    You can customize the experience of your users when they enter invalid input! For example, if I know that the rule @hl.scala{side} failing @i{usually} means the user made some common mistake, I can easily check for that via @hl.scala{fail.traced.stack.contains(_.parser == Foo.side)} and display a more helpful error "Maybe try X?" if it's found. No need to embed your error-reporting deep in the parser, just inspect the @hl.scala{stack} and find out after the fact.
+                    You can customize the experience of your users when they enter invalid input! For example, if I know that the rule @hl.scala{side} failing @i{usually} means the user made some common mistake, I can easily check for that via @hl.scala{fail.traced.stack.contains(_.parser == Foo.side)} and display a more helpful error @i{"Maybe try X?"} if it's found. No need to embed your error-reporting deep in the parser, just inspect the @hl.scala{stack} and find out after the fact.
             @p
                 In general, FastParse's error reporting is detailed and structured. As a @i{developer}, most of your time spent interacting with your parser is when it is incorrect and throwing errors at you. As a @i{user}, most of your time spent interacting with the parser is when your input is incorrect and it is throwing errors at you. This is almost self-evident, since once your parser is correct or your input is correct you're done and go do other things
             @p
