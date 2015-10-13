@@ -21,12 +21,12 @@ object ProjectTests extends TestSuite{
       println("Cloning")
       Seq("git", "clone", repo, path.toString, "--depth", "1").!
     }
-    val pythonFiles: Seq[String] = Files.walk(path).filter(new Predicate[Path] {
-      def test(t: Path) = {
-        print("+")
-        t.toString.endsWith(".py")
-      }
-    }).toArray.map(_.toString).toSeq
+    val pythonFiles: Seq[String] =
+      Files.walk(path)
+           .toArray
+           .filter(_.toString.endsWith(".py"))
+           .map(_.toString)
+           .toSeq
 
     val grouped = Await.result(Future.sequence(pythonFiles.map { p =>
       Future {
