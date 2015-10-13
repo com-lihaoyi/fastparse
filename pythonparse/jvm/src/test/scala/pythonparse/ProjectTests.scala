@@ -1,6 +1,5 @@
 package pythonparse
 import concurrent.ExecutionContext.Implicits.global
-import java.util.function.Predicate
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 import sys.process._
