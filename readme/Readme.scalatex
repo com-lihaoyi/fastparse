@@ -465,22 +465,17 @@
 
         @p
             Let's take an example Parser:
-        @hl.scala
-            object Foo{
-              import fastparse.all._
-              val plus = P( "+" )
-              val num = P( CharIn('0' to '9').rep(1) ).!.map(_.toInt)
-              val side = P( "(" ~ expr ~ ")" | num )
-              val expr: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}
-            }
+
+        @hl.ref(tests/"ExampleTests.scala", Seq("Debugging", "object Foo"), "check")
+
         @p
             This is a simple parser that parses some basic arithmetic expressions: @hl.scala{1+2}, @hl.scala{(1+2)+(3+4)}, etc.
 
         @p
             If we run the parser on a bad input, though, we get this:
-        @hl.scala
-            Foo.expr.parse("(1+(2+3x))+4")
-            // Failure(("(" ~ expr ~ ")" | num):0 ..."(1+(2+3x))")
+
+
+        @hl.ref(tests/"ExampleTests.scala", Seq("'debugging", "original", "object Foo", "check", ""))
 
         @p
             As you can see, the error message is pretty generic: "i tried to parse @hl.scala{"(" ~ expr ~ ")"} or a @hl.scala{num} at index @hl.scala{0}". Why does it tell us that?
@@ -489,56 +484,29 @@
             @p
                 The answer is that as far as FastParse knows, you could have wanted either the @hl.scala{"(" ~ expr ~ ")"} or the @hl.scala{num} at that position, and it doesn't know which one. Thus even though it starts off parsing a paren, when that branch eventually fails (it tries to parse a @hl.scala{")"} at index 7, but finds a @hl.scala{"x"}) it backtracks out of the @hl.scala{"(" ~ expr ~ ")"} parser and then tries to parse @hl.scala{num}. When that fails, it doesn't know which side was "meant" to succeed, and so it gives up and just tells you both sides failed to parse.
             @p
-                Although FastParse doesn't know which branch was meant to succeed, @i{we} know that once we've parsed a @hl.scala{"("}, it can no longer parse a number! Thus there's no point in backtracking and trying that side of the @hl.scala{|}. If we tell FastParse this by adding @sect.ref{Cuts} @hl.scala{~!} after @hl.scala{"("}
+                Although FastParse doesn't know which branch was meant to succeed, @i{we} know that once we've parsed a @hl.scala{"("}, it can no longer parse a number! Thus there's no point in backtracking and trying that side of the @hl.scala{|}. We can tell FastParse this fact by adding @sect.ref{Cuts} @hl.scala{~!} after @hl.scala{"("}
 
-            @hl.scala
-                object Foo{
-                  import fastparse.all._
-                  val plus = P( "+" )
-                  val num = P( CharIn('0' to '9').rep(1) ).!.map(_.toInt)
-                  val side = P( "(" ~! expr ~ ")" | num )
-                  val expr: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}
-                }
+            @hl.ref(tests/"ExampleTests.scala", Seq("Debugging", "cuts", "object Foo"), "check")
             @p
                 Now, once FastParse sees a @hl.scala{"("}, it can no longer backtrack! Thus it knows that whatever error occurs later, it @i{must} be because it failed to parse a @hl.scala{")"} and not because @hl.scala{num} failed. Then the error message becomes much more precise and useful:
-            @hl.scala
-                Foo.expr.parse("(1+(2+3x))+4")
-                // Failure(")":7 ..."x))+4")
+            @hl.ref(tests/"ExampleTests.scala", Seq("'debugging", "cut", "object Foo", "check", ""))
+
 
         @sect{Using Log}
             @p
                 We can add @sect.ref{Log} calls to make FastParse tell us a lot more about what a parser is doing. For example, if we want to know whenever a @hl.scala{side} or @hl.scala{expr} is being attempted, we can add @hl.scala{.log()} to those to parsers to find out:
-            @hl.scala
-                object Foo{
-                  import fastparse.all._
-                  val plus = P( "+" )
-                  val num = P( CharIn('0' to '9').rep(1) ).!.map(_.toInt)
-                  val side = P( "(" ~! expr ~ ")" | num ).log()
-                  val expr:P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}.log()
-                }
+            @hl.ref(tests/"ExampleTests.scala", Seq("'debugging", "log", "object Foo"), "Foo.expr.parse")
+
             @p
                 Then when you run it on an invalid input:
-            @hl.scala
-                Foo.expr.parse("(1+(2+3x))+4")
+
+            @hl.ref(tests/"ExampleTests.scala", Seq("'debugging", "log", "object Foo", "Foo.expr.parse"), "")
+
             @p
                 You get a dump of everything the logged parsers are trying to do
-            @hl.scala
-                +expr:0
-                 +side:0
-                   +expr:1
-                     +side:1
-                     -side:1:Success(2)
-                     +side:3
-                       +expr:4
-                         +side:4
-                         -side:4:Success(5)
-                         +side:6
-                         -side:6:Success(7)
-                       -expr:4:Success(7)
-                     -side:3:Failure(side:3 / ")":3 ..."(2+3x))+4", cut)
-                   -expr:1:Failure(expr:1 / side:3 / ")":1 ..."1+(2+3x))+", cut)
-                 -side:0:Failure(side:0 / expr:1 / side:3 / ")":0 ..."(1+(2+3x))", cut)
-                -expr:0:Failure(expr:0 / side:0 / expr:1 / side:3 / ")":0 ..."(1+(2+3x))"
+
+            @hl.ref(tests/"ExampleTests.scala", Seq("'debugging", "log", "val expected", ""), "\"\"\"")
+
 
             @p
                 @hl.scala{+} is when a parser is started, @hl.scala{-} is when it finishes with either a success or a failure. In the case of failure, it tells you what the stack was when it failed.

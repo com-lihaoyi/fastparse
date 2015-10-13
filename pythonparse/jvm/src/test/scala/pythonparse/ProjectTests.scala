@@ -20,10 +20,16 @@ object ProjectTests extends TestSuite{
       println("Cloning")
       Seq("git", "clone", repo, path.toString, "--depth", "1").!
     }
-    val pythonFiles: Seq[String] =
-      Files.walk(path)
-           .toArray
-           .filter(_.toString.endsWith(".py"))
+    def listFiles(s: java.io.File): Iterator[String] = {
+      val (dirs, files) = Option(s.listFiles()).toIterator
+        .flatMap(_.toIterator)
+        .partition(_.isDirectory)
+
+      files.map(_.getPath) ++ dirs.flatMap(listFiles)
+    }
+
+    val pythonFiles: Seq[String] = listFiles(new java.io.File(path.toString))
+            .filter(_.toString.endsWith(".py"))
            .map(_.toString)
            .toSeq
 

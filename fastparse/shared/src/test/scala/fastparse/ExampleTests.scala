@@ -279,5 +279,78 @@ object ExampleTests extends TestSuite{
         )
       }
     }
+    'debugging{
+      def check(a: Any, s: String) = assert(a.toString == s.trim)
+      'original{
+        object Foo{
+          import fastparse.all._
+          val plus = P( "+" )
+          val num = P( CharIn('0' to '9').rep(1) ).!.map(_.toInt)
+          val side = P( "(" ~ expr ~ ")" | num )
+          val expr: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}
+        }
+
+
+        check(
+          Foo.expr.parse("(1+(2+3x))+4"),
+          """Failure(("(" ~ expr ~ ")" | num):0 ..."(1+(2+3x))")"""
+        )
+
+      }
+      'cuts{
+        object Foo{
+          import fastparse.all._
+          val plus = P( "+" )
+          val num = P( CharIn('0' to '9').rep(1) ).!.map(_.toInt)
+          val side = P( "(" ~! expr ~ ")" | num )
+          val expr: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}
+        }
+        check(
+          Foo.expr.parse("(1+(2+3x))+4"),
+          """Failure(")":7 ..."x))+4")"""
+        )
+      }
+      'log{
+        val captured = collection.mutable.Buffer.empty[String]
+        implicit val logger = Logger(captured.append(_))
+        object Foo{
+          import fastparse.all._
+          val plus = P( "+" )
+          val num = P( CharIn('0' to '9').rep(1) ).!.map(_.toInt)
+          val side = P( "(" ~! expr ~ ")" | num ).log()
+          val expr:P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}.log()
+        }
+
+
+        Foo.expr.parse("(1+(2+3x))+4")
+
+
+
+        val expected = """
+          +expr:0
+            +side:0
+              +expr:1
+                +side:1
+                -side:1:Success(2)
+                +side:3
+                  +expr:4
+                    +side:4
+                    -side:4:Success(5)
+                    +side:6
+                    -side:6:Success(7)
+                  -expr:4:Success(7)
+                -side:3:Failure(side:3 / ")":3 ..."(2+3x))+4", cut)
+              -expr:1:Failure(expr:1 / side:3 / ")":1 ..."1+(2+3x))+", cut)
+            -side:0:Failure(side:0 / expr:1 / side:3 / ")":0 ..."(1+(2+3x))", cut)
+          -expr:0:Failure(expr:0 / side:0 / expr:1 / side:3 / ")":0 ..."(1+(2+3x))", cut)
+        """.lines.filter(_.trim != "").toSeq
+        val minIndent = expected.map(_.takeWhile(_ == ' ').length).min
+        val expectedString = expected.map(_.drop(minIndent)).mkString("\n")
+        println("XXX " + minIndent)
+        val capturedString = captured.mkString("\n")
+        assert(expectedString == capturedString)
+      }
+    }
+
   }
 }
