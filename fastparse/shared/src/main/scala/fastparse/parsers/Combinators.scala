@@ -286,8 +286,9 @@ object Combinators {
                                   (implicit ev: Implicits.Sequencer[T1, T2, R]) extends Parser[R]{
     def ev2: Implicits.Sequencer[_, _, _] = ev
     def parseRec(cfg: ParseCtx, index: Int) = {
+
       p1.parseRec(cfg, index) match{
-        case f: Mutable.Failure => failMore(f, index, cfg.logDepth, traceParsers = List(p1), cut = f.cut)
+        case f: Mutable.Failure => failMore(f, index, cfg.logDepth, traceParsers = if(cfg.traceIndex == -1) Nil else List(p1), cut = f.cut)
         case Mutable.Success(value0, index0, traceParsers0, cut0)  =>
           //          if (cut) println("CUT! " + this + ":" + s1.index)
           p2.parseRec(cfg, index0) match{
