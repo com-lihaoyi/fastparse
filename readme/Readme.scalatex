@@ -296,6 +296,16 @@
                     With a cut, the error is improved:
 
                 @hl.ref(tests/"ExampleTests.scala", Seq("'delimitercut", ""))
+            @sect{Isolating Cuts}
+                @p
+                    Because cuts prevent backtracking throughout the entire parser, they make it difficult to compose arbitrary parsers.
+
+                @hl.ref(tests/"ExampleTests.scala", Seq("'composecut", ""))
+
+                @p
+                    To explicitly isolate a cut to one branch of a parser, place that branch within @hl.scala{NoCut}.  Cuts within that branch will prevent backtracking inside that branch, but if that branch fails alternate branches will be tried as normal.
+
+                @hl.ref(tests/"ExampleTests.scala", Seq("'composenocut", ""))
 
     @sect{Example Parsers}
         @p
