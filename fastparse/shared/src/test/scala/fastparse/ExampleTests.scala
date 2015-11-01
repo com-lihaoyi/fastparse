@@ -280,22 +280,22 @@ object ExampleTests extends TestSuite{
       }
       'composecut{
          val digit = P( CharIn('0' to '9') )
-         val time1 = P(("1".? ~ digit) ~ ":" ~! digit ~ digit ~ ("am" | "pm"))
-         val time2 = P((("1" | "2").? ~ digit) ~ ":" ~! digit ~ digit)
+         val time1 = P( ("1".? ~ digit) ~ ":" ~! digit ~ digit ~ ("am" | "pm") )
+         val time2 = P( (("1" | "2").? ~ digit) ~ ":" ~! digit ~ digit )
          val Result.Success((), _) = time1.parse("12:30pm")
          val Result.Success((), _) = time2.parse("17:45")
-         val time = P(time1 | time2)
+         val time = P( time1 | time2 )
          val Result.Success((), _) = time.parse("12:30pm")
          val failure = time.parse("17:45").asInstanceOf[Result.Failure]
          assert(failure.index == 5)  // Expects am or pm
       }
       'composenocut{
          val digit = P( CharIn('0' to '9') )
-         val time1 = P(("1".? ~ digit) ~ ":" ~! digit ~ digit ~ ("am" | "pm"))
-         val time2 = P((("1" | "2").? ~ digit) ~ ":" ~! digit ~ digit)
+         val time1 = P( ("1".? ~ digit) ~ ":" ~! digit ~ digit ~ ("am" | "pm") )
+         val time2 = P( (("1" | "2").? ~ digit) ~ ":" ~! digit ~ digit )
          val Result.Success((), _) = time1.parse("12:30pm")
          val Result.Success((), _) = time2.parse("17:45")
-         val time = P(NoCut(time1) | time2)
+         val time = P( NoCut(time1) | time2 )
          val Result.Success((), _) = time.parse("12:30pm")
          val Result.Success((), _) = time.parse("17:45")
       }

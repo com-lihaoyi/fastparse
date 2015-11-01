@@ -72,7 +72,7 @@
             @p
                 Such a parser returns a @hl.scala{Result.Success} if the input matches the string, and otherwise returns a @hl.scala{Result.Failure}.
             @p
-                As you can see, by default the @hl.scala{Success} contains a @hl.scala{(): Unit}, unless you use @sect.ref{Capturing} or @sect.ref{Map} described below. Also, apart from the structured data of the failure, @hl.scala{Failure} also contains a nice human-readable trace of the parse showing the stack of parsers which were in progress when the parse failed.
+                As you can see, by default the @hl.scala{Success} contains a @hl.scala{(): Unit}, unless you use @sect.ref{Capture} or @sect.ref{Map} described below. Also, apart from the structured data of the failure, @hl.scala{Failure} also contains a nice human-readable trace of the parse showing the stack of parsers which were in progress when the parse failed.
 
             @p
                 You can also wrap the strings in an @hl.scala{IgnoreCase("...")} if you want the matching to be case-insensitive.
@@ -123,7 +123,7 @@
                 @p
                     Always succeeds, and provides the current index of the parse into the input string. e.g. useful for providing source locations for AST nodes. Consumes no input.
 
-            @sect{Capturing}
+            @sect{Capture}
                 @hl.ref(tests/"ExampleTests.scala", Seq("'capturing", ""))
                 @p
                     So far, all the parsers go over the input text but do not return any useful value: the @hl.scala{Success#value} attribute was always @hl.scala{()}. In order to make them do so, you use the @hl.scala{.!} operation to capture the section of the input string the parser parsed.
@@ -298,9 +298,12 @@
                 @hl.ref(tests/"ExampleTests.scala", Seq("'delimitercut", ""))
             @sect{Isolating Cuts}
                 @p
-                    Because cuts prevent backtracking throughout the entire parser, they make it difficult to compose arbitrary parsers.
+                    Because cuts prevent backtracking throughout the entire parser, they make it difficult to compose arbitrary parsers:
 
                 @hl.ref(tests/"ExampleTests.scala", Seq("'composecut", ""))
+
+                @p
+                    In the above case, @hl.scala{time1} and @hl.scala{time2} are arbitrary parsers containing @sect.ref{Cuts}. By default, that means that once you've crossed a cut, you can no longer backtrack. However, there are cases where you want to use an existing parser (for example @hl.scala{time1}) in a situation where you want to allow it to backtrack, but you don't want to rewrite it identically but without cuts. In this case it's trivial, but if @hl.scala{time1} was larger you would need to rewrite all of it as well as all of its transitive sub-parsers to make sure that not a single one had a cut inside!
 
                 @p
                     To explicitly isolate a cut to one branch of a parser, place that branch within @hl.scala{NoCut}.  Cuts within that branch will prevent backtracking inside that branch, but if that branch fails alternate branches will be tried as normal.
@@ -492,7 +495,7 @@
         @p
             Let's take an example Parser:
 
-        @hl.ref(tests/"ExampleTests.scala", Seq("Debugging", "object Foo"), "check")
+        @hl.ref(tests/"ExampleTests.scala", Seq("'debugging", "object Foo"), "check")
 
         @p
             This is a simple parser that parses some basic arithmetic expressions: @hl.scala{1+2}, @hl.scala{(1+2)+(3+4)}, etc.
@@ -512,7 +515,7 @@
             @p
                 Although FastParse doesn't know which branch was meant to succeed, @i{we} know that once we've parsed a @hl.scala{"("}, it can no longer parse a number! Thus there's no point in backtracking and trying that side of the @hl.scala{|}. We can tell FastParse this fact by adding @sect.ref{Cuts} @hl.scala{~!} after @hl.scala{"("}
 
-            @hl.ref(tests/"ExampleTests.scala", Seq("Debugging", "cuts", "object Foo"), "check")
+            @hl.ref(tests/"ExampleTests.scala", Seq("'debugging", "cuts", "object Foo"), "check")
             @p
                 Now, once FastParse sees a @hl.scala{"("}, it can no longer backtrack! Thus it knows that whatever error occurs later, it @i{must} be because it failed to parse a @hl.scala{")"} and not because @hl.scala{num} failed. Then the error message becomes much more precise and useful:
             @hl.ref(tests/"ExampleTests.scala", Seq("'debugging", "cut", "object Foo", "check", ""))
