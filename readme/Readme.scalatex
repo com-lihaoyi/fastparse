@@ -47,7 +47,7 @@
     )
     @p
         Which will give you a quick 1-hour tour of how to use FastParse, the motivation behind the library, and how it fits into the bigger picture of how programmers parse unstructured text.
- 
+
     @sect{Getting Started}
         @p
             To begin using FastParse, add
@@ -59,7 +59,7 @@
             To your SBT configuration. To use with Scala.js, you'll need
         @hl.scala
             "com.lihaoyi" %%% "fastparse" % "@fastparse.Constants.version"
-        
+
 
 
     @sect{Writing Parsers}
@@ -122,7 +122,7 @@
 
                 @p
                     Always succeeds, and provides the current index of the parse into the input string. e.g. useful for providing source locations for AST nodes. Consumes no input.
-                    
+
             @sect{Capturing}
                 @hl.ref(tests/"ExampleTests.scala", Seq("'capturing", ""))
                 @p
@@ -173,7 +173,7 @@
 
                 @p
                     @hl.scala{.map} lets you convert an arbitrary @hl.scala{Parser[T]} into a @hl.scala{Parser[V]} by providing a @hl.scala{T => V} function. This is useful for converting the strings and tuples/seqs/options of strings into more useful data-structures.
-            @sect{FlatMap}  
+            @sect{FlatMap}
                 @hl.ref(tests/"ExampleTests.scala", Seq("'flatMap", ""))
 
                 @p
@@ -227,7 +227,7 @@
                 @hl.ref(tests/"ExampleTests.scala", Seq("'charIn", ""))
                 @p
                     Similar to @sect.ref{CharPred}, except you pass in sequences of valid characters rather than a predicate.
-                
+
                 @p
                     As a result, it's much faster to execute than if you had used @hl.scala{"a" | "b" | "c" | "d" | ...} to combine a bunch of single-character parsers together. The same warning as @sect.ref{CharPred} about the one time cost-of-construction applies.
 
@@ -257,7 +257,7 @@
                     Above we have a naive scala definition parser: it either parses a @hl.scala{val} or @hl.scala{def}, a space, and its (lower-case only) name. On a success this works as expected, and extracts the name. However, on a failure, something odd happens: the deepest parser on-failure is shown to be the entire @sect.ref{Either}, rather than just the @hl.scala{alpha} that came after @hl.scala{"val "}. Why is that?
 
                 @p
-                    By default, the parse has an opportunity to backtrack whenever it enters a 
+                    By default, the parse has an opportunity to backtrack whenever it enters a
 
                 @ul
                     @li
@@ -285,7 +285,7 @@
                 @hl.ref(tests/"ExampleTests.scala", Seq("'repcut", ""))
 
                 @p
-                    Another case where you may want to pay attention is when you are using delimiters with your @hl.scala{.rep} calls: 
+                    Another case where you may want to pay attention is when you are using delimiters with your @hl.scala{.rep} calls:
 
                 @hl.ref(tests/"ExampleTests.scala", Seq("'delimiternocut", ""))
 
@@ -336,7 +336,7 @@
             @hl.ref(tests/"WhiteSpaceMathTests.scala", "val White", "val tests")
 
             @p
-                To handle whitespace and other non-significant characters with FastParse, use the @hl.scala{WhitespaceApi} as a substitue for the normal API that is provided for parsers. This modifies the @hl.scala{~} and @hl.scala{.rep} operators to consume all non-trailing whitespace and ignoring it. 
+                To handle whitespace and other non-significant characters with FastParse, use the @hl.scala{WhitespaceApi} as a substitue for the normal API that is provided for parsers. This modifies the @hl.scala{~} and @hl.scala{.rep} operators to consume all non-trailing whitespace and ignoring it.
 
             @p
                 Note how you can pass in whatever definition of whitespace you want: here we're passing in a simple @hl.scala{" ".rep}, but in a more sophisticated parser you may wish to include tabs, newlines, comments or even nested comments. The whitespace parser can be arbitrarily complex.
@@ -363,7 +363,7 @@
             @hl.ref(tests/"IndentationTests.scala", "def check", Seq("check(", "check(", "check("))
 
             @p
-                As you can see, it is basically a prefix math evaluator, where you use indentation to pass the numbers or expressions to each operator to operate on. 
+                As you can see, it is basically a prefix math evaluator, where you use indentation to pass the numbers or expressions to each operator to operate on.
 
             @p
                 As for the parser, the novel things are:
@@ -387,7 +387,7 @@
             @div(id := "indentdiv")
             @script(raw("""demo.DemoMain().indentation(document.getElementById("indentdiv"))"""))
 
-        @sect{Json}          
+        @sect{Json}
             @hl.ref(tests/"JsonTests.scala", "Here is the parser", "val tests")
 
             @p
@@ -399,7 +399,7 @@
             @ul
                 @li
                     We use cuts (@hl.scala{~!}) liberally in order to improve the quality of errors. Anywhere there's an @sect.ref{Either} or @sect.ref{Repeat}, the children have cuts once the parse has progressed far enough backtracking isn't an option.
-                @li 
+                @li
                     We use @hl.scala{CharIn} and @hl.scala{CharsWhile} quite a lot, in order to speed up the common case of consuming lots of boring characters.
                 @li
                     In @hl.scala{strChars}, we break out of @hl.scala{CharsWhile} closing quote (@hl.scala{'"'}) or whenever we see the start of an escape sequence (@hl.scala{'\'}). Although @hl.scala{CharsWhile} can't process these multi-char sequences, we let the @hl.scala{escape} parser deal with these before trying to fall back to @hl.scala{strChars} after. This lets us speed up the "common" case of consuming large numbers of non-escape characters, while still properly handling escapes.
@@ -417,10 +417,10 @@
             @p
                 And that it provides good error messages in the case of mal-formed JSON, even for moderately-sized fragemnts
 
-            @val failPath = Seq("'fail", "* -", "* -", "* -", "* -", "* -", "* -", "\"\"\"", "")    
+            @val failPath = Seq("'fail", "* -", "* -", "* -", "* -", "* -", "* -", "\"\"\"", "")
             @hl.ref(tests/"JsonTests.scala", failPath, "\"\"\"")
 
-            @hl.ref(tests/"JsonTests.scala", failPath ++ Seq("\"\"\"", "\"\"\"", ""), "\"\"\"")            
+            @hl.ref(tests/"JsonTests.scala", failPath ++ Seq("\"\"\"", "\"\"\"", ""), "\"\"\"")
 
             @p
                 Here, we're missing a square bracket after the @hl.scala{"phoneNumbers"} key, and so the parser expects to find a single JSON expression. It finds a JSON object, and then fails reporting that it expected to find the next key (a string), but instead found @hl.scala{"{\n"} at that index.
@@ -454,7 +454,7 @@
                 Apart from the core @hl.scala{Parser}, FastParse includes a large set of operations that you can perform on a @hl.scala{Parser} to make composing them more pleasant. These all live in @hl.scala{ParserApi}:
 
             @hl.ref(main/"ParserApi.scala", "trait ParserApi", "class ParserApiImpl")
-            
+
             @p
                 There are essentially all short-hand constructors for the parsers in the @hl.scala{object Parser} companion. This is the list of operators that you have available when writing your own parsers using FastParse.
             @p
@@ -662,7 +662,7 @@
             These numbers are the number of iterations over 30 seconds, average of 4 runs, with 2 runs of warmup (discarded). FastParse performs worse here, at 11.5x slower than Scalac's in-built parser, and 3x slower than the equivalent Parboiled2-based parser. Depending on what you're doing, that may or may not be a problem: ScalaParse still makes progress at 57,027 lines of Scala per second, which despite being slower than the others is still blazing fast.
 
     @sect{Internals}
-        @p 
+        @p
             FastParse's internals are straightforward, at less than 1000 lines of code. Nonetheless, its design is unlike any other combinator library I've seen: externally immutable, pure-functional parser-combinators with mutable, highly-optimized internals.
 
         @sect{Fast Interpreter}
@@ -698,13 +698,13 @@
                 FastParse does some things that take advantage of the type-directed nature of the result-aggregation: while @hl.scala{Parser[T].rep} returns a @hl.scala{Parser[Seq[T]]} for an arbitrary @hl.scala{T}, there is a short circuit such that @hl.scala{Parser[Unit].rep} simple returns @hl.scala{Parser[Unit]}. This lets the common case of "parsing things, not caring about the result" avoid the allocation, while still allowing you to stick some other type in there (e.g. @hl.scala{Any}) if you really do care about the bucket-of-@hl.scala{Unit}s.
 
             @p
-                FastParse also takes advantage of the fact that @hl.scala{Parser}s are immutable. That makes it feasible to make instantiation mildly-expensive, since each one only gets instantiated once rather than per-parse. As an example, @sect.ref{CharIn}, @sect.ref{CharPred} and @sect.ref{CharsWhile} all have their predicate converted to an identical bit-set to make character lookups extremely fast. Similarly, @sect.ref{StringIn} gets converted into a Trie in order to allow one-pass matching of dozens of strings at the same time. 
+                FastParse also takes advantage of the fact that @hl.scala{Parser}s are immutable. That makes it feasible to make instantiation mildly-expensive, since each one only gets instantiated once rather than per-parse. As an example, @sect.ref{CharIn}, @sect.ref{CharPred} and @sect.ref{CharsWhile} all have their predicate converted to an identical bit-set to make character lookups extremely fast. Similarly, @sect.ref{StringIn} gets converted into a Trie in order to allow one-pass matching of dozens of strings at the same time.
             @p
                 These operations are not cheap: the bitsets easily take a few KB of memory each, and involve 65k iterations to fill them in. However, since @hl.scala{Parser}s are immutable, this one-time-cost goes from "ridiculous" to "acceptable". All these internal optimizations are completely opaque to the user, who (apart from performance) never need to think about them.
 
 
     @sect{Comparisons}
-        @p    
+        @p
             FastParse differs from all other parser-combinator libraries in the Scala universe, in quite substantial ways:
 
         @ul
@@ -716,7 +716,7 @@
                 @a("scala-parser-combinators", href:="https://github.com/scala/scala-parser-combinators") is similar, but poorly executed. It is ~100x slower than FastParse, has an awkward inheritance-based API, and is full of bugs despite being half a decade old. FastParse is faster, has self-contained pure-functional parsers, and fixes bugs e.g. by having the @hl.scala{.log} operator actually work.
 
 @sect{ScalaParse}
-    
+
     @div(id := "scaladiv")
     @script(raw("""demo.DemoMain().scalaparser(document.getElementById("scaladiv"))"""))
 
@@ -773,11 +773,11 @@
             @li
                 Error-reporting has been overhauled, and is greatly improved at the cost of being more expensive. Detailed errors now require a second parse with instrumentation
             @li
-                The cheap & spartan error data in @hl.scala{Result.Failure} has been split out from the expensive but detailed error traces in @hl.scala{Result.Failure#traced}. 
+                The cheap & spartan error data in @hl.scala{Result.Failure} has been split out from the expensive but detailed error traces in @hl.scala{Result.Failure#traced}.
             @li
                 @hl.scala{.log()} now uses the parser's own @hl.scala{.toString} by default if you don't pass in a tag, for convenience.
             @li
-                Added the ability to exclude the default parser operators via @hl.scala{import fastparse.noApi._}, allowing you to import custom sets of operators tailored to your needs. 
+                Added the ability to exclude the default parser operators via @hl.scala{import fastparse.noApi._}, allowing you to import custom sets of operators tailored to your needs.
             @li
                 Introduced the @hl.scala{fastparse.WhitespaceApi} class, which replaces the default set of operators with a new set which eagerly consumes whitespace between parsers.
             @li

@@ -135,7 +135,7 @@ lazy val demo = project.enablePlugins(ScalaJSPlugin)
   .settings(shared:_*)
   .settings(
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.8.0",
-    libraryDependencies += "com.lihaoyi" %%% "scalatags" % "0.5.1",
+    libraryDependencies += "com.lihaoyi" %%% "scalatags" % "0.5.3",
     emitSourceMaps := false,
     publishArtifact := false,
     publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
