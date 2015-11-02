@@ -139,7 +139,7 @@
                     @li
                         @hl.scala{captureRep} is a @hl.scala{Parser[Seq[String]]}
                     @li
-                        @hl.scala{captureOpt} is a @hl.scala{Parser[Opt[String]]}
+                        @hl.scala{captureOpt} is a @hl.scala{Parser[Option[String]]}
                 @p
                     In general, if you have a parser of type @hl.scala{TupleN}, capturing one more section turns it into a @hl.scala{TupleN+1}. Furthermore, if you capture within a @hl.scala{.rep} or @hl.scala{.?} optional parser, it becomes a @hl.scala{Parser[Seq[T]]} or @hl.scala{Parser[Option[T]]} respectively
             @sect{AnyChar}
