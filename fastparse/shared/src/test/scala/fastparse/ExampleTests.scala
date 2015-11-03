@@ -220,7 +220,7 @@ object ExampleTests extends TestSuite{
       }
       'withcut{
         val alpha = P( CharIn('a' to 'z') )
-        val nocut = P( "val " ~! alpha.rep(1).! | "def " ~! alpha.rep(1).!)
+        val nocut = P( "val " ~!~ alpha.rep(1).! | "def " ~!~ alpha.rep(1).!)
 
 //        val Result.Success("abcd", _) = nocut.parse("val abcd")
 
@@ -247,7 +247,7 @@ object ExampleTests extends TestSuite{
       }
       'repcut{
         val alpha = P( CharIn('a' to 'z') )
-        val stmt = P( "val " ~! alpha.rep(1).! ~ ";" ~ " ".rep )
+        val stmt = P( "val " ~!~ alpha.rep(1).! ~ ";" ~ " ".rep )
         val stmts = P( stmt.rep(1) ~ End )
 
         val Result.Success(Seq("abcd"), _) = stmts.parse("val abcd;")
@@ -274,7 +274,19 @@ object ExampleTests extends TestSuite{
       }
       'delimitercut{
         val digits = P( CharIn('0' to '9').rep(1) )
-        val tuple = P( "(" ~ digits.!.rep(sep="," ~! Pass) ~ ")" )
+        val tuple = P( "(" ~ digits.!.rep(sep="," ~!~ Pass) ~ ")" )
+
+        val Result.Success(Seq("1", "23"), _) = tuple.parse("(1,23)")
+
+        val failure = tuple.parse("(1,)").asInstanceOf[Result.Failure]
+        assert(
+          failure.index == 3,
+          failure.traced.trace == """tuple:0 / digits:3 / CharIn("0123456789"):3 ...")""""
+        )
+      }
+      'endcut{
+        val digits = P( CharIn('0' to '9').rep(1) )
+        val tuple = P( "(" ~ digits.!.rep(sep="," ~!) ~ ")" )
 
         val Result.Success(Seq("1", "23"), _) = tuple.parse("(1,23)")
 
@@ -286,8 +298,8 @@ object ExampleTests extends TestSuite{
       }
       'composecut{
          val digit = P( CharIn('0' to '9') )
-         val time1 = P( ("1".? ~ digit) ~ ":" ~! digit ~ digit ~ ("am" | "pm") )
-         val time2 = P( (("1" | "2").? ~ digit) ~ ":" ~! digit ~ digit )
+         val time1 = P( ("1".? ~ digit) ~ ":" ~!~ digit ~ digit ~ ("am" | "pm") )
+         val time2 = P( (("1" | "2").? ~ digit) ~ ":" ~!~ digit ~ digit )
          val Result.Success((), _) = time1.parse("12:30pm")
          val Result.Success((), _) = time2.parse("17:45")
          val time = P( time1 | time2 )
@@ -297,8 +309,8 @@ object ExampleTests extends TestSuite{
       }
       'composenocut{
          val digit = P( CharIn('0' to '9') )
-         val time1 = P( ("1".? ~ digit) ~ ":" ~! digit ~ digit ~ ("am" | "pm") )
-         val time2 = P( (("1" | "2").? ~ digit) ~ ":" ~! digit ~ digit )
+         val time1 = P( ("1".? ~ digit) ~ ":" ~!~ digit ~ digit ~ ("am" | "pm") )
+         val time2 = P( (("1" | "2").? ~ digit) ~ ":" ~!~ digit ~ digit )
          val Result.Success((), _) = time1.parse("12:30pm")
          val Result.Success((), _) = time2.parse("17:45")
          val time = P( NoCut(time1) | time2 )
@@ -329,7 +341,7 @@ object ExampleTests extends TestSuite{
           import fastparse.all._
           val plus = P( "+" )
           val num = P( CharIn('0' to '9').rep(1) ).!.map(_.toInt)
-          val side = P( "(" ~! expr ~ ")" | num )
+          val side = P( "(" ~!~ expr ~ ")" | num )
           val expr: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}
         }
         check(
@@ -344,7 +356,7 @@ object ExampleTests extends TestSuite{
           import fastparse.all._
           val plus = P( "+" )
           val num = P( CharIn('0' to '9').rep(1) ).!.map(_.toInt)
-          val side = P( "(" ~! expr ~ ")" | num ).log()
+          val side = P( "(" ~!~ expr ~ ")" | num ).log()
           val expr:P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}.log()
         }
 
