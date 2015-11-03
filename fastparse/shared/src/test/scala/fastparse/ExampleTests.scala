@@ -360,10 +360,10 @@ object ExampleTests extends TestSuite{
                     +side:6
                     -side:6:Success(7)
                   -expr:4:Success(7)
-                -side:3:Failure(side:3 / ")":3 ..."(2+3x))+4", cut)
-              -expr:1:Failure(expr:1 / side:3 / ")":1 ..."1+(2+3x))+", cut)
-            -side:0:Failure(side:0 / expr:1 / side:3 / ")":0 ..."(1+(2+3x))", cut)
-          -expr:0:Failure(expr:0 / side:0 / expr:1 / side:3 / ")":0 ..."(1+(2+3x))", cut)
+                -side:3:Failure(side:3 / ")":7 ..."(2+3x))+4", cut)
+              -expr:1:Failure(expr:1 / side:3 / ")":7 ..."1+(2+3x))+", cut)
+            -side:0:Failure(side:0 / expr:1 / side:3 / ")":7 ..."(1+(2+3x))", cut)
+          -expr:0:Failure(expr:0 / side:0 / expr:1 / side:3 / ")":7 ..."(1+(2+3x))", cut)
         """.lines.filter(_.trim != "").toSeq
         val minIndent = expected.map(_.takeWhile(_ == ' ').length).min
         val expectedString = expected.map(_.drop(minIndent)).mkString("\n")

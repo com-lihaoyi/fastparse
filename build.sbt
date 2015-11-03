@@ -4,7 +4,7 @@ publishArtifact := false
 
 publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
 
-crossScalaVersions := Seq("2.10.4", "2.11.5")
+crossScalaVersions := Seq("2.10.5", "2.11.7")
 
 val shared = Seq(
   libraryDependencies ++= Seq(
@@ -18,14 +18,14 @@ val shared = Seq(
     )
   ),
   libraryDependencies ++= Seq(
-    "com.lihaoyi" %%% "utest" % "0.3.0" % "test"
+    "com.lihaoyi" %%% "utest" % "0.3.1" % "test"
   ),
   scalaJSStage in Global := FullOptStage,
   organization := "com.lihaoyi",
   version := _root_.fastparse.Constants.version,
-  scalaVersion := "2.11.6",
-  libraryDependencies += "com.lihaoyi" %% "acyclic" % "0.1.2" % "provided",
-  addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.2"),
+  scalaVersion := "2.11.7",
+  libraryDependencies += "com.lihaoyi" %% "acyclic" % "0.1.3" % "provided",
+  addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.3"),
   autoCompilerPlugins := true,
   resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
   testFrameworks += new TestFramework("utest.runner.Framework"),
@@ -134,7 +134,7 @@ lazy val demo = project.enablePlugins(ScalaJSPlugin)
   .dependsOn(fastparseJS % "compile->compile;compile->test", scalaparseJS)
   .settings(shared:_*)
   .settings(
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.8.0",
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.8.2",
     libraryDependencies += "com.lihaoyi" %%% "scalatags" % "0.5.3",
     emitSourceMaps := false,
     publishArtifact := false,
