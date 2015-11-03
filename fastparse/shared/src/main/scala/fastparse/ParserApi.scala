@@ -39,12 +39,12 @@ trait ParserApi[+T] {
    * This lets you greatly narrow the error position by avoiding unwanted
    * backtracking.
    */
-  def ~![V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R]
+  def ~!~[V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R]
 
   /**
    * Performs a cut if this parses successfully.
    */
-  def ~! : Parser[T]
+  def ~!~ : Parser[T]
   /**
    * Parses this, optionally
    */
