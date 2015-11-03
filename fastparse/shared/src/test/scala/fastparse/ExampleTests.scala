@@ -43,8 +43,14 @@ object ExampleTests extends TestSuite{
         val abc = P( "a".rep(sep="b") ~ "c").log("A")
 
         val Result.Success(_, 8) = abc.parse("abababac")
-
         val Result.Failure(parser, 3) = abc.parse("abaabac")
+
+        val ab4c = P ( "a".rep(min=2, max=4, sep="b") ~ "c" )
+
+        val Result.Failure(_, 1) = ab4c.parse("ac")
+        val Result.Success(_, 4) = ab4c.parse("abac")
+        val Result.Success(_, 8) = ab4c.parse("abababac")
+        val Result.Failure(_, 7) = ab4c.parse("ababababac")
       }
 
       'option{
