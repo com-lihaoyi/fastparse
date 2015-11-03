@@ -4,7 +4,7 @@ import fastparse.core.Result
 import utest._
 
 /**
- * Demonstrates simulatneously parsing and
+ * Demonstrates simultaneously parsing and
  * evaluating simple arithmetic expressions
  */
 object MathTests extends TestSuite{
@@ -53,6 +53,11 @@ object MathTests extends TestSuite{
       check(
         "1+-",
         """ expr:0 / addSub:0 / divMul:2 / factor:2 / (number | parens):2 ..."-" """
+      )
+      check(
+        "(1+(2+3x))+4",
+        """ expr:0 / addSub:0 / divMul:0 / factor:0 / parens:0 / addSub:1""" +
+        """ / divMul:3 / factor:3 / parens:3 / (")" | CharIn("+-")):7 ..."x))+4" """
       )
     }
   }
