@@ -280,7 +280,7 @@ object ExampleTests extends TestSuite{
         val failure = tuple.parse("(1,)").asInstanceOf[Result.Failure]
         assert(
           failure.index == 3,
-          failure.traced.trace == """tuple:0 / digits:3 / CharIn("0123456789"):3 ...")""""
+          failure.traced.trace == """tuple:1:1 / digits:1:4 / CharIn("0123456789"):1:4 ...")""""
         )
       }
       'endcut{
