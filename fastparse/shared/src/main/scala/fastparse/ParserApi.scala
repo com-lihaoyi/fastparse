@@ -21,6 +21,13 @@ trait ParserApi[+T] {
   def rep[R](min: Int = 0,
              sep: Parser[_] = Pass)
             (implicit ev: Repeater[T, R]): Parser[R]
+  /**
+   * Repeats this parser any times, between the min and the max defined by
+   * the given range.
+   */
+  def rep[R](range: Range,
+             sep: Parser[_] = Pass)
+            (implicit ev: Repeater[T, R]): Parser[R]
 
   /**
    * Parses using this or the parser `p`
