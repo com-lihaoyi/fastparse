@@ -77,7 +77,7 @@ object MiscTests extends TestSuite{
       val expected =
         """+Foo:0
           |  +DeepFailure:0
-          |  -DeepFailure:0:Failure(DeepFailure:0 / "C":0 ..."AB")
+          |  -DeepFailure:0:Failure(DeepFailure:1:1 / "C":1:1 ..."AB")
           |  +"A":0
           |  -"A":0:Success(1)
           |  +"B":1

@@ -85,6 +85,8 @@ object ProjectTests extends TestSuite{
     'spire - checkRepo("https://github.com/non/spire")
     'saddle - checkRepo("https://github.com/saddle/saddle")
     'scalaIDE - checkRepo("https://github.com/scala-ide/scala-ide")
+    'scalaFX - checkRepo("https://github.com/scalafx/scalafx")
+    'sfxEnsemble - checkRepo("https://github.com/scalafx/scalafx-ensemble")
     'gitbucket - checkRepo("https://github.com/takezoe/gitbucket")
     'scalding - checkRepo("https://github.com/twitter/scalding")
     'scaloid - checkRepo("https://github.com/pocorall/scaloid")
@@ -94,7 +96,11 @@ object ProjectTests extends TestSuite{
     'slick - checkRepo("https://github.com/slick/slick")
     'ensime - checkRepo("https://github.com/ensime/ensime-server")
     'goose - checkRepo("https://github.com/GravityLabs/goose")
-    'lila - checkRepo("https://github.com/ornicar/lila")
+    'lila - checkRepo("https://github.com/ornicar/lila",
+      x => !Seq(
+       "target/repos/lila/modules/lobby/src/main/SocketHandler.scala"
+      ).exists(x.startsWith)
+    )
     'precog - checkRepo("https://github.com/precog/platform")
     'twitterUtil - checkRepo("https://github.com/twitter/util")
     'pickling - checkRepo("https://github.com/scala/pickling")
