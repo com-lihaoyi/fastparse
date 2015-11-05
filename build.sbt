@@ -4,7 +4,7 @@ publishArtifact := false
 
 publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
 
-crossScalaVersions := Seq("2.10.5", "2.11.7")
+crossScalaVersions := Seq("2.10.6", "2.11.7")
 
 val shared = Seq(
   libraryDependencies ++= Seq(
@@ -24,7 +24,6 @@ val shared = Seq(
   organization := "com.lihaoyi",
   version := _root_.fastparse.Constants.version,
   scalaVersion := "2.11.7",
-  ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) },
   libraryDependencies += "com.lihaoyi" %% "acyclic" % "0.1.3" % "provided",
   addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.3"),
   autoCompilerPlugins := true,
