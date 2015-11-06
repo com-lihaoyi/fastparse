@@ -77,6 +77,10 @@ object Result{
 
     lazy val traced = TracedFailure(input, index, lastParser, traceData)
 
+    private lazy val lines = input.take(1 + index).lines.toVector
+    lazy val line = lines.length 
+    lazy val col = lines.last.length
+
     def msg = Failure.formatStackTrace(
       Nil, input, index, Failure.formatParser(lastParser, input, index)
     )
@@ -147,7 +151,7 @@ object Result{
      * and index where the parse failed for easier reading.
      */
     lazy val stack = Failure.filterFullStack(fullStack)
-    
+
     /**
      * A one-line snippet that tells you what the state of the parser was
      * when it failed. This message is completely derived from other values
@@ -157,6 +161,10 @@ object Result{
     lazy val trace = {
       Failure.formatStackTrace(stack, input, index, Failure.formatParser(expected0, input, index))
     }
+
+    private lazy val lines = input.take(1 + index).lines.toVector
+    lazy val line = lines.length 
+    lazy val col = lines.last.length
   }
   object TracedFailure{
     def apply(input: String, index: Int, lastParser: Parser[_], traceData: (Int, Parser[_])) = {
