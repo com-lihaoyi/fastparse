@@ -161,10 +161,6 @@ object Result{
     lazy val trace = {
       Failure.formatStackTrace(stack, input, index, Failure.formatParser(expected0, input, index))
     }
-
-    private lazy val lines = input.take(1 + index).lines.toVector
-    lazy val line = lines.length 
-    lazy val col = lines.last.length
   }
   object TracedFailure{
     def apply(input: String, index: Int, lastParser: Parser[_], traceData: (Int, Parser[_])) = {
