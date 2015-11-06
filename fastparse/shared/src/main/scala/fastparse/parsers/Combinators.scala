@@ -368,11 +368,13 @@ object Combinators {
                     finalIndex: Int,
                     acc: R,
                     count: Int) = {
-        if ((min <= count) && (count <= max)) {
-          if (null == lastFailure)
-            success(cfg.success, acc, finalIndex, List.empty[Parser[_]], cut)
-          else
-            success(cfg.success, acc, finalIndex, lastFailure.traceParsers, cut)
+        if (min <= count) {
+          val parsers =
+            if (null == lastFailure)
+              List.empty[Parser[_]]
+            else
+              lastFailure.traceParsers
+          success(cfg.success, acc, finalIndex, parsers, cut)
         } else failMore(lastFailure, index, cfg.logDepth, cut = cut)
       }
 
