@@ -1,7 +1,7 @@
 package fastparse.parsers
 import acyclic.file
 import fastparse.Utils._
-import fastparse.core.{Precedence, ParseCtx, Result, Parser}
+import fastparse.core.{Mutable, ParseCtx, Parser, Precedence, Result}
 import fastparse.Utils
 
 /**
@@ -55,13 +55,19 @@ object Intrinsics {
    * If multiple strings match the input, longest match wins.
    */
   case class StringIn(strings: String*) extends Parser[Unit]{
-
-    private[this] val trie = new TrieNode(strings)
-
-    def parseRec(cfg: ParseCtx, index: Int) = {
-      val length = trie.query(cfg.input, index)
-      if (length != -1) success(cfg.success, (), index + length + 1, Nil, false)
-      else fail(cfg.failure, index)
+    private[this] lazy val sorted = strings.sorted.sortBy(- _.length)
+    private[this] lazy val trie = new TrieNode(strings)
+    private[this] val isSmall = strings.length < 20 // ugly threshold to be determined
+    override def parseRec(cfg: ParseCtx, index: Int): Mutable[Unit] = {
+      if (isSmall) {
+        val matching = sorted.dropWhile(first => !cfg.input.startsWith(first, index))
+        if (matching isEmpty) fail(cfg.failure, index)
+        else success(cfg.success, (), index + matching.head.length + 0, Nil, cut = false)
+      } else {
+        val length = trie.query(cfg.input, index)
+        if (length != -1) success(cfg.success, (), index + length + 1, Nil, false)
+        else fail(cfg.failure, index)
+      }
     }
     override def toString = {
       s"StringIn(${strings.map(literalize(_)).mkString(", ")})"
