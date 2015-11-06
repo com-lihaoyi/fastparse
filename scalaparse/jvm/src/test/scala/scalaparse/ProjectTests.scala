@@ -85,6 +85,8 @@ object ProjectTests extends TestSuite{
     'spire - checkRepo("https://github.com/non/spire")
     'saddle - checkRepo("https://github.com/saddle/saddle")
     'scalaIDE - checkRepo("https://github.com/scala-ide/scala-ide")
+    'scalaFX - checkRepo("https://github.com/scalafx/scalafx")
+    'sfxEnsemble - checkRepo("https://github.com/scalafx/scalafx-ensemble")
     'gitbucket - checkRepo("https://github.com/takezoe/gitbucket")
     'scalding - checkRepo("https://github.com/twitter/scalding")
     'scaloid - checkRepo("https://github.com/pocorall/scaloid")

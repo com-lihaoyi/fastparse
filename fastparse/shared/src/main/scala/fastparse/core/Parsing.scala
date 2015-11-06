@@ -77,14 +77,21 @@ object Result{
 
     lazy val traced = TracedFailure(input, index, lastParser, traceData)
 
+    private lazy val lines = input.take(1 + index).lines.toVector
+    lazy val line = lines.length 
+    lazy val col = lines.last.length
+
     def msg = Failure.formatStackTrace(
-      Nil, input, index, Failure.formatParser(lastParser, index)
+      Nil, input, index, Failure.formatParser(lastParser, input, index)
     )
     override def toString = s"Failure($msg)"
   }
   object Failure {
-    def formatParser(p: Precedence, i: Int) = {
-      Precedence.opWrap(p, Precedence.`:`) + ":" + i
+    def formatParser(p: Precedence, input: String, index: Int) = {
+      val lines = input.take(1 + index).lines.toVector
+      val line = lines.length 
+      val col = lines.last.length
+      s"${Precedence.opWrap(p, Precedence.`:`)}:${line}:${col}"
     }
     def formatStackTrace(stack: Seq[Frame],
                           input: String,
@@ -92,7 +99,7 @@ object Result{
                           last: String) = {
       val body =
         for (Frame(index, p) <- stack )
-        yield formatParser(p, index)
+        yield formatParser(p, input, index)
       (body :+ last).mkString(" / ") + " ..." + literalize(input.slice(index, index + 10))
     }
     def filterFullStack(fullStack: Seq[Frame]) = {
@@ -144,7 +151,7 @@ object Result{
      * and index where the parse failed for easier reading.
      */
     lazy val stack = Failure.filterFullStack(fullStack)
-    
+
     /**
      * A one-line snippet that tells you what the state of the parser was
      * when it failed. This message is completely derived from other values
@@ -152,7 +159,7 @@ object Result{
      * the default error message isn't to your liking.
      */
     lazy val trace = {
-      Failure.formatStackTrace(stack, input, index, Failure.formatParser(expected0, index))
+      Failure.formatStackTrace(stack, input, index, Failure.formatParser(expected0, input, index))
     }
   }
   object TracedFailure{

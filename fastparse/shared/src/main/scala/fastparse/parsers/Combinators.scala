@@ -88,7 +88,7 @@ object Combinators {
               stack,
               f.input,
               index,
-              Failure.formatParser(f.lastParser, f.index)
+              Failure.formatParser(f.lastParser, f.input, f.index)
             )
             s"Failure($trace${if (f.cut) ", cut" else ""})"
         }
