@@ -1,6 +1,5 @@
 package fastparse
 import all._
-import fastparse.core.ParseError$
 import utest._
 
 import scala.collection.mutable
@@ -39,7 +38,9 @@ object MiscTests extends TestSuite{
         check(("A" | "B").rep, """ ("A" | "B").rep """)
         check(("A".? | "B").rep, """ ("A".? | "B").rep """)
         check(("A".? | "B").rep(1), """ ("A".? | "B").rep(1) """)
+        check(("A".? | "B").rep(1, max = 2), """ ("A".? | "B").rep(1, max = 2) """)
         check(("A".? | "B").rep(sep = "C"), """ ("A".? | "B").rep(sep = "C") """)
+        check(("A".? | "B").rep(sep = "C", max = 2), """ ("A".? | "B").rep(sep = "C", max = 2) """)
         check(("A".? | "B").rep(1, sep="C" ~ "D" | "E"), """("A".? | "B").rep(1, sep = "C" ~ "D" | "E")""")
       }
       'lookahead{
@@ -99,8 +100,8 @@ object MiscTests extends TestSuite{
       }
       'sequence{
         val S = parsers.Combinators.Sequence
-        val F = parsers.Combinators.Sequence.Flat
-        def C(p: P0, b: Boolean = false) = parsers.Combinators.Sequence.Chain(p, b)(null)
+        val F = S.Flat
+        def C(p: P0, b: Boolean = false) = S.Chain(p, b)(null)
         // Need to be pulled out because it makes utest crash
         val expected1 = F("A", Vector(C("B"), C("C"), C("D")))
         val expected2 = F("A", Vector(C("B"), C(F("C", Vector(C("D"))))))

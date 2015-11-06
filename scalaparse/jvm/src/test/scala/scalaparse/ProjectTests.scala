@@ -94,7 +94,11 @@ object ProjectTests extends TestSuite{
     'slick - checkRepo("https://github.com/slick/slick")
     'ensime - checkRepo("https://github.com/ensime/ensime-server")
     'goose - checkRepo("https://github.com/GravityLabs/goose")
-    'lila - checkRepo("https://github.com/ornicar/lila")
+    'lila - checkRepo("https://github.com/ornicar/lila",
+      x => !Seq(
+        "target/repos/lila/modules/lobby/src/main/SocketHandler.scala"
+      ).exists(x.startsWith)
+    )
     'precog - checkRepo("https://github.com/precog/platform")
     'twitterUtil - checkRepo("https://github.com/twitter/util")
     'pickling - checkRepo("https://github.com/scala/pickling")

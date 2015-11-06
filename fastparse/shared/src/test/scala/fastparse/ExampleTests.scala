@@ -36,15 +36,21 @@ object ExampleTests extends TestSuite{
       }
       'repeat{
         val ab = P( "a".rep ~ "b" )
-
         val Result.Success(_, 8) = ab.parse("aaaaaaab")
         val Result.Success(_, 4) = ab.parse("aaaba")
 
-        val abc = P( "a".rep(sep="b") ~ "c").log("A")
-
+        val abc = P( "a".rep(sep="b") ~ "c")
         val Result.Success(_, 8) = abc.parse("abababac")
-
         val Result.Failure(parser, 3) = abc.parse("abaabac")
+
+        val ab4 = P ( "a".rep(min=2, max=4, sep="b") )
+        val Result.Success(_, 7) = ab4.parse("ababababababa")
+
+        val ab4c = P ( "a".rep(min=2, max=4, sep="b") ~ "c" )
+        val Result.Failure(_, 1) = ab4c.parse("ac")
+        val Result.Success(_, 4) = ab4c.parse("abac")
+        val Result.Success(_, 8) = ab4c.parse("abababac")
+        val Result.Failure(_, 7) = ab4c.parse("ababababac")
       }
 
       'option{

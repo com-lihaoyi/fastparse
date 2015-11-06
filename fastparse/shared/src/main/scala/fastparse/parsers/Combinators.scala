@@ -324,10 +324,11 @@ object Combinators {
   }
   /**
    * Repeats the parser over and over. Succeeds with a `Seq` of results
-   * if there are more than [[min]] successful parses. uses the [[delimiter]]
-   * between parses and discards its results
+   * if there are more than [[min]] and less than [[max]] successful parses.
+   * The range [[min]] and [[max]] bounds are inclusive.
+   * It uses the [[delimiter]] parser between parses and discards its results.
    */
-  case class Repeat[T, +R](p: Parser[T], min: Int, delimiter: Parser[_])
+  case class Repeat[T, +R](p: Parser[T], min: Int, max: Int, delimiter: Parser[_])
                           (implicit ev: Implicits.Repeater[T, R]) extends Parser[R]{
 
 
@@ -341,43 +342,52 @@ object Combinators {
         del.parseRec(cfg, index) match{
           case f1: Mutable.Failure =>
             val cut1 = f1.cut
-            if (f1.cut) failMore(f1, index, cfg.logDepth, cut = true)
-            else passIfMin(cut, f1, index, ev.result(acc), count)
+            if (cut1) failMore(f1, index, cfg.logDepth, cut = true)
+            else passInRange(cut, f1, index, ev.result(acc), count)
 
           case Mutable.Success(value0, index0, traceParsers0, cut0)  =>
             p.parseRec(cfg, index0) match{
               case f2: Mutable.Failure =>
                 val cut2 = f2.cut
                 if (cut2 | cut0) failMore(f2, index0, cfg.logDepth, cut = true)
-                else passIfMin(cut | cut0, f2, index, ev.result(acc), count)
+                else passInRange(cut | cut0, f2, index, ev.result(acc), count)
 
               case Mutable.Success(value1, index1, traceParsers1, cut1)  =>
                 ev.accumulate(value1, acc)
-                rec(index1, delimiter, lastFailure, acc, cut0 | cut1, count + 1)
+                val counted = count + 1
+                if (counted < max)
+                  rec(index1, delimiter, lastFailure, acc, cut0 | cut1, counted)
+                else
+                  passInRange(cut0 | cut1, lastFailure, index1, ev.result(acc), counted)
             }
         }
       }
 
-      def passIfMin(cut: Boolean,
+      def passInRange(cut: Boolean,
                     lastFailure: Mutable.Failure,
                     finalIndex: Int,
                     acc: R,
                     count: Int) = {
-        if (count >= min) success(cfg.success, acc, finalIndex, lastFailure.traceParsers, cut)
-        else  failMore(lastFailure, index, cfg.logDepth, cut = cut)
-
+        if (min <= count) {
+          val parsers =
+            if (null == lastFailure)
+              List.empty[Parser[_]]
+            else
+              lastFailure.traceParsers
+          success(cfg.success, acc, finalIndex, parsers, cut)
+        } else failMore(lastFailure, index, cfg.logDepth, cut = cut)
       }
+
       rec(index, Pass, null, ev.initial, false, 0)
     }
     override def toString = {
-      if (min == 0 && delimiter == Pass) opWrap(p) + ".rep"
-      else{
-        val things = Seq(
-          if (min == 0) None else Some(min),
-          if (delimiter == Pass) None else Some("sep = " + delimiter)
-        ).flatten.mkString(", ")
-        s"${opWrap(p)}.rep($things)"
-      }
+      val things = Seq(
+        if (min == 0) None else Some(min),
+        if (delimiter == Pass) None else Some("sep = " + delimiter),
+        if (max == Int.MaxValue) None else Some("max = " + max)
+      ).flatten.mkString(", ")
+      if (things.isEmpty) opWrap(p) + ".rep"
+      else s"${opWrap(p)}.rep($things)"
     }
   }
 
