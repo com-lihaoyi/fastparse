@@ -48,7 +48,7 @@ trait Literals { l =>
     // terminal node. That means that a comment before any terminal will
     // prevent any backtracking from working, which is not what we want!
     val CommentChunk = P( CharsWhile(!"/*".contains(_)) | MultilineComment | !"*/" ~ AnyChar )
-    val MultilineComment: P0 = P( "/*" ~! CommentChunk.rep ~ "*/" )
+    val MultilineComment: P0 = P( "/*" ~!~ CommentChunk.rep ~ "*/" )
     val SameLineCharChunks = P( CharsWhile(!"\n\r".contains(_))  | !Basic.Newline ~ AnyChar )
     val LineComment = P( "//" ~ SameLineCharChunks.rep ~ &(Basic.Newline | End) )
     val Comment: P0 = P( MultilineComment | LineComment )
@@ -56,7 +56,7 @@ trait Literals { l =>
     val Null = Key.W("null")
 
     val OctalEscape = P( Digit ~ Digit.? ~ Digit.? )
-    val Escape = P( "\\" ~! (CharIn("""btnfr'\"]""") | OctalEscape | UnicodeEscape ) )
+    val Escape = P( "\\" ~!~ (CharIn("""btnfr'\"]""") | OctalEscape | UnicodeEscape ) )
 
     // Note that symbols can take on the same values as keywords!
     val Symbol = P( Identifiers.PlainId | Identifiers.Keywords )
@@ -69,7 +69,7 @@ trait Literals { l =>
     }
 
     class InterpCtx(interp: Option[P0]){
-      val Literal = P( ("-".? ~ (Float | Int)) | Bool | String | "'" ~! (Char | Symbol) | Null )
+      val Literal = P( ("-".? ~ (Float | Int)) | Bool | String | "'" ~!~ (Char | Symbol) | Null )
       val Interp = interp match{
         case None => P ( Fail )
         case Some(p) => P( "$" ~ Identifiers.PlainIdNoDollar | ("${" ~ p ~ WL ~ "}") | "$$" )
@@ -94,10 +94,10 @@ trait Literals { l =>
       }
       val String = {
         P {
-          (Id ~ TQ ~! TripleChars ~ TripleTail) |
-          (Id ~ "\"" ~! SingleChars(true)  ~ "\"") |
-          (TQ ~! NoInterp.TripleChars ~ TripleTail) |
-          ("\"" ~! NoInterp.SingleChars(false) ~ "\"")
+          (Id ~ TQ ~!~ TripleChars ~ TripleTail) |
+          (Id ~ "\"" ~!~ SingleChars(true)  ~ "\"") |
+          (TQ ~!~ NoInterp.TripleChars ~ TripleTail) |
+          ("\"" ~!~ NoInterp.SingleChars(false) ~ "\"")
         }
       }
 
