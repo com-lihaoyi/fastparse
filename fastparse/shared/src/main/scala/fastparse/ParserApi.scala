@@ -40,7 +40,7 @@ trait ParserApi[+T] {
    * This lets you greatly narrow the error position by avoiding unwanted
    * backtracking.
    */
-  def ~!~[V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R]
+  def ~/[V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R]
 
   /**
    * Performs a cut if this parses successfully.
@@ -89,7 +89,7 @@ class ParserApiImpl[+T](self: Parser[T]) extends ParserApi[T] {
 
   def ~[V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R] =
     Sequence.flatten(Sequence(self, p, cut=false).asInstanceOf[Sequence[R, R, R]])
-  def ~!~[V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R] =
+  def ~/[V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R] =
     Sequence.flatten(Sequence(self, p, cut=true).asInstanceOf[Sequence[R, R, R]])
 
   def ?[R](implicit ev: Optioner[T, R]): Parser[R] = Optional(self)

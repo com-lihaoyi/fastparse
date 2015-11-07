@@ -98,7 +98,7 @@ class WhitespaceApi[+T](p0: P[T], WL: P0) extends ParserApiImpl(p0)  {
   }
 
 
-  override def ~!~[V, R](p: P[V])
+  override def ~/[V, R](p: P[V])
                        (implicit ev: Sequencer[T, V, R])
   : P[R] = {
     assert(p != null)

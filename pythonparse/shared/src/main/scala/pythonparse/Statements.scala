@@ -35,7 +35,7 @@ class Statements(indent: Int){
     )
   }
 
-  val decorator: P[Ast.expr] = P( "@" ~!~ dotted_name ~ ("(" ~ arglist ~ ")" ).?  ~~ Lexical.nonewlinewscomment.? ~~ NEWLINE).map{
+  val decorator: P[Ast.expr] = P( "@" ~/ dotted_name ~ ("(" ~ arglist ~ ")" ).?  ~~ Lexical.nonewlinewscomment.? ~~ NEWLINE).map{
     case (name, None) => collapse_dotted_name(name)
     case (name, Some((args, (keywords, starargs, kwargs)))) =>
       val x = collapse_dotted_name(name)
@@ -45,12 +45,12 @@ class Statements(indent: Int){
   val decorators = P( decorator.rep )
   val decorated: P[Ast.stmt] = P( decorators ~ (classdef | funcdef) ).map{case (a, b) => b(a)}
   val classdef: P[Seq[Ast.expr] => Ast.stmt.ClassDef] =
-    P( kw("class") ~!~ NAME ~ ("(" ~ testlist.? ~ ")").?.map(_.toSeq.flatten.flatten) ~ ":" ~~ suite ).map{
+    P( kw("class") ~/ NAME ~ ("(" ~ testlist.? ~ ")").?.map(_.toSeq.flatten.flatten) ~ ":" ~~ suite ).map{
       case (a, b, c) => Ast.stmt.ClassDef(a, b, c, _)
     }
 
 
-  val funcdef: P[Seq[Ast.expr] => Ast.stmt.FunctionDef] = P( kw("def") ~!~ NAME ~ parameters ~ ":" ~~ suite ).map{
+  val funcdef: P[Seq[Ast.expr] => Ast.stmt.FunctionDef] = P( kw("def") ~/ NAME ~ parameters ~ ":" ~~ suite ).map{
     case (name, args, suite) => Ast.stmt.FunctionDef(name, args, suite, _)
   }
   val parameters: P[Ast.arguments] = P( "(" ~ varargslist ~ ")" )
@@ -129,9 +129,9 @@ class Statements(indent: Int){
 
   val compound_stmt: P[Ast.stmt] = P( if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | decorated )
   val if_stmt: P[Ast.stmt.If] = {
-    val firstIf = P( kw("if") ~!~ test ~ ":" ~~ suite )
-    val elifs = P( (space_indents ~~ kw("elif") ~!~ test ~ ":" ~~ suite).repX )
-    val lastElse = P( (space_indents ~~ kw("else") ~!~ ":" ~~ suite).? )
+    val firstIf = P( kw("if") ~/ test ~ ":" ~~ suite )
+    val elifs = P( (space_indents ~~ kw("elif") ~/ test ~ ":" ~~ suite).repX )
+    val lastElse = P( (space_indents ~~ kw("else") ~/ ":" ~~ suite).? )
     P( firstIf ~~ elifs ~~ lastElse ).map{
       case (test, body, elifs, orelse) =>
         val (init :+ last) = (test, body) +: elifs
@@ -142,20 +142,20 @@ class Statements(indent: Int){
     }
   }
   val space_indents = P( spaces.repX ~~ " ".repX(indent) )
-  val while_stmt = P( kw("while") ~!~ test ~ ":" ~~ suite ~~ (space_indents ~~ kw("else") ~!~ ":" ~~ suite).?.map(_.toSeq.flatten) ).map(Ast.stmt.While.tupled)
-  val for_stmt: P[Ast.stmt.For] = P( kw("for") ~!~ exprlist ~ kw("in") ~ testlist ~ ":" ~~ suite ~~ (space_indents ~ kw("else") ~!~ ":" ~~ suite).? ).map {
+  val while_stmt = P( kw("while") ~/ test ~ ":" ~~ suite ~~ (space_indents ~~ kw("else") ~/ ":" ~~ suite).?.map(_.toSeq.flatten) ).map(Ast.stmt.While.tupled)
+  val for_stmt: P[Ast.stmt.For] = P( kw("for") ~/ exprlist ~ kw("in") ~ testlist ~ ":" ~~ suite ~~ (space_indents ~ kw("else") ~/ ":" ~~ suite).? ).map {
     case (itervars, generator, body, orelse) =>
       Ast.stmt.For(tuplize(itervars), tuplize(generator), body, orelse.toSeq.flatten)
   }
   val try_stmt: P[Ast.stmt]= {
-    val `try` = P( kw("try") ~!~ ":" ~~ suite )
+    val `try` = P( kw("try") ~/ ":" ~~ suite )
     val excepts: P[Seq[Ast.excepthandler]] = P( (except_clause ~ ":" ~~ suite).map{
       case (None, body) => Ast.excepthandler.ExceptHandler(None, None, body)
       case (Some((x, None)), body) => Ast.excepthandler.ExceptHandler(Some(x), None, body)
       case (Some((x, Some(y))), body) => Ast.excepthandler.ExceptHandler(Some(x), Some(y), body)
     }.repX )
-    val `else` = P( space_indents ~~ kw("else") ~!~ ":" ~~ suite )
-    val `finally` = P( space_indents ~~ kw("finally") ~!~ ":" ~~ suite )
+    val `else` = P( space_indents ~~ kw("else") ~/ ":" ~~ suite )
+    val `finally` = P( space_indents ~~ kw("finally") ~/ ":" ~~ suite )
     P( `try` ~~ excepts ~~ `else`.? ~~ `finally`.? ).map{
       case (tryBlock, excepts, elseBlock, None) =>
         Ast.stmt.TryExcept(tryBlock, excepts, elseBlock.toSeq.flatten)
@@ -168,7 +168,7 @@ class Statements(indent: Int){
         )
     }
   }
-  val with_stmt: P[Ast.stmt.With] = P( kw("with") ~!~ with_item.rep(1, ",")~ ":" ~~ suite ).map{
+  val with_stmt: P[Ast.stmt.With] = P( kw("with") ~/ with_item.rep(1, ",")~ ":" ~~ suite ).map{
     case (items, body) =>
       val (last_expr, last_vars) = items.last
       val inner = Ast.stmt.With(last_expr, last_vars, body)
@@ -178,7 +178,7 @@ class Statements(indent: Int){
   }
   val with_item: P[(Ast.expr, Option[Ast.expr])] = P( test ~ (kw("as") ~ expr).? )
   // NB compile.c makes sure that the default except clause is last
-  val except_clause = P( space_indents ~ kw("except") ~!~ (test ~ ((kw("as") | ",") ~ test).?).? )
+  val except_clause = P( space_indents ~ kw("except") ~/ (test ~ ((kw("as") | ",") ~ test).?).? )
 
 
   val suite: P[Seq[Ast.stmt]] = {
