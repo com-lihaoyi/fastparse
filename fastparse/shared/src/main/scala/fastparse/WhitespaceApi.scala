@@ -51,7 +51,7 @@ object WhitespaceApi {
     override def toString = {
       if (!cut && p0 == Pass) p.toString
       else {
-        val op = if (cut) "~!" else "~"
+        val op = if (cut) "~/" else "~"
         opWrap(p0) + " " + op + " " + opWrap(p)
       }
     }

@@ -12,9 +12,9 @@ trait Exprs extends Core with Types with Xml{
 
   val Import: P0 = {
     val Selector: P0 = P( (Id | `_`) ~ (`=>` ~/ (Id | `_`)).? )
-    val Selectors: P0 = P( "{" ~/ Selector.rep(sep = "," ~!) ~ "}" )
+    val Selectors: P0 = P( "{" ~/ Selector.rep(sep = "," ~/) ~ "}" )
     val ImportExpr: P0 = P( StableId ~ ("." ~/ (`_` | Selectors)).? )
-    P( `import` ~/ ImportExpr.rep(1, sep = "," ~!) )
+    P( `import` ~/ ImportExpr.rep(1, sep = "," ~/) )
   }
 
   object StatCtx extends WsCtx(curlyBlock=true)
@@ -69,7 +69,7 @@ trait Exprs extends Core with Types with Xml{
     val AscriptionType = if (curlyBlock) P( PostfixType ) else P( Type )
     val Ascription = P( `:` ~/ (`_*` |  AscriptionType | Annot.rep(1)) )
     val MatchAscriptionSuffix = P(`match` ~/ "{" ~ CaseClauses | Ascription)
-    val ExprPrefix = P( WL ~ CharIn("-+~!") ~~ !syntax.Basic.OpChar ~ WS)
+    val ExprPrefix = P( WL ~ CharIn("-+~/") ~~ !syntax.Basic.OpChar ~ WS)
     val ExprSuffix = P( (WL ~ "." ~/ Id | WL ~ TypeArgs | NoSemis ~ ArgList).repX ~~ (NoSemis  ~ `_`).? )
     val PrefixExpr = P( ExprPrefix.? ~ SimpleExpr )
     
@@ -82,7 +82,7 @@ trait Exprs extends Core with Types with Xml{
 
     val PostfixExpr: P0 = P( PrefixExpr ~~ ExprSuffix ~~ PostfixSuffix )
 
-    val Parened = P ( "(" ~/ TypeExpr.rep(0, "," ~!) ~ ")" )
+    val Parened = P ( "(" ~/ TypeExpr.rep(0, "," ~/) ~ ")" )
     val SimpleExpr: P0 = {
       val New = P( `new` ~/ AnonTmpl )
 
@@ -91,7 +91,7 @@ trait Exprs extends Core with Types with Xml{
     val Guard : P0 = P( `if` ~/ PostfixExpr )
   }
   val SimplePattern: P0 = {
-    val TupleEx = P( "(" ~/ Pattern.rep(sep = "," ~!) ~ ")" )
+    val TupleEx = P( "(" ~/ Pattern.rep(sep = "," ~/) ~ ")" )
     val Extractor = P( StableId ~ TypeArgs.? ~ TupleEx.? )
     val Thingy = P( `_` ~ (`:` ~/ TypePat).? ~ !("*" ~~ !syntax.Basic.OpChar) )
     P( XmlPattern | Thingy | PatLiteral | TupleEx | Extractor | VarId)
@@ -114,8 +114,8 @@ trait Exprs extends Core with Types with Xml{
     P( Semis.? ~ BlockLambda.? ~ Body ~/ BlockEnd )
   }
 
-  val Patterns: P0 = P( Pattern.rep(1, sep = "," ~!) )
-  val Pattern: P0 = P( (WL ~ TypeOrBindPattern).rep(1, sep = "|" ~!) )
+  val Patterns: P0 = P( Pattern.rep(1, sep = "," ~/) )
+  val Pattern: P0 = P( (WL ~ TypeOrBindPattern).rep(1, sep = "|" ~/) )
   val TypePattern = P( (`_` | VarId) ~ `:` ~ TypePat )
   val TypeOrBindPattern: P0 = P( TypePattern | BindPattern )
   val BindPattern: P0 = {

@@ -35,7 +35,7 @@ object ParsingTests extends TestSuite{
       check(IgnoreCase("Hello").!, ("hElLo WOrld!", 0), Success("hElLo", 5))
       checkFail(IgnoreCase("Hello"), ("hElLo WOrld!", 5), 5)
       check(IgnoreCase(" wo").!, ("Hello WOrld!", 5), Success(" WO", 8))
-      check(IgnoreCase("`~!@3#$4%^&*()-_=+[{]}|\\,.? Hello World"), ("`~!@3#$4%^&*()-_=+[{]}|\\,.? hElLo wOrLd", 0), Success((), 39))
+      check(IgnoreCase("`~/@3#$4%^&*()-_=+[{]}|\\,.? Hello World"), ("`~/@3#$4%^&*()-_=+[{]}|\\,.? hElLo wOrLd", 0), Success((), 39))
     }
     'repeat{
       check("Hello".!.rep, ("HelloHello!", 0), Success(Seq("Hello", "Hello"), 10))

@@ -298,7 +298,7 @@
                 @hl.ref(tests/"ExampleTests.scala", Seq("'delimitercut", ""))
 
                 @p
-                    The @hl.scala{~!} operator can be used as a shortcut for @hl.scala{~/ Pass}. Compare the previous example with the following one:
+                    The @hl.scala{~/} operator can be used as a shortcut for @hl.scala{~/ Pass}. Compare the previous example with the following one:
 
                 @hl.ref(tests/"ExampleTests.scala", Seq("'endcut", ""))
             @sect{Isolating Cuts}
@@ -416,7 +416,7 @@
 
             @ul
                 @li
-                    We use cuts (@hl.scala{~/} and @hl.scala{~!}) liberally in order to improve the quality of errors. Anywhere there's an @sect.ref{Either} or @sect.ref{Repeat}, the children have cuts once the parse has progressed far enough backtracking isn't an option.
+                    We use cuts (@hl.scala{~/} and @hl.scala{~/}) liberally in order to improve the quality of errors. Anywhere there's an @sect.ref{Either} or @sect.ref{Repeat}, the children have cuts once the parse has progressed far enough backtracking isn't an option.
                 @li
                     We use @hl.scala{CharIn} and @hl.scala{CharsWhile} quite a lot, in order to speed up the common case of consuming lots of boring characters.
                 @li

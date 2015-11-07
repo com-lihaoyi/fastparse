@@ -285,7 +285,7 @@ object ExampleTests extends TestSuite{
       }
       'endcut{
         val digits = P( CharIn('0' to '9').rep(1) )
-        val tuple = P( "(" ~ digits.!.rep(sep="," ~!) ~ ")" )
+        val tuple = P( "(" ~ digits.!.rep(sep="," ~/) ~ ")" )
 
         val Result.Success(Seq("1", "23"), _) = tuple.parse("(1,23)")
 
