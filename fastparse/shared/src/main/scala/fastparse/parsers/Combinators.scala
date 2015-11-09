@@ -306,7 +306,7 @@ object Combinators {
     }
     override def opPred = Precedence.OtherOp
     override def toString = {
-      val op = if(cut) "~!" else "~"
+      val op = if(cut) "~/" else "~"
       opWrap(p1) + " " + op + " " + opWrap(p2)
     }
   }
