@@ -30,7 +30,7 @@ trait Types extends Core{
 
   val CompoundType = {
     val Refinement = P( OneNLMax ~ `{` ~ Dcl.repX(sep=Semis) ~ `}` )
-    val NamedType = P( (Pass ~ AnnotType).rep(1, `with` ~/) )
+    val NamedType = P( (Pass ~ AnnotType).rep(1, `with`.~/) )
     P( NamedType ~~ Refinement.? | Refinement )
   }
   val NLAnnot = P( NotNewline ~ Annot )
@@ -40,19 +40,19 @@ trait Types extends Core{
   val SimpleType: P0 = {
     // Can't `cut` after the opening paren, because we might be trying to parse `()`
     // or `() => T`! only cut after parsing one type
-    val TupleType = P( "(" ~ Type.rep(sep= "," ~/) ~ ")" )
+    val TupleType = P( "(" ~ Type.rep(sep= ",".~/) ~ ")" )
     val BasicType = P( TupleType | TypeId ~ ("." ~ `type`).? | `_` )
     P( BasicType ~ (Pass ~ (TypeArgs | `#` ~/ Id)).rep )
   }
 
-  val TypeArgs = P( "[" ~/ Type.rep(sep="," ~/) ~ "]" )
+  val TypeArgs = P( "[" ~/ Type.rep(sep=",".~/) ~ "]" )
 
 
   val FunSig: P0 = {
     val FunArg = P( Annot.rep ~ Id ~ (`:` ~/ Type).? ~ (`=` ~/ TypeExpr).? )
-    val Args = P( FunArg.rep(1, "," ~/) )
+    val Args = P( FunArg.rep(1, ",".~/) )
     val FunArgs = P( OneNLMax ~ "(" ~/ (Pass ~ `implicit`).? ~ Args.? ~ ")" )
-    val FunTypeArgs = P( "[" ~/ (Annot.rep ~ TypeArg).rep(1, "," ~/) ~ "]" )
+    val FunTypeArgs = P( "[" ~/ (Annot.rep ~ TypeArg).rep(1, ",".~/) ~ "]" )
     P( (Id | `this`) ~ (Pass ~ FunTypeArgs).? ~~ FunArgs.rep )
   }
 
@@ -66,8 +66,8 @@ trait Types extends Core{
 
   val TypeArgList: P0 = {
     val Variant: P0 = P( Annot.rep ~ CharIn("+-").? ~ TypeArg )
-    P( "[" ~/ Variant.rep(1, "," ~/) ~ "]" )
+    P( "[" ~/ Variant.rep(1, ",".~/) ~ "]" )
   }
-  val Exprs: P0 = P( TypeExpr.rep(1, "," ~/) )
+  val Exprs: P0 = P( TypeExpr.rep(1, ",".~/) )
   val TypeDef: P0 = P( Id ~ TypeArgList.? ~ (`=` ~/ Type | TypeBounds) )
 }

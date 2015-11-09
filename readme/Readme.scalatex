@@ -298,7 +298,7 @@
                 @hl.ref(tests/"ExampleTests.scala", Seq("'delimitercut", ""))
 
                 @p
-                    The @hl.scala{~/} operator can be used as a shortcut for @hl.scala{~/ Pass}. Compare the previous example with the following one:
+                    The @hl.scala{~/} operator can be used without foolowing parser as a shortcut for @hl.scala{~/ Pass}. Compare the previous example with the following one:
 
                 @hl.ref(tests/"ExampleTests.scala", Seq("'endcut", ""))
             @sect{Isolating Cuts}
