@@ -45,7 +45,7 @@ trait ParserApi[+T] {
   /**
    * Performs a cut if this parses successfully.
    */
-  def ~! : Parser[T]
+  def ~/ : Parser[T]
   /**
    * Parses this, optionally
    */
@@ -96,7 +96,7 @@ class ParserApiImpl[+T](self: Parser[T]) extends ParserApi[T] {
 
   def unary_! : Parser[Unit] = Not(self)
 
-  def ~! : Parser[T] = Cut[T](self)
+  def ~/ : Parser[T] = Cut[T](self)
 
   def ! : Parser[String] = Capturing(self)
 
