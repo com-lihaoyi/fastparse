@@ -35,7 +35,7 @@ object ParsingTests extends TestSuite{
       check(IgnoreCase("Hello").!, ("hElLo WOrld!", 0), Success("hElLo", 5))
       checkFail(IgnoreCase("Hello"), ("hElLo WOrld!", 5), 5)
       check(IgnoreCase(" wo").!, ("Hello WOrld!", 5), Success(" WO", 8))
-      check(IgnoreCase("`~!@3#$4%^&*()-_=+[{]}|\\,.? Hello World"), ("`~!@3#$4%^&*()-_=+[{]}|\\,.? hElLo wOrLd", 0), Success((), 39))
+      check(IgnoreCase("`~/@3#$4%^&*()-_=+[{]}|\\,.? Hello World"), ("`~/@3#$4%^&*()-_=+[{]}|\\,.? hElLo wOrLd", 0), Success((), 39))
     }
     'repeat{
       check("Hello".!.rep, ("HelloHello!", 0), Success(Seq("Hello", "Hello"), 10))
@@ -71,19 +71,19 @@ object ParsingTests extends TestSuite{
       'sequence {
         check("Hello" ~ ("wtf" ~ "omg" | "wtfom"), ("Hellowtfom", 0), Success((), 10))
         checkFail("Hello" ~ ("wtf" ~ "omg" | "bbq"), ("Hellowtfom", 0), 5)
-        checkFail("Hello" ~ ("wtf" ~! "omg" | "wtfom"), ("Hellowtfom", 0), 8)
-        checkFail("Hello" ~ ("wtf" ~ "omg" ~! "bbq" | "wtfom"), ("Hellowtfomgbbe", 0), 11)
-        checkFail("Hello" ~ ("wtf" ~! "omg" ~ "bbq" | "wtfom"), ("Hellowtfomgbbe", 0), 11)
+        checkFail("Hello" ~ ("wtf" ~/ "omg" | "wtfom"), ("Hellowtfom", 0), 8)
+        checkFail("Hello" ~ ("wtf" ~ "omg" ~/ "bbq" | "wtfom"), ("Hellowtfomgbbe", 0), 11)
+        checkFail("Hello" ~ ("wtf" ~/ "omg" ~ "bbq" | "wtfom"), ("Hellowtfomgbbe", 0), 11)
       }
       'rep {
         check(("Hello" ~ "Bye").rep, ("HelloByeHello", 0), Success((), 8))
-        checkFail(("Hello" ~! "Bye").rep, ("HelloByeHello", 0), 13)
+        checkFail(("Hello" ~/ "Bye").rep, ("HelloByeHello", 0), 13)
         check(("Hello" ~ "Bye").rep, ("HelloByeHello", 0), Success((), 8))
-        checkFail("Hello".rep(sep = "Bye" ~! Pass), ("HelloBye", 0), 8)
+        checkFail("Hello".rep(sep = "Bye" ~/ Pass), ("HelloBye", 0), 8)
       }
       'optional{
         check(("Hello" ~ "Bye").?, ("HelloBoo", 0), Success((), 0))
-        checkFail(("Hello" ~! "Bye").?, ("HelloBoo", 0), 5)
+        checkFail(("Hello" ~/ "Bye").?, ("HelloBoo", 0), 5)
       }
     }
   }
