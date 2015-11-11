@@ -1,6 +1,10 @@
-[Documentation](https://lihaoyi.github.io/fastparse)
+FastParse [![Build Status](https://travis-ci.org/lihaoyi/fastparse.svg?branch=master)](https://travis-ci.org/lihaoyi/fastparse) [![Join the chat at https://gitter.im/lihaoyi/Ammonite](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/lihaoyi/fastparse?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+=========
 
-[![Build Status](https://travis-ci.org/lihaoyi/fastparse.svg?branch=master)](https://travis-ci.org/lihaoyi/fastparse)
+This is where the code for the FastParse parsing library lives! If you want
+to use Fastparse, you probably will want to check out the documentation:
+
+- [Documentation](https://lihaoyi.github.io/fastparse)
 
 License
 =======

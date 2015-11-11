@@ -775,6 +775,18 @@
             "com.lihaoyi" %%% "scalaparse" % "@fastparse.Constants.version"
 
 @sect{Change Log}
+    @sect{0.3.1}
+        @ul
+            @li
+                @b{#47} Upgraded to Scala.js 0.6.5, removed unnecessary @code{CharPredicate}s
+            @li
+                @b{#42} Renamed @hl.scala{a ~! b} to @hl.scala{a ~/ b} to avoid confusion with @hl.scala{a ~ !b}
+            @li
+                @hl.scala{Failure} objects now expose the @hl.scala{.line} and @hl.scala{.col} attributes, in addition to the raw @hl.scala{.index}
+            @li
+                @b{#27} @hl.scala{.rep} now can take a @hl.scala{max} in addition to a @hl.scala{min}
+            @li
+                @b{#40} @hl.scala{.log} now properly displays the proper snippet of text when propagating failure upward
     @sect{0.2.1}
         @ul
             @li
