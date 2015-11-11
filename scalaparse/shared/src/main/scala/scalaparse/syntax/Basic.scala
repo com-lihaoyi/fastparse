@@ -28,10 +28,10 @@ object Basic {
     // Same thing for LetterDigit, LowerChar, UpperChar
     fastparse.CharPredicates.isOtherSymbol(c) || fastparse.CharPredicates.isMathSymbol(c) || "!#%&*+-/:<=>?@\\^|~".contains(c)
   }
-  val Letter = P( CharPred(c => isLetter(c) | isDigit(c) | "$_".contains(c)) )
-  val LetterDigitDollarUnderscore =  P( CharPred(c => isLetter(c) | isDigit(c) | "$_".contains(c) ) )
-  val Lower = P( CharPred(c => isLower(c) || "$_".contains(c)) )
-  val Upper = P( CharPred(isUpper) )
+  val Letter = P( CharPred(c => c.isLetter | c.isDigit | "$_".contains(c)) )
+  val LetterDigitDollarUnderscore =  P( CharPred(c => c.isLetter | c.isDigit | "$_".contains(c) ) )
+  val Lower = P( CharPred(c => c.isLower || "$_".contains(c)) )
+  val Upper = P( CharPred(_.isUpper) )
 }
 /**
  * Most keywords don't just require the correct characters to match,
