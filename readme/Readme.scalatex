@@ -782,7 +782,7 @@
             @li
                 @b{#42} Renamed @hl.scala{a ~! b} to @hl.scala{a ~/ b} to avoid confusion with @hl.scala{a ~ !b}
             @li
-                @hl.scala{Failure} objects now expose the @hl.scala{.line} and @hl.scala{.col} attributes, in addition to the raw @hl.scala{.index}
+                @hl.scala{Failure} objects now expose the @hl.scala{.line} and @hl.scala{.col} attributes, in addition to the raw @hl.scala{.index}, and display these in the default trace messages
             @li
                 @b{#27} @hl.scala{.rep} now can take a @hl.scala{max} in addition to a @hl.scala{min}
             @li
