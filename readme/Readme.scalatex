@@ -272,7 +272,7 @@
                 @hl.ref(tests/"ExampleTests.scala", Seq("'withcut", ""))
 
                 @p
-                    Cuts are added using the @hl.scala{~!} operator, which is similar to the @sect.ref{Sequence} operator @hl.scala{~}. Once the parse has crossed a cut, it can no longer backtrack past the point at which the cut occured. Hence, in this case you can see that it no longer backtracks to index 0, out of the enclosing @sect.ref{Either} parser and offering that in the error trace. Instead, it shows a much more precise error: at index @hl.scala{4}, expecting one of the small set of alphanumeric characters.
+                    Cuts are added using the @hl.scala{~/} operator, which is similar to the @sect.ref{Sequence} operator @hl.scala{~}. Once the parse has crossed a cut, it can no longer backtrack past the point at which the cut occured. Hence, in this case you can see that it no longer backtracks to index 0, out of the enclosing @sect.ref{Either} parser and offering that in the error trace. Instead, it shows a much more precise error: at index @hl.scala{4}, expecting one of the small set of alphanumeric characters.
                 @p
                     In general, if you know that a parser is "committed" to one branch after parsing to a certain point, adding a cut will greatly improve the error message by ensuring that the parser @i{itself} knows that. Good places to add cuts include places like after keywords in a programming language parser, where a keyword can be followed by only one thing and anything else is an error.
             @sect{Rep Cuts}
@@ -296,6 +296,12 @@
                     With a cut, the error is improved:
 
                 @hl.ref(tests/"ExampleTests.scala", Seq("'delimitercut", ""))
+
+                @p
+                    The @hl.scala{~/} operator can be used without following parser as a shortcut for @hl.scala{~/ Pass}. Compare the previous example with the following one:
+
+                @hl.ref(tests/"ExampleTests.scala", Seq("'endcut", ""))
+
             @sect{Isolating Cuts}
                 @p
                     Because cuts prevent backtracking throughout the entire parser, they make it difficult to compose arbitrary parsers:
@@ -411,7 +417,7 @@
 
             @ul
                 @li
-                    We use cuts (@hl.scala{~!}) liberally in order to improve the quality of errors. Anywhere there's an @sect.ref{Either} or @sect.ref{Repeat}, the children have cuts once the parse has progressed far enough backtracking isn't an option.
+                    We use cuts (@hl.scala{~/}) liberally in order to improve the quality of errors. Anywhere there's an @sect.ref{Either} or @sect.ref{Repeat}, the children have cuts once the parse has progressed far enough backtracking isn't an option.
                 @li
                     We use @hl.scala{CharIn} and @hl.scala{CharsWhile} quite a lot, in order to speed up the common case of consuming lots of boring characters.
                 @li
@@ -513,7 +519,7 @@
             @p
                 The answer is that as far as FastParse knows, you could have wanted either the @hl.scala{"(" ~ expr ~ ")"} or the @hl.scala{num} at that position, and it doesn't know which one. Thus even though it starts off parsing a paren, when that branch eventually fails (it tries to parse a @hl.scala{")"} at index 7, but finds a @hl.scala{"x"}) it backtracks out of the @hl.scala{"(" ~ expr ~ ")"} parser and then tries to parse @hl.scala{num}. When that fails, it doesn't know which side was "meant" to succeed, and so it gives up and just tells you both sides failed to parse.
             @p
-                Although FastParse doesn't know which branch was meant to succeed, @i{we} know that once we've parsed a @hl.scala{"("}, it can no longer parse a number! Thus there's no point in backtracking and trying that side of the @hl.scala{|}. We can tell FastParse this fact by adding @sect.ref{Cuts} @hl.scala{~!} after @hl.scala{"("}
+                Although FastParse doesn't know which branch was meant to succeed, @i{we} know that once we've parsed a @hl.scala{"("}, it can no longer parse a number! Thus there's no point in backtracking and trying that side of the @hl.scala{|}. We can tell FastParse this fact by adding @sect.ref{Cuts} @hl.scala{~/} after @hl.scala{"("}
 
             @hl.ref(tests/"ExampleTests.scala", Seq("'debugging", "cuts", "object Foo"), "check")
             @p
@@ -600,9 +606,9 @@
                 > fail.traced.fullStack // Every single parser in the stack when it failed
                 List(
                  Frame(0,expr),   Frame(0,expr), Frame(0,side ~ plus ~ side),
-                 Frame(0,side),   Frame(0,"(" ~! expr ~! ")" | num), Frame(1,"(" ~! expr ~! ")"),
+                 Frame(0,side),   Frame(0,"(" ~/ expr ~/ ")" | num), Frame(1,"(" ~/ expr ~/ ")"),
                  Frame(1,expr),   Frame(1,expr), Frame(3,side ~ plus ~ side),
-                 Frame(3,side),   Frame(3,"(" ~! expr ~! ")" | num), Frame(7,"(" ~! expr ~! ")")
+                 Frame(3,side),   Frame(3,"(" ~/ expr ~/ ")" | num), Frame(7,"(" ~/ expr ~/ ")")
                 )
                 > (fail.index, fail.lastParser) // Last index and last parser at which it failed
                 (7, ")")         //        x))+4

@@ -40,12 +40,12 @@ trait ParserApi[+T] {
    * This lets you greatly narrow the error position by avoiding unwanted
    * backtracking.
    */
-  def ~![V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R]
+  def ~/[V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R]
 
   /**
    * Performs a cut if this parses successfully.
    */
-  def ~! : Parser[T]
+  def ~/ : Parser[T]
   /**
    * Parses this, optionally
    */
@@ -89,14 +89,14 @@ class ParserApiImpl[+T](self: Parser[T]) extends ParserApi[T] {
 
   def ~[V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R] =
     Sequence.flatten(Sequence(self, p, cut=false).asInstanceOf[Sequence[R, R, R]])
-  def ~![V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R] =
+  def ~/[V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R] =
     Sequence.flatten(Sequence(self, p, cut=true).asInstanceOf[Sequence[R, R, R]])
 
   def ?[R](implicit ev: Optioner[T, R]): Parser[R] = Optional(self)
 
   def unary_! : Parser[Unit] = Not(self)
 
-  def ~! : Parser[T] = Cut[T](self)
+  def ~/ : Parser[T] = Cut[T](self)
 
   def ! : Parser[String] = Capturing(self)
 
