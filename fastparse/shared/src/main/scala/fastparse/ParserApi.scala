@@ -19,7 +19,8 @@ trait ParserApi[+T] {
    */
   def rep[R](implicit ev: Repeater[T, R]): Parser[R]
   def rep[R](min: Int = 0,
-             sep: Parser[_] = Pass)
+             sep: Parser[_] = Pass,
+             max: Int = Int.MaxValue)
             (implicit ev: Repeater[T, R]): Parser[R]
 
   /**
@@ -39,12 +40,12 @@ trait ParserApi[+T] {
    * This lets you greatly narrow the error position by avoiding unwanted
    * backtracking.
    */
-  def ~![V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R]
+  def ~/[V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R]
 
   /**
    * Performs a cut if this parses successfully.
    */
-  def ~! : Parser[T]
+  def ~/ : Parser[T]
   /**
    * Parses this, optionally
    */
@@ -80,22 +81,22 @@ class ParserApiImpl[+T](self: Parser[T]) extends ParserApi[T] {
 
   def log(msg: String = self.toString)(implicit output: Logger) = Logged(self, msg, output.f)
 
-  def rep[R](implicit ev: Repeater[T, R]): Parser[R] = Repeat(self, 0, Pass)
-  def rep[R](min: Int = 0, sep: Parser[_] = Pass)
-            (implicit ev: Repeater[T, R]): Parser[R] = Repeat(self, min, sep)
+  def rep[R](implicit ev: Repeater[T, R]): Parser[R] = Repeat(self, 0, Int.MaxValue, Pass)
+  def rep[R](min: Int = 0, sep: Parser[_] = Pass, max: Int = Int.MaxValue)
+            (implicit ev: Repeater[T, R]): Parser[R] = Repeat(self, min, max, sep)
 
   def |[V >: T](p: Parser[V]): Parser[V] = Either[V](Either.flatten(Vector(self, p)):_*)
 
   def ~[V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R] =
     Sequence.flatten(Sequence(self, p, cut=false).asInstanceOf[Sequence[R, R, R]])
-  def ~![V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R] =
+  def ~/[V, R](p: Parser[V])(implicit ev: Sequencer[T, V, R]): Parser[R] =
     Sequence.flatten(Sequence(self, p, cut=true).asInstanceOf[Sequence[R, R, R]])
 
   def ?[R](implicit ev: Optioner[T, R]): Parser[R] = Optional(self)
 
   def unary_! : Parser[Unit] = Not(self)
 
-  def ~! : Parser[T] = Cut[T](self)
+  def ~/ : Parser[T] = Cut[T](self)
 
   def ! : Parser[String] = Capturing(self)
 

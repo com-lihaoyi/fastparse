@@ -21,11 +21,11 @@ object WhiteSpaceMathTests extends TestSuite{
     }}
   }
   val number: P[Int] = P( CharIn('0'to'9').rep(1).!.map(_.toInt) )
-  val parens: P[Int] = P( "(" ~! addSub ~ ")" )
+  val parens: P[Int] = P( "(" ~/ addSub ~ ")" )
   val factor: P[Int] = P( number | parens )
 
-  val divMul: P[Int] = P( factor ~ (CharIn("*/").! ~! factor).rep ).map(eval)
-  val addSub: P[Int] = P( divMul ~ (CharIn("+-").! ~! divMul).rep ).map(eval)
+  val divMul: P[Int] = P( factor ~ (CharIn("*/").! ~/ factor).rep ).map(eval)
+  val addSub: P[Int] = P( divMul ~ (CharIn("+-").! ~/ divMul).rep ).map(eval)
   val expr: P[Int]   = P( " ".rep ~ addSub ~ " ".rep ~ End )
 
   val tests = TestSuite{
@@ -51,11 +51,11 @@ object WhiteSpaceMathTests extends TestSuite{
       }
       * - check(
         "(  +  )",
-        """ expr:0 / addSub:0 / divMul:0 / factor:0 / parens:0 / addSub:3 / divMul:3 / factor:3 / (number | parens):3 ..."+  )" """
+        """ expr:1:1 / addSub:1:1 / divMul:1:1 / factor:1:1 / parens:1:1 / addSub:1:4 / divMul:1:4 / factor:1:4 / (number | parens):1:4 ..."+  )" """
       )
       * - check(
         "1  +  - ",
-        """ expr:0 / addSub:0 / divMul:6 / factor:6 / (number | parens):6 ..."- " """
+        """ expr:1:1 / addSub:1:1 / divMul:1:7 / factor:1:7 / (number | parens):1:7 ..."- " """
       )
     }
   }

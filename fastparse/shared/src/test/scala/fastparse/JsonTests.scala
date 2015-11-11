@@ -5,7 +5,7 @@ import utest._
 
 /**
  * A complete, self-contained JSON parser that parses the JSON
- * but does not build an AST. Demonstrates the use of `~!` cuts
+ * but does not build an AST. Demonstrates the use of `~/` cuts
  * to provide excellent error-reporting almost for free
  */
 object JsonTests extends TestSuite{
@@ -64,15 +64,15 @@ object JsonTests extends TestSuite{
 
   val strChars = P( CharsWhile(StringChars) )
   val string =
-    P( space ~ "\"" ~! (strChars | escape).rep.! ~ "\"").map(Js.Str)
+    P( space ~ "\"" ~/ (strChars | escape).rep.! ~ "\"").map(Js.Str)
 
   val array =
-    P( "[" ~! jsonExpr.rep(sep="," ~!) ~ space ~ "]").map(Js.Arr(_:_*))
+    P( "[" ~/ jsonExpr.rep(sep=",".~/) ~ space ~ "]").map(Js.Arr(_:_*))
 
-  val pair = P( string.map(_.value) ~! ":" ~! jsonExpr )
+  val pair = P( string.map(_.value) ~/ ":" ~/ jsonExpr )
 
   val obj =
-    P( "{" ~! pair.rep(sep="," ~!) ~ space ~ "}").map(Js.Obj(_:_*))
+    P( "{" ~/ pair.rep(sep=",".~/) ~ space ~ "}").map(Js.Obj(_:_*))
 
   val jsonExpr: P[Js.Val] = P(
     space ~ (obj | array | string | `true` | `false` | `null` | number) ~ space
@@ -158,7 +158,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / (obj | array | string | true | false | null | number):9 ..."}\n        "
+          jsonExpr:1:0 / (obj | array | string | true | false | null | number):2:9 ..."}\n        "
         """
       )
       * - check(
@@ -186,7 +186,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / ("}" | "\""):23 ..."firstName\""
+          jsonExpr:1:0 / obj:2:9 / ("}" | "\""):3:13 ..."firstName\""
         """
       )
       * - check(
@@ -214,7 +214,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / pair:10 / ":":34 ..." \"John\",\n "
+          jsonExpr:1:0 / obj:2:9 / pair:2:9 / ":":3:24 ..." \"John\",\n "
         """
       )
       * - check(
@@ -242,7 +242,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / ("}" | ","):56 ..."lastName\":"
+          jsonExpr:1:0 / obj:2:9 / ("}" | ","):4:14 ..."lastName\":"
         """
       )
       * - check(
@@ -270,7 +270,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / ("}" | ","):154 ...": \"21 2nd "
+          jsonExpr:1:0 / obj:2:9 / ("}" | ","):7:32 ...": \"21 2nd "
         """
       )
       * - check(
@@ -298,7 +298,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / pair:438 / string:438 / "\"":455 ..."{\n        "
+          jsonExpr:1:0 / obj:2:9 / pair:16:18 / string:16:18 / "\"":17:17 ..."{\n        "
         """
       )
       * - check(
@@ -326,7 +326,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / pair:292 / jsonExpr:320 / obj:337 / pair:338 / ":":365 ..." \"home\",\n "
+          jsonExpr:1:0 / obj:2:9 / pair:11:14 / jsonExpr:12:27 / obj:13:17 / pair:13:17 / ":":14:27 ..." \"home\",\n "
         """
       )
       * - check(
@@ -354,7 +354,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / pair:292 / jsonExpr:320 / array:321 / jsonExpr:322 / obj:339 / ("}" | ","):411 ..."555-1234\n "
+          jsonExpr:1:0 / obj:2:9 / pair:11:14 / jsonExpr:12:28 / array:12:29 / jsonExpr:12:29 / obj:13:17 / ("}" | ","):15:35 ..."555-1234\n "
         """
       )
       * - check(
@@ -382,7 +382,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / pair:292 / jsonExpr:320 / array:321 / jsonExpr:440 / obj:457 / ("}" | ","):528 ..."555-4567\n "
+          jsonExpr:1:0 / obj:2:9 / pair:11:14 / jsonExpr:12:28 / array:12:29 / jsonExpr:16:18 / obj:17:17 / ("}" | ","):19:35 ..."555-4567\n "
         """
       )
       * - check(
@@ -410,7 +410,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:0 / obj:9 / pair:292 / jsonExpr:320 / array:321 / ("]" | ","):566 ..."}\n        "
+          jsonExpr:1:0 / obj:2:9 / pair:11:14 / jsonExpr:12:28 / array:12:29 / ("]" | ","):22:9 ..."}\n        "
         """
       )
     }
