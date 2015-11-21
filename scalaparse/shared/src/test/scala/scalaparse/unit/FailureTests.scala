@@ -856,5 +856,13 @@ object FailureTests extends TestSuite{
         found = "["
       )
 
+      * - checkNeg(
+        s"""
+          |object System {
+          |  $tq """".stripMargin,
+        expected = """ "\"\"\"" | StringChars | Interp | NonTripleQuoteChar """,
+        found = ""
+      )
+
   }
 }
