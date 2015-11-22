@@ -775,6 +775,12 @@
             "com.lihaoyi" %%% "scalaparse" % "@fastparse.Constants.version"
 
 @sect{Change Log}
+    @sect{0.3.2}
+        @ul
+            @li
+                Slightly better parsing of triple-quote strings in Scalaparse
+            @li
+                Added an alias for @hl.scala{type Result[T]} to match the @hl.scala{val Result} inside @hl.scala{fastparse.all}
     @sect{0.3.1}
         @ul
             @li

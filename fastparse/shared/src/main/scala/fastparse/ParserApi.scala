@@ -8,7 +8,6 @@ import core.Parser
 
 trait ParserApi[+T] {
 
-
   /**
    * Wraps this in a [[Logged]]. This prints out information
    * where a parser was tried and its result, which is useful for debugging
