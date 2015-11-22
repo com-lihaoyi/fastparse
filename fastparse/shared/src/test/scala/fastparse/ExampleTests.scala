@@ -172,6 +172,29 @@ object ExampleTests extends TestSuite{
         assert(even.toString == "digits.filter(<function1>)")
         assert(failure.traced.trace == "digits.filter(<function1>):1:1 ...\"123\"")
       }
+      'opaque{
+        val digit = CharIn('0' to '9')
+        val letter = CharIn('A' to 'Z')
+        def twice[T](p: Parser[T]) = p ~ p
+        def errorMessage[T](p: Parser[T], str: String) =
+          ParseError(p.parse(str).asInstanceOf[Result.Failure]).getMessage
+
+        // Portuguese number plate format since 2006
+        val numberPlate = P(twice(digit) ~ "-" ~ twice(letter) ~ "-" ~ twice(digit))
+
+        assert(errorMessage(numberPlate, "11-A1-22") == """
+          |found "1-22", expected CharIn("ABCDEFGHIJKLMNOPQRSTUVWXYZ") at index 4
+          |11-A1-22
+          |    ^""".stripMargin.trim)
+
+        // Suppress implementation details from the error message
+        val opaqueNumberPlate = numberPlate.opaque("<number-plate>")
+
+        assert(errorMessage(opaqueNumberPlate, "11-A1-22") == """
+          |found "11-A1-22", expected <number-plate> at index 0
+          |11-A1-22
+          |^""".stripMargin.trim)
+      }
     }
     'charX{
       'charPred{

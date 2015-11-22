@@ -186,6 +186,13 @@
 
                 @p
                     @hl.scala{.filter} allows you to supply a predicate @hl.scala{T => Boolean} which is applied to the successful result of the current parser. If the predicate is true the filtered parser succeeds otherwise it fails. The example above uses @hl.scala{.filter} on digits to parse only even numbers successfully while odd numbers will fail. If the current parser fails then that failure is simply passed along.
+            @sect{Opaque}
+                @p
+                    Sometimes it's useful to hide parser's implementation details and provide a higher-level error message. @hl.scala{.opaque} achieves exactly that.
+                @hl.ref(tests/"ExampleTests.scala", Seq("'opaque", ""))
+                @p
+                    @hl.scala{.opaque} wraps the target parser in an @hl.scala{Opaque} combinator, which only succeeds or fails as a single entity and leaves no traces of underlying parsers on the stack.
+
             @sect{Log}
                 @hl.ref(tests/"MiscTests.scala", Seq("'logging", ""))
 
@@ -779,6 +786,8 @@
         @ul
             @li
                 @b{#59} Fix @hl.scala{fastparse.core.Result.Failure.formatParser()} throwing @hl.scala{UnsupportedOperationException} on receiving an empty string as an input
+            @li
+                @b{#61} Added the @sect.ref{Opaque} combinator, which allows to provide more high-level error messages
     @sect{0.3.2}
         @ul
             @li
