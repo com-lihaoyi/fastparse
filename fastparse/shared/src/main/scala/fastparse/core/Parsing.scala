@@ -80,8 +80,7 @@ object Result{
     override def toString = s"Failure($msg)"
 
     /**
-      *
-      * @return
+      * Convenience method, that delegates to [[Extra.traced]]
       */
     def traced = extra.traced
   }
@@ -97,8 +96,17 @@ object Result{
     * @param lastParser The deepest parser in the parse which failed
     */
   case class Extra(input: String, traceData: (Int, Parser[_]) )(index: Int, lastParser: Parser[_]) {
+
     /** Get the underlying [[TracedFailure]] to allow for analysis of the full parse stack.. */
     lazy val traced = TracedFailure(input, index, lastParser, traceData)
+
+    /** Easy access to line number, where a parse failure has occured. */
+    lazy val line = lines.length
+
+    /** Easy access to column, where a parse failure has occured. */
+    lazy val col = lines.last.length
+
+    private lazy val lines = input.take(1 + index).lines.toVector
   }
 
   object Failure {
@@ -123,7 +131,8 @@ object Result{
       }
     }
   }
-  // TraceFailure
+
+  // TracedFailure
   /**
    * A failure containing detailed information about a parse failure. This is more
    * expensive to compute than a simple error message and is thus not generated
