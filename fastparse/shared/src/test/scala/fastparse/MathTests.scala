@@ -42,7 +42,7 @@ object MathTests extends TestSuite{
     'fail{
       def check(input: String, expectedTrace: String) = {
         val failure = expr.parse(input).asInstanceOf[Result.Failure]
-        val actualTrace = failure.traced.trace
+        val actualTrace = failure.extra.traced.trace
         assert(expectedTrace.trim == actualTrace.trim)
       }
       check(

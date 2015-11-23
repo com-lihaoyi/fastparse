@@ -97,14 +97,14 @@ object DemoMain {
             tr(td("value:"), td(code(s.value.toString)))
           )
 
-        case f: Result.Failure =>
-          val pretty = fastparse.Utils.literalize(f.input.slice(f.index, f.index + 15)).toString
+        case Result.Failure(lastParser, index, extra) =>
+          val pretty = fastparse.Utils.literalize( extra.input.slice( index, index + 15)).toString
           table(
             width := "100%",
             tr(td("Failure!")),
-            tr(td("at index:"), td(code(f.index))),
+            tr(td("at index:"), td(code(index))),
             tr(td("found:"), td("...", code(pretty))),
-            tr(td("expected:"), td(code(f.lastParser.toString)))
+            tr(td("expected:"), td(code(lastParser.toString)))
           )
       }
       outputBox.innerHTML = ""
