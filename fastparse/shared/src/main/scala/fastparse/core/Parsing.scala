@@ -128,7 +128,6 @@ object Result{
 
       val pos = Position.computeFrom(input, index)
       s"${Precedence.opWrap(p, Precedence.`:`)}:${pos.line}:${pos.column}"
-
     }
     def formatStackTrace(stack: Seq[Frame],
                           input: String,
