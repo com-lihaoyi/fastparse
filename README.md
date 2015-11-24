@@ -37,7 +37,7 @@ Contribution Guidelines
 - **It's entirely possible your changes won't be merged**, or will get ripped out later. This is also the case for my changes, as the Author!
 - **Even a rejected/reverted PR is valuable**! It helps explore the solution space, and know what works and what doesn't. For every line in the repo, at least three lines were tried, committed, and reverted/refactored, and more than 10 were tried without committing.
 - **Feel free to send Proof-Of-Concept PRs** that you don't intend to get merged.
-- **No binary or source compatibility is guaranteed between any releases**. FastParse is still in the 0.x.y phase of development, which means it's still under rapid development and things do change.
+- **No binary or source compatibility is guaranteed between any releases**. FastParse is still in the 0.x.y phase of development, which means it's still under rapid development and things do change. On the other hand, upgrading is usually trivial, and I don't expect existing functionality to go away
 
 License
 =======
