@@ -97,8 +97,8 @@ object DemoMain {
             tr(td("value:"), td(code(s.value.toString)))
           )
 
-        case Result.Failure(lastParser, index, extra) =>
-          val pretty = fastparse.Utils.literalize( extra.input.slice( index, index + 15)).toString
+        case Result.Failure(lastParser, index, input, _) =>
+          val pretty = fastparse.Utils.literalize( input.slice( index, index + 15)).toString
           table(
             width := "100%",
             tr(td("Failure!")),

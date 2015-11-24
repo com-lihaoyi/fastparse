@@ -31,7 +31,7 @@ sealed trait Result[+T]{
 }
 
 case class ParseError(failure: Result.Failure) extends Exception(
-  ParseError.msg0(failure.extra.input, failure.extra.traced.expected, failure.index)
+  ParseError.msg0(failure.input, failure.traced().expected, failure.index)
 )
 
 object ParseError{
@@ -59,6 +59,7 @@ object Result{
    *              the length of input
    */
   case class Success[+T](value: T, index: Int) extends Result[T]
+
   /**
    * Simple information about a parse failure. Also contains the original parse
    * information necessary to construct the traced failure. That contains more
@@ -67,54 +68,67 @@ object Result{
    * 
    * @param index The index in the parse where this parse failed
    * @param lastParser The deepest parser in the parse which failed
-   * @param extra Extra supplementary information (including trace information).
-   *              For details see [[Extra]]
+   * @param input The input string for the failed parse. Useful so the [[Failure]]
+    *             object can pretty-print snippet.
+   * @param traced Extra supplementary information (including trace information).
+   *              For details see [[Traced]]
    */
   case class Failure(lastParser: Parser[_],
                      index: Int,
-                     extra: Extra) extends Result[Nothing]{
+                     input: String,
+                     traced: Traced) extends Result[Nothing]{
 
     def msg = Failure.formatStackTrace(
-      Nil, extra.input, index, Failure.formatParser(lastParser, extra.input, index)
+      Nil, input, index, Failure.formatParser(lastParser, input, index)
     )
+
     override def toString = s"Failure($msg)"
 
-    /**
-      * Convenience method, that delegates to [[Extra.traced]]
-      */
-    def traced = extra.traced
+    /** Easy access to line number, where a parse failure has occured. */
+    lazy val line = pos.line
+
+    /** Easy access to column, where a parse failure has occured. */
+    lazy val col = pos.column
+
+    private lazy val pos = Position.computeFrom(input, index)
   }
 
   /**
-    * Additional information on a parse [[Failure]]. This is most relevant for retrieving traces
-    * of a failed parse, see [[Extra.traced]] and [[TracedFailure]].
-    *
-    * @param input The input string for the failed parse. Useful so the [[Failure]]
-    *              object can pretty-print snippet
-    * @param traceData
-    * @param index The index in the parse where this parse failed
-    * @param lastParser The deepest parser in the parse which failed
+    * Additional tracing information on a parse failure.
+    * Use `apply()` or short `()` to obtain the [[TracedFailure]].
+    * See [[TracedFailure]] for further details.
     */
-  case class Extra(input: String, traceData: (Int, Parser[_]) )(index: Int, lastParser: Parser[_]) {
+  trait Traced extends Function0[TracedFailure] {
+
+    /** Call to obtain the [[TracedFailure]]. This is a costly operation (3-4 times the time it takes to execute [[Parser.parse()]]. */
+    def apply() : TracedFailure
+  }
+
+  private[core] class TracedImpl(input: String, startIndex: Int, startParser: Parser[_], index: Int, lastParser: Parser[_]) extends Traced {
+
+    def apply() : TracedFailure = traced
 
     /** Get the underlying [[TracedFailure]] to allow for analysis of the full parse stack.. */
-    lazy val traced = TracedFailure(input, index, lastParser, traceData)
+    private lazy val traced = TracedFailure(input, index, lastParser, (startIndex, startParser))
+  }
 
-    /** Easy access to line number, where a parse failure has occured. */
-    lazy val line = lines.length
+  case class Position(line: Int, column: Int)
 
-    /** Easy access to column, where a parse failure has occured. */
-    lazy val col = lines.last.length
-
-    private lazy val lines = input.take(1 + index).lines.toVector
+  object Position {
+    def computeFrom(input: String, index: Int) : Position = {
+      val lines = input.take(1 + index).lines.toVector
+      val line = lines.length
+      val col = lines.lastOption.map(_.length).getOrElse(0)
+      Position(line, col)
+    }
   }
 
   object Failure {
     def formatParser(p: Precedence, input: String, index: Int) = {
-      val lines = input.take(1 + index).lines.toVector
-      val line = lines.length 
-      val col = lines.lastOption.map(_.length).getOrElse(0)
-      s"${Precedence.opWrap(p, Precedence.`:`)}:${line}:${col}"
+
+      val pos = Position.computeFrom(input, index)
+      s"${Precedence.opWrap(p, Precedence.`:`)}:${pos.line}:${pos.column}"
+
     }
     def formatStackTrace(stack: Seq[Frame],
                           input: String,
@@ -247,6 +261,7 @@ object Mutable{
 
   /**
    * A mutable version of [[Result.Failure]] with extra data.
+   *
    * @param originalParser the original parser that was attempted and failed.
    *                       Used to repeat the parse with tracing when
    *                       generating error messages
@@ -270,8 +285,8 @@ object Mutable{
                      var traceParsers: List[Parser[_]],
                      var cut: Boolean) extends Mutable[Nothing]{
     def toResult = {
-      val extra = Result.Extra(input, (originalIndex, originalParser))(index, lastParser)
-      Result.Failure(lastParser, index, extra)
+      val traced = new Result.TracedImpl(input, originalIndex, originalParser, index, lastParser)
+      Result.Failure(lastParser, index, input, traced)
     }
   }
 }
