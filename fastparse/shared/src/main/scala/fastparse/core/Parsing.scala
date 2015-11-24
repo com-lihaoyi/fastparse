@@ -90,7 +90,7 @@ object Result{
     def formatParser(p: Precedence, input: String, index: Int) = {
       val lines = input.take(1 + index).lines.toVector
       val line = lines.length 
-      val col = lines.last.length
+      val col = lines.lastOption.map(_.length).getOrElse(0)
       s"${Precedence.opWrap(p, Precedence.`:`)}:${line}:${col}"
     }
     def formatStackTrace(stack: Seq[Frame],

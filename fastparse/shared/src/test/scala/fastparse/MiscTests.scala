@@ -126,5 +126,10 @@ object MiscTests extends TestSuite{
       }
 
     }
+    'formatParser{
+      assert(
+        Result.Failure.formatParser("a", "", 0) == """"a":0:0""",
+        Result.Failure.formatParser("A", "B", 0) == """"A":1:1""")
+    }
   }
 }
