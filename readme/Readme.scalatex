@@ -779,6 +779,8 @@
         @ul
             @li
                 @b{#59} Fix @hl.scala{fastparse.core.Result.Failure.formatParser()} throwing @hl.scala{UnsupportedOperationException} on receiving an empty string as an input
+            @li
+                Pattern matching on @hl.scala{Failure} follows standard convention.
     @sect{0.3.2}
         @ul
             @li
