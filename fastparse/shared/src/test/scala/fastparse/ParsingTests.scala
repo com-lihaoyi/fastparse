@@ -11,13 +11,13 @@ object ParsingTests extends TestSuite{
   def check[T](parser: P[T], input: (String, Int), rhs: Result[T]) = {
     val (str, index) = input
     val parsed = parser.parse(str, index)
-    assert({parser; str; parsed} == rhs)
+    assert(parsed == rhs)
   }
   def checkFail[T](parser: P[T], input: (String, Int), expectedFailureIndex: Int) = {
     val (str, index) = input
     val parsed = parser.parse(str, index)
     val failureIndex = parsed.asInstanceOf[Failure].index
-    assert({parser; str; failureIndex} == expectedFailureIndex)
+    assert(failureIndex == expectedFailureIndex)
   }
   val tests = TestSuite{
 

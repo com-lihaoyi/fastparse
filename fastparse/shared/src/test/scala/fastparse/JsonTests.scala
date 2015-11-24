@@ -83,8 +83,8 @@ object JsonTests extends TestSuite{
       def test(p: P[_], s: String) = p.parse(s) match{
         case Result.Success(v, i) =>
           val expectedIndex = s.length
-          assert(i == {s; expectedIndex})
-        case f: Result.Failure => throw new Exception(f.traced.fullStack.mkString("\n"))
+          assert(i == expectedIndex)
+        case f: Result.Failure => throw new Exception(f.traced().fullStack.mkString("\n"))
       }
 
       'parts {
@@ -128,7 +128,7 @@ object JsonTests extends TestSuite{
         jsonExpr.parse(s) match{
           case s: Result.Success[_] => throw new Exception("Parsing should have failed:")
           case f: Result.Failure =>
-            val error = f.traced.trace
+            val error = f.traced().trace
             val expected = expectedError.trim
             assert(error == expected)
         }
