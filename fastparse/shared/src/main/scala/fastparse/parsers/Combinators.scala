@@ -50,6 +50,30 @@ object Combinators {
     }
     override def toString = p.toString
   }
+
+  /**
+   * A wrapper that replaces target parser and its inner parsers in the stack trace.
+   * Useful for providing more high-level error messages without going into details.
+   * For example, "expected CharPred(...)..." can become "expected IDENT...".
+   *
+   * @param msg The message for the wrapper
+   */
+  case class Opaque[+T](p: Parser[T], msg: String) extends Parser[T]{
+    def parseRec(cfg: ParseCtx, index: Int) = {
+      p.parseRec(cfg, index) match {
+        case s: Mutable.Success[_] =>
+          s.traceParsers = List(this)
+          s
+        case f: Mutable.Failure =>
+          f.index = index
+          f.lastParser = this
+          f.traceParsers = List(this)
+          f
+      }
+    }
+    override def toString = msg
+  }
+
   /**
    *
    */

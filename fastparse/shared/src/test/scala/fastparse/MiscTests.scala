@@ -111,6 +111,21 @@ object MiscTests extends TestSuite{
         )
       }
     }
+    'opaque{
+      def checkOpaqueness[T](p: Parser[T], strs: String*) = strs foreach { str =>
+        val failure = p.parse(str).asInstanceOf[Result.Failure].traced
+        assert(failure.index == 0)
+        assert(failure.traceParsers == List(p))
+      }
+      'nocut{
+        val p = P("foo" ~ CharPred(_.isDigit).rep(1)).opaque("fooX")
+        checkOpaqueness(p, "fo", "fooz")
+      }
+      'cut{
+        val p = P("foo" ~/ CharPred(_.isDigit).rep(1)).opaque("fooX")
+        checkOpaqueness(p, "fo", "fooz")
+      }
+    }
     'wspStr{
       val literal = wspStr("ab")
       val charLiteral = wspStr("a")
