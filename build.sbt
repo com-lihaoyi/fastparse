@@ -6,17 +6,19 @@ publishTo := Some(Resolver.file("Unused transient repository", file("target/unus
 
 crossScalaVersions := Seq("2.10.4", "2.11.7")
 
+def macroDependencies(version: String) =
+  Seq(
+    "org.scala-lang" % "scala-reflect" % version % "provided",
+    "org.scala-lang" % "scala-compiler" % version % "provided"
+  ) ++
+  (if (version startsWith "2.10.")
+     Seq(compilerPlugin("org.scalamacros" % s"paradise" % "2.0.0" cross CrossVersion.full),
+         "org.scalamacros" %% s"quasiquotes" % "2.0.0")
+   else
+     Seq())
+
 val shared = Seq(
-  libraryDependencies ++= Seq(
-    "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
-    "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided"
-  ) ++ (
-    if (scalaVersion.value startsWith "2.11.") Nil
-    else Seq(
-      compilerPlugin("org.scalamacros" % s"paradise" % "2.0.0" cross CrossVersion.full),
-      "org.scalamacros" %% s"quasiquotes" % "2.0.0"
-    )
-  ),
+  libraryDependencies ++= macroDependencies(scalaVersion.value),
   libraryDependencies ++= Seq(
     "com.lihaoyi" %%% "utest" % "0.3.1" % "test"
   ),
