@@ -17,9 +17,9 @@ object TestUtil {
     Scala.CompilationUnit.parse(input) match{
       case f: Result.Failure =>
 
-        val parsedExpected = f.traced.expected
+        val parsedExpected = f.extra.traced.expected
         val parsedFound = input.slice(f.index, f.index + 10)
-        val stack = f.traced.trace
+        val stack = f.extra.traced.trace
         assert(
         { implicitly(input)
           implicitly(stack)
@@ -37,7 +37,7 @@ object TestUtil {
       case f: Result.Failure =>
         //        println(f.formatExpectedAsString)
         //        println(f.formatTraces)
-        throw new Exception(tag + "\n" + input + "\n" + f.traced.trace)
+        throw new Exception(tag + "\n" + input + "\n" + f.extra.traced.trace)
       case s: Result.Success[_] =>
         //        println(parsed)
         val inputLength = input.length
