@@ -12,6 +12,8 @@ trait Api{
 
   val Result = core.Result
   type Result[+T] = core.Result[T]
+  val Failure = core.Result.Failure
+  val Success = core.Result.Success
 
   val Pass = parsers.Terminals.Pass
   val Fail = parsers.Terminals.Fail

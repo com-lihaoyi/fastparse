@@ -789,7 +789,7 @@
             @li
                 @b{#61} Added the @sect.ref{Opaque} combinator, which allows to provide more high-level error messages
             @li
-                @hl.scala{Result.Failure} has been restructured; now the less-commonly-used properties like @hl.scala{input} or @hl.scala{traced} have been aggregated into an @hl.scala{Result.Failure.Extra} object, simplifying pattern matching.
+                @hl.scala{Result.Failure} has been restructured: Less-commonly-used properties like @hl.scala{input} and @hl.scala{traced} have been aggregated into an @hl.scala{Result.Failure.Extra} object, simplifying pattern matching. Contributor: @a("Martin Senne", href:="https://github.com/ProjectZetta/")
 
     @sect{0.3.2}
         @ul

@@ -52,11 +52,11 @@ object ParseError{
 
 
 
-object Result{
+object Result {
 
-  case class Position(line: Int, column: Int)
+  private[core] case class Position(line: Int, column: Int)
 
-  object Position {
+  private[core] object Position {
     def computeFrom(input: String, index: Int) : Position = {
       val lines = input.take(1 + index).lines.toVector
       val line = lines.length
@@ -92,43 +92,43 @@ object Result{
     )
 
     override def toString = s"Failure($msg)"
-
-    /** Easy access to line number, where a parse failure has occured. */
-    lazy val line = pos.line
-
-    /** Easy access to column, where a parse failure has occured. */
-    lazy val col = pos.column
-
-    private lazy val pos = Position.computeFrom(extra.input, index)
   }
 
   object Failure {
     /**
       * Additional tracing information on a parse failure.
-      * Use `apply()` or short `()` to obtain the [[TracedFailure]].
-      * See [[TracedFailure]] for further details.
+      * Use `traced` to obtain the [[TracedFailure]],see [[TracedFailure]] for further details.
       */
-    sealed trait Extra{
+    sealed trait Extra {
+      /** Input string. */
       def input: String
+      /** Get the underlying [[TracedFailure]] to allow for analysis of the full parse stack. */
       def traced: TracedFailure
+      /** Line number, where a parse failure has occured. */
+      def line: Int
+      /** Column, where a parse failure has occured. */
+      def col: Int
     }
+    
     object Extra{
-      case class Impl(input: String,
-                      startIndex: Int,
-                      startParser: Parser[_],
-                      index: Int,
-                      lastParser: Parser[_]) extends Extra{
-
-        /** Get the underlying [[TracedFailure]] to allow for analysis of the full parse stack.. */
+      class Impl(val input: String, 
+                 startParser: Parser[_], startIndex: Int, 
+                 lastParser: Parser[_], index: Int) extends Extra {
+        
         lazy val traced = TracedFailure(input, index, lastParser, (startIndex, startParser))
 
-        override def toString = "Extra(...)"
+        lazy val pos = Position.computeFrom(input, index)
+        
+        lazy val line = pos.line
+        
+        lazy val col = pos.column 
+
+        override def toString = s"Extra(${input}, [traced - not evaluated])"
       }
     }
 
 
     def formatParser(p: Precedence, input: String, index: Int) = {
-
       val pos = Position.computeFrom(input, index)
       s"${Precedence.opWrap(p, Precedence.`:`)}:${pos.line}:${pos.column}"
     }
@@ -287,7 +287,7 @@ object Mutable{
                      var traceParsers: List[Parser[_]],
                      var cut: Boolean) extends Mutable[Nothing]{
     def toResult = {
-      val extra = new Result.Failure.Extra.Impl(input, originalIndex, originalParser, index, lastParser)
+      val extra = new Result.Failure.Extra.Impl(input, originalParser, originalIndex, lastParser, index)
       Result.Failure(lastParser, index, extra)
     }
   }
