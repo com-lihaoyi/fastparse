@@ -496,7 +496,7 @@
             @hl.ref(main/'core/"Parsing.scala", Seq("case class Success", "/*"), "object Failure")
 
             @p
-                Note how @hl.scala{Failure} only contains the parser which failed and a single index where the parse failed. Further debugging information is available in the lazily-computer @hl.scala{Extra.traced} value, which performs a whole new parse on the input data with additional instrumentation, and provides additional insight into why the parse failed:
+                Note how @hl.scala{Failure} only contains the parser which failed and a single index where the parse failed. Further debugging information is available via the @hl.scala{Failure.Extra} class. Especially the @hl.scala{TracedFailure} that is lazily-computed via @hl.scala{Extra.traced}, provides valuable information: It performs a whole new parse on the input data with additional instrumentation, and provides additional insight into why the parse failed:
 
             @hl.ref(main/'core/"Parsing.scala", Seq("// TracedFailure", "/*"), "object TracedFailure")
             @p
