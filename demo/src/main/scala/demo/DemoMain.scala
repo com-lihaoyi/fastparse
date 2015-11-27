@@ -90,14 +90,14 @@ object DemoMain {
     def recalc() = {
       inputBox.rows = inputBox.value.lines.length
       val details = parser.parse(inputBox.value) match{
-        case s: Result.Success[_] =>
+        case s: Parsed.Success[_] =>
           table(
             width := "100%",
             tr(td("Success!")),
             tr(td("value:"), td(code(s.value.toString)))
           )
 
-        case Result.Failure(lastParser, index, extra) =>
+        case Parsed.Failure(lastParser, index, extra) =>
           val pretty = fastparse.Utils.literalize( extra.input.slice( index, index + 15)).toString
           table(
             width := "100%",

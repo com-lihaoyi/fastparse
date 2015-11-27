@@ -31,7 +31,7 @@ object WhiteSpaceMathTests extends TestSuite{
   val tests = TestSuite{
     'pass {
       def check(str: String, num: Int) = {
-        val Result.Success(value, _) = expr.parse(str)
+        val Parsed.Success(value, _) = expr.parse(str)
         assert(value == num)
       }
 
@@ -45,7 +45,7 @@ object WhiteSpaceMathTests extends TestSuite{
     }
     'fail{
       def check(input: String, expectedTrace: String) = {
-        val failure = expr.parse(input).asInstanceOf[Result.Failure]
+        val failure = expr.parse(input).asInstanceOf[Parsed.Failure]
         val actualTrace = failure.extra.traced.trace
         assert(expectedTrace.trim == actualTrace.trim)
       }

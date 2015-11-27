@@ -113,7 +113,7 @@ object MiscTests extends TestSuite{
     }
     'opaque{
       def checkOpaqueness[T](p: Parser[T], strs: String*) = strs foreach { str =>
-        val failure = p.parse(str).asInstanceOf[Result.Failure]
+        val failure = p.parse(str).asInstanceOf[Parsed.Failure]
         assert(failure.index == 0)
         assert(failure.extra.traced.traceParsers == List(p))
       }
@@ -143,8 +143,8 @@ object MiscTests extends TestSuite{
     }
     'formatParser{
       assert(
-        Result.Failure.formatParser("a", "", 0) == """"a":0:0""",
-        Result.Failure.formatParser("A", "B", 0) == """"A":1:1""")
+        Parsed.Failure.formatParser("a", "", 0) == """"a":0:0""",
+        Parsed.Failure.formatParser("A", "B", 0) == """"A":1:1""")
     }
   }
 }

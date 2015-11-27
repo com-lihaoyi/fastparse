@@ -10,11 +10,9 @@ import acyclic.file
 trait Api{
   implicit def enclosingFunctionName: Utils.FuncName = macro MacroUtils.impl
 
-  val Result = core.Result
-  type Result[+T] = core.Result[T]
-  val Failure = core.Result.Failure
-  val Success = core.Result.Success
-
+  val Parsed = core.Parsed
+  type Parsed[+T] = core.Parsed[T]
+  
   val Pass = parsers.Terminals.Pass
   val Fail = parsers.Terminals.Fail
   val Start = parsers.Terminals.Start

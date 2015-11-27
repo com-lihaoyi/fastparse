@@ -1,7 +1,7 @@
 package fastparse
 
 import fastparse.JsonTests._
-import fastparse.core.Result
+import fastparse.core.Parsed
 import utest._
 /**
  * Parse the JSON from the parboiled2 testsuite and make
@@ -10,7 +10,7 @@ import utest._
 object LargeJsonTest extends TestSuite{
   val tests = TestSuite{
     'large{
-      val Result.Success(value, _) = jsonExpr.parse(
+      val Parsed.Success(value, _) = jsonExpr.parse(
         io.Source.fromInputStream(getClass.getResourceAsStream("/test.json")).mkString
       )
       assert(value(200)("friends")(1)("name").value == "Susan White")

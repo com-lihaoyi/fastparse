@@ -1,14 +1,14 @@
 package fastparse
 import all._
-import fastparse.core.Result
+import fastparse.core.Parsed
 import utest._
 
 object ParsingTests extends TestSuite{
 
 
-  import Result.{Success, Failure}
+  import Parsed.{Success, Failure}
 
-  def check[T](parser: P[T], input: (String, Int), rhs: Result[T]) = {
+  def check[T](parser: P[T], input: (String, Int), rhs: Parsed[T]) = {
     val (str, index) = input
     val parsed = parser.parse(str, index)
     assert(parsed == rhs)
