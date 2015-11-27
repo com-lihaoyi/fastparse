@@ -11,25 +11,6 @@ import fastparse.Utils._
  */
 case class Frame(index: Int, parser: Parser[_])
 
-/**
- * Result of a parse, whether successful or failed.
- */
-sealed trait Parsed[+T]{
-  /**
-   * Where the parser ended up, whether the result was a success or failure
-   */
-  def index: Int
-
-  /**
-   * Converts this instance of [[Parsed]] into a [[Parsed.Success]] or 
-   * throws an exception if it was a failure.
-   */
-  def get: Parsed.Success[T] = this match{
-    case s: Parsed.Success[T] => s
-    case f: Parsed.Failure => throw new ParseError(f)
-  }
-}
-
 case class ParseError(failure: Parsed.Failure) extends Exception(
   ParseError.msg0(failure.extra.input, failure.extra.traced.expected, failure.index)
 )
@@ -64,11 +45,30 @@ object Parsed {
   }
 
   /**
+    * Result of a parse, whether successful or failed.
+    */
+  sealed trait Result[+T]{
+    /**
+      * Where the parser ended up, whether the result was a success or failure
+      */
+    def index: Int
+
+    /**
+      * Converts this instance of [[Parsed]] into a [[Success]] or 
+      * throws an exception if it was a failure.
+      */
+    def get: Parsed.Success[T] = this match{
+      case s: Parsed.Success[T] => s
+      case f: Parsed.Failure => throw new ParseError(f)
+    }
+  }
+
+  /**
    * @param value The result of this parse
    * @param index The index where the parse completed; may be less than
    *              the length of input
    */
-  case class Success[+T](value: T, index: Int) extends Parsed[T]
+  case class Success[+T](value: T, index: Int) extends Result[T]
 
   /**
    * Simple information about a parse failure. Also contains the original parse
@@ -79,11 +79,11 @@ object Parsed {
    * @param index The index in the parse where this parse failed
    * @param lastParser The deepest parser in the parse which failed
    * @param extra Extra supplementary information (including trace information).
-   *              For details see [[Parsed.Failure.Extra]]
+   *              For details see [[Failure.Extra]]
    */
   case class Failure(lastParser: Parser[_],
                      index: Int,
-                     extra: Failure.Extra) extends Parsed[Nothing]{
+                     extra: Failure.Extra) extends Result[Nothing]{
 
     def msg = Failure.formatStackTrace(
       Nil, extra.input, index, Failure.formatParser(lastParser, extra.input, index)
@@ -108,7 +108,7 @@ object Parsed {
       def col: Int
     }
     
-    object Extra{
+    object Extra {
       class Impl(val input: String, 
                  startParser: Parser[_], startIndex: Int, 
                  lastParser: Parser[_], index: Int) extends Extra {
@@ -220,7 +220,7 @@ trait Mutable[+T]{
    * Snapshots this mutable result and converts it into
    * an immutable [[Parsed]] object
    */
-  def toResult: Parsed[T]
+  def toResult: Parsed.Result[T]
 
   /**
    * A set of parsers which have failed to parse at
@@ -308,7 +308,7 @@ class ParseCtx(val input: String,
                val traceIndex: Int,
                val originalParser: Parser[_],
                val originalIndex: Int,
-               val instrument: (Parser[_], Int, () => Parsed[_]) => Unit){
+               val instrument: (Parser[_], Int, () => Parsed.Result[_]) => Unit){
   require(logDepth >= -1, "logDepth can only be -1 (for no logs) or >= 0")
   require(traceIndex >= -1, "traceIndex can only be -1 (for no tracing) or an index 0")
   val failure = Mutable.Failure(input, Nil, 0, null, originalParser, originalIndex, traceIndex, Nil, false)
@@ -345,8 +345,8 @@ trait Parser[+T] extends ParserResults[T] with Precedence{
    */
   def parse(input: String,
             index: Int = 0,
-            instrument: (Parser[_], Int, () => Parsed[_]) => Unit = null)
-            : Parsed[T] = {
+            instrument: (Parser[_], Int, () => Parsed.Result[_]) => Unit = null)
+            : Parsed.Result[T] = {
     parseRec(new ParseCtx(input, 0, -1, this, index, instrument), index).toResult
   }
 

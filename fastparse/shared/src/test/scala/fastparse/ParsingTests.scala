@@ -8,7 +8,7 @@ object ParsingTests extends TestSuite{
 
   import Parsed.{Success, Failure}
 
-  def check[T](parser: P[T], input: (String, Int), rhs: Parsed[T]) = {
+  def check[T](parser: P[T], input: (String, Int), rhs: Parsed.Result[T]) = {
     val (str, index) = input
     val parsed = parser.parse(str, index)
     assert(parsed == rhs)
