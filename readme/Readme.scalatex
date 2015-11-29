@@ -72,7 +72,7 @@
             @p
                 Such a parser returns a @hl.scala{Parsed.Success} if the input matches the string, and otherwise returns a @hl.scala{Parsed.Failure}.
             @p
-                As you can see, by default the @hl.scala{Parsed.Success} contains a @hl.scala{(): Unit}, unless you use @sect.ref{Capture} or @sect.ref{Map} described below. Also, apart from the structured data of the failure, @hl.scala{Parsed.Failure} also contains a nice human-readable trace of the parse showing the stack of parsers which were in progress when the parse failed, accessible via @hl.scala{Parsed.Failure.Extra.trace}.
+                As you can see, by default the @hl.scala{Parsed.Success} contains a @hl.scala{(): Unit}, unless you use @sect.ref{Capture} or @sect.ref{Map} described below. Also, apart from the structured data of the failure, @hl.scala{Parsed.Failure} also contains a nice human-readable trace of the parse showing the stack of parsers which were in progress when the parse failed. The trace can be obtained via @hl.scala{Parsed.Failure.Extra.trace}.
 
             @p
                 You can also wrap the strings in an @hl.scala{IgnoreCase("...")} if you want the matching to be case-insensitive.
@@ -487,16 +487,20 @@
                 As mentioned in @sect.ref("Whitespace Handling"), you can choose to ignore the default set of operators by using @hl.scala{import fastparse.noApi} instead of @hl.scala{import fastparse.all}. That way you can use your own set of operators, e.g. the whitespace-sensitive operators described in that section.
         @sect{Parsing Results}
             @p
-                Two kinds of @hl.scala{Parsed.Result}s reflect the status of a parse: a success (@hl.scala{Parsed.Success}) or a failure (@hl.scala{Parsed.Failure}). First, both classes can be used in pattern matching to discriminate the parse status and second, to extract the most commonly-used values. @hl.scala{Parsed.Success} provides the parsed value - the value you are probably most interesed in - and the index in the input string till where the parse was performed. @hl.scala{Parsed.Failure} allows you to retrieve the last parsed that failed and the index, where it failed. Additionally, failure provides an @hl.scala{Parsed.Failure.extra} field that provides precise details about the failure: line and column numbers (via @hl.scala{Extra.line} and @hl.scala{Extra.col} and most importantly a complete stack trace of the parsers that is available via @hl.scala{Extra.traced}.
+                The two kinds of a @hl.scala{Parsed} result reflect the status of a parse: a success (@hl.scala{Parsed.Success}) or a failure (@hl.scala{Parsed.Failure}). First, both classes can be used in pattern matching to discriminate the parse status. Second, they allow to extract the most commonly-used values. @hl.scala{Parsed.Success} provides the parsed value - the value you are probably most interesed in - and the index in the input string till where the parse was performed. @hl.scala{Parsed.Failure} allows you to retrieve the last parser that failed and the index where it failed. Additionally, failure provides an @hl.scala{Parsed.Failure.extra} field that provides precise details about the failure: line and column numbers (via @hl.scala{Extra.line} and @hl.scala{Extra.col}) and most importantly a complete stack trace of the involved parsers, which is accessible via @hl.scala{Extra.traced}.
 
             @p
-                An overview of @hl.scala{Parsed.Result}s:
+                An overview of @hl.scala{Parsed}:
 
             @hl.ref(main/'core/"Parsing.scala", Seq("object Parsed", "/*"), "/*")
             @hl.ref(main/'core/"Parsing.scala", Seq("case class Success", "/*"), "object Failure")
 
             @p
+<<<<<<< HEAD
                 Note how @hl.scala{Failure} only contains the parser which failed and a single index where the parse failed. Further debugging information is available via the @hl.scala{Failure.Extra} class. Especially the @hl.scala{TracedFailure} that is lazily-computed via @hl.scala{Extra.traced}, provides valuable information: It performs a whole new parse on the input data with additional instrumentation, and provides additional insight into why the parse failed:
+=======
+                Note how @hl.scala{Failure} only contains the parser which failed and a single index where the parse failed. Further debugging information is available in the lazily-computer @hl.scala{Extra.traced} value, which performs a whole new parse on the input data with additional instrumentation, and provides additional insight into why the parse failed:
+>>>>>>> - Corrected documentation (for renaming from Result to  Parsed) and added additional information on Extra and its capabilities.
 
             @hl.ref(main/'core/"Parsing.scala", Seq("// TracedFailure", "/*"), "object TracedFailure")
             @p
@@ -784,6 +788,13 @@
 @sect{Change Log}
     @sect{0.3.3}
         @ul
+            @li 
+                Further restructuring of @hl.scala{Parsed} including docs - Contributor: @a("Martin Senne", href:="https://github.com/ProjectZetta/")
+                @ul
+                    @li
+                          Object @hl.scala{Result} has been renamed to @hl.scala{Parsed}
+                    @li
+                          Methods for position retrieval @hl.scala{line} and @hl.scala{col} have moved to @hl.scala{Failure.Extra}
             @li
                 Further restructuring of @hl.scala{Parsed.Result} including docs - Contributor: @a("Martin Senne", href:="https://github.com/ProjectZetta/")
                  @ul
