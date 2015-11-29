@@ -11,7 +11,7 @@ trait Api{
   implicit def enclosingFunctionName: Utils.FuncName = macro MacroUtils.impl
 
   val Parsed = core.Parsed
-  type Result[+T] = core.Parsed.Result[T]
+  type Parsed[+T] = core.Parsed[T]
   
   val Pass = parsers.Terminals.Pass
   val Fail = parsers.Terminals.Fail
