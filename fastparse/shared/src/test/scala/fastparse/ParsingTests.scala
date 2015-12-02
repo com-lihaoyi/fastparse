@@ -45,6 +45,11 @@ object ParsingTests extends TestSuite{
       check("Hello".!.rep(1, max = 1), ("HelloHello!", 0), Success(Seq("Hello"), 5))
       check("Hello".!.rep(1, max = 2), ("HelloHello!", 0), Success(Seq("Hello", "Hello"), 10))
       check("Hello".!.rep(1, max = 2), ("HelloHelloHello!", 0), Success(Seq("Hello", "Hello"), 10))
+
+      check("Hello".!.rep(0, max=0), ("HelloHello!", 0), Success(Seq(), 0))
+      // identical :  check( ("Hello" | Pass).!, ("HelloHello!", 0), Success("Hello", 5))
+      check("Hello".!.rep(0, max=1), ("HelloHello!", 0), Success(Seq("Hello"), 5))
+
       checkFail("Hello".rep(1), ("HelloHello!", 2), 2)
       checkFail("Hello".rep ~ "bye" ~ End, ("HelloHello!", 0), 10)
     }

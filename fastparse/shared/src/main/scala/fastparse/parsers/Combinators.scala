@@ -402,7 +402,12 @@ object Combinators {
         } else failMore(lastFailure, index, cfg.logDepth, cut = cut)
       }
 
-      rec(index, Pass, null, ev.initial, false, 0)
+      // don't call the parseRec at all, if max is "0", as our parser corresponds to `Pass` in that case.
+      if (max == 0 ) {
+        success(cfg.success, ev.result(ev.initial), index, List.empty[Parser[_]], false)
+      } else {
+        rec(index, Pass, null, ev.initial, false, 0)
+      }
     }
     override def toString = {
       val things = Seq(
