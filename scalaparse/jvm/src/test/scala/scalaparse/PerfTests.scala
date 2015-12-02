@@ -1,6 +1,6 @@
 package scalaparse
 
-import fastparse.core.Result
+import fastparse.core.Parsed
 import utest._
 
 import scala.tools.nsc.{Global, Settings}

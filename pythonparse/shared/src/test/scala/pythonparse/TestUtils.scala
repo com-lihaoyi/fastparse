@@ -10,9 +10,9 @@ object TestUtils {
     import fastparse.all._
     val parsed = (rule ~ End).parse(s)
     parsed match {
-      case f: fastparse.core.Result.Failure =>
+      case f: fastparse.core.Parsed.Failure =>
         throw new Exception(f.extra.traced.trace)
-      case s: fastparse.core.Result.Success[T] =>
+      case s: fastparse.core.Parsed.Success[T] =>
         val result = s.value
         assert(result == expected)
         result

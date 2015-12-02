@@ -1,7 +1,7 @@
 package scalaparse
 
 import fastparse._
-import fastparse.core.Result
+import fastparse.core.Parsed
 import utest._
 
 
@@ -15,7 +15,7 @@ object TestUtil {
 //    println("Checking Neg...\n" )
 //    println(input)
     Scala.CompilationUnit.parse(input) match{
-      case f: Result.Failure =>
+      case f: Parsed.Failure =>
 
         val parsedExpected = f.extra.traced.expected
         val parsedFound = input.slice(f.index, f.index + 10)
@@ -25,7 +25,7 @@ object TestUtil {
           implicitly(stack)
           parsedExpected.trim == expected.trim && parsedFound.startsWith(found)}
         )
-      case s: Result.Success[_] => assert{implicitly(input); false}
+      case s: Parsed.Success[_] => assert{implicitly(input); false}
     }
   }
 
@@ -34,11 +34,11 @@ object TestUtil {
 //    println(input)
     val res = Scala.CompilationUnit.parse(input)
     res match{
-      case f: Result.Failure =>
+      case f: Parsed.Failure =>
         //        println(f.formatExpectedAsString)
         //        println(f.formatTraces)
         throw new Exception(tag + "\n" + input + "\n" + f.extra.traced.trace)
-      case s: Result.Success[_] =>
+      case s: Parsed.Success[_] =>
         //        println(parsed)
         val inputLength = input.length
         assert(s.index == inputLength)

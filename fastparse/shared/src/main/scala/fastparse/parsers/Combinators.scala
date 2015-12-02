@@ -3,9 +3,9 @@ import acyclic.file
 import fastparse.Implicits
 import fastparse.Utils.FuncName
 import Terminals._
-import fastparse.core.Result._
+import fastparse.core.Parsed._
 import fastparse.core.Mutable
-import fastparse.core.{Precedence, ParseCtx, Result, Parser}
+import fastparse.core.{Precedence, ParseCtx, Parsed, Parser}
 
 import scala.annotation.tailrec
 /**

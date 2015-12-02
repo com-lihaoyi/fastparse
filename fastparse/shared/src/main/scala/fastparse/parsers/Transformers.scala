@@ -2,8 +2,8 @@ package fastparse.parsers
 import acyclic.file
 import fastparse.core.Mutable
 import fastparse.core.Parser
-import fastparse.core.Result.{Failure, Success}
-import fastparse.core.{ParseCtx, Result}
+import fastparse.core.Parsed.{Failure, Success}
+import fastparse.core.{ParseCtx, Parsed}
 
 /**
  * Parsers that work with the output of a successful parse

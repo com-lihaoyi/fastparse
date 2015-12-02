@@ -70,9 +70,9 @@
             @hl.ref(tests/"ExampleTests.scala", Seq("'simple", ""))
 
             @p
-                Such a parser returns a @hl.scala{Result.Success} if the input matches the string, and otherwise returns a @hl.scala{Result.Failure}.
+                Such a parser returns a @hl.scala{Parsed.Success} if the input matches the string, and otherwise returns a @hl.scala{Parsed.Failure}.
             @p
-                As you can see, by default the @hl.scala{Success} contains a @hl.scala{(): Unit}, unless you use @sect.ref{Capture} or @sect.ref{Map} described below. Also, apart from the structured data of the failure, @hl.scala{Failure} also contains a nice human-readable trace of the parse showing the stack of parsers which were in progress when the parse failed.
+                As you can see, by default the @hl.scala{Parsed.Success} contains a @hl.scala{(): Unit}, unless you use @sect.ref{Capture} or @sect.ref{Map} described below. Also, apart from the structured data of the failure, @hl.scala{Parsed.Failure} also contains a nice human-readable trace of the parse showing the stack of parsers which were in progress when the parse failed. The trace can be obtained via @hl.scala{Parsed.Failure.Extra.trace}.
 
             @p
                 You can also wrap the strings in an @hl.scala{IgnoreCase("...")} if you want the matching to be case-insensitive.
@@ -485,22 +485,22 @@
                 There are essentially all short-hand constructors for the parsers in the @hl.scala{object Parser} companion. This is the list of operators that you have available when writing your own parsers using FastParse.
             @p
                 As mentioned in @sect.ref("Whitespace Handling"), you can choose to ignore the default set of operators by using @hl.scala{import fastparse.noApi} instead of @hl.scala{import fastparse.all}. That way you can use your own set of operators, e.g. the whitespace-sensitive operators described in that section.
-        @sect{Results}
+        @sect{Parsing Results}
             @p
-                The two kinds of @hl.scala{Result}s let you pattern match to extract the most commonly-used values: for a success, you can extract the resultant value, while a failure provides the last parser which failed. Both also provide the index into the string where the parse succeeded or failed.
+                The two kinds of a @hl.scala{Parsed} result reflect the status of a parse: a success (@hl.scala{Parsed.Success}) or a failure (@hl.scala{Parsed.Failure}). First, both classes can be used in pattern matching to discriminate the parse status. Second, they allow to extract the most commonly-used values. @hl.scala{Parsed.Success} provides the parsed value - the value you are probably most interesed in - and the index in the input string till where the parse was performed. @hl.scala{Parsed.Failure} allows you to retrieve the last parser that failed and the index where it failed. Additionally, failure provides an @hl.scala{Parsed.Failure.extra} field that provides precise details about the failure: line and column numbers (via @hl.scala{Extra.line} and @hl.scala{Extra.col}) and most importantly a complete stack trace of the involved parsers, which is accessible via @hl.scala{Extra.traced}.
 
             @p
-                Apart from that, @hl.scala{Result}s also provide other useful information about a parse:
+                An overview of @hl.scala{Parsed}:
 
-            @hl.ref(main/'core/"Parsing.scala", Seq("object Result", "/*"), "/*")
+            @hl.ref(main/'core/"Parsing.scala", Seq("object Parsed", "/*"), "/*")
             @hl.ref(main/'core/"Parsing.scala", Seq("case class Success", "/*"), "object Failure")
 
             @p
-                Note how @hl.scala{Failure} only contains a single index for where the parse failed, and the parser at that index which failed. Further debugging information is available in the lazily-computer @hl.scala{traced} value, which performs a whole new parse on the input data with additional instrumentation, and provides additional insight into why the parse failed:
+                Note how @hl.scala{Failure} only contains the parser which failed and a single index where the parse failed. Further debugging information is available via the @hl.scala{Failure.Extra} class. Especially the @hl.scala{TracedFailure} that is lazily-computed via @hl.scala{Extra.traced}, provides valuable information: It performs a whole new parse on the input data with additional instrumentation, and provides additional insight into why the parse failed:
 
             @hl.ref(main/'core/"Parsing.scala", Seq("// TracedFailure", "/*"), "object TracedFailure")
             @p
-                Computing the @hl.scala{traced} data is not done by default for performance reasons: the additional run takes about 3x longer than the initial run due to the instrumentation, for a total of 4x slowdown. If you want the information for debugging, though, it will be there.
+                Computing the @hl.scala{Extra.traced} data is not done by default for performance reasons: the additional run takes about 3x longer than the initial run due to the instrumentation, for a total of 4x slowdown. If you want the information for debugging, though, it will be there.
     @sect{Debugging Parsers}
         @p
             The vast majority of your time working with FastParse, your parsers will be incorrect. This is almost by definition, because once your parser is correct, you'll be done and can go do something else with your life! Thus FastParse puts a lot of effort into making working with broken parsers as easy as possible
@@ -570,12 +570,12 @@
             @p
                 By default, on failure, FastParse only provides the index and the last parser which failed at that index. This is information FastParse already has and is thus cheap to provide, and often is enough to show what went wrong, and where. If you prefer row & column, you can trivially compute that from the input & index by counting newlines inside the input string.
             @p
-                Often you want something more, though, and for that FastParse provides tracing, as described in the documentation of @sect.ref{Results}. By accessing the @hl.scala{.traced} lazy val on a @hl.scala{Failure}, FastParse will perform a whole second parse on the original input, starting from the same index, but with additional tracing code to keep track of what's happening. This typically costs ~2x as much as the original parse, so isn't done by default, but it's trivial to ask for it.
+                Often you want something more, though, and for that FastParse provides tracing, as described in the documentation of @sect.ref{Parsing Results}. By accessing the @hl.scala{.traced} lazy val on a @hl.scala{Failure}, FastParse will perform a whole second parse on the original input, starting from the same index, but with additional tracing code to keep track of what's happening. This typically costs ~2x as much as the original parse, so isn't done by default, but it's trivial to ask for it.
             @p
                 For example, this is tracing being done on an invalid input we know will fail:
 
             @hl.scala
-                val fail = Foo.expr.parse("(1+(2+3x))+4").asInstanceOf[fastparse.core.Result.Failure]
+                val fail = Foo.expr.parse("(1+(2+3x))+4").asInstanceOf[fastparse.core.Parsed.Failure]
             @p
                 We know that this input will fail, because our grammar (defined earlier) does not contain an @hl.scala{"x"} in it! It only handles numbers and @hl.scala{"+"} and parentheses. Let's see what information @hl.scala{.traced} gives us:
 
@@ -784,12 +784,31 @@
 @sect{Change Log}
     @sect{0.3.3}
         @ul
+            @li 
+                Further restructuring of @hl.scala{Parsed} including docs - Contributor: @a("Martin Senne", href:="https://github.com/ProjectZetta/")
+                @ul
+                    @li
+                          Object @hl.scala{Result} has been renamed to @hl.scala{Parsed}
+                    @li
+                          Methods for position retrieval @hl.scala{line} and @hl.scala{col} have moved to @hl.scala{Failure.Extra}
+            @li
+                Further restructuring of @hl.scala{Parsed.Result} including docs - Contributor: @a("Martin Senne", href:="https://github.com/ProjectZetta/")
+                 @ul
+                     @li
+                         Object @hl.scala{Result} has been renamed to @hl.scala{Parsed}
+                                
+                     @li    
+                         Former @hl.scala{Result} has moved to @hl.scala{Parsed.Result}.
+                                
+                     @li
+                         Methods for position retrieval @hl.scala{line} and @hl.scala{col} have moved to @hl.scala{Failure.Extra}
+
             @li
                 @b{#59} Fix @hl.scala{fastparse.core.Result.Failure.formatParser()} throwing @hl.scala{UnsupportedOperationException} on receiving an empty string as an input
             @li
                 @b{#61} Added the @sect.ref{Opaque} combinator, which allows to provide more high-level error messages
             @li
-                @hl.scala{Result.Failure} has been restructured; now the less-commonly-used properties like @hl.scala{input} or @hl.scala{traced} have been aggregated into an @hl.scala{Result.Failure.Extra} object, simplifying pattern matching.
+                @hl.scala{Result.Failure} has been restructured: Less-commonly-used properties like @hl.scala{input} and @hl.scala{traced} have been aggregated into an @hl.scala{Result.Failure.Extra} object, simplifying pattern matching. Contributor: @a("Martin Senne", href:="https://github.com/ProjectZetta/")
 
     @sect{0.3.2}
         @ul

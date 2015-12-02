@@ -1,7 +1,7 @@
 package fastparse.parsers
 import acyclic.file
 import fastparse.Utils._
-import fastparse.core.{Precedence, ParseCtx, Result, Parser}
+import fastparse.core.{Precedence, ParseCtx, Parsed, Parser}
 import fastparse.Utils
 
 /**
