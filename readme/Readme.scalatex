@@ -784,6 +784,9 @@
 @sect{Change Log}
     @sect{0.3.3}
         @ul
+            @li
+                @b{#66} Bugfix: @hl.scala{Parser.rep} now handles max=0 properly. Contributor: @a("Martin Senne", href:="https://github.com/ProjectZetta/")
+
             @li 
                 Further restructuring of @hl.scala{Parsed} including docs - Contributor: @a("Martin Senne", href:="https://github.com/ProjectZetta/")
                 @ul
