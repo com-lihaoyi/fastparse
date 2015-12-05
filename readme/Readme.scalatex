@@ -794,7 +794,7 @@
                          Object @hl.scala{Result} has been renamed to @hl.scala{Parsed}
                                 
                      @li
-                         Former @hl.scala{Result} has moved to @hl.scala{Parsed.Result}.
+                         Former @hl.scala{Result} has moved to @hl.scala{Parsed}.
                                 
                      @li
                          Methods for position retrieval @hl.scala{line} and @hl.scala{col} have moved to @hl.scala{Failure.Extra}
