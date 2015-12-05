@@ -785,33 +785,26 @@
     @sect{0.3.3}
         @ul
             @li
-                @b{#66} Bugfix: @hl.scala{Parser.rep} now handles max=0 properly. Contributor: @a("Martin Senne", href:="https://github.com/ProjectZetta/")
+                @b{#66} Bugfix: @hl.scala{Parser.rep} now handles max=0 properly, by @a("Martin Senne", href:="https://github.com/ProjectZetta/")
 
-            @li 
-                Further restructuring of @hl.scala{Parsed} including docs - Contributor: @a("Martin Senne", href:="https://github.com/ProjectZetta/")
-                @ul
-                    @li
-                          Object @hl.scala{Result} has been renamed to @hl.scala{Parsed}
-                    @li
-                          Methods for position retrieval @hl.scala{line} and @hl.scala{col} have moved to @hl.scala{Failure.Extra}
             @li
-                Further restructuring of @hl.scala{Parsed.Result} including docs - Contributor: @a("Martin Senne", href:="https://github.com/ProjectZetta/")
+                Further restructuring of @hl.scala{Parsed.Result} by  @a("Martin Senne", href:="https://github.com/ProjectZetta/")
                  @ul
                      @li
                          Object @hl.scala{Result} has been renamed to @hl.scala{Parsed}
                                 
-                     @li    
+                     @li
                          Former @hl.scala{Result} has moved to @hl.scala{Parsed.Result}.
                                 
                      @li
                          Methods for position retrieval @hl.scala{line} and @hl.scala{col} have moved to @hl.scala{Failure.Extra}
 
             @li
-                @b{#59} Fix @hl.scala{fastparse.core.Result.Failure.formatParser()} throwing @hl.scala{UnsupportedOperationException} on receiving an empty string as an input
+                @b{#59} Fix @hl.scala{fastparse.core.Result.Failure.formatParser()} throwing @hl.scala{UnsupportedOperationException} on receiving an empty string as an input, by @a("solar", href:="https://github.com/solar")
             @li
-                @b{#61} Added the @sect.ref{Opaque} combinator, which allows to provide more high-level error messages
+                @b{#61} Added the @sect.ref{Opaque} combinator, which allows to provide more high-level error messages, by @a("Nick Stanch", href:="https://github.com/stanch")
             @li
-                @hl.scala{Result.Failure} has been restructured: Less-commonly-used properties like @hl.scala{input} and @hl.scala{traced} have been aggregated into an @hl.scala{Result.Failure.Extra} object, simplifying pattern matching. Contributor: @a("Martin Senne", href:="https://github.com/ProjectZetta/")
+                @hl.scala{Result.Failure} has been restructured: Less-commonly-used properties like @hl.scala{input} and @hl.scala{traced} have been aggregated into an @hl.scala{Result.Failure.Extra} object, simplifying pattern matching. By @a("Martin Senne", href:="https://github.com/ProjectZetta/")
 
     @sect{0.3.2}
         @ul
