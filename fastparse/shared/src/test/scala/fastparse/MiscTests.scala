@@ -146,5 +146,13 @@ object MiscTests extends TestSuite{
         Parsed.Failure.formatParser("a", "", 0) == """"a":0:0""",
         Parsed.Failure.formatParser("A", "B", 0) == """"A":1:1""")
     }
+    'utils{
+      'trieNode {
+        val names = (0 until 1000).map(_.toString.flatMap(_.toString * 5))
+        val trie = new Utils.TrieNode(names)
+        for (name <- names)
+          assert(trie.query(name, 0) != -1)
+      }
+    }
   }
 }
