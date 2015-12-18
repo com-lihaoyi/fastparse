@@ -785,7 +785,7 @@
     @sect{0.3.4}
         @ul
             @li
-                Fix performance problem in the @hl.scala{StringsIn} parser, which resulted in initialization time exponential relative to the length of the longest string, by @a("Rudiger Klaehn", href:="https://github.com/rklaehn")
+                Fix @b{#69}: performance problem in the @hl.scala{StringsIn} parser, which resulted in initialization time exponential relative to the length of the longest string, by @a("Rudiger Klaehn", href:="https://github.com/rklaehn")
     @sect{0.3.3}
         @ul
             @li
