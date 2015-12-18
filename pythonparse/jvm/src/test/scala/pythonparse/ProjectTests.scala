@@ -12,7 +12,7 @@ import fastparse.all._
  */
 object ProjectTests extends TestSuite{
 
-  def check(repo: String) = {
+  def check(repo: String, ignored: Seq[String] = Nil) = {
 
     val name = repo.split("/").last
     val path = Paths.get("pythonparse/jvm/target/repos/" + name)
@@ -29,9 +29,9 @@ object ProjectTests extends TestSuite{
     }
 
     val pythonFiles: Seq[String] = listFiles(new java.io.File(path.toString))
-            .filter(_.toString.endsWith(".py"))
-           .map(_.toString)
-           .toSeq
+            .filter(path => path.toString.endsWith(".py") && !ignored.exists(path.endsWith))
+            .map(_.toString)
+            .toSeq
 
     val grouped = Await.result(Future.sequence(pythonFiles.map { p =>
       Future {
@@ -52,7 +52,10 @@ object ProjectTests extends TestSuite{
   }
   val tests = TestSuite{
     'changes - check("https://github.com/dropbox/changes")
-    'django - check("https://github.com/django/django")
+    'django - check(
+      "https://github.com/django/django",
+      ignored = Seq("tests/i18n/test_compilation.py")
+    )
     'flask - check("https://github.com/mitsuhiko/flask")
     'zulip- check("https://github.com/zulip/zulip")
     'ansible- check("https://github.com/ansible/ansible")

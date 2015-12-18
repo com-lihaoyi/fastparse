@@ -782,13 +782,17 @@
             "com.lihaoyi" %%% "scalaparse" % "@fastparse.Constants.version"
 
 @sect{Change Log}
+    @sect{0.3.4}
+        @ul
+            @li
+                Fix performance problem in the @hl.scala{StringsIn} parser, which resulted in initialization time exponential relative to the length of the longest string, by @a("Rudiger Klaehn", href:="https://github.com/rklaehn")
     @sect{0.3.3}
         @ul
             @li
                 @b{#66} Bugfix: @hl.scala{Parser.rep} now handles max=0 properly, by @a("Martin Senne", href:="https://github.com/ProjectZetta/")
 
             @li
-                Further restructuring of @hl.scala{Parsed.Result} by  @a("Martin Senne", href:="https://github.com/ProjectZetta/")
+                Further restructuring of @hl.scala{Parsed.Result} by @a("Martin Senne", href:="https://github.com/ProjectZetta/")
                  @ul
                      @li
                          Object @hl.scala{Result} has been renamed to @hl.scala{Parsed}
