@@ -40,7 +40,7 @@ object JsonTests extends TestSuite{
 
   }
   // Here is the parser
-  val Whitespace = NamedFunction(" \n".contains(_: Char), "Whitespace")
+  val Whitespace = NamedFunction(" \r\n".contains(_: Char), "Whitespace")
   val Digits = NamedFunction('0' to '9' contains (_: Char), "Digits")
   val StringChars = NamedFunction(!"\"\\".contains(_: Char), "StringChars")
 
