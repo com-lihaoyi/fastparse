@@ -40,7 +40,7 @@ object Basic {
  * (W) and key-operators (O) which have different non-match criteria.
  */
 object Key {
-  def W(s: String) = P( s ~ !Basic.LetterDigitDollarUnderscore )(s"`$s`")
+  def W(s: String) = P( s ~ !Basic.LetterDigitDollarUnderscore )(sourcecode.Name(s"`$s`"))
   // If the operator is followed by a comment, stop early so we can parse the comment
-  def O(s: String) = P( s ~ (!Basic.OpChar | &("/*" | "//")) )(s"`$s`")
+  def O(s: String) = P( s ~ (!Basic.OpChar | &("/*" | "//")) )(sourcecode.Name(s"`$s`"))
 }

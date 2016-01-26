@@ -6,6 +6,8 @@ publishTo := Some(Resolver.file("Unused transient repository", file("target/unus
 
 crossScalaVersions := Seq("2.10.4", "2.11.7")
 
+scalaJSUseRhino in Global := false
+
 def macroDependencies(version: String) =
   Seq(
     "org.scala-lang" % "scala-reflect" % version % "provided",
