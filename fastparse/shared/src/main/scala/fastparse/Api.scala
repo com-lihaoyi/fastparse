@@ -8,7 +8,6 @@ import acyclic.file
  * the "public" API to fastparse packages
  */
 trait Api{
-  implicit def enclosingFunctionName: Utils.FuncName = macro MacroUtils.impl
 
   val Parsed = core.Parsed
   type Parsed[+T] = core.Parsed[T]
@@ -36,8 +35,8 @@ trait Api{
     if (s.length == 1) parsers.Terminals.CharLiteral(s(0))
     else parsers.Terminals.Literal(s)
 
-  def P[T](p: => Parser[T])(implicit name: Utils.FuncName): Parser[T] =
-    parsers.Combinators.Rule(name.name, () => p)
+  def P[T](p: => Parser[T])(implicit name: sourcecode.Name): Parser[T] =
+    parsers.Combinators.Rule(name.value, () => p)
 
   type P0 = Parser[Unit]
   type Parser[+T] = core.Parser[T]

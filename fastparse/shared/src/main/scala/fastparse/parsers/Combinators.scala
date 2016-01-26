@@ -1,7 +1,6 @@
 package fastparse.parsers
 import acyclic.file
 import fastparse.Implicits
-import fastparse.Utils.FuncName
 import Terminals._
 import fastparse.core.Parsed._
 import fastparse.core.Mutable
@@ -128,7 +127,7 @@ object Combinators {
    * [[p]] only when `parse` is called to allow for circular
    * dependencies between parsers.
    */
-  case class Rule[+T](name: FuncName, p: () => Parser[T]) extends Parser[T]{
+  case class Rule[+T](name: String, p: () => Parser[T]) extends Parser[T]{
     private[this] lazy val pCached = p()
 
     def parseRec(cfg: ParseCtx, index: Int) = {
@@ -147,7 +146,7 @@ object Combinators {
         res
       }
     }
-    override def toString = name.name
+    override def toString = name
     override def shortTraced = true
   }
 

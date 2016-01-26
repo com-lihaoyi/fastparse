@@ -7,18 +7,6 @@ import scala.collection.mutable
 import scala.language.experimental.macros
 
 object MacroUtils{
-  def impl(c: Compat.Context): c.Expr[Utils.FuncName] = {
-    import c.universe._
-
-    val sym = Compat.enclosingName(c)
-    val simpleName = sym.name.decoded.toString.trim
-    val fullName = sym.fullName.trim
-
-    val name = q"$simpleName"
-
-    c.Expr[Utils.FuncName](q"fastparse.Utils.FuncName($name, $fullName)")
-  }
-
   /**
    * Takes a predicate and pre-generates a base64 encoded bit-set, that
    * evaluates at run-time to create a [[Utils.CharBitSet]]. Useful for pre-computing
@@ -38,15 +26,6 @@ object MacroUtils{
   }
 }
 object Utils {
-  /**
-   * Type, which when summoned implicitly, provides the
-   * name of the nearest enclosing method for your perusal
-   */
-  case class FuncName(name: String, fullName: String)
-  object FuncName{
-    implicit def strToFuncName(s: String) = FuncName(s, s)
-  }
-
   /**
    * Convert a string to a C&P-able literal. Basically
    * copied verbatim from the uPickle source code.
