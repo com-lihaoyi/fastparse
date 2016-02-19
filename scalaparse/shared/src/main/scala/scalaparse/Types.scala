@@ -29,7 +29,7 @@ trait Types extends Core{
   val InfixType = P( CompoundType ~~ (NotNewline ~ Id ~~ OneNLMax ~ CompoundType).repX )
 
   val CompoundType = {
-    val Refinement = P( OneNLMax ~ `{` ~ Dcl.repX(sep=Semis) ~ `}` )
+    val Refinement = P( OneNLMax ~ `{` ~/ Dcl.repX(sep=Semis) ~ `}` )
     val NamedType = P( (Pass ~ AnnotType).rep(1, `with`.~/) )
     P( NamedType ~~ Refinement.? | Refinement )
   }
@@ -40,7 +40,7 @@ trait Types extends Core{
   val SimpleType: P0 = {
     // Can't `cut` after the opening paren, because we might be trying to parse `()`
     // or `() => T`! only cut after parsing one type
-    val TupleType = P( "(" ~ Type.rep(sep= ",".~/) ~ ")" )
+    val TupleType = P( "(" ~/ Type.rep(sep= ",".~/) ~ ")" )
     val BasicType = P( TupleType | TypeId ~ ("." ~ `type`).? | `_` )
     P( BasicType ~ (Pass ~ (TypeArgs | `#` ~/ Id)).rep )
   }

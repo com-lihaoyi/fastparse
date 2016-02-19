@@ -35,8 +35,8 @@ object FailureTests extends TestSuite{
         |  type T = (A B)
         |}
       """.stripMargin,
-      expected = """NamedType ~ Refinement.? | Refinement""",
-      found = "(A B)"
+      expected = """ "," | ")" """,
+      found = "B)"
     )
     * - checkNeg(
       """object O{
@@ -90,8 +90,8 @@ object FailureTests extends TestSuite{
         |  new (1)
         |}
       """.stripMargin,
-      expected = """EarlyDefTmpl | NamedTmpl | TmplBody""",
-      found = "(1)"
+      expected = """NamedType ~ Refinement.? | Refinement | ")" """,
+      found = "1)"
     )
     * - checkNeg(
       """
