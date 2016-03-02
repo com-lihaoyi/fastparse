@@ -24,13 +24,13 @@ object WhitespaceApi {
                                        (implicit ev: Sequencer[T, V, R]) extends P[R] {
     def parseRec(cfg: ParseCtx, index: Int) = {
       p0.parseRec(cfg, index) match {
-        case f: Mutable.Failure => failMore(f, index, cfg.logDepth, f.traceParsers, false)
+        case f: Mutable.Failure => failMore(f, index, cfg.logDepth, f.traceParsers.distinct, false)
         case Mutable.Success(value0, index0, traceParsers0, cut0) =>
           WL.parseRec(cfg, index0) match {
             case f1: Mutable.Failure => failMore(f1, index, cfg.logDepth)
             case Mutable.Success(value1, index1, traceParsers1, cut1) =>
               p.parseRec(cfg, index1) match {
-                case f: Mutable.Failure => failMore(f, index1, cfg.logDepth, traceParsers0 ::: f.traceParsers, cut | cut0)
+                case f: Mutable.Failure => failMore(f, index1, cfg.logDepth, (traceParsers0 ::: f.traceParsers).distinct, cut | cut0)
                 case Mutable.Success(value2, index2, traceParsers2, cut2) =>
                   val (newIndex, newCut) =
                     if (index2 > index1 || index1 == cfg.input.length) (index2, cut | cut0 | cut1 | cut2)
@@ -40,7 +40,7 @@ object WhitespaceApi {
                     cfg.success,
                     ev.apply(value0, value2),
                     newIndex,
-                    traceParsers0 ::: traceParsers2,
+                    (traceParsers0 ::: traceParsers2).distinct,
                     newCut
                   )
               }
