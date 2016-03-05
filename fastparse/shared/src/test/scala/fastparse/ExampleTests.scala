@@ -313,9 +313,10 @@ object ExampleTests extends TestSuite{
         val Parsed.Success(Seq("1", "23"), _) = tuple.parse("(1,23)")
 
         val failure = tuple.parse("(1,)").asInstanceOf[Parsed.Failure]
+        val trace = failure.extra.traced.trace
         assert(
           failure.index == 3,
-          failure.extra.traced.trace == """tuple:1:1 / digits:1:4 / CharIn("0123456789"):1:4 ...")""""
+          trace == """tuple:1:1 / digits:1:4 / CharIn("0123456789"):1:4 ...")""""
         )
       }
       'composecut{

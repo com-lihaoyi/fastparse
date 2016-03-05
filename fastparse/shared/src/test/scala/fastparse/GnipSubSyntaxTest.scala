@@ -2,16 +2,15 @@ package fastparse
 
 import utest._
 
-/**
- * Created by jero on 2-3-16.
- */
-
 import scala.language.postfixOps
 
 /**
- * Created by jero on 3-2-16.
- */
-
+  * This is a regression test for the pathological behavior (#77) where
+  * `traceParsers` grows exponentially in cases with lots of backtracking.
+  *
+  * Without that issue being fixed, the this test runs forever and never
+  * terminates. With that issue fixed, it should complete trivially quickly.
+  */
 object GnipSubSyntaxTest extends TestSuite {
   class GnipRuleParser {
     val White = WhitespaceApi.Wrapper {

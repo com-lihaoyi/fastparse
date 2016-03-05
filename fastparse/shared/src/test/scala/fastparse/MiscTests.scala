@@ -115,7 +115,7 @@ object MiscTests extends TestSuite{
       def checkOpaqueness[T](p: Parser[T], strs: String*) = strs foreach { str =>
         val failure = p.parse(str).asInstanceOf[Parsed.Failure]
         assert(failure.index == 0)
-        assert(failure.extra.traced.traceParsers == List(p))
+        assert(failure.extra.traced.traceParsers == Set(p))
       }
       'nocut{
         val p = P("foo" ~ CharPred(_.isDigit).rep(1)).opaque("fooX")

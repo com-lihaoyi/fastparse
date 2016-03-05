@@ -15,7 +15,7 @@ object Terminals {
    * A parser that always succeeds, consuming no input
    */
   case object Pass extends Parser[Unit]{
-    def parseRec(cfg: ParseCtx, index: Int) = success(cfg.success, (), index, Nil, false)
+    def parseRec(cfg: ParseCtx, index: Int) = success(cfg.success, (), index, Set.empty, false)
   }
 
   /**
@@ -31,7 +31,7 @@ object Terminals {
     def parseRec(cfg: ParseCtx, index: Int) = {
       val input = cfg.input
       if (index >= input.length) fail(cfg.failure, index)
-      else success(cfg.success, input(index), index+1, Nil, false)
+      else success(cfg.success, input(index), index+1, Set.empty, false)
     }
   }
 
@@ -40,7 +40,7 @@ object Terminals {
    */
   case object Start extends Parser[Unit]{
     def parseRec(cfg: ParseCtx, index: Int) = {
-      if (index == 0) success(cfg.success, (), index, Nil, false)
+      if (index == 0) success(cfg.success, (), index, Set.empty, false)
       else fail(cfg.failure, index)
     }
   }
@@ -49,7 +49,7 @@ object Terminals {
    */
   case object End extends Parser[Unit]{
     def parseRec(cfg: ParseCtx, index: Int) = {
-      if (index == cfg.input.length) success(cfg.success, (), index, Nil, false)
+      if (index == cfg.input.length) success(cfg.success, (), index, Set.empty, false)
       else fail(cfg.failure, index)
     }
   }
@@ -90,7 +90,7 @@ object Terminals {
   case class Literal(s: String) extends Parser[Unit]{
     def parseRec(cfg: ParseCtx, index: Int) = {
 
-      if (startsWith(cfg.input, s, index)) success(cfg.success, (), index + s.length, Nil, false)
+      if (startsWith(cfg.input, s, index)) success(cfg.success, (), index + s.length, Set.empty, false)
       else fail(cfg.failure, index)
     }
     override def toString = literalize(s).toString
@@ -102,7 +102,7 @@ object Terminals {
   case class IgnoreCase(s: String) extends Parser[Unit]{
 
     def parseRec(cfg: ParseCtx, index: Int) = {
-      if (startsWithIgnoreCase(cfg.input, s, index)) success(cfg.success, (), index + s.length, Nil, false)
+      if (startsWithIgnoreCase(cfg.input, s, index)) success(cfg.success, (), index + s.length, Set.empty, false)
       else fail(cfg.failure, index)
     }
     override def toString = literalize(s).toString
@@ -115,7 +115,7 @@ object Terminals {
     def parseRec(cfg: ParseCtx, index: Int) = {
       val input = cfg.input
       if (index >= input.length) fail(cfg.failure, index)
-      else if (input(index) == c) success(cfg.success, c.toString, index + 1, Nil, false)
+      else if (input(index) == c) success(cfg.success, c.toString, index + 1, Set.empty, false)
       else fail(cfg.failure, index)
     }
     override def toString = literalize(c.toString).toString
@@ -128,7 +128,7 @@ object Terminals {
    */
   case object Index extends Parser[Int]{
     def parseRec(cfg: ParseCtx, index: Int) = {
-      success(cfg.success, index, index, Nil, false)
+      success(cfg.success, index, index, Set.empty, false)
     }
   }
 }

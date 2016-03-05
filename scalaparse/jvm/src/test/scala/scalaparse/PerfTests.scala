@@ -81,10 +81,10 @@ object PerfTests extends TestSuite{
 //
 //
 //        time(() => parser.parse(genJsCodeSource))
-//        time(() => parser.parse(genJsCodeSource + "*/").asInstanceOf[Result.Failure].traced)
+//        time(() => parser.parse(genJsCodeSource + "*/").asInstanceOf[Parsed.Failure].extra.traced)
 //        time(() => global.newUnitParser(genJsCodeSource).parse())
 //        time(() => parser.parse(genJsCodeSource))
-//        time(() => parser.parse(genJsCodeSource + "*/").asInstanceOf[Result.Failure].traced)
+//        time(() => parser.parse(genJsCodeSource + "*/").asInstanceOf[Parsed.Failure].extra.traced)
 //        time(() => global.newUnitParser(genJsCodeSource).parse())
 //        time(() => parser.parse(genJsCodeSource))
 //        time(() => parser.parse(genJsCodeSource + "*/").asInstanceOf[Result.Failure].traced)
@@ -103,7 +103,7 @@ object PerfTests extends TestSuite{
   def time(f: () => Unit) = {
     val start = System.currentTimeMillis()
     var count = 0
-    while(System.currentTimeMillis() - start < 30000){
+    while(System.currentTimeMillis() - start < 10000){
       f()
       count += 1
     }
