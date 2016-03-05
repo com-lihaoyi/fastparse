@@ -782,10 +782,12 @@
             "com.lihaoyi" %%% "scalaparse" % "@fastparse.Constants.version"
 
 @sect{Change Log}
-    @sect{0.3.5}
+    @sect{0.3.6}
         @ul
             @li
                 Fix @b{#77}: deduplicate traceParsers in WhitespaceAPI to prevent stack overflow, by @a("Jeroen Rosenberg", href:="https://github.com/jeroenr")
+    @sect{0.3.5}
+        @ul
             @li
                 Minor improvements to error-reporting in Scalaparse; error messages inside tuple-types and refinement-types should be slightly more precise
     @sect{0.3.4}

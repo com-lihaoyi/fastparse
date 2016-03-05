@@ -142,9 +142,7 @@ object ProjectTests extends TestSuite{
         "target/repos/scala/test/files/presentation/infix-completion/src/Snippet.scala",
         // Not sure why this is failing but it's new, and earlier version of Scalaparse fail too
         "target/repos/scala/src/scaladoc/scala/tools/nsc/doc/html/page/Entity.scala",
-        "target/repos/scala/src/scaladoc/scala/tools/nsc/doc/html/HtmlPage.scala",
-
-
+        "target/repos/scala/src/scaladoc/scala/tools/nsc/doc/html/HtmlPage.scala"
       ).exists(x.startsWith)
     )
 
