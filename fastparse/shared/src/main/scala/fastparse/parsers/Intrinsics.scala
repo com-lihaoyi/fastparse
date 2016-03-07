@@ -56,7 +56,7 @@ object Intrinsics {
    */
   case class StringIn(strings: String*) extends Parser[Unit]{
 
-    private[this] val trie = new TrieNode(strings)
+    private[this] val trie = new TrieNode(strings, false)
 
     def parseRec(cfg: ParseCtx, index: Int) = {
       val length = trie.query(cfg.input, index)
@@ -65,6 +65,25 @@ object Intrinsics {
     }
     override def toString = {
       s"StringIn(${strings.map(literalize(_)).mkString(", ")})"
+    }
+  }
+
+  /**
+   * Very efficiently attempts to parse a set of strings case insensitively, by
+   * first converting it into an array-backed Trie and then walking it once.
+   * If multiple strings match the input, longest match wins.
+   */
+  case class StringInIgnoreCase(strings: String*) extends Parser[Unit]{
+
+    private[this] val trie = new TrieNode(strings, true)
+
+    def parseRec(cfg: ParseCtx, index: Int) = {
+      val length = trie.query(cfg.input, index)
+      if (length != -1) success(cfg.success, (), index + length + 1, Set.empty, false)
+      else fail(cfg.failure, index)
+    }
+    override def toString = {
+      s"StringInIgnoreCase(${strings.map(literalize(_)).mkString(", ")})"
     }
   }
 }

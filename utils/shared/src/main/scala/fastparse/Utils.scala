@@ -118,12 +118,13 @@ object Utils {
    * An trie node for quickly matching multiple strings which
    * share the same prefix, one char at a time.
    */
-  final class TrieNode(strings: Seq[String]){
+  final class TrieNode(strings: Seq[String], ignoreCase: Boolean){
 
     val (min, max, arr) = {
-      val children = strings.filter(!_.isEmpty)
-                            .groupBy(_(0))
-                            .map { case (k,ss) => k -> new TrieNode(ss.map(_.tail)) }
+      val ignoreCaseStrings = if (ignoreCase) strings.map(_.toLowerCase) else strings
+      val children = ignoreCaseStrings.filter(!_.isEmpty)
+                                      .groupBy(_(0))
+                                      .map { case (k,ss) => k -> new TrieNode(ss.map(_.tail), ignoreCase) }
       if (children.size == 0) (0.toChar, 0.toChar, new Array[TrieNode](0))
       else {
         val min = children.keysIterator.min
@@ -143,6 +144,14 @@ object Utils {
      * Returns the length of the matching string, or -1 if not found
      */
     def query(input: String, index: Int): Int = {
+      if (ignoreCase) {
+        queryInternal(input.toLowerCase, index)
+      } else {
+        queryInternal(input, index)
+      }
+    }
+
+    private def queryInternal(input: String, index: Int): Int = {
       @tailrec def rec(offset: Int, currentNode: TrieNode, currentRes: Int): Int = {
         if (index + offset >= input.length) currentRes
         else {
