@@ -782,6 +782,10 @@
             "com.lihaoyi" %%% "scalaparse" % "@fastparse.Constants.version"
 
 @sect{Change Log}
+    @sect{0.3.7}
+        @ul
+            @li
+                Bump version of @code{sourcecode} from @code{0.1.0} to @code{0.1.1}
     @sect{0.3.6}
         @ul
             @li

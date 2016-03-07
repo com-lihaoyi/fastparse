@@ -23,7 +23,7 @@ val shared = Seq(
   libraryDependencies ++= macroDependencies(scalaVersion.value),
   libraryDependencies ++= Seq(
     "com.lihaoyi" %%% "utest" % "0.3.1" % "test",
-    "com.lihaoyi" %%% "sourcecode" % "0.1.0"
+    "com.lihaoyi" %%% "sourcecode" % "0.1.1"
   ),
   scalaJSStage in Global := FullOptStage,
   organization := "com.lihaoyi",
