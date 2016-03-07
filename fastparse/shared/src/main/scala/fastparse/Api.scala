@@ -25,6 +25,7 @@ trait Api{
   val CharsWhile = Intrinsics.CharsWhile
   val CharPredicates = fastparse.CharPredicates
   val StringIn = Intrinsics.StringIn
+  val StringInIgnoreCase = Intrinsics.StringInIgnoreCase
 
   val NoTrace = parsers.Combinators.NoTrace
   val NoCut = parsers.Combinators.NoCut

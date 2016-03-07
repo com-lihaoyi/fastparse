@@ -91,6 +91,11 @@ object ParsingTests extends TestSuite{
         checkFail(("Hello" ~/ "Bye").?, ("HelloBoo", 0), 5)
       }
     }
+    'stringInIgnoreCase {
+       check(StringInIgnoreCase("Hello", "Hello World"), ("hElLo WOrld!", 0), Success((), 11))
+       check(StringInIgnoreCase("abc","abde","abdgh").!, ("ABCDE", 0), Success(("ABC"), 3))
+       checkFail(StringInIgnoreCase("abc","def","ghi"), ("bcde", 0), 0)
+    }
   }
 }
 
