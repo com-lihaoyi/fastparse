@@ -12,7 +12,7 @@ import fastparse.all._
  */
 object ProjectTests extends TestSuite{
 
-  def check(ignored: Seq[String] = Nil)(testPath: utest.framework.TestPath) = {
+  def check(ignored: Seq[String] = Nil)(implicit testPath: utest.framework.TestPath) = {
     val repo = "https://github.com/" + testPath.value.last
     val name = repo.split("/").last
     val path = Paths.get("pythonparse/jvm/target/repos/" + name)
