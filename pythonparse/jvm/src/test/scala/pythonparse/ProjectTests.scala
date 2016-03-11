@@ -12,8 +12,8 @@ import fastparse.all._
  */
 object ProjectTests extends TestSuite{
 
-  def check(repo: String, ignored: Seq[String] = Nil) = {
-
+  def check(ignored: Seq[String] = Nil)(testPath: utest.framework.TestPath) = {
+    val repo = "https://github.com/" + testPath.value.last
     val name = repo.split("/").last
     val path = Paths.get("pythonparse/jvm/target/repos/" + name)
     if (!Files.exists(path)) {
@@ -51,15 +51,14 @@ object ProjectTests extends TestSuite{
 
   }
   val tests = TestSuite{
-    'changes - check("https://github.com/dropbox/changes")
-    'django - check(
-      "https://github.com/django/django",
+    "dropbox/changes" - check()
+    "django/django" - check(
       ignored = Seq("tests/i18n/test_compilation.py")
     )
-    'flask - check("https://github.com/mitsuhiko/flask")
-    'zulip- check("https://github.com/zulip/zulip")
-    'ansible- check("https://github.com/ansible/ansible")
-    'requests - check("https://github.com/kennethreitz/requests")
+    "mitsuhiko/flask" - check()
+    "zulip/zulip" - check()
+    "ansible/ansible"- check()
+    "kennethreitz/requests" - check()
 
     'bench{
       val path = "pythonparse/jvm/src/test/resources/pythonparse/bench.py"

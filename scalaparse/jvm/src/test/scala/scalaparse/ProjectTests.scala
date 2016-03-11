@@ -12,7 +12,7 @@ import scalaparse.PerfTests._
 object ProjectTests extends TestSuite{
 
   println("running")
-  def tests = TestSuite{
+  def tests = this{
 
     def checkDir(path: String, filter: String => Boolean = _ => true) = {
       println("Checking Dir " + path)
@@ -48,7 +48,8 @@ object ProjectTests extends TestSuite{
       ).mkString
       TestUtil.check(testSource)
     }
-    def checkRepo(url: String, filter: String => Boolean = _ => true) = {
+    def checkRepo(filter: String => Boolean = _ => true)(implicit testPath: utest.framework.TestPath) = {
+      val url = "https://github.com/" + testPath.value.last
       import sys.process._
       val name = url.split("/").last
       println("CLONING?")
@@ -60,16 +61,16 @@ object ProjectTests extends TestSuite{
     }
 
 
-    'fastparse - checkRepo("https://github.com/lihaoyi/fastparse")
-    'scalaJs - checkRepo("https://github.com/scala-js/scala-js")
-    'scalaz - checkRepo("https://github.com/scalaz/scalaz")
-    'shapeless - checkRepo("https://github.com/milessabin/shapeless")
-    'akka - checkRepo("https://github.com/akka/akka")
-    'lift - checkRepo("https://github.com/lift/framework")
-    'play - checkRepo("https://github.com/playframework/playframework")
-    'PredictionIO - checkRepo("https://github.com/PredictionIO/PredictionIO")
-    'spark - checkRepo("https://github.com/apache/spark")
-    'sbt - checkRepo("https://github.com/sbt/sbt",
+    "lihaoyi/fastparse" - checkRepo()
+    "scala-js/scala-js" - checkRepo()
+    "scalaz/scalaz" - checkRepo()
+    "milessabin/shapeless" - checkRepo()
+    "akka/akka"- checkRepo()
+    "lift/framework" - checkRepo()
+    "playframework/playframework" - checkRepo()
+    "PredictionIO/PredictionIO" - checkRepo()
+    "apache/spark" - checkRepo()
+    "sbt/sbt" - checkRepo(
       x => !Seq(
         // Unicode escapes in weird places
         "target/repos/sbt/main/settings/src/main/scala/sbt/std/InputWrapper.scala",
@@ -78,42 +79,42 @@ object ProjectTests extends TestSuite{
         "target/repos/sbt/sbt/src/sbt-test/source-dependencies/macro"
       ).exists(x.startsWith)
     )
-    'cats - checkRepo("https://github.com/non/cats")
-    'finagle - checkRepo("https://github.com/twitter/finagle")
-    'kafka - checkRepo("https://github.com/apache/kafka")
-    'breeze - checkRepo("https://github.com/scalanlp/breeze")
-    'spire - checkRepo("https://github.com/non/spire")
-    'saddle - checkRepo("https://github.com/saddle/saddle")
-    'scalaIDE - checkRepo("https://github.com/scala-ide/scala-ide")
-    'scalaFX - checkRepo("https://github.com/scalafx/scalafx")
-    'sfxEnsemble - checkRepo("https://github.com/scalafx/scalafx-ensemble")
-    'gitbucket - checkRepo("https://github.com/takezoe/gitbucket")
-    'scalding - checkRepo("https://github.com/twitter/scalding")
-    'scaloid - checkRepo("https://github.com/pocorall/scaloid")
-    'marathon - checkRepo("https://github.com/mesosphere/marathon")
-    'scalatra - checkRepo("https://github.com/scalatra/scalatra")
-    'summingbird - checkRepo("https://github.com/twitter/summingbird")
-    'slick - checkRepo("https://github.com/slick/slick")
-    'ensime - checkRepo("https://github.com/ensime/ensime-server")
-    'goose - checkRepo("https://github.com/GravityLabs/goose")
-    'lila - checkRepo("https://github.com/ornicar/lila",
+    "non/cats" - checkRepo()
+    "twitter/finagle" - checkRepo()
+    "apache/kafka" - checkRepo()
+    "scalanlp/breeze" - checkRepo()
+    "non/spire" - checkRepo()
+    "saddle/saddle" - checkRepo()
+    "scala-ide/scala-ide" - checkRepo()
+    "scalafx/scalafx" - checkRepo()
+    "scalafx/scalafx-ensemble"- checkRepo()
+    "takezoe/gitbucket" - checkRepo()
+    "twitter/scalding" - checkRepo()
+    "pocorall/scaloid" - checkRepo()
+    "mesosphere/marathon" - checkRepo()
+    "scalatra/scalatra" - checkRepo()
+    "summingbird/summingbird" - checkRepo()
+    "slick/slick" - checkRepo()
+    "ensime/ensime-server" - checkRepo()
+    "GravityLabs/goose" - checkRepo()
+    "ornicar/lila" - checkRepo(
       x => !Seq(
         "target/repos/lila/modules/lobby/src/main/SocketHandler.scala"
       ).exists(x.startsWith)
     )
-    'precog - checkRepo("https://github.com/precog/platform")
-    'twitterUtil - checkRepo("https://github.com/twitter/util")
-    'pickling - checkRepo("https://github.com/scala/pickling")
+    "precog/platform" - checkRepo()
+    "twitter/util" - checkRepo()
+    "scala/pickling" - checkRepo()
     // takes forever to clone on crappy internet =/
-    'intellij - checkRepo("https://github.com/JetBrains/intellij-scala")
-    'scalatest - checkRepo("https://github.com/scalatest/scalatest",
+    "JetBrains/intellij-scala" - checkRepo()
+    "scalatest/scalatest" - checkRepo(
       x => !Seq(
         // Unicode escapes in weird places
         "target/repos/scalatest/common-test/src/main/scala/org/scalatest/OperatorNames.scala",
         "target/repos/scalatest/scalatest-test/src/test/scala/org/scalatest/OperatorNames.scala"
       ).exists(x.startsWith)
     )
-    'macroid - checkRepo("https://github.com/macroid/macroid")
+    "macroid/macroid" - checkRepo()
     // annoyingly uses trailing .s all over the place, needing dozens of
     // skipped files. Probably only run this after we can properly parse those
 //    'delite- checkRepo("https://github.com/stanford-ppl/Delite",
@@ -122,10 +123,9 @@ object ProjectTests extends TestSuite{
 //        "target/repos/Delite/apps/multi-dsl/src/ppl/apps/interop/CustomerPricing.scala",
 //        "target/repos/Delite/apps/optiml"
 //      ).exists(x.startsWith))
-    'chisel - checkRepo("https://github.com/ucb-bar/chisel")
-    'specs2 - checkRepo("https://github.com/etorreborre/specs2")
-    'scala - checkRepo(
-      "https://github.com/scala/scala",
+    "ucb-bar/chisel" - checkRepo()
+    "etorreborre/specs2" - checkRepo()
+    "scala/scala" - checkRepo(
       x => !Seq(
         // This fella seems to make the scalac parser hang (???)
         "target/repos/scala/test/files/neg/t5510.scala",
