@@ -89,6 +89,7 @@ object Combinators {
     }
     override def toString = p.toString
   }
+  
   /**
    * Wraps a parser and prints out the indices where it starts
    * and ends, together with its result
@@ -104,7 +105,30 @@ object Combinators {
         val res = p.parseRec(cfg, index)
         cfg.logDepth = depth
         val strRes = res match{
-          case s: Mutable.Success[T] => s"Success(${s.index}${if (s.cut) ", cut" else ""})"
+          case s: Mutable.Success[T] => 
+            val input = cfg.input.slice(index,s.index)
+            // regex to reduce all WS strings to a single space, to shorten output message and keep on same line
+            // Java8 WS different from Java7 WS for \h, \v etc.  This combines them in a version-agnostic way, 
+            // so you're getting ascii & unicode vertical (\n etc) & horizontal (\t, space etc) spacing
+            val reduceWSRegEx = ("""(?s)[ \t\n\x0B\f\r\x85\u2028\u2029\xA0\u1680\u180e\u2000-\u200a\u202f\u205f\u3000]""").r //.unanchored
+            // val reduceWSRegEx = ("""(?s)\s""").r // simple version, if worried about compile speed
+            val successStr = reduceWSRegEx.replaceAllIn(input, " ")
+            val successSample =
+              if (successStr.length > 49) {
+                // regex to ID "not a space" 
+                val notWSRegEx = """(?s)[^ \t\n\x0B\f\r\x85\u2028\u2029\xA0\u1680\u180e\u2000-\u200a\u202f\u205f\u3000]"""
+                // val notWSRegEx = """(?s)[^\s]"""  // simple version, if worried about compile speed
+                // For getting initial and end sections, try to break on whitespace, but get min x chars + max y non-whitespace chars
+                // regex to get 1st x chars + next y non-whitespace chars
+                val beginRegEx = ("""^.{0,10}(?:""" + notWSRegEx + """{1,12})?""").r.unanchored  
+                // regex to get final y non-whitespace chars1st + x chars
+                val endRegEx = ("""(?:""" + notWSRegEx + """{1,12})?.{0,15}$""").r.unanchored 
+                beginRegEx.findFirstIn(successStr).getOrElse("") + "\"...\"" + 
+                  endRegEx.findFirstIn(successStr).getOrElse("")
+              } else {
+                successStr
+              }
+            s"${s.index}${if (s.cut) " (cut)" else ""} Success: " + "\"" + successSample + "\""
           case f: Mutable.Failure =>
             val stack = Failure.filterFullStack(f.fullStack)
             val trace = Failure.formatStackTrace(
@@ -113,7 +137,12 @@ object Combinators {
               index,
               Failure.formatParser(f.lastParser, f.input, f.index)
             )
-            s"Failure($trace${if (f.cut) ", cut" else ""})"
+            s"Failure($trace${if (f.cut) ", cut" else ""})" // original line
+            //s"FAILURE: trace=$trace\n" +
+            //s"index=$index — f.index=${f.index} — f.traceIndex=${f.traceIndex} — f.traceIndex=${f.traceIndex}\n" +
+            //s"f.input=${f.input}\n" +
+            //s"f.lastParser=${f.lastParser}"
+
         }
         output(s"$indent-$msg:$index:$strRes")
         res
