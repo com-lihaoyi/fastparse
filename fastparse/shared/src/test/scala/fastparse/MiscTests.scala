@@ -80,12 +80,24 @@ object MiscTests extends TestSuite{
           |  +DeepFailure:0
           |  -DeepFailure:0:Failure(DeepFailure:1:1 / "C":1:1 ..."AB")
           |  +"A":0
-          |  -"A":0:Success(1)
+          |  -"A":0:1 Success: "A"
           |  +"B":1
-          |  -"B":1:Success(2)
-          |-Foo:0:Success(2)
+          |  -"B":1:2 Success: "B"
+          |-Foo:0:2 Success: "AB"
           |
         """.stripMargin.trim
+
+      /*val expected =
+        """+Foo:0
+          |  +DeepFailure:0
+          |  -DeepFailure:0:Failure(DeepFailure:1:1 / "C":1:1 ..."AB")
+          |  +"A":0
+          |  -"A":0:Success(1) "A"
+          |  +"B":1
+          |  -"B":1:Success(2) "B"
+          |-Foo:0:Success(2) "AB"
+          |
+        """.stripMargin.trim*/
       assert(allLogged == expected)
     }
 
