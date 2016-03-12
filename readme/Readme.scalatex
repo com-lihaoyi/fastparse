@@ -786,6 +786,8 @@
         @ul
             @li
                 Bump version of @code{sourcecode} from @code{0.1.0} to @code{0.1.1}
+            @li
+                @b{#81} Enhance log() to display on Success the text (or a summarized version of it) that a rule processed, , by @a("Mark-L6n", href:="https://github.com/Mark-L6n")
     @sect{0.3.6}
         @ul
             @li
