@@ -206,6 +206,23 @@ object ExampleTests extends TestSuite{
           failure.extra.traced.trace == """xml:1:1 / rightTag:1:8 / "abcde":1:10 ..."edcba>""""
         )
       }
+      'to {
+        case class Foo1(a: String)
+        case class Foo2(a: String, b: String)
+        case class Foo3(a: String, b: String, c: String)
+
+        val Parsed.Success(r0, _i0) = P("foo").to(1).parse("foo")
+        assert(r0 == 1)
+
+        val Parsed.Success(r1, _i1) = P("foo").!.to(Foo1).parse("foo")
+        assert(r1 == Foo1("foo"))
+
+        val Parsed.Success(r2, _i2) = P("foo".! ~ "bar".!).to(Foo2).parse("foobar")
+        assert(r2 == Foo2("foo", "bar"))
+
+        val Parsed.Success(r3, _i3) = P("foo".! ~ "bar".! ~ "baz".!).to(Foo3).parse("foobarbaz")
+        assert(r3 == Foo3("foo", "bar", "baz"))
+      }
       'filter{
         val digits = P(CharIn('0' to '9').rep(1).!).map(_.toInt)
         val even = digits.filter(_ % 2 == 0)
