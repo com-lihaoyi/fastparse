@@ -5,15 +5,24 @@ import utest.asserts.assert
 
 object TestUtil {
 
-  def check[T](input: String, tag: String = "") = {
-    val res = CssParser.ruleList.parse(input)
-    res match{
-      case f: Parsed.Failure =>
-        throw new Exception(tag + "\n" + input + "\n" + f.extra.traced.trace)
-      case s: Parsed.Success[_] =>
-        val inputLength = input.length
-        val index = s.index
-        assert(index == inputLength)
+  def checkParsing(input: String, tag: String = "") = {
+
+    def checkParsed(input: String, res: Parsed[Ast.RuleList]) = {
+      res match {
+        case f: Parsed.Failure =>
+          throw new Exception(tag + "\n" + input + "\n" + f.extra.traced.trace)
+        case s: Parsed.Success[Ast.RuleList] =>
+          val inputLength = input.length
+          val index = s.index
+          assert(index == inputLength)
+      }
     }
+
+    val res = CssParser.ruleList.parse(input)
+    checkParsed(input, res)
+
+    val parsedInput = PrettyPrinter.printRuleList(res.get.value)
+    val res2 = CssParser.ruleList.parse(parsedInput)
+    checkParsed(parsedInput, res2)
   }
 }

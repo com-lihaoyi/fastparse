@@ -26,23 +26,38 @@ object PrettyPrinter {
       case ColumnToken() => "||"
       case CdcToken() => "<!--"
       case CdoToken() => "-->"
-      case DelimToken(delim) => delim
+      case DelimToken(",") => ", "
+      case DelimToken(".") => "."
+      case DelimToken(":") => ": "
+      case DelimToken("::") => "::"
+      case DelimToken("=") => "="
+      case DelimToken(";") => ";"
+      case DelimToken(delim) => s" $delim "
     }
   }
 
   def printComponentValues(values: Seq[ComponentValue], indent: Int = 0, isIndentation: Boolean = true): String = {
     val indentPart = if (isIndentation) "\n" + " " * indentSize * indent else " "
 
-    values.dropRight(1).map {
-      case DelimToken(";") => ";" + indentPart
-      case st: SimpleToken => printToken(st) + " "
-      case block: CurlyBracketsBlock => printBlock(block, indent, isIndentation=isIndentation) + indentPart
-      case block: Block => printBlock(block, isIndentation = false)
-    }.mkString +
+    values.dropRight(1).zip(values.drop(1)).map(p => {
+      val (first, last) = p
+      first match {
+        case DelimToken(";") => ";" + indentPart
+        case st: SimpleToken => {
+          val isTokenFirst = first.isInstanceOf[Ast.SimpleToken] && !first.isInstanceOf[DelimToken]
+          val isTokenLast = last.isInstanceOf[Ast.SimpleToken] && !last.isInstanceOf[DelimToken]
+          printToken(st) + (if (isTokenFirst && isTokenLast) " " else "")
+        }
+        case block: CurlyBracketsBlock => printBlock(block, indent, isIndentation = isIndentation) + indentPart
+        case block: Block => printBlock(block, isIndentation = false)
+        case FunctionBlock(name, block) => name + " " + printBlock(block, indent, isIndentation = false)
+      }
+    }).mkString +
     (values.last match {
       case st: SimpleToken => printToken(st)
       case block: CurlyBracketsBlock => printBlock(block, indent, isIndentation=isIndentation, isLast = true)
       case block: Block => printBlock(block, isIndentation = false, isLast = true)
+      case FunctionBlock(name, block) => name + " " + printBlock(block, indent, isIndentation = false, isLast = true)
     })
   }
 
@@ -73,7 +88,6 @@ object PrettyPrinter {
         indentBlock(Some(qualifiedRule.block))
       }
     }
-
 
   def printRuleList(ruleList: RuleList, indent: Int = 0): String = {
     ruleList.rules.map(printRule(_, indent)).mkString("\n")
