@@ -26,6 +26,7 @@ object PrettyPrinter {
       case ColumnToken() => "||"
       case CdcToken() => "<!--"
       case CdoToken() => "-->"
+      // probably deprecated
       case DelimToken(",") => ", "
       case DelimToken(".") => "."
       case DelimToken(":") => ": "
@@ -36,8 +37,12 @@ object PrettyPrinter {
     }
   }
 
-  def printComponentValues(values: Seq[ComponentValue], indent: Int = 0, isIndentation: Boolean = true): String = {
+  // probably deprecated
+  def printComponentValues(values: Seq[ComponentValue], indent: Int = 0, isIndentation: Boolean = false): String = {
     val indentPart = if (isIndentation) "\n" + " " * indentSize * indent else " "
+
+    if (values.isEmpty)
+      return ""
 
     values.dropRight(1).zip(values.drop(1)).map(p => {
       val (first, last) = p
@@ -53,12 +58,39 @@ object PrettyPrinter {
         case FunctionBlock(name, block) => name + " " + printBlock(block, indent, isIndentation = false)
       }
     }).mkString +
-    (values.last match {
-      case st: SimpleToken => printToken(st)
-      case block: CurlyBracketsBlock => printBlock(block, indent, isIndentation=isIndentation, isLast = true)
-      case block: Block => printBlock(block, isIndentation = false, isLast = true)
-      case FunctionBlock(name, block) => name + " " + printBlock(block, indent, isIndentation = false, isLast = true)
-    })
+      (values.last match {
+        case st: SimpleToken => printToken(st)
+        case block: CurlyBracketsBlock => printBlock(block, indent, isIndentation=isIndentation, isLast = true)
+        case block: Block => printBlock(block, isIndentation = false, isLast = true)
+        case FunctionBlock(name, block) => name + " " + printBlock(block, indent, isIndentation = false, isLast = true)
+      })
+  }
+
+  def printSelector(selector: Selector): String = {
+
+    selector match {
+      case AllSelector() => "*"
+      case ElementSelector(name) => name
+      case ClassSelector(optName, names) => optName.getOrElse("") + "." + names.mkString(".")
+      case IdSelector(id) => "#" + id
+      case AttributeSelector(optSelector, attrs) =>
+        optSelector.map(printSelector).getOrElse("") + attrs.map({
+          case (attr, optToken, optValue) => "[" + attr + optToken.getOrElse("") + optValue.getOrElse("") + "]"
+        }).mkString
+      case PseudoSelector(optSelector, pseudoClass, optParam) =>
+        optSelector.map(_.fold(printSelector, printSelector)).getOrElse("") +
+          pseudoClass + optParam.map(s => s"($s)").getOrElse("")
+      case MultipleSelector(firstSelector, selectors) =>
+        printSelector(firstSelector) +
+        selectors.map({
+          case (sep, selector) =>
+            (sep match {
+              case " " => " "
+              case "," => ", "
+              case s => " " + s + " "
+            }) + printSelector(selector)
+        }).mkString
+    }
   }
 
   def printBlock(block: Block, indent: Int = 0, isIndentation: Boolean = true, isLast: Boolean = false): String = {
@@ -70,26 +102,33 @@ object PrettyPrinter {
       (if (isIndentation && !isLast) "\n" else "")
   }
 
-  def printRule(rule: Rule, indent: Int): String = {
+  def printDeclarationList(list: DeclarationList, indent: Int = 0, isIndentation: Boolean = true): String = {
+    val indentPart = if (isIndentation) "\n" + " " * indentSize * indent else " "
+    list.declarations.map({
+      case Left(Declaration(name, values, isImportant)) =>
+        indentPart + name + ": " + printComponentValues(values) + {if (isImportant) " ! important" else ""} + ";"
+      case Right(atRule) => printRule(atRule)
+    }).mkString
+  }
 
-    def indentBlock(block: Option[Block]): String = {
-      block match {
-        case Some(block: CurlyBracketsBlock) => printBlock(block, indent)
-        case Some(block) => printBlock(block, isIndentation = false)
-        case None => ""
-      }
-    }
+  def printRule(rule: Rule, indent: Int = 0, isIndentation: Boolean = true): String = {
+    val indentPart = if (isIndentation) "\n" + " " * indentSize * indent else " "
+    def indentBlock[T](block: T, printBlock: (T, Int, Boolean) => String) =
+      " {" + printBlock(block, indent + 1, isIndentation) + indentPart + "}"
 
     rule match {
-      case atRule: AtRule => s"@${atRule.name} " +
-        printComponentValues(atRule.selector, isIndentation = false) +
-        indentBlock(atRule.block)
-      case qualifiedRule: QualifiedRule => printComponentValues(qualifiedRule.selector, isIndentation = false) +
-        indentBlock(Some(qualifiedRule.block))
+      case QualifiedRule(Left(selector), block) => printSelector(selector) + indentBlock(block, printDeclarationList)
+      case AtRule(name, options, None) =>
+        indentPart + "@" + name + " " + printComponentValues(options) + ";"
+      case AtRule(name, options, Some(Left(declartions))) =>
+        indentPart + "@" + name + " " + printComponentValues(options) + indentBlock(declartions, printDeclarationList)
+      case AtRule(name, options, Some(Right(rules))) =>
+        indentPart + "@" + name + " " + printComponentValues(options) + indentBlock(rules, printRuleList)
       }
     }
 
-  def printRuleList(ruleList: RuleList, indent: Int = 0): String = {
-    ruleList.rules.map(printRule(_, indent)).mkString("\n")
+  def printRuleList(ruleList: RuleList, indent: Int = 0, isIndentation: Boolean = true): String = {
+    val indentPart = if (isIndentation) "\n" + " " * indentSize * indent else " "
+    ruleList.rules.map(rule => indentPart + printRule(rule, indent, isIndentation = isIndentation)).mkString("\n\n")
   }
 }

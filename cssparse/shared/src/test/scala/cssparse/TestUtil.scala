@@ -18,11 +18,11 @@ object TestUtil {
       }
     }
 
-    val res = CssParser.ruleList.parse(input)
+    val res = CssRulesParser.ruleList.parse(input)
     checkParsed(input, res)
 
     val parsedInput = PrettyPrinter.printRuleList(res.get.value)
-    val res2 = CssParser.ruleList.parse(parsedInput)
+    val res2 = CssRulesParser.ruleList.parse(parsedInput)
     checkParsed(parsedInput, res2)
   }
 }

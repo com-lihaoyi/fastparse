@@ -40,10 +40,28 @@ object Ast {
 
   sealed case class FunctionBlock(name: String, bracketsBlock: BracketsBlock) extends ComponentValue
 
+  sealed abstract class Selector
+  sealed abstract class SingleSelector extends Selector
+  sealed abstract class SimpleSelector extends SingleSelector
+
+  sealed case class AllSelector() extends SimpleSelector
+  sealed case class ElementSelector(name: String) extends SimpleSelector
+  sealed case class ClassSelector(firstName: Option[String], names: Seq[String]) extends SimpleSelector
+  sealed case class IdSelector(id: String) extends SimpleSelector
+  sealed case class AttributeSelector(selector: Option[SimpleSelector],
+                                      attrs: Seq[(String, Option[String], Option[String])]) extends SingleSelector
+  sealed case class PseudoSelector(selector: Option[Either[SimpleSelector, AttributeSelector]],
+                                   pseudoClass: String, param: Option[ComponentValue]) extends SingleSelector
+
+  sealed case class MultipleSelector(firstSelector: SingleSelector,
+                                     selectors: Seq[(String, SingleSelector)]) extends Selector
+
   sealed abstract class Rule
 
-  sealed case class QualifiedRule(selector: Seq[ComponentValue], block: CurlyBracketsBlock) extends Rule
-  sealed case class AtRule(name: String, selector: Seq[ComponentValue], block: Option[CurlyBracketsBlock]) extends Rule
+  sealed case class QualifiedRule(selector: Either[Selector, Seq[ComponentValue]],
+                                  block: DeclarationList) extends Rule
+  sealed case class AtRule(name: String, options: Seq[ComponentValue],
+                           block: Option[Either[DeclarationList, RuleList]]) extends Rule
   sealed case class RuleList(rules: Seq[Rule])
 
   sealed case class Stylesheet(rules: Seq[Either[Rule, CToken]])

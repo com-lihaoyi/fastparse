@@ -7,7 +7,7 @@ object TestUtilJVM {
     import org.w3c.css.sac._
     import com.steadystate.css.parser._
 
-    val parsedInput = PrettyPrinter.printRuleList(CssParser.ruleList.parse(input).get.value)
+    val parsedInput = PrettyPrinter.printRuleList(CssRulesParser.ruleList.parse(input).get.value)
     val source = new InputSource(new StringReader(parsedInput))
     val parser = new CSSOMParser(new SACParserCSS3())
     parser.setErrorHandler(new ErrorHandler{

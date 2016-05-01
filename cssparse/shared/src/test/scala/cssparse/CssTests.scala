@@ -10,38 +10,36 @@ object CssTests extends TestSuite {
   val tests = this {
     'basic {
       'test1 {
-        val Parsed.Success(value1, index1) = CssParser.stylesheet.parse(
+        val Parsed.Success(value1, index1) = CssRulesParser.ruleList.parse(
           """
             |
-            |p > a {
-            |    color: blue;
-            |    text-decoration: underline;
+            |  p    >    a
+            |  {
+            |    color      :         blue;
+            |
+            |
+            |
+            |    text-decoration              :       underline
             |  }
             |
           """.stripMargin)
 
         assert(
           value1 ==
-            Stylesheet(ArrayBuffer(
-              Left(QualifiedRule(ArrayBuffer(
-                  IdentToken("p"),
-                  DelimToken(">"),
-                  IdentToken("a")),
-                CurlyBracketsBlock(ArrayBuffer(
-                  IdentToken("color"),
-                  DelimToken(":"),
-                  IdentToken("blue"),
-                  DelimToken(";"),
-                  IdentToken("text-decoration"),
-                  DelimToken(":"),
-                  IdentToken("underline"),
-                  DelimToken(";"))))))),
-          index1 == 74
+            RuleList(ArrayBuffer(
+              QualifiedRule(Left(
+                MultipleSelector(
+                  ElementSelector("p"),
+                  ArrayBuffer((">", ElementSelector("a"))))),
+                DeclarationList(ArrayBuffer(
+                  Left(Declaration("color", ArrayBuffer(IdentToken("blue")), false)),
+                  Left(Declaration("text-decoration", ArrayBuffer(IdentToken("underline")), false))))))),
+          index1 == 120
         )
       }
 
       'test2 {
-        val Parsed.Success(value2, index2) = CssParser.stylesheet.parse(
+        val Parsed.Success(value2, index2) = CssRulesParser.ruleList.parse(
           """
             |
             |/*!
@@ -60,30 +58,19 @@ object CssTests extends TestSuite {
 
         assert(
           value2 ==
-            Stylesheet(ArrayBuffer(
-              Left(QualifiedRule(ArrayBuffer(
-                IdentToken("html")),
-                CurlyBracketsBlock(ArrayBuffer(
-                  IdentToken("font-family"),
-                  DelimToken(":"),
-                  IdentToken("sans-serif"),
-                  DelimToken(";"),
-
-                  IdentToken("-webkit-text-size-adjust"),
-                  DelimToken(":"),
-                  PercentageToken("100"),
-                  DelimToken(";"),
-
-                  IdentToken("-ms-text-size-adjust"),
-                  DelimToken(":"),
-                  PercentageToken("100"),
-                  DelimToken(";"))))))),
+            RuleList(ArrayBuffer(
+              QualifiedRule(
+                Left(ElementSelector("html")),
+                DeclarationList(ArrayBuffer(
+                  Left(Declaration("font-family", ArrayBuffer(IdentToken("sans-serif")), false)),
+                  Left(Declaration("-webkit-text-size-adjust", ArrayBuffer(PercentageToken("100")), false)),
+                  Left(Declaration("-ms-text-size-adjust", ArrayBuffer(PercentageToken("100")), false))))))),
           index2 == 363
         )
       }
 
       'test3 {
-        val Parsed.Success(value3, index3) = CssParser.stylesheet.parse(
+        val Parsed.Success(value3, index3) = CssRulesParser.ruleList.parse(
           """
             |
             |  after {
@@ -98,46 +85,96 @@ object CssTests extends TestSuite {
 
         assert(
           value3 ==
-            Stylesheet(ArrayBuffer(
-              Left(QualifiedRule(ArrayBuffer(
-                IdentToken("after")),
-                CurlyBracketsBlock(ArrayBuffer(
-                  IdentToken("color"),
-                  DelimToken(":"),
-                  HashWordToken("000"),
-                  DelimToken("!"),
-                  IdentToken("important"),
-                  DelimToken(";"),
-
-                  IdentToken("text-shadow"),
-                  DelimToken(":"),
-                  IdentToken("none"),
-                  DelimToken("!"),
-                  IdentToken("important"),
-                  DelimToken(";"),
-
-                  IdentToken("background"),
-                  DelimToken(":"),
-                  IdentToken("transparent"),
-                  DelimToken("!"),
-                  IdentToken("important"),
-                  DelimToken(";"),
-
-                  IdentToken("-webkit-box-shadow"),
-                  DelimToken(":"),
-                  IdentToken("none"),
-                  DelimToken("!"),
-                  IdentToken("important"),
-                  DelimToken(";"),
-
-                  IdentToken("box-shadow"),
-                  DelimToken(":"),
-                  IdentToken("none"),
-                  DelimToken("!"),
-                  IdentToken("important"),
-                  DelimToken(";"))))))),
+            RuleList(ArrayBuffer(
+              QualifiedRule(
+                Left(ElementSelector("after")),
+                DeclarationList(ArrayBuffer(
+                  Left(Declaration("color", ArrayBuffer(HashWordToken("000")), true)),
+                  Left(Declaration("text-shadow", ArrayBuffer(IdentToken("none")), true)),
+                  Left(Declaration("background", ArrayBuffer(IdentToken("transparent")), true)),
+                  Left(Declaration("-webkit-box-shadow", ArrayBuffer(IdentToken("none")), true)),
+                  Left(Declaration("box-shadow", ArrayBuffer(IdentToken("none")), true))))))),
           index3 == 239
         )
+      }
+
+      'test4 {
+
+        val Parsed.Success(value4, index4) = CssRulesParser.ruleList.parse(
+          """
+            |
+            | .label-info[href]:hover,
+            | .label-info[href]:focus {
+            |          background-color: #31b0d5;
+            |  }
+            |
+          """.stripMargin)
+
+        assert(
+          value4 ==
+            RuleList(ArrayBuffer(
+              QualifiedRule(
+                Left(MultipleSelector(
+                  PseudoSelector(
+                    Some(Right(AttributeSelector(
+                      Some(ClassSelector(None, ArrayBuffer("label-info"))),
+                      ArrayBuffer(("href", None, None))))),
+                    ":hover", None),
+                  ArrayBuffer(
+                    (",", PseudoSelector(
+                      Some(Right(AttributeSelector(
+                        Some(ClassSelector(None, ArrayBuffer("label-info"))),
+                        ArrayBuffer(("href", None, None))))),
+                      ":focus", None))))),
+                DeclarationList(ArrayBuffer(
+                  Left(Declaration("background-color", ArrayBuffer(HashWordToken("31b0d5")), false))))))),
+          index4 == 107
+        )
+      }
+
+      'test5 {
+        val Parsed.Success(value5, index5) = CssRulesParser.ruleList.parse(
+          """
+            |
+            |   [hidden],
+            |   template {
+            |     display: none;
+            |   }
+            |
+          """.stripMargin)
+
+        assert(value5 == RuleList(ArrayBuffer(
+          QualifiedRule(
+            Left(MultipleSelector(
+              AttributeSelector(None, ArrayBuffer(("hidden", None, None))),
+              ArrayBuffer((",", ElementSelector("template"))))),
+            DeclarationList(ArrayBuffer(
+              Left(Declaration("display", ArrayBuffer(IdentToken("none")), false))))))))
+      }
+
+      'test6 {
+        val Parsed.Success(value6, index6) = CssRulesParser.ruleList.parse(
+          """
+            |
+            |@media (min-width: 768px) {
+            |          .lead {
+            |            font-size: 21px;
+            |          }
+            |        }
+            |
+          """.stripMargin)
+
+        assert(value6 == RuleList(ArrayBuffer(
+          AtRule("media", ArrayBuffer(
+            BracketsBlock(ArrayBuffer(
+              IdentToken("min-width"),
+              DelimToken(":"),
+              DimensionToken("768", "px")))),
+            Some(Right(RuleList(ArrayBuffer(
+              QualifiedRule(
+                Left(ClassSelector(None, ArrayBuffer("lead"))),
+                DeclarationList(ArrayBuffer(
+                  Left(Declaration("font-size", ArrayBuffer(DimensionToken("21", "px")), false)))))))))))))
 
       }
     }
