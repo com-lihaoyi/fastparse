@@ -2,6 +2,8 @@ package cssparse
 
 import fastparse.all._
 
+import scala.collection.mutable.ArrayBuffer
+
 // According to https://www.w3.org/TR/css-syntax-3/
 
 object CssTokensParser {
@@ -34,7 +36,7 @@ object CssTokensParser {
   val string_token_char = P( (!("\"" | "'" | "\\" | newline ) ~ AnyChar) | escape | ("\\" ~ newline) )
 
   val string_token = P( ("\"" ~ string_token_char.rep.! ~ "\"") |
-    ("'" ~ string_token_char.rep.! ~ "'") ).map(Ast.StringToken)
+    ("'" ~ string_token_char.rep.! ~ "'") ).map(Ast.StringToken).log()
 
   val url_unquoted = P( ((!(CharIn("\"\'()\\") | whitespace) ~ AnyChar) | escape).rep(1) )
 
@@ -42,8 +44,8 @@ object CssTokensParser {
 
   val digit = P( CharIn('0' to '9') )
 
-  val number_token = P( ((CharIn("+-").? ~ (digit.rep(1) ~ "." ~ digit.rep(1))) | digit.rep(1) | ("." ~ digit.rep(1) ~
-    (CharIn("eE") ~ CharIn("+-").? ~ digit.rep(1)).?)).! ).map(Ast.NumberToken)
+  val number_token = P( (CharIn("+-").? ~ ((digit.rep(1) ~ "." ~ digit.rep(1)) | digit.rep(1) | ("." ~ digit.rep(1) ~
+    (CharIn("eE") ~ CharIn("+-").? ~ digit.rep(1)).?))).! ).map(Ast.NumberToken)
 
   val dimension_token = P( number_token.! ~ ident_token.! ) map
     { case (number, ident) => Ast.DimensionToken(number, ident)}
@@ -79,7 +81,7 @@ object CssTokensParser {
     dimension_token  | unicode_range_token |
     url_token        | at_word_token |
     hash_token       | string_token |
-    ident_token      | number_token |
+    number_token     | ident_token |
     match_token      | column_token |
     CDO_token        | CDC_token |
     delim_token ).map({
@@ -112,45 +114,44 @@ object CssRulesParser {
 
   val elementSelector = P( ident_token.! ).map(Ast.ElementSelector)
 
-  val classSelector = P( ident_token.!.? ~ ("." ~ ident_token.!).rep(1) ).map({
-    case (first_name, names) => Ast.ClassSelector(first_name, names)
-  })
-
   val idSelector = P( "#" ~ ident_token.! ).map(Ast.IdSelector)
 
-  val simpleSelector: Parser[Ast.SimpleSelector] = P( idSelector | classSelector | elementSelector )
-
-  val attributeSelector = P( simpleSelector.? ~ ("[" ~ ident_token.! ~
+  val attributeSelector = P( ident_token.!.? ~ ("[" ~ ident_token.! ~
     (( "=" | match_token).! ~ (string_token | ident_token)).? ~ "]").rep(1) ).map({
-    case (sselector, attrs) => Ast.AttributeSelector(sselector, attrs.map({
+    case (name, attrs) => Ast.AttributeSelector(name, attrs.map({
       case (ident, Some((token, Ast.StringToken(string)))) => (ident, Some(token), Some(string))
       case (ident, Some((token, Ast.IdentToken(string)))) => (ident, Some(token), Some(string))
       case (ident, None) => (ident, None, None)
     }))
+  }).log()
+
+  val partSelector = P( allSelector | attributeSelector | elementSelector )
+
+  val classSelectorPart = P( "." ~  partSelector ).map(Ast.ClassSelectorPart)
+
+  val pseudoSelectorPart = P( (("::" | ":") ~ ident_token).! ~ ("(" ~ componentValue.rep(1) ~ ")").? ).map({
+    case (name, optValues) =>
+      Ast.PseudoSelectorPart(name, optValues.map(cvs => cvs.flatMap(cv => cv)).getOrElse(ArrayBuffer()))
   })
 
-  val pseudoSelector = P( (attributeSelector | simpleSelector).? ~ (("::" | ":").! ~ ws ~ ident_token.!)
-                          ~ ("(" ~ componentValue ~ ")").? ).map({
-    case (Some(s: Ast.SimpleSelector), (l, r), param) =>
-      Ast.PseudoSelector(Some(Left(s)), l + r, param.flatMap(identity))
-    case (Some(s: Ast.AttributeSelector), (l, r), param) =>
-      Ast.PseudoSelector(Some(Right(s)), l + r, param.flatMap(identity))
-    case (None, (l, r), param) =>
-      Ast.PseudoSelector(None, l + r, param.flatMap(identity))
+  val complexSelectorPart = P( pseudoSelectorPart | classSelectorPart )
+
+  val complexSelector = P( partSelector.? ~ complexSelectorPart.rep(1) ).map({
+    case (part, parts) => Ast.ComplexSelector(part, parts)
   })
 
-  val singleSelector: Parser[Ast.SingleSelector] = P( pseudoSelector | attributeSelector | simpleSelector ).log()
+  val singleSelector: Parser[Ast.SingleSelector] = P( complexSelector | partSelector | idSelector | allSelector )
 
   val selectorDelim = P( (ws ~ CharIn(",>+~").! ~ ws) | whitespace_token.rep(1).! ).map({
     case s if s.startsWith(" ") => " "
     case s => s
-  }).log()
+  })
 
   val multipleSelector = P( singleSelector ~ (selectorDelim ~ singleSelector).rep(1) ).map({
     case (firstSelector, selectors) => Ast.MultipleSelector(firstSelector, selectors)
-  }).log()
+  })
 
-  val selector: Parser[Ast.Selector] = P(multipleSelector | singleSelector | allSelector).log()
+  val selector: Parser[Ast.Selector] = P(multipleSelector | singleSelector | allSelector)
 
   val important = P( "!" ~ ws ~ "important" ~ ws)
 
@@ -161,30 +162,30 @@ object CssRulesParser {
 
   val simpleAtRule = P( at_word_token ~ (!CharIn(";{}") ~ componentValue).rep ).map({
     case (Ast.AtWordToken(name), values) => Ast.AtRule(name, values.flatten, None)
-  }).log()
+  })
 
   val declarationList = P( (ws ~ (simpleAtRule | declaration) ~ ws ~ (&("}") | ";")).rep ).map(
     s => Ast.DeclarationList(s.map({
       case atRule: Ast.AtRule => Right(atRule)
       case declaration: Ast.Declaration => Left(declaration)
-    }))).log()
+    })))
 
   val declAtRule =
     P( at_word_token ~ (!CharIn(";{}") ~ componentValue).rep ~ "{" ~ declarationList ~ ws ~ "}" ).map({
       case (Ast.AtWordToken(name), values, block) => Ast.AtRule(name, values.flatten, Some(Left(block)))
-    }).log()
+    })
 
   val complexAtRule =
     P( at_word_token ~ (!CharIn(";{}") ~ componentValue).rep ~ "{" ~ ruleList ~ ws ~ "}" ).map({
       case (Ast.AtWordToken(name), values, block) => Ast.AtRule(name, values.flatten, Some(Right(block)))
-    }).log()
+    })
 
-  val atRule = P( complexAtRule | declAtRule | (simpleAtRule ~ ";") ).log()
+  val atRule = P( complexAtRule | declAtRule | (simpleAtRule ~ ";") )
 
   val qualifiedRule = P( ((selector ~ ws) | (!"{" ~ componentValue).rep) ~ "{" ~ declarationList ~ ws ~ "}" ).map({
     case (values: Seq[Option[Ast.ComponentValue]], block) => Ast.QualifiedRule(Right(values.flatten), block)
     case (selector: Ast.Selector, block) => Ast.QualifiedRule(Left(selector), block)
-  }).log()
+  })
 
   val ruleList: Parser[Ast.RuleList] = P( (whitespace_token | atRule | qualifiedRule).rep ).map(
     s => Ast.RuleList(s flatMap {

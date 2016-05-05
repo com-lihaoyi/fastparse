@@ -113,21 +113,16 @@ object CssTests extends TestSuite {
         assert(
           value4 ==
             RuleList(ArrayBuffer(
-              QualifiedRule(
-                Left(MultipleSelector(
-                  PseudoSelector(
-                    Some(Right(AttributeSelector(
-                      Some(ClassSelector(None, ArrayBuffer("label-info"))),
-                      ArrayBuffer(("href", None, None))))),
-                    ":hover", None),
-                  ArrayBuffer(
-                    (",", PseudoSelector(
-                      Some(Right(AttributeSelector(
-                        Some(ClassSelector(None, ArrayBuffer("label-info"))),
-                        ArrayBuffer(("href", None, None))))),
-                      ":focus", None))))),
-                DeclarationList(ArrayBuffer(
-                  Left(Declaration("background-color", ArrayBuffer(HashWordToken("31b0d5")), false))))))),
+              QualifiedRule(Left(
+                MultipleSelector(
+                  ComplexSelector(None, ArrayBuffer(
+                    ClassSelectorPart(AttributeSelector(Some("label-info"), ArrayBuffer(("href", None, None)))),
+                    PseudoSelectorPart(":hover", ArrayBuffer()))),
+                  ArrayBuffer((",", ComplexSelector(None, ArrayBuffer(
+                    ClassSelectorPart(AttributeSelector(Some("label-info"), ArrayBuffer(("href", None, None)))),
+                    PseudoSelectorPart(":focus", ArrayBuffer()))))))),
+                DeclarationList(ArrayBuffer(Left(
+                  Declaration("background-color", ArrayBuffer(HashWordToken("31b0d5")), false))))))),
           index4 == 107
         )
       }
@@ -166,16 +161,12 @@ object CssTests extends TestSuite {
 
         assert(value6 == RuleList(ArrayBuffer(
           AtRule("media", ArrayBuffer(
-            BracketsBlock(ArrayBuffer(
-              IdentToken("min-width"),
-              DelimToken(":"),
-              DimensionToken("768", "px")))),
+            BracketsBlock(ArrayBuffer(IdentToken("min-width"), DelimToken(":"), DimensionToken("768", "px")))),
             Some(Right(RuleList(ArrayBuffer(
-              QualifiedRule(
-                Left(ClassSelector(None, ArrayBuffer("lead"))),
-                DeclarationList(ArrayBuffer(
-                  Left(Declaration("font-size", ArrayBuffer(DimensionToken("21", "px")), false)))))))))))))
-
+              QualifiedRule(Left(
+                ComplexSelector(None, ArrayBuffer(ClassSelectorPart(ElementSelector("lead"))))),
+                DeclarationList(ArrayBuffer(Left(
+                  Declaration("font-size", ArrayBuffer(DimensionToken("21", "px")), false)))))))))))))
       }
     }
   }

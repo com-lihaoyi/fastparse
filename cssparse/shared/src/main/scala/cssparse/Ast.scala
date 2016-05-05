@@ -42,16 +42,20 @@ object Ast {
 
   sealed abstract class Selector
   sealed abstract class SingleSelector extends Selector
-  sealed abstract class SimpleSelector extends SingleSelector
+  sealed abstract class PartSelector extends SingleSelector
 
-  sealed case class AllSelector() extends SimpleSelector
-  sealed case class ElementSelector(name: String) extends SimpleSelector
-  sealed case class ClassSelector(firstName: Option[String], names: Seq[String]) extends SimpleSelector
-  sealed case class IdSelector(id: String) extends SimpleSelector
-  sealed case class AttributeSelector(selector: Option[SimpleSelector],
-                                      attrs: Seq[(String, Option[String], Option[String])]) extends SingleSelector
-  sealed case class PseudoSelector(selector: Option[Either[SimpleSelector, AttributeSelector]],
-                                   pseudoClass: String, param: Option[ComponentValue]) extends SingleSelector
+  sealed case class AllSelector() extends PartSelector
+  sealed case class ElementSelector(name: String) extends PartSelector
+  sealed case class IdSelector(id: String) extends SingleSelector
+  sealed case class AttributeSelector(name: Option[String],
+                                      attrs: Seq[(String, Option[String], Option[String])]) extends PartSelector
+
+  sealed abstract class ComplexSelectorPart
+
+  sealed case class ClassSelectorPart(part: PartSelector) extends ComplexSelectorPart
+  sealed case class PseudoSelectorPart(pseudoClass: String, param: Seq[ComponentValue]) extends ComplexSelectorPart
+  sealed case class ComplexSelector(firstPart: Option[PartSelector],
+                                    parts: Seq[ComplexSelectorPart]) extends SingleSelector
 
   sealed case class MultipleSelector(firstSelector: SingleSelector,
                                      selectors: Seq[(String, SingleSelector)]) extends Selector

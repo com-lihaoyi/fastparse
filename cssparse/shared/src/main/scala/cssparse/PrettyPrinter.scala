@@ -8,6 +8,16 @@ object PrettyPrinter {
 
   def printToken(token: SimpleToken): String = {
     token match {
+      case IdentToken("and") => "and "
+      case IdentToken("or") => " or "
+      case DelimToken(",") => ", "
+      case DelimToken(".") => "."
+      case DelimToken(":") => ":"
+      case DelimToken("::") => "::"
+      case DelimToken("=") => "="
+      case DelimToken(";") => ";"
+      case DelimToken(delim) => s" $delim "
+
       case IdentToken(name) => name
       case AtWordToken(name) => s"@$name"
       case HashWordToken(name) => s"#$name"
@@ -26,14 +36,6 @@ object PrettyPrinter {
       case ColumnToken() => "||"
       case CdcToken() => "<!--"
       case CdoToken() => "-->"
-      // probably deprecated
-      case DelimToken(",") => ", "
-      case DelimToken(".") => "."
-      case DelimToken(":") => ": "
-      case DelimToken("::") => "::"
-      case DelimToken("=") => "="
-      case DelimToken(";") => ";"
-      case DelimToken(delim) => s" $delim "
     }
   }
 
@@ -68,18 +70,24 @@ object PrettyPrinter {
 
   def printSelector(selector: Selector): String = {
 
+    def printPart(part: ComplexSelectorPart): String = {
+      part match {
+        case ClassSelectorPart(part) => "." + printSelector(part)
+        case PseudoSelectorPart(pseudoClass, param) => pseudoClass +
+          (if (param.nonEmpty) "(" + printComponentValues(param) + ")" else "")
+      }
+    }
+
     selector match {
       case AllSelector() => "*"
       case ElementSelector(name) => name
-      case ClassSelector(optName, names) => optName.getOrElse("") + "." + names.mkString(".")
       case IdSelector(id) => "#" + id
-      case AttributeSelector(optSelector, attrs) =>
-        optSelector.map(printSelector).getOrElse("") + attrs.map({
+      case AttributeSelector(optName, attrs) =>
+        optName.getOrElse("") + attrs.map({
           case (attr, optToken, optValue) => "[" + attr + optToken.getOrElse("") + optValue.getOrElse("") + "]"
         }).mkString
-      case PseudoSelector(optSelector, pseudoClass, optParam) =>
-        optSelector.map(_.fold(printSelector, printSelector)).getOrElse("") +
-          pseudoClass + optParam.map(s => s"($s)").getOrElse("")
+      case ComplexSelector(firstPart, parts) =>
+        firstPart.map(printSelector).getOrElse("") + parts.map(printPart).mkString
       case MultipleSelector(firstSelector, selectors) =>
         printSelector(firstSelector) +
         selectors.map({
@@ -117,7 +125,10 @@ object PrettyPrinter {
       " {" + printBlock(block, indent + 1, isIndentation) + indentPart + "}"
 
     rule match {
-      case QualifiedRule(Left(selector), block) => printSelector(selector) + indentBlock(block, printDeclarationList)
+      case QualifiedRule(Left(selector), block) =>
+        printSelector(selector) + indentBlock(block, printDeclarationList)
+      case QualifiedRule(Right(values), block) =>
+        printComponentValues(values) + indentBlock(block, printDeclarationList)
       case AtRule(name, options, None) =>
         indentPart + "@" + name + " " + printComponentValues(options) + ";"
       case AtRule(name, options, Some(Left(declartions))) =>
@@ -129,6 +140,6 @@ object PrettyPrinter {
 
   def printRuleList(ruleList: RuleList, indent: Int = 0, isIndentation: Boolean = true): String = {
     val indentPart = if (isIndentation) "\n" + " " * indentSize * indent else " "
-    ruleList.rules.map(rule => indentPart + printRule(rule, indent, isIndentation = isIndentation)).mkString("\n\n")
+    ruleList.rules.map(rule => indentPart + printRule(rule, indent, isIndentation = isIndentation)).mkString("\n")
   }
 }

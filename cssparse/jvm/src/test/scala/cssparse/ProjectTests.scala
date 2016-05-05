@@ -20,14 +20,14 @@ object ProjectTests extends TestSuite {
     val css = new String(java.nio.file.Files.readAllBytes(
       java.nio.file.Paths.get("target", "files", name)))
     TestUtil.checkParsing(css, tag = name)
-    //TestUtilJVM.checkPrinting(css, tag = name)
+    TestUtil.checkPrinting(css, tag = name)
   }
 
   val tests = this {
     Seq("mkdir", "-p", "target/files").!
 
     "twbs/bootstrap/raw/master/dist/css/bootstrap.css" - checkCss()
-    "twbs/bootstrap/raw/master/dist/css/bootstrap.min.css" - checkCss()
-    "primer/primer/raw/master/css/primer.css" - checkCss()
+    //"twbs/bootstrap/raw/master/dist/css/bootstrap.min.css" - checkCss()
+    //"primer/primer/raw/master/css/primer.css" - checkCss()
   }
 }
