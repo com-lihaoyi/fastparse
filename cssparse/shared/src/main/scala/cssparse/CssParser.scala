@@ -14,7 +14,7 @@ object CssTokensParser {
 
   val whitespace = P( " " | "\t" | newline)
 
-  val hex_digit = P( CharIn('0' to '9', 'a' to 'f', 'A' to 'F'))
+  val hex_digit = P( CharIn('0' to '9', 'a' to 'f', 'A' to 'F') )
 
   val escape = P( "\\" ~ ((!(newline | hex_digit) ~ AnyChar) |
     (hex_digit.rep(min=1, max=6) ~ whitespace.?)) )
@@ -36,7 +36,7 @@ object CssTokensParser {
   val string_token_char = P( (!("\"" | "'" | "\\" | newline ) ~ AnyChar) | escape | ("\\" ~ newline) )
 
   val string_token = P( ("\"" ~ string_token_char.rep.! ~ "\"") |
-    ("'" ~ string_token_char.rep.! ~ "'") ).map(Ast.StringToken).log()
+    ("'" ~ string_token_char.rep.! ~ "'") ).map(Ast.StringToken)
 
   val url_unquoted = P( ((!(CharIn("\"\'()\\") | whitespace) ~ AnyChar) | escape).rep(1) )
 
@@ -52,9 +52,10 @@ object CssTokensParser {
 
   val percentage_token = P( number_token.! ~ "%" ).map(Ast.PercentageToken)
 
-  val unicode_range_token = P( CharIn("Uu") ~ "+" ~ hex_digit.rep(min=1, max=6).! |
-    (hex_digit.rep(min=1, max=5).! flatMap (s => "?".rep(min=1, max=6 - s.length))).! |
-    (hex_digit.rep(min=1, max=6).! ~ "-" ~ hex_digit.rep(min=1, max=6).!) ).map({ //TODO bad pattern matching
+  val unicode_range_token = P( CharIn("Uu") ~ "+" ~
+    ((hex_digit.rep(min=1, max=6) ~ "?".rep(min=1, max=5)).! |
+    (hex_digit.rep(min=1, max=6).! ~ "-" ~ hex_digit.rep(min=1, max=6).!) |
+    hex_digit.rep(min=1, max=6).!)).map({
       case hex: String => Ast.UnicodeRangeToken(hex, hex)
       case (left: String, right: String) => Ast.UnicodeRangeToken(left, right)
     })
@@ -77,13 +78,13 @@ object CssTokensParser {
 
   // any token except function_token
   val simple_token: Parser[Option[Ast.SimpleToken]] = P(
-    whitespace_token | percentage_token |
-    dimension_token  | unicode_range_token |
-    url_token        | at_word_token |
-    hash_token       | string_token |
-    number_token     | ident_token |
-    match_token      | column_token |
-    CDO_token        | CDC_token |
+    whitespace_token    | at_word_token |
+    hash_token          | match_token |
+    column_token        | CDO_token |
+    CDC_token           | string_token |
+    unicode_range_token | percentage_token |
+    dimension_token     | url_token |
+    number_token        | ident_token |
     delim_token ).map({
       case st: Ast.SimpleToken => Some(st)
       case _ => None
@@ -123,7 +124,7 @@ object CssRulesParser {
       case (ident, Some((token, Ast.IdentToken(string)))) => (ident, Some(token), Some(string))
       case (ident, None) => (ident, None, None)
     }))
-  }).log()
+  })
 
   val partSelector = P( allSelector | attributeSelector | elementSelector )
 
@@ -152,6 +153,8 @@ object CssRulesParser {
   })
 
   val selector: Parser[Ast.Selector] = P(multipleSelector | singleSelector | allSelector)
+
+
 
   val important = P( "!" ~ ws ~ "important" ~ ws)
 

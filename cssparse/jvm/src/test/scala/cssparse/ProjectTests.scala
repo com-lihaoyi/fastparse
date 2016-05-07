@@ -27,7 +27,7 @@ object ProjectTests extends TestSuite {
     Seq("mkdir", "-p", "target/files").!
 
     "twbs/bootstrap/raw/master/dist/css/bootstrap.css" - checkCss()
-    //"twbs/bootstrap/raw/master/dist/css/bootstrap.min.css" - checkCss()
-    //"primer/primer/raw/master/css/primer.css" - checkCss()
+    "twbs/bootstrap/raw/master/dist/css/bootstrap.min.css" - checkCss()
+    "primer/primer/raw/master/css/primer.css" - checkCss()
   }
 }

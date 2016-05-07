@@ -70,25 +70,25 @@ object PrettyPrinterTests extends TestSuite {
           |  font-size: 80%;
           |}
           |
-          |input[type=checkbox], input[type=radio] {
+          |input[type="checkbox"], input[type="radio"] {
           |  -webkit-box-sizing: border-box;
           |  -moz-box-sizing: border-box;
           |  box-sizing: border-box;
           |  padding: 0;
           |}
           |
-          |input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button {
+          |input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button {
           |  height: auto;
           |}
           |
-          |input[type=search] {
+          |input[type="search"] {
           |  -webkit-box-sizing: content-box;
           |  -moz-box-sizing: content-box;
           |  box-sizing: content-box;
           |  -webkit-appearance: textfield;
           |}
           |
-          |input[type=search]::-webkit-search-cancel-button, input[type=search]::-webkit-search-decoration {
+          |input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webkit-search-decoration {
           |  -webkit-appearance: none;
           |}
           |
@@ -330,8 +330,6 @@ object PrettyPrinterTests extends TestSuite {
             |}
           """.stripMargin
 
-        //scala.tools.nsc.io.File("outputs.txt").writeAll(CssRulesParser.ruleList.parse(input).get.value.toString)
-        //scala.tools.nsc.io.File("output.txt").writeAll(PrettyPrinter.printRuleList(CssRulesParser.ruleList.parse(input).get.value).trim)
         assert(PrettyPrinter.printRuleList(CssRulesParser.ruleList.parse(input).get.value).trim == output.trim)
       }
 

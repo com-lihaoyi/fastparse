@@ -11,9 +11,6 @@ object TestUtil {
         case f: Parsed.Failure =>
           throw new Exception(tag + "\n" + input + "\n" + f.extra.traced.trace)
         case s: Parsed.Success[Ast.RuleList] =>
-
-          scala.tools.nsc.io.File(s"$tag.txt").writeAll(PrettyPrinter.printRuleList(s.get.value))
-
           val inputLength = input.length
           val index = s.index
           assert(index == inputLength)

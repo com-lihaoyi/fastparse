@@ -168,6 +168,29 @@ object CssTests extends TestSuite {
                 DeclarationList(ArrayBuffer(Left(
                   Declaration("font-size", ArrayBuffer(DimensionToken("21", "px")), false)))))))))))))
       }
+
+      'test7 {
+        val Parsed.Success(value7, index7) = CssRulesParser.ruleList.parse(
+          """|
+             |@rule {
+             |        unicode-range: U+26;                 /* single codepoint */
+             |        unicode-range: U+0-7F;
+             |        unicode-range: U+0025-00FF;          /* codepoint range */
+             |        unicode-range: U+4??;                /* wildcard range */
+             |        unicode-range: U+0025-00FF, U+4??;
+             |}
+          """.stripMargin)
+        assert(value7 == RuleList(ArrayBuffer(
+          AtRule("rule", ArrayBuffer(), Some(Left(
+            DeclarationList(ArrayBuffer(
+              Left(Declaration("unicode-range", ArrayBuffer(UnicodeRangeToken("26", "26")), false)),
+              Left(Declaration("unicode-range", ArrayBuffer(UnicodeRangeToken("0", "7F")), false)),
+              Left(Declaration("unicode-range", ArrayBuffer(UnicodeRangeToken("0025", "00FF")), false)),
+              Left(Declaration("unicode-range", ArrayBuffer(UnicodeRangeToken("4??", "4??")), false)),
+              Left(Declaration("unicode-range", ArrayBuffer(
+                UnicodeRangeToken("0025", "00FF"), DelimToken(","), UnicodeRangeToken("4??", "4??")), false))))))))))
+
+      }
     }
   }
 }
