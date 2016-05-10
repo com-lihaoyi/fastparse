@@ -31,17 +31,31 @@ object TestUtil {
     import org.w3c.css.sac.InputSource
     import org.w3c.css.sac._
     import com.steadystate.css.parser._
+    import scala.collection.mutable.ArrayBuffer
+
+    def getErrors(css: String): Seq[String] = {
+      val errors = ArrayBuffer[String]()
+      val source = new InputSource(new StringReader(css))
+      val parser = new CSSOMParser(new SACParserCSS3())
+      parser.setErrorHandler(new ErrorHandler{
+        def error(ex: CSSParseException) = {
+          errors += ex.toString
+          println("ERROR " + ex + " Line: " + ex.getLineNumber + " Column:" + ex.getColumnNumber)
+        }
+        def fatalError(ex: CSSParseException) = {
+          errors += ex.toString
+          println("FATAL ERROR " + ex)
+        }
+        def warning(ex: CSSParseException) = println("WARNING " + ex)
+      })
+      val sheet = parser.parseStyleSheet(source, null, null)
+      errors
+    }
 
     val parsedInput = PrettyPrinter.printRuleList(CssRulesParser.ruleList.parse(input).get.value)
-    val source = new InputSource(new StringReader(parsedInput))
-    val parser = new CSSOMParser(new SACParserCSS3())
-    parser.setErrorHandler(new ErrorHandler{
-      def error(ex: CSSParseException) = println("ERROR " + ex +
-        " Line: " + ex.getLineNumber + " Column:" + ex.getColumnNumber)
-      def fatalError(ex: CSSParseException) = println("FATAL ERROR " + ex)
-      def warning(ex: CSSParseException) = println("WARNING " + ex)
-    })
-    val sheet = parser.parseStyleSheet(source, null, null)
-    assert(sheet != null)
+    val initialErrors = getErrors(input)
+    val parsingErrors = getErrors(parsedInput)
+
+    assert(initialErrors.sorted == parsingErrors.sorted)
   }
 }
