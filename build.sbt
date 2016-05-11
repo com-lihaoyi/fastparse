@@ -121,11 +121,24 @@ lazy val pythonparse = crossProject.dependsOn(fastparse).settings(
 lazy val pythonparseJVM = pythonparse.jvm
 lazy val pythonparseJS = pythonparse.js
 
+lazy val cssparse = crossProject
+  .dependsOn(fastparse)
+  .settings(name := "cssparse")
+  .settings(shared:_*)
+  .jvmSettings(
+    libraryDependencies += "net.sourceforge.cssparser" % "cssparser" % "0.9.18"
+  )
+
+lazy val cssparseJVM = cssparse.jvm
+lazy val cssparseJS = cssparse.js
+
 lazy val modules = project.aggregate(
   fastparseJS,
   fastparseJVM,
   pythonparseJS,
   pythonparseJVM,
+  cssparseJS,
+  cssparseJVM,
   scalaparseJS,
   scalaparseJVM,
   utilsJS,
