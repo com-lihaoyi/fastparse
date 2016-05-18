@@ -73,7 +73,7 @@ object ProjectTests extends TestSuite{
     "sbt/sbt" - checkRepo(
       x => !Seq(
         // Unicode escapes in weird places
-        "target/repos/sbt/main/settings/src/main/scala/sbt/std/InputWrapper.scala",
+        "target/repos/sbt/main-settings/src/main/scala/sbt/std/InputWrapper.scala",
         // uses a package called `macro`
         "target/repos/sbt/sbt/src/sbt-test/source-dependencies/inherited-macros",
         "target/repos/sbt/sbt/src/sbt-test/source-dependencies/macro"
