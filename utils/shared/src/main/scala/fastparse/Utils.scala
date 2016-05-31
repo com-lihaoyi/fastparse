@@ -92,7 +92,6 @@ object Utils {
     }
     def apply(chars: Seq[Char]) = {
       val (first, last, array) = compute(chars)
-      for(c <- chars) array((c - first) >> 5) |= 1 << ((c - first) & 31)
       new CharBitSet(array, first, last)
     }
   }
