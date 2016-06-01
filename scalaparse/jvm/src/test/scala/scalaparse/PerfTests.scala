@@ -1,5 +1,6 @@
 package scalaparse
 
+import fastparse.Source
 import fastparse.core.Parsed
 import utest._
 
@@ -78,26 +79,13 @@ object PerfTests extends TestSuite{
        * 4769
        * 4825
        */
-//
-//
-//        time(() => parser.parse(genJsCodeSource))
-//        time(() => parser.parse(genJsCodeSource + "*/").asInstanceOf[Parsed.Failure].extra.traced)
-//        time(() => global.newUnitParser(genJsCodeSource).parse())
-//        time(() => parser.parse(genJsCodeSource))
-//        time(() => parser.parse(genJsCodeSource + "*/").asInstanceOf[Parsed.Failure].extra.traced)
-//        time(() => global.newUnitParser(genJsCodeSource).parse())
-//        time(() => parser.parse(genJsCodeSource))
-//        time(() => parser.parse(genJsCodeSource + "*/").asInstanceOf[Result.Failure].traced)
-//        time(() => global.newUnitParser(genJsCodeSource).parse())
-//        time(() => parser.parse(genJsCodeSource))
-//        time(() => parser.parse(genJsCodeSource + "*/").asInstanceOf[Result.Failure].traced)
-//        time(() => global.newUnitParser(genJsCodeSource).parse())
-//        time(() => parser.parse(genJsCodeSource))
-//        time(() => parser.parse(genJsCodeSource + "*/").asInstanceOf[Result.Failure].traced)
-//        time(() => global.newUnitParser(genJsCodeSource).parse())
-//        time(() => parser.parse(genJsCodeSource))
-//        time(() => parser.parse(genJsCodeSource + "*/").asInstanceOf[Result.Failure].traced)
-//        time(() => global.newUnitParser(genJsCodeSource).parse())
+
+        for (i <- 1 to 5) {
+          Source.s = genJsCodeSource.to[Vector]
+          time(() => parser.parse(genJsCodeSource))
+          Source.s = (genJsCodeSource + "*/").to[Vector]
+          time(() => parser.parse(genJsCodeSource + "*/").asInstanceOf[Parsed.Failure].extra.traced)
+        }
     }
   }
   def time(f: () => Unit) = {
