@@ -1,10 +1,10 @@
 package fastparse.parsers
 import acyclic.file
-import fastparse.Implicits
+import fastparse.{Implicits, Source}
 import Terminals._
 import fastparse.core.Parsed._
 import fastparse.core.Mutable
-import fastparse.core.{Precedence, ParseCtx, Parsed, Parser}
+import fastparse.core.{ParseCtx, Parsed, Parser, Precedence}
 
 import scala.annotation.tailrec
 /**
@@ -22,7 +22,8 @@ object Combinators {
         case Mutable.Success(value0, index0, traceParsers0, cut0) =>
           success(
             cfg.success,
-            cfg.input.substring(index, index0),
+            Source.s.subSequence(index, index0).toString,
+            //cfg.input.substring(index, index0),
             index0,
             traceParsers0,
             cut0

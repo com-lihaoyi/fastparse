@@ -1,8 +1,8 @@
 package fastparse.parsers
 import acyclic.file
 import fastparse.Utils._
-import fastparse.core.{Precedence, ParseCtx, Parsed, Parser}
-import fastparse.Utils
+import fastparse.core.{ParseCtx, Parsed, Parser, Precedence}
+import fastparse.{Source, Utils}
 
 /**
  * High-performance intrinsics for parsing common patterns. All
@@ -17,7 +17,7 @@ object Intrinsics {
     def parseRec(cfg: ParseCtx, index: Int) = {
       val input = cfg.input
       if (index >= input.length) fail(cfg.failure, index)
-      else if (uberSet(input(index))) success(cfg.success, (), index + 1, Set.empty, false)
+      else if (uberSet(Source.s(index))) success(cfg.success, (), index + 1, Set.empty, false)
       else fail(cfg.failure, index)
     }
   }
@@ -44,7 +44,7 @@ object Intrinsics {
     def parseRec(cfg: ParseCtx, index: Int) = {
       var curr = index
       val input = cfg.input
-      while(curr < input.length && uberSet(input(curr))) curr += 1
+      while(curr < input.length && uberSet(Source.s(curr))) curr += 1
       if (curr - index < min) fail(cfg.failure, curr)
       else success(cfg.success, (), curr, Set.empty, false)
     }
@@ -59,7 +59,7 @@ object Intrinsics {
     private[this] val trie = new TrieNode(strings)
 
     def parseRec(cfg: ParseCtx, index: Int) = {
-      val length = trie.query(cfg.input, index)
+      val length = trie.query(Source.s, index)
       if (length != -1) success(cfg.success, (), index + length + 1, Set.empty, false)
       else fail(cfg.failure, index)
     }
