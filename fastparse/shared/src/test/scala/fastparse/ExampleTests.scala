@@ -388,7 +388,7 @@ object ExampleTests extends TestSuite{
 
 
 
-        val expected = """
+        /* val expected = """
           +expr:0
             +side:0
               +expr:1
@@ -401,6 +401,25 @@ object ExampleTests extends TestSuite{
                     +side:6
                     -side:6:Success(7)
                   -expr:4:Success(7)
+                -side:3:Failure(side:1:4 / ")":1:8 ..."(2+3x))+4", cut)
+              -expr:1:Failure(expr:1:2 / side:1:4 / ")":1:8 ..."1+(2+3x))+", cut)
+            -side:0:Failure(side:1:1 / expr:1:2 / side:1:4 / ")":1:8 ..."(1+(2+3x))", cut)
+          -expr:0:Failure(expr:1:1 / side:1:1 / expr:1:2 / side:1:4 / ")":1:8 ..."(1+(2+3x))", cut)
+        """.lines.filter(_.trim != "").toSeq
+        */
+        val expected = """
+          +expr:0
+            +side:0
+              +expr:1
+                +side:1
+                -side:1:2 Success: "1"
+                +side:3
+                  +expr:4
+                    +side:4
+                    -side:4:5 Success: "2"
+                    +side:6
+                    -side:6:7 Success: "3"
+                  -expr:4:7 Success: "2+3"
                 -side:3:Failure(side:1:4 / ")":1:8 ..."(2+3x))+4", cut)
               -expr:1:Failure(expr:1:2 / side:1:4 / ")":1:8 ..."1+(2+3x))+", cut)
             -side:0:Failure(side:1:1 / expr:1:2 / side:1:4 / ")":1:8 ..."(1+(2+3x))", cut)
