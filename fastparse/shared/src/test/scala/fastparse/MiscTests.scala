@@ -8,7 +8,7 @@ object MiscTests extends TestSuite{
 
   val tests = TestSuite{
     'toString{
-      def check(p: fastparse.core.Parser[_], s: String) = {
+      def check(p: Parser[_], s: String) = {
         assert(p.toString == s.trim)
       }
       'Either {
@@ -113,7 +113,7 @@ object MiscTests extends TestSuite{
     }
     'opaque{
       def checkOpaqueness[T](p: Parser[T], strs: String*) = strs foreach { str =>
-        val failure = p.parse(str).asInstanceOf[Parsed.Failure]
+        val failure = p.parse(str).asInstanceOf[Failure]
         assert(failure.index == 0)
         assert(failure.extra.traced.traceParsers == Set(p))
       }
@@ -130,8 +130,8 @@ object MiscTests extends TestSuite{
       val literal = wspStr("ab")
       val charLiteral = wspStr("a")
       assert(
-        literal.isInstanceOf[parsers.Terminals.Literal],
-        charLiteral.isInstanceOf[parsers.Terminals.CharLiteral]
+        literal.isInstanceOf[parsers.Terminals.Literal[Char, String]],
+        charLiteral.isInstanceOf[parsers.Terminals.CharLiteral[Char, String]]
       )
     }
     'failureget{

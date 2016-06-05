@@ -1,9 +1,10 @@
 package fastparse
 
-import scala.annotation.{tailrec, switch}
+import scala.annotation.{switch, tailrec}
 import acyclic.file
-import scala.collection.mutable
 
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 import scala.language.experimental.macros
 
 object MacroUtils{
@@ -30,13 +31,13 @@ object Utils {
    * Convert a string to a C&P-able literal. Basically
    * copied verbatim from the uPickle source code.
    */
-  def literalize(s: String, unicode: Boolean = true) = {
+  def literalize(s: IndexedSeq[Char], unicode: Boolean = true) = {
     val sb = new StringBuilder
     sb.append('"')
     var i = 0
     val len = s.length
     while (i < len) {
-      (s.charAt(i): @switch) match {
+      (s(i): @switch) match {
         case '"' => sb.append("\\\"")
         case '\\' => sb.append("\\\\")
         case '\b' => sb.append("\\b")
@@ -52,6 +53,28 @@ object Utils {
     }
     sb.append('"')
 
+    sb.result()
+  }
+
+  /**
+    * Split a sequence by the delimiter element.
+    */
+  def split[ElemType](seq: IndexedSeq[ElemType], delim: ElemType): Seq[IndexedSeq[ElemType]] = {
+    var curBuilder = seq.genericBuilder[ElemType]
+    val res = ArrayBuffer[IndexedSeq[ElemType]]()
+    for (x <- seq) {
+      if (x == delim) {
+        res += curBuilder.result()
+        curBuilder = seq.genericBuilder[ElemType]
+      } else {
+        curBuilder += x
+      }
+    }
+
+    if (!seq.headOption.contains(delim))
+      res += curBuilder.result()
+
+    res
   }
 
   object CharBitSet{
@@ -141,7 +164,7 @@ object Utils {
     /**
      * Returns the length of the matching string, or -1 if not found
      */
-    def query(input: String, index: Int): Int = {
+    def query(input: IndexedSeq[Char], index: Int): Int = {
       @tailrec def rec(offset: Int, currentNode: TrieNode, currentRes: Int): Int = {
         if (index + offset >= input.length) currentRes
         else {

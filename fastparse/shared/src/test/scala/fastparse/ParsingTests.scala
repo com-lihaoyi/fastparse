@@ -1,6 +1,5 @@
 package fastparse
 import all._
-import fastparse.core.Parsed
 import utest._
 
 object ParsingTests extends TestSuite{
@@ -16,7 +15,7 @@ object ParsingTests extends TestSuite{
   def checkFail[T](parser: P[T], input: (String, Int), expectedFailureIndex: Int) = {
     val (str, index) = input
     val parsed = parser.parse(str, index)
-    val failureIndex = parsed.asInstanceOf[Failure].index
+    val failureIndex = parsed.asInstanceOf[all.Failure].index
     assert(failureIndex == expectedFailureIndex)
   }
   val tests = TestSuite{

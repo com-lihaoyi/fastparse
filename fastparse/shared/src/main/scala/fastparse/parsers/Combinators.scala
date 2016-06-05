@@ -1,10 +1,10 @@
 package fastparse.parsers
 import acyclic.file
-import fastparse.Implicits
+import fastparse.{ConversionHelper, Implicits, ParserHelper}
 import Terminals._
 import fastparse.core.Parsed._
 import fastparse.core.Mutable
-import fastparse.core.{Precedence, ParseCtx, Parsed, Parser}
+import fastparse.core.{ParseCtx, Parsed, Parser, Precedence}
 
 import scala.annotation.tailrec
 /**
@@ -16,18 +16,20 @@ object Combinators {
   /**
    * Captures the string parsed by the given parser [[p]].
    */
-  case class Capturing(p: Parser[_]) extends Parser[String]{
-    def parseRec(cfg: ParseCtx, index: Int) = {
+  case class Capturing[ElemType, Repr](p: Parser[_, ElemType, Repr])
+                                      (implicit convHelper: ConversionHelper[ElemType, Repr])
+      extends Parser[Repr, ElemType, Repr] {
+    def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
       p.parseRec(cfg, index) match {
         case Mutable.Success(value0, index0, traceParsers0, cut0) =>
           success(
             cfg.success,
-            cfg.input.substring(index, index0),
+            convHelper.convert(cfg.input.slice(index, index0)),
             index0,
             traceParsers0,
             cut0
           )
-        case f: Mutable.Failure => f
+        case f: Mutable.Failure[ElemType] => f
       }
     }
     override def toString = p.toString
@@ -36,13 +38,13 @@ object Combinators {
   /**
    * Wrap a parser in this if you don't want for it to show up in a stack trace
    */
-  case class NoTrace[T](p: Parser[T]) extends Parser[T]{
-    def parseRec(cfg: ParseCtx, index: Int) = {
+  case class NoTrace[T, ElemType, R](p: Parser[T, ElemType, R]) extends Parser[T, ElemType, R]{
+    def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
       p.parseRec(cfg, index) match {
-        case s: Mutable.Success[_] =>
+        case s: Mutable.Success[_, ElemType] =>
           s.traceParsers = Set.empty
           s
-        case f: Mutable.Failure =>
+        case f: Mutable.Failure[ElemType] =>
           f.traceParsers = Set.empty
           f
       }
@@ -57,13 +59,14 @@ object Combinators {
    *
    * @param msg The message for the wrapper
    */
-  case class Opaque[+T](p: Parser[T], msg: String) extends Parser[T]{
-    def parseRec(cfg: ParseCtx, index: Int) = {
+  case class Opaque[+T, ElemType, R](p: Parser[T, ElemType, R], msg: String) extends
+      Parser[T, ElemType, R]{
+    def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
       p.parseRec(cfg, index) match {
-        case s: Mutable.Success[_] =>
+        case s: Mutable.Success[_, ElemType] =>
           if (cfg.traceIndex != -1) s.traceParsers = Set(this)
           s
-        case f: Mutable.Failure =>
+        case f: Mutable.Failure[ElemType] =>
           f.index = index
           f.lastParser = this
           if (cfg.traceIndex != -1) f.traceParsers = Set(this)
@@ -76,13 +79,13 @@ object Combinators {
   /**
    *
    */
-  case class NoCut[T](p: Parser[T]) extends Parser[T]{
-    def parseRec(cfg: ParseCtx, index: Int) = {
+  case class NoCut[T, ElemType, R](p: Parser[T, ElemType, R]) extends Parser[T, ElemType, R]{
+    def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
       p.parseRec(cfg, index) match {
-        case s: Mutable.Success[T] =>
+        case s: Mutable.Success[T, ElemType] =>
           s.cut = false
           s
-        case f: Mutable.Failure =>
+        case f: Mutable.Failure[ElemType] =>
           f.cut = false
           f
       }
@@ -93,8 +96,10 @@ object Combinators {
    * Wraps a parser and prints out the indices where it starts
    * and ends, together with its result
    */
-  case class Logged[+T](p: Parser[T], msg: String, output: String => Unit) extends Parser[T]{
-    def parseRec(cfg: ParseCtx, index: Int) = {
+  case class Logged[+T, ElemType, R](p: Parser[T, ElemType, R],
+                                  msg: String, output: String => Unit)
+                                 (implicit helper: ParserHelper[ElemType]) extends Parser[T, ElemType, R]{
+    def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
       if (cfg.logDepth == -1) p.parseRec(cfg, index)
       else {
         val indent = "  " * cfg.logDepth
@@ -104,8 +109,8 @@ object Combinators {
         val res = p.parseRec(cfg, index)
         cfg.logDepth = depth
         val strRes = res match{
-          case s: Mutable.Success[T] => s"Success(${s.index}${if (s.cut) ", cut" else ""})"
-          case f: Mutable.Failure =>
+          case s: Mutable.Success[T, ElemType] => s"Success(${s.index}${if (s.cut) ", cut" else ""})"
+          case f: Mutable.Failure[ElemType] =>
             val stack = Failure.filterFullStack(f.fullStack)
             val trace = Failure.formatStackTrace(
               stack.reverse,
@@ -127,20 +132,21 @@ object Combinators {
    * [[p]] only when `parse` is called to allow for circular
    * dependencies between parsers.
    */
-  case class Rule[+T](name: String, p: () => Parser[T]) extends Parser[T]{
+  case class Rule[+T, ElemType, R](name: String, p: () => Parser[T, ElemType, R]) extends
+      Parser[T, ElemType, R]{
     private[this] lazy val pCached = p()
 
-    def parseRec(cfg: ParseCtx, index: Int) = {
+    def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
 
       if (cfg.instrument == null) {
         pCached.parseRec(cfg, index) match{
-          case f: Mutable.Failure => failMore(f, index, cfg.logDepth)
-          case s: Mutable.Success[T] => s
+          case f: Mutable.Failure[ElemType] => failMore(f, index, cfg.logDepth)
+          case s: Mutable.Success[T, ElemType] => s
         }
       } else {
         lazy val res = pCached.parseRec(cfg, index) match{
-          case f: Mutable.Failure => failMore(f, index, cfg.logDepth)
-          case s: Mutable.Success[T] => s
+          case f: Mutable.Failure[ElemType] => failMore(f, index, cfg.logDepth)
+          case s: Mutable.Success[T, ElemType] => s
         }
         cfg.instrument(this, index, () => res.toResult)
         res
@@ -154,13 +160,13 @@ object Combinators {
    * Wraps another parser, succeeding/failing identically
    * but consuming no input
    */
-  case class Lookahead(p: Parser[_]) extends Parser[Unit]{
-    def parseRec(cfg: ParseCtx, index: Int) = {
+  case class Lookahead[ElemType, R](p: Parser[_, ElemType, R]) extends Parser[Unit, ElemType, R]{
+    def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
       p.parseRec(cfg, index) match{
-        case s: Mutable.Success[_] =>
+        case s: Mutable.Success[_, ElemType] =>
           s.cut = false
           success(cfg.success, (), index, s.traceParsers, false)
-        case f: Mutable.Failure =>
+        case f: Mutable.Failure[ElemType] =>
           f.cut = false
           failMore(f, index, cfg.logDepth)
       }
@@ -171,12 +177,12 @@ object Combinators {
    * Wraps another parser, succeeding it it fails and failing
    * if it succeeds. Neither case consumes any input
    */
-  case class Not(p: Parser[_]) extends Parser[Unit]{
-    def parseRec(cfg: ParseCtx, index: Int) = {
+  case class Not[ElemType, R](p: Parser[_, ElemType, R]) extends Parser[Unit, ElemType, R]{
+    def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
       val res0 = p.parseRec(cfg, index)
       val res = res0 match{
-        case s: Mutable.Success[_] => fail(cfg.failure, s.index)
-        case f: Mutable.Failure => success(cfg.success, (), index, Set.empty, false)
+        case s: Mutable.Success[_, ElemType] => fail(cfg.failure, s.index)
+        case f: Mutable.Failure[ElemType] => success(cfg.success, (), index, Set.empty, false)
       }
       res
     }
@@ -189,13 +195,14 @@ object Combinators {
    * Wraps a parser and succeeds with `Some` if [[p]] succeeds,
    * and succeeds with `None` if [[p]] fails.
    */
-  case class Optional[+T, R](p: Parser[T])
-                            (implicit ev: Implicits.Optioner[T, R]) extends Parser[R]{
+  case class Optional[+T, R, ElemType, Repr](p: Parser[T, ElemType, Repr])
+                            (implicit ev: Implicits.Optioner[T, R]) extends Parser[R, ElemType, Repr]{
 
-    def parseRec(cfg: ParseCtx, index: Int) = {
+    def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
       p.parseRec(cfg, index) match{
-        case s: Mutable.Success[_] => success(cfg.success, ev.some(s.value), s.index, s.traceParsers, s.cut)
-        case f: Mutable.Failure if f.cut => failMore(f, index, cfg.logDepth)
+        case s: Mutable.Success[_, ElemType] =>
+          success(cfg.success, ev.some(s.value), s.index, s.traceParsers, s.cut)
+        case f: Mutable.Failure[ElemType] if f.cut => failMore(f, index, cfg.logDepth)
         case _ => success(cfg.success, ev.none, index, Set.empty, false)
       }
     }
@@ -221,10 +228,12 @@ object Combinators {
     /**
      * The contents of a [[Sequence]] node, minus the left subtree.
      */
-    case class Chain[R](p: Parser[R], cut: Boolean)(val ev: Implicits.Sequencer[R, R, R])
-    case class Flat[R](p0: Parser[R],
-                       ps: Vector[Chain[R]]) extends Parser[R] {
-      def parseRec(cfg: ParseCtx, index: Int): Mutable[R] = {
+    case class Chain[R, ElemType, Repr](p: Parser[R, ElemType, Repr], cut: Boolean)
+                                       (val ev: Implicits.Sequencer[R, R, R])
+    case class Flat[R, ElemType, Repr](p0: Parser[R, ElemType, Repr],
+                                       ps: Vector[Chain[R, ElemType, Repr]]) extends
+        Parser[R, ElemType, Repr] {
+      def parseRec(cfg: ParseCtx[ElemType], index: Int): Mutable[R, ElemType] = {
         /**
          * Given
          *
@@ -241,12 +250,12 @@ object Combinators {
                          rIndex: Int,
                          rCut: Boolean,
                          vIndex: Int,
-                         traceParsers: Set[Parser[_]]): Mutable[R] = {
+                         traceParsers: Set[Parser[_, ElemType, _]]): Mutable[R, ElemType] = {
           if (vIndex >= ps.length) success(cfg.success, r1, rIndex, traceParsers, rCut)
           else {
             val c = ps(vIndex)
             c.p.parseRec(cfg, rIndex) match {
-              case f: Mutable.Failure => failMore(
+              case f: Mutable.Failure[ElemType] => failMore(
                 f,
                 rIndex,
                 cfg.logDepth,
@@ -264,7 +273,7 @@ object Combinators {
           }
         }
         p0.parseRec(cfg, index) match{
-          case f: Mutable.Failure => failMore(f, index, cfg.logDepth, cut = f.cut)
+          case f: Mutable.Failure[ElemType] => failMore(f, index, cfg.logDepth, cut = f.cut)
           case Mutable.Success(value0, index0, traceParsers0, cut0) =>
             rec(value0, index0, cut0, 0, traceParsers0)
         }
@@ -287,16 +296,16 @@ object Combinators {
      * A ~ B ~ C ~ D
      * ((A ~ B) ~ C) ~ D
      */
-    def flatten[R](s: Sequence[R, R, R]): Flat[R] = {
-      def rec(s: Sequence[R, R, R]): Flat[R] = {
+    def flatten[R, ElemType, Repr](s: Sequence[R, R, R, ElemType, Repr]): Flat[R, ElemType, Repr] = {
+      def rec(s: Sequence[R, R, R, ElemType, Repr]): Flat[R, ElemType, Repr] = {
         val ev2 = s.ev2.asInstanceOf[Implicits.Sequencer[R, R, R]]
         s.p1 match{
-          case f: Flat[R] =>
-            f.copy(ps = f.ps :+ Chain[R](s.p2, s.cut)(ev2))
-          case p: Sequence[R, R, R] =>
+          case f: Flat[R, ElemType, Repr] =>
+            f.copy(ps = f.ps :+ Chain[R, ElemType, Repr](s.p2, s.cut)(ev2))
+          case p: Sequence[R, R, R, ElemType, Repr] =>
             val res = rec(p)
-            res.copy(ps = res.ps :+ Chain[R](s.p2, s.cut)(ev2))
-          case p => Flat(p, Vector(Chain[R](s.p2, s.cut)(ev2)))
+            res.copy(ps = res.ps :+ Chain[R, ElemType, Repr](s.p2, s.cut)(ev2))
+          case p => Flat(p, Vector(Chain[R, ElemType, Repr](s.p2, s.cut)(ev2)))
         }
       }
       rec(s)
@@ -307,13 +316,15 @@ object Combinators {
    * Parsers two things in a row, returning a tuple of the two
    * results if both things succeed
    */
-  case class Sequence[+T1, +T2, R](p1: Parser[T1], p2: Parser[T2], cut: Boolean)
-                                  (implicit ev: Implicits.Sequencer[T1, T2, R]) extends Parser[R]{
+  case class Sequence[+T1, +T2, R,
+                      ElemType, Repr](p1: Parser[T1, ElemType, Repr],
+                                      p2: Parser[T2, ElemType, Repr], cut: Boolean)
+                               (implicit ev: Implicits.Sequencer[T1, T2, R]) extends Parser[R, ElemType, Repr]{
     def ev2: Implicits.Sequencer[_, _, _] = ev
-    def parseRec(cfg: ParseCtx, index: Int) = {
+    def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
 
       p1.parseRec(cfg, index) match{
-        case f: Mutable.Failure =>
+        case f: Mutable.Failure[ElemType] =>
           failMore(
             f, index, cfg.logDepth,
             traceParsers = mergeTrace(cfg.traceIndex, Set(p1), Set.empty),
@@ -322,7 +333,7 @@ object Combinators {
         case Mutable.Success(value0, index0, traceParsers0, cut0)  =>
           //          if (cut) println("CUT! " + this + ":" + s1.index)
           p2.parseRec(cfg, index0) match{
-            case f: Mutable.Failure => failMore(
+            case f: Mutable.Failure[ElemType] => failMore(
               f,
               index,
               cfg.logDepth,
@@ -346,11 +357,11 @@ object Combinators {
   }
 
 
-  case class Cut[T](p: Parser[T]) extends Parser[T]{
-    def parseRec(cfg: ParseCtx, index: Int) = {
+  case class Cut[T, ElemType, R](p: Parser[T, ElemType, R]) extends Parser[T, ElemType, R]{
+    def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
       p.parseRec(cfg, index) match{
-        case f: Mutable.Failure => failMore(f, index, cfg.logDepth, cut = false)
-        case s: Mutable.Success[T] => success(s, s.value, s.index, s.traceParsers, cut = true)
+        case f: Mutable.Failure[ElemType] => failMore(f, index, cfg.logDepth, cut = false)
+        case s: Mutable.Success[T, ElemType] => success(s, s.value, s.index, s.traceParsers, cut = true)
       }
     }
     override def opPred = Precedence.OtherOp
@@ -362,26 +373,27 @@ object Combinators {
    * The range [[min]] and [[max]] bounds are inclusive.
    * It uses the [[delimiter]] parser between parses and discards its results.
    */
-  case class Repeat[T, +R](p: Parser[T], min: Int, max: Int, delimiter: Parser[_])
-                          (implicit ev: Implicits.Repeater[T, R]) extends Parser[R]{
+  case class Repeat[T, +R, ElemType, Repr](p: Parser[T, ElemType, Repr], min: Int, max: Int,
+                                           delimiter: Parser[_, ElemType, Repr])
+                          (implicit ev: Implicits.Repeater[T, R]) extends Parser[R, ElemType, Repr]{
 
 
-    def parseRec(cfg: ParseCtx, index: Int) = {
+    def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
       @tailrec def rec(index: Int,
-                       del: Parser[_],
-                       lastFailure: Mutable.Failure,
+                       del: Parser[_, ElemType, Repr],
+                       lastFailure: Mutable.Failure[ElemType],
                        acc: ev.Acc,
                        cut: Boolean,
-                       count: Int): Mutable[R] = {
+                       count: Int): Mutable[R, ElemType] = {
         del.parseRec(cfg, index) match{
-          case f1: Mutable.Failure =>
+          case f1: Mutable.Failure[ElemType] =>
             val cut1 = f1.cut
             if (cut1) failMore(f1, index, cfg.logDepth, cut = true)
             else passInRange(cut, f1, index, ev.result(acc), count)
 
           case Mutable.Success(value0, index0, traceParsers0, cut0)  =>
             p.parseRec(cfg, index0) match{
-              case f2: Mutable.Failure =>
+              case f2: Mutable.Failure[ElemType] =>
                 val cut2 = f2.cut
                 if (cut2 | cut0) failMore(f2, index0, cfg.logDepth, cut = true)
                 else passInRange(cut | cut0, f2, index, ev.result(acc), count)
@@ -398,13 +410,13 @@ object Combinators {
       }
 
       def passInRange(cut: Boolean,
-                    lastFailure: Mutable.Failure,
+                    lastFailure: Mutable.Failure[ElemType],
                     finalIndex: Int,
                     acc: R,
                     count: Int) = {
         if (min <= count) {
           val parsers =
-            if (null == lastFailure) Set.empty[Parser[_]]
+            if (null == lastFailure) Set.empty[Parser[_, ElemType, _]]
             else lastFailure.traceParsers
           success(cfg.success, acc, finalIndex, parsers, cut)
         } else failMore(lastFailure, index, cfg.logDepth, cut = cut)
@@ -412,15 +424,15 @@ object Combinators {
 
       // don't call the parseRec at all, if max is "0", as our parser corresponds to `Pass` in that case.
       if (max == 0 ) {
-        success(cfg.success, ev.result(ev.initial), index, Set.empty[Parser[_]], false)
+        success(cfg.success, ev.result(ev.initial), index, Set.empty[Parser[_, ElemType, _]], false)
       } else {
-        rec(index, Pass, null, ev.initial, false, 0)
+        rec(index, Pass[ElemType, Repr], null, ev.initial, false, 0)
       }
     }
     override def toString = {
       val things = Seq(
         if (min == 0) None else Some(min),
-        if (delimiter == Pass) None else Some("sep = " + delimiter),
+        if (delimiter == Pass[ElemType, Repr]) None else Some("sep = " + delimiter),
         if (max == Int.MaxValue) None else Some("max = " + max)
       ).flatten.mkString(", ")
       if (things.isEmpty) opWrap(p) + ".rep"
@@ -429,7 +441,7 @@ object Combinators {
   }
 
   object Either{
-    def flatten[T](p: Vector[Parser[T]]): Vector[Parser[T]] = p.flatMap{
+    def flatten[T, ElemType, R](p: Vector[Parser[T, ElemType, R]]): Vector[Parser[T, ElemType, R]] = p.flatMap{
       case Either(ps@_*) => ps
       case p => Vector(p)
     }
@@ -438,18 +450,18 @@ object Combinators {
    * Parses using one parser or the other, if the first one fails. Returns
    * the first one that succeeds and fails if both fail
    */
-  case class Either[T](ps: Parser[T]*) extends Parser[T]{
+  case class Either[T, ElemType, R](ps: Parser[T, ElemType, R]*) extends Parser[T, ElemType, R]{
     private[this] val ps0 = ps.toArray
     private[this] val n = ps0.length
-    def parseRec(cfg: ParseCtx, index: Int) = {
-      @tailrec def rec(parserIndex: Int, traceParsers: Set[Parser[_]]): Mutable[T] = {
+    def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
+      @tailrec def rec(parserIndex: Int, traceParsers: Set[Parser[_, ElemType, _]]): Mutable[T, ElemType] = {
         if (parserIndex >= n) fail(cfg.failure, index)
         else ps0(parserIndex).parseRec(cfg, index) match {
-          case s: Mutable.Success[T] =>
+          case s: Mutable.Success[T, ElemType] =>
             s.traceParsers = mergeTrace(cfg.traceIndex, s.traceParsers, traceParsers)
             s
-          case f: Mutable.Failure if f.cut => failMore(f, index, cfg.logDepth)
-          case f: Mutable.Failure => rec(
+          case f: Mutable.Failure[ElemType] if f.cut => failMore(f, index, cfg.logDepth)
+          case f: Mutable.Failure[ElemType] => rec(
             parserIndex + 1,
             mergeTrace(cfg.traceIndex, f.traceParsers, traceParsers)
           )

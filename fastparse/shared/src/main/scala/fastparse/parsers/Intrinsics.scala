@@ -12,9 +12,9 @@ import fastparse.Utils
  */
 object Intrinsics {
 
-  abstract class CharSet(chars: Seq[Char]) extends Parser[Unit]{
+  abstract class CharSet[R](chars: Seq[Char]) extends Parser[Unit, Char, R]{
     private[this] val uberSet = CharBitSet(chars)
-    def parseRec(cfg: ParseCtx, index: Int) = {
+    def parseRec(cfg: ParseCtx[Char], index: Int) = {
       val input = cfg.input
       if (index >= input.length) fail(cfg.failure, index)
       else if (uberSet(input(index))) success(cfg.success, (), index + 1, Set.empty, false)
@@ -24,13 +24,13 @@ object Intrinsics {
   /**
    * Parses a single character if it passes the predicate
    */
-  case class CharPred(predicate: Char => Boolean)
-    extends CharSet((Char.MinValue to Char.MaxValue).filter(predicate)){}
+  case class CharPred[R](predicate: Char => Boolean)
+    extends CharSet[R]((Char.MinValue to Char.MaxValue).filter(predicate)){}
 
   /**
    * Parses a single character if its contained in the lists of allowed characters
    */
-  case class CharIn(strings: Seq[Char]*) extends CharSet(strings.flatten){
+  case class CharIn[R](strings: Seq[Char]*) extends CharSet[R](strings.flatten){
     override def toString = s"CharIn(${Utils.literalize(strings.flatten.mkString)})"
   }
 
@@ -38,10 +38,10 @@ object Intrinsics {
    * Keeps consuming characters until the predicate [[pred]] becomes false.
    * Functionally equivalent to using `.rep` and [[CharPred]], but much faster.
    */
-  case class CharsWhile(pred: Char => Boolean, min: Int = 1) extends Parser[Unit]{
+  case class CharsWhile[R](pred: Char => Boolean, min: Int = 1) extends Parser[Unit, Char, R]{
     private[this] val uberSet = CharBitSet((Char.MinValue to Char.MaxValue).filter(pred))
 
-    def parseRec(cfg: ParseCtx, index: Int) = {
+    def parseRec(cfg: ParseCtx[Char], index: Int) = {
       var curr = index
       val input = cfg.input
       while(curr < input.length && uberSet(input(curr))) curr += 1
@@ -54,11 +54,11 @@ object Intrinsics {
    * first converting it into an array-backed Trie and then walking it once.
    * If multiple strings match the input, longest match wins.
    */
-  case class StringIn(strings: String*) extends Parser[Unit]{
+  case class StringIn[R](strings: String*) extends Parser[Unit, Char, R]{
 
     private[this] val trie = new TrieNode(strings)
 
-    def parseRec(cfg: ParseCtx, index: Int) = {
+    def parseRec(cfg: ParseCtx[Char], index: Int) = {
       val length = trie.query(cfg.input, index)
       if (length != -1) success(cfg.success, (), index + length + 1, Set.empty, false)
       else fail(cfg.failure, index)

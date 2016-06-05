@@ -2,6 +2,8 @@ package fastparse
 package core
 import acyclic.file
 import fastparse.Utils._
+import fastparse.ParserHelper._
+
 import scala.collection.mutable
 /**
  * A single frame of the parser call stack
@@ -9,12 +11,12 @@ import scala.collection.mutable
  * @param index The index at which point this parse frame started
  * @param parser The parser which was attempted at this index
  */
-case class Frame(index: Int, parser: Parser[_])
+case class Frame(index: Int, parser: Parser[_, _, _])
 
 /**
  * Result of a parse, whether successful or failed.
  */
-sealed trait Parsed[+T]{
+sealed trait Parsed[+T, ElemType]{
   /**
    * Where the parser ended up, whether the result was a success or failure
    */
@@ -24,29 +26,37 @@ sealed trait Parsed[+T]{
    * Converts this instance of [[Parsed]] into a [[Parsed.Success]] or 
    * throws an exception if it was a failure.
    */
-  def get: Parsed.Success[T] = this match{
-    case s: Parsed.Success[T] => s
-    case f: Parsed.Failure => throw new ParseError(f)
+  def get(implicit helper: ParserHelper[ElemType]): Parsed.Success[T, ElemType] = this match{
+    case s: Parsed.Success[T, ElemType] => s
+    case f: Parsed.Failure[ElemType] => throw new ParseError[ElemType](f)
   }
 }
 
-case class ParseError(failure: Parsed.Failure) extends Exception(
+case class ParseError[ElemType](failure: Parsed.Failure[ElemType])
+                               (implicit helper: ParserHelper[ElemType]) extends Exception(
   ParseError.msg0(failure.extra.input, failure.extra.traced.expected, failure.index)
 )
 
 object ParseError{
-  def msg(code: String, expected: String, idx: Int) = {
+  def msg[ElemType](code: IndexedSeq[ElemType], expected: String, idx: Int)
+                   (implicit helper: ParserHelper[ElemType])= {
     "SyntaxError: " + msg0(code, expected, idx)
   }
-  def msg0(code: String, expected: String, idx: Int) = {
-    val locationString = {
+
+  def msg0[ElemType](code: IndexedSeq[ElemType], expected: String, idx: Int)
+                    (implicit helper: ParserHelper[ElemType]) = {
+    val locationCode = {
       val (first, last) = code.splitAt(idx)
-      val lastSnippet = last.split('\n').headOption.getOrElse("")
-      val firstSnippet = first.reverse.split('\n').lift(0).getOrElse("").reverse
-      firstSnippet + lastSnippet + "\n" + (" " * firstSnippet.length) + "^"
+      val lastSnippet = Utils.split(last, helper.delimiter).headOption.
+        getOrElse(helper.emptyElem)
+      val firstSnippet = Utils.split(first.reverse, helper.delimiter).headOption.
+        getOrElse(helper.emptyElem).reverse
+
+      helper.convertToString(firstSnippet) +
+        helper.convertToString(lastSnippet) + "\n" + (" " * firstSnippet.length) + "^"
     }
-    val literal = fastparse.Utils.literalize(code.slice(idx, idx + 20))
-    s"found $literal, expected $expected at index $idx\n$locationString"
+    val literal = helper.literalize(code.slice(idx, idx + 20))
+    s"found $literal, expected $expected at index $idx\n$locationCode"
   }
 }
 
@@ -55,8 +65,9 @@ object Parsed {
   private[core] case class Position(line: Int, column: Int)
 
   private[core] object Position {
-    def computeFrom(input: String, index: Int) : Position = {
-      val lines = input.take(1 + index).lines.toVector
+    def computeFrom[ElemType](input: IndexedSeq[ElemType], index: Int)
+                             (implicit helper: ParserHelper[ElemType]) : Position = {
+      val lines = Utils.split(input.take(1 + index), helper.delimiter)
       val line = lines.length
       val col = lines.lastOption.map(_.length).getOrElse(0)
       Position(line, col)
@@ -68,7 +79,7 @@ object Parsed {
    * @param index The index where the parse completed; may be less than
    *              the length of input
    */
-  case class Success[+T](value: T, index: Int) extends Parsed[T]
+  case class Success[+T, ElemType](value: T, index: Int) extends Parsed[T, ElemType]
 
   /**
    * Simple information about a parse failure. Also contains the original parse
@@ -81,9 +92,10 @@ object Parsed {
    * @param extra Extra supplementary information (including trace information).
    *              For details see [[Parsed.Failure.Extra]]
    */
-  case class Failure(lastParser: Parser[_],
-                     index: Int,
-                     extra: Failure.Extra) extends Parsed[Nothing]{
+  case class Failure[ElemType](lastParser: Parser[_, ElemType, _],
+                               index: Int,
+                               extra: Failure.Extra[ElemType])
+                              (implicit helper: ParserHelper[ElemType]) extends Parsed[Nothing, ElemType]{
 
     def msg = Failure.formatStackTrace(
       Nil, extra.input, index, Failure.formatParser(lastParser, extra.input, index)
@@ -97,11 +109,11 @@ object Parsed {
       * Additional tracing information on a parse failure.
       * Use `traced` to obtain the [[TracedFailure]],see [[TracedFailure]] for further details.
       */
-    sealed trait Extra {
+    sealed trait Extra[ElemType] {
       /** Input string. */
-      def input: String
+      def input: IndexedSeq[ElemType]
       /** Get the underlying [[TracedFailure]] to allow for analysis of the full parse stack. */
-      def traced: TracedFailure
+      def traced: TracedFailure[ElemType]
       /** Line number, where a parse failure has occured. */
       def line: Int
       /** Column, where a parse failure has occured. */
@@ -109,9 +121,10 @@ object Parsed {
     }
     
     object Extra{
-      class Impl(val input: String, 
-                 startParser: Parser[_], startIndex: Int, 
-                 lastParser: Parser[_], index: Int) extends Extra {
+      class Impl[ElemType](val input: IndexedSeq[ElemType],
+                           startParser: Parser[_, ElemType, _], startIndex: Int,
+                           lastParser: Parser[_, ElemType, _], index: Int)
+                          (implicit helper: ParserHelper[ElemType]) extends Extra[ElemType] {
         
         lazy val traced = TracedFailure(input, index, lastParser, (startIndex, startParser))
 
@@ -121,23 +134,25 @@ object Parsed {
         
         lazy val col = pos.column 
 
-        override def toString = s"Extra(${input}, [traced - not evaluated])"
+        override def toString = s"Extra(${helper.convertToString(input)}, [traced - not evaluated])"
       }
     }
 
 
-    def formatParser(p: Precedence, input: String, index: Int) = {
+    def formatParser[ElemType](p: Precedence, input: IndexedSeq[ElemType], index: Int)
+                              (implicit helper: ParserHelper[ElemType])= {
       val pos = Position.computeFrom(input, index)
       s"${Precedence.opWrap(p, Precedence.`:`)}:${pos.line}:${pos.column}"
     }
-    def formatStackTrace(stack: Seq[Frame],
-                          input: String,
-                          index: Int,
-                          last: String) = {
+    def formatStackTrace[ElemType](stack: Seq[Frame],
+                                  input: IndexedSeq[ElemType],
+                                  index: Int,
+                                  last: String)
+                                  (implicit helper: ParserHelper[ElemType]) = {
       val body =
         for (Frame(index, p) <- stack)
         yield formatParser(p, input, index)
-      (body :+ last).mkString(" / ") + " ..." + literalize(input.slice(index, index + 10))
+      (body :+ last).mkString(" / ") + " ..." + helper.literalize(input.slice(index, index + 10))
     }
     def filterFullStack(fullStack: Seq[Frame]) = {
       fullStack.collect { case f @ Frame(i, p) if p.shortTraced => f }
@@ -157,10 +172,11 @@ object Parsed {
    * @param traceParsers A list of parsers that could have succeeded at the location
    *                     that this
    */
-  case class TracedFailure(input: String,
-                           index: Int,
-                           fullStack: Vector[Frame],
-                           traceParsers: Set[Parser[_]]){
+  case class TracedFailure[ElemType](input: IndexedSeq[ElemType],
+                                     index: Int,
+                                     fullStack: Vector[Frame],
+                                     traceParsers: Set[Parser[_, ElemType, _]])
+                                    (implicit helper: ParserHelper[ElemType]){
 
     private[this] lazy val expected0 = new Precedence {
       def opPred = if (traceParsers.size == 1) traceParsers.head.opPred else Precedence.|
@@ -191,16 +207,18 @@ object Parsed {
     }
   }
   object TracedFailure{
-    def apply(input: String, index: Int, lastParser: Parser[_], traceData: (Int, Parser[_])) = {
+    def apply[ElemType](input: IndexedSeq[ElemType], index: Int,
+                        lastParser: Parser[_, ElemType, _], traceData: (Int, Parser[_, ElemType, _]))
+                       (implicit helper: ParserHelper[ElemType]) = {
       val (originalIndex, originalParser) = traceData
 
       val mutFailure = originalParser.parseRec(
         new ParseCtx(input, 0, index, originalParser, originalIndex, (_, _, _) => ()),
         originalIndex
-      ).asInstanceOf[Mutable.Failure]
+      ).asInstanceOf[Mutable.Failure[ElemType]]
 
 
-      new TracedFailure(
+      new TracedFailure[ElemType](
         input,
         index,
         mutFailure.fullStack.toVector.reverse,
@@ -213,12 +231,12 @@ object Parsed {
  * An internal mirror of the [[Parsed]] classes, except it contains far
  * more data and is mutable to maximize performance
  */
-trait Mutable[+T]{
+trait Mutable[+T, ElemType]{
   /**
    * Snapshots this mutable result and converts it into
    * an immutable [[Parsed]] object
    */
-  def toResult: Parsed[T]
+  def toResult: Parsed[T, ElemType]
 
   /**
    * A set of parsers which have failed to parse at
@@ -226,7 +244,7 @@ trait Mutable[+T]{
    * at any particular index, what parsers could have
    * succeeded.
    */
-  def traceParsers: Set[Parser[_]]
+  def traceParsers: Set[Parser[_, ElemType, _]]
 
   /**
    * Whether or not the parser encountered a Cut before reaching
@@ -247,10 +265,10 @@ object Mutable{
    * @param cut Whether or not this parser crossed a cut and can not longer
    *            backtrack
    */
-  case class Success[T](var value: T,
-                        var index: Int,
-                        var traceParsers: Set[Parser[_]],
-                        var cut: Boolean = false) extends Mutable[T]{
+  case class Success[T, ElemType](var value: T,
+                                  var index: Int,
+                                  var traceParsers: Set[Parser[_, ElemType, _]],
+                                  var cut: Boolean = false) extends Mutable[T, ElemType]{
 
     override def toString = s"Success($value, $index)"
     def toResult = Parsed.Success(value, index)
@@ -273,15 +291,16 @@ object Mutable{
    *                     contains sub-parsers, you should generally aggregate
    *                     any the [[traceParsers]] of any of their results.
    */
-  case class Failure(var input: String,
-                     fullStack: mutable.Buffer[Frame],
-                     var index: Int,
-                     var lastParser: Parser[_],
-                     originalParser: Parser[_],
-                     originalIndex: Int,
-                     traceIndex: Int,
-                     var traceParsers: Set[Parser[_]],
-                     var cut: Boolean) extends Mutable[Nothing]{
+  case class Failure[ElemType](var input: IndexedSeq[ElemType],
+                               fullStack: mutable.Buffer[Frame],
+                               var index: Int,
+                               var lastParser: Parser[_, ElemType, _],
+                               originalParser: Parser[_, ElemType, _],
+                               originalIndex: Int,
+                               traceIndex: Int,
+                               var traceParsers: Set[Parser[_, ElemType, _]],
+                               var cut: Boolean)
+                              (implicit helper: ParserHelper[ElemType]) extends Mutable[Nothing, ElemType]{
     def toResult = {
       val extra = new Parsed.Failure.Extra.Impl(input, originalParser, originalIndex, lastParser, index)
       Parsed.Failure(lastParser, index, extra)
@@ -301,19 +320,20 @@ object Mutable{
  *                   reporting. `-1` disables tracing, and any other number
  *                   enables recording of stack-traces and
  */
-class ParseCtx(val input: String,
-               var logDepth: Int,
-               val traceIndex: Int,
-               val originalParser: Parser[_],
-               val originalIndex: Int,
-               val instrument: (Parser[_], Int, () => Parsed[_]) => Unit){
+class ParseCtx[ElemType](val input: IndexedSeq[ElemType],
+                         var logDepth: Int,
+                         val traceIndex: Int,
+                         val originalParser: Parser[_, ElemType, _],
+                         val originalIndex: Int,
+                         val instrument: (Parser[_, ElemType, _], Int, () => Parsed[_, ElemType]) => Unit)
+                        (implicit helper: ParserHelper[ElemType]){
   require(logDepth >= -1, "logDepth can only be -1 (for no logs) or >= 0")
   require(traceIndex >= -1, "traceIndex can only be -1 (for no tracing) or an index 0")
-  val failure = Mutable.Failure(
+  val failure = Mutable.Failure[ElemType](
     input, mutable.Buffer(), 0, null, originalParser,
     originalIndex, traceIndex, Set.empty, false
   )
-  val success = Mutable.Success(null, 0, Set.empty, false)
+  val success = Mutable.Success[Any, ElemType](null, 0, Set.empty, false)
 }
 
 // Parser
@@ -326,8 +346,8 @@ class ParseCtx(val input: String,
  * [[parsers.Combinators.Sequence.Flat]]s. These optimizations together appear to make
  * things faster but any 10%, whether or not you activate tracing.
  */
-trait Parser[+T] extends ParserResults[T] with Precedence{
-  /**
+trait Parser[+T, ElemType, Repr] extends ParserResults[T, ElemType] with Precedence{
+  /*
    * Parses the given `input` starting from the given `index`
    *
    * @param input The string we want to parse
@@ -344,17 +364,18 @@ trait Parser[+T] extends ParserResults[T] with Precedence{
    *                   invocations to locate bottlenecks or unwanted
    *                   backtracking in the parser.
    */
-  def parse(input: String,
+  def parse(input: IndexedSeq[ElemType],
             index: Int = 0,
-            instrument: (Parser[_], Int, () => Parsed[_]) => Unit = null)
-            : Parsed[T] = {
+            instrument: (Parser[_, _, _], Int, () => Parsed[_, ElemType]) => Unit = null)
+           (implicit helper: ParserHelper[ElemType])
+            : Parsed[T, ElemType] = {
     parseRec(new ParseCtx(input, 0, -1, this, index, instrument), index).toResult
   }
 
   /**
    * Parses the given `input` starting from the given `index` and `logDepth`
    */
-  def parseRec(cfg: ParseCtx, index: Int): Mutable[T]
+  def parseRec(cfg: ParseCtx[ElemType], index: Int): Mutable[T, ElemType]
 
   /**
    * Whether or not this parser should show up when [[Parsed.TracedFailure.trace]] is
@@ -374,8 +395,9 @@ trait Parser[+T] extends ParserResults[T] with Precedence{
 /**
  * Convenience methods to be used internally inside [[Parser]]s
  */
-trait ParserResults[+T]{ this: Parser[T] =>
-  def mergeTrace(traceIndex: Int, lhs: Set[Parser[_]], rhs: Set[Parser[_]]): Set[Parser[_]] = {
+trait ParserResults[+T, ElemType]{ this: Parser[T, ElemType, _] =>
+  def mergeTrace(traceIndex: Int, lhs: Set[Parser[_, ElemType, _]],
+                 rhs: Set[Parser[_, ElemType, _]]): Set[Parser[_, ElemType, _]] = {
     if (traceIndex != -1) lhs | rhs
     else Set.empty
   }
@@ -390,9 +412,9 @@ trait ParserResults[+T]{ this: Parser[T] =>
    *                     set. By default, this is the current parser.
    * @param cut Whether or not this failure should prevent backtracking
    */
-  def fail(f: Mutable.Failure,
+  def fail(f: Mutable.Failure[ElemType],
            index: Int,
-           traceParsers: Set[Parser[_]] = null,
+           traceParsers: Set[Parser[_, ElemType, _]] = null,
            cut: Boolean = false) = {
     f.index = index
     f.cut = cut
@@ -423,10 +445,10 @@ trait ParserResults[+T]{ this: Parser[T] =>
    * @param cut Whether or not this parser failing should prevent backtracking.
    *            ORed with any cuts caused by the existing failure
    */
-  def failMore(f: Mutable.Failure,
+  def failMore(f: Mutable.Failure[ElemType],
                index: Int,
                logDepth: Int,
-               traceParsers: Set[Parser[_]] = null,
+               traceParsers: Set[Parser[_, ElemType, _]] = null,
                cut: Boolean = false) = {
 
     if (f.traceIndex != -1) {
@@ -457,12 +479,12 @@ trait ParserResults[+T]{ this: Parser[T] =>
    *                     reported to ensure proper error reporting.
    * @param cut Whether the parse crossed a cut and should prevent backtracking
    */
-  def success[T](s: Mutable.Success[_],
+  def success[T](s: Mutable.Success[_, ElemType],
                  value: T,
                  index: Int,
-                 traceParsers: Set[Parser[_]],
+                 traceParsers: Set[Parser[_, ElemType, _]],
                  cut: Boolean) = {
-    val s1 = s.asInstanceOf[Mutable.Success[T]]
+    val s1 = s.asInstanceOf[Mutable.Success[T, ElemType]]
 
     s1.value = value
     s1.index = index

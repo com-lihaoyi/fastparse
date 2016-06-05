@@ -90,7 +90,7 @@ object DemoMain {
     def recalc() = {
       inputBox.rows = inputBox.value.lines.length
       val details = parser.parse(inputBox.value) match{
-        case s: Parsed.Success[_] =>
+        case s: Success[_] =>
           table(
             width := "100%",
             tr(td("Success!")),
