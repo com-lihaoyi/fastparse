@@ -51,11 +51,11 @@ object MiscTests extends TestSuite{
       'named{
         val Foo = P( "A" )
         check(Foo, """Foo""")
-        check(End, """End""")
-        check(Start, """Start""")
-        check(Pass, """Pass""")
-        check(Fail, """Fail""")
-        check(AnyChar, """AnyChar""")
+        check(End, """End()""")
+        check(Start, """Start()""")
+        check(Pass, """Pass()""")
+        check(Fail, """Fail()""")
+        check(AnyChar, """AnyChar()""")
         check(CharIn("abc", "d", Seq('1', '2', '3')), """CharIn("abcd123")""")
         check(
           StringIn("mango", "mandarin", "mangosteen"),
@@ -142,6 +142,7 @@ object MiscTests extends TestSuite{
 
     }
     'formatParser{
+      println("---" + Parsed.Failure.formatParser("a", "", 0))
       assert(
         Parsed.Failure.formatParser("a", "", 0) == """"a":0:0""",
         Parsed.Failure.formatParser("A", "B", 0) == """"A":1:1""")

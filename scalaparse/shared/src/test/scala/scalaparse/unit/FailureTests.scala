@@ -123,7 +123,7 @@ object FailureTests extends TestSuite{
         |  1
         |}
       """.stripMargin,
-      expected = """ ";" | Newline.rep(1) | End """,
+      expected = """ ";" | Newline.rep(1) | End() """,
       found = "o w{"
     )
     * - checkNeg(
@@ -169,7 +169,7 @@ object FailureTests extends TestSuite{
         |import org.parboiled2 _
         |
       """.stripMargin,
-      expected = """ ";" | Newline.rep(1) | End """,
+      expected = """ ";" | Newline.rep(1) | End() """,
       found = "_"
     )
     * - checkNeg(
@@ -385,7 +385,7 @@ object FailureTests extends TestSuite{
         |  val trueA = 1
         |}
       """.stripMargin,
-      expected = " \";\" | Newline.rep(1) | Pkg | Import | Tmpl | End ",
+      expected = " \";\" | Newline.rep(1) | Pkg | Import | Tmpl | End() ",
       found = "val trueA"
     )
     * - checkNeg(

@@ -71,7 +71,7 @@ object Utils {
       }
     }
 
-    if (!seq.headOption.contains(delim))
+    if (curBuilder.result().nonEmpty)
       res += curBuilder.result()
 
     res
