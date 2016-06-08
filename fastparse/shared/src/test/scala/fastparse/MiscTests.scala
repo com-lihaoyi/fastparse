@@ -142,7 +142,6 @@ object MiscTests extends TestSuite{
 
     }
     'formatParser{
-      println("---" + Parsed.Failure.formatParser("a", "", 0))
       assert(
         Parsed.Failure.formatParser("a", "", 0) == """"a":0:0""",
         Parsed.Failure.formatParser("A", "B", 0) == """"A":1:1""")

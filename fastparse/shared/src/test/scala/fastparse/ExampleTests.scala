@@ -19,7 +19,6 @@ object ExampleTests extends TestSuite{
         assert(value == (), successIndex == 1)
 
         val failure = parseA.parse("b").asInstanceOf[Parsed.Failure]
-        println(failure.extra.traced.trace)
         assert(
           failure.lastParser == ("a": P0),
           failure.index == 0,
@@ -176,8 +175,8 @@ object ExampleTests extends TestSuite{
       'opaque{
         val digit = CharIn('0' to '9')
         val letter = CharIn('A' to 'Z')
-        def twice[T](p: P[T]) = p ~ p
-        def errorMessage[T](p: P[T], str: String) =
+        def twice[T](p: Parser[T]) = p ~ p
+        def errorMessage[T](p: Parser[T], str: String) =
           ParseError(p.parse(str).asInstanceOf[Parsed.Failure]).getMessage
 
         // Portuguese number plate format since 2006
