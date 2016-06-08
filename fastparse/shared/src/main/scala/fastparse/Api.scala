@@ -9,10 +9,14 @@ import acyclic.file
  */
 trait Api{
 
-  val Parsed = core.Parsed
+  //val Parsed = core.Parsed
   type Parsed[+T] = core.Parsed[T, Char]
-  type Failure = Parsed.Failure[Char]
-  type Success[T] = Parsed.Success[T, Char]
+  object Parsed {
+    type Failure = core.Parsed.Failure[Char]
+    type Success[T] = core.Parsed.Success[T, Char]
+    val Success = core.Parsed.Success
+    val Failure = core.Parsed.Failure
+  }
   
   val Pass = parsers.Terminals.Pass[Char, String]()
   val Fail = parsers.Terminals.Fail[Char, String]()

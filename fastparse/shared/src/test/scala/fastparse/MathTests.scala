@@ -1,6 +1,5 @@
 package fastparse
 import all._
-import fastparse.core.Parsed
 import utest._
 
 /**
@@ -41,7 +40,7 @@ object MathTests extends TestSuite{
     }
     'fail{
       def check(input: String, expectedTrace: String) = {
-        val failure = expr.parse(input).asInstanceOf[Failure]
+        val failure = expr.parse(input).asInstanceOf[Parsed.Failure]
         val actualTrace = failure.extra.traced.trace
         assert(expectedTrace.trim == actualTrace.trim)
       }

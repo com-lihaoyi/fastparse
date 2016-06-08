@@ -44,7 +44,7 @@ object ProjectTests extends TestSuite{
       pythonparse.Statements.file_input.parse(new String(Files.readAllBytes(Paths.get(x)))).getClass
     }
 
-    selfParsed.get(classOf[Failure]) match{
+    selfParsed.get(classOf[Parsed.Failure]) match{
       case None => (grouped.mapValues(_.length), selfParsed.mapValues(_.length))
       case Some(xs) => throw new Exception(xs.mkString("\n"))
     }
