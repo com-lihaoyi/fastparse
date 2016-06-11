@@ -1,7 +1,7 @@
 package pythonparse
 
 import fastparse.Implicits.Sequencer
-import fastparse.noApi._
+import fastparse.emptyStringApi._
 import WsApi._
 import acyclic.file
 import Lexical.kw

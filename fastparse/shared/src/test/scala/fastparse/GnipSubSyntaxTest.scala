@@ -14,10 +14,10 @@ import scala.language.postfixOps
 object GnipSubSyntaxTest extends TestSuite {
   class GnipRuleParser {
     val White = WhitespaceApi.Wrapper {
-      import fastparse.all._
+      import fastparse.allString._
       NoTrace(" ".rep)
     }
-    import fastparse.noApi._
+    import fastparse.emptyStringApi._
     import White._
 
     private val keyword = P(CharIn('a' to 'z')!)

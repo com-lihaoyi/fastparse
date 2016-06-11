@@ -1,6 +1,6 @@
 package pythonparse
 import utest._
-import fastparse.all._
+import fastparse.allString._
 
 object RegressionTests extends TestSuite{
   import Ast.expr._

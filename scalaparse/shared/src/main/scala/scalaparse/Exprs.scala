@@ -3,7 +3,7 @@ package scalaparse
 import acyclic.file
 
 import scalaparse.syntax.Identifiers
-import fastparse.noApi._
+import fastparse.emptyStringApi._
 trait Exprs extends Core with Types with Xml{
 
   import WhitespaceApi._

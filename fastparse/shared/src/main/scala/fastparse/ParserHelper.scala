@@ -25,8 +25,11 @@ object ParserHelper {
   implicit val ByteParserHelper = new ParserHelper[Byte] {
     override val delimiter = 0.toByte
     override val emptyElem = ArrayBuffer[Byte]()
-    override def convertToString(input: IndexedSeq[Byte]): String = input.mkString
-    override def literalize(input: IndexedSeq[Byte]): String = convertToString(input)
+
+    private def ByteToHex(b: Byte) = String.format("%02X", java.lang.Byte.valueOf(b))
+
+    override def convertToString(input: IndexedSeq[Byte]): String = input.map(ByteToHex).mkString(" ")
+    override def literalize(input: IndexedSeq[Byte]): String = '"' + convertToString(input) + '"'
   }
 }
 

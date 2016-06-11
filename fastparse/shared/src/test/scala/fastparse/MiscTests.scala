@@ -1,5 +1,5 @@
 package fastparse
-import all._
+import allString._
 import utest._
 
 import scala.collection.mutable
@@ -131,7 +131,7 @@ object MiscTests extends TestSuite{
       val charLiteral = wspStr("a")
       assert(
         literal.isInstanceOf[parsers.Terminals.Literal[Char, String]],
-        charLiteral.isInstanceOf[parsers.Terminals.CharLiteral[Char, String]]
+        charLiteral.isInstanceOf[parsers.Terminals.ElemLiteral[Char, String]]
       )
     }
     'failureget{
@@ -148,8 +148,8 @@ object MiscTests extends TestSuite{
     }
     'utils{
       'trieNode {
-        val names = (0 until 1000).map(_.toString.flatMap(_.toString * 5))
-        val trie = new Utils.TrieNode(names)
+        val names = (0 until 1000).map(_.toString.flatMap(_.toString * 5).toIndexedSeq)
+        val trie = new Utils.TrieNode[Char](names)
         for (name <- names)
           assert(trie.query(name, 0) != -1)
       }

@@ -1,5 +1,5 @@
 package pythonparse
-import fastparse.noApi._
+import fastparse.emptyStringApi._
 import WsApi._
 import Expressions._
 import acyclic.file

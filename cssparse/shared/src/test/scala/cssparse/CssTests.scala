@@ -1,7 +1,7 @@
 package cssparse
 
 import utest._
-import fastparse.all._
+import fastparse.allString._
 import Ast._
 
 import scala.collection.mutable.ArrayBuffer

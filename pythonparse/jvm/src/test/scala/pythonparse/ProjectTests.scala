@@ -5,7 +5,7 @@ import scala.concurrent.{Await, Future}
 import sys.process._
 import java.nio.file._
 import utest._
-import fastparse.all._
+import fastparse.allString._
 /**
  * Load external Python code and force feed it through the parser
  * to find out where it blows up

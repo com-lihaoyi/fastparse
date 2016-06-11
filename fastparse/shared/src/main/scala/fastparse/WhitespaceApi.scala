@@ -2,7 +2,7 @@ package fastparse
 
 import fastparse.Implicits.{Repeater, Sequencer}
 import fastparse.core._
-import fastparse.all._
+import fastparse.allString._
 import fastparse.parsers.Combinators.Repeat
 
 

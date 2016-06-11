@@ -1,7 +1,7 @@
 package scalaparse.syntax
 
 import acyclic.file
-import fastparse.all._
+import fastparse.allString._
 import Basic._
 object Identifiers{
 
@@ -32,14 +32,15 @@ object Identifiers{
     "null", "object", "override", "package", "private", "protected",
     "return", "sealed", "super", "this", "throw", "trait", "try",
     "true", "type", "val", "var", "while", "with", "yield", "_", "macro"
-  )
+  ).map(_.toIndexedSeq)
 
   val AlphabetKeywords = P {
     StringIn(alphaKeywords:_*) ~ !Letter
   }
   val symbolKeywords = Seq(
     ":", ";", "=>", "=", "<-", "<:", "<%", ">:", "#", "@", "\u21d2", "\u2190"
-  ) 
+  ).map(_.toIndexedSeq)
+
   val SymbolicKeywords = P{
     StringIn(symbolKeywords:_*) ~ !OpChar
   }

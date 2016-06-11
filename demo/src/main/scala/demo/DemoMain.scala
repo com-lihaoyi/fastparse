@@ -1,6 +1,6 @@
 package demo
 
-import fastparse.all._
+import fastparse.allString._
 import org.scalajs.dom
 import org.scalajs.dom.html
 

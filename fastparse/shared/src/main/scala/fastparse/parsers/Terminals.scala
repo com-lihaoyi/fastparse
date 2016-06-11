@@ -31,7 +31,7 @@ object Terminals {
   /**
    * Succeeds, consuming a single character
    */
-  case class AnyChar[ElemType, R]() extends Parser[Unit, ElemType, R]{
+  case class AnyElem[ElemType, R]() extends Parser[Unit, ElemType, R]{
     def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
       val input = cfg.input
       if (index >= input.length) fail(cfg.failure, index)
@@ -101,7 +101,7 @@ object Terminals {
       if (startsWith(cfg.input, s, index)) success(cfg.success, (), index + s.length, Set.empty, false)
       else fail(cfg.failure, index)
     }
-    override def toString = helper.literalize(s).toString
+    override def toString = helper.literalize(s)
   }
 
   /**
@@ -115,14 +115,14 @@ object Terminals {
       if (startsWithIgnoreCase(cfg.input, s, index)) success(cfg.success, (), index + s.length, Set.empty, false)
       else fail(cfg.failure, index)
     }
-    override def toString = helper.literalize(s).toString
+    override def toString = helper.literalize(s)
   }
 
   /**
    * Parses a single character
    */
-  case class CharLiteral[ElemType, R](c: ElemType)
-                                  (implicit helper: ParserHelper[ElemType])
+  case class ElemLiteral[ElemType, R](c: ElemType)
+                                     (implicit helper: ParserHelper[ElemType])
        extends Parser[Unit, ElemType, R]{
     def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
       val input = cfg.input

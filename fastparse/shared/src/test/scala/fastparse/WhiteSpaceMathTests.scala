@@ -8,10 +8,10 @@ import utest._
  */
 object WhiteSpaceMathTests extends TestSuite{
   val White = WhitespaceApi.Wrapper{
-    import fastparse.all._
+    import fastparse.allString._
     NoTrace(" ".rep)
   }
-  import fastparse.noApi._
+  import fastparse.emptyStringApi._
   import White._
   def eval(tree: (Int, Seq[(String, Int)])): Int = {
     val (base, ops) = tree

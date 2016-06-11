@@ -1,6 +1,6 @@
 package cssparse
 
-import fastparse.all._
+import fastparse.allString._
 
 import scala.collection.mutable.ArrayBuffer
 
