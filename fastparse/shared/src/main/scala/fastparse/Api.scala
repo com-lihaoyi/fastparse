@@ -2,7 +2,7 @@ package fastparse
 import language.experimental.macros
 import fastparse.parsers.{Intrinsics, Terminals}
 import acyclic.file
-import fastparse.Utils.ElemHelper
+import fastparse.Utils.{ElemHelper, HexUtils}
 import fastparse.parsers.Intrinsics.ElemsWhile
 
 /**
@@ -80,6 +80,8 @@ object emptyStringApi extends StringApi
 
 trait ByteApi extends Api[Byte, Array[Byte]] {
 
+  val AnyByte = AnyElem
+
   val elemHelper = implicitly[ElemHelper[Byte]]
   val parserHelper = implicitly[ParserHelper[Byte]]
   val ordering = implicitly[Ordering[Byte]]
@@ -90,10 +92,29 @@ trait ByteApi extends Api[Byte, Array[Byte]] {
 
   def ByteSeq(bytes: Byte*) = bytes.toArray
   def BS(bytes: Byte*) = ByteSeq(bytes: _*)
+  type ByteSeq = Array[Byte]
+  type BS = ByteSeq
 
   implicit def wspByteSeq(seq: Array[Byte]): P0 =
     if (seq.length == 1) parsers.Terminals.ElemLiteral(seq(0))
     else parsers.Terminals.Literal(seq)
+
+  implicit class ByteSeqUtils(s: String) {
+    val hexChars = HexUtils.hexChars
+
+    def toBytes: Array[Byte] = {
+      import allString._
+
+      def strToByte(s: String): Byte = (hexChars.indexOf(s(1)) + hexChars.indexOf(s(0)) * 16).toByte
+
+      val hexDigit = allString.P( CharIn('0' to '9', 'a' to 'f') ) //TODO add uppercase letters
+      val byte = allString.P( "0x".? ~ hexDigit.rep(min=2, max=2).! ).map(strToByte)
+      val byteSep = allString.P(" ".rep)
+      val bytes = allString.P( byteSep ~ byte.rep(sep=byteSep) ).map(_.toArray)
+
+      bytes.parse(s.toIndexedSeq).get.value
+    }
+  }
 }
 
 object allByte extends ByteApi{
