@@ -171,8 +171,8 @@ object ByteTests extends TestSuite {
         object Foo{
           import fastparse.allByte._
 
-          val int = P( BS(0) ~ AnyByte.rep(min=4, max=4).! ).map(bytesToInt)
-          val longInt = P( BS(-1) ~ AnyByte.rep(min=8, max=8).! ).map(bytesToLongInt)
+          val int = P( BS(0) ~ AnyByte.rep(exactly=4).! ).map(bytesToInt)
+          val longInt = P( BS(-1) ~ AnyByte.rep(exactly=8).! ).map(bytesToLongInt)
           val ints = P( (int | longInt).rep(1) )
         }
 
@@ -186,8 +186,8 @@ object ByteTests extends TestSuite {
         object Foo{
           import fastparse.allByte._
 
-          val int = P( BS(0) ~/ AnyByte.rep(min=4, max=4).! ).map(bytesToInt)
-          val longInt = P( BS(-1) ~/ AnyByte.rep(min=8, max=8).! ).map(bytesToLongInt)
+          val int = P( BS(0) ~/ AnyByte.rep(exactly=4).! ).map(bytesToInt)
+          val longInt = P( BS(-1) ~/ AnyByte.rep(exactly=8).! ).map(bytesToLongInt)
           val ints = P( (int | longInt).rep(1) )
         }
         check(
@@ -201,8 +201,8 @@ object ByteTests extends TestSuite {
         object Foo{
           import fastparse.allByte._
 
-          val int = P( BS(0) ~/ AnyByte.rep(min=4, max=4).! ).map(bytesToInt).log()
-          val longInt = P( BS(-1) ~/ AnyByte.rep(min=8, max=8).! ).map(bytesToLongInt).log()
+          val int = P( BS(0) ~/ AnyByte.rep(exactly=4).! ).map(bytesToInt).log()
+          val longInt = P( BS(-1) ~/ AnyByte.rep(exactly=8).! ).map(bytesToLongInt).log()
           val ints = P( (int | longInt).rep(1) ).log()
         }
 

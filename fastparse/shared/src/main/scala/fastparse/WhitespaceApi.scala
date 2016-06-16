@@ -83,9 +83,12 @@ class WhitespaceApi[+T](p0: P[T], WL: P0) extends ParserApiImpl(p0)  {
   def repX[R](min: Int = 0, sep: P[_] = Pass, max: Int = Int.MaxValue)
              (implicit ev: Repeater[T, R]): P[R] = Repeat(p0, min, max, sep)
 
-  override def rep[R](min: Int = 0, sep: P[_] = Pass, max: Int = Int.MaxValue)
+  override def rep[R](min: Int = 0, sep: P[_] = Pass,
+                      max: Int = Int.MaxValue, exactly: Int = -1)
                      (implicit ev: Repeater[T, R]): P[R] = {
-    Repeat(p0, min, max, if (sep != Pass) NoCut(WL) ~ sep ~ NoCut(WL) else NoCut(WL))
+    Repeat(p0,
+      if (exactly < 0) min else exactly, if (exactly < 0) max else exactly,
+      if (sep != Pass) NoCut(WL) ~ sep ~ NoCut(WL) else NoCut(WL))
   }
 
   def ~~[V, R](p: P[V])

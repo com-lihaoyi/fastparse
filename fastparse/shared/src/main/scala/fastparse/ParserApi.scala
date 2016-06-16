@@ -27,7 +27,8 @@ trait ParserApi[+T, ElemType, Repr] {
   def rep[R](implicit ev: Repeater[T, R]): Parser[R, ElemType, Repr]
   def rep[R](min: Int = 0,
              sep: Parser[_, ElemType, Repr] = Pass[ElemType, Repr],
-             max: Int = Int.MaxValue)
+             max: Int = Int.MaxValue,
+             exactly: Int = -1)
             (implicit ev: Repeater[T, R]): Parser[R, ElemType, Repr]
 
   /**
@@ -95,8 +96,14 @@ class ParserApiImpl[+T, ElemType, Repr](self: Parser[T, ElemType, Repr])
 
   def rep[R](implicit ev: Repeater[T, R]): Parser[R, ElemType, Repr] =
     Repeat(self, 0, Int.MaxValue, Pass[ElemType, Repr])
-  def rep[R](min: Int = 0, sep: Parser[_, ElemType, Repr] = Pass[ElemType, Repr], max: Int = Int.MaxValue)
-            (implicit ev: Repeater[T, R]): Parser[R, ElemType, Repr] = Repeat(self, min, max, sep)
+  def rep[R](min: Int = 0, sep: Parser[_, ElemType, Repr] = Pass[ElemType, Repr],
+             max: Int = Int.MaxValue, exactly: Int = -1)
+            (implicit ev: Repeater[T, R]): Parser[R, ElemType, Repr] = {
+    if (exactly < 0)
+      Repeat(self, min, max, sep)
+    else
+      Repeat(self, exactly, exactly, sep)
+  }
 
   def |[V >: T](p: Parser[V, ElemType, Repr]): Parser[V, ElemType, Repr] =
     Either[V, ElemType, Repr](Either.flatten(Vector(self, p)):_*)

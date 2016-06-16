@@ -28,7 +28,7 @@ object ParserHelper {
     override val delimiter = 0.toByte
     override val emptyElem = ArrayBuffer[Byte]()
 
-    private def ByteToHex(b: Byte) = s"${HexUtils.hexChars(b & 0xf0 >> 4)}${HexUtils.hexChars(b & 15)}"
+    private def ByteToHex(b: Byte) = s"${HexUtils.hexChars((b & 0xf0) >> 4)}${HexUtils.hexChars(b & 15)}"
 
     override def convertToString(input: IndexedSeq[Byte]): String = input.map(ByteToHex).mkString(" ")
     override def literalize(input: IndexedSeq[Byte]): String = '"' + convertToString(input) + '"'

@@ -55,7 +55,7 @@ object MiscTests extends TestSuite{
         check(Start, """Start()""")
         check(Pass, """Pass()""")
         check(Fail, """Fail()""")
-        check(AnyChar, """AnyChar()""")
+        check(AnyChar, """AnyElem()""")
         check(CharIn("abc", "d", Seq('1', '2', '3')), """CharIn("abcd123")""")
         check(
           StringIn("mango", "mandarin", "mangosteen"),

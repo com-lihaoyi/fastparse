@@ -90,8 +90,8 @@ trait ByteApi extends Api[Byte, Array[Byte]] {
   def ByteIn(seqs: Seq[Byte]*) = ElemIn(seqs: _*)
   def BytesWhile(pred: Byte => Boolean, min: Int = 1) = ElemsWhile(pred, min)
 
-  def ByteSeq(bytes: Byte*) = bytes.toArray
-  def BS(bytes: Byte*) = ByteSeq(bytes: _*)
+  def ByteSeq[T](bytes: T*)(implicit num: Numeric[T]) = bytes.map(b => num.toInt(b).toByte).toArray
+  def BS[T](bytes: T*)(implicit num: Numeric[T]) = ByteSeq[T](bytes: _*)
   type ByteSeq = Array[Byte]
   type BS = ByteSeq
 
@@ -105,10 +105,12 @@ trait ByteApi extends Api[Byte, Array[Byte]] {
     def toBytes: Array[Byte] = {
       import allString._
 
-      def strToByte(s: String): Byte = (hexChars.indexOf(s(1)) + hexChars.indexOf(s(0)) * 16).toByte
+      def strToByte(s: String): Byte = {
+        (hexChars.indexOf(s(1)) + hexChars.indexOf(s(0)) * 16).toByte
+      }
 
-      val hexDigit = allString.P( CharIn('0' to '9', 'a' to 'f') ) //TODO add uppercase letters
-      val byte = allString.P( "0x".? ~ hexDigit.rep(min=2, max=2).! ).map(strToByte)
+      val hexDigit = allString.P( CharIn('0' to '9', 'a' to 'f', 'A' to 'F') )
+      val byte = allString.P( "0x".? ~ hexDigit.rep(min=2, max=2).! ).map(s => strToByte(s.toLowerCase))
       val byteSep = allString.P(" ".rep)
       val bytes = allString.P( byteSep ~ byte.rep(sep=byteSep) ).map(_.toArray)
 
@@ -121,5 +123,8 @@ object allByte extends ByteApi{
   implicit def parserApi[T, V](p: T)
                               (implicit c: T => core.Parser[V, Byte, Array[Byte]]): ParserApi[V, Byte, Array[Byte]] =
     new ParserApiImpl[V, Byte, Array[Byte]](p)
+
+  val AnyWord = P( AnyByte.rep(exactly=2) )
+  val AnyDword = P( AnyByte.rep(exactly=4) )
 }
 object emptyByteApi extends ByteApi
