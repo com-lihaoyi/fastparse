@@ -264,7 +264,7 @@ object ExampleTests extends TestSuite{
         val failure = stmts.parse("val abcd; val ").asInstanceOf[Parsed.Failure]
         assert(
           failure.index == 10,
-          failure.extra.traced.trace == """stmts:1:1 / (End() | " "):1:11 ..."val """"
+          failure.extra.traced.trace == """stmts:1:1 / (End | " "):1:11 ..."val """"
         )
       }
       'repcut{

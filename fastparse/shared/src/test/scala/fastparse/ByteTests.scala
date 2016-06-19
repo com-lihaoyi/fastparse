@@ -192,7 +192,7 @@ object ByteTests extends TestSuite {
         }
         check(
           Foo.ints.parse(strToBytes("ff 00 00 00 00")),
-          """Failure(AnyElem():4:0 ..."")"""
+          """Failure(AnyElem:4:0 ..."")"""
         )
       }
       'log{
@@ -214,8 +214,8 @@ object ByteTests extends TestSuite {
               +int:0
               -int:0:Failure(int:1:1 / "00":1:1 ..."ff 00 00 00 00")
               +longInt:0
-              -longInt:0:Failure(longInt:1:1 / AnyElem():4:0 ..."ff 00 00 00 00", cut)
-            -ints:0:Failure(ints:1:1 / longInt:1:1 / AnyElem():4:0 ..."ff 00 00 00 00", cut)
+              -longInt:0:Failure(longInt:1:1 / AnyElem:4:0 ..."ff 00 00 00 00", cut)
+            -ints:0:Failure(ints:1:1 / longInt:1:1 / AnyElem:4:0 ..."ff 00 00 00 00", cut)
                        """.lines.filter(_.trim != "").toSeq
         val minIndent = expected.map(_.takeWhile(_ == ' ').length).min
         val expectedString = expected.map(_.drop(minIndent)).mkString("\n")

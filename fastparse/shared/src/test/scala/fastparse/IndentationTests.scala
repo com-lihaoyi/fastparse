@@ -133,7 +133,7 @@ object IndentationTests extends TestSuite{
           |  1
           |1
         """.stripMargin.trim,
-        """ expr:1:1 / (End() | "\n  "):2:3 ..."\n1" """
+        """ expr:1:1 / (End | "\n  "):2:3 ..."\n1" """
       )
       * - check(
         """+
