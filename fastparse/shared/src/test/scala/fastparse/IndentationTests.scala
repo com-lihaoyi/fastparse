@@ -1,7 +1,7 @@
 package fastparse
 
 import utest._
-import allString._
+import all._
 /**
  * Same as MathTests, but demonstrating the use of whitespace
  */

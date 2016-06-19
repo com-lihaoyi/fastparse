@@ -6,7 +6,7 @@ import utest._
  * Created by haoyi on 10/8/15.
  */
 object TestUtils {
-  import fastparse.allString._
+  import fastparse.all._
   def check[T](rule: Parser[T], expected: T, s: String) = {
     val parsed = (rule ~ End).parse(s)
     parsed match {

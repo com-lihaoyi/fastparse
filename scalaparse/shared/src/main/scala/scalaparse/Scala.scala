@@ -3,7 +3,7 @@ package scalaparse
 import acyclic.file
 import language.implicitConversions
 import syntax._
-import fastparse.emptyStringApi._
+import fastparse.noApi._
 /**
  * Parser for Scala syntax.
  */

@@ -13,7 +13,7 @@ trait ParserApi[+T, ElemType, Repr] {
    * where a parser was tried and its result, which is useful for debugging
    */
   def log(msg: String = this.toString)(implicit output: Logger,
-                                       helper: ParserHelper[ElemType]): Parser[T, ElemType, Repr]
+                                       formatter: ElemTypeFormatter[ElemType]): Parser[T, ElemType, Repr]
 
   /**
    * Makes this parser opaque, i.e. hides it and its inner parsers
@@ -86,11 +86,11 @@ trait ParserApi[+T, ElemType, Repr] {
 }
 
 class ParserApiImpl[+T, ElemType, Repr](self: Parser[T, ElemType, Repr])
-                                       (implicit convHelper: ConversionHelper[ElemType, Repr])
+                                       (implicit builder: ResultBuilder[ElemType, Repr])
     extends ParserApi[T, ElemType, Repr] {
 
   def log(msg: String = self.toString)(implicit output: Logger,
-                                       helper: ParserHelper[ElemType]) = Logged(self, msg, output.f)
+                                       helper: ElemTypeFormatter[ElemType]) = Logged(self, msg, output.f)
 
   def opaque(msg: String = self.toString) = Opaque(self, msg)
 

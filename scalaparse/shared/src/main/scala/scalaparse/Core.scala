@@ -5,9 +5,9 @@ import syntax.{Key, Basic}
 
 import scala.language.implicitConversions
 import syntax.Identifiers
-import fastparse.emptyStringApi._
+import fastparse.noApi._
 trait Core extends syntax.Literals{
-  import fastparse.emptyStringApi._
+  import fastparse.noApi._
   val WhitespaceApi = new fastparse.WhitespaceApi.Wrapper(WL0)
   import WhitespaceApi._
 

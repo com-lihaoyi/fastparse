@@ -6,6 +6,7 @@ import acyclic.file
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.language.experimental.macros
+import fastparse.ElemSetHelper
 
 object MacroUtils{
   /**
@@ -107,27 +108,9 @@ object Utils {
     }
   }
 
-  trait ElemHelper[Elem] {
-    def toInt(a: Elem): Int
-    val allValues: Seq[Elem]
-  }
-
-  object ElemHelper {
-    implicit val CharBitSetHelper = new ElemHelper[Char] {
-      override def toInt(a: Char): Int = a
-      override val allValues = Char.MinValue to Char.MaxValue
-    }
-
-    implicit val ByteBitSetHelper = new ElemHelper[Byte] {
-      override def toInt(a: Byte): Int = a
-      override val allValues = (Byte.MinValue.toInt to Byte.MaxValue.toInt).map(_.toByte)
-    }
-  }
-
   object BitSet {
-    import ElemHelper._
     def compute[Elem](elems: Seq[Elem])
-                     (implicit helper: ElemHelper[Elem], ordering: Ordering[Elem]) = {
+                     (implicit helper: ElemSetHelper[Elem], ordering: Ordering[Elem]) = {
       val first = helper.toInt(elems.min)
       val last = helper.toInt(elems.max)
       val span = last - first
@@ -136,7 +119,7 @@ object Utils {
       (first, last, array)
     }
     def apply[Elem](chars: Seq[Elem])
-                   (implicit helper: ElemHelper[Elem], ordering: Ordering[Elem]) = {
+                   (implicit helper: ElemSetHelper[Elem], ordering: Ordering[Elem]) = {
       val (first, last, array) = compute(chars)
       new BitSet[Elem](array, first, last)
     }
@@ -150,7 +133,7 @@ object Utils {
    * making the resultant parser up to 2x faster!
    */
   final class BitSet[Elem](array: Array[Int], first: Int, last: Int)
-                          (implicit helper: ElemHelper[Elem]) extends (Elem => Boolean){
+                          (implicit helper: ElemSetHelper[Elem]) extends (Elem => Boolean){
     def apply(c: Elem) = {
       val ci = helper.toInt(c)
       if (ci > last || ci < first) false
@@ -166,7 +149,7 @@ object Utils {
    * share the same prefix, one char at a time.
    */
   final class TrieNode[Elem](strings: Seq[IndexedSeq[Elem]])
-                            (implicit helper: ElemHelper[Elem], ordering: Ordering[Elem]) {
+                            (implicit helper: ElemSetHelper[Elem], ordering: Ordering[Elem]) {
 
     val (min, max, arr) = {
       val children = strings.filter(_.nonEmpty)

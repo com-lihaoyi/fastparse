@@ -1,7 +1,7 @@
 package fastparse.parsers
 import acyclic.file
-import fastparse.ParserHelper
-import fastparse.ParserHelper._
+import fastparse.ElemTypeFormatter
+import fastparse.ElemTypeFormatter._
 import fastparse.Utils._
 import fastparse.core.ParseCtx
 
@@ -20,6 +20,7 @@ object Terminals {
    */
   case class Pass[ElemType, R]() extends Parser[Unit, ElemType, R]{
     def parseRec(cfg: ParseCtx[ElemType], index: Int) = success(cfg.success, (), index, Set.empty, false)
+    override val toString = "Pass"
   }
 
   /**
@@ -27,6 +28,7 @@ object Terminals {
    */
   case class Fail[ElemType, R]() extends Parser[Nothing, ElemType, R]{
     def parseRec(cfg: ParseCtx[ElemType], index: Int) = fail(cfg.failure, index)
+    override val toString = "Fail"
   }
   /**
    * Succeeds, consuming a single character
@@ -37,6 +39,7 @@ object Terminals {
       if (index >= input.length) fail(cfg.failure, index)
       else success(cfg.success, input(index), index+1, Set.empty, false)
     }
+    override val toString = "AnyElem"
   }
 
   /**
@@ -48,6 +51,7 @@ object Terminals {
       if (index == 0) success(cfg.success, (), index, Set.empty, false)
       else fail(cfg.failure, index)
     }
+    override val toString = "Start"
   }
 
   /**
@@ -58,6 +62,7 @@ object Terminals {
       if (index == cfg.input.length) success(cfg.success, (), index, Set.empty, false)
       else fail(cfg.failure, index)
     }
+    override val toString = "End"
   }
 
   /**
@@ -94,35 +99,35 @@ object Terminals {
    * Parses a literal `String`
    */
   case class Literal[ElemType, R](s: IndexedSeq[ElemType])
-                              (implicit helper: ParserHelper[ElemType])
+                              (implicit formatter: ElemTypeFormatter[ElemType])
        extends Parser[Unit, ElemType, R]{
     def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
 
       if (startsWith(cfg.input, s, index)) success(cfg.success, (), index + s.length, Set.empty, false)
       else fail(cfg.failure, index)
     }
-    override def toString = helper.literalize(s)
+    override def toString = formatter.literalize(s)
   }
 
   /**
    * Parses a literal `String` ignoring case
    */
   case class IgnoreCase[R](s: IndexedSeq[Char])
-                       (implicit helper: ParserHelper[Char])
+                       (implicit formatter: ElemTypeFormatter[Char])
        extends Parser[Unit, Char, R]{
 
     def parseRec(cfg: ParseCtx[Char], index: Int) = {
       if (startsWithIgnoreCase(cfg.input, s, index)) success(cfg.success, (), index + s.length, Set.empty, false)
       else fail(cfg.failure, index)
     }
-    override def toString = helper.literalize(s)
+    override def toString = formatter.literalize(s)
   }
 
   /**
    * Parses a single character
    */
   case class ElemLiteral[ElemType, R](c: ElemType)
-                                     (implicit helper: ParserHelper[ElemType])
+                                     (implicit formatter: ElemTypeFormatter[ElemType])
        extends Parser[Unit, ElemType, R]{
     def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
       val input = cfg.input
@@ -130,7 +135,7 @@ object Terminals {
       else if (input(index) == c) success(cfg.success, c.toString, index + 1, Set.empty, false)
       else fail(cfg.failure, index)
     }
-    override def toString = helper.literalize(ArrayBuffer(c)).toString
+    override def toString = formatter.literalize(ArrayBuffer(c)).toString
   }
 
   /**

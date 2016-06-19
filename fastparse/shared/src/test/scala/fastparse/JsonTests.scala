@@ -1,6 +1,6 @@
 package fastparse
 
-import allString._
+import all._
 import utest._
 
 /**

@@ -109,11 +109,12 @@ object BmpTests extends TestSuite {
     'wiki {
       /* These tests were taken from wiki page https://en.wikipedia.org/wiki/BMP_file_format */
       'example1 {
-        val file1 = (/*file header*/ "42 4d  46 00 00 00  00 00  00 00  36 00 00 00 " +
+        val file1 = strToBytes(
+                   /*file header*/ "42 4d  46 00 00 00  00 00  00 00  36 00 00 00 " +
                    /*bitmap header*/ "28 00 00 00  02 00 00 00  02 00 00 00  01 00  18 00  " +
                                      "00 00 00 00  10 00 00 00  13 0b 00 00  13 0b 00 00  " +
                                      "00 00 00 00  00 00 00 00" +
-                   /*pixels*/  "00 00 ff  ff ff ff  00 00  ff 00 00  00 ff 00  00 00").toBytes
+                   /*pixels*/  "00 00 ff  ff ff ff  00 00  ff 00 00  00 ff 00  00 00")
 
         val Parsed.Success(bmp1, _) = bmp.parse(file1)
 
@@ -129,14 +130,15 @@ object BmpTests extends TestSuite {
         }
 
       'example2 {
-        val file1 = (/*file header*/ "42 4d  9A 00 00 00  00 00  00 00  7A 00 00 00 " +
+        val file1 = strToBytes(
+          /*file header*/ "42 4d  9A 00 00 00  00 00  00 00  7A 00 00 00 " +
           /*bitmap header*/ "6C 00 00 00  04 00 00 00  02 00 00 00  01 00  20 00  " +
           "03 00 00 00  20 00 00 00  13 0B 00 00  13 0B 00 00 " +
           "00 00 00 00  00 00 00 00  00 00 FF 00  00 FF 00 00 " +
           "FF 00 00 00  00 00 00 FF  20 6E 69 57 " + "00" * 36 +
           "00 00 00 00  00 00 00 00  00 00 00 00" +
           /*pixels*/  "FF 00 00 7F  00 FF 00 7F  00 00 FF 7F  00 00 FF 7F " +
-                      "FF 00 00 FF  00 FF 00 FF  00 00 FF FF  FF FF FF FF").toBytes
+                      "FF 00 00 FF  00 FF 00 FF  00 00 FF FF  FF FF FF FF")
 
         val Parsed.Success(bmp2, _) = bmp.parse(file1)
 

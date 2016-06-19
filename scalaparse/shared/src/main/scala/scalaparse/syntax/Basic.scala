@@ -2,7 +2,7 @@ package scalaparse.syntax
 
 import acyclic.file
 
-import fastparse.allString._
+import fastparse.all._
 import fastparse.CharPredicates._
 object Basic {
   val UnicodeEscape = P( "u" ~ HexDigit ~ HexDigit ~ HexDigit ~ HexDigit )

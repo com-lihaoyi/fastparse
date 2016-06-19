@@ -2,7 +2,7 @@ package scalaparse
 
 import fastparse._
 import utest._
-import fastparse.allString._
+import fastparse.all._
 
 
 import scalaparse.Scala._

@@ -1,6 +1,6 @@
 package cssparse
 
-import fastparse.allString._
+import fastparse.all._
 
 object TestUtil {
 

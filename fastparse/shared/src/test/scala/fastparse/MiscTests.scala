@@ -1,5 +1,5 @@
 package fastparse
-import allString._
+import all._
 import utest._
 
 import scala.collection.mutable
@@ -51,17 +51,17 @@ object MiscTests extends TestSuite{
       'named{
         val Foo = P( "A" )
         check(Foo, """Foo""")
-        check(End, """End()""")
-        check(Start, """Start()""")
-        check(Pass, """Pass()""")
-        check(Fail, """Fail()""")
-        check(AnyChar, """AnyElem()""")
+        check(End, """End""")
+        check(Start, """Start""")
+        check(Pass, """Pass""")
+        check(Fail, """Fail""")
+        check(AnyChar, """AnyElem""")
         check(CharIn("abc", "d", Seq('1', '2', '3')), """CharIn("abcd123")""")
         check(
           StringIn("mango", "mandarin", "mangosteen"),
           """StringIn("mango", "mandarin", "mangosteen")"""
         )
-        check(CharPred(_.isUpper), """CharPred(<function1>)""")
+        check(CharPred(_.isUpper), """ElemPred(<function1>)""")
       }
     }
     'logging{

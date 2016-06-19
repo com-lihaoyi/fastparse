@@ -2,7 +2,7 @@ package fastparse
 package core
 import acyclic.file
 import fastparse.Utils._
-import fastparse.ParserHelper._
+import fastparse.ElemTypeFormatter._
 
 import scala.collection.mutable
 /**
@@ -26,36 +26,36 @@ sealed trait Parsed[+T, ElemType]{
    * Converts this instance of [[Parsed]] into a [[Parsed.Success]] or 
    * throws an exception if it was a failure.
    */
-  def get(implicit helper: ParserHelper[ElemType]): Parsed.Success[T, ElemType] = this match{
+  def get(implicit formatter: ElemTypeFormatter[ElemType]): Parsed.Success[T, ElemType] = this match{
     case s: Parsed.Success[T, ElemType] => s
     case f: Parsed.Failure[ElemType] => throw new ParseError[ElemType](f)
   }
 }
 
 case class ParseError[ElemType](failure: Parsed.Failure[ElemType])
-                               (implicit helper: ParserHelper[ElemType]) extends Exception(
+                               (implicit formatter: ElemTypeFormatter[ElemType]) extends Exception(
   ParseError.msg0(failure.extra.input, failure.extra.traced.expected, failure.index)
 )
 
 object ParseError{
   def msg[ElemType](code: IndexedSeq[ElemType], expected: String, idx: Int)
-                   (implicit helper: ParserHelper[ElemType])= {
+                   (implicit formatter: ElemTypeFormatter[ElemType])= {
     "SyntaxError: " + msg0(code, expected, idx)
   }
 
   def msg0[ElemType](code: IndexedSeq[ElemType], expected: String, idx: Int)
-                    (implicit helper: ParserHelper[ElemType]) = {
+                    (implicit formatter: ElemTypeFormatter[ElemType]) = {
     val locationCode = {
       val (first, last) = code.splitAt(idx)
-      val lastSnippet = Utils.split(last, helper.delimiter).headOption.
-        getOrElse(helper.emptyElem)
-      val firstSnippet = Utils.split(first.reverse, helper.delimiter).headOption.
-        getOrElse(helper.emptyElem).reverse
+      val lastSnippet = Utils.split(last, formatter.delimiter).headOption.
+        getOrElse(formatter.emptyElem)
+      val firstSnippet = Utils.split(first.reverse, formatter.delimiter).headOption.
+        getOrElse(formatter.emptyElem).reverse
 
-      helper.convertToString(firstSnippet) +
-        helper.convertToString(lastSnippet) + "\n" + (" " * firstSnippet.length) + "^"
+      formatter.prettyPrint(firstSnippet) +
+        formatter.prettyPrint(lastSnippet) + "\n" + (" " * firstSnippet.length) + "^"
     }
-    val literal = helper.literalize(code.slice(idx, idx + 20))
+    val literal = formatter.literalize(code.slice(idx, idx + 20))
     s"found $literal, expected $expected at index $idx\n$locationCode"
   }
 }
@@ -66,8 +66,8 @@ object Parsed {
 
   private[core] object Position {
     def computeFrom[ElemType](input: IndexedSeq[ElemType], index: Int)
-                             (implicit helper: ParserHelper[ElemType]) : Position = {
-      val lines = Utils.split(input.take(1 + index), helper.delimiter)
+                             (implicit formatter: ElemTypeFormatter[ElemType]) : Position = {
+      val lines = Utils.split(input.take(1 + index), formatter.delimiter)
       val line = lines.length
       val col = lines.lastOption.map(_.length).getOrElse(0)
       Position(line, col)
@@ -95,7 +95,7 @@ object Parsed {
   case class Failure[ElemType](lastParser: Parser[_, ElemType, _],
                                index: Int,
                                extra: Failure.Extra[ElemType])
-                              (implicit helper: ParserHelper[ElemType]) extends Parsed[Nothing, ElemType]{
+                              (implicit formatter: ElemTypeFormatter[ElemType]) extends Parsed[Nothing, ElemType]{
 
     def msg = Failure.formatStackTrace(
       Nil, extra.input, index, Failure.formatParser(lastParser, extra.input, index)
@@ -124,23 +124,23 @@ object Parsed {
       class Impl[ElemType](val input: IndexedSeq[ElemType],
                            startParser: Parser[_, ElemType, _], startIndex: Int,
                            lastParser: Parser[_, ElemType, _], index: Int)
-                          (implicit helper: ParserHelper[ElemType]) extends Extra[ElemType] {
-        
+                          (implicit formatter: ElemTypeFormatter[ElemType]) extends Extra[ElemType] {
+
         lazy val traced = TracedFailure(input, index, lastParser, (startIndex, startParser))
 
         lazy val pos = Position.computeFrom(input, index)
-        
-        lazy val line = pos.line
-        
-        lazy val col = pos.column 
 
-        override def toString = s"Extra(${helper.convertToString(input)}, [traced - not evaluated])"
+        lazy val line = pos.line
+
+        lazy val col = pos.column
+
+        override def toString = s"Extra(${formatter.prettyPrint(input)}, [traced - not evaluated])"
       }
     }
 
 
     def formatParser[ElemType](p: Precedence, input: IndexedSeq[ElemType], index: Int)
-                              (implicit helper: ParserHelper[ElemType])= {
+                              (implicit formatter: ElemTypeFormatter[ElemType])= {
       val pos = Position.computeFrom(input, index)
       s"${Precedence.opWrap(p, Precedence.`:`)}:${pos.line}:${pos.column}"
     }
@@ -148,11 +148,11 @@ object Parsed {
                                   input: IndexedSeq[ElemType],
                                   index: Int,
                                   last: String)
-                                  (implicit helper: ParserHelper[ElemType]) = {
+                                  (implicit formatter: ElemTypeFormatter[ElemType]) = {
       val body =
         for (Frame(index, p) <- stack)
         yield formatParser(p, input, index)
-      (body :+ last).mkString(" / ") + " ..." + helper.literalize(input.slice(index, index + 10))
+      (body :+ last).mkString(" / ") + " ..." + formatter.literalize(input.slice(index, index + 10))
     }
     def filterFullStack(fullStack: Seq[Frame]) = {
       fullStack.collect { case f @ Frame(i, p) if p.shortTraced => f }
@@ -176,7 +176,7 @@ object Parsed {
                                      index: Int,
                                      fullStack: Vector[Frame],
                                      traceParsers: Set[Parser[_, ElemType, _]])
-                                    (implicit helper: ParserHelper[ElemType]){
+                                    (implicit formatter: ElemTypeFormatter[ElemType]){
 
     private[this] lazy val expected0 = new Precedence {
       def opPred = if (traceParsers.size == 1) traceParsers.head.opPred else Precedence.|
@@ -209,7 +209,7 @@ object Parsed {
   object TracedFailure{
     def apply[ElemType](input: IndexedSeq[ElemType], index: Int,
                         lastParser: Parser[_, ElemType, _], traceData: (Int, Parser[_, ElemType, _]))
-                       (implicit helper: ParserHelper[ElemType]) = {
+                       (implicit formatter: ElemTypeFormatter[ElemType]) = {
       val (originalIndex, originalParser) = traceData
 
       val mutFailure = originalParser.parseRec(
@@ -256,7 +256,8 @@ object Mutable{
 
   /**
    * A mutable version of [[Parsed.Success]] with extra data.
-   * @param traceParsers If a `traceIndex` is provided, this will contain any
+    *
+    * @param traceParsers If a `traceIndex` is provided, this will contain any
    *                     parsers within this [[Success]] that failed at exactly
    *                     that index, which will be used for error reporting.
    *                     If you are writing your own custom [[Parser]] and it
@@ -300,7 +301,7 @@ object Mutable{
                                traceIndex: Int,
                                var traceParsers: Set[Parser[_, ElemType, _]],
                                var cut: Boolean)
-                              (implicit helper: ParserHelper[ElemType]) extends Mutable[Nothing, ElemType]{
+                              (implicit formatter: ElemTypeFormatter[ElemType]) extends Mutable[Nothing, ElemType]{
     def toResult = {
       val extra = new Parsed.Failure.Extra.Impl(input, originalParser, originalIndex, lastParser, index)
       Parsed.Failure(lastParser, index, extra)
@@ -326,7 +327,7 @@ class ParseCtx[ElemType](val input: IndexedSeq[ElemType],
                          val originalParser: Parser[_, ElemType, _],
                          val originalIndex: Int,
                          val instrument: (Parser[_, ElemType, _], Int, () => Parsed[_, ElemType]) => Unit)
-                        (implicit helper: ParserHelper[ElemType]){
+                        (implicit formatter: ElemTypeFormatter[ElemType]){
   require(logDepth >= -1, "logDepth can only be -1 (for no logs) or >= 0")
   require(traceIndex >= -1, "traceIndex can only be -1 (for no tracing) or an index 0")
   val failure = Mutable.Failure[ElemType](
@@ -367,7 +368,7 @@ trait Parser[+T, ElemType, Repr] extends ParserResults[T, ElemType] with Precede
   def parse(input: IndexedSeq[ElemType],
             index: Int = 0,
             instrument: (Parser[_, _, _], Int, () => Parsed[_, ElemType]) => Unit = null)
-           (implicit helper: ParserHelper[ElemType])
+           (implicit formatter: ElemTypeFormatter[ElemType])
             : Parsed[T, ElemType] = {
     parseRec(new ParseCtx(input, 0, -1, this, index, instrument), index).toResult
   }

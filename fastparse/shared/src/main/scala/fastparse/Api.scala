@@ -2,7 +2,7 @@ package fastparse
 import language.experimental.macros
 import fastparse.parsers.{Intrinsics, Terminals}
 import acyclic.file
-import fastparse.Utils.{ElemHelper, HexUtils}
+import fastparse.Utils.HexUtils
 import fastparse.parsers.Intrinsics.ElemsWhile
 
 /**
@@ -26,8 +26,8 @@ trait Api[ElemType, Repr] {
   val Index = parsers.Terminals.Index[ElemType, Repr]()
   val AnyElem = parsers.Terminals.AnyElem[ElemType, Repr]()
 
-  implicit val elemHelper: ElemHelper[ElemType]
-  implicit val parserHelper: ParserHelper[ElemType]
+  implicit val elemSetHelper: ElemSetHelper[ElemType]
+  implicit val elemFormatter: ElemTypeFormatter[ElemType]
   implicit val ordering: Ordering[ElemType]
 
   val ElemPred = Intrinsics.ElemPred[ElemType, Repr] _
@@ -52,8 +52,8 @@ trait Api[ElemType, Repr] {
 
 trait StringApi extends Api[Char, String] {
 
-  val elemHelper = implicitly[ElemHelper[Char]]
-  val parserHelper = implicitly[ParserHelper[Char]]
+  val elemSetHelper = implicitly[ElemSetHelper[Char]]
+  val elemFormatter = implicitly[ElemTypeFormatter[Char]]
   val ordering = implicitly[Ordering[Char]]
 
   val AnyChar = AnyElem
@@ -71,19 +71,19 @@ trait StringApi extends Api[Char, String] {
     else parsers.Terminals.Literal(s)
 }
 
-object allString extends StringApi{
+object all extends StringApi{
   implicit def parserApi[T, V](p: T)(implicit c: T => core.Parser[V, Char, String]): ParserApi[V, Char, String] =
     new ParserApiImpl[V, Char, String](p)
 }
-object emptyStringApi extends StringApi
+object noApi extends StringApi
 
 
 trait ByteApi extends Api[Byte, Array[Byte]] {
 
   val AnyByte = AnyElem
 
-  val elemHelper = implicitly[ElemHelper[Byte]]
-  val parserHelper = implicitly[ParserHelper[Byte]]
+  val elemSetHelper = implicitly[ElemSetHelper[Byte]]
+  val elemFormatter = implicitly[ElemTypeFormatter[Byte]]
   val ordering = implicitly[Ordering[Byte]]
 
   val BytePred = ElemPred
@@ -99,23 +99,23 @@ trait ByteApi extends Api[Byte, Array[Byte]] {
     if (seq.length == 1) parsers.Terminals.ElemLiteral(seq(0))
     else parsers.Terminals.Literal(seq)
 
-  implicit class ByteSeqUtils(s: String) {
+  object BytesParser {
+    import all._
+
     val hexChars = HexUtils.hexChars
 
-    def toBytes: Array[Byte] = {
-      import allString._
-
-      def strToByte(s: String): Byte = {
-        (hexChars.indexOf(s(1)) + hexChars.indexOf(s(0)) * 16).toByte
-      }
-
-      val hexDigit = allString.P( CharIn('0' to '9', 'a' to 'f', 'A' to 'F') )
-      val byte = allString.P( "0x".? ~ hexDigit.rep(min=2, max=2).! ).map(s => strToByte(s.toLowerCase))
-      val byteSep = allString.P(" ".rep)
-      val bytes = allString.P( byteSep ~ byte.rep(sep=byteSep) ).map(_.toArray)
-
-      bytes.parse(s.toIndexedSeq).get.value
+    def charsToByte(s: String): Byte = {
+      (hexChars.indexOf(s(1)) + hexChars.indexOf(s(0)) * 16).toByte
     }
+
+    val hexDigit = all.P(CharIn('0' to '9', 'a' to 'f', 'A' to 'F'))
+    val byte = all.P("0x".? ~ hexDigit.rep(min = 2, max = 2).!).map(s => charsToByte(s.toLowerCase))
+    val byteSep = all.P(" ".rep)
+    val bytes = all.P(byteSep ~ byte.rep(sep = byteSep)).map(_.toArray)
+  }
+
+  def strToBytes(s: String): Array[Byte] = {
+    BytesParser.bytes.parse(s.toIndexedSeq).get.value
   }
 }
 

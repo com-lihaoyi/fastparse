@@ -2,7 +2,7 @@ package fastparse.parsers
 import acyclic.file
 import fastparse.Utils._
 import fastparse.core.{ParseCtx, Parsed, Parser, Precedence}
-import fastparse.{ParserHelper, Utils}
+import fastparse.{ElemSetHelper, ElemTypeFormatter, Utils}
 
 /**
  * High-performance intrinsics for parsing common patterns. All
@@ -13,7 +13,7 @@ import fastparse.{ParserHelper, Utils}
 object Intrinsics {
 
   abstract class ElemSet[ElemType, R](elems: Seq[ElemType])
-                                     (implicit helper: ElemHelper[ElemType],
+                                     (implicit helper: ElemSetHelper[ElemType],
                                                ordering: Ordering[ElemType])
       extends Parser[Unit, ElemType, R]{
     private[this] val uberSet = BitSet(elems)
@@ -28,7 +28,7 @@ object Intrinsics {
    * Parses a single character if it passes the predicate
    */
   case class ElemPred[ElemType, R](predicate: ElemType => Boolean)
-                                  (implicit helper: ElemHelper[ElemType],
+                                  (implicit helper: ElemSetHelper[ElemType],
                                             ordering: Ordering[ElemType])
     extends ElemSet[ElemType, R](helper.allValues.filter(predicate)){}
 
@@ -36,11 +36,11 @@ object Intrinsics {
    * Parses a single character if its contained in the lists of allowed characters
    */
   case class ElemIn[ElemType, R](strings: IndexedSeq[ElemType]*)
-                                (implicit helper: ParserHelper[ElemType],
-                                          ehelper: ElemHelper[ElemType],
-                                          ordering: Ordering[ElemType])
+                                (implicit formatter: ElemTypeFormatter[ElemType],
+                                 ehelper: ElemSetHelper[ElemType],
+                                 ordering: Ordering[ElemType])
       extends ElemSet[ElemType, R](strings.flatten){
-    override def toString = s"CharIn(${helper.literalize(strings.flatten.toIndexedSeq)})"
+    override def toString = s"CharIn(${formatter.literalize(strings.flatten.toIndexedSeq)})"
   }
 
   /**
@@ -48,7 +48,7 @@ object Intrinsics {
    * Functionally equivalent to using `.rep` and [[ElemPred]], but much faster.
    */
   case class ElemsWhile[ElemType, R](pred: ElemType => Boolean, min: Int = 1)
-                                    (implicit helper: ElemHelper[ElemType],
+                                    (implicit helper: ElemSetHelper[ElemType],
                                               ordering: Ordering[ElemType])
       extends Parser[Unit, ElemType, R]{
     private[this] val uberSet = BitSet(helper.allValues.filter(pred))
@@ -67,9 +67,9 @@ object Intrinsics {
    * If multiple strings match the input, longest match wins.
    */
   case class StringIn[ElemType, R](strings: IndexedSeq[ElemType]*)
-                                  (implicit helper: ParserHelper[ElemType],
-                                            ehelper: ElemHelper[ElemType],
-                                            ordering: Ordering[ElemType])
+                                  (implicit formatter: ElemTypeFormatter[ElemType],
+                                   helper: ElemSetHelper[ElemType],
+                                   ordering: Ordering[ElemType])
       extends Parser[Unit, ElemType, R] {
 
     private[this] val trie = new TrieNode[ElemType](strings)
@@ -80,7 +80,7 @@ object Intrinsics {
       else fail(cfg.failure, index)
     }
     override def toString = {
-      s"StringIn(${strings.map(helper.literalize).mkString(", ")})"
+      s"StringIn(${strings.map(formatter.literalize).mkString(", ")})"
     }
   }
 }

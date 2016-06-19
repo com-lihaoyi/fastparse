@@ -1,5 +1,5 @@
 package fastparse
-import allString._
+import all._
 import utest._
 
 object ParsingTests extends TestSuite{

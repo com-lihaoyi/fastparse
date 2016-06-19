@@ -1,6 +1,6 @@
 package fastparse.parsers
 import acyclic.file
-import fastparse.{ConversionHelper, Implicits, ParserHelper}
+import fastparse.{ResultBuilder, Implicits, ElemTypeFormatter}
 import Terminals._
 import fastparse.core.Parsed._
 import fastparse.core.Mutable
@@ -17,14 +17,14 @@ object Combinators {
    * Captures the string parsed by the given parser [[p]].
    */
   case class Capturing[ElemType, Repr](p: Parser[_, ElemType, Repr])
-                                      (implicit convHelper: ConversionHelper[ElemType, Repr])
+                                      (implicit builder: ResultBuilder[ElemType, Repr])
       extends Parser[Repr, ElemType, Repr] {
     def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
       p.parseRec(cfg, index) match {
         case Mutable.Success(value0, index0, traceParsers0, cut0) =>
           success(
             cfg.success,
-            convHelper.convert(cfg.input.slice(index, index0)),
+            builder.convert(cfg.input.slice(index, index0)),
             index0,
             traceParsers0,
             cut0
@@ -98,7 +98,7 @@ object Combinators {
    */
   case class Logged[+T, ElemType, R](p: Parser[T, ElemType, R],
                                   msg: String, output: String => Unit)
-                                 (implicit helper: ParserHelper[ElemType]) extends Parser[T, ElemType, R]{
+                                 (implicit formatter: ElemTypeFormatter[ElemType]) extends Parser[T, ElemType, R]{
     def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
       if (cfg.logDepth == -1) p.parseRec(cfg, index)
       else {

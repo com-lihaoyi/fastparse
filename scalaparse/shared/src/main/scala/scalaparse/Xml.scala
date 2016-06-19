@@ -2,7 +2,7 @@ package scalaparse
 
 import acyclic.file
 import syntax.Basic
-import fastparse.allString._
+import fastparse.all._
 
 import scala.language.implicitConversions
 
