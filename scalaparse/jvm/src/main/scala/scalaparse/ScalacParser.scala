@@ -51,7 +51,6 @@ object ScalacParser{
       }
     }
     parser.parse()
-//    println("Scalac Parser fail " + fail)
     fail
   }
 }

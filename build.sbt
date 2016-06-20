@@ -132,6 +132,12 @@ lazy val cssparse = crossProject
 lazy val cssparseJVM = cssparse.jvm
 lazy val cssparseJS = cssparse.js
 
+lazy val perftests = crossProject.settings(
+  name := "perfomance-tests"
+).settings(shared:_*).dependsOn(fastparse, pythonparse, scalaparse, cssparse)
+lazy val perftestsJS = perftests.js
+lazy val perftestsJVM = perftests.jvm
+
 lazy val modules = project.aggregate(
   fastparseJS,
   fastparseJVM,
@@ -142,7 +148,9 @@ lazy val modules = project.aggregate(
   scalaparseJS,
   scalaparseJVM,
   utilsJS,
-  utilsJVM
+  utilsJVM,
+  perftestsJS,
+  perftestsJVM
 ).settings(
   publishArtifact := false,
   publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))

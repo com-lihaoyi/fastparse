@@ -4,10 +4,8 @@ import java.nio.file.{Paths, Path, Files}
 import concurrent.ExecutionContext.Implicits.global
 import utest._
 
-import scala.collection.mutable
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
-import scalaparse.PerfTests._
 
 object ProjectTests extends TestSuite{
 
