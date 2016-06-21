@@ -148,9 +148,7 @@ lazy val modules = project.aggregate(
   scalaparseJS,
   scalaparseJVM,
   utilsJS,
-  utilsJVM,
-  perftestsJS,
-  perftestsJVM
+  utilsJVM
 ).settings(
   publishArtifact := false,
   publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))

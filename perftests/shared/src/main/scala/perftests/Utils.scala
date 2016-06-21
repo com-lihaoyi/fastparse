@@ -13,6 +13,6 @@ object Utils {
   }
 
   def benchmark(fs: Seq[() => Unit], iterations: Int = 5, maxTime: Int = 10000): Seq[Seq[Int]] = {
-    fs.map(f => (1 to iterations).map(i => time(f, maxTime))) //TODO change the order of cycles
+    (1 to iterations).map(i => fs.map(f => time(f, maxTime)))
   }
 }
