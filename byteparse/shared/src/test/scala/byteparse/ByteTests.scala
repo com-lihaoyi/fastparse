@@ -1,7 +1,8 @@
-package fastparse
+package byteparse
 
+import fastparse.Logger
 import utest._
-import allByte._
+import fastparse.allByte._
 
 object ByteTests extends TestSuite {
 
@@ -169,7 +170,6 @@ object ByteTests extends TestSuite {
 
       'original{
         object Foo{
-          import fastparse.allByte._
 
           val int = P( BS(0) ~ AnyByte.rep(exactly=4).! ).map(bytesToInt)
           val longInt = P( BS(-1) ~ AnyByte.rep(exactly=8).! ).map(bytesToLongInt)
@@ -184,7 +184,6 @@ object ByteTests extends TestSuite {
       }
       'cuts{
         object Foo{
-          import fastparse.allByte._
 
           val int = P( BS(0) ~/ AnyByte.rep(exactly=4).! ).map(bytesToInt)
           val longInt = P( BS(-1) ~/ AnyByte.rep(exactly=8).! ).map(bytesToLongInt)
@@ -199,7 +198,6 @@ object ByteTests extends TestSuite {
         val captured = collection.mutable.Buffer.empty[String]
         implicit val logger = Logger(captured.append(_))
         object Foo{
-          import fastparse.allByte._
 
           val int = P( BS(0) ~/ AnyByte.rep(exactly=4).! ).map(bytesToInt).log()
           val longInt = P( BS(-1) ~/ AnyByte.rep(exactly=8).! ).map(bytesToLongInt).log()

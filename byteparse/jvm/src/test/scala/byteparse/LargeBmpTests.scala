@@ -1,17 +1,17 @@
-package fastparse
+package byteparse
 
 import java.awt.Color
 import java.awt.image.BufferedImage
-import java.io.File
 import java.nio.file.{Files, Paths}
 import javax.imageio.ImageIO
 
-import fastparse.BmpTests.BmpAst.{Bmp, Pixel}
-import fastparse.BmpTests._
-import fastparse.core.Parsed
 import utest._
+import fastparse.allByte._
 
 object LargeBmpTests extends TestSuite {
+  import BmpParser._
+  import BmpParser.BmpAst._
+
   val tests = TestSuite {
     'lena {
       val lenaRecource = getClass.getResource("/lena.bmp")
