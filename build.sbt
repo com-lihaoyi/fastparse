@@ -142,7 +142,7 @@ lazy val byteparseJS = byteparse.js
 
 lazy val perftests = crossProject.settings(
   name := "perfomance-tests"
-).settings(shared:_*).dependsOn(fastparse, pythonparse, scalaparse, cssparse)
+).settings(shared:_*).dependsOn(fastparse, pythonparse, scalaparse, cssparse, byteparse)
 lazy val perftestsJS = perftests.js
 lazy val perftestsJVM = perftests.jvm
 

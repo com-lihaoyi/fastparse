@@ -12,4 +12,5 @@ script:
 - sbt ++$TRAVIS_SCALA_VERSION "test-only -- perftests.ScalaParse"
 - sbt ++$TRAVIS_SCALA_VERSION "test-only -- perftests.PythonParse"
 - sbt ++$TRAVIS_SCALA_VERSION "test-only -- perftests.CssParse"
+- sbt ++$TRAVIS_SCALA_VERSION "test-only -- perftests.ByteParse"
 sudo: false
