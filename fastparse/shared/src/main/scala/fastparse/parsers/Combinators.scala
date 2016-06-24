@@ -1,12 +1,13 @@
 package fastparse.parsers
 import acyclic.file
-import fastparse.{ResultBuilder, Implicits, ElemTypeFormatter}
+import fastparse.{ElemTypeFormatter, Implicits, ResultBuilder}
 import Terminals._
 import fastparse.core.Parsed._
 import fastparse.core.Mutable
 import fastparse.core.{ParseCtx, Parsed, Parser, Precedence}
 
 import scala.annotation.tailrec
+import scala.collection.mutable.ArrayBuffer
 /**
  * Parsers which are made up of other parsers,
  * adding to or combining their behavior
@@ -231,7 +232,7 @@ object Combinators {
     case class Chain[R, ElemType, Repr](p: Parser[R, ElemType, Repr], cut: Boolean)
                                        (val ev: Implicits.Sequencer[R, R, R])
     case class Flat[R, ElemType, Repr](p0: Parser[R, ElemType, Repr],
-                                       ps: Vector[Chain[R, ElemType, Repr]]) extends
+                                       ps: ArrayBuffer[Chain[R, ElemType, Repr]]) extends
         Parser[R, ElemType, Repr] {
       def parseRec(cfg: ParseCtx[ElemType], index: Int): Mutable[R, ElemType] = {
         /**
@@ -305,7 +306,7 @@ object Combinators {
           case p: Sequence[R, R, R, ElemType, Repr] =>
             val res = rec(p)
             res.copy(ps = res.ps :+ Chain[R, ElemType, Repr](s.p2, s.cut)(ev2))
-          case p => Flat(p, Vector(Chain[R, ElemType, Repr](s.p2, s.cut)(ev2)))
+          case p => Flat(p, ArrayBuffer(Chain[R, ElemType, Repr](s.p2, s.cut)(ev2)))
         }
       }
       rec(s)
