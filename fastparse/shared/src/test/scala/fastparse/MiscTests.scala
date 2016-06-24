@@ -3,6 +3,7 @@ import all._
 import utest._
 
 import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 
 object MiscTests extends TestSuite{
 
@@ -103,8 +104,8 @@ object MiscTests extends TestSuite{
         val F = S.Flat
         def C(p: P0, b: Boolean = false) = S.Chain(p, b)(null)
         // Need to be pulled out because it makes utest crash
-        val expected1 = F("A", Vector(C("B"), C("C"), C("D")))
-        val expected2 = F("A", Vector(C("B"), C(F("C", Vector(C("D"))))))
+        val expected1 = F("A", ArrayBuffer(C("B"), C("C"), C("D")))
+        val expected2 = F("A", ArrayBuffer(C("B"), C(F("C", ArrayBuffer(C("D"))))))
         assert(
           ("A" ~ "B" ~ "C" ~ "D") == expected1,
           (("A" ~ "B") ~ ("C" ~ "D")) == expected2
