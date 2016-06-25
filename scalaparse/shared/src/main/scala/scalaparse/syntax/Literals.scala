@@ -85,7 +85,7 @@ trait Literals { l =>
        * to be a dud and we go back into a CharsChunk next rep
        */
       val StringChars = P( CharsWhile(!"\n\"\\$".contains(_)) )
-      val NonTripleQuoteChar = P( "\"" ~ "\"".? ~ !"\"" | Intrinsics.CharIn("\\$\n") )
+      val NonTripleQuoteChar = P( "\"" ~ "\"".? ~ !"\"" | Intrinsics.ElemIn("\\$\n") )
       val TripleChars = P( (StringChars | Interp | NonTripleQuoteChar).rep )
       val TripleTail = P( TQ ~ "\"".rep )
       def SingleChars(allowSlash: Boolean) = {

@@ -1,8 +1,8 @@
 package scalaparse
 
 import fastparse._
-import fastparse.core.Parsed
 import utest._
+import fastparse.all._
 
 
 import scalaparse.Scala._

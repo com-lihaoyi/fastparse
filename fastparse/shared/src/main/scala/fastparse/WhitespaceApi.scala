@@ -22,15 +22,15 @@ object WhitespaceApi {
    */
   case class CustomSequence[+T, +R, +V](WL: P0, p0: P[T], p: P[V], cut: Boolean)
                                        (implicit ev: Sequencer[T, V, R]) extends P[R] {
-    def parseRec(cfg: ParseCtx, index: Int) = {
+    def parseRec(cfg: ParseCtx[Char], index: Int) = {
       p0.parseRec(cfg, index) match {
-        case f: Mutable.Failure => failMore(f, index, cfg.logDepth, f.traceParsers, false)
+        case f: Mutable.Failure[Char] => failMore(f, index, cfg.logDepth, f.traceParsers, false)
         case Mutable.Success(value0, index0, traceParsers0, cut0) =>
           WL.parseRec(cfg, index0) match {
-            case f1: Mutable.Failure => failMore(f1, index, cfg.logDepth)
+            case f1: Mutable.Failure[Char] => failMore(f1, index, cfg.logDepth)
             case Mutable.Success(value1, index1, traceParsers1, cut1) =>
               p.parseRec(cfg, index1) match {
-                case f: Mutable.Failure => failMore(
+                case f: Mutable.Failure[Char] => failMore(
                   f, index1, cfg.logDepth,
                   mergeTrace(cfg.traceIndex, traceParsers0, f.traceParsers),
                   cut | cut0
@@ -83,9 +83,12 @@ class WhitespaceApi[+T](p0: P[T], WL: P0) extends ParserApiImpl(p0)  {
   def repX[R](min: Int = 0, sep: P[_] = Pass, max: Int = Int.MaxValue)
              (implicit ev: Repeater[T, R]): P[R] = Repeat(p0, min, max, sep)
 
-  override def rep[R](min: Int = 0, sep: P[_] = Pass, max: Int = Int.MaxValue)
+  override def rep[R](min: Int = 0, sep: P[_] = Pass,
+                      max: Int = Int.MaxValue, exactly: Int = -1)
                      (implicit ev: Repeater[T, R]): P[R] = {
-    Repeat(p0, min, max, if (sep != Pass) NoCut(WL) ~ sep ~ NoCut(WL) else NoCut(WL))
+    Repeat(p0,
+      if (exactly < 0) min else exactly, if (exactly < 0) max else exactly,
+      if (sep != Pass) NoCut(WL) ~ sep ~ NoCut(WL) else NoCut(WL))
   }
 
   def ~~[V, R](p: P[V])

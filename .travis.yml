@@ -6,5 +6,11 @@ jdk:
 - oraclejdk7
 - oraclejdk8
 script:
-- sbt readme/run ++$TRAVIS_SCALA_VERSION modules/compile; sbt ++$TRAVIS_SCALA_VERSION modules/test
+- sbt readme/run ++$TRAVIS_SCALA_VERSION modules/compile
+- sbt ++$TRAVIS_SCALA_VERSION modules/test
+- sbt ++$TRAVIS_SCALA_VERSION perftestsJVM/compile; sbt ++$TRAVIS_SCALA_VERSION perftestsJS/compile
+- sbt ++$TRAVIS_SCALA_VERSION "perftestsJVM/test-only -- perftests.ScalaParse"
+- sbt ++$TRAVIS_SCALA_VERSION "perftestsJVM/test-only -- perftests.PythonParse"
+- sbt ++$TRAVIS_SCALA_VERSION "perftestsJVM/test-only -- perftests.CssParse"
+- sbt ++$TRAVIS_SCALA_VERSION "perftestsJVM/test-only -- perftests.ByteParse"
 sudo: false

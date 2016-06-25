@@ -3,12 +3,13 @@ import all._
 import utest._
 
 import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 
 object MiscTests extends TestSuite{
 
   val tests = TestSuite{
     'toString{
-      def check(p: fastparse.core.Parser[_], s: String) = {
+      def check(p: Parser[_], s: String) = {
         assert(p.toString == s.trim)
       }
       'Either {
@@ -55,13 +56,13 @@ object MiscTests extends TestSuite{
         check(Start, """Start""")
         check(Pass, """Pass""")
         check(Fail, """Fail""")
-        check(AnyChar, """AnyChar""")
+        check(AnyChar, """AnyElem""")
         check(CharIn("abc", "d", Seq('1', '2', '3')), """CharIn("abcd123")""")
         check(
           StringIn("mango", "mandarin", "mangosteen"),
           """StringIn("mango", "mandarin", "mangosteen")"""
         )
-        check(CharPred(_.isUpper), """CharPred(<function1>)""")
+        check(CharPred(_.isUpper), """ElemPred(<function1>)""")
       }
     }
     'logging{
@@ -103,8 +104,8 @@ object MiscTests extends TestSuite{
         val F = S.Flat
         def C(p: P0, b: Boolean = false) = S.Chain(p, b)(null)
         // Need to be pulled out because it makes utest crash
-        val expected1 = F("A", Vector(C("B"), C("C"), C("D")))
-        val expected2 = F("A", Vector(C("B"), C(F("C", Vector(C("D"))))))
+        val expected1 = F("A", ArrayBuffer(C("B"), C("C"), C("D")))
+        val expected2 = F("A", ArrayBuffer(C("B"), C(F("C", ArrayBuffer(C("D"))))))
         assert(
           ("A" ~ "B" ~ "C" ~ "D") == expected1,
           (("A" ~ "B") ~ ("C" ~ "D")) == expected2
@@ -130,8 +131,8 @@ object MiscTests extends TestSuite{
       val literal = wspStr("ab")
       val charLiteral = wspStr("a")
       assert(
-        literal.isInstanceOf[parsers.Terminals.Literal],
-        charLiteral.isInstanceOf[parsers.Terminals.CharLiteral]
+        literal.isInstanceOf[parsers.Terminals.Literal[Char, String]],
+        charLiteral.isInstanceOf[parsers.Terminals.ElemLiteral[Char, String]]
       )
     }
     'failureget{
@@ -148,8 +149,8 @@ object MiscTests extends TestSuite{
     }
     'utils{
       'trieNode {
-        val names = (0 until 1000).map(_.toString.flatMap(_.toString * 5))
-        val trie = new Utils.TrieNode(names)
+        val names = (0 until 1000).map(_.toString.flatMap(_.toString * 5).toIndexedSeq)
+        val trie = new Utils.TrieNode[Char](names)
         for (name <- names)
           assert(trie.query(name, 0) != -1)
       }

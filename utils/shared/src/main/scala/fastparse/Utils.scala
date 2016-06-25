@@ -1,27 +1,29 @@
 package fastparse
 
-import scala.annotation.{tailrec, switch}
+import scala.annotation.{switch, tailrec}
 import acyclic.file
-import scala.collection.mutable
 
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
 import scala.language.experimental.macros
+import fastparse.ElemSetHelper
 
 object MacroUtils{
   /**
    * Takes a predicate and pre-generates a base64 encoded bit-set, that
-   * evaluates at run-time to create a [[Utils.CharBitSet]]. Useful for pre-computing
+   * evaluates at run-time to create a [[Utils.BitSet]]. Useful for pre-computing
    * Char predicates that are unfeasible at runtime, e.g. because they're too
    * slow or because they don't work in Scala.js
    */
-  def preCompute(pred: Char => Boolean): fastparse.Utils.CharBitSet = macro preComputeImpl
+  def preCompute(pred: Char => Boolean): fastparse.Utils.BitSet[Char] = macro preComputeImpl
 
-  def preComputeImpl(c: Compat.Context)(pred: c.Expr[Char => Boolean]): c.Expr[Utils.CharBitSet] = {
+  def preComputeImpl(c: Compat.Context)(pred: c.Expr[Char => Boolean]): c.Expr[Utils.BitSet[Char]] = {
     import c.universe._
     val evaled = c.eval(c.Expr[Char => Boolean](c.resetLocalAttrs(pred.tree.duplicate)))
-    val (first, last, array) = Utils.CharBitSet.compute((Char.MinValue to Char.MaxValue).filter(evaled))
-    val txt = Utils.CharBitSet.ints2Hex(array)
-    c.Expr[Utils.CharBitSet](q"""
-      new fastparse.Utils.CharBitSet(fastparse.Utils.CharBitSet.hex2Ints($txt), $first, $last)
+    val (first, last, array) = Utils.BitSet.compute((Char.MinValue to Char.MaxValue).filter(evaled))
+    val txt = Utils.HexUtils.ints2Hex(array)
+    c.Expr[Utils.BitSet[Char]](q"""
+      new fastparse.Utils.BitSet(fastparse.Utils.HexUtils.hex2Ints($txt), $first, $last)
     """)
   }
 }
@@ -30,13 +32,13 @@ object Utils {
    * Convert a string to a C&P-able literal. Basically
    * copied verbatim from the uPickle source code.
    */
-  def literalize(s: String, unicode: Boolean = true) = {
+  def literalize(s: IndexedSeq[Char], unicode: Boolean = true) = {
     val sb = new StringBuilder
     sb.append('"')
     var i = 0
     val len = s.length
     while (i < len) {
-      (s.charAt(i): @switch) match {
+      (s(i): @switch) match {
         case '"' => sb.append("\\\"")
         case '\\' => sb.append("\\\\")
         case '\b' => sb.append("\\b")
@@ -52,9 +54,31 @@ object Utils {
     }
     sb.append('"')
 
+    sb.result()
   }
 
-  object CharBitSet{
+  /**
+    * Split a sequence by the delimiter element.
+    */
+  def split[ElemType](seq: IndexedSeq[ElemType], delim: ElemType): Seq[IndexedSeq[ElemType]] = {
+    var curBuilder = seq.genericBuilder[ElemType]
+    val res = ArrayBuffer[IndexedSeq[ElemType]]()
+    for (x <- seq) {
+      if (x == delim) {
+        res += curBuilder.result()
+        curBuilder = seq.genericBuilder[ElemType]
+      } else {
+        curBuilder += x
+      }
+    }
+
+    if (curBuilder.result().nonEmpty)
+      res += curBuilder.result()
+
+    res
+  }
+
+  object HexUtils {
     val hexChars = Seq(
       '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
       'a', 'b', 'c', 'd', 'e', 'f'
@@ -69,8 +93,8 @@ object Utils {
     def hex2Ints(hex: String): Array[Int] = {
       val res = for {
         i <- 0 to hex.length - 1 by 8
-        // parseUnsignedInt not implemented in Scala.js
-        // java.lang.Long.parseLong also misbehaves
+      // parseUnsignedInt not implemented in Scala.js
+      // java.lang.Long.parseLong also misbehaves
       } yield hex2Int(hex.slice(i, i+8))
       res.toArray
     }
@@ -82,17 +106,22 @@ object Utils {
       }
       res.mkString
     }
-    def compute(chars: Seq[Char]) = {
-      val first = chars.min
-      val last = chars.max
+  }
+
+  object BitSet {
+    def compute[Elem](elems: Seq[Elem])
+                     (implicit helper: ElemSetHelper[Elem], ordering: Ordering[Elem]) = {
+      val first = helper.toInt(elems.min)
+      val last = helper.toInt(elems.max)
       val span = last - first
       val array = new Array[Int](span / 32 + 1)
-      for(c <- chars) array((c - first) >> 5) |= 1 << ((c - first) & 31)
+      for(c <- elems) array((helper.toInt(c) - first) >> 5) |= 1 << ((helper.toInt(c) - first) & 31)
       (first, last, array)
     }
-    def apply(chars: Seq[Char]) = {
+    def apply[Elem](chars: Seq[Elem])
+                   (implicit helper: ElemSetHelper[Elem], ordering: Ordering[Elem]) = {
       val (first, last, array) = compute(chars)
-      new CharBitSet(array, first, last)
+      new BitSet[Elem](array, first, last)
     }
   }
   /**
@@ -103,11 +132,13 @@ object Utils {
    * Empirically seems to be a hell of a lot faster than immutable.Bitset,
    * making the resultant parser up to 2x faster!
    */
-  final class CharBitSet(array: Array[Int], first: Int, last: Int) extends (Char => Boolean){
-    def apply(c: Char) = {
-      if (c > last || c < first) false
+  final class BitSet[Elem](array: Array[Int], first: Int, last: Int)
+                          (implicit helper: ElemSetHelper[Elem]) extends (Elem => Boolean){
+    def apply(c: Elem) = {
+      val ci = helper.toInt(c)
+      if (ci > last || ci < first) false
       else {
-        val offset = c - first
+        val offset = ci - first
         (array(offset >> 5) & 1 << (offset & 31)) != 0
       }
     }
@@ -117,36 +148,38 @@ object Utils {
    * An trie node for quickly matching multiple strings which
    * share the same prefix, one char at a time.
    */
-  final class TrieNode(strings: Seq[String]){
+  final class TrieNode[Elem](strings: Seq[IndexedSeq[Elem]])
+                            (implicit helper: ElemSetHelper[Elem], ordering: Ordering[Elem]) {
 
     val (min, max, arr) = {
-      val children = strings.filter(!_.isEmpty)
+      val children = strings.filter(_.nonEmpty)
                             .groupBy(_(0))
                             .map { case (k,ss) => k -> new TrieNode(ss.map(_.tail)) }
-      if (children.size == 0) (0.toChar, 0.toChar, new Array[TrieNode](0))
+      if (children.isEmpty) (0, 0, new Array[TrieNode[Elem]](0))
       else {
-        val min = children.keysIterator.min
-        val max = children.keysIterator.max
-        val arr = new Array[TrieNode](max - min + 1)
-        for ((k, v) <- children) arr(k - min) = v
+        val min = helper.toInt(children.keysIterator.min)
+        val max = helper.toInt(children.keysIterator.max)
+        val arr = new Array[TrieNode[Elem]](max - min + 1)
+        for ((k, v) <- children) arr(helper.toInt(k) - min) = v
         (min, max, arr)
       }
     }
     val word: Boolean = strings.exists(_.isEmpty) || arr.isEmpty
-    def apply(c: Char): TrieNode = {
-      if (c > max || c < min) null
-      else arr(c - min)
+    def apply(c: Elem): TrieNode[Elem] = {
+      val ci = helper.toInt(c)
+      if (ci > max || ci < min) null
+      else arr(ci - min)
     }
 
     /**
      * Returns the length of the matching string, or -1 if not found
      */
-    def query(input: String, index: Int): Int = {
-      @tailrec def rec(offset: Int, currentNode: TrieNode, currentRes: Int): Int = {
+    def query(input: IndexedSeq[Elem], index: Int): Int = {
+      @tailrec def rec(offset: Int, currentNode: TrieNode[Elem], currentRes: Int): Int = {
         if (index + offset >= input.length) currentRes
         else {
-          val char = input(index + offset)
-          val next = currentNode(char)
+          val elem = input(index + offset)
+          val next = currentNode(elem)
           if (next == null) currentRes
           else rec(
             offset + 1,
