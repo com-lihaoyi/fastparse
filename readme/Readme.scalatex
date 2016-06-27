@@ -156,7 +156,7 @@
             @sect{Negative Lookahead}
                 @hl.ref(tests/"ExampleTests.scala", Seq("'neglookahead", ""))
                 @p
-                    The @hl.scala{!...} operator wraps a parser and only succeeds of it fails, also consuming no input. Useful to combine with other parsers like @sect.ref{AnyChar} to restrict the things that they can parse.
+                    The @hl.scala{!...} operator wraps a parser and only succeeds if it fails, also consuming no input. Useful to combine with other parsers like @sect.ref{AnyChar} to restrict the things that they can parse.
             @sect{Map}
                 @hl.ref(tests/"ExampleTests.scala", Seq("'map", ""))
                 @p
