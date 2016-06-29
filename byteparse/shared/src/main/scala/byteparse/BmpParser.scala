@@ -1,5 +1,8 @@
 package byteparse
 
+import java.nio.ByteBuffer
+import java.nio.ByteOrder.{LITTLE_ENDIAN => LE}
+
 import fastparse.allByte._
 
 object BmpParser {
@@ -25,16 +28,11 @@ object BmpParser {
 
   import BmpAst._
 
-  def convertLE(byteSeq: ByteSeq): Int = {
-    var res = 0
-    for (i <- byteSeq.indices) {
-      res += (byteSeq(i) & 0xff) << (i * 8)
-    }
-    res
-  }
+  // Little Endian format
+  def wrapByteBuffer(byteSeq: ByteSeq): ByteBuffer = ByteBuffer.wrap(byteSeq).order(LE)
 
-  val AnyWordI = P( AnyWord.! ).map(convertLE)
-  val AnyDwordI = P( AnyDword.! ).map(convertLE)
+  val AnyWordI = P( AnyWord.! ).map(wrapByteBuffer(_).getShort.toInt)
+  val AnyDwordI = P( AnyDword.! ).map(wrapByteBuffer(_).getInt)
 
 
   val fileHeader = P( AnyWordI /*headerType*/ ~ AnyDwordI /*size*/ ~
