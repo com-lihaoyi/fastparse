@@ -9,6 +9,7 @@ import scala.collection.mutable.ArrayBuffer
 object ClassTests extends TestSuite {
   val tests = TestSuite {
     import ClassParser.Ast._
+    import ClassParser.BasicElems._
     'basic {
       'book {
         val classFile = strToBytes("CA FE BA BE " +
@@ -65,8 +66,37 @@ object ClassTests extends TestSuite {
 
         assert(parsedClass == ClassFile(0, 52,
           ClassFlags(false, false, true /*accSuper*/, false, false, false, false, false),
+          ArrayBuffer(
+            MethodRef("<init>", "()V", Class("java/lang/Object")),
+            FieldRef("title", "Ljava/lang/String;", Class("Book")),
+            FieldRef("pubYear", "I", Class("Book")),
+            Class("Book"),
+            Class("java/lang/Object"),
+            BasicElemPool(StringElem("title")),
+            BasicElemPool(StringElem("Ljava/lang/String;")),
+            BasicElemPool(StringElem("pubYear")),
+            BasicElemPool(StringElem("I")),
+            BasicElemPool(StringElem("<init>")),
+            BasicElemPool(StringElem("()V")),
+            BasicElemPool(StringElem("Code")),
+            BasicElemPool(StringElem("LineNumberTable")),
+            BasicElemPool(StringElem("getTitle")),
+            BasicElemPool(StringElem("()Ljava/lang/String;")),
+            BasicElemPool(StringElem("getPubYear")),
+            BasicElemPool(StringElem("()I")),
+            BasicElemPool(StringElem("setTitle")),
+            BasicElemPool(StringElem("(Ljava/lang/String;)V")),
+            BasicElemPool(StringElem("setPubYear")),
+            BasicElemPool(StringElem("(I)V")),
+            BasicElemPool(StringElem("SourceFile")),
+            BasicElemPool(StringElem("Book.java")),
+            NameAndType("<init>", "()V"),
+            NameAndType("title", "Ljava/lang/String;"),
+            NameAndType("pubYear", "I"),
+            BasicElemPool(StringElem("Book")),
+            BasicElemPool(StringElem("java/lang/Object"))),
           Class("Book"),
-          Class("java/lang/Object"),
+          Some(Class("java/lang/Object")),
           ArrayBuffer(),
           ArrayBuffer(
             Field("title", "Ljava/lang/String;",
@@ -78,33 +108,34 @@ object ClassTests extends TestSuite {
           ArrayBuffer(
             Method("<init>", "()V",
               MethodFlags(false, false, false, false, false, false, false, false, false, false, false, false),
-              ArrayBuffer(Attribute("Code",
-                strToBytes("00 01 00 01 00 00 00 05 2A B7 00 01 B1 00 00 00 01 00 0D 00 00 00 06 00 01 00 00 00 01")))),
+              ArrayBuffer(
+                CodeAttribute(1, 1, strToBytes("2A B7 00 01 B1"), ArrayBuffer(),
+                  ArrayBuffer(BasicAttribute("LineNumberTable", strToBytes("00 01 00 00 00 01")))))),
             Method("getTitle", "()Ljava/lang/String;",
               MethodFlags(true /*accPublic*/, false, false, false, false,
                           false, false, false, false, false, false, false),
-              ArrayBuffer(Attribute("Code",
-                strToBytes("00 01 00 01 00 00 00 05 2A B4 00 02 B0 00 00 " +
-                           "00 01 00 0D 00 00 00 06 00 01 00 00 00 06")))),
+              ArrayBuffer(
+                CodeAttribute(1, 1, strToBytes("2A B4 00 02 B0"), ArrayBuffer(),
+                  ArrayBuffer(BasicAttribute("LineNumberTable", strToBytes("00 01 00 00 00 06")))))),
             Method("getPubYear", "()I",
               MethodFlags(true /*accPublic*/, false, false, false, false, false, false,
                           false, false, false, false, false),
-              ArrayBuffer(Attribute("Code",
-                strToBytes("00 01 00 01 00 00 00 05 2A B4 00 03 AC 00 00 " +
-                           "00 01 00 0D 00 00 00 06 00 01 00 00 00 0A")))),
+              ArrayBuffer(
+                CodeAttribute(1, 1, strToBytes("2A B4 00 03 AC"), ArrayBuffer(),
+                  ArrayBuffer(BasicAttribute("LineNumberTable", strToBytes("00 01 00 00 00 0A")))))),
             Method("setTitle", "(Ljava/lang/String;)V",
               MethodFlags(true /*accPublic*/, false, false, false, false, false, false,
                           false, false, false, false, false),
-              ArrayBuffer(Attribute("Code",
-                strToBytes("00 02 00 02 00 00 00 06 2A 2B B5 00 02 B1 00 " +
-                           "00 00 01 00 0D 00 00 00 0A 00 02 00 00 00 0E 00 05 00 0F")))),
+              ArrayBuffer(
+                CodeAttribute(2, 2, strToBytes("2A 2B B5 00 02 B1"), ArrayBuffer(),
+                  ArrayBuffer(BasicAttribute("LineNumberTable", strToBytes("00 02 00 00 00 0E 00 05 00 0F")))))),
             Method("setPubYear","(I)V",
               MethodFlags(true /*accPublic*/, false, false, false, false, false, false,
                           false, false, false, false, false),
-              ArrayBuffer(Attribute("Code",
-                strToBytes("00 02 00 02 00 00 00 06 2A 1B B5 00 03 B1 00 " +
-                           "00 00 01 00 0D 00 00 00 0A 00 02 00 00 00 12 00 05 00 13"))))),
-          ArrayBuffer(Attribute("SourceFile", strToBytes("00 17")))))
+              ArrayBuffer(
+                CodeAttribute(2, 2, strToBytes("2A 1B B5 00 03 B1"), ArrayBuffer(),
+                  ArrayBuffer(BasicAttribute("LineNumberTable", strToBytes("00 02 00 00 00 12 00 05 00 13"))))))),
+          ArrayBuffer(SourceFileAttribute("Book.java"))))
       }
     }
   }
