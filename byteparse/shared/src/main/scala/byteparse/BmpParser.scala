@@ -27,13 +27,7 @@ object BmpParser {
   }
 
   import BmpAst._
-
-  // Little Endian format
-  def wrapByteBuffer(byteSeq: ByteSeq): ByteBuffer = ByteBuffer.wrap(byteSeq).order(LE)
-
-  val AnyWordI = P( AnyWord.! ).map(wrapByteBuffer(_).getShort.toInt)
-  val AnyDwordI = P( AnyDword.! ).map(wrapByteBuffer(_).getInt)
-
+  import ByteUtils.LE._
 
   val fileHeader = P( AnyWordI /*headerType*/ ~ AnyDwordI /*size*/ ~
     AnyWord ~ AnyWord ~
