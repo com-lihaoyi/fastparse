@@ -109,7 +109,7 @@ trait ByteApi extends Api[Byte, Array[Byte]] {
     }
 
     val hexDigit = all.P(CharIn('0' to '9', 'a' to 'f', 'A' to 'F'))
-    val byte = all.P("0x".? ~ hexDigit.rep(min = 2, max = 2).!).map(s => charsToByte(s.toLowerCase))
+    val byte = all.P("0x".? ~ hexDigit.rep(exactly = 2).!).map(s => charsToByte(s.toLowerCase))
     val byteSep = all.P(" ".rep)
     val bytes = all.P(byteSep ~ byte.rep(sep = byteSep)).map(_.toArray)
   }

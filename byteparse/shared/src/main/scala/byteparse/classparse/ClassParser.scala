@@ -2,6 +2,8 @@ package byteparse
 package classparse
 
 import fastparse.allByte._
+
+import scala.collection.mutable.ArrayBuffer
 // https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7
 
 object ClassParser {
@@ -21,6 +23,9 @@ object ClassParser {
     import BasicElems._
 
     sealed trait PoolInfo
+
+    case class NopInfo() extends PoolInfo // it's used as a stub for Long and Double info
+                                          // see https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.4.5
 
     case class ClassInfo(nameIndex: Int) extends PoolInfo
 
@@ -82,6 +87,8 @@ object ClassParser {
     import ClassAttributes.Attribute
 
     sealed trait PoolItem
+
+    case class Nop() extends PoolItem // see NopeInfo
 
     case class Class(name: String) extends PoolItem
 
@@ -241,6 +248,7 @@ object ClassParser {
 
     def convertToPoolItem(classInfo: Info.ClassFileInfo, info: PoolInfo): PoolItem = {
       info match {
+        case info: NopInfo => Nop()
         case info: ClassInfo => Class(classInfo, info)
         case info: FieldRefInfo => FieldRef(classInfo, info)
         case info: MethodRefInfo => MethodRef(classInfo, info)
@@ -324,12 +332,22 @@ object ClassParser {
   val constantInvokeDynamicInfo = P( BS(18) ~ AnyWordI /*bootstrap_method_attr_index*/ ~
                                      AnyWordI /*name_and_type_index*/ ).map(InvokeDynamicInfo.tupled)
 
-  val constantPoolItem = P( constantClassInfo      | constantFieldRefInfo |
-                            constantMethodRefInfo  | constantInterfaceMethodRefInfo |
-                            constantStringInfo     | constantIntInfo | constantFloatInfo |
-                            constantDoubleInfo     | constantNameAndTypeInfo |
-                            constantUtf8Info       | constantMethodHandleInfo |
-                            constantMethodTypeInfo | constantInvokeDynamicInfo )
+  val singleConstantPoolItem = P( constantClassInfo      | constantFieldRefInfo |
+                                  constantMethodRefInfo  | constantInterfaceMethodRefInfo |
+                                  constantStringInfo     | constantIntInfo |
+                                  constantFloatInfo      | constantNameAndTypeInfo |
+                                  constantUtf8Info       | constantMethodHandleInfo |
+                                  constantMethodTypeInfo | constantInvokeDynamicInfo )
+
+  val doubleConstantPoolItem = P( constantDoubleInfo | constantLongInfo)
+
+  def constantPool(count: Int): P[Seq[PoolInfo]] =
+    if (count == 0) {
+      Pass.map(_ => ArrayBuffer[PoolInfo]())
+    } else {
+        P( singleConstantPoolItem.flatMap(item => constantPool(count - 1).map(_ :+ item)) |
+           doubleConstantPoolItem.flatMap(item => constantPool(count - 2).map(_ :+ NopInfo() :+ item )) )
+    }
 
   val attributeInfo = P( AnyWordI /*attribute_name_index*/ ~ AnyDwordI /*attribute_length*/
     .flatMap(l => P( AnyByte.rep(exactly=l).! )) ).map(AttributeInfo.tupled)
@@ -345,7 +363,7 @@ object ClassParser {
 
   val classFile = P( BS(0xCA, 0xFE, 0xBA, 0xBE) ~
                      AnyWordI /*minor_version*/     ~ AnyWordI /*major_version*/ ~
-                     AnyWordI /*constant_pool_count*/.flatMap(l => P( constantPoolItem.rep(exactly=l - 1) )) ~
+                     AnyWordI /*constant_pool_count*/.flatMap(l => constantPool(l - 1).map(_.reverse)) ~
                      AnyWord.! /*access_flags*/ ~
                      AnyWordI /*this_class*/        ~ AnyWordI /*super_class*/ ~
                      AnyWordI /*interfaces_count*/   .flatMap(l => P( AnyWordI.rep(exactly=l) )) ~

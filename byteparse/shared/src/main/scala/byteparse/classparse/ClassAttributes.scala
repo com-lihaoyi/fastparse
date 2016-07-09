@@ -91,10 +91,22 @@ object ClassAttributes {
     },
     "InnerClasses" -> {
       (classInfo: ClassFileInfo) =>
-        P( AnyWordI /*number_of_exceptions*/
-          .flatMap(l => P( AnyWordI.rep(exactly=l) ).map(_
-          .map(idx => Class(classInfo, classInfo.getInfoByIndex[ClassInfo](idx).get)))) )
-          .map(ExceptionsAttribute)
+        val innerClass =
+          P( AnyWordI /*inner_class_info_index*/ ~ AnyWordI /*outer_class_info_index*/ ~
+             AnyWordI /*inner_name_index*/ ~       AnyWord.! /*inner_class_access_flags*/ )
+           .map {
+             case (inIdx: Int, outIdx: Int, inName: Int, inFlags: Array[Byte]) =>
+               InnerClass(
+                 Class(classInfo, classInfo.getInfoByIndex[ClassInfo](inIdx).get),
+                 if (outIdx == 0) None
+                 else Some(Class(classInfo, classInfo.getInfoByIndex[ClassInfo](outIdx).get)),
+                 if (inName == 0) None
+                 else Some(classInfo.getStringByIndex(inName)),
+                 InnerClassFlags(inFlags)
+               )
+           }
+        P( AnyWordI /*number_of_classes*/
+            .flatMap(l => P( innerClass.rep(exactly=l) ) ) ).map(InnerClassesAttribute)
     },
     "EnclosingMethod" -> {
       (classInfo: ClassFileInfo) =>
