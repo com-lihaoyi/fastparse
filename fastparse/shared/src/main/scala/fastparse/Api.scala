@@ -1,9 +1,7 @@
 package fastparse
 import language.experimental.macros
 import fastparse.parsers.{Intrinsics, Terminals}
-import acyclic.file
 import fastparse.Utils.HexUtils
-import fastparse.parsers.Intrinsics.ElemsWhile
 
 /**
  * This is basically a trait which contains

@@ -61,40 +61,47 @@ object ClassAttributes {
   val attributeParsers = Map[String, (ClassFileInfo) => Parser[Attribute]](
     "ConstantValue" -> {
       (classInfo: ClassFileInfo) =>
-        P( AnyWordI ).map(idx => ConstantValueAttribute(classInfo.getInfoByIndex[PoolInfo](idx).get match {
-          case BasicElemInfo(elem) => elem
-          case StringInfo(idx) => StringElem(classInfo.getStringByIndex(idx))
-        }))
+        P( AnyWordI ).map(idx =>
+          ConstantValueAttribute(
+            classInfo.getInfoByIndex[PoolInfo](idx).get match {
+              case BasicElemInfo(elem) => elem
+              case StringInfo(idx) => StringElem(classInfo.getStringByIndex(idx))
+            }))
     },
     "Code" -> {
       (classInfo: ClassFileInfo) => {
         val exceptionHandler =
-          P( AnyWordI /*start_pc*/ ~ AnyWordI /*end_pc*/ ~
-             AnyWordI /*handler_pc*/ ~ AnyWordI /*catch_type*/
-            .map(idx =>
+          P( AnyWordI /*start_pc*/ ~ AnyWordI /*end_pc*/ ~ AnyWordI /*handler_pc*/ ~
+             AnyWordI /*catch_type*/.map(idx =>
               if (idx == 0) None
-              else Some(Class(classInfo, classInfo.getInfoByIndex[ClassInfo](idx).get))) )
-            .map(ExceptionHandler.tupled)
-        P( AnyWordI /*max_stack*/ ~ AnyWordI /*max_locals*/ ~ AnyDwordI /*code_length*/
-          .flatMap(l => P( AnyByte.rep(exactly=l).! ).map(parseCode)) ~ AnyWordI /*exception_table_length*/
-          .flatMap(l => P( exceptionHandler.rep(exactly=l) )) ~ AnyWordI /*attributes_count*/
-          .flatMap(l => P( attributeInfo.rep(exactly=l) )
-          .map(_.map(attr => convertToAttribute(classInfo, attr)))) ).map(CodeAttribute.tupled)
+              else Some(Class(classInfo, classInfo.getInfoByIndex[ClassInfo](idx).get)))
+           ).map(ExceptionHandler.tupled)
+
+        P( AnyWordI /*max_stack*/ ~
+           AnyWordI /*max_locals*/ ~
+           AnyDwordI /*code_length*/.flatMap(l =>
+             P( AnyByte.rep(exactly=l).! ).map(parseCode)) ~
+           AnyWordI /*exception_table_length*/.flatMap(l =>
+             P( exceptionHandler.rep(exactly=l) )) ~
+           AnyWordI /*attributes_count*/.flatMap(l =>
+             P( attributeInfo.rep(exactly=l) ).map(
+              _.map(attr => convertToAttribute(classInfo, attr))))
+         ).map(CodeAttribute.tupled)
       }
     },
     "Exceptions" -> {
       (classInfo: ClassFileInfo) =>
-        P( AnyWordI /*number_of_exceptions*/
-          .flatMap(l => P( AnyWordI.rep(exactly=l) ).map(_
-          .map(idx => Class(classInfo, classInfo.getInfoByIndex[ClassInfo](idx).get)))) )
-          .map(ExceptionsAttribute)
+        P( AnyWordI /*number_of_exceptions*/.flatMap(l =>
+          P( AnyWordI.rep(exactly=l) ).map(
+            _.map(idx => Class(classInfo, classInfo.getInfoByIndex[ClassInfo](idx).get))))
+         ).map(ExceptionsAttribute)
     },
     "InnerClasses" -> {
       (classInfo: ClassFileInfo) =>
         val innerClass =
           P( AnyWordI /*inner_class_info_index*/ ~ AnyWordI /*outer_class_info_index*/ ~
-             AnyWordI /*inner_name_index*/ ~       AnyWord.! /*inner_class_access_flags*/ )
-           .map {
+             AnyWordI /*inner_name_index*/ ~       AnyWord.! /*inner_class_access_flags*/
+           ).map {
              case (inIdx: Int, outIdx: Int, inName: Int, inFlags: Array[Byte]) =>
                InnerClass(
                  Class(classInfo, classInfo.getInfoByIndex[ClassInfo](inIdx).get),
@@ -105,8 +112,9 @@ object ClassAttributes {
                  InnerClassFlags(inFlags)
                )
            }
-        P( AnyWordI /*number_of_classes*/
-            .flatMap(l => P( innerClass.rep(exactly=l) ) ) ).map(InnerClassesAttribute)
+        P( AnyWordI /*number_of_classes*/.flatMap(l =>
+          P( innerClass.rep(exactly=l) ))
+         ).map(InnerClassesAttribute)
     },
     "EnclosingMethod" -> {
       (classInfo: ClassFileInfo) =>
@@ -119,8 +127,11 @@ object ClassAttributes {
                   (Some(classInfo.getStringByIndex(nameIdx)), Some(classInfo.getStringByIndex(descriptorIdx)))
               }
 
-            EnclosingMethodAttribute(Class(classInfo, classInfo.getInfoByIndex[ClassInfo](classIdx).get),
-              name, descriptor)
+            EnclosingMethodAttribute(
+              Class(classInfo, classInfo.getInfoByIndex[ClassInfo](classIdx).get),
+              name,
+              descriptor
+            )
         }
     },
     "Synthetic" -> {
@@ -139,14 +150,22 @@ object ClassAttributes {
     },
     "BootstrapMethods" -> {
       (classInfo: ClassFileInfo) => {
-        val bootstrapMethod = P( AnyWordI /*bootstrap_method_ref*/ ~ AnyWordI /*num_bootstrap_arguments*/
-          .flatMap(l => P( AnyWordI.rep(exactly=l) )) ).map {
-          case (refIdx: Int, argsIdxs: Seq[Int]) =>
-            BootstrapMethod(MethodHandle(classInfo, classInfo.getInfoByIndex[MethodHandleInfo](refIdx).get),
-              argsIdxs.map(argIdx => convertToPoolItem(classInfo, classInfo.getInfoByIndex[PoolInfo](argIdx).get)))
-        }
-        P( AnyWordI /*num_bootstrap_methods*/.flatMap(l => P( bootstrapMethod.rep(exactly=l) )) )
-          .map(BootstrapMethodsAttribute)
+        val bootstrapMethod =
+          P( AnyWordI /*bootstrap_method_ref*/ ~
+             AnyWordI /*num_bootstrap_arguments*/ .flatMap(l =>
+               P( AnyWordI.rep(exactly=l) ))
+           ).map {
+              case (refIdx: Int, argsIdxs: Seq[Int]) =>
+                BootstrapMethod(
+                  MethodHandle(classInfo, classInfo.getInfoByIndex[MethodHandleInfo](refIdx).get),
+                  argsIdxs.map(
+                    argIdx => convertToPoolItem(classInfo, classInfo.getInfoByIndex[PoolInfo](argIdx).get))
+                )
+             }
+
+        P( AnyWordI /*num_bootstrap_methods*/.flatMap(l =>
+          P( bootstrapMethod.rep(exactly=l) ))
+         ).map(BootstrapMethodsAttribute)
       }
     }
   )

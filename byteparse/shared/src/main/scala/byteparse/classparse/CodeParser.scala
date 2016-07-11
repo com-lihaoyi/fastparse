@@ -242,7 +242,7 @@ object CodeParser {
 
   case class TableSwitch(defaultOffset: Int, low: Int, high: Int, offsets: Seq[Int]) extends OpCode
 
-  case class Wide() extends OpCode // correct behavior for this command wasn't implemented yet
+  case class Wide() extends OpCode // correct behavior for this command hasn't been implemented yet
 
   import ByteUtils.BE._
 
@@ -477,31 +477,38 @@ object CodeParser {
         case (idx: Int, count: Array[Byte]) => InvokeInterface(idx, count(0) & 0xff)
       },
 
-      0xab -> P( AnyDwordI /*default_offset*/ ~ AnyDwordI /*n_pairs*/
-                .flatMap(l => P( (AnyDwordI /*value*/ ~ AnyDwordI /*offset*/).rep(exactly=l) )) )
-                .map(LookUpSwitch.tupled),
-      0xaa -> P( AnyDwordI /*default_offset*/ ~ (AnyDwordI /*low*/ ~ AnyDwordI /*high*/).flatMap{
-        case (low: Int, high: Int) =>
-          P( AnyDwordI.rep(exactly=high - low + 1) ).map(offs => (low, high, offs))
-      }).map{
-        case (defaultOffset: Int, (low: Int, high: Int, offs: Seq[Int])) =>
-          TableSwitch(defaultOffset, low, high, offs)
-      }
+      0xab ->
+        P( AnyDwordI /*default_offset*/ ~
+           AnyDwordI /*n_pairs*/.flatMap(l =>
+             P( (AnyDwordI /*value*/ ~
+                 AnyDwordI /*offset*/).rep(exactly=l) ))
+         ).map(LookUpSwitch.tupled),
+      0xaa ->
+        P( AnyDwordI /*default_offset*/ ~
+           (AnyDwordI /*low*/ ~ AnyDwordI /*high*/).flatMap {
+              case (low: Int, high: Int) =>
+                P( AnyDwordI.rep(exactly=high - low + 1) ).map(offs => (low, high, offs))
+            }
+         ).map {
+            case (defaultOffset: Int, (low: Int, high: Int, offs: Seq[Int])) =>
+              TableSwitch(defaultOffset, low, high, offs)
+          }
     )
   }
 
   def parseCode(code: Array[Byte]): Seq[OpCode] = {
-    val opCodes = P( (AnyByte.! ~ Index).flatMap {
-      case (bs: Array[Byte], idx: Int) => (bs(0) & 0xff) match {
-        case b @ (0xab | 0xaa) => P( AnyByte.rep(exactly=(4 - idx % 4) % 4) ~ opCodeParsers(b))
-        case b: Int => opCodeParsers(b)
-      }
-    }.rep )
+    val opCodes =
+      P( (AnyByte.! ~ Index).flatMap {
+          case (bs: Array[Byte], idx: Int) => (bs(0) & 0xff) match {
+            case b @ (0xab | 0xaa) => P( AnyByte.rep(exactly=(4 - idx % 4) % 4) ~ opCodeParsers(b))
+            case b: Int => opCodeParsers(b)
+          }
+        }.rep
+      )
 
     opCodes.parse(code) match {
       case Parsed.Success(res, _) => res
       case f: Parsed.Failure => Seq()
     }
   }
-
 }

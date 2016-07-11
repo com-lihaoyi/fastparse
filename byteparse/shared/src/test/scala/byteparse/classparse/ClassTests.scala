@@ -1,7 +1,7 @@
 package byteparse
 package classparse
 
-import com.github.marklister.base64.Base64.Decoder
+import fastparse.Base64.Decoder
 import fastparse.allByte._
 import utest._
 

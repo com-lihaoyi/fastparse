@@ -135,10 +135,6 @@ lazy val cssparseJS = cssparse.js
 lazy val byteparse = crossProject.dependsOn(fastparse).settings(
    name := "byteparse"
  ).settings(shared:_*)
-  .settings(
-    libraryDependencies += "com.github.marklister" %%% "base64" % "0.2.2",
-    libraryDependencies += "org.mdkt.compiler" % "InMemoryJavaCompiler" % "1.2"
-  )
 
 lazy val byteparseJVM = byteparse.jvm
 lazy val byteparseJS = byteparse.js

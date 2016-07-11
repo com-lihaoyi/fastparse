@@ -10,16 +10,13 @@ import utest._
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 import concurrent.ExecutionContext.Implicits.global
-import scala.util.{Failure, Success, Try}
 
 object ProjectTests extends TestSuite {
   def checkDir(initPath: String, dirs: Seq[String] = Seq("/"), srcFolders: Boolean = true,
                filter: String => Boolean = _ => true) = {
     println("Checking Dir " + initPath)
-    def listFiles(s: java.io.File): Iterator[String] = {
-      val (dirs, files) = Option(s.listFiles()).toIterator
-        .flatMap(_.toIterator)
-        .partition(_.isDirectory)
+    def listFiles(s: File): Seq[String] = {
+      val (dirs, files) = Option(s.listFiles).getOrElse(Array[File]()).partition(_.isDirectory)
 
       files.map(_.getPath) ++ dirs.flatMap(listFiles)
     }
@@ -31,12 +28,11 @@ object ProjectTests extends TestSuite {
       val classLoader = new URLClassLoader(Array(new File(classesPath).toURI.toURL))
 
       val files = for {
-        f0 <- Option(listFiles(new java.io.File(srcPath))).toVector
-        filename <- f0
+        filename <- listFiles(new File(srcPath))
       } yield Future {
         if (filename.endsWith(".java") && filter(filename)) {
           val relativePath = filename.stripPrefix(srcPath).stripSuffix(".java")
-          val javaClassOpt = TestUtils.TryClass(classLoader.loadClass(relativePath.replace('/', '.')))
+          val javaClassOpt = TestUtils.TryClass( classLoader.loadClass(relativePath.replace('/', '.')) )
           javaClassOpt match {
             case Some(javaClass) =>
               print(".")
@@ -48,7 +44,7 @@ object ProjectTests extends TestSuite {
         }
       }
 
-      files.foreach(Await.result(_, Duration(1, "s")))
+      files.foreach(Await.result(_, Duration.Inf))
     }
     println()
   }
