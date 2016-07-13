@@ -6,98 +6,98 @@ import fastparse.allByte._
 object CodeParser {
   sealed abstract class OpCode
 
-  case class AALoad() extends OpCode
-  case class AAStore() extends OpCode
-  case class AConstNull() extends OpCode
+  case object AALoad extends OpCode
+  case object AAStore extends OpCode
+  case object AConstNull extends OpCode
   case class ALoad(index: Int) extends OpCode
-  case class ALoad0() extends OpCode
-  case class ALoad1() extends OpCode
-  case class ALoad2() extends OpCode
-  case class ALoad3() extends OpCode
+  case object ALoad0 extends OpCode
+  case object ALoad1 extends OpCode
+  case object ALoad2 extends OpCode
+  case object ALoad3 extends OpCode
   case class ANewArray(index: Int) extends OpCode
-  case class AReturn() extends OpCode
-  case class ArrayLength() extends OpCode
+  case object AReturn extends OpCode
+  case object ArrayLength extends OpCode
   case class AStore(index: Int) extends OpCode
-  case class AStore0() extends OpCode
-  case class AStore1() extends OpCode
-  case class AStore2() extends OpCode
-  case class AStore3() extends OpCode
-  case class AThrow() extends OpCode
+  case object AStore0 extends OpCode
+  case object AStore1 extends OpCode
+  case object AStore2 extends OpCode
+  case object AStore3 extends OpCode
+  case object AThrow extends OpCode
 
-  case class BALoad() extends OpCode
-  case class BAStore() extends OpCode
+  case object BALoad extends OpCode
+  case object BAStore extends OpCode
   case class BIPush(byte: Byte) extends OpCode
 
-  case class BreakPoint() extends OpCode
+  case object BreakPoint extends OpCode
 
-  case class CALoad() extends OpCode
-  case class CAStore() extends OpCode
+  case object CALoad extends OpCode
+  case object CAStore extends OpCode
 
   case class CheckCast(index: Int) extends OpCode
 
-  case class D2F() extends OpCode
-  case class D2I() extends OpCode
-  case class D2L() extends OpCode
-  case class DAdd() extends OpCode
-  case class DSub() extends OpCode
-  case class DMul() extends OpCode
-  case class DNeg() extends OpCode
-  case class DDiv() extends OpCode
-  case class DRem() extends OpCode
+  case object D2F extends OpCode
+  case object D2I extends OpCode
+  case object D2L extends OpCode
+  case object DAdd extends OpCode
+  case object DSub extends OpCode
+  case object DMul extends OpCode
+  case object DNeg extends OpCode
+  case object DDiv extends OpCode
+  case object DRem extends OpCode
 
-  case class DALoad() extends OpCode
-  case class DAStore() extends OpCode
-  case class DCmpG() extends OpCode
-  case class DCmpL() extends OpCode
-  case class DConst0() extends OpCode
-  case class DConst1() extends OpCode
+  case object DALoad extends OpCode
+  case object DAStore extends OpCode
+  case object DCmpG extends OpCode
+  case object DCmpL extends OpCode
+  case object DConst0 extends OpCode
+  case object DConst1 extends OpCode
   case class DLoad(index: Int) extends OpCode
-  case class DLoad0() extends OpCode
-  case class DLoad1() extends OpCode
-  case class DLoad2() extends OpCode
-  case class DLoad3() extends OpCode
-  case class DReturn() extends OpCode
+  case object DLoad0 extends OpCode
+  case object DLoad1 extends OpCode
+  case object DLoad2 extends OpCode
+  case object DLoad3 extends OpCode
+  case object DReturn extends OpCode
   case class DStore(index: Int) extends OpCode
-  case class DStore0() extends OpCode
-  case class DStore1() extends OpCode
-  case class DStore2() extends OpCode
-  case class DStore3() extends OpCode
+  case object DStore0 extends OpCode
+  case object DStore1 extends OpCode
+  case object DStore2 extends OpCode
+  case object DStore3 extends OpCode
 
-  case class Dup() extends OpCode
-  case class Dup2() extends OpCode
-  case class DupX1() extends OpCode
-  case class DupX2() extends OpCode
-  case class Dup2X1() extends OpCode
-  case class Dup2X2() extends OpCode
+  case object Dup extends OpCode
+  case object Dup2 extends OpCode
+  case object DupX1 extends OpCode
+  case object DupX2 extends OpCode
+  case object Dup2X1 extends OpCode
+  case object Dup2X2 extends OpCode
 
-  case class F2D() extends OpCode
-  case class F2I() extends OpCode
-  case class F2L() extends OpCode
-  case class FAdd() extends OpCode
-  case class FSub() extends OpCode
-  case class FMul() extends OpCode
-  case class FNeg() extends OpCode
-  case class FDiv() extends OpCode
-  case class FRem() extends OpCode
+  case object F2D extends OpCode
+  case object F2I extends OpCode
+  case object F2L extends OpCode
+  case object FAdd extends OpCode
+  case object FSub extends OpCode
+  case object FMul extends OpCode
+  case object FNeg extends OpCode
+  case object FDiv extends OpCode
+  case object FRem extends OpCode
 
-  case class FALoad() extends OpCode
-  case class FAStore() extends OpCode
-  case class FCmpG() extends OpCode
-  case class FCmpL() extends OpCode
-  case class FConst0() extends OpCode
-  case class FConst1() extends OpCode
-  case class FConst2() extends OpCode
+  case object FALoad extends OpCode
+  case object FAStore extends OpCode
+  case object FCmpG extends OpCode
+  case object FCmpL extends OpCode
+  case object FConst0 extends OpCode
+  case object FConst1 extends OpCode
+  case object FConst2 extends OpCode
   case class FLoad(index: Int) extends OpCode
-  case class FLoad0() extends OpCode
-  case class FLoad1() extends OpCode
-  case class FLoad2() extends OpCode
-  case class FLoad3() extends OpCode
-  case class FReturn() extends OpCode
+  case object FLoad0 extends OpCode
+  case object FLoad1 extends OpCode
+  case object FLoad2 extends OpCode
+  case object FLoad3 extends OpCode
+  case object FReturn extends OpCode
   case class FStore(index: Int) extends OpCode
-  case class FStore0() extends OpCode
-  case class FStore1() extends OpCode
-  case class FStore2() extends OpCode
-  case class FStore3() extends OpCode
+  case object FStore0 extends OpCode
+  case object FStore1 extends OpCode
+  case object FStore2 extends OpCode
+  case object FStore3 extends OpCode
 
   case class GetField(index: Int) extends OpCode
   case class GetStatic(index: Int) extends OpCode
@@ -105,47 +105,47 @@ object CodeParser {
   case class Goto(offset: Short) extends OpCode
   case class GotoW(offset: Int) extends OpCode
 
-  case class I2B() extends OpCode
-  case class I2C() extends OpCode
-  case class I2D() extends OpCode
-  case class I2F() extends OpCode
-  case class I2L() extends OpCode
-  case class I2S() extends OpCode
-  case class IAdd() extends OpCode
-  case class ISub() extends OpCode
-  case class IMul() extends OpCode
-  case class INeg() extends OpCode
-  case class IDiv() extends OpCode
-  case class IRem() extends OpCode
+  case object I2B extends OpCode
+  case object I2C extends OpCode
+  case object I2D extends OpCode
+  case object I2F extends OpCode
+  case object I2L extends OpCode
+  case object I2S extends OpCode
+  case object IAdd extends OpCode
+  case object ISub extends OpCode
+  case object IMul extends OpCode
+  case object INeg extends OpCode
+  case object IDiv extends OpCode
+  case object IRem extends OpCode
   case class IInc(index: Int, const: Int) extends OpCode
 
-  case class IAnd() extends OpCode
-  case class IOr() extends OpCode
-  case class IShl() extends OpCode
-  case class IShr() extends OpCode
-  case class IUShr() extends OpCode
-  case class IXor() extends OpCode
+  case object IAnd extends OpCode
+  case object IOr extends OpCode
+  case object IShl extends OpCode
+  case object IShr extends OpCode
+  case object IUShr extends OpCode
+  case object IXor extends OpCode
 
-  case class IALoad() extends OpCode
-  case class IAStore() extends OpCode
-  case class IConstM1() extends OpCode
-  case class IConst0() extends OpCode
-  case class IConst1() extends OpCode
-  case class IConst2() extends OpCode
-  case class IConst3() extends OpCode
-  case class IConst4() extends OpCode
-  case class IConst5() extends OpCode
+  case object IALoad extends OpCode
+  case object IAStore extends OpCode
+  case object IConstM1 extends OpCode
+  case object IConst0 extends OpCode
+  case object IConst1 extends OpCode
+  case object IConst2 extends OpCode
+  case object IConst3 extends OpCode
+  case object IConst4 extends OpCode
+  case object IConst5 extends OpCode
   case class ILoad(index: Int) extends OpCode
-  case class ILoad0() extends OpCode
-  case class ILoad1() extends OpCode
-  case class ILoad2() extends OpCode
-  case class ILoad3() extends OpCode
-  case class IReturn() extends OpCode
+  case object ILoad0 extends OpCode
+  case object ILoad1 extends OpCode
+  case object ILoad2 extends OpCode
+  case object ILoad3 extends OpCode
+  case object IReturn extends OpCode
   case class IStore(index: Int) extends OpCode
-  case class IStore0() extends OpCode
-  case class IStore1() extends OpCode
-  case class IStore2() extends OpCode
-  case class IStore3() extends OpCode
+  case object IStore0 extends OpCode
+  case object IStore1 extends OpCode
+  case object IStore2 extends OpCode
+  case object IStore3 extends OpCode
 
 
   case class IfACmpEq(offset: Short) extends OpCode
@@ -167,8 +167,8 @@ object CodeParser {
   case class IfNonNull(offset: Short) extends OpCode
   case class IfNull(offset: Short) extends OpCode
 
-  case class ImpDep1() extends OpCode
-  case class ImpDep2() extends OpCode
+  case object ImpDep1 extends OpCode
+  case object ImpDep2 extends OpCode
 
   case class InstanceOf(index: Int) extends OpCode
   case class InvokeDynamic(index: Int) extends OpCode
@@ -180,39 +180,39 @@ object CodeParser {
   case class JSR(offset: Short) extends OpCode
   case class JSRW(offset: Int) extends OpCode
 
-  case class L2D() extends OpCode
-  case class L2F() extends OpCode
-  case class L2I() extends OpCode
-  case class LAdd() extends OpCode
-  case class LSub() extends OpCode
-  case class LMul() extends OpCode
-  case class LNeg() extends OpCode
-  case class LDiv() extends OpCode
-  case class LRem() extends OpCode
+  case object L2D extends OpCode
+  case object L2F extends OpCode
+  case object L2I extends OpCode
+  case object LAdd extends OpCode
+  case object LSub extends OpCode
+  case object LMul extends OpCode
+  case object LNeg extends OpCode
+  case object LDiv extends OpCode
+  case object LRem extends OpCode
 
-  case class LAnd() extends OpCode
-  case class LOr() extends OpCode
-  case class LShl() extends OpCode
-  case class LShr() extends OpCode
-  case class LUShr() extends OpCode
-  case class LXor() extends OpCode
+  case object LAnd extends OpCode
+  case object LOr extends OpCode
+  case object LShl extends OpCode
+  case object LShr extends OpCode
+  case object LUShr extends OpCode
+  case object LXor extends OpCode
 
-  case class LALoad() extends OpCode
-  case class LAStore() extends OpCode
-  case class LCmp() extends OpCode
-  case class LConst0() extends OpCode
-  case class LConst1() extends OpCode
+  case object LALoad extends OpCode
+  case object LAStore extends OpCode
+  case object LCmp extends OpCode
+  case object LConst0 extends OpCode
+  case object LConst1 extends OpCode
   case class LLoad(index: Int) extends OpCode
-  case class LLoad0() extends OpCode
-  case class LLoad1() extends OpCode
-  case class LLoad2() extends OpCode
-  case class LLoad3() extends OpCode
+  case object LLoad0 extends OpCode
+  case object LLoad1 extends OpCode
+  case object LLoad2 extends OpCode
+  case object LLoad3 extends OpCode
   case class LStore(index: Int) extends OpCode
-  case class LStore0() extends OpCode
-  case class LStore1() extends OpCode
-  case class LStore2() extends OpCode
-  case class LStore3() extends OpCode
-  case class LReturn() extends OpCode
+  case object LStore0 extends OpCode
+  case object LStore1 extends OpCode
+  case object LStore2 extends OpCode
+  case object LStore3 extends OpCode
+  case object LReturn extends OpCode
 
   case class LDC(index: Int) extends OpCode
   case class LDCW(index: Int) extends OpCode
@@ -220,29 +220,29 @@ object CodeParser {
 
   case class LookUpSwitch(defaultOffset: Int, pairs: Seq[(Int, Int)]) extends OpCode
 
-  case class MonitorEnter() extends OpCode
-  case class MonitorExit() extends OpCode
+  case object MonitorEnter extends OpCode
+  case object MonitorExit extends OpCode
 
   case class MutliANewArray(index: Int, dimensions: Int) extends OpCode
   case class New(index: Int) extends OpCode
   case class NewArray(atype: Byte) extends OpCode
 
-  case class Nop() extends OpCode
-  case class Pop() extends OpCode
-  case class Pop2() extends OpCode
-  case class Swap() extends OpCode
+  case object Nop extends OpCode
+  case object Pop extends OpCode
+  case object Pop2 extends OpCode
+  case object Swap extends OpCode
   case class PutField(index: Int) extends OpCode
   case class PutStatic(index: Int) extends OpCode
   case class Ret(index: Int) extends OpCode
-  case class Return() extends OpCode
+  case object Return extends OpCode
 
-  case class SALoad() extends OpCode
-  case class SAStore() extends OpCode
+  case object SALoad extends OpCode
+  case object SAStore extends OpCode
   case class SIPush(short: Short) extends OpCode
 
   case class TableSwitch(defaultOffset: Int, low: Int, high: Int, offsets: Seq[Int]) extends OpCode
 
-  case class Wide() extends OpCode // correct behavior for this command hasn't been implemented yet
+  case object Wide extends OpCode // correct behavior for this command hasn't been implemented yet
 
   import ByteUtils.BE._
 
@@ -254,164 +254,164 @@ object CodeParser {
     val offsetIndexWide = P( AnyDwordI ).map(i => i.toInt) // TODO It's done because Dword is actually unsigned
 
     Map[Int, Parser[OpCode]](
-      0x32 -> Pass.map(_ => AALoad()),
-      0x53 -> Pass.map(_ => AAStore()),
-      0x01 -> Pass.map(_ => AConstNull()),
-      0x2a -> Pass.map(_ => ALoad0()),
-      0x2b -> Pass.map(_ => ALoad1()),
-      0x2c -> Pass.map(_ => ALoad2()),
-      0x2d -> Pass.map(_ => ALoad3()),
-      0xb0 -> Pass.map(_ => AReturn()),
-      0xbe -> Pass.map(_ => ArrayLength()),
-      0x4b -> Pass.map(_ => AStore0()),
-      0x4c -> Pass.map(_ => AStore1()),
-      0x4d -> Pass.map(_ => AStore2()),
-      0x4e -> Pass.map(_ => AStore3()),
-      0xbf -> Pass.map(_ => AThrow()),
+      0x32 -> PassWith(CodeParser.AALoad),
+      0x53 -> PassWith(AAStore),
+      0x01 -> PassWith(AConstNull),
+      0x2a -> PassWith(ALoad0),
+      0x2b -> PassWith(ALoad1),
+      0x2c -> PassWith(ALoad2),
+      0x2d -> PassWith(ALoad3),
+      0xb0 -> PassWith(AReturn),
+      0xbe -> PassWith(ArrayLength),
+      0x4b -> PassWith(AStore0),
+      0x4c -> PassWith(AStore1),
+      0x4d -> PassWith(AStore2),
+      0x4e -> PassWith(AStore3),
+      0xbf -> PassWith(AThrow),
 
-      0x33 -> Pass.map(_ => BALoad()),
-      0x54 -> Pass.map(_ => BAStore()),
-      0xca -> Pass.map(_ => BreakPoint()),
+      0x33 -> PassWith(BALoad),
+      0x54 -> PassWith(BAStore),
+      0xca -> PassWith(BreakPoint),
 
-      0x34 -> Pass.map(_ => CALoad()),
-      0x55 -> Pass.map(_ => CAStore()),
+      0x34 -> PassWith(CALoad),
+      0x55 -> PassWith(CAStore),
 
-      0x90 -> Pass.map(_ => D2F()),
-      0x8e -> Pass.map(_ => D2I()),
-      0x8f -> Pass.map(_ => D2L()),
-      0x63 -> Pass.map(_ => DAdd()),
-      0x31 -> Pass.map(_ => DALoad()),
-      0x52 -> Pass.map(_ => DAStore()),
-      0x98 -> Pass.map(_ => DCmpG()),
-      0x97 -> Pass.map(_ => DCmpL()),
-      0x0e -> Pass.map(_ => DConst0()),
-      0x0f -> Pass.map(_ => DConst1()),
-      0x6f -> Pass.map(_ => DDiv()),
-      0x26 -> Pass.map(_ => DLoad0()),
-      0x27 -> Pass.map(_ => DLoad1()),
-      0x28 -> Pass.map(_ => DLoad2()),
-      0x29 -> Pass.map(_ => DLoad3()),
-      0x6b -> Pass.map(_ => DMul()),
-      0x77 -> Pass.map(_ => DNeg()),
-      0x73 -> Pass.map(_ => DRem()),
-      0xaf -> Pass.map(_ => DReturn()),
-      0x47 -> Pass.map(_ => DStore0()),
-      0x48 -> Pass.map(_ => DStore1()),
-      0x49 -> Pass.map(_ => DStore2()),
-      0x4a -> Pass.map(_ => DStore3()),
-      0x67 -> Pass.map(_ => DSub()),
-      0x59 -> Pass.map(_ => Dup()),
-      0x5a -> Pass.map(_ => DupX1()),
-      0x5b -> Pass.map(_ => DupX2()),
-      0x5c -> Pass.map(_ => Dup2()),
-      0x5d -> Pass.map(_ => Dup2X1()),
-      0x5e -> Pass.map(_ => Dup2X2()),
+      0x90 -> PassWith(D2F),
+      0x8e -> PassWith(D2I),
+      0x8f -> PassWith(D2L),
+      0x63 -> PassWith(DAdd),
+      0x31 -> PassWith(DALoad),
+      0x52 -> PassWith(DAStore),
+      0x98 -> PassWith(DCmpG),
+      0x97 -> PassWith(DCmpL),
+      0x0e -> PassWith(DConst0),
+      0x0f -> PassWith(DConst1),
+      0x6f -> PassWith(DDiv),
+      0x26 -> PassWith(DLoad0),
+      0x27 -> PassWith(DLoad1),
+      0x28 -> PassWith(DLoad2),
+      0x29 -> PassWith(DLoad3),
+      0x6b -> PassWith(DMul),
+      0x77 -> PassWith(DNeg),
+      0x73 -> PassWith(DRem),
+      0xaf -> PassWith(DReturn),
+      0x47 -> PassWith(DStore0),
+      0x48 -> PassWith(DStore1),
+      0x49 -> PassWith(DStore2),
+      0x4a -> PassWith(DStore3),
+      0x67 -> PassWith(DSub),
+      0x59 -> PassWith(Dup),
+      0x5a -> PassWith(DupX1),
+      0x5b -> PassWith(DupX2),
+      0x5c -> PassWith(Dup2),
+      0x5d -> PassWith(Dup2X1),
+      0x5e -> PassWith(Dup2X2),
 
-      0x8d -> Pass.map(_ => F2D()),
-      0x8b -> Pass.map(_ => F2I()),
-      0x8c -> Pass.map(_ => F2L()),
-      0x62 -> Pass.map(_ => FAdd()),
-      0x30 -> Pass.map(_ => FALoad()),
-      0x51 -> Pass.map(_ => FAStore()),
-      0x96 -> Pass.map(_ => FCmpG()),
-      0x95 -> Pass.map(_ => FCmpL()),
-      0x0b -> Pass.map(_ => FConst0()),
-      0x0c -> Pass.map(_ => FConst1()),
-      0x0d -> Pass.map(_ => FConst2()),
-      0x6e -> Pass.map(_ => FDiv()),
-      0x22 -> Pass.map(_ => FLoad0()),
-      0x23 -> Pass.map(_ => FLoad1()),
-      0x24 -> Pass.map(_ => FLoad2()),
-      0x25 -> Pass.map(_ => FLoad3()),
-      0x6a -> Pass.map(_ => FMul()),
-      0x76 -> Pass.map(_ => FNeg()),
-      0x72 -> Pass.map(_ => FRem()),
-      0xae -> Pass.map(_ => FReturn()),
-      0x43 -> Pass.map(_ => FStore0()),
-      0x44 -> Pass.map(_ => FStore1()),
-      0x45 -> Pass.map(_ => FStore2()),
-      0x46 -> Pass.map(_ => FStore3()),
-      0x66 -> Pass.map(_ => FSub()),
+      0x8d -> PassWith(F2D),
+      0x8b -> PassWith(F2I),
+      0x8c -> PassWith(F2L),
+      0x62 -> PassWith(FAdd),
+      0x30 -> PassWith(FALoad),
+      0x51 -> PassWith(FAStore),
+      0x96 -> PassWith(FCmpG),
+      0x95 -> PassWith(FCmpL),
+      0x0b -> PassWith(FConst0),
+      0x0c -> PassWith(FConst1),
+      0x0d -> PassWith(FConst2),
+      0x6e -> PassWith(FDiv),
+      0x22 -> PassWith(FLoad0),
+      0x23 -> PassWith(FLoad1),
+      0x24 -> PassWith(FLoad2),
+      0x25 -> PassWith(FLoad3),
+      0x6a -> PassWith(FMul),
+      0x76 -> PassWith(FNeg),
+      0x72 -> PassWith(FRem),
+      0xae -> PassWith(FReturn),
+      0x43 -> PassWith(FStore0),
+      0x44 -> PassWith(FStore1),
+      0x45 -> PassWith(FStore2),
+      0x46 -> PassWith(FStore3),
+      0x66 -> PassWith(FSub),
 
-      0x91 -> Pass.map(_ => I2B()),
-      0x92 -> Pass.map(_ => I2C()),
-      0x87 -> Pass.map(_ => I2D()),
-      0x86 -> Pass.map(_ => I2F()),
-      0x85 -> Pass.map(_ => I2L()),
-      0x93 -> Pass.map(_ => I2S()),
-      0x60 -> Pass.map(_ => IAdd()),
-      0x2e -> Pass.map(_ => IALoad()),
-      0x7e -> Pass.map(_ => IAnd()),
-      0x4f -> Pass.map(_ => IAStore()),
-      0x02 -> Pass.map(_ => IConstM1()),
-      0x03 -> Pass.map(_ => IConst0()),
-      0x04 -> Pass.map(_ => IConst1()),
-      0x05 -> Pass.map(_ => IConst2()),
-      0x06 -> Pass.map(_ => IConst3()),
-      0x07 -> Pass.map(_ => IConst4()),
-      0x08 -> Pass.map(_ => IConst5()),
-      0x6c -> Pass.map(_ => IDiv()),
-      0x1a -> Pass.map(_ => ILoad0()),
-      0x1b -> Pass.map(_ => ILoad1()),
-      0x1c -> Pass.map(_ => ILoad2()),
-      0x1d -> Pass.map(_ => ILoad3()),
-      0xfe -> Pass.map(_ => ImpDep1()),
-      0xff -> Pass.map(_ => ImpDep2()),
-      0x68 -> Pass.map(_ => IMul()),
-      0x74 -> Pass.map(_ => INeg()),
-      0x80 -> Pass.map(_ => IOr()),
-      0x70 -> Pass.map(_ => IRem()),
-      0xac -> Pass.map(_ => IReturn()),
-      0x78 -> Pass.map(_ => IShl()),
-      0x7a -> Pass.map(_ => IShr()),
-      0x3b -> Pass.map(_ => IStore0()),
-      0x3c -> Pass.map(_ => IStore1()),
-      0x3d -> Pass.map(_ => IStore2()),
-      0x3e -> Pass.map(_ => IStore3()),
-      0x64 -> Pass.map(_ => ISub()),
-      0x7c -> Pass.map(_ => IUShr()),
-      0x82 -> Pass.map(_ => IXor()),
+      0x91 -> PassWith(I2B),
+      0x92 -> PassWith(I2C),
+      0x87 -> PassWith(I2D),
+      0x86 -> PassWith(I2F),
+      0x85 -> PassWith(I2L),
+      0x93 -> PassWith(I2S),
+      0x60 -> PassWith(IAdd),
+      0x2e -> PassWith(IALoad),
+      0x7e -> PassWith(IAnd),
+      0x4f -> PassWith(IAStore),
+      0x02 -> PassWith(IConstM1),
+      0x03 -> PassWith(IConst0),
+      0x04 -> PassWith(IConst1),
+      0x05 -> PassWith(IConst2),
+      0x06 -> PassWith(IConst3),
+      0x07 -> PassWith(IConst4),
+      0x08 -> PassWith(IConst5),
+      0x6c -> PassWith(IDiv),
+      0x1a -> PassWith(ILoad0),
+      0x1b -> PassWith(ILoad1),
+      0x1c -> PassWith(ILoad2),
+      0x1d -> PassWith(ILoad3),
+      0xfe -> PassWith(ImpDep1),
+      0xff -> PassWith(ImpDep2),
+      0x68 -> PassWith(IMul),
+      0x74 -> PassWith(INeg),
+      0x80 -> PassWith(IOr),
+      0x70 -> PassWith(IRem),
+      0xac -> PassWith(IReturn),
+      0x78 -> PassWith(IShl),
+      0x7a -> PassWith(IShr),
+      0x3b -> PassWith(IStore0),
+      0x3c -> PassWith(IStore1),
+      0x3d -> PassWith(IStore2),
+      0x3e -> PassWith(IStore3),
+      0x64 -> PassWith(ISub),
+      0x7c -> PassWith(IUShr),
+      0x82 -> PassWith(IXor),
 
-      0x8a -> Pass.map(_ => L2D()),
-      0x89 -> Pass.map(_ => L2F()),
-      0x88 -> Pass.map(_ => L2I()),
-      0x61 -> Pass.map(_ => LAdd()),
-      0x2f -> Pass.map(_ => LALoad()),
-      0x7f -> Pass.map(_ => LAnd()),
-      0x50 -> Pass.map(_ => LAStore()),
-      0x94 -> Pass.map(_ => LCmp()),
-      0x09 -> Pass.map(_ => LConst0()),
-      0x0a -> Pass.map(_ => LConst1()),
-      0x6d -> Pass.map(_ => LDiv()),
-      0x1e -> Pass.map(_ => LLoad0()),
-      0x1f -> Pass.map(_ => LLoad1()),
-      0x20 -> Pass.map(_ => LLoad2()),
-      0x21 -> Pass.map(_ => LLoad3()),
-      0x69 -> Pass.map(_ => LMul()),
-      0x75 -> Pass.map(_ => LNeg()),
-      0x81 -> Pass.map(_ => LOr()),
-      0x71 -> Pass.map(_ => LRem()),
-      0xad -> Pass.map(_ => LReturn()),
-      0x79 -> Pass.map(_ => LShl()),
-      0x7b -> Pass.map(_ => LShr()),
-      0x3f -> Pass.map(_ => LStore0()),
-      0x40 -> Pass.map(_ => LStore1()),
-      0x41 -> Pass.map(_ => LStore2()),
-      0x42 -> Pass.map(_ => LStore3()),
-      0x65 -> Pass.map(_ => LSub()),
-      0x7d -> Pass.map(_ => LUShr()),
-      0x83 -> Pass.map(_ => LXor()),
+      0x8a -> PassWith(L2D),
+      0x89 -> PassWith(L2F),
+      0x88 -> PassWith(L2I),
+      0x61 -> PassWith(LAdd),
+      0x2f -> PassWith(LALoad),
+      0x7f -> PassWith(LAnd),
+      0x50 -> PassWith(LAStore),
+      0x94 -> PassWith(LCmp),
+      0x09 -> PassWith(LConst0),
+      0x0a -> PassWith(LConst1),
+      0x6d -> PassWith(LDiv),
+      0x1e -> PassWith(LLoad0),
+      0x1f -> PassWith(LLoad1),
+      0x20 -> PassWith(LLoad2),
+      0x21 -> PassWith(LLoad3),
+      0x69 -> PassWith(LMul),
+      0x75 -> PassWith(LNeg),
+      0x81 -> PassWith(LOr),
+      0x71 -> PassWith(LRem),
+      0xad -> PassWith(LReturn),
+      0x79 -> PassWith(LShl),
+      0x7b -> PassWith(LShr),
+      0x3f -> PassWith(LStore0),
+      0x40 -> PassWith(LStore1),
+      0x41 -> PassWith(LStore2),
+      0x42 -> PassWith(LStore3),
+      0x65 -> PassWith(LSub),
+      0x7d -> PassWith(LUShr),
+      0x83 -> PassWith(LXor),
 
-      0xc2 -> Pass.map(_ => MonitorEnter()),
-      0xc3 -> Pass.map(_ => MonitorExit()),
-      0x00 -> Pass.map(_ => Nop()),
-      0x57 -> Pass.map(_ => Pop()),
-      0x58 -> Pass.map(_ => Pop2()),
-      0xb1 -> Pass.map(_ => Return()),
-      0x35 -> Pass.map(_ => SALoad()),
-      0x56 -> Pass.map(_ => SAStore()),
-      0x5f -> Pass.map(_ => Swap()),
-      0xc4 -> Pass.map(_ => Wide()),
+      0xc2 -> PassWith(MonitorEnter),
+      0xc3 -> PassWith(MonitorExit),
+      0x00 -> PassWith(Nop),
+      0x57 -> PassWith(Pop),
+      0x58 -> PassWith(Pop2),
+      0xb1 -> PassWith(Return),
+      0x35 -> PassWith(SALoad),
+      0x56 -> PassWith(SAStore),
+      0x5f -> PassWith(Swap),
+      0xc4 -> PassWith(Wide),
 
       0x10 -> P( AnyByte.! ).map(_(0)).map(BIPush),
       0x11 -> P( AnyWordI ).map(i => i.toShort).map(SIPush),
@@ -480,14 +480,14 @@ object CodeParser {
       0xab ->
         P( AnyDwordI /*default_offset*/ ~
            AnyDwordI /*n_pairs*/.flatMap(l =>
-             P( (AnyDwordI /*value*/ ~
-                 AnyDwordI /*offset*/).rep(exactly=l) ))
+             (AnyDwordI /*value*/ ~
+              AnyDwordI /*offset*/).rep(exactly=l))
          ).map(LookUpSwitch.tupled),
       0xaa ->
         P( AnyDwordI /*default_offset*/ ~
            (AnyDwordI /*low*/ ~ AnyDwordI /*high*/).flatMap {
               case (low: Int, high: Int) =>
-                P( AnyDwordI.rep(exactly=high - low + 1) ).map(offs => (low, high, offs))
+                AnyDwordI.rep(exactly=high - low + 1).map(offs => (low, high, offs))
             }
          ).map {
             case (defaultOffset: Int, (low: Int, high: Int, offs: Seq[Int])) =>
@@ -500,7 +500,7 @@ object CodeParser {
     val opCodes =
       P( (AnyByte.! ~ Index).flatMap {
           case (bs: Array[Byte], idx: Int) => (bs(0) & 0xff) match {
-            case b @ (0xab | 0xaa) => P( AnyByte.rep(exactly=(4 - idx % 4) % 4) ~ opCodeParsers(b))
+            case b @ (0xab | 0xaa) => AnyByte.rep(exactly=(4 - idx % 4) % 4) ~ opCodeParsers(b)
             case b: Int => opCodeParsers(b)
           }
         }.rep

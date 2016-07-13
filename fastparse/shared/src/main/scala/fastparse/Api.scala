@@ -18,6 +18,7 @@ trait Api[ElemType, Repr] {
   }
 
   val Pass = parsers.Terminals.Pass[ElemType, Repr]()
+  def PassWith[T](t: T) = parsers.Terminals.PassWith[T, ElemType, Repr](t)
   val Fail = parsers.Terminals.Fail[ElemType, Repr]()
   val Start = parsers.Terminals.Start[ElemType, Repr]()
   val End = parsers.Terminals.End[ElemType, Repr]()

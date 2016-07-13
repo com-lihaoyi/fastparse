@@ -23,6 +23,10 @@ object Terminals {
     override val toString = "Pass"
   }
 
+  case class PassWith[T, ElemType, R](t: T) extends Parser[T, ElemType, R]{
+    def parseRec(cfg: ParseCtx[ElemType], index: Int) = success(cfg.success, t, index, Set.empty, false)
+  }
+
   /**
    * A parser that always fails immediately
    */

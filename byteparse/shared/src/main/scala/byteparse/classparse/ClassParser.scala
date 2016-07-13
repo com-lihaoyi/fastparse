@@ -86,7 +86,7 @@ object ClassParser {
 
     sealed trait PoolItem
 
-    case class Nop() extends PoolItem // see NopeInfo
+    case object Nop extends PoolItem // see NopeInfo
 
     case class Class(name: String) extends PoolItem
 
@@ -209,10 +209,11 @@ object ClassParser {
                                accAbstract: Boolean, accSynthetic: Boolean, accAnnotation: Boolean,
                                accEnum: Boolean){
 
-      def this(fs: Array[Byte]) = this(getFlag(fs(1), 0x01), getFlag(fs(1), 0x02), getFlag(fs(1), 0x04),
-                                       getFlag(fs(1), 0x08), getFlag(fs(1), 0x10), getFlag(fs(0), 0x02),
-                                       getFlag(fs(0), 0x04), getFlag(fs(0), 0x10), getFlag(fs(0), 0x20),
-                                       getFlag(fs(0), 0x40))
+      def this(fs: Array[Byte]) = this(
+        getFlag(fs(1), 0x01), getFlag(fs(1), 0x02), getFlag(fs(1), 0x04),
+        getFlag(fs(1), 0x08), getFlag(fs(1), 0x10), getFlag(fs(0), 0x02),
+        getFlag(fs(0), 0x04), getFlag(fs(0), 0x10), getFlag(fs(0), 0x20),
+        getFlag(fs(0), 0x40))
     }
 
 
@@ -224,9 +225,10 @@ object ClassParser {
                           accStatic: Boolean,    accFinal: Boolean,     accVolatile: Boolean,
                           accTransient: Boolean, accSynthetic: Boolean, accEnum: Boolean) {
 
-      def this(fs: Array[Byte]) = this(getFlag(fs(1), 0x01), getFlag(fs(1), 0x02), getFlag(fs(1), 0x04),
-                                       getFlag(fs(1), 0x08), getFlag(fs(1), 0x10), getFlag(fs(1), 0x40),
-                                       getFlag(fs(1), 0x80), getFlag(fs(0), 0x10), getFlag(fs(0), 0x40))
+      def this(fs: Array[Byte]) = this(
+        getFlag(fs(1), 0x01), getFlag(fs(1), 0x02), getFlag(fs(1), 0x04),
+        getFlag(fs(1), 0x08), getFlag(fs(1), 0x10), getFlag(fs(1), 0x40),
+        getFlag(fs(1), 0x80), getFlag(fs(0), 0x10), getFlag(fs(0), 0x40))
     }
 
     object FieldFlags {
@@ -238,10 +240,11 @@ object ClassParser {
                            accBridge: Boolean,    accVarargs: Boolean,   accNative: Boolean,
                            accAbstract: Boolean,  accStrict: Boolean,    accSynthetic: Boolean) {
 
-      def this(fs: Array[Byte]) = this(getFlag(fs(1), 0x01), getFlag(fs(1), 0x02), getFlag(fs(1), 0x04),
-                                       getFlag(fs(1), 0x08), getFlag(fs(1), 0x10), getFlag(fs(1), 0x20),
-                                       getFlag(fs(1), 0x40), getFlag(fs(1), 0x80), getFlag(fs(0), 0x01),
-                                       getFlag(fs(0), 0x04), getFlag(fs(0), 0x08), getFlag(fs(0), 0x10))
+      def this(fs: Array[Byte]) = this(
+        getFlag(fs(1), 0x01), getFlag(fs(1), 0x02), getFlag(fs(1), 0x04),
+        getFlag(fs(1), 0x08), getFlag(fs(1), 0x10), getFlag(fs(1), 0x20),
+        getFlag(fs(1), 0x40), getFlag(fs(1), 0x80), getFlag(fs(0), 0x01),
+        getFlag(fs(0), 0x04), getFlag(fs(0), 0x08), getFlag(fs(0), 0x10))
     }
 
     object MethodFlags {
@@ -252,9 +255,10 @@ object ClassParser {
                           accInterface: Boolean,  accAbstract: Boolean, accSynthetic: Boolean,
                           accAnnotation: Boolean, accEnum: Boolean){
 
-      def this(fs: Array[Byte]) = this(getFlag(fs(1), 0x01), getFlag(fs(1), 0x10), getFlag(fs(1), 0x20),
-                                       getFlag(fs(0), 0x02), getFlag(fs(0), 0x04), getFlag(fs(0), 0x10),
-                                       getFlag(fs(0), 0x20), getFlag(fs(0), 0x40))
+      def this(fs: Array[Byte]) = this(
+        getFlag(fs(1), 0x01), getFlag(fs(1), 0x10), getFlag(fs(1), 0x20),
+        getFlag(fs(0), 0x02), getFlag(fs(0), 0x04), getFlag(fs(0), 0x10),
+        getFlag(fs(0), 0x20), getFlag(fs(0), 0x40))
     }
 
     object ClassFlags {
@@ -273,7 +277,7 @@ object ClassParser {
 
     def convertToPoolItem(classInfo: Info.ClassFileInfo, info: PoolInfo): PoolItem = {
       info match {
-        case info: NopInfo => Nop()
+        case info: NopInfo => Nop
         case info: ClassInfo => Class(classInfo, info)
         case info: FieldRefInfo => FieldRef(classInfo, info)
         case info: MethodRefInfo => MethodRef(classInfo, info)
@@ -373,7 +377,7 @@ object ClassParser {
   val constantUtf8Info =
     P( BS(1) ~
        AnyWordI.flatMap(l =>
-         P( AnyByte.rep(exactly=l).! ))
+         AnyByte.rep(exactly=l).!)
     ).map(Utf8Info)
 
   val constantMethodHandleInfo =
@@ -414,7 +418,7 @@ object ClassParser {
   val attributeInfo =
     P( AnyWordI /*attribute_name_index*/ ~
        AnyDwordI /*attribute_length*/.flatMap(l =>
-         P( AnyByte.rep(exactly=l).! ))
+         AnyByte.rep(exactly=l).!)
      ).map(AttributeInfo.tupled)
 
 
@@ -423,7 +427,7 @@ object ClassParser {
        AnyWordI /*name_index*/ ~
        AnyWordI /*descriptor_index*/ ~
        AnyWordI /*attributes_count*/.flatMap(l =>
-         P( attributeInfo.rep(exactly=l) ))
+         attributeInfo.rep(exactly=l))
      ).map(FieldInfo.tupled)
 
   val methodInfo =
@@ -431,7 +435,7 @@ object ClassParser {
        AnyWordI /*name_index*/ ~
        AnyWordI /*descriptor_index*/ ~
        AnyWordI /*attributes_count*/.flatMap(l =>
-         P( attributeInfo.rep(exactly=l) ))
+         attributeInfo.rep(exactly=l))
      ).map(MethodInfo.tupled)
 
   val classFile =
@@ -444,13 +448,13 @@ object ClassParser {
        AnyWordI /*this_class*/ ~
        AnyWordI /*super_class*/ ~
        AnyWordI /*interfaces_count*/.flatMap(l =>
-         P( AnyWordI.rep(exactly=l) )) ~
+         AnyWordI.rep(exactly=l)) ~
        AnyWordI /*fields_count*/.flatMap(l =>
-         P( fieldInfo.rep(exactly=l) )) ~
+         fieldInfo.rep(exactly=l)) ~
        AnyWordI /*methods_count*/.flatMap(l =>
-         P( methodInfo.rep(exactly=l) )) ~
+         methodInfo.rep(exactly=l)) ~
        AnyWordI /*attributes_count*/.flatMap(l =>
-         P( attributeInfo.rep(exactly=l)))
+         attributeInfo.rep(exactly=l))
      ).map(ClassFileInfo.tupled)
 
 }
