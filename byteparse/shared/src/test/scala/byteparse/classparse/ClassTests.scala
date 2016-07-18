@@ -936,6 +936,12 @@ object ClassTests extends TestSuite {
 
         assert(parsedClass.methods(1).attributes(0).asInstanceOf[CodeAttribute].code ==
             ArrayBuffer(
+                                    // output from the javap -c
+                                    // it was manually run to verify the correctness of parser result
+                                    //
+                                    // all gotos and if-conditions were printed with absolute addresses by javap
+                                    // but actually they are relative
+
               GetStatic(2),          //   0: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
               LDC(3),                //   3: ldc           #3                  // String Hello World!
               InvokeVirtual(4),      //   5: invokevirtual #4                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
@@ -1469,11 +1475,6 @@ object ClassTests extends TestSuite {
               InvokeStatic(87),      //1222: invokestatic  #87                 // Method java/lang/Integer.toString:(I)Ljava/lang/String;
               Pop,                   //1225: pop
               Return                 //1226: return
-                                     //
-                                     // output from the javap -c
-                                     // all gotos and if-conditions were printed with absolute addresses by javap
-                                     // but in real bytecode they are relative
-
             )
         )
       }

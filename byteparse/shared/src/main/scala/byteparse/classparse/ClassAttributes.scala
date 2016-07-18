@@ -67,73 +67,76 @@ object ClassAttributes {
     ))
 
   val code = {
-      val exceptionHandler =
-        P( AnyWordI /*start_pc*/ ~
-           AnyWordI /*end_pc*/ ~
-           AnyWordI /*handler_pc*/ ~
-           AnyWordI /*catch_type*/
-        ).map{
-          case (spc: Int, epc: Int, hpc: Int, ctype: Int) =>
-            (classInfo: ClassFileInfo) => ExceptionHandler(
-              spc,
-              epc,
-              hpc,
-              if (ctype == 0) None
-              else Some(Class(classInfo, classInfo.getInfoByIndex[ClassInfo](ctype).get)))
-        }
+    val exceptionHandler = {
+      val start_pc = AnyWordI
+      val end_pc = AnyWordI
+      val handler_pc = AnyWordI
+      val catch_type = AnyWordI
+      P( start_pc ~ end_pc ~ handler_pc ~ catch_type ).map {
+        case (spc: Int, epc: Int, hpc: Int, ctype: Int) =>
+          (classInfo: ClassFileInfo) => ExceptionHandler(
+            spc,
+            epc,
+            hpc,
+            if (ctype == 0) None
+            else Some(Class(classInfo, classInfo.getInfoByIndex[ClassInfo](ctype).get)))
+      }
+    }
 
-      P( AnyWordI /*max_stack*/ ~
-         AnyWordI /*max_locals*/ ~
-         AnyDwordI /*code_length*/.flatMap(l =>
-           AnyByte.rep(exactly=l).!).map(parseCode) ~
-         AnyWordI /*exception_table_length*/.flatMap(l =>
-           exceptionHandler.rep(exactly=l)) ~
-         AnyWordI /*attributes_count*/.flatMap(l =>
-           attributeInfo.rep(exactly=l))
-       ).map {
-         case (maxs: Int, maxl: Int, code: Seq[OpCode], exceptions, attrs: Seq[AttributeInfo]) =>
-           (classInfo: ClassFileInfo) => CodeAttribute(
-             maxs,
-             maxl,
-             code,
-             exceptions.map(_(classInfo)),
-             attrs.map(attr => convertToAttribute(classInfo, attr))
-           )
-       }
+    val max_stack = AnyWordI
+    val max_locals = AnyWordI
+    val code = AnyDwordI.flatMap(l => AnyByte.rep(exactly=l).!).map(parseCode)
+    val exception_table = repeatWithSize(exceptionHandler)
+    val attributes = repeatWithSize(attributeInfo)
+
+    P( max_stack ~ max_locals ~ code ~ exception_table ~ attributes ).map {
+       case (maxs: Int, maxl: Int, code: Seq[OpCode], exceptions, attrs: Seq[AttributeInfo]) =>
+         (classInfo: ClassFileInfo) => CodeAttribute(
+           maxs,
+           maxl,
+           code,
+           exceptions.map(_(classInfo)),
+           attrs.map(attr => convertToAttribute(classInfo, attr))
+         )
+     }
   }
 
   val innerClasses = {
-    val innerClass =
-      P( AnyWordI /*inner_class_info_index*/ ~
-         AnyWordI /*outer_class_info_index*/ ~
-         AnyWordI /*inner_name_index*/ ~
-         AnyWord.! /*inner_class_access_flags*/
-       ).map {
-         case (inIdx: Int, outIdx: Int, inName: Int, inFlags: Array[Byte]) =>
-           (classInfo: ClassFileInfo) => InnerClass(
-             Class(classInfo, classInfo.getInfoByIndex[ClassInfo](inIdx).get),
-             if (outIdx == 0) None
-             else Some(Class(classInfo, classInfo.getInfoByIndex[ClassInfo](outIdx).get)),
-             if (inName == 0) None
-             else Some(classInfo.getStringByIndex(inName)),
-             InnerClassFlags(inFlags)
-           )
-       }
+    val innerClass = {
+      val inner_class_info_index = AnyWordI
+      val outer_class_info_index = AnyWordI
+      val inner_name_index = AnyWordI
+      val inner_class_access_flags = AnyWord.!
 
-    P( AnyWordI /*number_of_classes*/.flatMap(l =>
-      innerClass.rep(exactly = l))
-    ).map(ics => (classInfo: ClassFileInfo) => InnerClassesAttribute(ics.map(_(classInfo))))
+      P( inner_class_info_index ~ outer_class_info_index ~
+         inner_name_index ~ inner_class_access_flags ).map {
+        case (inIdx: Int, outIdx: Int, inName: Int, inFlags: Array[Byte]) =>
+          (classInfo: ClassFileInfo) => InnerClass(
+            Class(classInfo, classInfo.getInfoByIndex[ClassInfo](inIdx).get),
+            if (outIdx == 0) None
+            else Some(Class(classInfo, classInfo.getInfoByIndex[ClassInfo](outIdx).get)),
+            if (inName == 0) None
+            else Some(classInfo.getStringByIndex(inName)),
+            InnerClassFlags(inFlags)
+          )
+      }
+    }
+
+    repeatWithSize(innerClass).map(
+      ics => (classInfo: ClassFileInfo) => InnerClassesAttribute(ics.map(_(classInfo))))
   }
 
   val exceptions =
-    P( AnyWordI /*number_of_exceptions*/.flatMap(l =>
-       AnyWordI.rep(exactly=l))
-     ).map(exceptionsIdxs =>
-        (classInfo: ClassFileInfo) => ExceptionsAttribute(
-          exceptionsIdxs.map(idx => Class(classInfo, classInfo.getInfoByIndex[ClassInfo](idx).get))
-        ))
+    repeatWithSize(AnyWordI).map(exceptionsIdxs =>
+      (classInfo: ClassFileInfo) => ExceptionsAttribute(
+        exceptionsIdxs.map(idx => Class(classInfo, classInfo.getInfoByIndex[ClassInfo](idx).get))
+      ))
 
-  val enclosingMethod = P( AnyWordI /*class_index*/ ~ AnyWordI /*method_index*/).map {
+  val enclosingMethod = {
+    val class_index = AnyWordI
+    val method_index = AnyWordI
+
+    P( class_index ~ method_index ).map {
       case (classIdx: Int, methodIdx: Int) =>
         (classInfo: ClassFileInfo) => {
           val (name, descriptor) =
@@ -148,15 +151,16 @@ object ClassAttributes {
             name,
             descriptor
           )
-      }
+        }
     }
+  }
 
   val bootstrapMethods = {
+    val bootstrap_method_ref = AnyWordI
+    val bootstrap_arguments = repeatWithSize(AnyWordI)
+
     val bootstrapMethod =
-      P( AnyWordI /*bootstrap_method_ref*/ ~
-         AnyWordI /*num_bootstrap_arguments*/.flatMap(l =>
-          AnyWordI.rep(exactly=l))
-      ).map {
+      P( bootstrap_method_ref ~ bootstrap_arguments ).map {
         case (refIdx: Int, argsIdxs: Seq[Int]) => (classInfo: ClassFileInfo) =>
           BootstrapMethod(
             MethodHandle(classInfo, classInfo.getInfoByIndex[MethodHandleInfo](refIdx).get),
@@ -165,9 +169,8 @@ object ClassAttributes {
           )
       }
 
-    P( AnyWordI /*num_bootstrap_methods*/.flatMap(l =>
-        bootstrapMethod.rep(exactly=l))
-     ).map(bms => (classInfo: ClassFileInfo) => BootstrapMethodsAttribute(bms.map(_(classInfo))))
+    repeatWithSize(bootstrapMethod).map(
+      bms => (classInfo: ClassFileInfo) => BootstrapMethodsAttribute(bms.map(_(classInfo))))
   }
 
   val attributeParsers = Map[String, Parser[(ClassFileInfo) => Attribute]](
