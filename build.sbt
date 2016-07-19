@@ -133,16 +133,15 @@ lazy val cssparseJVM = cssparse.jvm
 lazy val cssparseJS = cssparse.js
 
 lazy val byteparse = crossProject.dependsOn(fastparse).settings(
-  name := "byteparse"
-).settings(shared:_*)
-  .jvmSettings()
+   name := "byteparse"
+ ).settings(shared:_*)
 
 lazy val byteparseJVM = byteparse.jvm
 lazy val byteparseJS = byteparse.js
 
 lazy val perftests = crossProject.settings(
-  name := "perfomance-tests"
-).settings(shared:_*).dependsOn(fastparse, pythonparse, scalaparse, cssparse, byteparse)
+   name := "perfomance-tests"
+ ).settings(shared:_*).dependsOn(fastparse, pythonparse, scalaparse, cssparse, byteparse)
 lazy val perftestsJS = perftests.js
 lazy val perftestsJVM = perftests.jvm
 

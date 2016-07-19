@@ -1,9 +1,7 @@
 package fastparse
 import language.experimental.macros
 import fastparse.parsers.{Intrinsics, Terminals}
-import acyclic.file
 import fastparse.Utils.HexUtils
-import fastparse.parsers.Intrinsics.ElemsWhile
 
 /**
  * This is basically a trait which contains
@@ -20,6 +18,7 @@ trait Api[ElemType, Repr] {
   }
 
   val Pass = parsers.Terminals.Pass[ElemType, Repr]()
+  def PassWith[T](t: T) = parsers.Terminals.PassWith[T, ElemType, Repr](t)
   val Fail = parsers.Terminals.Fail[ElemType, Repr]()
   val Start = parsers.Terminals.Start[ElemType, Repr]()
   val End = parsers.Terminals.End[ElemType, Repr]()
@@ -109,7 +108,7 @@ trait ByteApi extends Api[Byte, Array[Byte]] {
     }
 
     val hexDigit = all.P(CharIn('0' to '9', 'a' to 'f', 'A' to 'F'))
-    val byte = all.P("0x".? ~ hexDigit.rep(min = 2, max = 2).!).map(s => charsToByte(s.toLowerCase))
+    val byte = all.P("0x".? ~ hexDigit.rep(exactly = 2).!).map(s => charsToByte(s.toLowerCase))
     val byteSep = all.P(" ".rep)
     val bytes = all.P(byteSep ~ byte.rep(sep = byteSep)).map(_.toArray)
   }

@@ -13,7 +13,7 @@ object ByteParse extends TestSuite {
     'Lena {
       val results = Utils.benchmark(Seq(
         () => parser.parse(lenaSource),
-        () => parser.parse(lenaSource)))
+        () => parser.parse(lenaSource ++ Array(0.toByte))))
 
       println("ByteParse Benchmark")
       println(results.map(_.mkString(" ")).mkString("\n"))

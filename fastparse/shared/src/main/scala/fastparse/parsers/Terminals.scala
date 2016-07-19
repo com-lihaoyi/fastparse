@@ -24,6 +24,13 @@ object Terminals {
   }
 
   /**
+    * A parser that always succeeds with given result value `t`, consuming no input
+    */
+  case class PassWith[T, ElemType, R](t: T) extends Parser[T, ElemType, R]{
+    def parseRec(cfg: ParseCtx[ElemType], index: Int) = success(cfg.success, t, index, Set.empty, false)
+  }
+
+  /**
    * A parser that always fails immediately
    */
   case class Fail[ElemType, R]() extends Parser[Nothing, ElemType, R]{

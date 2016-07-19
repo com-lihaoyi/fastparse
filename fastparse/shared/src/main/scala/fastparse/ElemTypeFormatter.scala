@@ -24,7 +24,7 @@ object ElemTypeFormatter {
     override def literalize(input: IndexedSeq[Char]): String = Utils.literalize(input.mkString)
   }
 
-  implicit val ByteParserHelper = new ElemTypeFormatter[Byte] {
+  implicit val ByteFormatter = new ElemTypeFormatter[Byte] {
     override val delimiter = 0.toByte
     override val emptyElem = ArrayBuffer[Byte]()
 

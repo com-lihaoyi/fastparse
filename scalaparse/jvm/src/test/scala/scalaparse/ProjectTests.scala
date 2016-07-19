@@ -1,6 +1,8 @@
 package scalaparse
 
-import java.nio.file.{Paths, Path, Files}
+import java.io.File
+import java.nio.file.{Files, Path, Paths}
+
 import concurrent.ExecutionContext.Implicits.global
 import utest._
 
@@ -14,17 +16,14 @@ object ProjectTests extends TestSuite{
 
     def checkDir(path: String, filter: String => Boolean = _ => true) = {
       println("Checking Dir " + path)
-      def listFiles(s: java.io.File): Iterator[String] = {
-        val (dirs, files) = Option(s.listFiles()).toIterator
-                                                 .flatMap(_.toIterator)
-                                                 .partition(_.isDirectory)
+      def listFiles(s: File): Seq[String] = {
+        val (dirs, files) = Option(s.listFiles).getOrElse(Array[File]()).partition(_.isDirectory)
 
         files.map(_.getPath) ++ dirs.flatMap(listFiles)
       }
 
-      val files = for{
-        f0 <- Option(listFiles(new java.io.File(path))).toVector
-        filename <- f0
+      val files = for {
+        filename <- listFiles(new File(path))
       } yield Future{
         if (filename.endsWith(".scala") && filter(filename)) {
           val code = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(filename)))
