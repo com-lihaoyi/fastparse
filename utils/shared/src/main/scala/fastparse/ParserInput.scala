@@ -2,6 +2,11 @@ package fastparse
 
 import scala.collection.mutable.ArrayBuffer
 
+abstract class ParserInputLogger {
+  def logDropBuffer(index: Int)
+  def logApply(index: Int)
+}
+
 abstract class ParserInput[ElemType] {
   def apply(index: Int): ElemType
   def dropBuffer(index: Int): Unit
@@ -9,6 +14,33 @@ abstract class ParserInput[ElemType] {
   def length: Int
   def innerLength: Int
   def isReachable(index: Int): Boolean
+}
+
+abstract class LoggedParsedInput[ElemType](parserInput: ParserInput[ElemType]) extends ParserInput[ElemType] {
+
+  def logApply(index: Int): Unit = ()
+  def logDropBuffer(index: Int): Unit = ()
+  def logIsReachable(index: Int): Unit = ()
+  def logSlice(from: Int, until: Int): Unit = ()
+
+  def apply(index: Int) = {
+    logApply(index)
+    parserInput.apply(index)
+  }
+  def dropBuffer(index: Int) = {
+    logDropBuffer(index)
+    parserInput.dropBuffer(index)
+  }
+  def slice(from: Int, until: Int) = {
+    logSlice(from, until)
+    parserInput.slice(from, until)
+  }
+  def length = parserInput.length
+  def innerLength = parserInput.innerLength
+  def isReachable(index: Int) = {
+    logIsReachable(index)
+    parserInput.isReachable(index)
+  }
 }
 
 case class IndexedParserInput[ElemType](data: IndexedSeq[ElemType]) extends ParserInput[ElemType] {
@@ -21,13 +53,13 @@ case class IndexedParserInput[ElemType](data: IndexedSeq[ElemType]) extends Pars
 }
 
 final case class IteratorParserInput[ElemType](data: Iterator[IndexedSeq[ElemType]]) extends ParserInput[ElemType] {
-  private var buffer: ArrayBuffer[ElemType] = ArrayBuffer()
+  private var buffer: Vector[ElemType] = Vector()
   private var firstIdx: Int = 0 // index in the data corresponding to the 0th element in the buffer
 
   private def requestUntil(until: Int): Boolean = {
     while (this.length <= until && data.hasNext) {
       val chunk = data.next()
-      buffer ++= chunk
+      buffer = buffer ++ chunk
     }
     this.length > until
   }

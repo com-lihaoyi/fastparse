@@ -3,6 +3,7 @@ package core
 import acyclic.file
 import fastparse.Utils._
 import fastparse.ElemTypeFormatter._
+import fastparse.IndexedParserInput
 
 import scala.collection.mutable
 /**
@@ -23,7 +24,7 @@ sealed trait Parsed[+T, ElemType]{
   def index: Int
 
   /**
-   * Converts this instance of [[Parsed]] into a [[Parsed.Success]] or 
+   * Converts this instance of [[Parsed]] into a [[Parsed.Success]] or
    * throws an exception if it was a failure.
    */
   def get(implicit formatter: ElemTypeFormatter[ElemType]): Parsed.Success[T, ElemType] = this match{
@@ -87,7 +88,7 @@ object Parsed {
       /** Get the underlying [[TracedFailure]] to allow for analysis of the full parse stack. */
       def traced: TracedFailure[ElemType]
     }
-    
+
     object Extra{
       class Impl[ElemType](val input: ParserInput[ElemType],
                            startParser: Parser[_, ElemType, _], startIndex: Int,
@@ -181,7 +182,7 @@ object Parsed {
       val (originalIndex, originalParser) = traceData
 
       val mutFailure = originalParser.parseRec(
-        new ParseCtx(input, 0, index, originalParser, originalIndex, (_, _, _) => ()),
+        new ParseCtx(input, 0, index, originalParser, originalIndex, (_, _, _) => (), false, false, false),
         originalIndex
       ).asInstanceOf[Mutable.Failure[ElemType]]
 
@@ -289,13 +290,16 @@ object Mutable{
  *                   reporting. `-1` disables tracing, and any other number
  *                   enables recording of stack-traces and
  */
-class ParseCtx[ElemType](val input: ParserInput[ElemType],
-                         var logDepth: Int,
-                         val traceIndex: Int,
-                         val originalParser: Parser[_, ElemType, _],
-                         val originalIndex: Int,
-                         val instrument: (Parser[_, ElemType, _], Int, () => Parsed[_, ElemType]) => Unit)
-                        (implicit formatter: ElemTypeFormatter[ElemType]){
+case class ParseCtx[ElemType](input: ParserInput[ElemType],
+                              var logDepth: Int,
+                              traceIndex: Int,
+                              originalParser: Parser[_, ElemType, _],
+                              originalIndex: Int,
+                              instrument: (Parser[_, ElemType, _], Int, () => Parsed[_, ElemType]) => Unit,
+                              var isFork: Boolean,
+                              var isCapturing: Boolean,
+                              var isNoCut: Boolean)
+                            (implicit formatter: ElemTypeFormatter[ElemType]){
   require(logDepth >= -1, "logDepth can only be -1 (for no logs) or >= 0")
   require(traceIndex >= -1, "traceIndex can only be -1 (for no tracing) or an index 0")
   val failure = Mutable.Failure[ElemType](
@@ -338,7 +342,32 @@ trait Parser[+T, ElemType, Repr] extends ParserResults[T, ElemType] with Precede
             instrument: (Parser[_, _, _], Int, () => Parsed[_, ElemType]) => Unit = null)
            (implicit formatter: ElemTypeFormatter[ElemType])
             : Parsed[T, ElemType] = {
-    parseRec(new ParseCtx(IndexedParserInput(input), 0, -1, this, index, instrument), index).toResult
+    parseRec(
+      new ParseCtx(IndexedParserInput(input), 0, -1, this, index, instrument, false, false, false),
+      index
+    ).toResult
+  }
+
+  def parseIterator(input: Iterator[IndexedSeq[ElemType]],
+                    index: Int = 0,
+                    instrument: (Parser[_, _, _], Int, () => Parsed[_, ElemType]) => Unit = null)
+                   (implicit formatter: ElemTypeFormatter[ElemType])
+                    : Parsed[T, ElemType] = {
+    parseRec(
+      new ParseCtx(IteratorParserInput(input), 0, -1, this, index, instrument, false, false, false),
+      index
+    ).toResult
+  }
+
+  def parseInput(input: ParserInput[ElemType],
+                 index: Int = 0,
+                 instrument: (Parser[_, _, _], Int, () => Parsed[_, ElemType]) => Unit = null)
+                (implicit formatter: ElemTypeFormatter[ElemType])
+  : Parsed[T, ElemType] = {
+    parseRec(
+      new ParseCtx(input, 0, -1, this, index, instrument, false, false, false),
+      index
+    ).toResult
   }
 
   /**
