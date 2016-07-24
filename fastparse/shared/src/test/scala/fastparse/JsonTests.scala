@@ -4,14 +4,14 @@ import all._
 import utest._
 
 /**
-  * A complete, self-contained JSON parser that parses the JSON
-  * but does not build an AST. Demonstrates the use of `~/` cuts
-  * to provide excellent error-reporting almost for free
-  */
+ * A complete, self-contained JSON parser that parses the JSON
+ * but does not build an AST. Demonstrates the use of `~/` cuts
+ * to provide excellent error-reporting almost for free
+ */
 object JsonTests extends TestSuite{
   /**
-    * A very small, very simple JSON AST
-    */
+   * A very small, very simple JSON AST
+   */
   object Js {
     sealed trait Val extends Any {
       def value: Any
@@ -121,7 +121,7 @@ object JsonTests extends TestSuite{
                     }
                 ]
             }
-                                    """)
+      """)
     }
     'fail{
       def check(s: String, expectedError: String) = {

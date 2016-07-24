@@ -4,9 +4,9 @@ import all._
 import utest._
 
 /**
-  * Demonstrates simulatneously parsing and
-  * evaluating simple arithmetic expressions
-  */
+ * Demonstrates simulatneously parsing and
+ * evaluating simple arithmetic expressions
+ */
 object ExampleTests extends TestSuite{
 
   val tests = TestSuite{
@@ -183,17 +183,17 @@ object ExampleTests extends TestSuite{
         val numberPlate = P(twice(digit) ~ "-" ~ twice(letter) ~ "-" ~ twice(digit))
 
         assert(errorMessage(numberPlate, "11-A1-22") == """
-                                                          |found "1-22", expected CharIn("ABCDEFGHIJKLMNOPQRSTUVWXYZ") at index 4
-                                                          |11-A1-22
-                                                          |    ^""".stripMargin.trim)
+          |found "1-22", expected CharIn("ABCDEFGHIJKLMNOPQRSTUVWXYZ") at index 4
+          |11-A1-22
+          |    ^""".stripMargin.trim)
 
         // Suppress implementation details from the error message
         val opaqueNumberPlate = numberPlate.opaque("<number-plate>")
 
         assert(errorMessage(opaqueNumberPlate, "11-A1-22") == """
-                                                                |found "11-A1-22", expected <number-plate> at index 0
-                                                                |11-A1-22
-                                                                |^""".stripMargin.trim)
+          |found "11-A1-22", expected <number-plate> at index 0
+          |11-A1-22
+          |^""".stripMargin.trim)
       }
     }
     'charX{
@@ -238,20 +238,20 @@ object ExampleTests extends TestSuite{
         assert(
           failure.index == 0,
           failure.extra.traced.trace ==
-            """nocut:1:1 / ("val " ~ alpha.rep(1) | "def " ~ alpha.rep(1)):1:1 ..."val 1234""""
+          """nocut:1:1 / ("val " ~ alpha.rep(1) | "def " ~ alpha.rep(1)):1:1 ..."val 1234""""
         )
       }
       'withcut{
         val alpha = P( CharIn('a' to 'z') )
         val nocut = P( "val " ~/ alpha.rep(1).! | "def " ~/ alpha.rep(1).!)
 
-        //        val Result.Success("abcd", _) = nocut.parse("val abcd")
+//        val Result.Success("abcd", _) = nocut.parse("val abcd")
 
         val failure = nocut.parse("val 1234").asInstanceOf[Parsed.Failure]
         assert(
           failure.index == 4,
           failure.extra.traced.trace ==
-            """nocut:1:1 / alpha:1:5 / CharIn("abcdefghijklmnopqrstuvwxyz"):1:5 ..."1234""""
+          """nocut:1:1 / alpha:1:5 / CharIn("abcdefghijklmnopqrstuvwxyz"):1:5 ..."1234""""
         )
       }
       'repnocut{
@@ -259,8 +259,8 @@ object ExampleTests extends TestSuite{
         val stmt = P( "val " ~ alpha.rep(1).! ~ ";" ~ " ".rep )
         val stmts = P( stmt.rep(1) ~ End )
 
-        //        val Result.Success(Seq("abcd"), _) = stmts.parse("val abcd;")
-        //        val Result.Success(Seq("abcd", "efg"), _) = stmts.parse("val abcd; val efg;")
+//        val Result.Success(Seq("abcd"), _) = stmts.parse("val abcd;")
+//        val Result.Success(Seq("abcd", "efg"), _) = stmts.parse("val abcd; val efg;")
         val failure = stmts.parse("val abcd; val ").asInstanceOf[Parsed.Failure]
         assert(
           failure.index == 10,
@@ -320,25 +320,25 @@ object ExampleTests extends TestSuite{
         )
       }
       'composecut{
-        val digit = P( CharIn('0' to '9') )
-        val time1 = P( ("1".? ~ digit) ~ ":" ~/ digit ~ digit ~ ("am" | "pm") )
-        val time2 = P( (("1" | "2").? ~ digit) ~ ":" ~/ digit ~ digit )
-        val Parsed.Success((), _) = time1.parse("12:30pm")
-        val Parsed.Success((), _) = time2.parse("17:45")
-        val time = P( time1 | time2 )
-        val Parsed.Success((), _) = time.parse("12:30pm")
-        val failure = time.parse("17:45").asInstanceOf[Parsed.Failure]
-        assert(failure.index == 5)  // Expects am or pm
+         val digit = P( CharIn('0' to '9') )
+         val time1 = P( ("1".? ~ digit) ~ ":" ~/ digit ~ digit ~ ("am" | "pm") )
+         val time2 = P( (("1" | "2").? ~ digit) ~ ":" ~/ digit ~ digit )
+         val Parsed.Success((), _) = time1.parse("12:30pm")
+         val Parsed.Success((), _) = time2.parse("17:45")
+         val time = P( time1 | time2 )
+         val Parsed.Success((), _) = time.parse("12:30pm")
+         val failure = time.parse("17:45").asInstanceOf[Parsed.Failure]
+         assert(failure.index == 5)  // Expects am or pm
       }
       'composenocut{
-        val digit = P( CharIn('0' to '9') )
-        val time1 = P( ("1".? ~ digit) ~ ":" ~/ digit ~ digit ~ ("am" | "pm") )
-        val time2 = P( (("1" | "2").? ~ digit) ~ ":" ~/ digit ~ digit )
-        val Parsed.Success((), _) = time1.parse("12:30pm")
-        val Parsed.Success((), _) = time2.parse("17:45")
-        val time = P( NoCut(time1) | time2 )
-        val Parsed.Success((), _) = time.parse("12:30pm")
-        val Parsed.Success((), _) = time.parse("17:45")
+         val digit = P( CharIn('0' to '9') )
+         val time1 = P( ("1".? ~ digit) ~ ":" ~/ digit ~ digit ~ ("am" | "pm") )
+         val time2 = P( (("1" | "2").? ~ digit) ~ ":" ~/ digit ~ digit )
+         val Parsed.Success((), _) = time1.parse("12:30pm")
+         val Parsed.Success((), _) = time2.parse("17:45")
+         val time = P( NoCut(time1) | time2 )
+         val Parsed.Success((), _) = time.parse("12:30pm")
+         val Parsed.Success((), _) = time.parse("17:45")
       }
     }
     'debugging{
@@ -405,7 +405,7 @@ object ExampleTests extends TestSuite{
               -expr:1:Failure(expr:1:2 / side:1:4 / ")":1:8 ..."1+(2+3x))+", cut)
             -side:0:Failure(side:1:1 / expr:1:2 / side:1:4 / ")":1:8 ..."(1+(2+3x))", cut)
           -expr:0:Failure(expr:1:1 / side:1:1 / expr:1:2 / side:1:4 / ")":1:8 ..."(1+(2+3x))", cut)
-                       """.lines.filter(_.trim != "").toSeq
+        """.lines.filter(_.trim != "").toSeq
         val minIndent = expected.map(_.takeWhile(_ == ' ').length).min
         val expectedString = expected.map(_.drop(minIndent)).mkString("\n")
         val capturedString = captured.mkString("\n")

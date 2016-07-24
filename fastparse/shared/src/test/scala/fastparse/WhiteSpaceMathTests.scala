@@ -4,8 +4,8 @@ import acyclic.file
 import utest._
 
 /**
-  * Same as MathTests, but demonstrating the use of whitespace
-  */
+ * Same as MathTests, but demonstrating the use of whitespace
+ */
 object WhiteSpaceMathTests extends TestSuite{
   val White = WhitespaceApi.Wrapper{
     import fastparse.all._

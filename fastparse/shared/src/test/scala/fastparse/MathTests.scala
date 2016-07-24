@@ -3,9 +3,9 @@ import all._
 import utest._
 
 /**
-  * Demonstrates simultaneously parsing and
-  * evaluating simple arithmetic expressions
-  */
+ * Demonstrates simultaneously parsing and
+ * evaluating simple arithmetic expressions
+ */
 object MathTests extends TestSuite{
   def eval(tree: (Int, Seq[(String, Int)])) = {
     val (base, ops) = tree
@@ -47,7 +47,7 @@ object MathTests extends TestSuite{
       check(
         "(+)",
         """expr:1:1 / addSub:1:1 / divMul:1:1 / factor:1:1 / parens:1:1 / addSub:1:2""" +
-          """ / divMul:1:2 / factor:1:2 / (number | parens):1:2 ..."+)" """
+        """ / divMul:1:2 / factor:1:2 / (number | parens):1:2 ..."+)" """
       )
       check(
         "1+-",
@@ -56,7 +56,7 @@ object MathTests extends TestSuite{
       check(
         "(1+(2+3x))+4",
         """ expr:1:1 / addSub:1:1 / divMul:1:1 / factor:1:1 / parens:1:1 / addSub:1:2""" +
-          """ / divMul:1:4 / factor:1:4 / parens:1:4 / (")" | CharIn("+-")):1:8 ..."x))+4" """
+        """ / divMul:1:4 / factor:1:4 / parens:1:4 / (")" | CharIn("+-")):1:8 ..."x))+4" """
       )
     }
   }
