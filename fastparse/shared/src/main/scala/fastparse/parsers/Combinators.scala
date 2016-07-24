@@ -376,7 +376,8 @@ object Combinators {
    */
   case class Repeat[T, +R, ElemType, Repr](p: Parser[T, ElemType, Repr], min: Int, max: Int,
                                            delimiter: Parser[_, ElemType, Repr])
-                          (implicit ev: Implicits.Repeater[T, R]) extends Parser[R, ElemType, Repr]{
+                          (implicit ev: Implicits.Repeater[T, R],
+                           formatter: ElemTypeFormatter[ElemType]) extends Parser[R, ElemType, Repr]{
 
 
     def parseRec(cfg: ParseCtx[ElemType], index: Int) = {

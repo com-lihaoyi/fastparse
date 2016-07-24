@@ -79,7 +79,7 @@ object MiscTests extends TestSuite{
       val expected =
         """+Foo:0
           |  +DeepFailure:0
-          |  -DeepFailure:0:Failure(DeepFailure:1:1 / "C":1:1 ..."AB")
+          |  -DeepFailure:0:Failure(DeepFailure:0 / "C":0 ..."AB")
           |  +"A":0
           |  -"A":0:Success(1)
           |  +"B":1
@@ -144,15 +144,15 @@ object MiscTests extends TestSuite{
     }
     'formatParser{
       assert(
-        Parsed.Failure.formatParser("a", "", 0) == """"a":0:0""",
-        Parsed.Failure.formatParser("A", "B", 0) == """"A":1:1""")
+        Parsed.Failure.formatParser("a", IndexedParserInput(""), 0) == """"a":0""",
+        Parsed.Failure.formatParser("A", IndexedParserInput("B"), 0) == """"A":0""")
     }
     'utils{
       'trieNode {
         val names = (0 until 1000).map(_.toString.flatMap(_.toString * 5).toIndexedSeq)
         val trie = new Utils.TrieNode[Char](names)
         for (name <- names)
-          assert(trie.query(name, 0) != -1)
+          assert(trie.query(IndexedParserInput(name), 0) != -1)
       }
     }
   }

@@ -174,9 +174,9 @@ object Utils {
     /**
      * Returns the length of the matching string, or -1 if not found
      */
-    def query(input: IndexedSeq[Elem], index: Int): Int = {
+    def query(input: ParserInput[Elem], index: Int): Int = {
       @tailrec def rec(offset: Int, currentNode: TrieNode[Elem], currentRes: Int): Int = {
-        if (index + offset >= input.length) currentRes
+        if (!input.isReachable(index + offset)) currentRes
         else {
           val elem = input(index + offset)
           val next = currentNode(elem)
