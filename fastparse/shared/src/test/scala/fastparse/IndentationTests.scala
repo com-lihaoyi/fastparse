@@ -3,8 +3,8 @@ package fastparse
 import utest._
 import all._
 /**
- * Same as MathTests, but demonstrating the use of whitespace
- */
+  * Same as MathTests, but demonstrating the use of whitespace
+  */
 object IndentationTests extends TestSuite{
   def eval(tree: (String, Seq[Int])) = tree match{
     case ("+", nums) => nums.reduceLeft(_+_)
@@ -14,10 +14,10 @@ object IndentationTests extends TestSuite{
   }
 
   /**
-   * Parser for an indentation-based math syntax. Parens are no longer
-   * necessary, and the whole parser is parametrized with the current
-   * depth of indentation
-   */
+    * Parser for an indentation-based math syntax. Parens are no longer
+    * necessary, and the whole parser is parametrized with the current
+    * depth of indentation
+    */
   class Parser(indent: Int){
     val number: P[Int] = P( CharIn('0'to'9').rep(1).!.map(_.toInt) )
 
@@ -126,21 +126,21 @@ object IndentationTests extends TestSuite{
       }
       * - check(
         "+",
-        """ expr:0 / block:0 / "\n":1 ..."" """
+        """ expr:1:1 / block:1:1 / "\n":1:1 ..."" """
       )
       * - check(
         """+
           |  1
           |1
         """.stripMargin.trim,
-        """ expr:0 / (End | "\n  "):5 ..."\n1" """
+        """ expr:1:1 / (End | "\n  "):2:3 ..."\n1" """
       )
       * - check(
         """+
           |  1
           |   1
         """.stripMargin.trim,
-        """ expr:0 / block:0 / factor:8 / (number | block):8 ..." 1" """
+        """ expr:1:1 / block:1:1 / factor:3:3 / (number | block):3:3 ..." 1" """
       )
     }
   }

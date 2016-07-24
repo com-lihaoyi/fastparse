@@ -8,6 +8,7 @@ trait ElemTypeFormatter[ElemType] {
   def prettyPrint(input: IndexedSeq[ElemType]): String
   def literalize(input: IndexedSeq[ElemType]): String
   def errorMessage(input: ParserInput[ElemType], expected: String, idx: Int): String
+  def prettyIndex(input: ParserInput[ElemType], index: Int): String
 }
 
 trait ResultBuilder[ElemType, ResultType] {
@@ -35,6 +36,17 @@ object ElemTypeFormatter {
       //TODO Probably we could avoid code duplication by creating only method `locationCode`
       //TODO but it reduces the abstraction
     }
+
+    override def prettyIndex(input: ParserInput[Char], index: Int): String = {
+      input match {
+        case IndexedParserInput(data) =>
+          val lines = Utils.split(data.take(1 + index), '\n')
+          val line = lines.length
+          val col = lines.lastOption.map(_.length).getOrElse(0)
+          s"$line:$col"
+        case _ => String.valueOf(index)
+      }
+    }
   }
 
   implicit val ByteFormatter = new ElemTypeFormatter[Byte] {
@@ -53,6 +65,8 @@ object ElemTypeFormatter {
       val literal = literalize(input.slice(idx, idx + 20))
       s"found $literal, expected $expected at index $idx\n$locationCode"
     }
+
+    override def prettyIndex(input: ParserInput[Byte], index: Int): String = String.valueOf(index)
   }
 }
 

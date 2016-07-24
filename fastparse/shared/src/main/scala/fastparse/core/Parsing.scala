@@ -109,8 +109,9 @@ object Parsed {
 
     def formatParser[ElemType](p: Precedence, input: ParserInput[ElemType], index: Int)
                               (implicit formatter: ElemTypeFormatter[ElemType]) = {
-      s"${Precedence.opWrap(p, Precedence.`:`)}:$index"
+      s"${Precedence.opWrap(p, Precedence.`:`)}:${formatter.prettyIndex(input, index)}"
     }
+
     def formatStackTrace[ElemType](stack: Seq[Frame],
                                    input: ParserInput[ElemType],
                                    index: Int,

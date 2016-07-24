@@ -1,7 +1,7 @@
 package fastparse
 
 import fastparse.Implicits.{Repeater, Sequencer}
-import fastparse.core._
+import fastparse.core.{Parser, _}
 import fastparse.all._
 import fastparse.parsers.Combinators.Repeat
 
@@ -73,7 +73,7 @@ object WhitespaceApi {
  * provides replacement methods `repX` and `~~` if you wish to call the
  * original un-modified versions of these operators.
  */
-class WhitespaceApi[+T](p0: P[T], WL: P0) extends ParserApiImpl(p0)  {
+class WhitespaceApi[+T](p0: P[T], WL: P0) extends ParserApiImpl[T, Char, String](p0)  {
 
 
   def repX[R](implicit ev: Repeater[T, R]): P[R] = Repeat(p0, 0, Int.MaxValue, Pass)
@@ -113,5 +113,7 @@ class WhitespaceApi[+T](p0: P[T], WL: P0) extends ParserApiImpl(p0)  {
     assert(p != null)
     new WhitespaceApi.CustomSequence(WL, if (p0 != WL) p0 else Pass.asInstanceOf[P[T]], p, cut=true)(ev)
   }
+
+  override def ~/ : P[T] = super.~/
 
 }
