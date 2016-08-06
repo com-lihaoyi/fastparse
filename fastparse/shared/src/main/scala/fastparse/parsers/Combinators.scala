@@ -1,6 +1,6 @@
 package fastparse.parsers
 import acyclic.file
-import fastparse.{ElemTypeFormatter, Implicits, ResultBuilder}
+import fastparse.{Implicits, ResultBuilder}
 import Terminals._
 import fastparse.core.Parsed._
 import fastparse.core.Mutable
@@ -18,8 +18,7 @@ object Combinators {
    * Captures the string parsed by the given parser [[p]].
    */
   case class Capturing[ElemType, Repr](p: Parser[_, ElemType, Repr])
-                                      (implicit builder: ResultBuilder[ElemType, Repr],
-                                       formatter: ElemTypeFormatter[ElemType])
+                                      (implicit builder: ResultBuilder[ElemType, Repr])
       extends Parser[Repr, ElemType, Repr] {
     def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
       val oldCapturing = cfg.isCapturing
@@ -86,8 +85,7 @@ object Combinators {
   /**
    *
    */
-  case class NoCut[T, ElemType, R](p: Parser[T, ElemType, R])
-                                  (implicit formatter: ElemTypeFormatter[ElemType]) extends Parser[T, ElemType, R]{
+  case class NoCut[T, ElemType, R](p: Parser[T, ElemType, R]) extends Parser[T, ElemType, R]{
     def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
       val oldNoCut = cfg.isNoCut
       cfg.isNoCut = true
@@ -110,8 +108,7 @@ object Combinators {
    * and ends, together with its result
    */
   case class Logged[+T, ElemType, R](p: Parser[T, ElemType, R],
-                                  msg: String, output: String => Unit)
-                                 (implicit formatter: ElemTypeFormatter[ElemType]) extends Parser[T, ElemType, R]{
+                                     msg: String, output: String => Unit) extends Parser[T, ElemType, R]{
     def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
       if (cfg.logDepth == -1) p.parseRec(cfg, index)
       else {
@@ -173,8 +170,7 @@ object Combinators {
    * Wraps another parser, succeeding/failing identically
    * but consuming no input
    */
-  case class Lookahead[ElemType, R](p: Parser[_, ElemType, R])
-                                   (implicit formatter: ElemTypeFormatter[ElemType]) extends Parser[Unit, ElemType, R]{
+  case class Lookahead[ElemType, R](p: Parser[_, ElemType, R]) extends Parser[Unit, ElemType, R]{
     def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
       val oldFork = cfg.isFork
       cfg.isFork = true
@@ -215,8 +211,7 @@ object Combinators {
    * and succeeds with `None` if [[p]] fails.
    */
   case class Optional[+T, R, ElemType, Repr](p: Parser[T, ElemType, Repr])
-                            (implicit ev: Implicits.Optioner[T, R],
-                             formatter: ElemTypeFormatter[ElemType]) extends Parser[R, ElemType, Repr]{
+                            (implicit ev: Implicits.Optioner[T, R]) extends Parser[R, ElemType, Repr]{
 
     def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
       val oldFork = cfg.isFork
@@ -408,8 +403,7 @@ object Combinators {
    */
   case class Repeat[T, +R, ElemType, Repr](p: Parser[T, ElemType, Repr], min: Int, max: Int,
                                            delimiter: Parser[_, ElemType, Repr])
-                          (implicit ev: Implicits.Repeater[T, R],
-                           formatter: ElemTypeFormatter[ElemType]) extends Parser[R, ElemType, Repr]{
+                          (implicit ev: Implicits.Repeater[T, R]) extends Parser[R, ElemType, Repr]{
 
 
     def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
@@ -493,8 +487,7 @@ object Combinators {
    * Parses using one parser or the other, if the first one fails. Returns
    * the first one that succeeds and fails if both fail
    */
-  case class Either[T, ElemType, R](ps: Parser[T, ElemType, R]*)
-                                   (implicit formatter: ElemTypeFormatter[ElemType]) extends Parser[T, ElemType, R]{
+  case class Either[T, ElemType, R](ps: Parser[T, ElemType, R]*) extends Parser[T, ElemType, R]{
     private[this] val ps0 = ps.toArray
     private[this] val n = ps0.length
     def parseRec(cfg: ParseCtx[ElemType], index: Int) = {

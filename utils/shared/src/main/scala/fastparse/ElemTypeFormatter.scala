@@ -2,9 +2,7 @@ package fastparse
 
 import fastparse.Utils.HexUtils
 
-import scala.collection.mutable.ArrayBuffer
-
-trait ElemTypeFormatter[ElemType] {
+abstract class ElemTypeFormatter[ElemType] {
   def prettyPrint(input: IndexedSeq[ElemType]): String
   def literalize(input: IndexedSeq[ElemType]): String
   def errorMessage(input: ParserInput[ElemType], expected: String, idx: Int): String

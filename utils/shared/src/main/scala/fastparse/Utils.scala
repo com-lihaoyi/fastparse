@@ -1,12 +1,11 @@
 package fastparse
 
 import scala.annotation.{switch, tailrec}
-import acyclic.file
+//import acyclic.file
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.language.experimental.macros
-import fastparse.ElemSetHelper
 
 object MacroUtils{
   /**

@@ -1,17 +1,15 @@
 package byteparse
 
-import java.net.URL
+import java.io.InputStream
 
-import fastparse.{IteratorParserInput, LoggedParsedInput}
-
+import fastparse.IteratorParserInput
 import utest._
 import fastparse.allByte._
 import BmpParser._
 
 object LargeBmpIteratorTests extends TestSuite {
-  val url = "https://raw.githubusercontent.com/lihaoyi/fastparse/master/byteparse/jvm/src/test/resources/lena.bmp"
   def stream = new Iterator[IndexedSeq[Byte]] {
-    val stream = new URL(url).openStream()
+    val stream: InputStream = getClass.getResource("/lena.bmp").openStream()
     val buffer = new Array[Byte](100)
     var bufferLen = 0
     var isRead = false
@@ -45,10 +43,12 @@ object LargeBmpIteratorTests extends TestSuite {
     }
 
     'maxInnerLength {
-      val loggedInput = new LoggedParsedInput[Byte](IteratorParserInput(stream)) {
+      val loggedInput = new IteratorParserInput[Byte](stream) {
         var maxInnerLength = 0
-        override def logDropBuffer(index: Int) = {
+
+        override def dropBuffer(index: Int): Unit = {
           maxInnerLength = math.max(maxInnerLength, this.innerLength)
+          super.dropBuffer(index)
         }
       }
 

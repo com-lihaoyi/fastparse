@@ -12,8 +12,7 @@ trait ParserApi[+T, ElemType, Repr] {
    * Wraps this in a [[Logged]]. This prints out information
    * where a parser was tried and its result, which is useful for debugging
    */
-  def log(msg: String = this.toString)(implicit output: Logger,
-                                       formatter: ElemTypeFormatter[ElemType]): Parser[T, ElemType, Repr]
+  def log(msg: String = this.toString)(implicit output: Logger): Parser[T, ElemType, Repr]
 
   /**
    * Makes this parser opaque, i.e. hides it and its inner parsers
@@ -24,20 +23,17 @@ trait ParserApi[+T, ElemType, Repr] {
   /**
    * Repeats this parser 0 or more times
    */
-  def rep[R](implicit ev: Repeater[T, R],
-             formatter: ElemTypeFormatter[ElemType]): Parser[R, ElemType, Repr]
+  def rep[R](implicit ev: Repeater[T, R]): Parser[R, ElemType, Repr]
   def rep[R](min: Int = 0,
              sep: Parser[_, ElemType, Repr] = Pass[ElemType, Repr],
              max: Int = Int.MaxValue,
              exactly: Int = -1)
-            (implicit ev: Repeater[T, R],
-             formatter: ElemTypeFormatter[ElemType]): Parser[R, ElemType, Repr]
+            (implicit ev: Repeater[T, R]): Parser[R, ElemType, Repr]
 
   /**
    * Parses using this or the parser `p`
    */
-  def |[V >: T](p: Parser[V, ElemType, Repr])
-               (implicit formatter: ElemTypeFormatter[ElemType]): Parser[V, ElemType, Repr]
+  def |[V >: T](p: Parser[V, ElemType, Repr]): Parser[V, ElemType, Repr]
 
   /**
    * Parses using this followed by the parser `p`
@@ -60,8 +56,7 @@ trait ParserApi[+T, ElemType, Repr] {
   /**
    * Parses this, optionally
    */
-  def ?[R](implicit ev: Optioner[T, R],
-           formatter: ElemTypeFormatter[ElemType]): Parser[R, ElemType, Repr]
+  def ?[R](implicit ev: Optioner[T, R]): Parser[R, ElemType, Repr]
 
   /**
    * Wraps this in a [[Not]] for negative lookaheak
@@ -71,7 +66,7 @@ trait ParserApi[+T, ElemType, Repr] {
   /**
    * Used to capture the text parsed by this as a `String`
    */
-  def !(implicit formatter: ElemTypeFormatter[ElemType]) : Parser[Repr, ElemType, Repr]
+  def ! : Parser[Repr, ElemType, Repr]
 
   /**
    * Transforms the result of this Parser with the given function
@@ -93,26 +88,22 @@ class ParserApiImpl[+T, ElemType, Repr](self: Parser[T, ElemType, Repr])
                                        (implicit builder: ResultBuilder[ElemType, Repr])
     extends ParserApi[T, ElemType, Repr] {
 
-  def log(msg: String = self.toString)(implicit output: Logger,
-                                       formatter: ElemTypeFormatter[ElemType]) = Logged(self, msg, output.f)
+  def log(msg: String = self.toString)(implicit output: Logger) = Logged(self, msg, output.f)
 
   def opaque(msg: String = self.toString) = Opaque(self, msg)
 
-  def rep[R](implicit ev: Repeater[T, R],
-             formatter: ElemTypeFormatter[ElemType]): Parser[R, ElemType, Repr] =
+  def rep[R](implicit ev: Repeater[T, R]): Parser[R, ElemType, Repr] =
     Repeat(self, 0, Int.MaxValue, Pass[ElemType, Repr])
   def rep[R](min: Int = 0, sep: Parser[_, ElemType, Repr] = Pass[ElemType, Repr],
              max: Int = Int.MaxValue, exactly: Int = -1)
-            (implicit ev: Repeater[T, R],
-             formatter: ElemTypeFormatter[ElemType]): Parser[R, ElemType, Repr] = {
+            (implicit ev: Repeater[T, R]): Parser[R, ElemType, Repr] = {
     if (exactly < 0)
       Repeat(self, min, max, sep)
     else
       Repeat(self, exactly, exactly, sep)
   }
 
-  def |[V >: T](p: Parser[V, ElemType, Repr])
-               (implicit formatter: ElemTypeFormatter[ElemType]): Parser[V, ElemType, Repr] =
+  def |[V >: T](p: Parser[V, ElemType, Repr]): Parser[V, ElemType, Repr] =
     Either[V, ElemType, Repr](Either.flatten(Vector(self, p)):_*)
 
   def ~[V, R](p: Parser[V, ElemType, Repr])(implicit ev: Sequencer[T, V, R]): Parser[R, ElemType, Repr] =
@@ -120,14 +111,13 @@ class ParserApiImpl[+T, ElemType, Repr](self: Parser[T, ElemType, Repr])
   def ~/[V, R](p: Parser[V, ElemType, Repr])(implicit ev: Sequencer[T, V, R]): Parser[R, ElemType, Repr] =
     Sequence.flatten(Sequence(self, p, cut=true).asInstanceOf[Sequence[R, R, R, ElemType, Repr]])
 
-  def ?[R](implicit ev: Optioner[T, R],
-           formatter: ElemTypeFormatter[ElemType]): Parser[R, ElemType, Repr] = Optional(self)
+  def ?[R](implicit ev: Optioner[T, R]): Parser[R, ElemType, Repr] = Optional(self)
 
   def unary_! : Parser[Unit, ElemType, Repr] = Not(self)
 
   def ~/ : Parser[T, ElemType, Repr] = Cut[T, ElemType, Repr](self)
 
-  def !(implicit formatter: ElemTypeFormatter[ElemType]) : Parser[Repr, ElemType, Repr] = Capturing(self)
+  def ! : Parser[Repr, ElemType, Repr] = Capturing(self)
 
   def map[V](f: T => V): Parser[V, ElemType, Repr] = Mapper(self, f)
 

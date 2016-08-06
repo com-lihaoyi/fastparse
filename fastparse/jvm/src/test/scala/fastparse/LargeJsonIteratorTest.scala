@@ -7,8 +7,7 @@ import fastparse.JsonTests._
 import scala.io.Source
 
 object LargeJsonIteratorTest extends TestSuite {
-  val url = "https://raw.githubusercontent.com/lihaoyi/fastparse/master/fastparse/jvm/src/test/resources/test.json"
-  def source = Source.fromURL(url)
+  def source = io.Source.fromInputStream(getClass.getResourceAsStream("/test.json"))
 
   val tests = TestSuite {
     'large {
@@ -18,10 +17,11 @@ object LargeJsonIteratorTest extends TestSuite {
     }
 
     'maxInnerLength {
-      val loggedInput = new LoggedParsedInput[Char](IteratorParserInput(source.getLines().map(_.repr))) {
+      val loggedInput = new IteratorParserInput[Char](source.getLines().map(_.repr)) {
         var maxInnerLength = 0
-        override def logDropBuffer(index: Int) = {
+        override def dropBuffer(index: Int) = {
           maxInnerLength = math.max(maxInnerLength, this.innerLength)
+          super.dropBuffer(index)
         }
       }
 
