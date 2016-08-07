@@ -362,7 +362,7 @@
             @hl.ref(tests/"WhiteSpaceMathTests.scala", "val White", "val tests")
 
             @p
-                To handle whitespace and other non-significant characters with FastParse, use the @hl.scala{WhitespaceApi} as a substitue for the normal API that is provided for parsers. This modifies the @hl.scala{~} and @hl.scala{.rep} operators to consume all non-trailing whitespace and ignoring it.
+                To handle whitespace and other non-significant characters with FastParse, use the @hl.scala{WhitespaceApi} as a substitute for the normal API that is provided for parsers. This modifies the @hl.scala{~} and @hl.scala{.rep} operators to consume all non-trailing whitespace and ignore it. This means that whitespace is skipped between parsers, so if you want to consume it in the beginning or the end of input, use @sect.ref("End, Start", "Start or End") parsers.
 
             @p
                 Note how you can pass in whatever definition of whitespace you want: here we're passing in a simple @hl.scala{" ".rep}, but in a more sophisticated parser you may wish to include tabs, newlines, comments or even nested comments. The whitespace parser can be arbitrarily complex.
@@ -808,10 +808,10 @@
                  @ul
                      @li
                          Object @hl.scala{Result} has been renamed to @hl.scala{Parsed}
-                                
+
                      @li
                          Former @hl.scala{Result} has moved to @hl.scala{Parsed}.
-                                
+
                      @li
                          Methods for position retrieval @hl.scala{line} and @hl.scala{col} have moved to @hl.scala{Failure.Extra}
 
@@ -890,4 +890,3 @@
                 Added @hl.scala{IgnoreCase} combinator, for case-insensitive string matching
             @li
                 Cross-published for Scala 2.10
-
