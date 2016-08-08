@@ -88,8 +88,8 @@ object Utils {
                              iteratorFactory: Int => Iterator[IndexedSeq[ElemType]])
                             (implicit formatter: ElemTypeFormatter[ElemType]): Unit = {
 
-    /*val results = Utils.benchmark(s"$name Benchmark", datas.map(data => () => parser.parse(data)))
-    println(results.map(_.mkString(" ")).mkString("\n"))*/
+    val results = Utils.benchmark(s"$name Benchmark", datas.map(data => () => parser.parse(data)))
+    println(results.map(_.mkString(" ")).mkString("\n"))
 
     val sizes = Seq(1, 2, /*4, 16, 64, */1024/*, 4096*/)
     Utils.benchmarkIteratorBufferSizes(parser, sizes, iteratorFactory)
