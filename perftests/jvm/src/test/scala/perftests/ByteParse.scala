@@ -7,16 +7,16 @@ import utest._
 
 object ByteParse extends TestSuite {
   val lenaRecource = getClass.getResource("/lena.bmp")
-  val lenaSource = Files.readAllBytes(Paths.get(lenaRecource.getPath))
-  val tests = TestSuite {
-    val parser = byteparse.BmpParser.bmp
-    'Lena {
-      val results = Utils.benchmark(Seq(
-        () => parser.parse(lenaSource),
-        () => parser.parse(lenaSource ++ Array(0.toByte))))
+  val lenaSource = wrapByteArray(Files.readAllBytes(Paths.get(lenaRecource.getPath)))
+  def lenaIterator(size: Int) = lenaSource.grouped(size)
+  val parser = byteparse.BmpParser.bmp
 
-      println("ByteParse Benchmark")
-      println(results.map(_.mkString(" ")).mkString("\n"))
+  val tests = TestSuite {
+    'Lena {
+      Utils.benchmarkAll("ByteParse",
+        parser,
+        Seq(lenaSource, lenaSource ++ Array(0.toByte)),
+        lenaIterator)
     }
   }
 }

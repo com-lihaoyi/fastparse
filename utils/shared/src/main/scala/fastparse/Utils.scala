@@ -1,5 +1,7 @@
 package fastparse
 
+import java.io.InputStream
+
 import scala.annotation.{switch, tailrec}
 //import acyclic.file
 
@@ -27,6 +29,7 @@ object MacroUtils{
   }
 }
 object Utils {
+
   /**
    * Convert a string to a C&P-able literal. Basically
    * copied verbatim from the uPickle source code.

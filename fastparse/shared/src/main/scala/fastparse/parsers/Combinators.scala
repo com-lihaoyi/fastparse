@@ -271,8 +271,6 @@ object Combinators {
                          rCut: Boolean,
                          vIndex: Int,
                          traceParsers: Set[Parser[_, ElemType, _]]): Mutable[R, ElemType] = {
-          if (!cfg.isCapturing && ((rCut && !cfg.isNoCut) || !cfg.isFork))
-            cfg.input.dropBuffer(rIndex)
           if (vIndex >= ps.length) success(cfg.success, r1, rIndex, traceParsers, rCut)
           else {
             val c = ps(vIndex)
@@ -284,19 +282,24 @@ object Combinators {
                 traceParsers = mergeTrace(cfg.traceIndex, f.traceParsers, traceParsers),
                 cut = c.cut | f.cut | rCut
               )
-              case Mutable.Success(value0, index0, traceParsers0, cut0)  => rec(
-                c.ev(r1, value0),
-                index0,
-                c.cut | cut0 | rCut,
-                vIndex + 1,
-                traceParsers0 | traceParsers
-              )
+              case Mutable.Success(value0, index0, traceParsers0, cut0)  =>
+                if (!cfg.isCapturing && ((cut0 && !cfg.isNoCut) || !cfg.isFork))
+                  cfg.input.dropBuffer(index0)
+                rec(
+                  c.ev(r1, value0),
+                  index0,
+                  c.cut | cut0 | rCut,
+                  vIndex + 1,
+                  traceParsers0 | traceParsers
+                )
             }
           }
         }
         p0.parseRec(cfg, index) match{
           case f: Mutable.Failure[ElemType] => failMore(f, index, cfg.logDepth, cut = f.cut)
           case Mutable.Success(value0, index0, traceParsers0, cut0) =>
+            if (!cfg.isCapturing && ((cut0 && !cfg.isNoCut) || !cfg.isFork))
+              cfg.input.dropBuffer(index0)
             rec(value0, index0, cut0, 0, traceParsers0)
         }
       }

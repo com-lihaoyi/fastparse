@@ -2,19 +2,21 @@ package byteparse
 
 import java.io.InputStream
 
-import fastparse.IteratorParserInput
+import fastparse.{IteratorParserInput, Utils}
 import utest._
 import fastparse.allByte._
 import BmpParser._
 
+import scala.collection.mutable
+
 object LargeBmpIteratorTests extends TestSuite {
-  def stream = new Iterator[IndexedSeq[Byte]] {
-    val stream: InputStream = getClass.getResource("/lena.bmp").openStream()
-    val buffer = new Array[Byte](100)
+
+  class StreamToIteratorByte(stream: InputStream, bufferSize: Int) extends Iterator[mutable.WrappedArray[Byte]] {
+    val buffer = new Array[Byte](bufferSize)
     var bufferLen = 0
     var isRead = false
 
-    def readBuffer() = {
+    private def readBuffer() = {
       bufferLen = stream.read(buffer)
       isRead = true
     }
@@ -27,7 +29,7 @@ object LargeBmpIteratorTests extends TestSuite {
         bufferLen != -1
       }
 
-    override def next(): IndexedSeq[Byte] = {
+    override def next(): mutable.WrappedArray[Byte] = {
       if (!isRead)
         readBuffer()
       isRead = false
@@ -35,15 +37,17 @@ object LargeBmpIteratorTests extends TestSuite {
     }
   }
 
+  def lenaIterator = new StreamToIteratorByte(getClass.getResource("/lena.bmp").openStream(), 100)
+
   val tests = TestSuite {
     'large {
-      val Parsed.Success(_, i) = bmp.parseIterator(stream)
-      val expectedIndex = stream.map(_.length).sum
+      val Parsed.Success(_, i) = bmp.parseIterator(lenaIterator)
+      val expectedIndex = lenaIterator.map(_.length).sum
       assert(i == expectedIndex)
     }
 
     'maxInnerLength {
-      val loggedInput = new IteratorParserInput[Byte](stream) {
+      val loggedInput = new IteratorParserInput[Byte](lenaIterator) {
         var maxInnerLength = 0
 
         override def dropBuffer(index: Int): Unit = {
@@ -53,7 +57,7 @@ object LargeBmpIteratorTests extends TestSuite {
       }
 
       val Parsed.Success(_, i) = bmp.parseInput(loggedInput)
-      println(s"Size: ${stream.map(_.length).sum}")
+      println(s"Size: ${lenaIterator.map(_.length).sum}")
       println(s"Max buffer length: ${loggedInput.maxInnerLength}")
     }
   }
