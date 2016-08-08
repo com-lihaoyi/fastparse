@@ -4,7 +4,7 @@ import utest._
 
 object PythonParse extends TestSuite {
   val crossValidationStream = getClass.getResourceAsStream("/cross_validation.py")
-  val crossValidationSource = wrapString(scala.io.Source.fromInputStream(crossValidationStream).mkString)
+  val crossValidationSource = scala.io.Source.fromInputStream(crossValidationStream).mkString
   def crossValidationIterator(size: Int) = crossValidationSource.grouped(size)
   val parser = pythonparse.Statements.file_input
 
@@ -12,7 +12,7 @@ object PythonParse extends TestSuite {
     'CrossValidation {
       Utils.benchmarkAll("PythonParse",
         parser,
-        Seq(crossValidationSource, wrapString("def ") ++ crossValidationSource),
+        Seq(crossValidationSource, "def " + crossValidationSource),
         crossValidationIterator)
     }
   }

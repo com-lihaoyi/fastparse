@@ -11,7 +11,7 @@ import scala.collection.mutable
 
 object LargeBmpIteratorTests extends TestSuite {
 
-  class StreamToIteratorByte(stream: InputStream, bufferSize: Int) extends Iterator[mutable.WrappedArray[Byte]] {
+  class StreamToIteratorByte(stream: InputStream, bufferSize: Int) extends Iterator[Array[Byte]] {
     val buffer = new Array[Byte](bufferSize)
     var bufferLen = 0
     var isRead = false
@@ -29,7 +29,7 @@ object LargeBmpIteratorTests extends TestSuite {
         bufferLen != -1
       }
 
-    override def next(): mutable.WrappedArray[Byte] = {
+    override def next(): Array[Byte] = {
       if (!isRead)
         readBuffer()
       isRead = false
@@ -47,7 +47,7 @@ object LargeBmpIteratorTests extends TestSuite {
     }
 
     'maxInnerLength {
-      val loggedInput = new IteratorParserInput[Byte](lenaIterator) {
+      val loggedInput = new IteratorParserInput[Byte](lenaIterator.map(wrapByteArray)) {
         var maxInnerLength = 0
 
         override def dropBuffer(index: Int): Unit = {

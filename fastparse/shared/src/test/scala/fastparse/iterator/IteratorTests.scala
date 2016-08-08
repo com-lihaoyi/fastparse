@@ -5,7 +5,7 @@ import utest._
 
 object IteratorTests extends TestSuite {
 
-  def toIterator(string: IndexedSeq[Char]) = string.map(IndexedSeq(_)).toIterator
+  def toIterator(string: String) = string.grouped(1)
 
   val tests = TestSuite {
     'cuts {

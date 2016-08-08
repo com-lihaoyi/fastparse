@@ -9,8 +9,9 @@ abstract class ElemTypeFormatter[ElemType] {
   def prettyIndex(input: ParserInput[ElemType], index: Int): String
 }
 
-trait ResultBuilder[ElemType, ResultType] {
-  def convert(input: IndexedSeq[ElemType]): ResultType
+trait ResultConverter[ElemType, ResultType] {
+  def convertToRepr(input: IndexedSeq[ElemType]): ResultType
+  def convertFromRepr(input: ResultType): IndexedSeq[ElemType]
 }
 
 object ElemTypeFormatter {
@@ -68,12 +69,14 @@ object ElemTypeFormatter {
   }
 }
 
-object ResultBuilder {
-  implicit val CharBuilder = new ResultBuilder[Char, String] {
-    override def convert(input: IndexedSeq[Char]): String = input.mkString
+object ResultConverter {
+  implicit val CharBuilder = new ResultConverter[Char, String] {
+    override def convertToRepr(input: IndexedSeq[Char]): String = input.mkString
+    override def convertFromRepr(input: String): IndexedSeq[Char] = wrapString(input)
   }
 
-  implicit val ByteBuilder = new ResultBuilder[Byte, Array[Byte]] {
-    override def convert(input: IndexedSeq[Byte]): Array[Byte] = input.toArray
+  implicit val ByteBuilder = new ResultConverter[Byte, Array[Byte]] {
+    override def convertToRepr(input: IndexedSeq[Byte]): Array[Byte] = input.toArray
+    override def convertFromRepr(input: Array[Byte]): IndexedSeq[Byte] = wrapByteArray(input)
   }
 }

@@ -85,7 +85,7 @@ trait ParserApi[+T, ElemType, Repr] {
 }
 
 class ParserApiImpl[+T, ElemType, Repr](self: Parser[T, ElemType, Repr])
-                                       (implicit builder: ResultBuilder[ElemType, Repr])
+                                       (implicit builder: ResultConverter[ElemType, Repr])
     extends ParserApi[T, ElemType, Repr] {
 
   def log(msg: String = self.toString)(implicit output: Logger) = Logged(self, msg, output.f)

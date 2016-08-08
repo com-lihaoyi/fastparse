@@ -7,7 +7,7 @@ import utest._
 
 object ByteParse extends TestSuite {
   val lenaRecource = getClass.getResource("/lena.bmp")
-  val lenaSource = wrapByteArray(Files.readAllBytes(Paths.get(lenaRecource.getPath)))
+  val lenaSource = Files.readAllBytes(Paths.get(lenaRecource.getPath))
   def lenaIterator(size: Int) = lenaSource.grouped(size)
   val parser = byteparse.BmpParser.bmp
 

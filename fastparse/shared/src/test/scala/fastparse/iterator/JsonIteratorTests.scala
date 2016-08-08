@@ -7,7 +7,7 @@ import utest._
 object JsonIteratorTests extends TestSuite {
 
   def test(p: P[_], s: String) = {
-    val Parsed.Success(_, i) = p.parseIterator(s.map(IndexedSeq(_)).toIterator)
+    val Parsed.Success(_, i) = p.parseIterator(s.grouped(1))
     val expectedIndex = s.length
     assert(i == expectedIndex)
   }

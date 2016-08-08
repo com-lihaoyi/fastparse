@@ -8,7 +8,7 @@ import scalaparse.{Scala, ScalacParser}
 
 object ScalaParse extends TestSuite{
   val genJsCodeStream = getClass.getResourceAsStream("/GenJSCode.scala")
-  val genJsCodeSource = wrapString(scala.io.Source.fromInputStream(genJsCodeStream).mkString)
+  val genJsCodeSource = scala.io.Source.fromInputStream(genJsCodeStream).mkString
   def genJsCodeIterator(size: Int) = genJsCodeSource.grouped(size)
 
   val tests = TestSuite{
@@ -83,7 +83,7 @@ object ScalaParse extends TestSuite{
 
       Utils.benchmarkAll("ScalaParse",
         parser,
-        Seq(genJsCodeSource, genJsCodeSource ++ "*/"),
+        Seq(genJsCodeSource, genJsCodeSource + "*/"),
         genJsCodeIterator)
     }
   }

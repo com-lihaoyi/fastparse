@@ -1,6 +1,6 @@
 package fastparse.parsers
 import acyclic.file
-import fastparse.{Implicits, ResultBuilder}
+import fastparse.{Implicits, ResultConverter, ResultConverter$}
 import Terminals._
 import fastparse.core.Parsed._
 import fastparse.core.Mutable
@@ -18,7 +18,7 @@ object Combinators {
    * Captures the string parsed by the given parser [[p]].
    */
   case class Capturing[ElemType, Repr](p: Parser[_, ElemType, Repr])
-                                      (implicit builder: ResultBuilder[ElemType, Repr])
+                                      (implicit converter: ResultConverter[ElemType, Repr])
       extends Parser[Repr, ElemType, Repr] {
     def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
       val oldCapturing = cfg.isCapturing
@@ -30,7 +30,7 @@ object Combinators {
         case Mutable.Success(value0, index0, traceParsers0, cut0) =>
           success(
             cfg.success,
-            builder.convert(cfg.input.slice(index, index0)),
+            converter.convertToRepr(cfg.input.slice(index, index0)),
             index0,
             traceParsers0,
             cut0

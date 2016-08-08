@@ -327,20 +327,22 @@ trait Parser[+T, ElemType, Repr] extends ParserResults[T, ElemType] with Precede
    *                   invocations to locate bottlenecks or unwanted
    *                   backtracking in the parser.
    */
-  def parse(input: IndexedSeq[ElemType],
+  def parse(input: Repr,
             index: Int = 0,
             instrument: (Parser[_, _, _], Int, () => Parsed[_, ElemType]) => Unit = null)
-           (implicit formatter: ElemTypeFormatter[ElemType])
+           (implicit formatter: ElemTypeFormatter[ElemType],
+                     converter: ResultConverter[ElemType, Repr])
       : Parsed[T, ElemType] = {
-    parseInput(IndexedParserInput(input), index, instrument)
+    parseInput(IndexedParserInput(converter.convertFromRepr(input)), index, instrument)
   }
 
-  def parseIterator(input: Iterator[IndexedSeq[ElemType]],
+  def parseIterator(input: Iterator[Repr],
                     index: Int = 0,
                     instrument: (Parser[_, _, _], Int, () => Parsed[_, ElemType]) => Unit = null)
-                   (implicit formatter: ElemTypeFormatter[ElemType])
+                   (implicit formatter: ElemTypeFormatter[ElemType],
+                             converter: ResultConverter[ElemType, Repr])
       : Parsed[T, ElemType] = {
-    parseInput(IteratorParserInput(input), index, instrument)
+    parseInput(IteratorParserInput(input.map(converter.convertFromRepr)), index, instrument)
   }
 
   def parseInput(input: ParserInput[ElemType],
