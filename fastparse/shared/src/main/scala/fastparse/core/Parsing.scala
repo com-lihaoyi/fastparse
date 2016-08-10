@@ -374,6 +374,26 @@ trait Parser[+T, ElemType, Repr] extends ParserResults[T, ElemType] with Precede
   }
 
   /**
+   * Extractor for pattern matching
+   *
+   *  For example:
+   *
+   *  {{{
+   *  val p1 = CharIn('a'to'z').! ~ CharIn('0'to'9').rep(1).!.map(_.toInt)
+   *  List("a42x") match {
+   *    case p1(x: String, y: Int) :: _ => // x is "a", y is 42
+   *  }
+   * }}}
+   */
+  def unapply[Repr <% IndexedSeq[ElemType]](input: Repr): Option[T] = {
+    // there is no way to se an error message so `formatter` will not be used
+    parse(input: IndexedSeq[ElemType])(null) match {
+      case Parsed.Success(r, _) => Some(r)
+      case _ => None
+    }
+  }
+
+  /**
    * Parses the given `input` starting from the given `index` and `logDepth`
    */
   def parseRec(cfg: ParseCtx[ElemType], index: Int): Mutable[T, ElemType]

@@ -116,6 +116,27 @@ object ByteTests extends TestSuite {
 
         val Parsed.Success(Some(Array(2)), 4) = captureOpt.parse(strToBytes("01 01 01 02"))
       }
+      'unapply {
+        val capture1 = P(BS(1).rep.! ~ BS(2) ~ End)
+
+        val capture1(Array(1, 1, 1)) = strToBytes("01 01 01 02")
+
+        val capture2 = P(BS(1).rep.! ~ BS(2).! ~ End)
+
+        val capture2(Array(1, 1, 1), Array(2)) = strToBytes("01 01 01 02")
+
+        val capture3 = P(BS(1).rep.! ~ BS(2).! ~ BS(3).! ~ End)
+
+        val capture3(Array(1, 1, 1), Array(2), Array(3)) = strToBytes("01 01 01 02 03")
+
+        val captureRep = P(BS(1).!.rep ~ BS(2) ~ End)
+
+        val captureRep(Seq(Array(1), Array(1), Array(1))) = strToBytes("01 01 01 02")
+
+        val captureOpt = P(BS(1).rep ~ BS(2).!.? ~ End)
+
+        val captureOpt(Some(Array(2))) = strToBytes("01 01 01 02")
+      }
       'anychar {
         val ab = P(BS(1) ~ AnyByte.! ~ BS(1))
 
