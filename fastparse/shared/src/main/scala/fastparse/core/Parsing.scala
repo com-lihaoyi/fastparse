@@ -385,9 +385,8 @@ trait Parser[+T, ElemType, Repr] extends ParserResults[T, ElemType] with Precede
    *  }
    * }}}
    */
-  def unapply[Repr <% IndexedSeq[ElemType]](input: Repr): Option[T] = {
-    // there is no way to se an error message so `formatter` will not be used
-    parse(input)(null) match {
+  def unapply[Repr <% IndexedSeq[ElemType]](input: Repr)(implicit formatter: ElemTypeFormatter[ElemType]): Option[T] = {
+    parse(input)(formatter) match {
       case Parsed.Success(r, _) => Some(r)
       case _ => None
     }
