@@ -17,6 +17,10 @@ abstract class ParserInput[ElemType] {
 
   /**
     * @return Slice of internal data.
+    *         For `IndexedSeq` mode it works as regular slice, if `until` overshoots the end of input,
+    *         it just ignores it and behaves like `until` equals to the length of input.
+    *         Same for `Iterator` mode, but it requests batches while the index of last retrieved element is less than `until`
+    *         and if `until` is farther away than any element, it ignores this too.
     */
   def slice(from: Int, until: Int): IndexedSeq[ElemType]
 
@@ -61,6 +65,13 @@ case class IndexedParserInput[ElemType](data: IndexedSeq[ElemType])
 /**
   * Contains buffer - queue of elements that extends from given iterator when particular elements are requested;
   * and shrinks by calling `dropBuffer` method.
+  *
+  * Generally, at any specific time this buffer contains "suffix" of given iterator,
+  * e.g. some piece of data from past calls of `next`, which extends by requesting new batches from iterator.
+  * Therefore we can denote the same notation of indices as for regular `Array` or more abstract `IndexedSeq`.
+  * The only difference is when index doesn't fit into the bounds of current buffer
+  * either the new batches are requested to extend the buffer, either it's inaccessible at all,
+  * so calling of `dropBuffer` should guarantee that there won't be any attempts to access to the elements in dropped part of input.
   */
 case class IteratorParserInput[ElemType](data: Iterator[IndexedSeq[ElemType]])
                                         (implicit val formatter: ElemTypeFormatter[ElemType])
@@ -97,7 +108,7 @@ case class IteratorParserInput[ElemType](data: Iterator[IndexedSeq[ElemType]])
   /**
     * Also requests batches to the `until`.
     * If the current buffer is too small to provide some part of data after `from` bound,
-    * lower bound of slice is cut to the minimum of `from` and first index of accessible element in buffer.
+    * lower bound of slice is cut to the minimum of `from` and first index of accessible element in the buffer.
     */
   override def slice(from: Int, until: Int): IndexedSeq[ElemType] = {
     requestUntil(until - 1)
@@ -116,7 +127,8 @@ case class IteratorParserInput[ElemType](data: Iterator[IndexedSeq[ElemType]])
   override def innerLength: Int = buffer.length
 
   /**
-    * Requests batches until `index` and, when it's possible, returns true, otherwise false.
+    * Requests batches until index of last retrieved element is less than `index` and,
+    * when it's possible, returns true, otherwise false.
     */
   override def isReachable(index: Int): Boolean = {
     index < length || requestUntil(index)
