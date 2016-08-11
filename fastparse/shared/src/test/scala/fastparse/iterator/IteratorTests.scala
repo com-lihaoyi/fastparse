@@ -1,50 +1,91 @@
 package fastparse.iterator
 
+import fastparse.{ElemTypeFormatter, IteratorParserInput}
 import fastparse.all._
 import utest._
 
+import scala.collection.mutable
+
 object IteratorTests extends TestSuite {
 
-  def toIterator(string: String) = string.grouped(1)
+  class LoggedDropsParserInput[ElemType](data: Iterator[IndexedSeq[ElemType]])
+                                        (implicit formatter: ElemTypeFormatter[ElemType])
+    extends IteratorParserInput[ElemType](data) {
+
+    var drops = mutable.Set.empty[Int]
+
+    override def dropBuffer(index: Int): Unit = {
+      drops.add(index)
+      super.dropBuffer(index)
+    }
+  }
+
+  def toInput(string: String) = new LoggedDropsParserInput[Char](string.grouped(1).map(wrapString))
 
   val tests = TestSuite {
     'cuts {
       'capturing {
         val p = P( "a" ~/ "b" ~/ "c")
         val capt = P( p.! ~ p.! ~ p.!)
-        val Parsed.Success(res, i) = capt.parseIterator(toIterator("abcabcabc"))
+        val input = toInput("abcabcabc")
+        val Parsed.Success(res, i) = capt.parseInput(input)
         assert(
           i == 9,
-          res == ("abc", "abc", "abc"))
+          res == ("abc", "abc", "abc"),
+          Seq(3, 6, 9).forall(input.drops.contains)
+        )
       }
 
       'nocut {
         val p = P( "a" ~/ "b" ~/ "c")
-        val nocut = P((NoCut(p) ~ NoCut(p) ~ NoCut(p)) | "abcd")
-        val Parsed.Success(_, i1) = nocut.parseIterator(toIterator("abcabcabc"))
-        assert(i1 == 9)
-        val Parsed.Success(_, i2) = nocut.parseIterator(toIterator("abcd"))
+        val nocut = P((NoCut(p) ~ NoCut(p) ~/ NoCut(p)) | "abcd")
+
+        val input1 = toInput("abcabcabc")
+        val Parsed.Success(_, i1) = nocut.parseInput(input1)
+        assert(
+          i1 == 9,
+          Seq(9).forall(input1.drops.contains)
+        )
+
+        val input2 = toInput("abcd")
+        val Parsed.Success(_, i2) = nocut.parseInput(input2)
         assert(i2 == 4)
       }
 
       'either {
         val p = P( "a" ~ "b" ~ "c")
         val either = P( (p ~ End) | ("abc" ~ p ~ End) | ("abcabc" ~ p ~ End))
-        val Parsed.Success(_, i1) = either.parseIterator(toIterator("abcabcabc"))
-        assert(i1 == 9)
-        val Parsed.Success(_, i2) = either.parseIterator(toIterator("abcabc"))
+
+        val input1 = toInput("abcabcabc")
+        val Parsed.Success(_, i1) = either.parseInput(input1)
+        assert(
+          i1 == 9,
+          Seq(6, 7, 8, 9).forall(input1.drops.contains)
+        )
+
+        val input2 = toInput("abcabc")
+        val Parsed.Success(_, i2) = either.parseInput(input2)
         assert(i2 == 6)
-        val Parsed.Success(_, i3) = either.parseIterator(toIterator("abc"))
+
+        val input3 = toInput("abc")
+        val Parsed.Success(_, i3) = either.parseInput(input3)
         assert(i3 == 3)
       }
 
       'rep {
         val p = P( "a" ~ "b" ~ "c")
         val rep = P( (p.rep ~ "d") | (p.rep ~ "e") )
-        val Parsed.Success(_, i1) = rep.parseIterator(toIterator("abcabcabcd"))
+
+        val input1 = toInput("abcabcabcd")
+        val Parsed.Success(_, i1) = rep.parseInput(input1)
         assert(i1 == 10)
-        val Parsed.Success(_, i2) = rep.parseIterator(toIterator("abcabcabce"))
-        assert(i1 == 10)
+
+        val input2 = toInput("abcabcabce")
+        val Parsed.Success(_, i2) = rep.parseInput(input2)
+        assert(
+          i1 == 10,
+          Seq(9, 10).forall(input2.drops.contains)
+        )
       }
 
       'all {
@@ -54,7 +95,9 @@ object IteratorTests extends TestSuite {
 
         val all = P( pp | (np ~/ np) | p ~ "e" | "abded".! )
 
-        val Parsed.Success(res, _) = all.parseIterator(toIterator("abded"))
+        val input = toInput("abded")
+
+        val Parsed.Success(res, _) = all.parseInput(input)
         assert(res == "abded")
       }
     }

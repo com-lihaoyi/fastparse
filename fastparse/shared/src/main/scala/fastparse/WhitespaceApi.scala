@@ -26,19 +26,36 @@ object WhitespaceApi {
       p0.parseRec(cfg, index) match {
         case f: Mutable.Failure[Char] => failMore(f, index, cfg.logDepth, f.traceParsers, false)
         case Mutable.Success(value0, index0, traceParsers0, cut0) =>
-          WL.parseRec(cfg, index0) match {
+          if (cfg.checkForDrop(cut0)) cfg.input.dropBuffer(index0)
+
+          val oldCapturing = cfg.isCapturing // completely disallow dropBuffer
+          cfg.isCapturing = true
+          val resWL = WL.parseRec(cfg, index0)
+          cfg.isCapturing = oldCapturing
+
+          resWL match {
             case f1: Mutable.Failure[Char] => failMore(f1, index, cfg.logDepth)
             case Mutable.Success(value1, index1, traceParsers1, cut1) =>
-              p.parseRec(cfg, index1) match {
-                case f: Mutable.Failure[Char] => failMore(
+              val oldCapturing = cfg.isCapturing
+              cfg.isCapturing = true
+              val resP = p.parseRec(cfg, index1)
+              cfg.isCapturing = oldCapturing
+
+              resP match {
+                case f: Mutable.Failure[Char] =>
+                  failMore(
                   f, index1, cfg.logDepth,
                   mergeTrace(cfg.traceIndex, traceParsers0, f.traceParsers),
                   cut | cut0
                 )
                 case Mutable.Success(value2, index2, traceParsers2, cut2) =>
                   val (newIndex, newCut) =
-                    if (index2 > index1 || !cfg.input.isReachable(index1)) (index2, cut | cut0 | cut1 | cut2)
-                    else (index0, cut | cut0 | cut2)
+                    if (index2 > index1 || !cfg.input.isReachable(index1)) {
+                      if (cfg.checkForDrop(cut | cut0 | cut1 | cut2)) cfg.input.dropBuffer(index2)
+                      (index2, cut | cut0 | cut1 | cut2)
+                    } else {
+                      (index0, cut | cut0 | cut2)
+                    }
 
                   success(
                     cfg.success,

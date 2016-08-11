@@ -90,17 +90,17 @@ object Utils {
                                   (implicit formatter: ElemTypeFormatter[ElemType],
                                             converter: ResultConverter[ElemType, Repr]): Unit = {
 
-    val results = Utils.benchmark(s"$name Benchmark", datas.map(data => () => parser.parse(data)))
-    println(results.map(_.mkString(" ")).mkString("\n"))
+    /*val results = Utils.benchmark(s"$name Benchmark", datas.map(data => () => parser.parse(data)))
+    println(results.map(_.mkString(" ")).mkString("\n"))*/
 
-    val sizes = Seq(1, 2, /*4, 16, 64, */1024/*, 4096*/)
+    val sizes = Seq(1, 2 /*4, 16, 64, 1024, 4096*/)
     Utils.benchmarkIteratorBufferSizes(parser, sizes, iteratorFactory)
 
-    val iteratorResults = Utils.benchmark(s"$name Iterator Benchmark",
+    /*val iteratorResults = Utils.benchmark(s"$name Iterator Benchmark",
       sizes.map(s => () => parser.parseIterator(iteratorFactory(s)))
-    )
+    )*/
 
-    println(iteratorResults.map(_.mkString(" ")).mkString("\n"))
+    /*println(iteratorResults.map(_.mkString(" ")).mkString("\n"))*/
 
   }
 }

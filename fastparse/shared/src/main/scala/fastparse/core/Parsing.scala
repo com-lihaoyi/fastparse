@@ -297,6 +297,8 @@ case class ParseCtx[ElemType](input: ParserInput[ElemType],
     originalIndex, traceIndex, Set.empty, false
   )
   val success = Mutable.Success[Any, ElemType](null, 0, Set.empty, false)
+
+  def checkForDrop(outerCut: Boolean) = !isCapturing && ((outerCut && !isNoCut) || !isFork)
 }
 
 // Parser
