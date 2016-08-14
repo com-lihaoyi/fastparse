@@ -26,7 +26,7 @@ object WhitespaceApi {
       p0.parseRec(cfg, index) match {
         case f: Mutable.Failure[Char] => failMore(f, index, cfg.logDepth, f.traceParsers, false)
         case Mutable.Success(value0, index0, traceParsers0, cut0) =>
-          if (cfg.checkForDrop(cut0)) cfg.input.dropBuffer(index0)
+          if (index0 > index && cfg.checkForDrop(cut0)) cfg.input.dropBuffer(index0)
 
           val oldCapturing = cfg.isCapturing // completely disallow dropBuffer
           cfg.isCapturing = true
@@ -36,12 +36,7 @@ object WhitespaceApi {
           resWL match {
             case f1: Mutable.Failure[Char] => failMore(f1, index, cfg.logDepth)
             case Mutable.Success(value1, index1, traceParsers1, cut1) =>
-              val oldCapturing = cfg.isCapturing
-              cfg.isCapturing = true
-              val resP = p.parseRec(cfg, index1)
-              cfg.isCapturing = oldCapturing
-
-              resP match {
+              p.parseRec(cfg, index1) match {
                 case f: Mutable.Failure[Char] =>
                   failMore(
                   f, index1, cfg.logDepth,

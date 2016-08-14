@@ -1,7 +1,7 @@
 package perftests
 
 import fastparse.{ElemTypeFormatter, IteratorParserInput, ResultConverter}
-import fastparse.core.Parser
+import fastparse.core.{Parsed, Parser}
 
 import scala.collection.mutable
 
@@ -85,23 +85,25 @@ object Utils {
 
   def benchmarkAll[ElemType, Repr](name: String,
                                    parser: Parser[_, ElemType, Repr],
-                                   datas: Seq[Repr],
+                                   data: Repr, dataFailOpt: Option[Repr],
                                    iteratorFactory: Int => Iterator[Repr])
                                   (implicit formatter: ElemTypeFormatter[ElemType],
                                             converter: ResultConverter[ElemType, Repr]): Unit = {
 
-    /*val results = Utils.benchmark(s"$name Benchmark", datas.map(data => () => parser.parse(data)))
-    println(results.map(_.mkString(" ")).mkString("\n"))*/
+    val results = Utils.benchmark(s"$name Benchmark",
+      Seq(Some(() => parser.parse(data)),
+          dataFailOpt.map(dataFail =>
+            () => parser.parse(dataFail).asInstanceOf[Parsed.Failure[ElemType]].extra.traced)).flatten)
+    println(results.map(_.mkString(" ")).mkString("\n"))
 
-    val sizes = Seq(1, 2 /*4, 16, 64, 1024, 4096*/)
+    val sizes = Seq(1, 2,/* 4, 16, 64,*/ 1024/*, 4096*/)
     Utils.benchmarkIteratorBufferSizes(parser, sizes, iteratorFactory)
 
-    /*val iteratorResults = Utils.benchmark(s"$name Iterator Benchmark",
+    val iteratorResults = Utils.benchmark(s"$name Iterator Benchmark",
       sizes.map(s => () => parser.parseIterator(iteratorFactory(s)))
-    )*/
+    )
 
-    /*println(iteratorResults.map(_.mkString(" ")).mkString("\n"))*/
-
+    println(iteratorResults.map(_.mkString(" ")).mkString("\n"))
   }
 }
 

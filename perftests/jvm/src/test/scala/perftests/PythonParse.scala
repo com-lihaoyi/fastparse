@@ -12,7 +12,7 @@ object PythonParse extends TestSuite {
     'CrossValidation {
       Utils.benchmarkAll("PythonParse",
         parser,
-        Seq(crossValidationSource, "def " + crossValidationSource),
+        crossValidationSource, Some("def " + crossValidationSource),
         crossValidationIterator)
     }
   }

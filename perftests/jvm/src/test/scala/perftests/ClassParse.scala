@@ -13,6 +13,9 @@ object ClassParse extends TestSuite {
   val parser = ClassParser.classFile
 
   val tests = TestSuite {
-    Utils.benchmarkAll("ClassParse", parser, Seq(collisionSource), collisionIterator)
+    Utils.benchmarkAll("ClassParse",
+      parser,
+      collisionSource, None,
+      collisionIterator)
   }
 }

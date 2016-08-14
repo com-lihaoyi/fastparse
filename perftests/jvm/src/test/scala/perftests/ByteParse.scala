@@ -15,7 +15,7 @@ object ByteParse extends TestSuite {
     'Lena {
       Utils.benchmarkAll("ByteParse",
         parser,
-        Seq(lenaSource, lenaSource ++ Array(0.toByte)),
+        lenaSource, None,
         lenaIterator)
     }
   }

@@ -12,7 +12,7 @@ object CssParse extends TestSuite {
     'Bootstrap {
       Utils.benchmarkAll("CssParse",
         parser,
-        Seq(bootstrapSource, bootstrapSource ++ "*/"),
+        bootstrapSource, None,
         bootstrapIterator)
     }
   }

@@ -83,7 +83,7 @@ object ScalaParse extends TestSuite{
 
       Utils.benchmarkAll("ScalaParse",
         parser,
-        Seq(genJsCodeSource, genJsCodeSource + "*/"),
+        genJsCodeSource, Some(genJsCodeSource + "*/"),
         genJsCodeIterator)
     }
   }
