@@ -1,12 +1,14 @@
 package fastparse
 
+import fastparse.Utils.IsReachable
+
 /**
   * ParserInput class represents data that is needed to parse.
   *
   * It can be regular `IndexedSeq` that behaves as simple array or
   * `Iterator` of `IndexedSeq` batches which is optimized by `dropBuffer` method.
   */
-abstract class ParserInput[ElemType] {
+abstract class ParserInput[ElemType] extends IsReachable[ElemType] {
   def apply(index: Int): ElemType
 
   /**

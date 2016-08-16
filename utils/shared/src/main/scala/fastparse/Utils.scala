@@ -3,7 +3,7 @@ package fastparse
 import java.io.InputStream
 
 import scala.annotation.{switch, tailrec}
-//import acyclic.file
+import acyclic.file
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -147,6 +147,17 @@ object Utils {
   }
 
   /**
+    * Trait that represents classes with isReachable method
+    *
+    * Currently the only use of it is to avoid the cyclic dependencies between Utils and ParserInput
+    */
+
+  trait IsReachable[Elem] {
+    def apply(index: Int): Elem
+    def isReachable(index: Int): Boolean
+  }
+
+  /**
    * An trie node for quickly matching multiple strings which
    * share the same prefix, one char at a time.
    */
@@ -176,7 +187,7 @@ object Utils {
     /**
      * Returns the length of the matching string, or -1 if not found
      */
-    def query(input: ParserInput[Elem], index: Int): Int = {
+    def query(input: IsReachable[Elem], index: Int): Int = {
       @tailrec def rec(offset: Int, currentNode: TrieNode[Elem], currentRes: Int): Int = {
         if (!input.isReachable(index + offset)) currentRes
         else {
