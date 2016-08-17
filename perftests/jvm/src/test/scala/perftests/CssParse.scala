@@ -3,18 +3,17 @@ package perftests
 import utest._
 
 object CssParse extends TestSuite {
-  val bootstrapSource = scala.io.Source.fromInputStream(
-    getClass.getResourceAsStream("/bootstrap.css")
-  ).mkString
-  val tests = TestSuite {
-    val parser = cssparse.CssRulesParser.ruleList
-    'Bootstrap {
-      val results = Utils.benchmark(Seq(
-        () => parser.parse(bootstrapSource),
-        () => parser.parse(bootstrapSource + "*/")))
+  val bootstrapStream = getClass.getResourceAsStream("/bootstrap.css")
+  val bootstrapSource = scala.io.Source.fromInputStream(bootstrapStream).mkString
+  def bootstrapIterator(size: Int) = bootstrapSource.grouped(size)
+  val parser = cssparse.CssRulesParser.ruleList
 
-      println("CssParse Benchmark")
-      println(results.map(_.mkString(" ")).mkString("\n"))
+  val tests = TestSuite {
+    'Bootstrap {
+      Utils.benchmarkAll("CssParse",
+        parser,
+        bootstrapSource, None,
+        bootstrapIterator)
     }
   }
 }

@@ -114,7 +114,7 @@ trait ByteApi extends Api[Byte, Array[Byte]] {
   }
 
   def strToBytes(s: String): Array[Byte] = {
-    BytesParser.bytes.parse(s.toIndexedSeq).get.value
+    BytesParser.bytes.parse(s).get.value
   }
 }
 

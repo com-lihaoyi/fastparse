@@ -12,8 +12,7 @@ trait ParserApi[+T, ElemType, Repr] {
    * Wraps this in a [[Logged]]. This prints out information
    * where a parser was tried and its result, which is useful for debugging
    */
-  def log(msg: String = this.toString)(implicit output: Logger,
-                                       formatter: ElemTypeFormatter[ElemType]): Parser[T, ElemType, Repr]
+  def log(msg: String = this.toString)(implicit output: Logger): Parser[T, ElemType, Repr]
 
   /**
    * Makes this parser opaque, i.e. hides it and its inner parsers
@@ -86,11 +85,10 @@ trait ParserApi[+T, ElemType, Repr] {
 }
 
 class ParserApiImpl[+T, ElemType, Repr](self: Parser[T, ElemType, Repr])
-                                       (implicit builder: ResultBuilder[ElemType, Repr])
+                                       (implicit builder: ResultConverter[ElemType, Repr])
     extends ParserApi[T, ElemType, Repr] {
 
-  def log(msg: String = self.toString)(implicit output: Logger,
-                                       helper: ElemTypeFormatter[ElemType]) = Logged(self, msg, output.f)
+  def log(msg: String = self.toString)(implicit output: Logger) = Logged(self, msg, output.f)
 
   def opaque(msg: String = self.toString) = Opaque(self, msg)
 

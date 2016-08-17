@@ -86,8 +86,8 @@ object ClassAttributes {
     val max_stack = AnyWordI
     val max_locals = AnyWordI
     val code = AnyDwordI.flatMap(l => AnyByte.rep(exactly=l).!).map(parseCode)
-    val exception_table = repeatWithSize(exceptionHandler)
-    val attributes = repeatWithSize(attributeInfo)
+    val exception_table = repeatWithSize(exceptionHandler.~/)
+    val attributes = repeatWithSize(attributeInfo.~/)
 
     P( max_stack ~ max_locals ~ code ~ exception_table ~ attributes ).map {
        case (maxs: Int, maxl: Int, code: Seq[OpCode], exceptions, attrs: Seq[AttributeInfo]) =>

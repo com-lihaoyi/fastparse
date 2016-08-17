@@ -18,7 +18,7 @@ object ByteTests extends TestSuite {
         assert(
           failure.lastParser == (BS(1): P0),
           failure.index == 0,
-          failure.extra.traced.trace == """parseA:1:1 / "01":1:1 ..."02""""
+          failure.extra.traced.trace == """parseA:0 / "01":0 ..."02""""
         )
       }
 
@@ -178,7 +178,7 @@ object ByteTests extends TestSuite {
 
         check(
           Foo.ints.parse(strToBytes("ff 00 00 00 00")),
-          """Failure((int | longInt):1:1 ..."ff 00 00 00 00")"""
+          """Failure((int | longInt):0 ..."ff 00 00 00 00")"""
         )
 
       }
@@ -191,7 +191,7 @@ object ByteTests extends TestSuite {
         }
         check(
           Foo.ints.parse(strToBytes("ff 00 00 00 00")),
-          """Failure(AnyElem:4:0 ..."")"""
+          """Failure(AnyElem:5 ..."")"""
         )
       }
       'log{
@@ -210,10 +210,10 @@ object ByteTests extends TestSuite {
         val expected = """
             +ints:0
               +int:0
-              -int:0:Failure(int:1:1 / "00":1:1 ..."ff 00 00 00 00")
+              -int:0:Failure(int:0 / "00":0 ..."ff 00 00 00 00")
               +longInt:0
-              -longInt:0:Failure(longInt:1:1 / AnyElem:4:0 ..."ff 00 00 00 00", cut)
-            -ints:0:Failure(ints:1:1 / longInt:1:1 / AnyElem:4:0 ..."ff 00 00 00 00", cut)
+              -longInt:0:Failure(longInt:0 / AnyElem:5 ..."ff 00 00 00 00", cut)
+            -ints:0:Failure(ints:0 / longInt:0 / AnyElem:5 ..."ff 00 00 00 00", cut)
                        """.lines.filter(_.trim != "").toSeq
         val minIndent = expected.map(_.takeWhile(_ == ' ').length).min
         val expectedString = expected.map(_.drop(minIndent)).mkString("\n")

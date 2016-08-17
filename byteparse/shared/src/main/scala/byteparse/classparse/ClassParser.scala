@@ -335,67 +335,67 @@ object ClassParser {
 
   val constantClassInfo = {
     val name_index = AnyWordI
-    P( BS(7) ~ name_index ).map(ClassInfo)
+    P( BS(7) ~/ name_index ).map(ClassInfo)
   }
 
   val constantFieldRefInfo = {
     val class_index = AnyWordI
     val name_and_type_index = AnyWordI
-    P( BS(9) ~ class_index ~ name_and_type_index ).map(FieldRefInfo.tupled)
+    P( BS(9) ~/ class_index ~ name_and_type_index ).map(FieldRefInfo.tupled)
   }
 
   val constantMethodRefInfo = {
     val class_index = AnyWordI
     val name_and_type_index = AnyWordI
-    P( BS(10) ~ class_index ~ name_and_type_index ).map(MethodRefInfo.tupled)
+    P( BS(10) ~/ class_index ~ name_and_type_index ).map(MethodRefInfo.tupled)
   }
 
   val constantInterfaceMethodRefInfo = {
     val class_index = AnyWordI
     val name_and_type_index = AnyWordI
-    P( BS(11) ~ class_index ~ name_and_type_index ).map(InterfaceMethodRefInfo.tupled)
+    P( BS(11) ~/ class_index ~ name_and_type_index ).map(InterfaceMethodRefInfo.tupled)
   }
 
   val constantStringInfo = {
     val string_index = AnyWordI
-    P( BS(8) ~ string_index ).map(StringInfo)
+    P( BS(8) ~/ string_index ).map(StringInfo)
   }
 
-  val constantIntInfo = P( BS(3) ~ AnyDword.! ).map(bs =>
+  val constantIntInfo = P( BS(3) ~/ AnyDword.! ).map(bs =>
     BasicElemInfo(IntElem(wrapByteBuffer(bs).getInt)))
-  val constantFloatInfo = P( BS(4) ~ AnyDword.! ).map(bs =>
+  val constantFloatInfo = P( BS(4) ~/ AnyDword.! ).map(bs =>
     BasicElemInfo(FloatElem(wrapByteBuffer(bs).getFloat)))
-  val constantLongInfo = P( BS(5) ~ AnyByte.rep(exactly=8).! ).map(bs =>
+  val constantLongInfo = P( BS(5) ~/ AnyByte.rep(exactly=8).! ).map(bs =>
     BasicElemInfo(LongElem(wrapByteBuffer(bs).getLong)))
-  val constantDoubleInfo = P( BS(6) ~ AnyByte.rep(exactly=8).! ).map(bs =>
+  val constantDoubleInfo = P( BS(6) ~/ AnyByte.rep(exactly=8).! ).map(bs =>
     BasicElemInfo(DoubleElem(wrapByteBuffer(bs).getDouble)))
 
   val constantNameAndTypeInfo = {
     val name_index = AnyWordI
     val descriptor_index = AnyWordI
-    P( BS(12) ~ name_index ~ descriptor_index ).map(NameAndTypeInfo.tupled)
+    P( BS(12) ~/ name_index ~ descriptor_index ).map(NameAndTypeInfo.tupled)
   }
 
   val constantUtf8Info =
-    P( BS(1) ~ AnyWordI.flatMap(l => AnyByte.rep(exactly=l).!) ).map(Utf8Info)
+    P( BS(1) ~/ AnyWordI.flatMap(l => AnyByte.rep(exactly=l).!) ).map(Utf8Info)
 
   val constantMethodHandleInfo = {
     val reference_kind = AnyByte.!
     val reference_index = AnyWordI
-    P( BS(15) ~ reference_kind ~ reference_index ).map {
+    P( BS(15) ~/ reference_kind ~ reference_index ).map {
       case (refKind, refIdx) => MethodHandleInfo(refKind(0).toInt, refIdx)
     }
   }
 
   val constantMethodTypeInfo = {
     val descriptor_index = AnyWordI
-    P( BS(16) ~ descriptor_index ).map(MethodTypeInfo)
+    P( BS(16) ~/ descriptor_index ).map(MethodTypeInfo)
   }
 
   val constantInvokeDynamicInfo = {
     val bootstrap_method_attr_index = AnyWordI
     val name_and_type_index = AnyWordI
-    P( BS(18) ~ bootstrap_method_attr_index ~ name_and_type_index ).map(InvokeDynamicInfo.tupled)
+    P( BS(18) ~/ bootstrap_method_attr_index ~ name_and_type_index ).map(InvokeDynamicInfo.tupled)
   }
 
   val singleConstantPoolItem = P( constantClassInfo      | constantFieldRefInfo |
@@ -411,8 +411,9 @@ object ClassParser {
     if (count == 0) {
       Pass.map(_ => ArrayBuffer[PoolInfo]())
     } else {
-        P( singleConstantPoolItem.flatMap(item => constantPool(count - 1).map(_ :+ item)) |
-           doubleConstantPoolItem.flatMap(item => constantPool(count - 2).map(_ :+ NopInfo() :+ item )) )
+        P( singleConstantPoolItem.~/.flatMap(item => constantPool(count - 1).map(_ :+ item)) |
+           doubleConstantPoolItem.~/.flatMap(item => constantPool(count - 2).map(_ :+ NopInfo() :+ item )) )
+      //TODO it's pretty slow solution, as I think, but it's only one that I know currently
     }
 
   val attributeInfo = {
@@ -427,7 +428,7 @@ object ClassParser {
     val access_flags = AnyWord.!
     val name_index = AnyWordI
     val descriptor_index = AnyWordI
-    val attributes = repeatWithSize(attributeInfo)
+    val attributes = repeatWithSize(attributeInfo.~/)
 
     P( access_flags ~ name_index ~ descriptor_index ~ attributes ).map(FieldInfo.tupled)
   }
@@ -436,7 +437,7 @@ object ClassParser {
     val access_flags = AnyWord.!
     val name_index = AnyWordI
     val descriptor_index = AnyWordI
-    val attributes = repeatWithSize(attributeInfo)
+    val attributes = repeatWithSize(attributeInfo.~/)
 
     P(access_flags ~ name_index ~ descriptor_index ~ attributes).map(MethodInfo.tupled)
   }
@@ -448,12 +449,12 @@ object ClassParser {
     val access_flags = AnyWord.!
     val this_class = AnyWordI
     val super_class = AnyWordI
-    val interfaces = repeatWithSize(AnyWordI)
-    val fields = repeatWithSize(fieldInfo)
-    val methods = repeatWithSize(methodInfo)
-    val attributes = repeatWithSize(attributeInfo)
+    val interfaces = repeatWithSize(AnyWordI.~/)
+    val fields = repeatWithSize(fieldInfo.~/)
+    val methods = repeatWithSize(methodInfo.~/)
+    val attributes = repeatWithSize(attributeInfo.~/)
 
-    P(BS(0xCA, 0xFE, 0xBA, 0xBE) ~
+    P(BS(0xCA, 0xFE, 0xBA, 0xBE) ~/
       minor_version ~ major_version ~ constant_pool ~
       access_flags ~  this_class ~    super_class ~
       interfaces ~    fields ~        methods ~       attributes ).map(ClassFileInfo.tupled)
