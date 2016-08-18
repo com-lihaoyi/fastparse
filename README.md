@@ -13,9 +13,10 @@ Developer Docs
 
 The core of FastParse lives in the `fastparse/` folder. It is cross-built ScalaJVM/Scala.js codebase, with almost everything shared between the two platforms in the `fastparse/shared/` and minor differences in `fastparse/js/` and `fastparse/jvm/`.
 
-The two subprojects `scalaparse/` and `pythonparse/` are FastParse parsers for those respective languages. These are both usable as standalone libraries, and also serve as extensive test-suites and use-cases for FastParse itself. Each of those projects clones & parses large quantities of code from Github as part of *their* own test suites.
+The three subprojects `scalaparse/`, `pythonparse/` and `cssparse/` are FastParse parsers for those respective languages. These are both usable as standalone libraries, and also serve as extensive test-suites and use-cases for FastParse itself. Each of those projects clones & parses large quantities of code from Github as part of *their* own test suites.
+`byteparse` module has also two subprojects `classparse` and BMP parser. The first one is parser for .class files for java-bytecode.
 
-`util/` contains some basic utilities that FastParse uses that aren't specific to parsers: bitsets, escaping, tries, etc.. `readme/` contains the documentation site, which contains several live demos of FastParse parsers compiled to Scala.js. These all live in `demo/`.
+`perftests/` constains performance tests for main projects in the library including `ScalaParse`, `PythonParse`, `CssParse`, `ClassParse` and `ByteParse`. `util/` contains some basic utilities that FastParse uses that aren't specific to parsers: bitsets, escaping, tries, etc.. `readme/` contains the documentation site, which contains several live demos of FastParse parsers compiled to Scala.js. These all live in `demo/`.
 
 Common Commands
 ---------------
