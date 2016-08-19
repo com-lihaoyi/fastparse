@@ -67,7 +67,7 @@ object BmpParser {
   def bmpRow(width: Int, bitsPerPixel: Int): P[Seq[Pixel]] = {
     val bytesPerPixel = bitsPerPixel / 8
     val padding = (width * bytesPerPixel) % 4
-    P( AnyByte.rep(exactly=bytesPerPixel).!.rep(exactly=width) ~ AnyByte.rep(exactly=padding) ).map(
+    P( AnyByte.rep(exactly=bytesPerPixel).!.~/.rep(exactly=width) ~/ AnyByte.rep(exactly=padding) ).map(
       pixels => pixels.map(Pixel)
     )
   }

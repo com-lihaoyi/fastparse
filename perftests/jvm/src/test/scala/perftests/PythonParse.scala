@@ -1,21 +1,19 @@
 package perftests
 
-import fastparse.all._
 import utest._
 
 object PythonParse extends TestSuite {
-  val crossValidationSource = scala.io.Source.fromInputStream(
-    getClass.getResourceAsStream("/cross_validation.py")
-  ).mkString
-  val tests = TestSuite {
-    val parser = pythonparse.Statements.file_input
-    'CrossValidation {
-      val results = Utils.benchmark(Seq(
-        () => parser.parse(crossValidationSource),
-        () => parser.parse("def " + crossValidationSource)))
+  val crossValidationStream = getClass.getResourceAsStream("/cross_validation.py")
+  val crossValidationSource = scala.io.Source.fromInputStream(crossValidationStream).mkString
+  def crossValidationIterator(size: Int) = crossValidationSource.grouped(size)
+  val parser = pythonparse.Statements.file_input
 
-      println("PythonParse Benchmark")
-      println(results.map(_.mkString(" ")).mkString("\n"))
+  val tests = TestSuite {
+    'CrossValidation {
+      Utils.benchmarkAll("PythonParse",
+        parser,
+        crossValidationSource, Some("def " + crossValidationSource),
+        crossValidationIterator)
     }
   }
 }

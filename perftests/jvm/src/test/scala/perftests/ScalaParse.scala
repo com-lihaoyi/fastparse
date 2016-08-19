@@ -7,9 +7,10 @@ import scala.tools.nsc.{Global, Settings}
 import scalaparse.{Scala, ScalacParser}
 
 object ScalaParse extends TestSuite{
-  val genJsCodeSource = scala.io.Source.fromInputStream(
-    getClass.getResourceAsStream("/GenJSCode.scala")
-  ).mkString
+  val genJsCodeStream = getClass.getResourceAsStream("/GenJSCode.scala")
+  val genJsCodeSource = scala.io.Source.fromInputStream(genJsCodeStream).mkString
+  def genJsCodeIterator(size: Int) = genJsCodeSource.grouped(size)
+
   val tests = TestSuite{
     'GenJSCode {
       var current = Thread.currentThread().getContextClassLoader
@@ -80,12 +81,10 @@ object ScalaParse extends TestSuite{
         * 4825
         */
 
-      val results = Utils.benchmark(Seq(
-        () => parser.parse(genJsCodeSource),
-        () => parser.parse(genJsCodeSource + "*/").asInstanceOf[Parsed.Failure].extra.traced))
-
-      println("ScalaParse Benchmark")
-      println(results.map(_.mkString(" ")).mkString("\n"))
+      Utils.benchmarkAll("ScalaParse",
+        parser,
+        genJsCodeSource, Some(genJsCodeSource + "*/"),
+        genJsCodeIterator)
     }
   }
 }

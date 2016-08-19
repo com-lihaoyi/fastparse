@@ -1,6 +1,6 @@
 package fastparse.parsers
 import acyclic.file
-import fastparse.ElemTypeFormatter
+import fastparse.{ElemTypeFormatter, ParserInput}
 import fastparse.ElemTypeFormatter._
 import fastparse.Utils._
 import fastparse.core.ParseCtx
@@ -38,12 +38,12 @@ object Terminals {
     override val toString = "Fail"
   }
   /**
-   * Succeeds, consuming a single character
+   * Succeeds, consuming a single element
    */
   case class AnyElem[ElemType, R]() extends Parser[Unit, ElemType, R]{
     def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
       val input = cfg.input
-      if (index >= input.length) fail(cfg.failure, index)
+      if (!input.isReachable(index)) fail(cfg.failure, index)
       else success(cfg.success, input(index), index+1, Set.empty, false)
     }
     override val toString = "AnyElem"
@@ -66,7 +66,7 @@ object Terminals {
    */
   case class End[ElemType, R]() extends Parser[Unit, ElemType, R]{
     def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
-      if (index == cfg.input.length) success(cfg.success, (), index, Set.empty, false)
+      if (!cfg.input.isReachable(index)) success(cfg.success, (), index, Set.empty, false)
       else fail(cfg.failure, index)
     }
     override val toString = "End"
@@ -76,22 +76,22 @@ object Terminals {
    * Workaround https://github.com/scala-js/scala-js/issues/1603
    * by implementing startsWith myself
    */
-  def startsWith[ElemType](src: IndexedSeq[ElemType], prefix: IndexedSeq[ElemType], offset: Int) = {
+  def startsWith[ElemType](src: ParserInput[ElemType], prefix: IndexedSeq[ElemType], offset: Int) = {
     val max = prefix.length
     @tailrec def rec(i: Int): Boolean = {
       if (i >= prefix.length) true
-      else if (i + offset >= src.length) false
+      else if (!src.isReachable(i + offset)) false
       else if (src(i + offset) != prefix(i)) false
       else rec(i + 1)
     }
     rec(0)
   }
 
-  def startsWithIgnoreCase(src: IndexedSeq[Char], prefix: IndexedSeq[Char], offset: Int) = {
+  def startsWithIgnoreCase(src: ParserInput[Char], prefix: IndexedSeq[Char], offset: Int) = {
     val max = prefix.length
     @tailrec def rec(i: Int): Boolean = {
       if (i >= prefix.length) true
-      else if (i + offset >= src.length) false
+      else if (!src.isReachable(i + offset)) false
       else {
         val c1: Char = src(i + offset)
         val c2: Char = prefix(i)
@@ -103,7 +103,7 @@ object Terminals {
   }
 
   /**
-   * Parses a literal `String`
+   * Parses a literal `IndexedSeq[ElemType]`
    */
   case class Literal[ElemType, R](s: IndexedSeq[ElemType])
                               (implicit formatter: ElemTypeFormatter[ElemType])
@@ -131,14 +131,14 @@ object Terminals {
   }
 
   /**
-   * Parses a single character
+   * Parses a single element
    */
   case class ElemLiteral[ElemType, R](c: ElemType)
                                      (implicit formatter: ElemTypeFormatter[ElemType])
        extends Parser[Unit, ElemType, R]{
     def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
       val input = cfg.input
-      if (index >= input.length) fail(cfg.failure, index)
+      if (!input.isReachable(index)) fail(cfg.failure, index)
       else if (input(index) == c) success(cfg.success, c.toString, index + 1, Set.empty, false)
       else fail(cfg.failure, index)
     }
@@ -147,7 +147,7 @@ object Terminals {
 
   /**
    * Always succeeds, and provides the current index of the
-   * parse into the input string. e.g. useful for providing
+   * parse into the input. e.g. useful for providing
    * source locations for AST nodes. Consumes no input.
    */
   case class Index[ElemType, R]() extends Parser[Int, ElemType, R]{

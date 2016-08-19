@@ -19,7 +19,7 @@ object Intrinsics {
     private[this] val uberSet = BitSet(elems)
     def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
       val input = cfg.input
-      if (index >= input.length) fail(cfg.failure, index)
+      if (!input.isReachable(index)) fail(cfg.failure, index)
       else if (uberSet(input(index))) success(cfg.success, (), index + 1, Set.empty, false)
       else fail(cfg.failure, index)
     }
@@ -56,7 +56,7 @@ object Intrinsics {
     def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
       var curr = index
       val input = cfg.input
-      while(curr < input.length && uberSet(input(curr))) curr += 1
+      while(input.isReachable(curr) && uberSet(input(curr))) curr += 1
       if (curr - index < min) fail(cfg.failure, curr)
       else success(cfg.success, (), curr, Set.empty, false)
     }

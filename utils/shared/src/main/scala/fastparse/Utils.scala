@@ -1,12 +1,13 @@
 package fastparse
 
+import java.io.InputStream
+
 import scala.annotation.{switch, tailrec}
 import acyclic.file
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.language.experimental.macros
-import fastparse.ElemSetHelper
 
 object MacroUtils{
   /**
@@ -28,6 +29,7 @@ object MacroUtils{
   }
 }
 object Utils {
+
   /**
    * Convert a string to a C&P-able literal. Basically
    * copied verbatim from the uPickle source code.
@@ -145,6 +147,17 @@ object Utils {
   }
 
   /**
+    * Trait that represents classes with isReachable method
+    *
+    * Currently the only use of it is to avoid the cyclic dependencies between Utils and ParserInput
+    */
+
+  trait IsReachable[Elem] {
+    def apply(index: Int): Elem
+    def isReachable(index: Int): Boolean
+  }
+
+  /**
    * An trie node for quickly matching multiple strings which
    * share the same prefix, one char at a time.
    */
@@ -174,9 +187,9 @@ object Utils {
     /**
      * Returns the length of the matching string, or -1 if not found
      */
-    def query(input: IndexedSeq[Elem], index: Int): Int = {
+    def query(input: IsReachable[Elem], index: Int): Int = {
       @tailrec def rec(offset: Int, currentNode: TrieNode[Elem], currentRes: Int): Int = {
-        if (index + offset >= input.length) currentRes
+        if (!input.isReachable(index + offset)) currentRes
         else {
           val elem = input(index + offset)
           val next = currentNode(elem)
