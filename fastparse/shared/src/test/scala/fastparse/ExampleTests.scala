@@ -119,6 +119,27 @@ object ExampleTests extends TestSuite{
 
         val Parsed.Success(Some("b"), 4) = captureOpt.parse("aaab")
       }
+      'unapply{
+        val capture1 = P( "a".rep.! ~ "b" ~ End)
+
+        val capture1("aaa") = "aaab"
+
+        val capture2 = P( "a".rep.! ~ "b".! ~ End)
+
+        val capture2("aaa", "b") = "aaab"
+
+        val capture3 = P( "a".rep.! ~ "b".! ~ "c".! ~ End)
+
+        val capture3("aaa", "b", "c") = "aaabc"
+
+        val captureRep = P( "a".!.rep ~ "b" ~ End)
+
+        val captureRep(Seq("a", "a", "a")) = "aaab"
+
+        val captureOpt = P( "a".rep ~ "b".!.? ~ End)
+
+        val captureOpt(Some("b")) = "aaab"
+      }
       'anychar{
         val ab = P( "'" ~ AnyChar.! ~ "'" )
 
