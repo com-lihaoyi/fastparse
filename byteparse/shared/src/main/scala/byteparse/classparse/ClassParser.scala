@@ -178,7 +178,8 @@ object ClassParser {
             case fr: FieldRefInfo => FieldRef(classInfo, fr)
             case mr: MethodRefInfo => MethodRef(classInfo, mr)
             case imr: InterfaceMethodRefInfo => InterfaceMethodRef(classInfo, imr)
-          })
+          }
+        )
     }
 
     case class MethodType(descriptor: String) extends PoolItem
@@ -362,13 +363,17 @@ object ClassParser {
   }
 
   val constantIntInfo = P( BS(3) ~/ AnyDword.! ).map(bs =>
-    BasicElemInfo(IntElem(wrapByteBuffer(bs).getInt)))
+    BasicElemInfo(IntElem(wrapByteBuffer(bs).getInt))
+  )
   val constantFloatInfo = P( BS(4) ~/ AnyDword.! ).map(bs =>
-    BasicElemInfo(FloatElem(wrapByteBuffer(bs).getFloat)))
+    BasicElemInfo(FloatElem(wrapByteBuffer(bs).getFloat))
+  )
   val constantLongInfo = P( BS(5) ~/ AnyByte.rep(exactly=8).! ).map(bs =>
-    BasicElemInfo(LongElem(wrapByteBuffer(bs).getLong)))
+    BasicElemInfo(LongElem(wrapByteBuffer(bs).getLong))
+  )
   val constantDoubleInfo = P( BS(6) ~/ AnyByte.rep(exactly=8).! ).map(bs =>
-    BasicElemInfo(DoubleElem(wrapByteBuffer(bs).getDouble)))
+    BasicElemInfo(DoubleElem(wrapByteBuffer(bs).getDouble))
+  )
 
   val constantNameAndTypeInfo = {
     val name_index = AnyWordI
@@ -454,10 +459,12 @@ object ClassParser {
     val methods = repeatWithSize(methodInfo.~/)
     val attributes = repeatWithSize(attributeInfo.~/)
 
-    P(BS(0xCA, 0xFE, 0xBA, 0xBE) ~/
+    P(
+      BS(0xCA, 0xFE, 0xBA, 0xBE) ~/
       minor_version ~ major_version ~ constant_pool ~
       access_flags ~  this_class ~    super_class ~
-      interfaces ~    fields ~        methods ~       attributes ).map(ClassFileInfo.tupled)
+      interfaces ~    fields ~        methods ~       attributes
+    ).map(ClassFileInfo.tupled)
   }
 
 }

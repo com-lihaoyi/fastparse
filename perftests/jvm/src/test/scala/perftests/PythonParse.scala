@@ -10,10 +10,12 @@ object PythonParse extends TestSuite {
 
   val tests = TestSuite {
     'CrossValidation {
-      Utils.benchmarkAll("PythonParse",
+      Utils.benchmarkAll(
+        "PythonParse",
         parser,
         crossValidationSource, Some("def " + crossValidationSource),
-        crossValidationIterator)
+        crossValidationIterator
+      )
     }
   }
 }

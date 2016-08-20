@@ -35,16 +35,26 @@ object BmpTests extends TestSuite {
 
         val Parsed.Success(bmp1, _) = bmp.parse(file1)
 
-        assert(compareBmps(bmp1,
-                         Bmp(FileHeader(19778, 70, 54),
-                             BitmapInfoHeader(BitmapInfoHeaderPart(2, 2, 1, 24, 0, 16, 2835, 2835, 0, 0)),
-                             ArrayBuffer(ArrayBuffer(
-                               Pixel(BS(0xff, 0, 0)),
-                               Pixel(BS(0, 0xff, 0))),
-                             ArrayBuffer(
-                               Pixel(BS(0, 0, 0xff)),
-                               Pixel(BS(0xff, 0xff, 0xff)))))))
-        }
+        assert(
+          compareBmps(
+            bmp1,
+            Bmp(
+              FileHeader(19778, 70, 54),
+              BitmapInfoHeader(BitmapInfoHeaderPart(2, 2, 1, 24, 0, 16, 2835, 2835, 0, 0)),
+              ArrayBuffer(
+                ArrayBuffer(
+                  Pixel(BS(0xff, 0, 0)),
+                  Pixel(BS(0, 0xff, 0))
+                ),
+                ArrayBuffer(
+                  Pixel(BS(0, 0, 0xff)),
+                  Pixel(BS(0xff, 0xff, 0xff))
+                )
+              )
+            )
+          )
+        )
+      }
 
       'example2 {
         val file1 = strToBytes(
@@ -59,19 +69,29 @@ object BmpTests extends TestSuite {
 
         val Parsed.Success(bmp2, _) = bmp.parse(file1)
 
-        assert(compareBmps(bmp2,
-                           Bmp(FileHeader(19778, 154, 122),
-                               BitmapInfoHeader(BitmapInfoHeaderPart(4, 2, 1, 32, 3, 32, 2835, 2835, 0, 0)),
-                               ArrayBuffer(ArrayBuffer(
-                                 Pixel(BS(0xff, 0, 0, 0xff)),
-                                 Pixel(BS(0, 0xff, 0, 0xff)),
-                                 Pixel(BS(0, 0, 0xff, 0xff)),
-                                 Pixel(BS(0xff, 0xff, 0xff, 0xff))),
-                              ArrayBuffer(
-                                 Pixel(BS(0xff, 0, 0, 0x7f)),
-                                 Pixel(BS(0, 0xff, 0, 0x7f)),
-                                 Pixel(BS(0, 0, 0xff, 0x7f)),
-                                 Pixel(BS(0, 0, 0xff, 0x7f)))))))
+        assert(
+          compareBmps(
+            bmp2,
+            Bmp(
+              FileHeader(19778, 154, 122),
+              BitmapInfoHeader(BitmapInfoHeaderPart(4, 2, 1, 32, 3, 32, 2835, 2835, 0, 0)),
+              ArrayBuffer(
+                ArrayBuffer(
+                  Pixel(BS(0xff, 0, 0, 0xff)),
+                  Pixel(BS(0, 0xff, 0, 0xff)),
+                  Pixel(BS(0, 0, 0xff, 0xff)),
+                  Pixel(BS(0xff, 0xff, 0xff, 0xff))
+                ),
+                ArrayBuffer(
+                  Pixel(BS(0xff, 0, 0, 0x7f)),
+                  Pixel(BS(0, 0xff, 0, 0x7f)),
+                  Pixel(BS(0, 0, 0xff, 0x7f)),
+                  Pixel(BS(0, 0, 0xff, 0x7f))
+                )
+              )
+            )
+          )
+        )
       }
     }
   }

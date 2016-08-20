@@ -8,14 +8,16 @@ import utest._
 
 object ClassParse extends TestSuite {
   val collisionResource = getClass.getResource("/CollisionJNI.class")
-  val collisionSource = Files.readAllBytes(Paths.get(collisionResource.getPath))
+  val collisionSource = Files.readAllBytes(Paths.get(collisionResource.toURI.getPath))
   def collisionIterator(size: Int) = collisionSource.grouped(size)
   val parser = ClassParser.classFile
 
   val tests = TestSuite {
-    Utils.benchmarkAll("ClassParse",
+    Utils.benchmarkAll(
+      "ClassParse",
       parser,
       collisionSource, None,
-      collisionIterator)
+      collisionIterator
+    )
   }
 }
