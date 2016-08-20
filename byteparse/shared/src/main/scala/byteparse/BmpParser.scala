@@ -29,16 +29,34 @@ object BmpParser {
   import BmpAst._
   import ByteUtils.LE._
 
-  val fileHeader = P( AnyWordI /*headerType*/ ~ AnyDwordI /*size*/ ~
-    AnyWord ~ AnyWord ~
-    AnyDwordI /*offset*/ ).map(s => FileHeader.tupled(s))
+  val fileHeader = {
+    val headerType = AnyWordI
+    val size = AnyDwordI
+    val offset = AnyDwordI
+    P( headerType ~ size ~ AnyWord ~ AnyWord ~ offset ).map(FileHeader.tupled)
+  }
 
-  val bitmapInfoHeaderPart = P( AnyDwordI /*width*/ ~ AnyDwordI /*height*/ ~
-    AnyWordI /*colorPlanes*/ ~ AnyWordI /*bitsPerPixel*/ ~
-    AnyDwordI /*compression*/ ~ AnyDwordI /*imageSize*/ ~
-    AnyDwordI /*horzRes*/ ~ AnyDwordI /*vertRes*/ ~
-    AnyDwordI /*colorUsed*/ ~ AnyDwordI /*colorsImportant*/ ).map(
-    s => BitmapInfoHeader(BitmapInfoHeaderPart.tupled(s)))
+  val bitmapInfoHeaderPart = {
+    val width = AnyDwordI 
+    val height = AnyDwordI
+    val colorPlanes = AnyWordI
+    val bitsPerPixel = AnyWordI
+    val compression = AnyDwordI
+    val imageSize = AnyDwordI
+    val horzRes = AnyDwordI
+    val vertRes = AnyDwordI
+    val colorUsed = AnyDwordI
+    val colorsImportant = AnyDwordI
+    P(
+      width ~ height ~
+      colorPlanes ~ bitsPerPixel ~
+      compression ~ imageSize ~
+      horzRes ~ vertRes ~
+      colorUsed ~ colorsImportant
+    ).map(
+      s => BitmapInfoHeader(BitmapInfoHeaderPart.tupled(s))
+    )
+  }
 
   val bitmapV2HeaderPart = {
     val RgbPart = P( AnyByte.rep(exactly=4) )

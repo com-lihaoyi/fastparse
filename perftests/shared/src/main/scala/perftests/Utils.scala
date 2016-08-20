@@ -91,9 +91,13 @@ object Utils {
                                             converter: ResultConverter[ElemType, Repr]): Unit = {
 
     val results = Utils.benchmark(s"$name Benchmark",
-      Seq(Some(() => parser.parse(data)),
-          dataFailOpt.map(dataFail =>
-            () => parser.parse(dataFail).asInstanceOf[Parsed.Failure[ElemType]].extra.traced)).flatten)
+      Seq(
+        Some(() => parser.parse(data)),
+        dataFailOpt.map(dataFail =>
+          () => parser.parse(dataFail).asInstanceOf[Parsed.Failure[ElemType]].extra.traced
+        )
+      ).flatten
+    )
     println(results.map(_.mkString(" ")).mkString("\n"))
 
     val sizes = Seq(1, 2,/* 4, 16, 64,*/ 1024/*, 4096*/)
