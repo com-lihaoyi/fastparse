@@ -34,6 +34,21 @@ object IteratorTests extends TestSuite {
       // the cut has taken place, rather than at position 4 as we did earlier.
       assert(input.drops == Set(2, 4))
     }
+    'whitespaceImmediateCutDrop{
+      import fastparse.noApi._
+      val White = fastparse.WhitespaceApi.Wrapper{
+        import fastparse.all._
+        NoTrace(" ".? ~ " ".rep) // note that the whitespace delimiter has cut
+      }
+      import White._
+      val p = P( "ab" ~/ "cd" | "z" )
+
+      val input = toInput("abcdef")
+      val Parsed.Success(res, i) = p.parseInput(input)
+      // Make sure that we drop immediately at position 2, since that is where
+      // the cut has taken place, rather than at position 4 as we did earlier.
+      assert(input.drops == Set(2, 4))
+    }
     'topLevelNoCuts{
       // Top-level sequences, which are not inside any `|`s or `.rep`s or `.?`s,
       // should dropBuffer immediately after every `~`, even without any cuts
