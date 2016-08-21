@@ -46,7 +46,9 @@ object WhitespaceApi {
                 case Mutable.Success(value2, index2, traceParsers2, cut2) =>
                   val (newIndex, newCut) =
                     if (index2 > index1 || !cfg.input.isReachable(index1)) {
-                      if (cfg.checkForDrop(cut | cut0 | cut1 | cut2)) cfg.input.dropBuffer(index2)
+                      if (cfg.checkForDrop(cut | cut0 | cut1 | cut2)) {
+                        cfg.input.dropBuffer(index2)
+                      }
                       (index2, cut | cut0 | cut1 | cut2)
                     } else {
                       (index0, cut | cut0 | cut2)

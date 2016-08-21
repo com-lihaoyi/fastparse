@@ -11,17 +11,40 @@ object IteratorTests extends TestSuite {
                                         (implicit formatter: ElemTypeFormatter[ElemType])
     extends IteratorParserInput[ElemType](data) {
 
-    var drops = mutable.Set.empty[Int]
+    val drops = mutable.SortedSet.empty[Int]
 
     override def dropBuffer(index: Int): Unit = {
       drops.add(index)
       super.dropBuffer(index)
     }
+    override def toString = s"LoggedDropsParserInput($drops)"
   }
 
   def toInput(string: String) = new LoggedDropsParserInput[Char](string.grouped(1).map(wrapString))
 
   val tests = TestSuite {
+
+    'immediateCutDrop{
+      import fastparse.all._
+      val p = P( "ab" ~/ "cd" | "z" )
+
+      val input = toInput("abcdef")
+      val Parsed.Success(res, i) = p.parseInput(input)
+      // Make sure that we drop immediately at position 2, since that is where
+      // the cut has taken place, rather than at position 4 as we did earlier.
+      assert(input.drops == Set(2, 4))
+    }
+    'topLevelNoCuts{
+      // Top-level sequences, which are not inside any `|`s or `.rep`s or `.?`s,
+      // should dropBuffer immediately after every `~`, even without any cuts
+      import fastparse.all._
+
+      val p = P( "a" ~ "b" ~ "c")
+      val capt = P( p ~ p ~ p)
+      val input = toInput("abcabcabc")
+      val Parsed.Success(res, i) = capt.parseInput(input)
+      assert(input.drops == Set(1, 2, 3, 4, 5, 6, 7, 8, 9))
+    }
     'cuts {
       'capturing {
         import fastparse.all._
@@ -47,7 +70,7 @@ object IteratorTests extends TestSuite {
         val Parsed.Success(_, i1) = nocut.parseInput(input1)
         assert(
           i1 == 9,
-          Set(9) == input1.drops // drop non-droppable NoCut block after cut
+          Set(6, 9) == input1.drops // drop non-droppable NoCut block after cut
         )
 
         val input2 = toInput("abcd")
