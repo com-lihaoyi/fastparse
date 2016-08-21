@@ -3,6 +3,8 @@ package scalaparse
 import java.io.File
 import java.nio.file.{Files, Path, Paths}
 
+import fastparse.IndexedParserInput
+
 import concurrent.ExecutionContext.Implicits.global
 import utest._
 
@@ -29,7 +31,7 @@ object ProjectTests extends TestSuite{
           val code = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(filename)))
           if (!ScalacParser.checkParseFails(code)) {
             print(".")
-            TestUtil.check(code, tag = filename)
+            TestUtil.check(code, tag = filename, skipIterator = true)
           }
         }
       }
@@ -90,7 +92,6 @@ object ProjectTests extends TestSuite{
     "pocorall/scaloid" - checkRepo()
     "mesosphere/marathon" - checkRepo()
     "scalatra/scalatra" - checkRepo()
-    "summingbird/summingbird" - checkRepo()
     "slick/slick" - checkRepo()
     "ensime/ensime-server" - checkRepo()
     "GravityLabs/goose" - checkRepo()

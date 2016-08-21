@@ -124,13 +124,22 @@ object JsonTests extends TestSuite{
       """)
     }
     'fail{
-      def check(s: String, expectedError: String) = {
+      def check(s: String, expectedError: String, expectedShortError: String) = {
         jsonExpr.parse(s) match{
           case s: Parsed.Success[_] => throw new Exception("Parsing should have failed:")
           case f: Parsed.Failure =>
             val error = f.extra.traced.trace
             val expected = expectedError.trim
             assert(error == expected)
+        }
+        for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
+          jsonExpr.parseIterator(s.grouped(chunkSize)) match {
+            case s: Parsed.Success[_] => throw new Exception("Parsing should have failed:")
+            case f: Parsed.Failure =>
+              val error = f.msg
+              val expected = expectedShortError.trim
+              assert(error == expected)
+          }
         }
       }
       * - check(
@@ -159,6 +168,9 @@ object JsonTests extends TestSuite{
         """,
         """
           jsonExpr:1:0 / (obj | array | string | true | false | null | number):2:9 ..."}\n        "
+        """,
+        """
+          (obj | array | string | true | false | null | number):9 ..."}\n        "
         """
       )
       * - check(
@@ -187,6 +199,9 @@ object JsonTests extends TestSuite{
         """,
         """
           jsonExpr:1:0 / obj:2:9 / ("}" | "\""):3:13 ..."firstName\""
+        """,
+        """
+          "}":23 ..."firstName\""
         """
       )
       * - check(
@@ -215,6 +230,9 @@ object JsonTests extends TestSuite{
         """,
         """
           jsonExpr:1:0 / obj:2:9 / pair:2:9 / ":":3:24 ..." \"John\",\n "
+        """,
+        """
+          ":":34 ..." \"John\",\n "
         """
       )
       * - check(
@@ -243,6 +261,9 @@ object JsonTests extends TestSuite{
         """,
         """
           jsonExpr:1:0 / obj:2:9 / ("}" | ","):4:14 ..."lastName\":"
+        """,
+        """
+          "}":56 ..."lastName\":"
         """
       )
       * - check(
@@ -271,6 +292,9 @@ object JsonTests extends TestSuite{
         """,
         """
           jsonExpr:1:0 / obj:2:9 / ("}" | ","):7:32 ...": \"21 2nd "
+        """,
+        """
+          "}":154 ...": \"21 2nd "
         """
       )
       * - check(
@@ -299,6 +323,9 @@ object JsonTests extends TestSuite{
         """,
         """
           jsonExpr:1:0 / obj:2:9 / pair:16:18 / string:16:18 / "\"":17:17 ..."{\n        "
+        """,
+        """
+          "\"":455 ..."{\n        "
         """
       )
       * - check(
@@ -327,6 +354,9 @@ object JsonTests extends TestSuite{
         """,
         """
           jsonExpr:1:0 / obj:2:9 / pair:11:14 / jsonExpr:12:27 / obj:13:17 / pair:13:17 / ":":14:27 ..." \"home\",\n "
+        """,
+        """
+          ":":365 ..." \"home\",\n "
         """
       )
       * - check(
@@ -355,6 +385,9 @@ object JsonTests extends TestSuite{
         """,
         """
           jsonExpr:1:0 / obj:2:9 / pair:11:14 / jsonExpr:12:28 / array:12:29 / jsonExpr:12:29 / obj:13:17 / ("}" | ","):15:35 ..."555-1234\n "
+        """,
+        """
+          "}":411 ..."555-1234\n "
         """
       )
       * - check(
@@ -383,6 +416,9 @@ object JsonTests extends TestSuite{
         """,
         """
           jsonExpr:1:0 / obj:2:9 / pair:11:14 / jsonExpr:12:28 / array:12:29 / jsonExpr:16:18 / obj:17:17 / ("}" | ","):19:35 ..."555-4567\n "
+        """,
+        """
+          "}":528 ..."555-4567\n "
         """
       )
       * - check(
@@ -411,6 +447,9 @@ object JsonTests extends TestSuite{
         """,
         """
           jsonExpr:1:0 / obj:2:9 / pair:11:14 / jsonExpr:12:28 / array:12:29 / ("]" | ","):22:9 ..."}\n        "
+        """,
+        """
+          "]":566 ..."}\n        "
         """
       )
     }
