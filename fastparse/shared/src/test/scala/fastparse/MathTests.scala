@@ -26,8 +26,15 @@ object MathTests extends TestSuite{
   val tests = TestSuite{
     'pass {
       def check(str: String, num: Int) = {
+        // Normal parsing
+
         val Parsed.Success(value, _) = expr.parse(str)
         assert(value == num)
+        // Iterator parsing
+        for(chunkSize <- Seq(1, 2, 4, 8, 16, 32, 64, 128, 256, 512)){
+          val Parsed.Success(value, _) = expr.parseIterator(str.grouped(chunkSize))
+          assert(value == num)
+        }
       }
 
       check("1+1", 2)
@@ -43,6 +50,13 @@ object MathTests extends TestSuite{
         val failure = expr.parse(input).asInstanceOf[Parsed.Failure]
         val actualTrace = failure.extra.traced.trace
         assert(expectedTrace.trim == actualTrace.trim)
+        val chunkSize = 512
+
+        {
+          val failure = expr.parseIterator(input.grouped(chunkSize)).asInstanceOf[Parsed.Failure]
+          val actualTrace = failure.extra.traced.trace
+          assert(expectedTrace.trim == actualTrace.trim)
+        }
       }
       check(
         "(+)",
