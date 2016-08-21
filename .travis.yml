@@ -15,7 +15,7 @@ env:
 
 matrix:
   include:
-    - CI_SCRIPT: sbt readme/run ++$TRAVIS_SCALA_VERSION
+    - CI_SCRIPT: 'sbt readme/run ++$TRAVIS_SCALA_VERSION'
       scala: 2.11.8
       jdk: oraclejdk8
 
