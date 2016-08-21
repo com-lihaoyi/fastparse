@@ -271,7 +271,8 @@ object Combinators {
                          rCut: Boolean,
                          vIndex: Int,
                          traceParsers: Set[Parser[_, ElemType, _]]): Mutable[R, ElemType] = {
-          if (rIndex > index && cfg.checkForDrop(rCut)) cfg.input.dropBuffer(rIndex)
+          val currParserCut = if (vIndex < ps.length) ps(vIndex).cut else false
+          if (rIndex > index && cfg.checkForDrop(rCut | currParserCut)) cfg.input.dropBuffer(rIndex)
 
           if (vIndex >= ps.length) success(cfg.success, r1, rIndex, traceParsers, rCut)
           else {
