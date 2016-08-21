@@ -80,10 +80,12 @@ object CssTokensParser {
   val prefixMatchToken =    P( "^=" ).map{ _ => Ast.PrefixMatchToken()}
   val suffixMatchToken =    P( "$=" ).map{_ => Ast.SuffixMatchToken()}
   val substringMatchToken = P( "*=" ).map{_ => Ast.SubstringMatchToken()}
-  val matchToken = P( includeMatchToken | dashMatchToken |
-                       prefixMatchToken  | suffixMatchToken |
-                       suffixMatchToken  | substringMatchToken |
-                       substringMatchToken)
+  val matchToken = P(
+    includeMatchToken | dashMatchToken |
+    prefixMatchToken  | suffixMatchToken |
+    suffixMatchToken  | substringMatchToken |
+    substringMatchToken
+  )
 
   val columnToken =          P( "||" ).map{_ => Ast.ColumnToken()}
   val CDOToken =             P( "<!--" ).map{_ => Ast.CdoToken()}
@@ -100,10 +102,11 @@ object CssTokensParser {
     unicodeRangeToken   | percentageToken |
     dimensionToken      | urlToken |
     numberToken         | identToken |
-    delimToken ).map{
-      case st: Ast.SimpleToken => Some(st)
-      case _ => None
-    }
+    delimToken
+  ).map{
+    case st: Ast.SimpleToken => Some(st)
+    case _ => None
+  }
 
   val bracketsBlock =       P( "(" ~ componentValue.rep ~ ")" ).map(values => Ast.BracketsBlock(values.flatten))
   val curlyBracketsBlock =  P( "{" ~ componentValue.rep ~ "}" ).map(values => Ast.CurlyBracketsBlock(values.flatten))

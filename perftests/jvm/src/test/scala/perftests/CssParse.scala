@@ -10,10 +10,12 @@ object CssParse extends TestSuite {
 
   val tests = TestSuite {
     'Bootstrap {
-      Utils.benchmarkAll("CssParse",
+      Utils.benchmarkAll(
+        "CssParse",
         parser,
         bootstrapSource, None,
-        bootstrapIterator)
+        bootstrapIterator
+      )
     }
   }
 }

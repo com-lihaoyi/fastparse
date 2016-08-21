@@ -77,7 +77,6 @@ object Terminals {
    * by implementing startsWith myself
    */
   def startsWith[ElemType](src: ParserInput[ElemType], prefix: IndexedSeq[ElemType], offset: Int) = {
-    val max = prefix.length
     @tailrec def rec(i: Int): Boolean = {
       if (i >= prefix.length) true
       else if (!src.isReachable(i + offset)) false

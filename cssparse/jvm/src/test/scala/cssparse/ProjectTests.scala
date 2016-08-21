@@ -17,8 +17,11 @@ object ProjectTests extends TestSuite {
       println("DOWNLOADING")
       Seq("wget", url, "-O", "target/files/" + name).!
     }
-    val css = new String(java.nio.file.Files.readAllBytes(
-      java.nio.file.Paths.get("target", "files", name)))
+    val css = new String(
+      java.nio.file.Files.readAllBytes(
+        java.nio.file.Paths.get("target", "files", name)
+      )
+    )
     TestUtil.checkParsing(css, tag = name)
     TestUtil.checkPrinting(css, tag = name)
   }

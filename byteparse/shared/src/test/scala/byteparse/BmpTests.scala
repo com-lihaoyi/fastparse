@@ -49,11 +49,10 @@ object BmpTests extends TestSuite {
         )
 
         val Parsed.Success(bmp1, _) = bmp.parse(file1)
-
         assert(compareBmps(bmp1, expected))
+
         for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
           val Parsed.Success(bmp1, _) = bmp.parseIterator(file1.grouped(chunkSize))
-
           assert(compareBmps(bmp1, expected))
         }
       }
@@ -91,7 +90,6 @@ object BmpTests extends TestSuite {
 
         for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
           val Parsed.Success(bmp2, _) = bmp.parseIterator(file1.grouped(chunkSize))
-
           assert(compareBmps(bmp2, expected))
         }
       }
