@@ -9,14 +9,28 @@ object ParsingTests extends TestSuite{
 
   def check[T](parser: P[T], input: (String, Int), rhs: Parsed[T]) = {
     val (str, index) = input
+    // Test normal parsing
     val parsed = parser.parse(str, index)
     assert(parsed == rhs)
+    // Test iterator parsing
+    for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
+      val parsed = parser.parse(str, index)
+      assert(parsed == rhs)
+    }
   }
   def checkFail[T](parser: P[T], input: (String, Int), expectedFailureIndex: Int) = {
     val (str, index) = input
+    // Test normal parsing
     val parsed = parser.parse(str, index)
     val failureIndex = parsed.asInstanceOf[Parsed.Failure].index
     assert(failureIndex == expectedFailureIndex)
+    // Test iterator parsing
+    for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
+      val parsed = parser.parseIterator(str.grouped(chunkSize), index)
+      val failureIndex = parsed.asInstanceOf[Parsed.Failure].index
+      assert(failureIndex == expectedFailureIndex)
+    }
+
   }
   val tests = TestSuite{
 
