@@ -31,7 +31,7 @@ object ProjectTests extends TestSuite{
           val code = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(filename)))
           if (!ScalacParser.checkParseFails(code)) {
             print(".")
-            TestUtil.check(code, tag = filename)
+            TestUtil.check(code, tag = filename, skipIterator = true)
           }
         }
       }
