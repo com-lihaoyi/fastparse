@@ -56,67 +56,78 @@ val shared = Seq(
       </developers>
 )
 
-lazy val utils = crossProject.settings(
-  name := "fastparse-utils",
-  unmanagedSourceDirectories in Compile ++= {
-    if (scalaVersion.value startsWith "2.10.") Seq(baseDirectory.value / ".."/"shared"/"src"/ "main" / "scala-2.10")
-    else Seq(baseDirectory.value / ".."/"shared" / "src"/"main" / "scala-2.11")
-  }
-).settings(shared:_*)
+lazy val utils = crossProject
+  .settings(shared:_*)
+  .settings(
+    name := "fastparse-utils",
+    unmanagedSourceDirectories in Compile ++= {
+      if (scalaVersion.value startsWith "2.10.") Seq(baseDirectory.value / ".."/"shared"/"src"/ "main" / "scala-2.10")
+      else Seq(baseDirectory.value / ".."/"shared" / "src"/"main" / "scala-2.11")
+    }
+  )
 lazy val utilsJS = utils.js
 lazy val utilsJVM= utils.jvm
 
 
-lazy val fastparse = crossProject.dependsOn(utils).settings(
-  name := "fastparse",
-  sourceGenerators in Compile <+= sourceManaged in Compile map { dir =>
-    val file = dir/"fastparse"/"SequencerGen.scala"
-    // Only go up to 21, because adding the last element makes it 22
-    val tuples = (2 to 21).map{ i =>
-      val ts = (1 to i) map ("T" + _)
-      val chunks = (1 to i) map { n =>
-        s"t._$n"
+lazy val fastparse = crossProject
+  .dependsOn(utils)
+  .settings(shared:_*)
+  .settings(
+    name := "fastparse",
+    sourceGenerators in Compile <+= sourceManaged in Compile map { dir =>
+      val file = dir/"fastparse"/"SequencerGen.scala"
+      // Only go up to 21, because adding the last element makes it 22
+      val tuples = (2 to 21).map{ i =>
+        val ts = (1 to i) map ("T" + _)
+        val chunks = (1 to i) map { n =>
+          s"t._$n"
+        }
+        val tsD = (ts :+ "D").mkString(",")
+        s"""
+          implicit def Sequencer$i[$tsD]: Sequencer[(${ts.mkString(", ")}), D, ($tsD)] =
+            Sequencer0((t, d) => (${chunks.mkString(", ")}, d))
+          """
       }
-      val tsD = (ts :+ "D").mkString(",")
-      s"""
-        implicit def Sequencer$i[$tsD]: Sequencer[(${ts.mkString(", ")}), D, ($tsD)] =
-          Sequencer0((t, d) => (${chunks.mkString(", ")}, d))
-        """
+      val output = s"""
+          package fastparse
+          trait SequencerGen[Sequencer[_, _, _]] extends LowestPriSequencer[Sequencer]{
+            protected[this] def Sequencer0[A, B, C](f: (A, B) => C): Sequencer[A, B, C]
+            ${tuples.mkString("\n")}
+          }
+          trait LowestPriSequencer[Sequencer[_, _, _]]{
+            protected[this] def Sequencer0[A, B, C](f: (A, B) => C): Sequencer[A, B, C]
+            implicit def Sequencer1[T1, T2]: Sequencer[T1, T2, (T1, T2)] = Sequencer0{case (t1, t2) => (t1, t2)}
+          }
+        """.stripMargin
+      IO.write(file, output)
+      Seq(file)
     }
-    val output = s"""
-        package fastparse
-        trait SequencerGen[Sequencer[_, _, _]] extends LowestPriSequencer[Sequencer]{
-          protected[this] def Sequencer0[A, B, C](f: (A, B) => C): Sequencer[A, B, C]
-          ${tuples.mkString("\n")}
-        }
-        trait LowestPriSequencer[Sequencer[_, _, _]]{
-          protected[this] def Sequencer0[A, B, C](f: (A, B) => C): Sequencer[A, B, C]
-          implicit def Sequencer1[T1, T2]: Sequencer[T1, T2, (T1, T2)] = Sequencer0{case (t1, t2) => (t1, t2)}
-        }
-      """.stripMargin
-    IO.write(file, output)
-    Seq(file)
-  }
-).settings(shared:_*)
+  )
+
 lazy val fastparseJS = fastparse.js
 lazy val fastparseJVM = fastparse.jvm
 
-lazy val scalaparse = crossProject.dependsOn(fastparse).settings(
-  name := "scalaparse"
-).settings(shared:_*)
-.jvmSettings(
-  libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"
-)
+lazy val scalaparse = crossProject
+  .settings(shared:_*)
+  .dependsOn(fastparse).settings(
+    name := "scalaparse"
+    )
+  .jvmSettings(
+    libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"
+  )
 
 lazy val scalaparseJS = scalaparse.js
 
 lazy val scalaparseJVM = scalaparse.jvm
 
 
-lazy val pythonparse = crossProject.dependsOn(fastparse).settings(
-  name := "pythonparse"
-).settings(shared:_*)
-.jvmSettings()
+lazy val pythonparse = crossProject
+  .dependsOn(fastparse)
+  .settings(shared:_*)
+  .settings(
+    name := "pythonparse"
+  )
+
 
 lazy val pythonparseJVM = pythonparse.jvm
 lazy val pythonparseJS = pythonparse.js
@@ -132,36 +143,46 @@ lazy val cssparse = crossProject
 lazy val cssparseJVM = cssparse.jvm
 lazy val cssparseJS = cssparse.js
 
-lazy val byteparse = crossProject.dependsOn(fastparse).settings(
-   name := "byteparse"
- ).settings(shared:_*)
+lazy val byteparse = crossProject
+  .dependsOn(fastparse)
+  .settings(shared:_*)
+  .settings(
+    name := "byteparse"
+  )
 
 lazy val byteparseJVM = byteparse.jvm
 lazy val byteparseJS = byteparse.js
 
-lazy val perftests = crossProject.settings(
-   name := "perfomance-tests"
- ).settings(shared:_*).dependsOn(fastparse, pythonparse, scalaparse, cssparse, byteparse)
+lazy val perftests = crossProject
+  .dependsOn(fastparse, pythonparse, scalaparse, cssparse, byteparse)
+  .settings(shared:_*)
+  .settings(
+    name := "perfomance-tests",
+    parallelExecution := false
+  )
+
 lazy val perftestsJS = perftests.js
 lazy val perftestsJVM = perftests.jvm
 
-lazy val modules = project.aggregate(
-  fastparseJS,
-  fastparseJVM,
-  pythonparseJS,
-  pythonparseJVM,
-  cssparseJS,
-  cssparseJVM,
-  scalaparseJS,
-  scalaparseJVM,
-  byteparseJVM,
-  byteparseJS,
-  utilsJS,
-  utilsJVM
-).settings(
-  publishArtifact := false,
-  publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
-)
+lazy val modules = project
+  .aggregate(
+    fastparseJS,
+    fastparseJVM,
+    pythonparseJS,
+    pythonparseJVM,
+    cssparseJS,
+    cssparseJVM,
+    scalaparseJS,
+    scalaparseJVM,
+    byteparseJVM,
+    byteparseJS,
+    utilsJS,
+    utilsJVM
+  )
+  .settings(
+    publishArtifact := false,
+    publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
+  )
 
 lazy val demo = project.enablePlugins(ScalaJSPlugin)
   .dependsOn(fastparseJS % "compile->compile;compile->test", scalaparseJS)

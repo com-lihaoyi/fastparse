@@ -5,12 +5,14 @@ scala:
 jdk:
 - oraclejdk7
 - oraclejdk8
+env:
+- CI_SCRIPT="sbt readme/run ++$TRAVIS_SCALA_VERSION"
+- CI_SCRIPT="sbt ++$TRAVIS_SCALA_VERSION fastparseJVM/test fastparseJS/test"
+- CI_SCRIPT="sbt ++$TRAVIS_SCALA_VERSION byteparseJVM/test byteparseJS/test"
+- CI_SCRIPT="sbt ++$TRAVIS_SCALA_VERSION scalaparseJVM/test scalaparseJS/test"
+- CI_SCRIPT="sbt ++$TRAVIS_SCALA_VERSION pythonparseJVM/test pythonparseJS/test"
+- CI_SCRIPT="sbt ++$TRAVIS_SCALA_VERSION cssparseJVM/test cssparseJS/test"
+- CI_SCRIPT="sbt ++$TRAVIS_SCALA_VERSION perftestsJVM/compile perftestsJS/compile perftestsJVM/test"
 script:
-- sbt readme/run ++$TRAVIS_SCALA_VERSION modules/compile
-- sbt ++$TRAVIS_SCALA_VERSION modules/test
-- sbt ++$TRAVIS_SCALA_VERSION perftestsJVM/compile; sbt ++$TRAVIS_SCALA_VERSION perftestsJS/compile
-- sbt ++$TRAVIS_SCALA_VERSION "perftestsJVM/test-only -- perftests.ScalaParse"
-- sbt ++$TRAVIS_SCALA_VERSION "perftestsJVM/test-only -- perftests.PythonParse"
-- sbt ++$TRAVIS_SCALA_VERSION "perftestsJVM/test-only -- perftests.CssParse"
-- sbt ++$TRAVIS_SCALA_VERSION "perftestsJVM/test-only -- perftests.ByteParse"
+- $CI_SCRIPT
 sudo: false
