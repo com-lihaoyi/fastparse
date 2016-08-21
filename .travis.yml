@@ -6,13 +6,19 @@ jdk:
 - oraclejdk7
 - oraclejdk8
 env:
-- CI_SCRIPT="sbt readme/run ++$TRAVIS_SCALA_VERSION"
-- CI_SCRIPT="sbt ++$TRAVIS_SCALA_VERSION fastparseJVM/test fastparseJS/test"
-- CI_SCRIPT="sbt ++$TRAVIS_SCALA_VERSION byteparseJVM/test byteparseJS/test"
-- CI_SCRIPT="sbt ++$TRAVIS_SCALA_VERSION scalaparseJVM/test scalaparseJS/test"
-- CI_SCRIPT="sbt ++$TRAVIS_SCALA_VERSION pythonparseJVM/test pythonparseJS/test"
-- CI_SCRIPT="sbt ++$TRAVIS_SCALA_VERSION cssparseJVM/test cssparseJS/test"
-- CI_SCRIPT="sbt ++$TRAVIS_SCALA_VERSION perftestsJVM/compile perftestsJS/compile perftestsJVM/test"
+- CI_SCRIPT: sbt ++$TRAVIS_SCALA_VERSION fastparseJVM/test fastparseJS/test
+- CI_SCRIPT: sbt ++$TRAVIS_SCALA_VERSION byteparseJVM/test byteparseJS/test
+- CI_SCRIPT: sbt ++$TRAVIS_SCALA_VERSION scalaparseJVM/test scalaparseJS/test
+- CI_SCRIPT: sbt ++$TRAVIS_SCALA_VERSION pythonparseJVM/test pythonparseJS/test
+- CI_SCRIPT: sbt ++$TRAVIS_SCALA_VERSION cssparseJVM/test cssparseJS/test
+- CI_SCRIPT: sbt ++$TRAVIS_SCALA_VERSION perftestsJVM/compile perftestsJS/compile perftestsJVM/test
+
+matrix:
+  include:
+    - CI_SCRIPT: sbt readme/run ++$TRAVIS_SCALA_VERSION
+      scala: 2.11.8
+      jdk: oraclejdk8
+
 script:
 - $CI_SCRIPT
 sudo: false
