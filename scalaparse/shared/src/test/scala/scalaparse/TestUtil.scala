@@ -7,14 +7,16 @@ import fastparse.all._
 
 import scalaparse.Scala._
 
-/**
- * Created by haoyi on 5/3/15.
- */
+
 object TestUtil {
-  def checkNeg[T](input: String, expected: String = "ADA???D", found: String = "ADQW??") = {
+
+  def checkNeg0(input: String,
+                expected: String,
+                found: String,
+                makeInput: String => ParserInput[Char]) = {
 //    println("Checking Neg...\n" )
 //    println(input)
-    Scala.CompilationUnit.parse(input) match{
+    Scala.CompilationUnit.parseInput(makeInput(input)) match{
       case f: Parsed.Failure =>
 
         val parsedExpected = f.extra.traced.expected
@@ -29,10 +31,12 @@ object TestUtil {
     }
   }
 
-  def check[T](input: String, tag: String = "") = {
+  def check0(input: String,
+             tag: String = "",
+             makeInput: String => ParserInput[Char]) = {
 //    println("Checking...\n" )
 //    println(input)
-    val res = Scala.CompilationUnit.parse(input)
+    val res = Scala.CompilationUnit.parseInput(makeInput(input))
     res match{
       case f: Parsed.Failure =>
         //        println(f.formatExpectedAsString)

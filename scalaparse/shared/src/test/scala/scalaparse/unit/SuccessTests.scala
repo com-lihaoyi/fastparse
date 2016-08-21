@@ -4,8 +4,18 @@ import scalaparse.{TestUtil, Scala}
 import fastparse._
 import utest._
 import TestUtil._
-object SuccessTests extends TestSuite{
-
+object SuccessTests extends BaseSuccessTests{
+  def check(s: String, tag: String = "") = TestUtil.check0(s, tag, IndexedParserInput(_))
+}
+object SuccessIteratorTests extends BaseSuccessTests{
+  def check(s: String, tag: String = "") = TestUtil.check0(
+    s,
+    tag,
+    makeInput = s => IteratorParserInput(s.sliding(1).map(_.mkString))
+  )
+}
+abstract class BaseSuccessTests extends TestSuite{
+  def check(s: String, tag: String = ""): Unit
   println("running")
   def tests = TestSuite{
 

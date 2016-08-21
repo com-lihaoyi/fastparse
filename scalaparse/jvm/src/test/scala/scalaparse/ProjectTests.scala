@@ -3,6 +3,8 @@ package scalaparse
 import java.io.File
 import java.nio.file.{Files, Path, Paths}
 
+import fastparse.IndexedParserInput
+
 import concurrent.ExecutionContext.Implicits.global
 import utest._
 
@@ -29,7 +31,7 @@ object ProjectTests extends TestSuite{
           val code = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(filename)))
           if (!ScalacParser.checkParseFails(code)) {
             print(".")
-            TestUtil.check(code, tag = filename)
+            TestUtil.check0(code, tag = filename, makeInput = IndexedParserInput(_))
           }
         }
       }
@@ -43,7 +45,7 @@ object ProjectTests extends TestSuite{
       val testSource = scala.io.Source.fromInputStream(
         getClass.getResourceAsStream("/scalaparse/Test.scala")
       ).mkString
-      TestUtil.check(testSource)
+      TestUtil.check0(testSource, makeInput = IndexedParserInput(_))
     }
     def checkRepo(filter: String => Boolean = _ => true)(implicit testPath: utest.framework.TestPath) = {
       val url = "https://github.com/" + testPath.value.last

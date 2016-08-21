@@ -1,9 +1,27 @@
 package scalaparse.unit
 
+import fastparse.{IndexedParserInput, IteratorParserInput}
+
 import scalaparse.TestUtil
 import utest._
+
 import TestUtil._
-object FailureTests extends TestSuite{
+
+object FailureTests extends BaseFailureTests{
+  def checkNeg(input: String, expected: String, found: String) = {
+    TestUtil.checkNeg0(input, expected, found, IndexedParserInput(_))
+  }
+}
+object FailureIteratorTests extends BaseFailureTests{
+  def checkNeg(input: String, expected: String, found: String) = {
+    TestUtil.checkNeg0(
+      input, expected, found,
+      s => IteratorParserInput(s.sliding(1).map(_.mkString))
+    )
+  }
+}
+abstract class BaseFailureTests extends TestSuite{
+  def checkNeg(input: String, expected: String, found: String): Unit
   val tests = TestSuite{
 
     * - checkNeg("package package", "PkgBlock | PkgObj", "package")
