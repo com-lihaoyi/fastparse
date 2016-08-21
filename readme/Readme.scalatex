@@ -12,6 +12,7 @@
 
 @val tests = wd/'fastparse/'shared/'src/'test/'scala/'fastparse
 @val main = wd/'fastparse/'shared/'src/'main/'scala/'fastparse
+@val bytetests = wd/'byteparse/'shared/'src/'test/'scala/'byteparse
 @sect("FastParse " + fastparse.Constants.version, "Fast to write, Fast running Parsers in Scala")
     @hl.ref(tests/"MathTests.scala", "val number", "val tests")
     @hl.ref(tests/"MathTests.scala", Seq("def check", "check"))
@@ -143,6 +144,8 @@
                 @p
                     In general, if you have a parser of type @hl.scala{TupleN}, capturing one more section turns it into a @hl.scala{TupleN+1}. Furthermore, if you capture within a @hl.scala{.rep} or @hl.scala{.?} optional parser, it becomes a @hl.scala{Parser[Seq[T]]} or @hl.scala{Parser[Option[T]]} respectively
             @sect{AnyChar}
+                @i
+                    See also @hl.scala{AnyElem} in @sect.ref{Inner Structure}
                 @hl.ref(tests/"ExampleTests.scala", Seq("'anychar", ""))
 
                 @p
@@ -223,6 +226,8 @@
                 In theory, all possible parsers can be put together using the above tools. In practice, a few more tools are provided for convenience or performance:
 
             @sect{CharPred}
+                @i
+                    See also @hl.scala{ElemPred} in @sect.ref{Inner Structure}
                 @hl.ref(tests/"ExampleTests.scala", Seq("'charPred", ""))
                 @p
                     @hl.scala{CharPred} takes a @hl.scala{Char => Boolean} predicate and creates a parser that parses any single character that satisfies that predicate. e.g. you can use any of the helpful methods on @hl.scala{scala.Char} to check if a @hl.scala{Char} @hl.scala{isUpper}, @hl.scala{isDigit}, @hl.scala{isControl}, etc. etc.
@@ -231,6 +236,8 @@
                     Note that this builds a high-performance bit-packed lookup table, the size of the range of valid characters, up to 65k. That means that creating a parser like this has a one-time cost in terms of memory (up to 8k bytes) and time. This should not matter as FastParse parsers are long-lived and re-usable, though you may want to consciously avoid creating too many of these repeatedly.
 
             @sect{CharIn}
+                @i
+                    See also @hl.scala{ElemIn} in @sect.ref{Inner Structure}
                 @hl.ref(tests/"ExampleTests.scala", Seq("'charIn", ""))
                 @p
                     Similar to @sect.ref{CharPred}, except you pass in sequences of valid characters rather than a predicate.
@@ -239,6 +246,8 @@
                     As a result, it's much faster to execute than if you had used @hl.scala{"a" | "b" | "c" | "d" | ...} to combine a bunch of single-character parsers together. The same warning as @sect.ref{CharPred} about the one time cost-of-construction applies.
 
             @sect{CharsWhile}
+                @i
+                    See also @hl.scala{ElemWhile} in @sect.ref{Inner Structure}
                 @hl.ref(tests/"ExampleTests.scala", Seq("'charsWhile", ""))
                 @p
                     A repeated version of @sect.ref{CharPred}: this parser continually chomps away at characters as long as they continue passes the given predicate.
@@ -247,6 +256,8 @@
                     This is a very fast parser, ideal for quickly consuming large numbers of characters. The same warning as @sect.ref{CharPred} about the one time cost-of-construction applies.
 
             @sect{StringIn}
+                @i
+                    See also @hl.scala{SeqIn} in @sect.ref{Inner Structure}
                 @hl.ref(tests/"ExampleTests.scala", Seq("'stringIn", ""))
 
                 @p
@@ -322,6 +333,82 @@
                     To explicitly isolate a cut to one branch of a parser, place that branch within @hl.scala{NoCut}.  Cuts within that branch will prevent backtracking inside that branch, but if that branch fails alternate branches will be tried as normal.
 
                 @hl.ref(tests/"ExampleTests.scala", Seq("'composenocut", ""))
+
+    @sect{Writing Byte Parsers}
+        @p
+            In the same way as the @hl.scala{String} parsers we can build @hl.scala{Array[Byte]} or simply @hl.scala{Byte} parsers.
+        @p
+            The first example will be also about parsing a single byte sequence
+        @hl.ref(bytetests/"ByteTests.scala", Seq("'sequence", ""))
+
+        @p
+            As you can see it has the very same structure as previous @hl.scala{String} parsers,
+            but with several additional features.
+            The first is new word @hl.scala{BS} or @hl.scala{ByteSeq} that merely means alias for @hl.scala{Array[Byte]},
+            the second is new function for convenient conversion from @hl.scala{String} to @hl.scala{Array[Byte]} - @hl.scala{strToBytes}.
+        @p
+            Of course, you aren't restricted to use only them, you are free to create Array of Byte by any method or function,
+            but, naturally, it's recommended to follow the one uniform style and @hl.scala{BS} with @hl.scala{strToBytes} is the good example of it.
+
+        @sect{New Parsers}
+            @p
+                Byte Parsers doesn't bring anything new to the basic set of parsers.
+                @hl.scala{Option}, @hl.scala{Repeat}, @hl.scala{Capture} and ect. are still here with the same logic,
+                but there are some new names for @hl.scala{Byte} versions of some of them.
+                It just a replacement of "Char" substring to the "Byte", that's all, so
+                @ul
+                    @li
+                        @hl.scala{AnyChar} becomes @hl.scala{AnyByte}
+                     @li
+                        @hl.scala{CharPred} becomes @hl.scala{BytePred}
+                     @li
+                        @hl.scala{CharIn} becomes @hl.scala{ByteIn}
+                     @li
+                        @hl.scala{CharsWhile} becomes @hl.scala{BytesWhile}
+                     @li
+                        @p
+                            @hl.scala{StringIn} becomes @hl.scala{SeqIn}
+                        @i
+                            It isn't a simple replacement of substrings, and the reason of this is described in @sect.ref{Inner Structure}.
+
+             @p
+                For instance, the basic parser with @hl.scala{AnyByte}
+             @hl.ref(bytetests/"ByteTests.scala", Seq("'anychar", ""))
+
+    @sect{Inner Structure}
+        @p
+            Actually, each of the previously described parsers is a special case of more abstract
+            corresponding parser from the inner Api that can be used for the arbitrary type of elements in the input.
+            Parsers for @hl.scala{String} input has @hl.scala{Char} as type-parameter in this Api,
+            parsers for @hl.scala{Array[Byte]} has @hl.scala{Byte} and etc.
+        @p
+            There is no need to explain again how these abstract parsers work,
+            because it's exactly the same as in the @hl.scala{String} or @hl.scala{Array[Byte]} case,
+            the only difference is that instead of @hl.scala{Char} or @hl.scala{Byte} we consider arbitrary class.
+            Names of these parsers are also the same except of
+            @ul
+                @li
+                    @hl.scala{AnyElem} for @hl.scala{AnyChar} and @hl.scala{AnyByte}
+                @li
+                    @hl.scala{ElemPred} for @hl.scala{CharPred} and @hl.scala{BytePred}
+                @li
+                    @hl.scala{ElemIn} for @hl.scala{CharIn} and @hl.scala{ByteIn}
+                @li
+                    @hl.scala{ElemsWhile} for @hl.scala{CharsWhile} and @hl.scala{BytesWhile}
+                @li
+                    @hl.scala{SeqIn} for @hl.scala{StringIn}
+            but you can, of course, use these abstract versions of names wherever you want.
+
+    @sect{Iterator Parsers}
+        @p
+            In addition to the regular plain parsing you can simply parse streaming data as @hl.scala{Iterator}.
+            Just call @hl.scala{.parseIterator} instead of @hl.scala{.parse} in your parser and pass the @hl.scala{Iterator}.
+            It will try to optimize the memory consumption using the information
+            about cuts, capturing and other special behaviors of simple parsers,
+            but it's quite a complicated logic described in source docs.
+            Anyway, you can use the simple rule to improve the performance in the Iterator parsing -
+            every cut in your parser possibly reduces the total memory consumption,
+            so if you want to write good Iterator parser just add cuts wherever it's possible.
 
     @sect{Example Parsers}
         @p
