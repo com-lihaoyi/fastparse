@@ -31,7 +31,7 @@ object ProjectTests extends TestSuite{
           val code = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(filename)))
           if (!ScalacParser.checkParseFails(code)) {
             print(".")
-            TestUtil.check0(code, tag = filename, makeInput = IndexedParserInput(_))
+            TestUtil.check(code, tag = filename)
           }
         }
       }
@@ -45,7 +45,7 @@ object ProjectTests extends TestSuite{
       val testSource = scala.io.Source.fromInputStream(
         getClass.getResourceAsStream("/scalaparse/Test.scala")
       ).mkString
-      TestUtil.check0(testSource, makeInput = IndexedParserInput(_))
+      TestUtil.check(testSource)
     }
     def checkRepo(filter: String => Boolean = _ => true)(implicit testPath: utest.framework.TestPath) = {
       val url = "https://github.com/" + testPath.value.last
@@ -92,7 +92,6 @@ object ProjectTests extends TestSuite{
     "pocorall/scaloid" - checkRepo()
     "mesosphere/marathon" - checkRepo()
     "scalatra/scalatra" - checkRepo()
-    "summingbird/summingbird" - checkRepo()
     "slick/slick" - checkRepo()
     "ensime/ensime-server" - checkRepo()
     "GravityLabs/goose" - checkRepo()

@@ -13,7 +13,7 @@ object ParsingTests extends TestSuite{
     val parsed = parser.parse(str, index)
     assert(parsed == rhs)
     // Test iterator parsing
-    for(chunkSize <- Seq(1, 2, 4, 8, 16, 32, 64, 128, 256, 512)){
+    for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
       val parsed = parser.parse(str, index)
       assert(parsed == rhs)
     }
@@ -25,7 +25,7 @@ object ParsingTests extends TestSuite{
     val failureIndex = parsed.asInstanceOf[Parsed.Failure].index
     assert(failureIndex == expectedFailureIndex)
     // Test iterator parsing
-    for(chunkSize <- Seq(1, 2, 4, 8, 16, 32, 64, 128, 256, 512)){
+    for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
       val parsed = parser.parseIterator(str.grouped(chunkSize), index)
       val failureIndex = parsed.asInstanceOf[Parsed.Failure].index
       assert(failureIndex == expectedFailureIndex)

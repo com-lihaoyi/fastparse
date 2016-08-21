@@ -33,18 +33,30 @@ object BmpTests extends TestSuite {
                                      "00 00 00 00  00 00 00 00" +
                    /*pixels*/  "00 00 ff  ff ff ff  00 00  ff 00 00  00 ff 00  00 00")
 
+
+
+        val expected = Bmp(
+          FileHeader(19778, 70, 54),
+          BitmapInfoHeader(BitmapInfoHeaderPart(2, 2, 1, 24, 0, 16, 2835, 2835, 0, 0)),
+          ArrayBuffer(ArrayBuffer(
+            Pixel(BS(0xff, 0, 0)),
+            Pixel(BS(0, 0xff, 0))),
+            ArrayBuffer(
+              Pixel(BS(0, 0, 0xff)),
+              Pixel(BS(0xff, 0xff, 0xff))
+            )
+          )
+        )
+
         val Parsed.Success(bmp1, _) = bmp.parse(file1)
 
-        assert(compareBmps(bmp1,
-                         Bmp(FileHeader(19778, 70, 54),
-                             BitmapInfoHeader(BitmapInfoHeaderPart(2, 2, 1, 24, 0, 16, 2835, 2835, 0, 0)),
-                             ArrayBuffer(ArrayBuffer(
-                               Pixel(BS(0xff, 0, 0)),
-                               Pixel(BS(0, 0xff, 0))),
-                             ArrayBuffer(
-                               Pixel(BS(0, 0, 0xff)),
-                               Pixel(BS(0xff, 0xff, 0xff)))))))
+        assert(compareBmps(bmp1, expected))
+        for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
+          val Parsed.Success(bmp1, _) = bmp.parseIterator(file1.grouped(chunkSize))
+
+          assert(compareBmps(bmp1, expected))
         }
+      }
 
       'example2 {
         val file1 = strToBytes(
@@ -57,21 +69,31 @@ object BmpTests extends TestSuite {
           /*pixels*/  "FF 00 00 7F  00 FF 00 7F  00 00 FF 7F  00 00 FF 7F " +
                       "FF 00 00 FF  00 FF 00 FF  00 00 FF FF  FF FF FF FF")
 
-        val Parsed.Success(bmp2, _) = bmp.parse(file1)
 
-        assert(compareBmps(bmp2,
-                           Bmp(FileHeader(19778, 154, 122),
-                               BitmapInfoHeader(BitmapInfoHeaderPart(4, 2, 1, 32, 3, 32, 2835, 2835, 0, 0)),
-                               ArrayBuffer(ArrayBuffer(
-                                 Pixel(BS(0xff, 0, 0, 0xff)),
-                                 Pixel(BS(0, 0xff, 0, 0xff)),
-                                 Pixel(BS(0, 0, 0xff, 0xff)),
-                                 Pixel(BS(0xff, 0xff, 0xff, 0xff))),
-                              ArrayBuffer(
-                                 Pixel(BS(0xff, 0, 0, 0x7f)),
-                                 Pixel(BS(0, 0xff, 0, 0x7f)),
-                                 Pixel(BS(0, 0, 0xff, 0x7f)),
-                                 Pixel(BS(0, 0, 0xff, 0x7f)))))))
+        val expected = Bmp(FileHeader(19778, 154, 122),
+          BitmapInfoHeader(BitmapInfoHeaderPart(4, 2, 1, 32, 3, 32, 2835, 2835, 0, 0)),
+          ArrayBuffer(ArrayBuffer(
+            Pixel(BS(0xff, 0, 0, 0xff)),
+            Pixel(BS(0, 0xff, 0, 0xff)),
+            Pixel(BS(0, 0, 0xff, 0xff)),
+            Pixel(BS(0xff, 0xff, 0xff, 0xff))),
+            ArrayBuffer(
+              Pixel(BS(0xff, 0, 0, 0x7f)),
+              Pixel(BS(0, 0xff, 0, 0x7f)),
+              Pixel(BS(0, 0, 0xff, 0x7f)),
+              Pixel(BS(0, 0, 0xff, 0x7f))
+            )
+          )
+        )
+
+        val Parsed.Success(bmp2, _) = bmp.parse(file1)
+        assert(compareBmps(bmp2, expected))
+
+        for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
+          val Parsed.Success(bmp2, _) = bmp.parseIterator(file1.grouped(chunkSize))
+
+          assert(compareBmps(bmp2, expected))
+        }
       }
     }
   }
