@@ -6,16 +6,18 @@ jdk:
 - oraclejdk7
 - oraclejdk8
 env:
-- CI_SCRIPT: 'sbt ++$TRAVIS_SCALA_VERSION fastparseJVM/test fastparseJS/test'
-- CI_SCRIPT: 'sbt ++$TRAVIS_SCALA_VERSION byteparseJVM/test byteparseJS/test'
-- CI_SCRIPT: 'sbt ++$TRAVIS_SCALA_VERSION scalaparseJVM/test scalaparseJS/test'
-- CI_SCRIPT: 'sbt ++$TRAVIS_SCALA_VERSION pythonparseJVM/test pythonparseJS/test'
-- CI_SCRIPT: 'sbt ++$TRAVIS_SCALA_VERSION cssparseJVM/test cssparseJS/test'
-- CI_SCRIPT: 'sbt ++$TRAVIS_SCALA_VERSION perftestsJVM/compile perftestsJS/compile perftestsJVM/test'
+# Crazy double-quoting necessary to make env variables with spaces in them work, as
+# tkaen from https://github.com/travis-ci/travis-ci/issues/1444#issuecomment-24856452
+- CI_SCRIPT: "'sbt ++$TRAVIS_SCALA_VERSION fastparseJVM/test fastparseJS/test'"
+- CI_SCRIPT: "'sbt ++$TRAVIS_SCALA_VERSION byteparseJVM/test byteparseJS/test'"
+- CI_SCRIPT: "'sbt ++$TRAVIS_SCALA_VERSION scalaparseJVM/test scalaparseJS/test'"
+- CI_SCRIPT: "'sbt ++$TRAVIS_SCALA_VERSION pythonparseJVM/test pythonparseJS/test'"
+- CI_SCRIPT: "'sbt ++$TRAVIS_SCALA_VERSION cssparseJVM/test cssparseJS/test'"
+- CI_SCRIPT: "'sbt ++$TRAVIS_SCALA_VERSION perftestsJVM/compile perftestsJS/compile perftestsJVM/test'"
 
 matrix:
   include:
-    - CI_SCRIPT: 'sbt readme/run ++$TRAVIS_SCALA_VERSION'
+    - CI_SCRIPT: "'sbt readme/run ++$TRAVIS_SCALA_VERSION'"
       scala: 2.11.8
       jdk: oraclejdk8
 
