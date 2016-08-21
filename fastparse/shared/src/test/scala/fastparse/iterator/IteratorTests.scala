@@ -38,7 +38,7 @@ object IteratorTests extends TestSuite {
       import fastparse.noApi._
       val White = fastparse.WhitespaceApi.Wrapper{
         import fastparse.all._
-        NoTrace(" ".? ~ " ".rep) // note that the whitespace delimiter has cut
+        NoTrace(" ".? ~ " ".rep)
       }
       import White._
       val p = P( "ab" ~/ "cd" | "z" )
