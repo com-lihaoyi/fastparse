@@ -1,5 +1,6 @@
-package perftests
+package perftests.string
 
+import perftests.Utils
 import utest._
 
 object PythonParse extends TestSuite {

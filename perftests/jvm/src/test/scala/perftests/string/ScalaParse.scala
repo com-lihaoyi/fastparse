@@ -1,7 +1,7 @@
-package perftests
+package perftests.string
 
+import perftests.Utils
 import utest._
-import fastparse.all._
 
 import scala.tools.nsc.{Global, Settings}
 import scalaparse.{Scala, ScalacParser}

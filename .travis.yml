@@ -16,9 +16,13 @@ matrix:
 
     # Run perftests only on 2.11.7/jdk8; if performance differs subtly between
     # versions, it's probably no big deal, and there probably won't be major
-    # differences
+    # differences. Break it into two runs, since perftests tend to be slow.
     - env:
-      - CI_SCRIPT: '"perftestsJVM/compile perftestsJS/compile perftestsJVM/test"'
+      - CI_SCRIPT: '"perftestsJVM/compile \"perftestsJVM/test-only -- perftests.binary\" "'
+      scala: 2.11.7
+      jdk: oraclejdk8
+    - env:
+      - CI_SCRIPT: '"perftestsJVM/compile \"perftestsJVM/test-only -- perftests.string\" "'
       scala: 2.11.7
       jdk: oraclejdk8
 

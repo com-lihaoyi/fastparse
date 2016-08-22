@@ -1,7 +1,8 @@
-package perftests
+package perftests.binary
 
 import java.nio.file.{Files, Paths}
 
+import perftests.Utils
 import utest._
 
 
