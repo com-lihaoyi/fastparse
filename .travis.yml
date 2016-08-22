@@ -23,8 +23,7 @@ matrix:
       jdk: oraclejdk8
 
     # Cross-test the core fastparse test suite to make sure the core all works
-    # on each platform. Also cross-test scalaparse and byteparse to stress-test
-    # it in a more realistic environment, and make sure things still work
+    # on each platform.
     - env:
       - CI_SCRIPT: '"fastparseJVM/test fastparseJS/test"'
       scala: 2.10.4
@@ -42,18 +41,13 @@ matrix:
       scala: 2.11.7
       jdk: oraclejdk8
 
+    # Also cross-test scalaparse and byteparse to stress-test fastparse in a
+    # more realistic environment, and make sure things still work, though use
+    # a smaller cross-test matrix than for fastparse itself
     - env:
       - CI_SCRIPT: '"scalaparseJVM/test scalaparseJS/test"'
       scala: 2.10.4
       jdk: oraclejdk7
-    - env:
-      - CI_SCRIPT: '"scalaparseJVM/test scalaparseJS/test"'
-      scala: 2.11.7
-      jdk: oraclejdk7
-    - env:
-      - CI_SCRIPT: '"scalaparseJVM/test scalaparseJS/test"'
-      scala: 2.10.4
-      jdk: oraclejdk8
     - env:
       - CI_SCRIPT: '"scalaparseJVM/test scalaparseJS/test"'
       scala: 2.11.7
@@ -66,16 +60,7 @@ matrix:
     - env:
       - CI_SCRIPT: '"byteparseJVM/test byteparseJS/test"'
       scala: 2.11.7
-      jdk: oraclejdk7
-    - env:
-      - CI_SCRIPT: '"byteparseJVM/test byteparseJS/test"'
-      scala: 2.10.4
       jdk: oraclejdk8
-    - env:
-      - CI_SCRIPT: '"byteparseJVM/test byteparseJS/test"'
-      scala: 2.11.7
-      jdk: oraclejdk8
-
 
     # For pythonparse and cssparse, just run it on one JDK/Scala version combo
     # to make sure it basically works; hopefully any cross-version incompatibilities
