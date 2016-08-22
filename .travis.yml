@@ -17,7 +17,8 @@ env:
 
 matrix:
   include:
-    - script: "sbt readme/run"
+    - env: 
+      script: "sbt readme/run"
       scala: 2.11.8
       jdk: oraclejdk8
 
