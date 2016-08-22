@@ -18,30 +18,30 @@ matrix:
     # versions, it's probably no big deal, and there probably won't be major
     # differences. Break it into two runs, since perftests tend to be slow.
     - env:
-      - CI_SCRIPT: '"perftestsJVM/compile perftestsJVM/test-only\ --\ perftests.binary"'
+      - CI_SCRIPT: '"perftestsJVM/compile; perftestsJVM/test-only -- perftests.binary"'
       scala: 2.11.7
       jdk: oraclejdk8
     - env:
-      - CI_SCRIPT: '"perftestsJVM/compile perftestsJVM/test-only\ --\ perftests.string"'
+      - CI_SCRIPT: '"perftestsJVM/compile; perftestsJVM/test-only -- perftests.string"'
       scala: 2.11.7
       jdk: oraclejdk8
 
     # Cross-test the core fastparse test suite to make sure the core all works
     # on each platform.
     - env:
-      - CI_SCRIPT: '"fastparseJVM/test fastparseJS/test"'
+      - CI_SCRIPT: '"fastparseJVM/test; fastparseJS/test"'
       scala: 2.10.4
       jdk: oraclejdk7
     - env:
-      - CI_SCRIPT: '"fastparseJVM/test fastparseJS/test"'
+      - CI_SCRIPT: '"fastparseJVM/test; fastparseJS/test"'
       scala: 2.11.7
       jdk: oraclejdk7
     - env:
-      - CI_SCRIPT: '"fastparseJVM/test fastparseJS/test"'
+      - CI_SCRIPT: '"fastparseJVM/test; fastparseJS/test"'
       scala: 2.10.4
       jdk: oraclejdk8
     - env:
-      - CI_SCRIPT: '"fastparseJVM/test fastparseJS/test"'
+      - CI_SCRIPT: '"fastparseJVM/test; fastparseJS/test"'
       scala: 2.11.7
       jdk: oraclejdk8
 
@@ -49,20 +49,20 @@ matrix:
     # more realistic environment, and make sure things still work, though use
     # a smaller cross-test matrix than for fastparse itself
     - env:
-      - CI_SCRIPT: '"scalaparseJVM/test scalaparseJS/test"'
+      - CI_SCRIPT: '"scalaparseJVM/test; scalaparseJS/test"'
       scala: 2.10.4
       jdk: oraclejdk7
     - env:
-      - CI_SCRIPT: '"scalaparseJVM/test scalaparseJS/test"'
+      - CI_SCRIPT: '"scalaparseJVM/test; scalaparseJS/test"'
       scala: 2.11.7
       jdk: oraclejdk8
 
     - env:
-      - CI_SCRIPT: '"byteparseJVM/test byteparseJS/test"'
+      - CI_SCRIPT: '"byteparseJVM/test; byteparseJS/test"'
       scala: 2.10.4
       jdk: oraclejdk7
     - env:
-      - CI_SCRIPT: '"byteparseJVM/test byteparseJS/test"'
+      - CI_SCRIPT: '"byteparseJVM/test; byteparseJS/test"'
       scala: 2.11.7
       jdk: oraclejdk8
 
@@ -70,16 +70,16 @@ matrix:
     # to make sure it basically works; hopefully any cross-version incompatibilities
     # in fastparse will already be sussed out by earlier builds
     - env:
-      - CI_SCRIPT: '"pythonparseJVM/test pythonparseJS/test"'
+      - CI_SCRIPT: '"pythonparseJVM/test; pythonparseJS/test"'
       scala: 2.11.7
       jdk: oraclejdk8
     - env:
-      - CI_SCRIPT: '"cssparseJVM/test cssparseJS/test"'
+      - CI_SCRIPT: '"cssparseJVM/test; cssparseJS/test"'
       scala: 2.11.7
       jdk: oraclejdk8
 
 
 script:
-- sbt ++$TRAVIS_SCALA_VERSION $CI_SCRIPT
+- sbt ++$TRAVIS_SCALA_VERSION "; $CI_SCRIPT"
 
 sudo: false
