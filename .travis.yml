@@ -1,4 +1,14 @@
 language: scala
+
+# Crazy double-quoting necessary to make env variables with spaces in them work, as
+# tkaen from https://github.com/travis-ci/travis-ci/issues/1444#issuecomment-24856452
+- CI_SCRIPT: '"fastparseJVM/test fastparseJS/test"'
+- CI_SCRIPT: '"perftestsJVM/compile perftestsJS/compile perftestsJVM/test"'
+- CI_SCRIPT: '"byteparseJVM/test byteparseJS/test"'
+- CI_SCRIPT: '"scalaparseJVM/test scalaparseJS/test"'
+- CI_SCRIPT: '"pythonparseJVM/test pythonparseJS/test"'
+- CI_SCRIPT: '"cssparseJVM/test cssparseJS/test"'
+
 scala:
 - 2.10.4
 - 2.11.6
@@ -6,14 +16,8 @@ jdk:
 - oraclejdk7
 - oraclejdk8
 env:
-# Crazy double-quoting necessary to make env variables with spaces in them work, as
-# tkaen from https://github.com/travis-ci/travis-ci/issues/1444#issuecomment-24856452
-- CI_SCRIPT: '"fastparseJVM/test fastparseJS/test"'
-- CI_SCRIPT: '"byteparseJVM/test byteparseJS/test"'
-- CI_SCRIPT: '"scalaparseJVM/test scalaparseJS/test"'
-- CI_SCRIPT: '"pythonparseJVM/test pythonparseJS/test"'
-- CI_SCRIPT: '"cssparseJVM/test cssparseJS/test"'
-- CI_SCRIPT: '"perftestsJVM/compile perftestsJS/compile perftestsJVM/test"'
+
+
 
 matrix:
   include:
