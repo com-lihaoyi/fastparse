@@ -8,11 +8,7 @@ language: scala
 # taken from https://github.com/travis-ci/travis-ci/issues/1444#issuecomment-24856452
 matrix:
   include:
-    # Things run on only one set of versions
-    - env:
-      - CI_SCRIPT: readme/run
-      scala: 2.11.7
-      jdk: oraclejdk8
+
 
     # Run perftests only on 2.11.7/jdk8; if performance differs subtly between
     # versions, it's probably no big deal, and there probably won't be major
@@ -49,20 +45,20 @@ matrix:
     # more realistic environment, and make sure things still work, though use
     # a smaller cross-test matrix than for fastparse itself
     - env:
-      - CI_SCRIPT: '"scalaparseJVM/test; scalaparseJS/test"'
+      - CI_SCRIPT: '"byteparseJVM/test; byteparseJS/test"'
       scala: 2.10.4
       jdk: oraclejdk7
     - env:
-      - CI_SCRIPT: '"scalaparseJVM/test; scalaparseJS/test"'
+      - CI_SCRIPT: '"byteparseJVM/test; byteparseJS/test"'
       scala: 2.11.7
       jdk: oraclejdk8
 
     - env:
-      - CI_SCRIPT: '"byteparseJVM/test; byteparseJS/test"'
+      - CI_SCRIPT: '"scalaparseJVM/test; scalaparseJS/test"'
       scala: 2.10.4
       jdk: oraclejdk7
     - env:
-      - CI_SCRIPT: '"byteparseJVM/test; byteparseJS/test"'
+      - CI_SCRIPT: '"scalaparseJVM/test; scalaparseJS/test"'
       scala: 2.11.7
       jdk: oraclejdk8
 
@@ -75,6 +71,12 @@ matrix:
       jdk: oraclejdk8
     - env:
       - CI_SCRIPT: '"cssparseJVM/test; cssparseJS/test"'
+      scala: 2.11.7
+      jdk: oraclejdk8
+
+    # Readme is fast and runs last, and only works on latest scala/jdk
+    - env:
+      - CI_SCRIPT: readme/run
       scala: 2.11.7
       jdk: oraclejdk8
 
