@@ -33,7 +33,7 @@ matrix:
   include:
     - env:
       - CI_SCRIPT: readme/run
-      scala: 2.11.8
+      scala: 2.11.7
       jdk: oraclejdk8
 
 script:
