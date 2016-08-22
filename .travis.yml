@@ -40,9 +40,11 @@ matrix:
       - CI_SCRIPT: '"perftestsJVM/compile perftestsJS/compile perftestsJVM/test"'
       scala: 2.10.4
       jdk: oraclejdk7
+    - env:
       - CI_SCRIPT: '"perftestsJVM/compile perftestsJS/compile perftestsJVM/test"'
       scala: 2.11.6
       jdk: oraclejdk7
+    - env:
       - CI_SCRIPT: '"perftestsJVM/compile perftestsJS/compile perftestsJVM/test"'
       scala: 2.11.6
       jdk: oraclejdk8
