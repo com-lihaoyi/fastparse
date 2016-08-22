@@ -11,6 +11,19 @@ language: scala
 # helping balance out the work and keep all nodes busy so we don't have any
 # individual long poles making the whole suite slow.
 
+
+matrix:
+  include:
+    - env:
+      - CI_SCRIPT: readme/run
+      scala: 2.11.7
+      jdk: oraclejdk8
+
+    - env:
+      - CI_SCRIPT: '"perftestsJVM/compile perftestsJS/compile perftestsJVM/test"'
+      scala: 2.11.7
+      jdk: oraclejdk8
+      
 env:
 # Crazy double-quoting necessary to make env variables with spaces in them work, as
 # taken from https://github.com/travis-ci/travis-ci/issues/1444#issuecomment-24856452
@@ -29,12 +42,6 @@ jdk:
 - oraclejdk8
 
 
-matrix:
-  include:
-    - env:
-      - CI_SCRIPT: readme/run
-      scala: 2.11.7
-      jdk: oraclejdk8
 
 script:
 - sbt ++$TRAVIS_SCALA_VERSION $CI_SCRIPT
