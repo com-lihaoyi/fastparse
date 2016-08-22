@@ -22,5 +22,5 @@ matrix:
       jdk: oraclejdk8
 
 script:
-- sbt ++$TRAVIS_SCALA_VERSION "$CI_SCRIPT"
+- sbt ++$TRAVIS_SCALA_VERSION $CI_SCRIPT
 sudo: false
