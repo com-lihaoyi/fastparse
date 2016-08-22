@@ -1,5 +1,6 @@
 language: scala
 
+env:
 # Crazy double-quoting necessary to make env variables with spaces in them work, as
 # tkaen from https://github.com/travis-ci/travis-ci/issues/1444#issuecomment-24856452
 - CI_SCRIPT: '"fastparseJVM/test fastparseJS/test"'
@@ -15,8 +16,6 @@ scala:
 jdk:
 - oraclejdk7
 - oraclejdk8
-env:
-
 
 
 matrix:
