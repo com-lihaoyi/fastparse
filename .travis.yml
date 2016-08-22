@@ -1,8 +1,19 @@
 language: scala
 
+# The order of the various keys matters; `env` being first would mean that the
+# first entry in env will be the first set of shards, second entry the second
+# set, etc.. Within each set, scala and jdk versions then vary.
+
+# We use this to put the fast fastparse*/test runs first so we can see if
+# anything stupid broke, and then the subsequent tests from slowest to fastest.
+# That means hopefully the variation in the slowest tests running first will
+# let some builds finish early and start working on the faster tests later,
+# helping balance out the work and keep all nodes busy so we don't have any
+# individual long poles making the whole suite slow.
+
 env:
 # Crazy double-quoting necessary to make env variables with spaces in them work, as
-# tkaen from https://github.com/travis-ci/travis-ci/issues/1444#issuecomment-24856452
+# taken from https://github.com/travis-ci/travis-ci/issues/1444#issuecomment-24856452
 - CI_SCRIPT: '"fastparseJVM/test fastparseJS/test"'
 - CI_SCRIPT: '"perftestsJVM/compile perftestsJS/compile perftestsJVM/test"'
 - CI_SCRIPT: '"byteparseJVM/test byteparseJS/test"'
