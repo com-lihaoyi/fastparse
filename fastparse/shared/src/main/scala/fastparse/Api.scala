@@ -8,7 +8,9 @@ import fastparse.Utils.HexUtils
  * the "public" API to fastparse packages
  */
 
-trait Api[ElemType, Repr] {
+class Api[ElemType, Repr]()(implicit elemSetHelper: ElemSetHelper[ElemType],
+                            elemFormatter: ElemTypeFormatter[ElemType],
+                            ordering: Ordering[ElemType]) {
   type Parsed[+T] = core.Parsed[T, ElemType]
   object Parsed {
     type Failure = core.Parsed.Failure[ElemType]
@@ -25,9 +27,6 @@ trait Api[ElemType, Repr] {
   val Index = parsers.Terminals.Index[ElemType, Repr]()
   val AnyElem = parsers.Terminals.AnyElem[ElemType, Repr]()
 
-  implicit val elemSetHelper: ElemSetHelper[ElemType]
-  implicit val elemFormatter: ElemTypeFormatter[ElemType]
-  implicit val ordering: Ordering[ElemType]
 
   val ElemPred = Intrinsics.ElemPred[ElemType, Repr] _
   def ElemIn(seqs: Seq[ElemType]*) = Intrinsics.ElemIn[ElemType, Repr](seqs.map(_.toIndexedSeq): _*)
@@ -49,11 +48,7 @@ trait Api[ElemType, Repr] {
   type ParseError = core.ParseError[ElemType]
 }
 
-trait StringApi extends Api[Char, String] {
-
-  val elemSetHelper = implicitly[ElemSetHelper[Char]]
-  val elemFormatter = implicitly[ElemTypeFormatter[Char]]
-  val ordering = implicitly[Ordering[Char]]
+class StringApi() extends Api[Char, String]() {
 
   val AnyChar = AnyElem
 
@@ -77,13 +72,9 @@ object all extends StringApi{
 object noApi extends StringApi
 
 
-trait ByteApi extends Api[Byte, Array[Byte]] {
+class ByteApi() extends Api[Byte, Array[Byte]]() {
 
   val AnyByte = AnyElem
-
-  val elemSetHelper = implicitly[ElemSetHelper[Byte]]
-  val elemFormatter = implicitly[ElemTypeFormatter[Byte]]
-  val ordering = implicitly[Ordering[Byte]]
 
   val BytePred = ElemPred
   def ByteIn(seqs: Seq[Byte]*) = ElemIn(seqs: _*)
