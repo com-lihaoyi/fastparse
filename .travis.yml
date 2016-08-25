@@ -1,16 +1,87 @@
 language: scala
-scala:
-- 2.10.4
-- 2.11.6
-jdk:
-- oraclejdk7
-- oraclejdk8
+
+
+# Manually specify the build matrix so we can control exactly what order things
+# run, and which things are cross-tested and which things aren't
+#
+# Crazy double-quoting necessary to make env variables with spaces in them work, as
+# taken from https://github.com/travis-ci/travis-ci/issues/1444#issuecomment-24856452
+matrix:
+  include:
+
+
+    # Run perftests only on 2.11.7/jdk8; if performance differs subtly between
+    # versions, it's probably no big deal, and there probably won't be major
+    # differences. Break it into two runs, since perftests tend to be slow.
+    - env:
+      - CI_SCRIPT: '"perftestsJVM/compile; perftestsJVM/test-only -- perftests.binary"'
+      scala: 2.11.7
+      jdk: oraclejdk8
+    - env:
+      - CI_SCRIPT: '"perftestsJVM/compile; perftestsJVM/test-only -- perftests.string"'
+      scala: 2.11.7
+      jdk: oraclejdk8
+
+    # Cross-test the core fastparse test suite to make sure the core all works
+    # on each platform.
+    - env:
+      - CI_SCRIPT: '"fastparseJVM/test; fastparseJS/test"'
+      scala: 2.10.4
+      jdk: oraclejdk7
+    - env:
+      - CI_SCRIPT: '"fastparseJVM/test; fastparseJS/test"'
+      scala: 2.11.7
+      jdk: oraclejdk7
+    - env:
+      - CI_SCRIPT: '"fastparseJVM/test; fastparseJS/test"'
+      scala: 2.10.4
+      jdk: oraclejdk8
+    - env:
+      - CI_SCRIPT: '"fastparseJVM/test; fastparseJS/test"'
+      scala: 2.11.7
+      jdk: oraclejdk8
+
+    # Also cross-test scalaparse and byteparse to stress-test fastparse in a
+    # more realistic environment, and make sure things still work, though use
+    # a smaller cross-test matrix than for fastparse itself
+    - env:
+      - CI_SCRIPT: '"byteparseJVM/test; byteparseJS/test"'
+      scala: 2.10.4
+      jdk: oraclejdk7
+    - env:
+      - CI_SCRIPT: '"byteparseJVM/test; byteparseJS/test"'
+      scala: 2.11.7
+      jdk: oraclejdk8
+
+    - env:
+      - CI_SCRIPT: '"scalaparseJVM/test; scalaparseJS/test"'
+      scala: 2.10.4
+      jdk: oraclejdk7
+    - env:
+      - CI_SCRIPT: '"scalaparseJVM/test; scalaparseJS/test"'
+      scala: 2.11.7
+      jdk: oraclejdk8
+
+    # For pythonparse and cssparse, just run it on one JDK/Scala version combo
+    # to make sure it basically works; hopefully any cross-version incompatibilities
+    # in fastparse will already be sussed out by earlier builds
+    - env:
+      - CI_SCRIPT: '"pythonparseJVM/test; pythonparseJS/test"'
+      scala: 2.11.7
+      jdk: oraclejdk8
+    - env:
+      - CI_SCRIPT: '"cssparseJVM/test; cssparseJS/test"'
+      scala: 2.11.7
+      jdk: oraclejdk8
+
+    # Readme is fast and runs last, and only works on latest scala/jdk
+    - env:
+      - CI_SCRIPT: readme/run
+      scala: 2.11.7
+      jdk: oraclejdk8
+
+
 script:
-- sbt readme/run ++$TRAVIS_SCALA_VERSION modules/compile
-- sbt ++$TRAVIS_SCALA_VERSION modules/test
-- sbt ++$TRAVIS_SCALA_VERSION perftestsJVM/compile; sbt ++$TRAVIS_SCALA_VERSION perftestsJS/compile
-- sbt ++$TRAVIS_SCALA_VERSION "perftestsJVM/test-only -- perftests.ScalaParse"
-- sbt ++$TRAVIS_SCALA_VERSION "perftestsJVM/test-only -- perftests.PythonParse"
-- sbt ++$TRAVIS_SCALA_VERSION "perftestsJVM/test-only -- perftests.CssParse"
-- sbt ++$TRAVIS_SCALA_VERSION "perftestsJVM/test-only -- perftests.ByteParse"
+- sbt ++$TRAVIS_SCALA_VERSION "; $CI_SCRIPT"
+
 sudo: false

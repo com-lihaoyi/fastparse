@@ -1,8 +1,9 @@
-package perftests
+package perftests.binary
 
 import java.nio.file.{Files, Paths}
 
 import byteparse.classparse.ClassParser
+import perftests.Utils
 import utest._
 
 
