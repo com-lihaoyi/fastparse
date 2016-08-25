@@ -35,6 +35,8 @@ abstract class ParserInput[ElemType] extends IsReachable[ElemType] {
   def isReachable(index: Int): Boolean
 
   val formatter: ElemTypeFormatter[ElemType]
+
+  def checkTraceable(): Unit
 }
 
 case class IndexedParserInput[ElemType](data: IndexedSeq[ElemType])
@@ -62,6 +64,8 @@ case class IndexedParserInput[ElemType](data: IndexedSeq[ElemType])
     * Simple condition of `index` < `length`
     */
   override def isReachable(index: Int): Boolean = index < length
+
+  def checkTraceable() = ()
 }
 
 /**
@@ -135,4 +139,10 @@ case class IteratorParserInput[ElemType](data: Iterator[IndexedSeq[ElemType]])
   override def isReachable(index: Int): Boolean = {
     index < length || requestUntil(index)
   }
+
+  def checkTraceable() = throw new RuntimeException(
+    "Cannot perform `.traced` on an `IteratorParserInput`, as it needs to parse " +
+    "the input a second time to collect traces, which is impossible after an " +
+    "`IteratorParserInput` is used once and the underlying Iterator exhausted."
+  )
 }
