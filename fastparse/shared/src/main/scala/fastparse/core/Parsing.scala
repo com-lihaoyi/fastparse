@@ -91,8 +91,10 @@ object Parsed {
                            startParser: Parser[_, ElemType, _], startIndex: Int,
                            lastParser: Parser[_, ElemType, _], index: Int) extends Extra[ElemType] {
 
-        lazy val traced = TracedFailure(input, index, lastParser, (startIndex, startParser))
-
+        lazy val traced = {
+          input.checkTraceable()
+          TracedFailure(input, index, lastParser, (startIndex, startParser))
+        }
         override def toString = {
           val inputHead = {
             val ellipses = if (input.innerLength < 20 && input.innerLength == input.length) "" else "..."
