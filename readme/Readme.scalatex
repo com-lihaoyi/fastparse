@@ -542,7 +542,7 @@
                         @p
                             @hl.scala{StringIn} becomes @hl.scala{SeqIn}
                         @i
-                            It isn't a simple replacement of substrings, and the reason of this is described in @sect.ref{Inner Structure}.
+                            It isn't a simple replacement of substrings, and the reason for this is described in @sect.ref{Inner Structure}.
 
              @p
                 For instance, the basic parser with @hl.scala{AnyByte}
@@ -818,7 +818,6 @@
                 you can choose to ignore the default set of operators by using @hl.scala{import fastparse.noApi}
                 instead of @hl.scala{import fastparse.all}. That way you can use your own set of operators,
                 e.g. the whitespace-sensitive operators described in that section.
-
         @sect{Parsing Results}
             @p
                 The two kinds of a @hl.scala{Parsed} result reflect the status of a parse:
