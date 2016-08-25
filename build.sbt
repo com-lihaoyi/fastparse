@@ -164,7 +164,7 @@ lazy val modules = project.aggregate(
 )
 
 lazy val demo = project.enablePlugins(ScalaJSPlugin)
-  .dependsOn(fastparseJS % "compile->compile;compile->test", scalaparseJS)
+  .dependsOn(fastparseJS % "compile->compile;compile->test", scalaparseJS, cssparseJS, byteparseJS)
   .settings(shared:_*)
   .settings(
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.8.2",

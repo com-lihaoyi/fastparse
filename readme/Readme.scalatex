@@ -13,6 +13,8 @@
 @val tests = wd/'fastparse/'shared/'src/'test/'scala/'fastparse
 @val main = wd/'fastparse/'shared/'src/'main/'scala/'fastparse
 @val bytetests = wd/'byteparse/'shared/'src/'test/'scala/'byteparse
+@val bytemain = wd/'byteparse/'shared/'src/'main/'scala/'byteparse
+
 @sect("FastParse " + fastparse.Constants.version, "Fast to write, Fast running Parsers in Scala")
     @hl.ref(tests/"MathTests.scala", "val number", "val tests")
     @hl.ref(tests/"MathTests.scala", Seq("def check", "check"))
@@ -333,6 +335,13 @@
                     To explicitly isolate a cut to one branch of a parser, place that branch within @hl.scala{NoCut}.  Cuts within that branch will prevent backtracking inside that branch, but if that branch fails alternate branches will be tried as normal.
 
                 @hl.ref(tests/"ExampleTests.scala", Seq("'composenocut", ""))
+        @sect{Unapply}
+            @p
+                @hl.scala{Parser} class has (as many other classes in Scala) a convenient method @hl.scala{unapply}
+                which allows to do pattern matching using parsers (like regular expressions) in your code.
+
+                @hl.ref(tests/"ExampleTests.scala", "val capture1", "val captureOpt")
+
 
     @sect{Writing Byte Parsers}
         @p
@@ -369,7 +378,7 @@
                         @p
                             @hl.scala{StringIn} becomes @hl.scala{SeqIn}
                         @i
-                            It isn't a simple replacement of substrings, and the reason of this is described in @sect.ref{Inner Structure}.
+                            It isn't a simple replacement of substrings, and the reason for this is described in @sect.ref{Inner Structure}.
 
              @p
                 For instance, the basic parser with @hl.scala{AnyByte}
@@ -550,31 +559,147 @@
             @p
                 PythonParse is currently compatible enough to parse all the python sources in Zulip, Ansible, Changes, Django, and Flask. It isn't published yet on maven central, but feel free to look at it if you want an idea of how to write a complex, real parser.
 
+        @sect{CssParse}
+            @div(id := "cssdiv")
+            @script(raw("""demo.DemoMain().css(document.getElementById("cssdiv"))"""))
+
+            @p
+                @a("One more", href:="https://github.com/lihaoyi/fastparse/tree/master/cssparse/shared/src/main/scala/cssparse")
+                too big for describing parser that parses CSS files and prints them adding the necessary spaces and tabs.
+                In other words, making the file readable and good-looking.
+                In process it builds internal AST that stores information about tags and rules in the given CSS,
+                this AST isn't complete, because of complexity of initial CSS format,
+                but it provides all the essential information about basic elements of file (blocks, selectors, rules).
+                The correctness is tested by parsing and then printing several huge files including CSS from Bootstrap and Primer.
+
+        @sect{BmpParser}
+            @div(id := "bmpdiv")
+            @script(raw("""demo.DemoMain().bmp(document.getElementById("bmpdiv"))"""))
+            @i
+                Given form accepts BMP files and prints short info about it (width, height and etc.).
+                If you haven't any bmp around, you can download classic
+                @a("lena", href:="https://raw.githubusercontent.com/lihaoyi/fastparse/master/byteparse/jvm/src/test/resources/lena.bmp").
+
+            @p
+                @hl.scala{BmpParser} is a good first example of byte parser, it's not small, but structure is pretty simple.
+
+            @i
+                @hl.scala{AnyWordI} and @hl.scala{AnyDwordI} are just parsers that consumes any word (2 bytes) or dword (4 bytes).
+
+            @hl.ref(bytemain/"BmpParser.scala", "val fileHeader")
+
+            @p
+                Bmp file consists of two headers (file header and info header) and pixels in rows with padding,
+                the difficulties are that there are several versions of headers and the parser should distinct them and
+                process them correctly, and that the size and padding of rows in bmp file depends on information from header.
+            @p
+                The first problem is reflected in similar parsers describing 5 versions of info header
+                (@hl.scala{v2HeaderPart}, @hl.scala{v2Header}, @hl.scala{v3HeaderPart}, @hl.scala{v3Header}...),
+                the second in the @hl.scala{bmpRow} function that computes the parameters of row and creates parser on a fly.
+            @p
+                Note also few tricks for parsing binary data.
+            @ul
+                @li
+                    @b
+                        Most of main elements in bmp format has very simple and plain structure. @br
+                     For instance @hl.scala{fileHeader} and @hl.scala{infoHeaderPart}
+                     are just sequences of @hl.scala{AnyDwordI} or @hl.scala{AnyWordI}
+                @li
+                    @b
+                        The extensive usage of @hl.scala{.rep(exactly=...)}.@br
+                    This is due to the fact that many binary formats depends on constant-sized blocks
+                    and the easiest and fastest method to parse them is to write @hl.scala{.rep(exactly=...)}.
+                @li
+                    @b
+                        The same extensive usage of @hl.scala{.flatMap}.@br
+                    @hl.scala{flatMap} allows to retrieve data from one parser and pass it to the next.
+                    The most popular and primitive example is dynamic-sized array with length written at the beginning.
+                    Similar algorithm is used in the @hl.scala{bmp} when header information is passed to the @hl.scala{bmpRow}
+                    that returns new parser for row in this particular bmp file.
+
+        @sect{ClassParser}
+            @p
+                @div(id := "clssdiv")
+                @script(raw("""demo.DemoMain().clss(document.getElementById("clssdiv"))"""))
+                @i
+                    Given form accepts .class bytecode files for java language and prints names of all fields and methods with their descriptors.
+                    If you haven't any .class files around, you can download
+                    some examples (
+                    @a("Book.java", href:="https://github.com/lihaoyi/fastparse/raw/master/byteparse/shared/src/test/resources/Book.java"),
+                    @a("Book.class", href:="https://github.com/lihaoyi/fastparse/raw/master/byteparse/shared/src/test/resources/Book.class"),
+                    @a("Book2.java", href:="https://github.com/lihaoyi/fastparse/raw/master/byteparse/shared/src/test/resources/Book2.java"),
+                    @a("Book2.class", href:="https://github.com/lihaoyi/fastparse/raw/master/byteparse/shared/src/test/resources/Book2.class"),
+                    @a("CodeTest.java", href:="https://github.com/lihaoyi/fastparse/raw/master/byteparse/shared/src/test/resources/CodeTest.java"),
+                    @a("CodeTest.class", href:="https://github.com/lihaoyi/fastparse/raw/master/byteparse/shared/src/test/resources/CodeTest.class"))
+
+            @p
+                @a("Another byte parser", href:="https://github.com/lihaoyi/fastparse/tree/master/byteparse/shared/src/main/scala/byteparse/classparse")
+                that is present in the fastparse is @hl.scala{ClassParser}.
+                It's quite a complex parser that process .class files from java bytecode.
+                It's able to retrieve almost full information about given class including all methods, fields, subclasses, code
+                and pack it into the convenient AST.
+                On the similarity with other big parsers it has good set of unit-tests
+                with tests which compile real projects from github (joda-time, junit4, jenkins and etc.)
+                and check each built file.
+
     @sect{API Highlights}
 
-        @sect{Parser[T]}
+        @sect{Parser[T, ElemType, Repr]}
             @p
-                Fastparse revolves around @hl.scala{Parser[T]}s: a parser that can attempt to parser a value @hl.scala{T} from an input string. These are defined as:
+                Fastparse revolves around @hl.scala{Parser[T, ElemType, Repr]}s:
+                a parser that can attempt to parser a value @hl.scala{T} from an input sequence of elements of type @hl.scala{ElemType}.
+                The @hl.scala{Repr} type-parameter is responsible for output type in @sect.ref{Capture},
+                since input is converted to the @hl.scala{IndexedSeq[ElemType]} or @hl.scala{Iterator[IndexedSeq[ElemType]]}
+                during all parsing operations.
+                These are defined as:
 
             @hl.ref(main/'core/"Parsing.scala", Seq("// Parser", "/*"), "// End Parser")
             @p
-                The main external API is @hl.scala{.parse}. As you can see, apart from the @hl.scala{input} parameter, there are a few parameters that you can use to configure the parse. Apart from that, each @hl.scala{Parser[T]} needs to implement @hl.scala{parseRec} which is a less-convenient but more-performant version that FastParse uses internally when performing a parse.
-            @p
-                Although the core of @sect.ref{Parser[T]} is simple, a lot of additional functionality is included in the @hl.scala{ParserApi[T]} trait in order to make constructing parsers convenient and concise.
+                The main external API is @hl.scala{.parse} for parsing regular arrays of data
+                and @hl.scala{.parseIterator} for parsing streaming data. (@i{See also @sect.ref{Iterator Parsers}}).
+                As you can see, apart from the @hl.scala{input} parameter,
+                there are a few parameters that you can use to configure the parse.
+                Apart from that, each @hl.scala{Parser[T, ElemType, Repr]} needs to implement @hl.scala{parseRec}
+                which is a less-convenient but more-performant version that FastParse uses internally when performing a parse.
 
-        @sect{ParserApi[T]}
             @p
-                Apart from the core @hl.scala{Parser}, FastParse includes a large set of operations that you can perform on a @hl.scala{Parser} to make composing them more pleasant. These all live in @hl.scala{ParserApi}:
+                There is @hl.scala{unapply} method in this class, you can read about it in @sect.ref{Unapply}.
+
+            @p
+                Although the core of @sect.ref{Parser[T, ElemType, Repr]} is simple,
+                a lot of additional functionality is included in the @hl.scala{ParserApi[T, ElemType, Repr]} trait
+                in order to make constructing parsers convenient and concise.
+
+        @sect{ParserApi[T, ElemType, Repr]}
+            @p
+                Apart from the core @hl.scala{Parser},
+                FastParse includes a large set of operations that you can perform on a @hl.scala{Parser}
+                to make composing them more pleasant.
+                These all live in @hl.scala{ParserApi}:
 
             @hl.ref(main/"ParserApi.scala", "trait ParserApi", "class ParserApiImpl")
 
             @p
-                There are essentially all short-hand constructors for the parsers in the @hl.scala{object Parser} companion. This is the list of operators that you have available when writing your own parsers using FastParse.
+                There are essentially all short-hand constructors for the parsers in the @hl.scala{object Parser} companion.
+                This is the list of operators that you have available when writing your own parsers using FastParse.
             @p
-                As mentioned in @sect.ref("Whitespace Handling"), you can choose to ignore the default set of operators by using @hl.scala{import fastparse.noApi} instead of @hl.scala{import fastparse.all}. That way you can use your own set of operators, e.g. the whitespace-sensitive operators described in that section.
+                As mentioned in @sect.ref("Whitespace Handling"),
+                you can choose to ignore the default set of operators by using @hl.scala{import fastparse.noApi}
+                instead of @hl.scala{import fastparse.all}. That way you can use your own set of operators,
+                e.g. the whitespace-sensitive operators described in that section.
         @sect{Parsing Results}
             @p
-                The two kinds of a @hl.scala{Parsed} result reflect the status of a parse: a success (@hl.scala{Parsed.Success}) or a failure (@hl.scala{Parsed.Failure}). First, both classes can be used in pattern matching to discriminate the parse status. Second, they allow to extract the most commonly-used values. @hl.scala{Parsed.Success} provides the parsed value - the value you are probably most interesed in - and the index in the input string till where the parse was performed. @hl.scala{Parsed.Failure} allows you to retrieve the last parser that failed and the index where it failed. Additionally, failure provides an @hl.scala{Parsed.Failure.extra} field that provides precise details about the failure: line and column numbers (via @hl.scala{Extra.line} and @hl.scala{Extra.col}) and most importantly a complete stack trace of the involved parsers, which is accessible via @hl.scala{Extra.traced}.
+                The two kinds of a @hl.scala{Parsed} result reflect the status of a parse:
+                a success (@hl.scala{Parsed.Success}) or a failure (@hl.scala{Parsed.Failure}).
+                First, both classes can be used in pattern matching to discriminate the parse status.
+                Second, they allow to extract the most commonly-used values.
+                @hl.scala{Parsed.Success} provides the parsed value -
+                the value you are probably most interesed in -
+                and the index in the input string till where the parse was performed.
+                @hl.scala{Parsed.Failure} allows you to retrieve the last parser that failed and the index where it failed.
+                Additionally, failure provides an @hl.scala{Parsed.Failure.extra} field that provides precise details about the failure:
+                line and column numbers (via @hl.scala{Extra.line} and @hl.scala{Extra.col})
+                and most importantly a complete stack trace of the involved parsers, which is accessible via @hl.scala{Extra.traced}.
 
             @p
                 An overview of @hl.scala{Parsed}:
@@ -583,11 +708,17 @@
             @hl.ref(main/'core/"Parsing.scala", Seq("case class Success", "/*"), "object Failure")
 
             @p
-                Note how @hl.scala{Failure} only contains the parser which failed and a single index where the parse failed. Further debugging information is available via the @hl.scala{Failure.Extra} class. Especially the @hl.scala{TracedFailure} that is lazily-computed via @hl.scala{Extra.traced}, provides valuable information: It performs a whole new parse on the input data with additional instrumentation, and provides additional insight into why the parse failed:
+                Note how @hl.scala{Failure} only contains the parser which failed and a single index where the parse failed.
+                Further debugging information is available via the @hl.scala{Failure.Extra} class.
+                Especially the @hl.scala{TracedFailure} that is lazily-computed via @hl.scala{Extra.traced},
+                provides valuable information: It performs a whole new parse on the input data with additional instrumentation,
+                and provides additional insight into why the parse failed:
 
             @hl.ref(main/'core/"Parsing.scala", Seq("// TracedFailure", "/*"), "object TracedFailure")
             @p
-                Computing the @hl.scala{Extra.traced} data is not done by default for performance reasons: the additional run takes about 3x longer than the initial run due to the instrumentation, for a total of 4x slowdown. If you want the information for debugging, though, it will be there.
+                Computing the @hl.scala{Extra.traced} data is not done by default for performance reasons:
+                the additional run takes about 3x longer than the initial run due to the instrumentation,
+                for a total of 4x slowdown. If you want the information for debugging, though, it will be there.
     @sect{Debugging Parsers}
         @p
             The vast majority of your time working with FastParse, your parsers will be incorrect. This is almost by definition, because once your parser is correct, you'll be done and can go do something else with your life! Thus FastParse puts a lot of effort into making working with broken parsers as easy as possible
@@ -869,6 +1000,10 @@
             "com.lihaoyi" %%% "scalaparse" % "@fastparse.Constants.version"
 
 @sect{Change Log}
+    @sect{0.4}
+        @ul
+            @li
+                A lot of things :)
     @sect{0.3.7}
         @ul
             @li

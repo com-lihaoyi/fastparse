@@ -36,8 +36,8 @@ object BmpParser {
     P( headerType ~ size ~ AnyWord ~ AnyWord ~ offset ).map(FileHeader.tupled)
   }
 
-  val bitmapInfoHeaderPart = {
-    val width = AnyDwordI 
+  val infoHeaderPart = {
+    val width = AnyDwordI
     val height = AnyDwordI
     val colorPlanes = AnyWordI
     val bitsPerPixel = AnyWordI
@@ -58,29 +58,29 @@ object BmpParser {
     )
   }
 
-  val bitmapV2HeaderPart = {
+  val v2HeaderPart = {
     val RgbPart = P( AnyByte.rep(exactly=4) )
-    P( bitmapInfoHeaderPart ~ RgbPart.rep(exactly=3) )
+    P( infoHeaderPart ~ RgbPart.rep(exactly=3) )
   }
 
-  val bitmapV3HeaderPart = {
+  val v3HeaderPart = {
     val AlphaPart = P( AnyByte.rep(exactly=4) )
-    P( bitmapV2HeaderPart ~ AlphaPart )
+    P( v2HeaderPart ~ AlphaPart )
   }
 
-  val bitmapV4HeaderPart = P( bitmapV3HeaderPart ~ AnyByte.rep(exactly=52) )
+  val v4HeaderPart = P( v3HeaderPart ~ AnyByte.rep(exactly=52) )
 
-  val bitmapV5HeaderPart = P( bitmapV4HeaderPart ~ AnyByte.rep(exactly=16) )
+  val v5HeaderPart = P( v4HeaderPart ~ AnyByte.rep(exactly=16) )
 
 
-  val bitmapInfoHeader = P( BS(40, 0, 0, 0) /* 40 bytes */ ~/ bitmapInfoHeaderPart )
-  val bitmapV2Header = P( BS(52, 0, 0, 0) ~/ bitmapV2HeaderPart )
-  val bitmapV3Header = P( BS(56, 0, 0, 0) ~/ bitmapV3HeaderPart )
-  val bitmapV4Header = P( BS(108, 0, 0, 0) ~/ bitmapV4HeaderPart )
-  val bitmapV5Header = P( BS(124, 0, 0, 0) ~/ bitmapV5HeaderPart )
+  val infoHeader = P( BS(40, 0, 0, 0) /* 40 bytes */ ~/ infoHeaderPart )
+  val v2Header = P( BS(52, 0, 0, 0) ~/ v2HeaderPart )
+  val v3Header = P( BS(56, 0, 0, 0) ~/ v3HeaderPart )
+  val v4Header = P( BS(108, 0, 0, 0) ~/ v4HeaderPart )
+  val v5Header = P( BS(124, 0, 0, 0) ~/ v5HeaderPart )
 
-  val bitmapHeader = P(bitmapInfoHeader | bitmapV2Header |
-    bitmapV3Header | bitmapV4Header | bitmapV5Header)
+  val header = P( infoHeader | v2Header |
+    v3Header | v4Header | v5Header)
 
   def bmpRow(width: Int, bitsPerPixel: Int): P[Seq[Pixel]] = {
     val bytesPerPixel = bitsPerPixel / 8
@@ -90,9 +90,14 @@ object BmpParser {
     )
   }
 
-  val bmp = P( fileHeader ~ bitmapHeader.flatMap {
+  val bmp = P( fileHeader ~ header.flatMap {
     case header: BitmapHeader =>
       val infoPart = header.infoPart
-      bmpRow(infoPart.width, infoPart.bitsPerPixel).rep(exactly=infoPart.height).map(pixels => (header, pixels))
-  } ).map{case (fileHeader, (bitmapHeader, pixels)) => Bmp(fileHeader, bitmapHeader, pixels.reverse)}
+      bmpRow(infoPart.width, infoPart.bitsPerPixel)
+        .rep(exactly=infoPart.height)
+        .map(pixels => (header, pixels))
+    } ).map{
+    case (fileHeader, (bitmapHeader, pixels)) =>
+      Bmp(fileHeader, bitmapHeader, pixels.reverse)
+  }
 }
