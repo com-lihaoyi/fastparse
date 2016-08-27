@@ -1,11 +1,15 @@
 package demo
 
-import fastparse.all._
+import byteparse.BmpParser.BmpAst.BitmapInfoHeader
+import byteparse.classparse.ClassParser
+import cssparse.PrettyPrinter
 import org.scalajs.dom
-import org.scalajs.dom.html
+import org.scalajs.dom.{Event, UIEvent, html}
+import fastparse.core.{Parsed, Parser}
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExport
+import scala.scalajs.js.typedarray.{ArrayBuffer, Uint8Array}
 
 @JSExport
 object DemoMain {
@@ -75,7 +79,58 @@ object DemoMain {
         |  ]
         |}""".stripMargin)
   }
-  def helper(container: html.Div, parser: Parser[_], default: String) = {
+  @JSExport
+  def css(container: html.Div) = {
+   import fastparse.all._
+   helper(container, cssparse.CssRulesParser.ruleList.map(PrettyPrinter.printRuleList(_)),
+   """b,
+     |strong {
+     |  font-weight:         bold;
+     |}
+     |dfn
+     |{
+     |  font-style:   italic;
+     |}
+     |h1 {
+     |  margin: .67em 0;
+     |
+     |
+     |  font-size: 2em
+     |}""".stripMargin)
+  }
+  @JSExport
+  def bmp(container: html.Div) = {
+    import fastparse.allByte._
+    helperByteFile(container, byteparse.BmpParser.bmp.map(bmp => {
+      bmp.bitmapHeader match {
+        case h: BitmapInfoHeader =>
+          val p = h.infoPart
+          s"""
+            |Width: ${p.width}
+            |Height: ${p.height}
+            |Bit per pixel: ${p.bitsPerPixel}
+            |Horizontal resolution ${p.horzRes}
+            |Vertical resolution ${p.vertRes}
+            |Image size ${p.imageSize}
+          """.stripMargin
+      }
+    }))
+  }
+  @JSExport
+  def clss(container: html.Div) = {
+    import fastparse.allByte._
+    helperByteFile(container, byteparse.classparse.ClassParser.classFile.map(c => {
+      val ast = ClassParser.Ast.convertToAst(c)
+      s"""
+         |Fields:
+         |${ast.fields.map(field => field.descriptor + " " + field.name).mkString("\n")}
+         |
+         |Methods:
+         |${ast.methods.map(method => method.descriptor + " " + method.name).mkString("\n")}
+       """.stripMargin
+    }))
+  }
+  def helper(container: html.Div, parser: Parser[_, Char, String], default: String) = {
     import scalatags.JsDom.all._
     val inputBox = textarea(
       width := "45%",
@@ -90,11 +145,11 @@ object DemoMain {
     def recalc() = {
       inputBox.rows = inputBox.value.lines.length
       val details = parser.parse(inputBox.value) match{
-        case s: Parsed.Success[_] =>
+        case s: Parsed.Success[_, Char] =>
           table(
             width := "100%",
             tr(td("Success!")),
-            tr(td("value:"), td(code(s.value.toString)))
+            tr(td("value:"), td(pre(s.value.toString)))
           )
 
         case Parsed.Failure(lastParser, index, extra) =>
@@ -114,5 +169,49 @@ object DemoMain {
     inputBox.onkeyup = (e: dom.Event) => recalc()
 
     container.appendChild(div(inputBox, outputBox, div(clear.both)).render)
+  }
+
+  def helperByteFile(container: html.Div, parser: Parser[_, Byte, Array[Byte]]) = {
+    import scalatags.JsDom.all._
+    val uploadFile = input(
+      width := "30%",
+      float.left,
+      id := "uploadFile",
+      tpe := "file",
+      "Upload file"
+    ).render
+
+    val outputBox = div(width:="65%", float.right, overflowX.scroll).render
+
+    def recalc(e: dom.Event) = {
+      val reader = new dom.FileReader()
+      reader.readAsArrayBuffer(uploadFile.files.item(0))
+      reader.onload = (e: UIEvent) => {
+        val array = new Uint8Array(reader.result.asInstanceOf[ArrayBuffer])
+        val contents = (for (i <- 0 until array.length) yield array.get(i).toByte).toArray
+
+        val details = parser.parse(contents) match {
+          case s: Parsed.Success[_, Byte] =>
+            table(
+              width := "100%",
+              tr(td("Success!")),
+              tr(td("value:"), td(pre(s.value.toString)))
+            )
+
+          case Parsed.Failure(lastParser, index, extra) =>
+            table(
+              width := "100%",
+              tr(td("Failure!")),
+              tr(td("at index:"), td(code(index))),
+              tr(td("expected:"), td(code(lastParser.toString)))
+            )
+        }
+        outputBox.innerHTML = ""
+        outputBox.appendChild(details.render)
+      }
+    }
+
+    uploadFile.onchange = (e: dom.Event) => recalc(e)
+    container.appendChild(div(uploadFile, outputBox, div(clear.both)).render)
   }
 }

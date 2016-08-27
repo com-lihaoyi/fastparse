@@ -46,6 +46,9 @@ object ExampleTests extends TestSuite{
         val ab4 = P ( "a".rep(min=2, max=4, sep="b") )
         val Parsed.Success(_, 7) = ab4.parse("ababababababa")
 
+        val ab2exactly = P( "ab".rep(exactly=2) )
+        val Parsed.Success(_, 4) = ab2exactly.parse("abab")
+
         val ab4c = P ( "a".rep(min=2, max=4, sep="b") ~ "c" )
         val Parsed.Failure(_, 1, _) = ab4c.parse("ac")
         val Parsed.Success(_, 4) = ab4c.parse("abac")

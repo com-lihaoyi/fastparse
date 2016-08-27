@@ -244,7 +244,7 @@ object CodeParser {
 
   case object Wide extends OpCode // correct behavior for this command hasn't been implemented yet
 
-  import ByteUtils.BE._
+  import fastparse.ByteUtils.BE._
 
   val opCodeParsers = {
 

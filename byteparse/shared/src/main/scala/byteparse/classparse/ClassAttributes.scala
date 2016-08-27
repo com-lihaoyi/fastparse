@@ -56,7 +56,7 @@ object ClassAttributes {
 
   case class BootstrapMethodsAttribute(bootstrapMethods: Seq[BootstrapMethod]) extends Attribute
 
-  import ByteUtils.BE._
+  import fastparse.ByteUtils.BE._
 
   val constantValue = P( AnyWordI ).map(idx => (classInfo: ClassFileInfo) =>
     ConstantValueAttribute(
