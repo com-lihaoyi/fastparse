@@ -4,6 +4,7 @@ import fastparse.{ElemTypeFormatter, IteratorParserInput, ResultConverter}
 import fastparse.core.{Parsed, Parser}
 
 import scala.collection.mutable
+import scala.reflect.ClassTag
 
 object Utils {
 
@@ -35,10 +36,10 @@ object Utils {
                                                    sizes: Seq[Int],
                                                    iteratorFactory: Int => Iterator[Repr])
                                                   (implicit formatter: ElemTypeFormatter[ElemType],
-                                                            converter: ResultConverter[ElemType, Repr]): Unit = {
+                                                            converter: ResultConverter[ElemType, Repr],
+                                                            ct: ClassTag[ElemType]): Unit = {
 
-    class LoggedMaxBufferLengthParserInput[ElemType](data: Iterator[IndexedSeq[ElemType]])
-                                                    (implicit formatter: ElemTypeFormatter[ElemType])
+    class LoggedMaxBufferLengthParserInput(data: Iterator[IndexedSeq[ElemType]])
       extends IteratorParserInput[ElemType](data) {
 
       var maxInnerLength = 0
@@ -49,8 +50,7 @@ object Utils {
       }
     }
 
-    class LoggedDistributionBufferLengthParserInput[ElemType](data: Iterator[IndexedSeq[ElemType]])
-                                                             (implicit formatter: ElemTypeFormatter[ElemType])
+    class LoggedDistributionBufferLengthParserInput(data: Iterator[IndexedSeq[ElemType]])
       extends IteratorParserInput[ElemType](data) {
 
       val drops = mutable.Map.empty[Int, Int].withDefaultValue(0)
@@ -63,12 +63,12 @@ object Utils {
 
 
     sizes.foreach(s => {
-      val input = new LoggedMaxBufferLengthParserInput[ElemType](iteratorFactory(s).map(converter.convertFromRepr))
+      val input = new LoggedMaxBufferLengthParserInput(iteratorFactory(s).map(converter.convertFromRepr))
       parser.parseInput(input)
       println(s"Batch size: $s. Max buffer size: ${input.maxInnerLength}.")
     })
 
-    val input = new LoggedDistributionBufferLengthParserInput[ElemType](iteratorFactory(1).map(converter.convertFromRepr))
+    val input = new LoggedDistributionBufferLengthParserInput(iteratorFactory(1).map(converter.convertFromRepr))
     parser.parseInput(input)
     println("Distibutions of buffer size:")
 
@@ -88,7 +88,8 @@ object Utils {
                                    data: Repr, dataFailOpt: Option[Repr],
                                    iteratorFactory: Int => Iterator[Repr])
                                   (implicit formatter: ElemTypeFormatter[ElemType],
-                                            converter: ResultConverter[ElemType, Repr]): Unit = {
+                                            converter: ResultConverter[ElemType, Repr],
+                                            ct: ClassTag[ElemType]): Unit = {
 
     val results = Utils.benchmark(s"$name Benchmark",
       Seq(
@@ -100,7 +101,7 @@ object Utils {
     )
     println(results.map(_.mkString(" ")).mkString("\n"))
 
-    val sizes = Seq(1, 2,/* 4, 16, 64,*/ 1024/*, 4096*/)
+    val sizes = Seq(1, 2, 4, 16, 64, 1024, 4096)
     Utils.benchmarkIteratorBufferSizes(parser, sizes, iteratorFactory)
 
     val iteratorResults = Utils.benchmark(s"$name Iterator Benchmark",

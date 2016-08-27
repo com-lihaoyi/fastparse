@@ -1,6 +1,10 @@
 package fastparse
 
+import java.nio.BufferUnderflowException
+
 import fastparse.Utils.IsReachable
+
+import scala.reflect.ClassTag
 
 /**
   * ParserInput class represents data that is needed to parse.
@@ -80,15 +84,16 @@ case class IndexedParserInput[ElemType](data: IndexedSeq[ElemType])
   * so calling of `dropBuffer` should guarantee that there won't be any attempts to access to the elements in dropped part of input.
   */
 case class IteratorParserInput[ElemType](data: Iterator[IndexedSeq[ElemType]])
-                                        (implicit val formatter: ElemTypeFormatter[ElemType])
+                                        (implicit val formatter: ElemTypeFormatter[ElemType],
+                                         ct: ClassTag[ElemType])
     extends ParserInput[ElemType] {
-  private var buffer: Vector[ElemType] = Vector()
+  private val buffer: UberBuffer[ElemType] = new UberBuffer[ElemType](16)
   private var firstIdx: Int = 0 // index in the data corresponding to the 0th element in the buffer
 
   private def requestUntil(until: Int): Boolean = {
     while (this.length <= until && data.hasNext) {
       val chunk = data.next()
-      buffer = buffer ++ chunk
+      buffer.write(chunk.toArray)
     }
     this.length > until
   }
@@ -106,7 +111,7 @@ case class IteratorParserInput[ElemType](data: Iterator[IndexedSeq[ElemType]])
     */
   override def dropBuffer(index: Int): Unit = {
     if (index > firstIdx) {
-      buffer = buffer.drop(index - firstIdx)
+      buffer.drop(index - firstIdx)
       firstIdx = index
     }
   }
@@ -146,3 +151,4 @@ case class IteratorParserInput[ElemType](data: Iterator[IndexedSeq[ElemType]])
     "`IteratorParserInput` is used once and the underlying Iterator exhausted."
   )
 }
+

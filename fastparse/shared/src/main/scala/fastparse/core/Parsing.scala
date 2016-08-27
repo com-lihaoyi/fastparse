@@ -6,6 +6,7 @@ import fastparse.ElemTypeFormatter._
 import fastparse.IndexedParserInput
 
 import scala.collection.mutable
+import scala.reflect.ClassTag
 /**
  * A single frame of the parser call stack
  *
@@ -344,7 +345,8 @@ trait Parser[+T, ElemType, Repr] extends ParserResults[T, ElemType] with Precede
                     index: Int = 0,
                     instrument: (Parser[_, _, _], Int, () => Parsed[_, ElemType]) => Unit = null)
                    (implicit formatter: ElemTypeFormatter[ElemType],
-                             converter: ResultConverter[ElemType, Repr])
+                    converter: ResultConverter[ElemType, Repr],
+                    ct: ClassTag[ElemType])
       : Parsed[T, ElemType] = {
     parseInput(IteratorParserInput(input.map(converter.convertFromRepr)), index, instrument)
   }
