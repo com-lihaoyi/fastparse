@@ -1,7 +1,7 @@
 package byteparse
 
 import scala.collection.mutable.ArrayBuffer
-import fastparse.allByte._
+import fastparse.byte._
 import utest._
 
 /*

@@ -4,7 +4,7 @@ import java.io.InputStream
 
 import fastparse.{IteratorParserInput, Utils}
 import utest._
-import fastparse.allByte._
+import fastparse.byte._
 import BmpParser._
 
 import scala.collection.mutable

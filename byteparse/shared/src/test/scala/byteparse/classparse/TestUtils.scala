@@ -1,6 +1,6 @@
 package byteparse.classparse
 
-import fastparse.allByte._
+import fastparse.byte._
 import utest._
 
 

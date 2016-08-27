@@ -343,74 +343,169 @@
                 @hl.ref(tests/"ExampleTests.scala", Seq("'composenocut", ""))
         @sect{Unapply}
             @p
-                @hl.scala{Parser} class has (as many other classes in Scala) a convenient method @hl.scala{unapply}
-                which allows to do pattern matching using parsers (like regular expressions) in your code.
+                @hl.scala{Parser} class has a convenient method @hl.scala{unapply}
+                which allows to do pattern matching using parsers (like regular
+                expressions) in your code.
 
                 @hl.ref(tests/"ExampleTests.scala", "val capture1", "val captureOpt")
+            @p
+                If the parser succeeds, the return value of the parser is bound
+                to the name in the pattern match. If the parser fails, the
+                pattern match fails. Note you do not have access to the failure
+                details when pattern-matching-syntax/unapply with a parser: if
+                you need that, call @code{.parse} and pattern match on the
+                @sect.ref{Parsing Results} yourself
 
-    @sect{Iterator Parsing}
+    @sect{Streaming Parsing}
         @p
-            In addition to the regular plain parsing you can simply parse streaming data as @hl.scala{Iterator}.
-            Just call @hl.scala{.parseIterator} instead of @hl.scala{.parse} in your parser and pass the @hl.scala{Iterator[IndexedSeq[ElemType]]}.
-            In contrast to merely @hl.scala{Iterator[Char]} or @hl.scala{Iterator[Byte]} @hl.scala{Iterator} of @hl.scala{IndexedSeq}
-            represents real case when chunks of data coming from some source (network, lines from file on the disk)
-            and improves performance by loading big parts of input immediately, not dividing them into bytes.
+            In addition to the parsing strings, you can also parse "streaming"
+            data from @hl.scala{Iterator}s. To do so, call @hl.scala{.parseIterator}
+            instead of @hl.scala{.parse} in your parser and pass the
+            @hl.scala{Iterator[String]} (or @hl.scala{Iterator[Array[Byte]]} for
+            @sect.ref{Byte Parsers}).
+
+        @hl.ref(tests/"IteratorTests.scala", Seq("'basic", ""))
+
         @p
-            Parsing process will try to optimize the memory consumption using the information
-            about @sect.ref{Cuts}, @sect.ref{Capture} and other special behaviors of simple parsers.
-            It maintains an internal buffer of the iterator segments it has read so far,
-            and then uses @hl.scala{Cuts} to determine when the parser no longer can backtrack past certain points,
-            and discards the parts of buffered input it no longer needs.
-            This discarding happens approximately after every ~ (especially ~/) or iteration of .rep.
+            Note that fastparse does not parse @hl.scala{Iterator[Char]} or
+            @hl.scala{Iterator[Byte]}s for performancereasons : most input
+            sources make data available in chunks, such as network packets or
+            lines from file on the disk.
+            By parsing chunks chunks, FastParse better matches any underlying
+            data source, and itself has better performance parsing larger chunks.
         @p
-            Anyway, you can use the simple rule to improve the performance in the Iterator parsing -
-            every cut in your parser possibly reduces the total memory consumption,
-            so if you want to write good Iterator parser just add cuts wherever it's possible.
+            Streaming parsing still needs to buffer input in-memory: in particular,
+            parsers like @sect.ref{Optional}, @sect.ref{Repeat} or
+            @sect.ref{Either} means a parser may backtrack, and thus FastParse
+            needs to buffer any input from where such a parsers starts parsing.
+            Other parsers like @sect.ref{Capture} do not backtrack, but need
+            to buffer data in order to return the data that gets captured. Using
+            @sect.ref{Cuts} to prevent backtracking, apart from making
+            @sect.ref{Debugging Parsers} easier, also allows FastParse to flush
+            parts of the buffer that it no longer needs to backtrack into.
 
         @p
             @i
-                Note also that with Iterator parser you can't use @sect.ref{Tracing}
-                as the iterator gets exhausted after the first parsing pass and are not available for a second time.
+                In general every cut in your parser possibly reduces the memory
+                used to buffer input for iterator parsing
 
-        @p
-            Here's some benchmarks that measure maximum size of inner buffer and execution time during some parsers work.
-        @table(width := "100%")
-            @thead
-                @th{Parser}
-                @th{Maximum buffer @br for 1-sized chunk}
-                @th{Maximum buffer @br for 1024-sized chunk}
-                @th{Size of input}
-                @th{Used memory}
-            @tbody
-                @tr
-                    @td{ScalaParse}@td{1555}@td{2523}@td{147894}@td{1.4%}
-                @tr
-                    @td{PythonParse}@td{2006}@td{2867}@td{68558}@td{3.6%}
-                @tr
-                    @td{ByteParse}@td{36}@td{1026}@td{786486}@td{0.01%}
-                @tr
-                    @td{ClassParse}@td{476}@td{1371}@td{332142}@td{0.3%}
 
-        @table(width := "100%")
-            @thead
-                @th{Parser}
-                @th{Score on the plain parsing}
-                @th{Score on the iterator parsing @br for 1-sized chunk}
-                @th{Score on the iterator parsing @br for 1024-sized chunk}
-            @tbody
-                @tr
-                    @td{ScalaParse}@td{43}@td{33}@td{43}
-                @tr
-                    @td{PythonParse}@td{1150}@td{600}@td{890}
-                @tr
-                    @td{ByteParse}@td{195}@td{15}@td{40}
-                @tr
-                    @td{ClassParse}@td{160}@td{40}@td{100}
+        @sect{Streaming Parsing Buffer Size}
+            @p
+                This first benchmark measures the maximum size of buffered input
+                when using streaming parsing, for some sample parsers we have in
+                the test suite, for input-chunks of size 1 and 1024:
 
-         @p
-            As you can see parsing of Iterators dramatically reduces (even with quite big size of chunks)
-            the amount of memory needed for work and the chunk size directly impact on performance
-            because of a large number of requests for data from Iterator in small size chunk case.
+            @table(width := "100%", cls := "pure-table")
+                @thead
+                    @th{Parser}
+                    @th{Maximum buffer @br for 1-sized chunk}
+                    @th{Maximum buffer @br for 1024-sized chunk}
+                    @th{Size of input}
+                    @th{Used memory}
+                @tbody
+                    @tr
+                        @td{ScalaParse}@td{1555}@td{2523}@td{147894}@td{1.4%}
+                    @tr
+                        @td{PythonParse}@td{2006}@td{2867}@td{68558}@td{3.6%}
+                    @tr
+                        @td{BmpParse}@td{36}@td{1026}@td{786486}@td{0.01%}
+                    @tr
+                        @td{ClassParse}@td{476}@td{1371}@td{332142}@td{0.3%}
+
+            @p
+                As you can see, for these "typical" parsers, some input needs to
+                be buffered to allow backtracking, but it turns out to be only a
+                few percent of the total file size.
+            @p
+                These parsers make heavy use of backtracking operators like
+                @sect.ref{Either} or @sect.ref{Repeat}, but also make
+                heavy use of @sect.ref{Cuts}. This lets FastParse drop buffered
+                input when it knows it can no longer backtrack.
+            @p
+                Another thing to note is the chunk size: a smaller chunk size
+                reduces the granularity of the chunks that get buffered,
+                reducing the buffer size. However, this comes at a performance
+                cost, as you can see below...
+
+
+        @sect{Streaming Parsing Performane}
+            @p
+                This next benchmark measures the effect of streaming parsing on
+                runtime performance, using two different chunk-sizes, compared
+                to the performance of non-streaming parsing:
+
+            @table(width := "100%", cls := "pure-table")
+                @thead
+                    @th{Parser}
+                    @th{Score on the plain parsing}
+                    @th{Score on the iterator parsing @br for 1-sized chunk}
+                    @th{Score on the iterator parsing @br for 1024-sized chunk}
+                @tbody
+                    @tr
+                        @td{ScalaParse}@td{43}@td{33}@td{43}
+                    @tr
+                        @td{PythonParse}@td{1150}@td{600}@td{890}
+                    @tr
+                        @td{BmpParse}@td{195}@td{15}@td{40}
+                    @tr
+                        @td{ClassParse}@td{160}@td{40}@td{100}
+
+            @p
+                Here, we can see that streaming parsing has a non-trivial effect
+                on performance: ScalaParse seems unaffected by a chunks of size
+                1024, and takes a 25% performance hit for chunks of size 1, but
+                PythonParse takes a significant hit (25%, 47%) and ClassParse
+                and BmpParse have it much worse. While smaller chunk sizes
+                results in smaller buffers, it also comes with a performance
+                cost. Exactly how big you want your input chunks to be is up to
+                you to decide: FastParse will accept an iterator of chunks
+                as large or as small as you want.
+
+            @p
+                In general, Streaming Parsing it always going to be a
+                performance hit over parsing a single @code{String} you
+                pre-loaded in memory. The point of streaming parsing is to
+                handle cases where you can't/don't-want-to load everything in
+                memory. In that case, if the choice is between slightly-slower
+                parsing or an @code{OutOfMemory} error, streaming parsing is
+                a good option to have.
+
+        @sect{Streaming Parsing Limitations}
+            @p
+                Apart from the performance/memory tradeoff mentioned above,
+                streaming parsing has some limitations that it is worth being aware of:
+            @ul
+                @li
+                    Performance of iterator parsing is always going to be
+                    slower than performance of raw @code{String} or @code{Array[Byte]}
+                    parsing: this is unavoidable given the overhead of maintaining
+                    and trimming the input buffer
+                @li
+                    Memory use when parsing iterators is always going to depend
+                    on aggressive use of @sect.ref{Cuts} within the parser: most
+                    real-world parsers rely heavily on @sect.ref{Optional},
+                    @sect.ref{Repeat} and @sect.ref{Either}, all of which will
+                    cause input to be buffered in memory unless you use
+                    @sect.ref{Cuts} to avoid backtracking
+                @li
+                    You can't use @sect.ref{Tracing} after parsing an iterator:
+                    tracing performs a second parse on the same input to generate
+                    its error information, and the iterator input gets exhausted after
+                    the first parsing pass and are not available for a second time.
+                @li
+                    Streaming parsing does not support parsing
+                    @code{scala.Stream[String]}, as @code{scala.Stream} buffers
+                    everything in memory, making it pretty useless from a
+                    perspective of "streaming parsing" where you explicitly
+                    @i{don't} wan't to do that.
+                @li
+                    Streaming parsing does not (and will likely never) support
+                    @lnk("\"async\" or \"push\" parsing", "http://stackoverflow.com/questions/15895124/what-is-push-approach-and-pull-approach-to-parsing").
+                    This is because FastParse's entire execution model is based
+                    on a straightforward recursive-descent over the input stream.
+                    It's unlikely we'll ever be able to graft async-parsing
+                    on top of this execution model.
 
 
     @sect{Example Parsers}
@@ -554,40 +649,77 @@
                 PythonParse is currently compatible enough to parse all the python sources in Zulip, Ansible, Changes, Django, and Flask. It isn't published yet on maven central, but feel free to look at it if you want an idea of how to write a complex, real parser.
 
         @sect{CssParse}
+            @p
+                CssParse is a parser that parses CSS files into an abstract syntax tree (AST).
+                The implementation is too large to show in-line, but can be found here:
+            @ul
+                @li
+                    @a("CssParse", href:="https://github.com/lihaoyi/fastparse/tree/master/cssparse/shared/src/main/scala/cssparse")
+
+            @p
+                This AST can then be used for a variety of reasons: you could
+                analyze the CSS to try and find bugs, transform the CSS in some
+                custom way (e.g. prefixing class-names with the name of the file)
+                or just re-formatting the CSS when printing it back out.
+            @p
+                CssParse compiles to Javascript via Scala.js, and we have a demo
+                here that demonstrates the use of CssParse as a CSS pretty-printer.
+                Enter some CSS in the box below, no matter how it's formatted or
+                minified, and CssParse will add the necessary spaces and tabs to make
+                the file readable and good-looking.
+
             @div(id := "cssdiv")
             @script(raw("""demo.DemoMain().css(document.getElementById("cssdiv"))"""))
 
             @p
-                @a("One more", href:="https://github.com/lihaoyi/fastparse/tree/master/cssparse/shared/src/main/scala/cssparse")
-                too big for describing parser that parses CSS files and prints them adding the necessary spaces and tabs.
-                In other words, making the file readable and good-looking.
-                In process it builds internal AST that stores information about tags and rules in the given CSS,
-                this AST isn't complete, because of complexity of initial CSS format,
-                but it provides all the essential information about basic elements of file (blocks, selectors, rules).
-                The correctness is tested by parsing and then printing several huge files including CSS from Bootstrap and Primer.
+                As mentioned above, CssParse builds and AST that stores
+                information about tags and rules in the given CSS, this AST isn't
+                complete, because of complexity of initial CSS format,
+                but it provides all the essential information about basic elements
+                of file (blocks, selectors, rules). The correctness of CssParse is
+                tested by parsing and then printing several huge files including CSS
+                from Bootstrap and Primer.
 
     @sect{API Highlights}
 
         @sect{Parser[T, ElemType, Repr]}
             @p
                 Fastparse revolves around @hl.scala{Parser[T, ElemType, Repr]}s:
-                a parser that can attempt to parser a value @hl.scala{T} from an input sequence of elements of type @hl.scala{ElemType}.
+                a parser that can attempt to parse a value @hl.scala{T} from an input sequence of elements of type @hl.scala{ElemType}.
                 The @hl.scala{Repr} type-parameter is responsible for output type in @sect.ref{Capture},
                 since input is converted to the @hl.scala{IndexedSeq[ElemType]} or @hl.scala{Iterator[IndexedSeq[ElemType]]}
                 during all parsing operations.
                 These are defined as:
 
             @hl.ref(main/'core/"Parsing.scala", Seq("// Parser", "/*"), "// End Parser")
-            @p
-                The main external API is @hl.scala{.parse} for parsing regular arrays of data
-                and @hl.scala{.parseIterator} for parsing streaming data. (@i{See also @sect.ref{Iterator Parsing}}).
-                As you can see, apart from the @hl.scala{input} parameter,
-                there are a few parameters that you can use to configure the parse.
-                Apart from that, each @hl.scala{Parser[T, ElemType, Repr]} needs to implement @hl.scala{parseRec}
-                which is a less-convenient but more-performant version that FastParse uses internally when performing a parse.
 
             @p
-                There is @hl.scala{unapply} method in this class, you can read about it in @sect.ref{Unapply}.
+                Typically, you will be dealing with the aliased version of
+                this inside @hl.scala{import fastparse.all._}:
+
+            @hl.scala
+                type Parsed[+T] = core.Parsed[T, String]
+                type Parser[+T] = core.Parser[T, Char, String]
+            @p
+                Or if you're writing @sect.ref{Byte Parsers}:
+
+            @hl.scala
+                type Parsed[+T] = core.Parsed[T, Array[Byte]]
+                type Parser[+T] = core.Parser[T, Byte, Array[Byte]]
+
+            @p
+                The main external API is @hl.scala{.parse} for parsing regular arrays of data
+                and @hl.scala{.parseIterator} for parsing streaming data. (@i{See also @sect.ref{Streaming Parsing}}).
+                As you can see, apart from the @hl.scala{input} parameter,
+                there are a few parameters that you can use to configure the parse.
+                Apart from that, each @hl.scala{Parser[T, ElemType, Repr]} needs
+                to implement @hl.scala{parseRec} which is a less-convenient but
+                more-performant version that FastParse uses internally when
+                performing a parse.
+
+            @p
+                This class also supports an @sect.ref{Unapply} method, which can
+                be used in Scala @hl.scala{match} expressions.
 
             @p
                 Although the core of @sect.ref{Parser[T, ElemType, Repr]} is simple,
@@ -611,6 +743,7 @@
                 you can choose to ignore the default set of operators by using @hl.scala{import fastparse.noApi}
                 instead of @hl.scala{import fastparse.all}. That way you can use your own set of operators,
                 e.g. the whitespace-sensitive operators described in that section.
+
         @sect{Parsing Results}
             @p
                 The two kinds of a @hl.scala{Parsed} result reflect the status of a parse:
@@ -618,12 +751,12 @@
                 First, both classes can be used in pattern matching to discriminate the parse status.
                 Second, they allow to extract the most commonly-used values.
                 @hl.scala{Parsed.Success} provides the parsed value -
-                the value you are probably most interesed in -
+                the value you are probably most interested in -
                 and the index in the input string till where the parse was performed.
                 @hl.scala{Parsed.Failure} allows you to retrieve the last parser that failed and the index where it failed.
                 Additionally, failure provides an @hl.scala{Parsed.Failure.extra} field that provides precise details about the failure:
-                line and column numbers (via @hl.scala{Extra.line} and @hl.scala{Extra.col})
-                and most importantly a complete stack trace of the involved parsers, which is accessible via @hl.scala{Extra.traced}.
+                line and column numbers (via @hl.scala{extra.line} and @hl.scala{extra.col})
+                and most importantly a complete stack trace of the involved parsers, which is accessible via @hl.scala{extra.traced}.
 
             @p
                 An overview of @hl.scala{Parsed}:
@@ -643,6 +776,7 @@
                 Computing the @hl.scala{Extra.traced} data is not done by default for performance reasons:
                 the additional run takes about 3x longer than the initial run due to the instrumentation,
                 for a total of 4x slowdown. If you want the information for debugging, though, it will be there.
+
     @sect{Debugging Parsers}
         @p
             The vast majority of your time working with FastParse, your parsers will be incorrect. This is almost by definition, because once your parser is correct, you'll be done and can go do something else with your life! Thus FastParse puts a lot of effort into making working with broken parsers as easy as possible
@@ -782,7 +916,7 @@
         @p
             FastParse will never be able to compete with hand-written recursive descent parsers for speed. However, it's no slouch either; here's a comparison of FastParse with alternatives, using Parboiled2's JSON parsing benchmark, which parses a ~21,500 line JSON file:
 
-        @table(width := "100%")
+        @table(width := "100%", cls := "pure-table")
             @thead
                 @th{Benchmark}@th{Score}@th{Error}
             @tbody
@@ -813,7 +947,7 @@
         @p
             A similar speed ratio can be seen in parsing a @a("sample Scala file", href:="https://github.com/scala-js/scala-js/blob/master/compiler/src/main/scala/org/scalajs/core/compiler/GenJSCode.scala") using FastParse, Parboiled2 and Scalac's inbuilt hand-written Scala-language parser:
 
-        @table(width := "100%")
+        @table(width := "100%", cls := "pure-table")
             @thead
                 @th{Benchmark}@th{Score}@th{Error}
             @tbody
@@ -831,31 +965,7 @@
 
     @sect{Internals}
         @p
-            FastParse's internals are straightforward, at less than 1000 lines of code. Nonetheless, its design is unlike any other combinator library I've seen: externally immutable, pure-functional parser-combinators with mutable, highly-optimized internals.
-
-        @sect{Abstraction}
-            @p
-                Actually, each of the previously described basic parsers is a special case of more abstract
-                corresponding parser from the inner Api that can be used for the arbitrary type of elements in the input.
-                Parsers for @hl.scala{String} input has @hl.scala{Char} as type-parameter in this Api,
-                parsers for @hl.scala{Array[Byte]} has @hl.scala{Byte} and etc.
-            @p
-                There is no need to explain again how these abstract parsers work,
-                because it's exactly the same as in the @hl.scala{String} or @hl.scala{Array[Byte]} case,
-                the only difference is that instead of @hl.scala{Char} or @hl.scala{Byte} we consider arbitrary class.
-                Names of these parsers are also the same except of
-                @ul
-                    @li
-                        @hl.scala{AnyElem} for @hl.scala{AnyChar} and @hl.scala{AnyByte}
-                    @li
-                        @hl.scala{ElemPred} for @hl.scala{CharPred} and @hl.scala{BytePred}
-                    @li
-                        @hl.scala{ElemIn} for @hl.scala{CharIn} and @hl.scala{ByteIn}
-                    @li
-                        @hl.scala{ElemsWhile} for @hl.scala{CharsWhile} and @hl.scala{BytesWhile}
-                    @li
-                        @hl.scala{SeqIn} for @hl.scala{StringIn}
-                but you can, of course, use these abstract versions of names wherever you want.
+            FastParse's internals are straightforward. Nonetheless, its design is unlike any other combinator library I've seen: externally immutable, pure-functional parser-combinators with mutable, highly-optimized internals.
 
 
         @sect{Fast Interpreter}
@@ -896,6 +1006,76 @@
                 These operations are not cheap: the bitsets easily take a few KB of memory each, and involve 65k iterations to fill them in. However, since @hl.scala{Parser}s are immutable, this one-time-cost goes from "ridiculous" to "acceptable". All these internal optimizations are completely opaque to the user, who (apart from performance) never need to think about them.
 
 
+        @sect{Abstraction}
+            @p
+                FastParse's basic parsers are all generic: things like
+                @sect.ref{Sequence}, @sect.ref{Repeat}, @sect.ref{Optional},
+                etc. are written to work on any sort of input, whether parsing
+                @code{String}s or @code{Array[Byte]}. The @code{Parser} and
+                code{Result} types are themselves generic and can work on multiple
+                input and output types, hence the rather complex signatures:
+
+            @hl.scala
+                trait Parser[+T, ElemType, Repr]
+                sealed trait Parsed[+T, ElemType]
+            @p
+                From this generic baseline, FastParse defines multiple "Api"
+                modules. Each of these specializes the "generic" FastParse API
+                into something that's more convenient for a task at hand:
+
+            @ul
+                @li
+                    @hl.scala{import fastparse.all._} for parsing @code{String}s
+                @li
+                    @hl.scala{import fastparse.noApi._} for parsing @code{String}s,
+                    in combination with custom @sect.ref{Whitespace Handling}
+                @li
+                    @hl.scala{import fastparse.byte._} for parsing @code{Array[Byte]}s
+
+            @p
+                Each FastParse API has type aliases that narrow the type for its particular
+                use case: e.g. @code{fastparse.all} has aliased:
+
+            @hl.scala
+                type Parsed[+T] = core.Parsed[T, String]
+                type Parser[+T] = core.Parser[T, Char, String]
+            @p
+                While @code{fastparse.byte} has aliased:
+
+            @hl.scala
+                type Parsed[+T] = core.Parsed[T, Array[Byte]]
+                type Parser[+T] = core.Parser[T, Byte, Array[Byte]]
+
+            @p
+                Thus, you generally can worked directly with the aliases defined
+                in the relevant Api module without worrying about the more
+                generic form, though most of the core parsers are written
+                generically to work in any Api module. If you wished to, you
+                too could write a custom parser that can parse both @code{String}s
+                and @code{Array[Byte]}, by inheriting from the more generic
+                @hl.scala{Parser[+T, ElemType, Repr]} trait.
+
+            @p
+                Apart from the direct aliases, FastParse also provides alternate names
+                for the "generic versions" of some of the common parsers:
+
+            @ul
+                @li
+                    @hl.scala{AnyElem} for @hl.scala{AnyChar} and @hl.scala{AnyByte}
+                @li
+                    @hl.scala{ElemPred} for @hl.scala{CharPred} and @hl.scala{BytePred}
+                @li
+                    @hl.scala{ElemIn} for @hl.scala{CharIn} and @hl.scala{ByteIn}
+                @li
+                    @hl.scala{ElemsWhile} for @hl.scala{CharsWhile} and @hl.scala{BytesWhile}
+                @li
+                    @hl.scala{SeqIn} for @hl.scala{StringIn}
+
+            @p
+                This is for backwards compatibility, and to allow you to use
+                more relevant names when writing your parser (e.g. @code{AnyChar}
+                instead of @code{AnyElem}).
+
     @sect{Comparisons}
         @p
             FastParse differs from all other parser-combinator libraries in the Scala universe, in quite substantial ways:
@@ -908,143 +1088,196 @@
             @li
                 @a("scala-parser-combinators", href:="https://github.com/scala/scala-parser-combinators") is similar, but poorly executed. It is ~100x slower than FastParse, has an awkward inheritance-based API, and is full of bugs despite being half a decade old. FastParse is faster, has self-contained pure-functional parsers, and fixes bugs e.g. by having the @hl.scala{.log} operator actually work.
 
-@sect{Writing Byte Parsers}
+@sect{Byte Parsers}
     @p
-        In the same way as the @hl.scala{String} parsers we can build @hl.scala{Array[Byte]} or simply @hl.scala{Byte} parsers.
+        While FastParse was originally designed to parse @hl.scala{String}s,
+        it also provides an API that allows parsing of @hl.scala{Array[Byte]}s
+        (or @hl.scala{Iterator[Array[Byte]]}s) into structured data
+
     @p
-        The first example will be about parsing a single byte sequence
+        This first example demonstrates a basic byte-parser, which parses the
+        two bytes @code{1} and @code{2}:
+
     @hl.ref(bytetests/"ByteTests.scala", Seq("'sequence", ""))
 
     @p
-        As you can see it has the very same structure as previous @hl.scala{String} parsers,
-        but with several additional features.
-        The first is new word @hl.scala{BS} or @hl.scala{ByteSeq} that merely means alias for @hl.scala{Array[Byte]},
-        the second is new function for convenient conversion from @hl.scala{String} to @hl.scala{Array[Byte]} - @hl.scala{strToBytes}.
-    @p
-        Of course, you aren't restricted to use only them, you are free to create Array of Byte by any method or function,
-        but, naturally, it's recommended to follow the one uniform style and @hl.scala{BS} with @hl.scala{strToBytes} is the good example of it.
+        As you can see it has the same underlying structure as previous
+        @sect.ref{Basic} string-parsers, but with some differences:
 
-    @sect{New Parsers}
+    @sect{Equivalent Byte Parsers}
         @p
             Byte Parsers doesn't bring anything new to the basic set of parsers.
-            @sect.ref{Optional}, @sect.ref{Repeat}, @sect.ref{Capture} and ect. are still here with the same logic,
-            but there are some new names for @hl.scala{Byte} versions of some of them.
-            It just a replacement of "Char" substring to the "Byte", that's all, so
-            @ul
-                @li
-                    @hl.scala{AnyChar} becomes @hl.scala{AnyByte}
-                 @li
-                    @hl.scala{CharPred} becomes @hl.scala{BytePred}
-                 @li
-                    @hl.scala{CharIn} becomes @hl.scala{ByteIn}
-                 @li
-                    @hl.scala{CharsWhile} becomes @hl.scala{BytesWhile}
-                 @li
-                    @p
-                        @hl.scala{StringIn} becomes @hl.scala{SeqIn}
-                    @i
-                        It isn't a simple replacement of substrings, and the reason for this is described in @sect.ref{Abstraction}.
+            @sect.ref{Optional}, @sect.ref{Repeat}, @sect.ref{Capture} and etc.
+            are still here with the same logic, but there are some new names for
+            @hl.scala{Byte} versions of some of them:
+
+        @ul
+            @li
+                @hl.scala{BS} or @hl.scala{ByteSeq} is an alias for
+                @hl.scala{Array[Byte]}, and is used when defining byte parsers
+                as a replacement for literal strings.
+            @li
+                @sect.ref{AnyChar} becomes @hl.scala{AnyByte}
+             @li
+                @sect.ref{CharPred} becomes @hl.scala{BytePred}
+             @li
+                @sect.ref{CharIn} becomes @hl.scala{ByteIn}
+             @li
+                @sect.ref{CharsWhile} becomes @hl.scala{BytesWhile}
+             @li
+                @p
+                    @hl.scala{StringIn} becomes @hl.scala{SeqIn}
+                @i
+                    It isn't a simple replacement of substrings, and the reason for
+                    this is described in @sect.ref{Abstraction}.
 
          @p
-            For instance, the basic parser with @hl.scala{AnyByte}
+            For instance, the basic parser with @hl.scala{AnyByte}, used with a
+            @sect.ref{Capture} @code{.!}, works and looks the same as @sect.ref{AnyChar}
+            did, except now it captures a @code{BS} (or @code{Array[Byte]})
+            rather than a @code{String}
+
          @hl.ref(bytetests/"ByteTests.scala", Seq("'anychar", ""))
 
-    @sect{Words and Dwords}
+    @sect{Byte-Specific Parsers}
         @p
-            Many byte formats use such concepts as Word and Dword that just means 2 and 4 bytes,
-            so Api for Byte Parsers provides special parsers for this case.
-            They called @hl.scala{Word} and @hl.scala{Dword}
-            and is defined as @hl.scala{AnyByte.rep(exactly=2)} and @hl.scala{AnyByte.rep(exactly=4)},
-            which means they consumes any 2 or 4 byte.
-            When it's needed to convert Word or Dword to integer value (@hl.scala{Short} and @hl.scala{Int}),
-            you can use @hl.scala{WordI} and @hl.scala{DwordI} parsers,
-            but the problem is that there are
+            Many byte formats use such concepts as Word and Double-Word that just
+            means 2 and 4 bytes, so FastParse's API for Byte Parsing provides
+            special parsers for these cases:
+        @ul
+            @li
+                @code{Word16}, @code{Word32}, @code{Word64}: parses 2 and 4 bytes
+                and 8 bytes respectively, but discards the results
+            @li
+                @code{LE.Int16}, @code{LE.Int32}, @code{LE.Int64}: parses 2 and 4 bytes
+                and 8 bytes respectively, and returns a signed @code{Short}s,
+                @code{Int}s and @code{Long}s from the little-endian bytes
+            @li
+                @code{BE.Int16}, @code{BE.Int32}, @code{BE.Int64}: parses 2 and 4 bytes
+                and 8 bytes respectively, and returns a signed @code{Short}s,
+                @code{Int}s and @code{Long}s from the big-endian bytes
+
+        @p
+            Note the difference between @code{LE} and @code{BE} versions of the
+            @code{IntN} parsers; there are
             @a("two standards of ordering bytes", href:="https://en.wikipedia.org/wiki/Endianness"),
-            and they gives different results on equal byte sequences.
-            Thus there are two special packages @hl.scala{fastparse.ByteUtils.BE._} for Big-Endian
-            and @hl.scala{fastparse.ByteUtils.LE._} for Little-Endian,
-            each has its own @hl.scala{WordI} and @hl.scala{DwordI} parser for each case.
+            so you have to pick which one you want to use. You can also @hl.scala{import LE._}
+            or @hl.scala{import BE._} if the endian-ness is the same throughout
+            your parser, and then use @code{Int16}/@code{Int32}/@code{Int64} directly.
 
     @sect{Example Byte Parsers}
         @sect{BmpParser}
+            @p
+                @hl.scala{BmpParser} is a good first example of byte parser:
+                a parser for @lnk("Bitmap image files", "https://en.wikipedia.org/wiki/BMP_file_format").
+                It's not small, but structure is pretty simple. It does not
+                support the full breadth of the Bitmap format, but it supports
+                enough to parse many common images.
+            @p
+                Like all other FastParse parsers, FastParse's Byte parsers all
+                run in the browser via Scala.js, and so does BmpParser! Here
+                we have a live demo: upload a bitmap file, and will parse it
+                and print out some simple metadata (width, height, etc.):
+
             @div(id := "bmpdiv")
             @script(raw("""demo.DemoMain().bmp(document.getElementById("bmpdiv"))"""))
             @i
-                Given form accepts BMP files and prints short info about it (width, height and etc.).
                 If you haven't any bmp around, you can download classic
                 @a("lena", href:="https://raw.githubusercontent.com/lihaoyi/fastparse/master/byteparse/jvm/src/test/resources/lena.bmp").
 
-            @p
-                @hl.scala{BmpParser} is a good first example of byte parser, it's not small, but structure is pretty simple.
+            @sect{BmpParser Walkthrough}
+                @p
+                    Here, we'll walk through the implementation of BmpParser,
+                    which should give you a taste of how FastParse's
+                    @sect.ref{Byte Parsers} work in general.
+                @hl.scala{import fastparse.ByteUtils.LE._}
 
-            @hl.scala{import fastparse.ByteUtils.LE._}
+                @p
+                    First of all we import package for Little-Endian support, because BMP format use it.
 
-            @p
-                First of all we import package for Little-Endian support, because BMP format use it.
+                @hl.ref(bytemain/"BmpParser.scala", "val bmp")
 
-            @hl.ref(bytemain/"BmpParser.scala", "val bmp")
+                @p
+                    Bmp file consists of two headers (file header and info header) and pixels in rows with padding,
+                    the difficulties are that there are several versions of headers and the parser should distinct them and
+                    process them correctly, and that the size and padding of rows in bmp file depends on information from header.
 
-            @p
-                Bmp file consists of two headers (file header and info header) and pixels in rows with padding,
-                the difficulties are that there are several versions of headers and the parser should distinct them and
-                process them correctly, and that the size and padding of rows in bmp file depends on information from header.
+                @hl.ref(bytemain/"BmpParser.scala", "val fileHeader", "def bmpRow")
 
-            @hl.ref(bytemain/"BmpParser.scala", "val fileHeader", "def bmpRow")
+                @p
+                    The first problem is reflected in similar parsers describing 5 versions of info header
+                    (@hl.scala{v2HeaderPart}, @hl.scala{v2Header}, @hl.scala{v3HeaderPart}, @hl.scala{v3Header}...).
 
-            @p
-                The first problem is reflected in similar parsers describing 5 versions of info header
-                (@hl.scala{v2HeaderPart}, @hl.scala{v2Header}, @hl.scala{v3HeaderPart}, @hl.scala{v3Header}...).
+                @hl.ref(bytemain/"BmpParser.scala", "def bmpRow", "val bmp")
 
-            @hl.ref(bytemain/"BmpParser.scala", "def bmpRow", "val bmp")
+                @p
+                    The second problem in the @hl.scala{bmpRow} function that computes the parameters of row and creates parser on a fly.
 
-            @p
-                The second problem in the @hl.scala{bmpRow} function that computes the parameters of row and creates parser on a fly.
-
-            @p
-                Note also few tricks for parsing binary data.
-            @ul
-                @li
-                    @b
-                        Most of main elements in bmp format has very simple and plain structure. @br
-                     For instance @hl.scala{fileHeader} and @hl.scala{infoHeaderPart}
-                     are just sequences of @hl.scala{AnyDwordI} or @hl.scala{AnyWordI}
-                @li
-                    @b
-                        The extensive usage of @hl.scala{.rep(exactly=...)}.@br
-                    This is due to the fact that many binary formats depends on constant-sized blocks
-                    and the easiest and fastest method to parse them is to write @hl.scala{.rep(exactly=...)}.
-                @li
-                    @b
-                        The same extensive usage of @hl.scala{.flatMap}.@br
-                    @hl.scala{flatMap} allows to retrieve data from one parser and pass it to the next.
-                    The most popular and primitive example is dynamic-sized array with length written at the beginning.
-                    Similar algorithm is used in the @hl.scala{bmp} when header information is passed to the @hl.scala{bmpRow}
-                    that returns new parser for row in this particular bmp file.
+                @p
+                    Note also few tricks for parsing binary data.
+                @ul
+                    @li
+                        @b
+                            Most of main elements in bmp format has very simple and plain structure. @br
+                         For instance @hl.scala{fileHeader} and @hl.scala{infoHeaderPart}
+                         are just sequences of @hl.scala{AnyDwordI} or @hl.scala{AnyWordI}
+                    @li
+                        @b
+                            The extensive usage of @hl.scala{.rep(exactly=...)}.@br
+                        This is due to the fact that many binary formats depends on constant-sized blocks
+                        and the easiest and fastest method to parse them is to write @hl.scala{.rep(exactly=...)}.
+                    @li
+                        @b
+                            The same extensive usage of @hl.scala{.flatMap}.@br
+                        @hl.scala{flatMap} allows to retrieve data from one parser and pass it to the next.
+                        The most popular and primitive example is dynamic-sized array with length written at the beginning.
+                        Similar algorithm is used in the @hl.scala{bmp} when header information is passed to the @hl.scala{bmpRow}
+                        that returns new parser for row in this particular bmp file.
 
         @sect{ClassParser}
             @p
-                @div(id := "clssdiv")
-                @script(raw("""demo.DemoMain().clss(document.getElementById("clssdiv"))"""))
-                @i
-                    Given form accepts .class bytecode files for java language and prints names of all fields and methods with their descriptors.
-                    If you haven't any .class files around, you can download
-                    some examples (
-                    @a("Book.java", href:="https://github.com/lihaoyi/fastparse/raw/master/byteparse/shared/src/test/resources/Book.java"),
-                    @a("Book.class", href:="https://github.com/lihaoyi/fastparse/raw/master/byteparse/shared/src/test/resources/Book.class"),
-                    @a("Book2.java", href:="https://github.com/lihaoyi/fastparse/raw/master/byteparse/shared/src/test/resources/Book2.java"),
-                    @a("Book2.class", href:="https://github.com/lihaoyi/fastparse/raw/master/byteparse/shared/src/test/resources/Book2.class"),
-                    @a("CodeTest.java", href:="https://github.com/lihaoyi/fastparse/raw/master/byteparse/shared/src/test/resources/CodeTest.java"),
-                    @a("CodeTest.class", href:="https://github.com/lihaoyi/fastparse/raw/master/byteparse/shared/src/test/resources/CodeTest.class"))
+                The other example byte-parser that FastParse provides is @hl.scala{ClassParser}.
+                It's quite a complex parser that process @code{.class} files with java bytecode,
+                and parses them into a simple structured format. You can see the code here:
+
+            @ul
+                @li
+                    @a("ClassParse", href:="https://github.com/lihaoyi/fastparse/tree/master/byteparse/shared/src/main/scala/byteparse/classparse")
+            @p
+                ClassParse able to retrieve almost full information about given
+                class including all methods, fields, subclasses, code and pack it
+                into the convenient AST. On the similarity with other big parsers
+                it has good set of unit-tests with tests which compile real projects
+                from github (joda-time, junit4, jenkins and etc.) and check each built file.
 
             @p
-                @a("Another byte parser", href:="https://github.com/lihaoyi/fastparse/tree/master/byteparse/shared/src/main/scala/byteparse/classparse")
-                that is present in the FastParse is @hl.scala{ClassParser}.
-                It's quite a complex parser that process .class files from java bytecode.
-                It's able to retrieve almost full information about given class including all methods, fields, subclasses, code
-                and pack it into the convenient AST.
-                On the similarity with other big parsers it has good set of unit-tests
-                with tests which compile real projects from github (joda-time, junit4, jenkins and etc.)
-                and check each built file.
+                Like all FastParse parsers, ClassParse compiles to Javascript using
+                Scala.js and can run in the browser. Below is a short demo of ClassParse
+                in action: upload any @code{.class} file full of Java byte code, and it
+                will parse it and print out the names and signatures of all fields and
+                methods define in that class:
+
+            @div(id := "clssdiv")
+            @script(raw("""demo.DemoMain().clss(document.getElementById("clssdiv"))"""))
+
+            @p
+
+                If you haven't any .class files around, you can download some examples
+                to try:
+            @ul
+                @val files = Seq(
+                    "Book.java", "Book.class",
+                    "Book2.java", "Book2.class",
+                    "CodeTest.java", "CodeTest.class"
+                )
+                @for(file <- files)
+                    @li
+                        @a(file, href:=s"https://github.com/lihaoyi/fastparse/raw/master/byteparse/shared/src/test/resources/$file")
+
+            @p
+                You can download the classfiles and directly try them in this
+                demo, or you can download the sources and compile them yourself
+                with @code{javac} before uploading the generated class file.
 
 @sect{ScalaParse}
 
@@ -1090,20 +1323,24 @@
     @sect{0.4}
         @ul
             @li
-                New @sect.ref{CssParse} in cssparse module
+                New @sect.ref{CssParse} in cssparse module, as an example CSS parser
+                written using FastParse.
+
             @li
-                More abstract version of @hl.scala{Parser} class, that becomes @sect.ref{Parser[T, ElemType, Repr]},
-                with changing all basic parsers in Combinators, Intrinsics and Terminals to conform this new definition.
+                FastParse now supports @sect.ref{Byte Parsers}! You can parse
+                binary data using FastParse, using all the same operators and
+                combinators you may already be familiar with
             @li
-                Convenient Api for @sect.ref{Writing Byte Parsers}.
+                New @sect.ref{BmpParser} and @sect.ref{ClassParser} parsers, as
+                working examples of how Fastparse's new @sect.ref{Byte Parsers}
+                are written.
+
             @li
-                New @sect.ref{BmpParser} in byteparse module.
+                Support for @sect.ref{Streaming Parsing}
+
             @li
-                Java bytecode parser of .class files @sect.ref{ClassParser} in byteparse.classparse module.
-            @li
-                Support for parsing streaming data or @sect.ref{Iterator Parsing}.
-            @li
-                @sect.ref{Unapply} method by @a("volth", href:="https://github.com/volth").
+                @sect.ref{Unapply} method to allow pattern matching on parsers,
+                thanks to @a("volth", href:="https://github.com/volth").
             @li
                 Sharding of build configuration to several separate groups of tests
     @sect{0.3.7}

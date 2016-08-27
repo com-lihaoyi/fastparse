@@ -112,28 +112,31 @@ class ByteApi() extends Api[Byte, Array[Byte]]() {
   }
 }
 
-object allByte extends ByteApi{
+object byte extends ByteApi{
   implicit def parserApi[T, V](p: T)
                               (implicit c: T => core.Parser[V, Byte, Array[Byte]]): ParserApi[V, Byte, Array[Byte]] =
     new ParserApiImpl[V, Byte, Array[Byte]](p)
 
-  val AnyWord = P( AnyByte.rep(exactly=2) )
-  val AnyDword = P( AnyByte.rep(exactly=4) )
+  val Word16 = P( AnyByte.rep(exactly=2) )
+  val Word32 = P( AnyByte.rep(exactly=4) )
+  val Word64 = P( AnyByte.rep(exactly=8) )
 }
-object emptyByteApi extends ByteApi
+object byteNoApi extends ByteApi
 
 object ByteUtils {
 
-  import allByte._
+  import byte._
 
   trait ByteFormat {
     def wrapByteBuffer(byteSeq: ByteSeq): ByteBuffer
 
-    val AnyWordI = P(AnyWord.!).map(wrapByteBuffer(_).getShort & 0xffff)
-    val AnyDwordI = P(AnyDword.!).map(wrapByteBuffer(_).getInt)
+    val Int16 = P(Word16.!).map(wrapByteBuffer(_).getShort & 0xffff)
+    val Int32 = P(Word32.!).map(wrapByteBuffer(_).getInt)
+    val Int64 = P(Word64.!).map(wrapByteBuffer(_).getLong)
+
     // TODO Dword should be unsigned, but the only option is to change it to Long, what seems quite bad
 
-    def repeatWithSize[T](p: Parser[T], sizeParser: Parser[Int] = AnyWordI): Parser[Seq[T]] =
+    def repeatWithSize[T](p: Parser[T], sizeParser: Parser[Int] = Int16): Parser[Seq[T]] =
       P( sizeParser.flatMap(l => p.rep(exactly = l)) )
   }
 

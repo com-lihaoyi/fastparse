@@ -23,6 +23,17 @@ object IteratorTests extends TestSuite {
 
   val tests = TestSuite {
 
+    'basic{
+      import fastparse.all._
+      val p = P( "ab" ~/ "cd".rep().! ~ "ef" | "z" )
+
+      val Parsed.Success(res, i) = p.parseIterator(
+        Iterator("ab", "cd", "cd", "cd", "ef")
+      )
+      
+      assert(res == "cdcdcd")
+    }
+
     'immediateCutDrop{
       import fastparse.all._
       val p = P( "ab" ~/ "cd" | "z" )
