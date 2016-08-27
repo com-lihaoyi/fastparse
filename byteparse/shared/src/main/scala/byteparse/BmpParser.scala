@@ -27,7 +27,7 @@ object BmpParser {
   }
 
   import BmpAst._
-  import ByteUtils.LE._
+  import fastparse.ByteUtils.LE._
 
   val fileHeader = {
     val headerType = AnyWordI

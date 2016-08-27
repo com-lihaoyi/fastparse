@@ -332,7 +332,7 @@ object ClassParser {
 
   import Info._
   import BasicElems._
-  import ByteUtils.BE._
+  import fastparse.ByteUtils.BE._
 
   val constantClassInfo = {
     val name_index = AnyWordI

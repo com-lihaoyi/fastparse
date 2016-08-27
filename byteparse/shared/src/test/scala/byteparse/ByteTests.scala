@@ -23,11 +23,11 @@ object ByteTests extends TestSuite {
       }
 
       'sequence {
-        val ab = P(BS(1) ~ BS(2))
+        val ab = P(BS(1) ~ BS(2)) // or P(Array[Byte](1) ~ Array[Byte](2))
 
-        val Parsed.Success(_, 2) = ab.parse(strToBytes("01 02"))
+        val Parsed.Success(_, 2) = ab.parse(BS(1, 2)) // BS(1, 2) == Array[Byte](1, 2)
 
-        val Parsed.Failure(parser, 1, _) = ab.parse(strToBytes("01 01"))
+        val Parsed.Failure(parser, 1, _) = ab.parse(strToBytes("01 01")) // or BS(1, 1)
         assert(parser == (BS(2): P0))
       }
 
