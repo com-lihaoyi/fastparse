@@ -1,7 +1,7 @@
 package classparse
 
 import classparse.ClassParser
-import fastparse.allByte._
+import fastparse.byte._
 import utest._
 
 

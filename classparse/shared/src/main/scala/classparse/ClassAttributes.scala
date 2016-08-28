@@ -1,6 +1,6 @@
 package classparse
 
-import fastparse.allByte._
+import fastparse.byte._
 
 object ClassAttributes {
   import ClassParser.Info._
@@ -57,7 +57,7 @@ object ClassAttributes {
 
   import fastparse.ByteUtils.BE._
 
-  val constantValue = P( AnyWordI ).map(idx => (classInfo: ClassFileInfo) =>
+  val constantValue = P( UInt16 ).map(idx => (classInfo: ClassFileInfo) =>
     ConstantValueAttribute(
       classInfo.getInfoByIndex[PoolInfo](idx).get match {
         case BasicElemInfo(elem) => elem
@@ -67,10 +67,10 @@ object ClassAttributes {
 
   val code = {
     val exceptionHandler = {
-      val start_pc = AnyWordI
-      val end_pc = AnyWordI
-      val handler_pc = AnyWordI
-      val catch_type = AnyWordI
+      val start_pc = UInt16
+      val end_pc = UInt16
+      val handler_pc = UInt16
+      val catch_type = UInt16
       P( start_pc ~ end_pc ~ handler_pc ~ catch_type ).map {
         case (spc: Int, epc: Int, hpc: Int, ctype: Int) =>
           (classInfo: ClassFileInfo) => ExceptionHandler(
@@ -82,9 +82,9 @@ object ClassAttributes {
       }
     }
 
-    val max_stack = AnyWordI
-    val max_locals = AnyWordI
-    val code = AnyDwordI.flatMap(l => AnyByte.rep(exactly=l).!).map(parseCode)
+    val max_stack = UInt16
+    val max_locals = UInt16
+    val code = Int32.flatMap(l => AnyByte.rep(exactly=l).!).map(parseCode)
     val exception_table = repeatWithSize(exceptionHandler.~/)
     val attributes = repeatWithSize(attributeInfo.~/)
 
@@ -102,10 +102,10 @@ object ClassAttributes {
 
   val innerClasses = {
     val innerClass = {
-      val inner_class_info_index = AnyWordI
-      val outer_class_info_index = AnyWordI
-      val inner_name_index = AnyWordI
-      val inner_class_access_flags = AnyWord.!
+      val inner_class_info_index = UInt16
+      val outer_class_info_index = UInt16
+      val inner_name_index = UInt16
+      val inner_class_access_flags = Word16.!
 
       P( inner_class_info_index ~ outer_class_info_index ~
          inner_name_index ~ inner_class_access_flags ).map {
@@ -126,14 +126,14 @@ object ClassAttributes {
   }
 
   val exceptions =
-    repeatWithSize(AnyWordI).map(exceptionsIdxs =>
+    repeatWithSize(UInt16).map(exceptionsIdxs =>
       (classInfo: ClassFileInfo) => ExceptionsAttribute(
         exceptionsIdxs.map(idx => Class(classInfo, classInfo.getInfoByIndex[ClassInfo](idx).get))
       ))
 
   val enclosingMethod = {
-    val class_index = AnyWordI
-    val method_index = AnyWordI
+    val class_index = UInt16
+    val method_index = UInt16
 
     P( class_index ~ method_index ).map {
       case (classIdx: Int, methodIdx: Int) =>
@@ -155,8 +155,8 @@ object ClassAttributes {
   }
 
   val bootstrapMethods = {
-    val bootstrap_method_ref = AnyWordI
-    val bootstrap_arguments = repeatWithSize(AnyWordI)
+    val bootstrap_method_ref = UInt16
+    val bootstrap_arguments = repeatWithSize(UInt16)
 
     val bootstrapMethod =
       P( bootstrap_method_ref ~ bootstrap_arguments ).map {
@@ -180,10 +180,10 @@ object ClassAttributes {
     "EnclosingMethod" -> enclosingMethod,
     "Synthetic" -> PassWith((classInfo: ClassFileInfo) => SyntheticAttribute),
     "Signature" ->
-      P( AnyWordI ).map(idx => (classInfo: ClassFileInfo) =>
+      P( UInt16 ).map(idx => (classInfo: ClassFileInfo) =>
         SignatureAttribute(classInfo.getStringByIndex(idx))),
     "SourceFile" ->
-      P( AnyWordI ).map(idx => (classInfo: ClassFileInfo) =>
+      P( UInt16 ).map(idx => (classInfo: ClassFileInfo) =>
         SourceFileAttribute(classInfo.getStringByIndex(idx))),
     "Deprecated" -> PassWith((classInfo: ClassFileInfo) => DeprecatedAttribute),
     "BootstrapMethods" -> bootstrapMethods

@@ -100,7 +100,9 @@ object DemoMain {
   @JSExport
   def bmp(container: html.Div) = {
     import fastparse.byte._
-    helperByteFile(container, byteparse.BmpParser.bmp.map(bmp => {
+    import fastparse.BmpTests.BmpParser
+
+    helperByteFile(container, BmpParser.bmp.map(bmp => {
       bmp.bitmapHeader match {
         case h: BmpParser.BmpAst.BitmapInfoHeader =>
           val p = h.infoPart
@@ -118,7 +120,7 @@ object DemoMain {
   @JSExport
   def clss(container: html.Div) = {
     import fastparse.byte._
-    helperByteFile(container, byteparse.classparse.ClassParser.classFile.map(c => {
+    helperByteFile(container, classparse.ClassParser.classFile.map(c => {
       val ast = ClassParser.Ast.convertToAst(c)
       s"""
          |Fields:

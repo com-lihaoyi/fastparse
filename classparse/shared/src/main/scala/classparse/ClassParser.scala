@@ -1,6 +1,6 @@
 package classparse
 
-import fastparse.allByte._
+import fastparse.byte._
 
 import scala.collection.mutable.ArrayBuffer
 // https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7
@@ -334,37 +334,37 @@ object ClassParser {
   import fastparse.ByteUtils.BE._
 
   val constantClassInfo = {
-    val name_index = AnyWordI
+    val name_index = UInt16
     P( BS(7) ~/ name_index ).map(ClassInfo)
   }
 
   val constantFieldRefInfo = {
-    val class_index = AnyWordI
-    val name_and_type_index = AnyWordI
+    val class_index = UInt16
+    val name_and_type_index = UInt16
     P( BS(9) ~/ class_index ~ name_and_type_index ).map(FieldRefInfo.tupled)
   }
 
   val constantMethodRefInfo = {
-    val class_index = AnyWordI
-    val name_and_type_index = AnyWordI
+    val class_index = UInt16
+    val name_and_type_index = UInt16
     P( BS(10) ~/ class_index ~ name_and_type_index ).map(MethodRefInfo.tupled)
   }
 
   val constantInterfaceMethodRefInfo = {
-    val class_index = AnyWordI
-    val name_and_type_index = AnyWordI
+    val class_index = UInt16
+    val name_and_type_index = UInt16
     P( BS(11) ~/ class_index ~ name_and_type_index ).map(InterfaceMethodRefInfo.tupled)
   }
 
   val constantStringInfo = {
-    val string_index = AnyWordI
+    val string_index = UInt16
     P( BS(8) ~/ string_index ).map(StringInfo)
   }
 
-  val constantIntInfo = P( BS(3) ~/ AnyDword.! ).map(bs =>
+  val constantIntInfo = P( BS(3) ~/ Word32.! ).map(bs =>
     BasicElemInfo(IntElem(wrapByteBuffer(bs).getInt))
   )
-  val constantFloatInfo = P( BS(4) ~/ AnyDword.! ).map(bs =>
+  val constantFloatInfo = P( BS(4) ~/ Word32.! ).map(bs =>
     BasicElemInfo(FloatElem(wrapByteBuffer(bs).getFloat))
   )
   val constantLongInfo = P( BS(5) ~/ AnyByte.rep(exactly=8).! ).map(bs =>
@@ -375,30 +375,30 @@ object ClassParser {
   )
 
   val constantNameAndTypeInfo = {
-    val name_index = AnyWordI
-    val descriptor_index = AnyWordI
+    val name_index = UInt16
+    val descriptor_index = UInt16
     P( BS(12) ~/ name_index ~ descriptor_index ).map(NameAndTypeInfo.tupled)
   }
 
   val constantUtf8Info =
-    P( BS(1) ~/ AnyWordI.flatMap(l => AnyByte.rep(exactly=l).!) ).map(Utf8Info)
+    P( BS(1) ~/ UInt16.flatMap(l => AnyByte.rep(exactly=l).!) ).map(Utf8Info)
 
   val constantMethodHandleInfo = {
     val reference_kind = AnyByte.!
-    val reference_index = AnyWordI
+    val reference_index = UInt16
     P( BS(15) ~/ reference_kind ~ reference_index ).map {
       case (refKind, refIdx) => MethodHandleInfo(refKind(0).toInt, refIdx)
     }
   }
 
   val constantMethodTypeInfo = {
-    val descriptor_index = AnyWordI
+    val descriptor_index = UInt16
     P( BS(16) ~/ descriptor_index ).map(MethodTypeInfo)
   }
 
   val constantInvokeDynamicInfo = {
-    val bootstrap_method_attr_index = AnyWordI
-    val name_and_type_index = AnyWordI
+    val bootstrap_method_attr_index = UInt16
+    val name_and_type_index = UInt16
     P( BS(18) ~/ bootstrap_method_attr_index ~ name_and_type_index ).map(InvokeDynamicInfo.tupled)
   }
 
@@ -421,39 +421,39 @@ object ClassParser {
     }
 
   val attributeInfo = {
-    val attribute_name_index = AnyWordI
-    val attributes = AnyDwordI.flatMap(l => AnyByte.rep(exactly = l).!)
+    val attribute_name_index = UInt16
+    val attributes = Int32.flatMap(l => AnyByte.rep(exactly = l).!)
 
     P( attribute_name_index ~ attributes ).map(AttributeInfo.tupled)
   }
 
 
   val fieldInfo = {
-    val access_flags = AnyWord.!
-    val name_index = AnyWordI
-    val descriptor_index = AnyWordI
+    val access_flags = Word16.!
+    val name_index = UInt16
+    val descriptor_index = UInt16
     val attributes = repeatWithSize(attributeInfo.~/)
 
     P( access_flags ~ name_index ~ descriptor_index ~ attributes ).map(FieldInfo.tupled)
   }
 
   val methodInfo = {
-    val access_flags = AnyWord.!
-    val name_index = AnyWordI
-    val descriptor_index = AnyWordI
+    val access_flags = Word16.!
+    val name_index = UInt16
+    val descriptor_index = UInt16
     val attributes = repeatWithSize(attributeInfo.~/)
 
     P(access_flags ~ name_index ~ descriptor_index ~ attributes).map(MethodInfo.tupled)
   }
 
   val classFile = {
-    val minor_version = AnyWordI
-    val major_version = AnyWordI
-    val constant_pool = AnyWordI.flatMap(l => constantPool(l - 1).map(_.reverse))
-    val access_flags = AnyWord.!
-    val this_class = AnyWordI
-    val super_class = AnyWordI
-    val interfaces = repeatWithSize(AnyWordI.~/)
+    val minor_version = UInt16
+    val major_version = UInt16
+    val constant_pool = UInt16.flatMap(l => constantPool(l - 1).map(_.reverse))
+    val access_flags = Word16.!
+    val this_class = UInt16
+    val super_class = UInt16
+    val interfaces = repeatWithSize(UInt16.~/)
     val fields = repeatWithSize(fieldInfo.~/)
     val methods = repeatWithSize(methodInfo.~/)
     val attributes = repeatWithSize(attributeInfo.~/)
