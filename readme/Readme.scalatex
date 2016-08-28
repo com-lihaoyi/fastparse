@@ -368,10 +368,10 @@
 
         @p
             Note that fastparse does not parse @hl.scala{Iterator[Char]} or
-            @hl.scala{Iterator[Byte]}s for performancereasons : most input
+            @hl.scala{Iterator[Byte]}s for performance reasons: most input
             sources make data available in chunks, such as network packets or
             lines from file on the disk.
-            By parsing chunks chunks, FastParse better matches any underlying
+            By parsing chunks, FastParse better matches any underlying
             data source, and itself has better performance parsing larger chunks.
         @p
             Streaming parsing still needs to buffer input in-memory: in particular,
@@ -498,7 +498,7 @@
                     @code{scala.Stream[String]}, as @code{scala.Stream} buffers
                     everything in memory, making it pretty useless from a
                     perspective of "streaming parsing" where you explicitly
-                    @i{don't} wan't to do that.
+                    @i{don't} want to do that.
                 @li
                     Streaming parsing does not (and will likely never) support
                     @lnk("\"async\" or \"push\" parsing", "http://stackoverflow.com/questions/15895124/what-is-push-approach-and-pull-approach-to-parsing").
@@ -1244,7 +1244,7 @@
                 @li
                     @a("ClassParse", href:="https://github.com/lihaoyi/fastparse/tree/master/byteparse/shared/src/main/scala/byteparse/classparse")
             @p
-                ClassParse able to retrieve almost full information about given
+                ClassParse is able to retrieve almost full information about given
                 class including all methods, fields, subclasses, code and pack it
                 into the convenient AST. On the similarity with other big parsers
                 it has good set of unit-tests with tests which compile real projects

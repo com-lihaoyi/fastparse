@@ -249,9 +249,9 @@ object CodeParser {
   val opCodeParsers = {
 
     val localIndex = P( AnyByte.! ).map(b => b(0) & 0xff)
-    val poolIndex = P( Int16 )
-    val offsetIndex = P( Int16 ).map(i => i.toShort)
-    val offsetIndexWide = P( Int32 ).map(i => i.toInt) // TODO It's done because Dword is actually unsigned
+    val poolIndex = P( UInt16 )
+    val offsetIndex = P( UInt16 ).map(i => i.toShort)
+    val offsetIndexWide = P( UInt32 ).map(i => i.toInt) // TODO It's done because Dword is actually unsigned
 
     Map[Int, Parser[OpCode]](
       0x32 -> PassWith(CodeParser.AALoad),
@@ -414,12 +414,12 @@ object CodeParser {
       0xc4 -> PassWith(Wide),
 
       0x10 -> P( AnyByte.! ).map(_(0)).map(BIPush),
-      0x11 -> P( Int16 ).map(i => i.toShort).map(SIPush),
+      0x11 -> P( UInt16 ).map(i => i.toShort).map(SIPush),
       0xbc -> P( AnyByte.! ).map(_(0)).map(NewArray),
       0x84 -> P( AnyByte.! ~ AnyByte.!).map {
         case (idx: Array[Byte], const: Array[Byte]) => IInc(idx(0) & 0xff, const(0).toInt)
       },
-      0xc5 -> P( Int16 ~ AnyByte.! ).map {
+      0xc5 -> P( UInt16 ~ AnyByte.! ).map {
         case (index: Int, dims: Array[Byte]) => MutliANewArray(index, dims(0) & 0xff)
       },
 
@@ -472,22 +472,22 @@ object CodeParser {
       0xc8 -> offsetIndexWide.map(GotoW),
       0xc9 -> offsetIndexWide.map(JSRW),
 
-      0xba -> P( Int16 ~ BS(0, 0) ).map(InvokeDynamic),
-      0xb9 -> P( Int16 ~ AnyByte.! ~ BS(0) ).map {
+      0xba -> P( UInt16 ~ BS(0, 0) ).map(InvokeDynamic),
+      0xb9 -> P( UInt16 ~ AnyByte.! ~ BS(0) ).map {
         case (idx: Int, count: Array[Byte]) => InvokeInterface(idx, count(0) & 0xff)
       },
 
       0xab ->
-        P( Int32 /*default_offset*/ ~
-           Int32 /*n_pairs*/.flatMap(l =>
-             (Int32 /*value*/ ~
-              Int32 /*offset*/).rep(exactly=l))
+        P( UInt32 /*default_offset*/ ~
+           UInt32 /*n_pairs*/.flatMap(l =>
+             (UInt32 /*value*/ ~
+              UInt32 /*offset*/).rep(exactly=l))
          ).map(LookUpSwitch.tupled),
       0xaa ->
-        P( Int32 /*default_offset*/ ~
-           (Int32 /*low*/ ~ Int32 /*high*/).flatMap {
+        P( UInt32 /*default_offset*/ ~
+           (UInt32 /*low*/ ~ UInt32 /*high*/).flatMap {
               case (low: Int, high: Int) =>
-                Int32.rep(exactly=high - low + 1).map(offs => (low, high, offs))
+                UInt32.rep(exactly=high - low + 1).map(offs => (low, high, offs))
             }
          ).map {
             case (defaultOffset: Int, (low: Int, high: Int, offs: Seq[Int])) =>

@@ -130,13 +130,16 @@ object ByteUtils {
   trait ByteFormat {
     def wrapByteBuffer(byteSeq: ByteSeq): ByteBuffer
 
-    val Int16 = P(Word16.!).map(wrapByteBuffer(_).getShort & 0xffff)
+    val UInt16 = P(Word16.!).map(wrapByteBuffer(_).getShort & 0xffff)
+    val UInt32 = P(Word32.!).map(wrapByteBuffer(_).getInt & 0x00000000ffffffffL )
+
+    val Int16 = P(Word16.!).map(wrapByteBuffer(_).getShort)
     val Int32 = P(Word32.!).map(wrapByteBuffer(_).getInt)
     val Int64 = P(Word64.!).map(wrapByteBuffer(_).getLong)
 
     // TODO Dword should be unsigned, but the only option is to change it to Long, what seems quite bad
 
-    def repeatWithSize[T](p: Parser[T], sizeParser: Parser[Int] = Int16): Parser[Seq[T]] =
+    def repeatWithSize[T](p: Parser[T], sizeParser: Parser[Int] = UInt16): Parser[Seq[T]] =
       P( sizeParser.flatMap(l => p.rep(exactly = l)) )
   }
 

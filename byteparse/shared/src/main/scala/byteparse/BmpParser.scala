@@ -30,23 +30,23 @@ object BmpParser {
   import fastparse.ByteUtils.LE._
 
   val fileHeader = {
-    val headerType = Int16
-    val size = Int32
-    val offset = Int32
+    val headerType = UInt16
+    val size = UInt32
+    val offset = UInt32
     P( headerType ~ size ~ Word16 ~ Word16 ~ offset ).map(FileHeader.tupled)
   }
 
   val infoHeaderPart = {
-    val width = Int32
-    val height = Int32
-    val colorPlanes = Int16
-    val bitsPerPixel = Int16
-    val compression = Int32
-    val imageSize = Int32
-    val horzRes = Int32
-    val vertRes = Int32
-    val colorUsed = Int32
-    val colorsImportant = Int32
+    val width = UInt32
+    val height = UInt32
+    val colorPlanes = UInt16
+    val bitsPerPixel = UInt16
+    val compression = UInt32
+    val imageSize = UInt32
+    val horzRes = UInt32
+    val vertRes = UInt32
+    val colorUsed = UInt32
+    val colorsImportant = UInt32
     P(
       width ~ height ~
       colorPlanes ~ bitsPerPixel ~
