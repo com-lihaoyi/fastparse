@@ -423,7 +423,7 @@ object ClassParser {
 
   val attributeInfo = {
     val attribute_name_index = UInt16
-    val attributes = UInt32.flatMap(l => AnyByte.rep(exactly = l).!)
+    val attributes = Int32.flatMap(l => AnyByte.rep(exactly = l).!)
 
     P( attribute_name_index ~ attributes ).map(AttributeInfo.tupled)
   }

@@ -478,16 +478,16 @@ object CodeParser {
       },
 
       0xab ->
-        P( UInt32 /*default_offset*/ ~
-           UInt32 /*n_pairs*/.flatMap(l =>
-             (UInt32 /*value*/ ~
-              UInt32 /*offset*/).rep(exactly=l))
+        P( Int32 /*default_offset*/ ~
+           Int32 /*n_pairs*/.flatMap(l =>
+             (Int32 /*value*/ ~
+              Int32 /*offset*/).rep(exactly=l))
          ).map(LookUpSwitch.tupled),
       0xaa ->
-        P( UInt32 /*default_offset*/ ~
-           (UInt32 /*low*/ ~ UInt32 /*high*/).flatMap {
+        P( Int32 /*default_offset*/ ~
+           (Int32 /*low*/ ~ Int32 /*high*/).flatMap {
               case (low: Int, high: Int) =>
-                UInt32.rep(exactly=high - low + 1).map(offs => (low, high, offs))
+                Int32.rep(exactly=high - low + 1).map(offs => (low, high, offs))
             }
          ).map {
             case (defaultOffset: Int, (low: Int, high: Int, offs: Seq[Int])) =>
