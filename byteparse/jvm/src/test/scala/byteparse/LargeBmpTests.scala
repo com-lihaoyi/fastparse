@@ -6,7 +6,7 @@ import java.nio.file.{Files, Paths}
 import javax.imageio.ImageIO
 
 import utest._
-import fastparse.allByte._
+import fastparse.byte._
 
 object LargeBmpTests extends TestSuite {
   import BmpParser._

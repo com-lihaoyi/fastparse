@@ -3,7 +3,7 @@ package byteparse
 import java.nio.ByteBuffer
 import java.nio.ByteOrder.{LITTLE_ENDIAN => LE}
 
-import fastparse.allByte._
+import fastparse.byte._
 
 object BmpParser {
   object BmpAst {
@@ -30,23 +30,23 @@ object BmpParser {
   import fastparse.ByteUtils.LE._
 
   val fileHeader = {
-    val headerType = AnyWordI
-    val size = AnyDwordI
-    val offset = AnyDwordI
-    P( headerType ~ size ~ AnyWord ~ AnyWord ~ offset ).map(FileHeader.tupled)
+    val headerType = UInt16
+    val size = Int32
+    val offset = Int32
+    P( headerType ~ size ~ Word16 ~ Word16 ~ offset ).map(FileHeader.tupled)
   }
 
   val infoHeaderPart = {
-    val width = AnyDwordI
-    val height = AnyDwordI
-    val colorPlanes = AnyWordI
-    val bitsPerPixel = AnyWordI
-    val compression = AnyDwordI
-    val imageSize = AnyDwordI
-    val horzRes = AnyDwordI
-    val vertRes = AnyDwordI
-    val colorUsed = AnyDwordI
-    val colorsImportant = AnyDwordI
+    val width = Int32
+    val height = Int32
+    val colorPlanes = UInt16
+    val bitsPerPixel = UInt16
+    val compression = Int32
+    val imageSize = Int32
+    val horzRes = Int32
+    val vertRes = Int32
+    val colorUsed = Int32
+    val colorsImportant = Int32
     P(
       width ~ height ~
       colorPlanes ~ bitsPerPixel ~
