@@ -1,4 +1,4 @@
-package byteparse
+package fastparse
 
 import java.awt.Color
 import java.awt.image.BufferedImage
@@ -9,8 +9,8 @@ import utest._
 import fastparse.byte._
 
 object LargeBmpTests extends TestSuite {
-  import BmpParser._
-  import BmpParser.BmpAst._
+  import BmpTests.BmpParser._
+  import BmpTests.BmpParser.BmpAst._
 
   val tests = TestSuite {
     'lena {

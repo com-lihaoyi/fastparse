@@ -12,7 +12,6 @@
 
 @val tests = wd/'fastparse/'shared/'src/'test/'scala/'fastparse
 @val main = wd/'fastparse/'shared/'src/'main/'scala/'fastparse
-@val bytetests = wd/'byteparse/'shared/'src/'test/'scala/'byteparse
 
 @sect("FastParse " + fastparse.Constants.version, "Fast to write, Fast running Parsers in Scala")
     @hl.ref(tests/"MathTests.scala", "val number", "val tests")
@@ -1270,7 +1269,7 @@
             @script(raw("""demo.DemoMain().bmp(document.getElementById("bmpdiv"))"""))
             @i
                 If you haven't any bmp around, you can download classic
-                @a("lena", href:="https://raw.githubusercontent.com/lihaoyi/fastparse/master/byteparse/jvm/src/test/resources/lena.bmp").
+                @a("lena", href:="https://raw.githubusercontent.com/lihaoyi/fastparse/master/fastparse/jvm/src/test/resources/lena.bmp").
 
             @sect{BmpParser Walkthrough}
                 @p

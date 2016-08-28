@@ -1,8 +1,7 @@
-package byteparse
+package fastparse
 
 import fastparse.Logger
 import utest._
-
 
 object ByteTests extends TestSuite {
 

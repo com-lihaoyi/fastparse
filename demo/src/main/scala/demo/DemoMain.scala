@@ -1,7 +1,6 @@
 package demo
 
-import byteparse.BmpParser.BmpAst.BitmapInfoHeader
-import byteparse.classparse.ClassParser
+import classparse.ClassParser
 import cssparse.PrettyPrinter
 import org.scalajs.dom
 import org.scalajs.dom.{Event, UIEvent, html}
@@ -103,7 +102,7 @@ object DemoMain {
     import fastparse.byte._
     helperByteFile(container, byteparse.BmpParser.bmp.map(bmp => {
       bmp.bitmapHeader match {
-        case h: BitmapInfoHeader =>
+        case h: BmpParser.BmpAst.BitmapInfoHeader =>
           val p = h.infoPart
           s"""
             |Width: ${p.width}
