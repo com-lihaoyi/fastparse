@@ -3,11 +3,12 @@ package fastparse
 import utest._
 
 import scala.collection.mutable
+import scala.reflect.ClassTag
 
 object IteratorTests extends TestSuite {
 
-  class LoggedDropsParserInput[ElemType](data: Iterator[IndexedSeq[ElemType]])
-                                        (implicit formatter: ElemTypeFormatter[ElemType])
+  class LoggedDropsParserInput[ElemType: ClassTag](data: Iterator[IndexedSeq[ElemType]])
+                                                  (implicit formatter: ElemTypeFormatter[ElemType])
     extends IteratorParserInput[ElemType](data) {
 
     val drops = mutable.SortedSet.empty[Int]
