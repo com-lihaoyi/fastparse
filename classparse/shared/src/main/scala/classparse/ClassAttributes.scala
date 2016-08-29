@@ -3,10 +3,10 @@ package classparse
 import fastparse.byte._
 
 object ClassAttributes {
-  import ClassParser.Info._
-  import ClassParser.BasicElems._
-  import ClassParser.Ast._
-  import ClassParser._
+  import ClassParse.Info._
+  import ClassParse.BasicElems._
+  import ClassParse.Ast._
+  import ClassParse._
   import CodeParser._
 
   sealed abstract class Attribute

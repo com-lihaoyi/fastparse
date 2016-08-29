@@ -1,6 +1,6 @@
 package classparse
 
-import classparse.ClassParser
+import classparse.ClassParse
 import fastparse.byte._
 import utest._
 
@@ -17,12 +17,12 @@ object TestUtils {
   }
 
   def checkClassAndClassFile(javaClass: Class[_], classFile: Array[Byte]) = {
-    val classInfo = ClassParser.classFile.parse(classFile) match {
+    val classInfo = ClassParse.classFile.parse(classFile) match {
       case Parsed.Success(info, _) => Some(info)
       case f: Parsed.Failure => None
     }
     assert(classInfo.isDefined)
-    val parsedClass = ClassParser.Ast.convertToAst(classInfo.get)
+    val parsedClass = ClassParse.Ast.convertToAst(classInfo.get)
     assert(parsedClass.thisClass.name.replace('/', '.') == javaClass.getName)
     val classFields = TryClass(javaClass.getDeclaredFields.map(_.getName))
     assert(classFields.isEmpty || parsedClass.fields.map(_.name).toSet == classFields.get.toSet)

@@ -1,6 +1,6 @@
 package demo
 
-import classparse.ClassParser
+import classparse.ClassParse
 import cssparse.PrettyPrinter
 import org.scalajs.dom
 import org.scalajs.dom.{Event, UIEvent, html}
@@ -120,8 +120,8 @@ object DemoMain {
   @JSExport
   def clss(container: html.Div) = {
     import fastparse.byte._
-    helperByteFile(container, classparse.ClassParser.classFile.map(c => {
-      val ast = ClassParser.Ast.convertToAst(c)
+    helperByteFile(container, classparse.ClassParse.classFile.map(c => {
+      val ast = ClassParse.Ast.convertToAst(c)
       s"""
          |Fields:
          |${ast.fields.map(field => field.descriptor + " " + field.name).mkString("\n")}

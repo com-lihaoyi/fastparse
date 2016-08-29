@@ -5,7 +5,7 @@ import java.io.InputStream
 import fastparse.{IteratorParserInput, Utils}
 import utest._
 import fastparse.byte._
-import fastparse.BmpTests.BmpParser._
+import fastparse.BmpTests.BmpParse._
 
 import scala.collection.mutable
 object LargeBmpIteratorTests extends TestSuite {
@@ -40,7 +40,7 @@ object LargeBmpIteratorTests extends TestSuite {
 
   val tests = TestSuite {
     'large {
-      val Parsed.Success(_, i) = BmpTests.BmpParser.bmp.parseIterator(lenaIterator)
+      val Parsed.Success(_, i) = BmpTests.BmpParse.bmp.parseIterator(lenaIterator)
       val expectedIndex = lenaIterator.map(_.length).sum
       assert(i == expectedIndex)
     }
@@ -55,7 +55,7 @@ object LargeBmpIteratorTests extends TestSuite {
         }
       }
 
-      val Parsed.Success(_, i) = BmpTests.BmpParser.bmp.parseInput(loggedInput)
+      val Parsed.Success(_, i) = BmpTests.BmpParse.bmp.parseInput(loggedInput)
       println(s"Size: ${lenaIterator.map(_.length).sum}")
       println(s"Max buffer length: ${loggedInput.maxInnerLength}")
     }

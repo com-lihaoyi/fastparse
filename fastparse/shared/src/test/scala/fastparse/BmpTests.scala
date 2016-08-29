@@ -14,7 +14,7 @@ import utest._
 
 object BmpTests extends TestSuite {
 
-  object BmpParser {
+  object BmpParse {
     object BmpAst {
 
       case class FileHeader(headerType: Int, size: Int, offset: Int) // probably useless information in our case
@@ -111,8 +111,8 @@ object BmpTests extends TestSuite {
     }
   }
 
-  import BmpParser._
-  import BmpParser.BmpAst._
+  import BmpParse._
+  import BmpParse.BmpAst._
 
   val tests = TestSuite {
     def compareBmps(bmp1: Bmp, bmp2: Bmp): Boolean ={

@@ -9,8 +9,8 @@ import utest._
 import fastparse.byte._
 
 object LargeBmpTests extends TestSuite {
-  import BmpTests.BmpParser._
-  import BmpTests.BmpParser.BmpAst._
+  import BmpTests.BmpParse._
+  import BmpTests.BmpParse.BmpAst._
 
   val tests = TestSuite {
     'lena {

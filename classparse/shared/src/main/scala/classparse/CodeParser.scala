@@ -250,7 +250,7 @@ object CodeParser {
     val localIndex = P( AnyByte.! ).map(b => b(0) & 0xff)
     val poolIndex = P( UInt16 )
     val offsetIndex = P( UInt16 ).map(i => i.toShort)
-    val offsetIndexWide = P( Int32 ).map(i => i.toInt) // TODO It's done because Dword is actually unsigned
+    val offsetIndexWide = P( UInt32 ).map(i => i.toInt) // TODO It's done because Dword is actually unsigned
 
     Map[Int, Parser[OpCode]](
       0x32 -> PassWith(CodeParser.AALoad),
