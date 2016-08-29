@@ -100,11 +100,11 @@ object DemoMain {
   @JSExport
   def bmp(container: html.Div) = {
     import fastparse.byte._
-    import fastparse.BmpTests.BmpParser
+    import fastparse.BmpTests.BmpParse
 
-    helperByteFile(container, BmpParser.bmp.map(bmp => {
+    helperByteFile(container, BmpParse.bmp.map(bmp => {
       bmp.bitmapHeader match {
-        case h: BmpParser.BmpAst.BitmapInfoHeader =>
+        case h: BmpParse.BmpAst.BitmapInfoHeader =>
           val p = h.infoPart
           s"""
             |Width: ${p.width}
