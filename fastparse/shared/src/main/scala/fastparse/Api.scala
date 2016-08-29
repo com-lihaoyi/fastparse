@@ -6,6 +6,8 @@ import language.experimental.macros
 import fastparse.parsers.{Intrinsics, Terminals}
 import fastparse.Utils.HexUtils
 
+import scala.reflect.ClassTag
+
 /**
  * This is basically a trait which contains
  * the "public" API to fastparse packages
@@ -13,7 +15,9 @@ import fastparse.Utils.HexUtils
 
 class Api[ElemType, Repr]()(implicit elemSetHelper: ElemSetHelper[ElemType],
                             elemFormatter: ElemTypeFormatter[ElemType],
-                            ordering: Ordering[ElemType]) {
+                            ordering: Ordering[ElemType],
+                            numeric: Numeric[ElemType],
+                            ct: ClassTag[ElemType]) {
   type Parsed[+T] = core.Parsed[T, ElemType]
   object Parsed {
     type Failure = core.Parsed.Failure[ElemType]
