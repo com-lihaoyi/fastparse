@@ -8,6 +8,7 @@ import acyclic.file
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.language.experimental.macros
+import scala.reflect.ClassTag
 
 object MacroUtils{
   /**
@@ -162,47 +163,81 @@ object Utils {
    * share the same prefix, one char at a time.
    */
   final class TrieNode[Elem](strings: Seq[IndexedSeq[Elem]])
-                            (implicit helper: ElemSetHelper[Elem], ordering: Ordering[Elem]) {
+                            (implicit helper: ElemSetHelper[Elem],
+                             ordering: Ordering[Elem],
+                             numeric: Numeric[Elem],
+                             ct: ClassTag[Elem]) {
 
-    val (min, max, arr) = {
-      val children = strings.filter(_.nonEmpty)
-                            .groupBy(_(0))
-                            .map { case (k,ss) => k -> new TrieNode(ss.map(_.tail)) }
-      if (children.isEmpty) (0, 0, new Array[TrieNode[Elem]](0))
-      else {
-        val min = helper.toInt(children.keysIterator.min)
-        val max = helper.toInt(children.keysIterator.max)
-        val arr = new Array[TrieNode[Elem]](max - min + 1)
-        for ((k, v) <- children) arr(helper.toInt(k) - min) = v
-        (min, max, arr)
+    private[this] val (rootIndex, arr) = {
+      val buffer = mutable.Buffer.empty[Int]
+
+      def rec(strings: Seq[IndexedSeq[Elem]], index: Int): Int = {
+
+        val (empty, remaining) = strings.partition(_.length == index)
+
+        val firstChars = remaining.map(_(index))
+
+        val children = remaining.groupBy(_(index)).map{case (k, v) => (k, rec(v, index + 1)) }
+        val current = buffer.length
+
+        val state = (empty, remaining) match{
+          case (Nil, Nil) => -1
+          case (Nil, r)   => 0
+          case (e, Nil)   => 1
+          case (e, r)     => 2
+        }
+
+        buffer.append(state)
+
+        if (remaining.nonEmpty){
+          val min = firstChars.min
+          val max = firstChars.max
+
+          buffer.append(numeric.toInt(min))
+          buffer.append(numeric.toInt(max))
+          for(i <- helper.toInt(min) to helper.toInt(max)){
+            children.get(numeric.fromInt(i)) match{
+              case None => buffer.append(Int.MaxValue)
+              case Some(j) => buffer.append(j)
+            }
+          }
+        }
+
+
+        current
       }
-    }
-    val word: Boolean = strings.exists(_.isEmpty) || arr.isEmpty
-    def apply(c: Elem): TrieNode[Elem] = {
-      val ci = helper.toInt(c)
-      if (ci > max || ci < min) null
-      else arr(ci - min)
+
+      (rec(strings, 0), buffer.toArray)
     }
 
     /**
      * Returns the length of the matching string, or -1 if not found
      */
     def query(input: IsReachable[Elem], index: Int): Int = {
-      @tailrec def rec(offset: Int, currentNode: TrieNode[Elem], currentRes: Int): Int = {
-        if (!input.isReachable(index + offset)) currentRes
-        else {
-          val elem = input(index + offset)
-          val next = currentNode(elem)
-          if (next == null) currentRes
-          else rec(
-            offset + 1,
-            next,
-            if (next.word) offset
-            else currentRes
-          )
+      @tailrec def rec(offset: Int, currentNode: Int, currentRes: Int): Int = {
+        arr(currentNode) match{
+          case -1 => -1
+          case 1 => offset
+          case state =>
+            val newRes = if (state == 2) offset else currentRes
+            if (!input.isReachable(index + offset)) newRes
+            else {
+              val elem = input(index + offset)
+              val min = arr(currentNode + 1)
+              val max = arr(currentNode + 2)
+              val toInt = numeric.toInt(elem)
+
+              if (toInt < min || toInt > max) newRes
+              else{
+                val next = arr(currentNode + 3 + toInt - min)
+                if (next == Int.MaxValue) newRes
+                else rec(offset + 1, next, newRes)
+              }
+            }
+
         }
       }
-      rec(0, this, -1)
+      rec(0, rootIndex, -1)
     }
   }
 }

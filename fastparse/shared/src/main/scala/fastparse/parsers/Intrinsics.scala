@@ -4,6 +4,8 @@ import fastparse.Utils._
 import fastparse.core.{ParseCtx, Parsed, Parser, Precedence}
 import fastparse.{ElemSetHelper, ElemTypeFormatter, Utils}
 
+import scala.reflect.ClassTag
+
 /**
  * High-performance intrinsics for parsing common patterns. All
  * of these have equivalent to constructs that can be put together
@@ -69,14 +71,16 @@ object Intrinsics {
   case class StringIn[ElemType, R](strings: IndexedSeq[ElemType]*)
                                   (implicit formatter: ElemTypeFormatter[ElemType],
                                    helper: ElemSetHelper[ElemType],
-                                   ordering: Ordering[ElemType])
+                                   ordering: Ordering[ElemType],
+                                   numeric: Numeric[ElemType],
+                                   ct: ClassTag[ElemType])
       extends Parser[Unit, ElemType, R] {
 
     private[this] val trie = new TrieNode[ElemType](strings)
 
     def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
       val length = trie.query(cfg.input, index)
-      if (length != -1) success(cfg.success, (), index + length + 1, Set.empty, false)
+      if (length != -1) success(cfg.success, (), index + length, Set.empty, false)
       else fail(cfg.failure, index)
     }
     override def toString = {

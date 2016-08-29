@@ -147,12 +147,47 @@ object MiscTests extends TestSuite{
         Parsed.Failure.formatParser("a", IndexedParserInput(""), 0) == """"a":0:0""",
         Parsed.Failure.formatParser("A", IndexedParserInput("B"), 0) == """"A":1:1""")
     }
-    'utils{
-      'trieNode {
+    'trieNode{
+      'basic {
         val names = (0 until 1000).map(_.toString.flatMap(_.toString * 5).toIndexedSeq)
         val trie = new Utils.TrieNode[Char](names)
         for (name <- names)
           assert(trie.query(IndexedParserInput(name), 0) != -1)
+      }
+      'edgeCases{
+        val words = for{
+          a <- 'a' to 'z'
+          b <- 'a' to 'z'
+          c <- 'a' to 'z'
+        } yield s"$a$b$c"
+//        val words = Seq("aaa")
+        val trie = new Utils.TrieNode[Char](words.map(_.toVector))
+        for (word <- words){
+          assert(trie.query(IndexedParserInput(word), 0) == 3)
+          assert(trie.query(IndexedParserInput(word), 1) == -1)
+          assert(trie.query(IndexedParserInput(word.drop(1)), 0) == -1)
+          assert(trie.query(IndexedParserInput(word.dropRight(1)), 0) == -1)
+          assert(trie.query(IndexedParserInput(word + "a_"), 0) == 3)
+          assert(trie.query(IndexedParserInput(word + word.last + "_"), 1) == 3)
+          assert(trie.query(IndexedParserInput(word + word.last + "_"), 2) == -1)
+          assert(trie.query(IndexedParserInput("a_" + word), 0) == -1)
+        }
+      }
+      'overlap{
+        val words = Seq(
+          "abcde",
+          "abc"
+        )
+        val trie = new Utils.TrieNode[Char](words.map(_.toVector))
+        assert(trie.query(IndexedParserInput("abcd"), 0) == 3)
+        val res = trie.query(IndexedParserInput("abcde"), 0)
+        assert(res == 5)
+      }
+      'empty{
+        val words = Seq[String]()
+        val trie = new Utils.TrieNode[Char](words.map(_.toVector))
+        val res = trie.query(IndexedParserInput(""), 0)
+        assert(res == -1)
       }
     }
   }
