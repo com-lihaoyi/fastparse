@@ -143,26 +143,26 @@ lazy val cssparse = crossProject
 lazy val cssparseJVM = cssparse.jvm
 lazy val cssparseJS = cssparse.js
 
-lazy val byteparse = crossProject
+lazy val classparse = crossProject
   .dependsOn(fastparse)
   .settings(shared:_*)
   .settings(
-    name := "byteparse"
+    name := "classparse"
   )
 
-lazy val byteparseJVM = byteparse.jvm
-lazy val byteparseJS = byteparse.js
+lazy val classparseJVM = classparse.jvm
+lazy val classparseJS = classparse.js
 
 lazy val perftests = crossProject
-  .dependsOn(fastparse, pythonparse, scalaparse, cssparse, byteparse)
+  .dependsOn(fastparse % "compile->compile;compile->test", pythonparse, scalaparse, cssparse, classparse)
   .settings(shared:_*)
   .settings(
     name := "perfomance-tests",
     parallelExecution := false
   )
 
-lazy val perftestsJS = perftests.js
 lazy val perftestsJVM = perftests.jvm
+lazy val perftestsJS = perftests.js
 
 lazy val modules = project
   .aggregate(
@@ -174,8 +174,8 @@ lazy val modules = project
     cssparseJVM,
     scalaparseJS,
     scalaparseJVM,
-    byteparseJVM,
-    byteparseJS,
+    classparseJVM,
+    classparseJS,
     utilsJS,
     utilsJVM
   )
@@ -185,7 +185,7 @@ lazy val modules = project
   )
 
 lazy val demo = project.enablePlugins(ScalaJSPlugin)
-  .dependsOn(fastparseJS % "compile->compile;compile->test", scalaparseJS, cssparseJS, byteparseJS)
+  .dependsOn(fastparseJS % "compile->compile;compile->test", scalaparseJS, cssparseJS, classparseJS)
   .settings(shared:_*)
   .settings(
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.8.2",

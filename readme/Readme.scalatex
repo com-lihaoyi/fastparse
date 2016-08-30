@@ -12,8 +12,6 @@
 
 @val tests = wd/'fastparse/'shared/'src/'test/'scala/'fastparse
 @val main = wd/'fastparse/'shared/'src/'main/'scala/'fastparse
-@val bytetests = wd/'byteparse/'shared/'src/'test/'scala/'byteparse
-@val bytemain = wd/'byteparse/'shared/'src/'main/'scala/'byteparse
 
 @sect("FastParse " + fastparse.Constants.version, "Fast to write, Fast running Parsers in Scala")
     @hl.ref(tests/"MathTests.scala", "val number", "val tests")
@@ -1098,7 +1096,7 @@
         This first example demonstrates a basic byte-parser, which parses the
         two bytes @code{1} and @code{2}:
 
-    @hl.ref(bytetests/"ByteTests.scala", Seq("'sequence", ""))
+    @hl.ref(tests/"ByteTests.scala", Seq("'sequence", ""))
 
     @p
         As you can see it has the same underlying structure as previous
@@ -1137,7 +1135,7 @@
             did, except now it captures a @code{BS} (or @code{Array[Byte]})
             rather than a @code{String}
 
-         @hl.ref(bytetests/"ByteTests.scala", Seq("'anychar", ""))
+         @hl.ref(tests/"ByteTests.scala", Seq("'anychar", ""))
 
     @sect{Byte-Specific Parsers}
         @p
@@ -1183,7 +1181,7 @@
             @script(raw("""demo.DemoMain().bmp(document.getElementById("bmpdiv"))"""))
             @i
                 If you haven't any bmp around, you can download classic
-                @a("lena", href:="https://raw.githubusercontent.com/lihaoyi/fastparse/master/byteparse/jvm/src/test/resources/lena.bmp").
+                @a("lena", href:="https://raw.githubusercontent.com/lihaoyi/fastparse/master/fastparse/jvm/src/test/resources/lena.bmp").
 
             @sect{BmpParser Walkthrough}
                 @p
@@ -1195,20 +1193,20 @@
                 @p
                     First of all we import package for Little-Endian support, because BMP format use it.
 
-                @hl.ref(bytemain/"BmpParser.scala", "val bmp")
+                @hl.ref(tests/"BmpTests.scala", "val bmp")
 
                 @p
                     Bmp file consists of two headers (file header and info header) and pixels in rows with padding,
                     the difficulties are that there are several versions of headers and the parser should distinct them and
                     process them correctly, and that the size and padding of rows in bmp file depends on information from header.
 
-                @hl.ref(bytemain/"BmpParser.scala", "val fileHeader", "def bmpRow")
+                @hl.ref(tests/"BmpTests.scala", "val fileHeader", "def bmpRow")
 
                 @p
                     The first problem is reflected in similar parsers describing 5 versions of info header
                     (@hl.scala{v2HeaderPart}, @hl.scala{v2Header}, @hl.scala{v3HeaderPart}, @hl.scala{v3Header}...).
 
-                @hl.ref(bytemain/"BmpParser.scala", "def bmpRow", "val bmp")
+                @hl.ref(tests/"BmpTests.scala", "def bmpRow", "val bmp")
 
                 @p
                     The second problem in the @hl.scala{bmpRow} function that computes the parameters of row and creates parser on a fly.
@@ -1242,7 +1240,7 @@
 
             @ul
                 @li
-                    @a("ClassParse", href:="https://github.com/lihaoyi/fastparse/tree/master/byteparse/shared/src/main/scala/byteparse/classparse")
+                    @a("ClassParse", href:="https://github.com/lihaoyi/fastparse/tree/master/classparse/shared/src/main/scala/classparse")
             @p
                 ClassParse is able to retrieve almost full information about given
                 class including all methods, fields, subclasses, code and pack it
@@ -1272,7 +1270,7 @@
                 )
                 @for(file <- files)
                     @li
-                        @a(file, href:=s"https://github.com/lihaoyi/fastparse/raw/master/byteparse/shared/src/test/resources/$file")
+                        @a(file, href:=s"https://github.com/lihaoyi/fastparse/raw/master/fastparse/shared/src/test/resources/$file")
 
             @p
                 You can download the classfiles and directly try them in this

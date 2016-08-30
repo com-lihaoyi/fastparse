@@ -1,4 +1,3 @@
-package byteparse
 package classparse
 
 import fastparse.byte._

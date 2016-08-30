@@ -45,11 +45,11 @@ matrix:
     # more realistic environment, and make sure things still work, though use
     # a smaller cross-test matrix than for fastparse itself
     - env:
-      - CI_SCRIPT: '"byteparseJVM/test; byteparseJS/test"'
+      - CI_SCRIPT: '"classparseJVM/test; classparseJS/test"'
       scala: 2.10.4
       jdk: oraclejdk7
     - env:
-      - CI_SCRIPT: '"byteparseJVM/test; byteparseJS/test"'
+      - CI_SCRIPT: '"classparseJVM/test; classparseJS/test"'
       scala: 2.11.7
       jdk: oraclejdk8
 

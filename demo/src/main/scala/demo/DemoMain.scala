@@ -1,7 +1,6 @@
 package demo
 
-import byteparse.BmpParser.BmpAst.BitmapInfoHeader
-import byteparse.classparse.ClassParser
+import classparse.ClassParse
 import cssparse.PrettyPrinter
 import org.scalajs.dom
 import org.scalajs.dom.{Event, UIEvent, html}
@@ -101,9 +100,11 @@ object DemoMain {
   @JSExport
   def bmp(container: html.Div) = {
     import fastparse.byte._
-    helperByteFile(container, byteparse.BmpParser.bmp.map(bmp => {
+    import fastparse.BmpTests.BmpParse
+
+    helperByteFile(container, BmpParse.bmp.map(bmp => {
       bmp.bitmapHeader match {
-        case h: BitmapInfoHeader =>
+        case h: BmpParse.BmpAst.BitmapInfoHeader =>
           val p = h.infoPart
           s"""
             |Width: ${p.width}
@@ -119,8 +120,8 @@ object DemoMain {
   @JSExport
   def clss(container: html.Div) = {
     import fastparse.byte._
-    helperByteFile(container, byteparse.classparse.ClassParser.classFile.map(c => {
-      val ast = ClassParser.Ast.convertToAst(c)
+    helperByteFile(container, classparse.ClassParse.classFile.map(c => {
+      val ast = ClassParse.Ast.convertToAst(c)
       s"""
          |Fields:
          |${ast.fields.map(field => field.descriptor + " " + field.name).mkString("\n")}

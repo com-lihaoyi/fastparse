@@ -1,6 +1,6 @@
-package byteparse
 package classparse
 
+import classparse.ClassParse
 import fastparse.Base64.Decoder
 import fastparse.byte._
 import utest._
@@ -9,9 +9,9 @@ import scala.collection.mutable.ArrayBuffer
 
 
 object ClassTests extends TestSuite {
-  import ClassParser.Ast._
-  import ClassParser.Ast.Nop
-  import ClassParser.BasicElems._
+  import ClassParse.Ast._
+  import ClassParse.Ast.Nop
+  import ClassParse.BasicElems._
   import ClassAttributes._
   import CodeParser._
 
@@ -150,16 +150,16 @@ object ClassTests extends TestSuite {
           ArrayBuffer(SourceFileAttribute("Book.java"))
         )
 
-        val Parsed.Success(parsedClassInfo, _) = ClassParser.classFile.parse(classFile)
-        val parsedClass = ClassParser.Ast.convertToAst(parsedClassInfo)
+        val Parsed.Success(parsedClassInfo, _) = ClassParse.classFile.parse(classFile)
+        val parsedClass = ClassParse.Ast.convertToAst(parsedClassInfo)
 
         assert(parsedClass == expected)
 
         for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
-          val Parsed.Success(parsedClassInfo, _) = ClassParser.classFile.parseIterator(
+          val Parsed.Success(parsedClassInfo, _) = ClassParse.classFile.parseIterator(
             classFile.grouped(chunkSize)
           )
-          val parsedClass = ClassParser.Ast.convertToAst(parsedClassInfo)
+          val parsedClass = ClassParse.Ast.convertToAst(parsedClassInfo)
 
           assert(parsedClass == expected)
         }
@@ -557,16 +557,16 @@ object ClassTests extends TestSuite {
           )
         )
 
-        val Parsed.Success(parsedClassInfo, _) = ClassParser.classFile.parse(classFile)
-        val parsedClass = ClassParser.Ast.convertToAst(parsedClassInfo)
+        val Parsed.Success(parsedClassInfo, _) = ClassParse.classFile.parse(classFile)
+        val parsedClass = ClassParse.Ast.convertToAst(parsedClassInfo)
 
         assert(parsedClass == expected)
 
         for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
-          val Parsed.Success(parsedClassInfo, _) = ClassParser.classFile.parseIterator(
+          val Parsed.Success(parsedClassInfo, _) = ClassParse.classFile.parseIterator(
             classFile.grouped(chunkSize)
           )
-          val parsedClass = ClassParser.Ast.convertToAst(parsedClassInfo)
+          val parsedClass = ClassParse.Ast.convertToAst(parsedClassInfo)
 
           assert(parsedClass == expected)
         }
@@ -609,8 +609,8 @@ object ClassTests extends TestSuite {
         /* AttributeTest.class from compiled class AttributeTest.java */
 
 
-        val Parsed.Success(parsedClassInfo, _) = ClassParser.classFile.parse(classFile)
-        val parsedClass = ClassParser.Ast.convertToAst(parsedClassInfo)
+        val Parsed.Success(parsedClassInfo, _) = ClassParse.classFile.parse(classFile)
+        val parsedClass = ClassParse.Ast.convertToAst(parsedClassInfo)
 
         assert(parsedClass.fields == ArrayBuffer(
           Field(
@@ -1494,8 +1494,8 @@ object ClassTests extends TestSuite {
           Return                 //1226: return
         )
 
-        val Parsed.Success(parsedClassInfo, _) = ClassParser.classFile.parse(classFile)
-        val parsedClass = ClassParser.Ast.convertToAst(parsedClassInfo)
+        val Parsed.Success(parsedClassInfo, _) = ClassParse.classFile.parse(classFile)
+        val parsedClass = ClassParse.Ast.convertToAst(parsedClassInfo)
 
         assert(parsedClass.pool == expectedPool)
 
@@ -1505,8 +1505,8 @@ object ClassTests extends TestSuite {
         )
 
         for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
-          val Parsed.Success(parsedClassInfo, _) = ClassParser.classFile.parseIterator(classFile.grouped(chunkSize))
-          val parsedClass = ClassParser.Ast.convertToAst(parsedClassInfo)
+          val Parsed.Success(parsedClassInfo, _) = ClassParse.classFile.parseIterator(classFile.grouped(chunkSize))
+          val parsedClass = ClassParse.Ast.convertToAst(parsedClassInfo)
 
           assert(parsedClass.pool == expectedPool)
 
