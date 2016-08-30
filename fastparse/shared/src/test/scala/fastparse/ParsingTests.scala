@@ -32,6 +32,10 @@ object ParsingTests extends TestSuite{
     }
 
   }
+  def checkFold[T, X](parser: P[T], input: (String, Int), onSuccess: (T, Int) => X, onFailure: (core.Parser[_, Char, _], Int, Parsed.Failure.Extra[Char]) => X, expectedOutput: X): Unit = {
+    val (str, index) = input
+    assert(parser.parse(str, index).fold(onFailure, onSuccess) == expectedOutput)
+  }
   val tests = TestSuite{
 
 
@@ -103,6 +107,14 @@ object ParsingTests extends TestSuite{
         check(("Hello" ~ "Bye").?, ("HelloBoo", 0), Success((), 0))
         checkFail(("Hello" ~/ "Bye").?, ("HelloBoo", 0), 5)
       }
+    }
+    'fold{
+      checkFold("Hello", ("Hello WOrld", 0), (_: Unit, _) => "Parsed", (_, _, _) => "Not Parsed", "Parsed")
+      checkFold("Hello", ("Bye WOrld", 0), (_: Unit, _) => "Parsed", (_, _, _) => "Not Parsed", "Not Parsed")
+      checkFold(("Hello" ~ ("wtf" ~ "omg" | "wtfom")).!, ("Hellowtfom", 0),
+        (v: String, _) => s"Parsed: $v", (_, i, _) => s"Did not parse, failed at index $i", "Parsed: Hellowtfom")
+      checkFold("Hello" ~ ("wtf" ~ "omg" | "bbg"), ("Hellowtfom", 0), (_: Unit, _) => "Parsed",
+        (_, i, _) => s"Did not parse, failed at index $i", "Did not parse, failed at index 5")
     }
   }
 }
