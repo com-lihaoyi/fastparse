@@ -7,12 +7,13 @@ import utest._
  * Same as MathTests, but demonstrating the use of whitespace
  */
 object WhiteSpaceMathTests extends TestSuite{
-  val White = WhitespaceApi.Wrapper{
+  val White = fastparse.WhitespaceApi.Wrapper{
     import fastparse.all._
     NoTrace(" ".rep)
   }
   import fastparse.noApi._
   import White._
+
   def eval(tree: (Int, Seq[(String, Int)])): Int = {
     val (base, ops) = tree
     ops.foldLeft(base){ case (left, (op, right)) => op match{
@@ -20,6 +21,7 @@ object WhiteSpaceMathTests extends TestSuite{
       case "*" => left * right case "/" => left / right
     }}
   }
+
   val number: P[Int] = P( CharIn('0'to'9').rep(1).!.map(_.toInt) )
   val parens: P[Int] = P( "(" ~/ addSub ~ ")" )
   val factor: P[Int] = P( number | parens )
