@@ -13,7 +13,7 @@ trait Types extends Core{
     P( (`private` | `protected`) ~ AccessQualifier.? )
   }
   val Dcl: P0 = {
-    P( Pass ~ ((`val` | `var`) ~/ ValVarDef | `def` ~/ FunDef | `type` ~/ TypeDef) )
+    P( (`val` | `var`) ~/ ValVarDef | `def` ~/ FunDef | `type` ~/ TypeDef )
   }
 
   val Mod: P0 = P( LocalMod | AccessMod | `override` )
@@ -42,7 +42,7 @@ trait Types extends Core{
     // or `() => T`! only cut after parsing one type
     val TupleType = P( "(" ~/ Type.rep(sep= ",".~/) ~ ")" )
     val BasicType = P( TupleType | TypeId ~ ("." ~ `type`).? | `_` )
-    P( BasicType ~ (Pass ~ (TypeArgs | `#` ~/ Id)).rep )
+    P( BasicType ~ (TypeArgs | `#` ~/ Id).rep )
   }
 
   val TypeArgs = P( "[" ~/ Type.rep(sep=",".~/) ~ "]" )
@@ -51,12 +51,12 @@ trait Types extends Core{
   val FunSig: P0 = {
     val FunArg = P( Annot.rep ~ Id ~ (`:` ~/ Type).? ~ (`=` ~/ TypeExpr).? )
     val Args = P( FunArg.rep(1, ",".~/) )
-    val FunArgs = P( OneNLMax ~ "(" ~/ (Pass ~ `implicit`).? ~ Args.? ~ ")" )
+    val FunArgs = P( OneNLMax ~ "(" ~/ `implicit`.? ~ Args.? ~ ")" )
     val FunTypeArgs = P( "[" ~/ (Annot.rep ~ TypeArg).rep(1, ",".~/) ~ "]" )
-    P( (Id | `this`) ~ (Pass ~ FunTypeArgs).? ~~ FunArgs.rep )
+    P( (Id | `this`) ~ (FunTypeArgs).? ~~ FunArgs.rep )
   }
 
-  val TypeBounds: P0 = P( (Pass ~ `>:` ~/ Type).? ~ (`<:` ~/ Type).? )
+  val TypeBounds: P0 = P( (`>:` ~/ Type).? ~ (`<:` ~/ Type).? )
   val TypeArg: P0 = {
     val CtxBounds = P((`<%` ~/ Type).rep ~ (`:` ~/ Type).rep)
     P((Id | `_`) ~ TypeArgList.? ~ TypeBounds ~ CtxBounds)
