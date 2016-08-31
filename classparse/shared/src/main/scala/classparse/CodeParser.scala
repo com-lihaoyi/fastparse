@@ -1,7 +1,7 @@
 package classparse
 
 import fastparse.byte._
-
+import BE._
 object CodeParser {
   sealed abstract class OpCode
 
@@ -243,7 +243,7 @@ object CodeParser {
 
   case object Wide extends OpCode // correct behavior for this command hasn't been implemented yet
 
-  import fastparse.ByteUtils.BE._
+
 
   val opCodeParsers = {
 

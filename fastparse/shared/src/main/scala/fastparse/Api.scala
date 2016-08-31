@@ -92,7 +92,7 @@ class ByteApi() extends Api[Byte, Array[Byte]]() {
     if (seq.length == 1) parsers.Terminals.ElemLiteral(seq(0))
     else parsers.Terminals.Literal(seq)
 
-  object BytesParser {
+  object HexBytesParser {
     import all._
 
     val hexChars = HexUtils.hexChars
@@ -107,25 +107,32 @@ class ByteApi() extends Api[Byte, Array[Byte]]() {
     val bytes = all.P(byteSep ~ byte.rep(sep = byteSep)).map(_.toArray)
   }
 
-  def strToBytes(s: String): Array[Byte] = {
-    BytesParser.bytes.parse(s).get.value
+  /**
+    * Helper method to convert a space-separated string of hexidecimal bytes
+    * (e.g. "01 bc 21 04") into the corresponding Array[Byte]
+    */
+  def hexBytes(s: String): Array[Byte] = {
+    HexBytesParser.bytes.parse(s).get.value
   }
 }
 
-object byte extends ByteApi{
+object byte extends ByteApi {
   implicit def parserApi[T, V](p: T)
                               (implicit c: T => core.Parser[V, Byte, Array[Byte]]): ParserApi[V, Byte, Array[Byte]] =
     new ParserApiImpl[V, Byte, Array[Byte]](p)
 
+  /**
+    * Parses a two-byte word
+    */
   val Word16 = P( AnyByte.rep(exactly=2) )
+  /**
+    * Parses a four-byte word
+    */
   val Word32 = P( AnyByte.rep(exactly=4) )
+  /**
+    * Parses an eight-byte word
+    */
   val Word64 = P( AnyByte.rep(exactly=8) )
-}
-object byteNoApi extends ByteApi
-
-object ByteUtils {
-
-  import byte._
 
   trait ByteFormat {
     def wrapByteBuffer(byteSeq: ByteSeq): ByteBuffer
@@ -142,14 +149,21 @@ object ByteUtils {
     def repeatWithSize[T](p: Parser[T], sizeParser: Parser[Int] = UInt16): Parser[Seq[T]] =
       P( sizeParser.flatMap(l => p.rep(exactly = l)) )
   }
-
+  /**
+    * Parsers for parsing 16, 32 and 64 bit integers in little-endian format
+    */
   object LE extends ByteFormat {
     // Little Endian format
     def wrapByteBuffer(byteSeq: ByteSeq): ByteBuffer = ByteBuffer.wrap(byteSeq).order(LITTLE_ENDIAN)
   }
-
+  /**
+    * Parsers for parsing 16, 32 and 64 bit integers in big-endian format
+    */
   object BE extends ByteFormat {
     // Big Endian format
     def wrapByteBuffer(byteSeq: ByteSeq): ByteBuffer = ByteBuffer.wrap(byteSeq).order(BIG_ENDIAN)
   }
+
+
 }
+object byteNoApi extends ByteApi

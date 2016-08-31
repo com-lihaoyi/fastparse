@@ -1,7 +1,7 @@
 package classparse
 
 import fastparse.byte._
-
+import BE._
 object ClassAttributes {
   import ClassParse.Info._
   import ClassParse.BasicElems._
@@ -55,7 +55,7 @@ object ClassAttributes {
 
   case class BootstrapMethodsAttribute(bootstrapMethods: Seq[BootstrapMethod]) extends Attribute
 
-  import fastparse.ByteUtils.BE._
+
 
   val constantValue = P( UInt16 ).map(idx => (classInfo: ClassFileInfo) =>
     ConstantValueAttribute(

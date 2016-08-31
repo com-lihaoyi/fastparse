@@ -1,7 +1,7 @@
 package classparse
 
 import fastparse.byte._
-
+import BE._
 import scala.collection.mutable.ArrayBuffer
 // https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.7
 
@@ -331,7 +331,7 @@ object ClassParse {
 
   import Info._
   import BasicElems._
-  import fastparse.ByteUtils.BE._
+
 
   val constantClassInfo = {
     val name_index = UInt16

@@ -188,6 +188,24 @@ object ExampleTests extends TestSuite{
           failure.extra.traced.trace == """xml:1:1 / rightTag:1:8 / "abcde":1:10 ..."edcba>""""
         )
       }
+      'flatMapFor{
+        val leftTag = P( "<" ~ (!">" ~ AnyChar).rep(1).! ~ ">" )
+        def rightTag(s: String) = P( "</" ~ s.! ~ ">" )
+        val xml = P(
+          for{
+            s <- leftTag
+            right <- rightTag(s)
+          } yield right
+        )
+
+        val Parsed.Success("a", _) = xml.parse("<a></a>")
+        val Parsed.Success("abcde", _) = xml.parse("<abcde></abcde>")
+
+        val failure = xml.parse("<abcde></edcba>").asInstanceOf[Parsed.Failure]
+        assert(
+          failure.extra.traced.trace == """xml:1:1 / rightTag:1:8 / "abcde":1:10 ..."edcba>""""
+        )
+      }
       'filter{
         val digits = P(CharIn('0' to '9').rep(1).!).map(_.toInt)
         val even = digits.filter(_ % 2 == 0)

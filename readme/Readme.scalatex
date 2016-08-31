@@ -190,6 +190,14 @@
 
                 @p
                     Note that the function given to @hl.scala{.flatMap} is evaluated every time this parser is tried. You should be conscious of the cost of re-creating the resultant parser every time, since FastParse parsers are somewhat expensive to initialize despite being fast per-run. If possible, store the parsers somewhere before-hand or memo-ize/cache them to avoid initializing them wastefully.
+                @p
+                    As is normal in Scala, you can replace a @hl.scala{.flatMap} call with a @hl.scala{for}-comprehension, as below:
+
+                @hl.ref(tests/"ExampleTests.scala", Seq("'flatMapFor", ""))
+
+                @p
+                    Which is equivalent and behaves exactly the same.
+
             @sect{Filter}
                 @hl.ref(tests/"ExampleTests.scala", Seq("'filter", ""))
 
@@ -427,7 +435,7 @@
                 cost, as you can see below...
 
 
-        @sect{Streaming Parsing Performane}
+        @sect{Streaming Parsing Performance}
             @p
                 This next benchmark measures the effect of streaming parsing on
                 runtime performance, using two different chunk-sizes, compared
@@ -639,6 +647,47 @@
 
             @div(id := "jsondiv")
             @script(raw("""demo.DemoMain().json(document.getElementById("jsondiv"))"""))
+
+        @sect{ScalaParse}
+
+            @div(id := "scaladiv")
+            @script(raw("""demo.DemoMain().scalaparser(document.getElementById("scaladiv"))"""))
+
+            @p
+                ScalaParse is a parser for the entire Scala programming language, written using FastParse. This is notable for a few reasons:
+
+            @ul
+                @li
+                    ScalaParse is about 700 lines of code, making it about 1/10th the size of the default parser in @hl.scala{tools.nsc.Global}
+                @li
+                    ScalaParse runs about @sect.ref("Performance", "1/8th the speed") of of the default parser in @hl.scala{tools.nsc.Global}
+                @li
+                    ScalaParse has excellent error reporting due to proper use of @sect.ref{Cuts}, without any code explicitly dedicated to error reporting
+            @p
+                ScalaParse does not currently generate an AST. As you can see, the parse result above is listed as @hl.scala{undefined}. However, that does not make it useless! Even without generating an AST, ScalaParse can be used to:
+
+            @ul
+                @li
+                    Check for errors! ScalaParse provides excellent error reporting on parses, equal or better than that provided by the tools.nsc.Global parser, entirely for free.
+                @li
+                    Prototype extensions to the Scala grammar! Unlike the default tools.nsc.Global parser, ScalaParse makes it trivial to add new rules at various sections of the grammar.
+                @li
+                    Manipulate Scala code sections! It's trivial to wrap various rules in ScalaParse in an @sect.ref{Capture} and use it to pull out the relevant bits of a Scala file for you to use.
+
+
+            @sect{Using ScalaParse}
+                @p
+                To begin using ScalaParse, add
+
+                @hl.scala
+                    "com.lihaoyi" %% "scalaparse" % "@fastparse.Constants.version"
+
+                @p
+                    To your SBT configuration. To use with Scala.js, you'll need
+
+                @hl.scala
+                    "com.lihaoyi" %%% "scalaparse" % "@fastparse.Constants.version"
+
         @sect{PythonParse}
             @p
                 There is now an @a("example Python parser", href:="https://github.com/lihaoyi/fastparse/tree/master/pythonparse/shared/src/main/scala/pythonparse") available under a subproject in the repo. This is a good example of a real-world parser: parsing knotty syntax (including indentation-delimited blocks!), building an AST, and with heavy unit tests.
@@ -1003,6 +1052,23 @@
             @p
                 These operations are not cheap: the bitsets easily take a few KB of memory each, and involve 65k iterations to fill them in. However, since @hl.scala{Parser}s are immutable, this one-time-cost goes from "ridiculous" to "acceptable". All these internal optimizations are completely opaque to the user, who (apart from performance) never need to think about them.
 
+        @sect{Parsing Only}
+            @p
+                Fastparse, unlike libraries like @lnk("Scodec", "https://github.com/scodec/scodec")
+                or Python's @lnk("Construct", "https://pypi.python.org/pypi/construct"),
+                only allows you to define how to parse data from serialized
+                text/bytes into structured data, and not the other way around.
+
+            @p
+                It is probably possible to write a wrapper on top of FastParse
+                that will allow two-directional serialization, but such a thing
+                does not exist right now in the FastParse codebase, and would
+                likely be pretty difficult to design and implement. If you need
+                such a thing you could try writing your own wrapper and (if it
+                works out well) contributing it back to FastParse, or otherwise
+                just use something else like
+                @lnk("Scodec", "https://github.com/scodec/scodec")
+                which has this capability build in.
 
         @sect{Abstraction}
             @p
@@ -1093,49 +1159,30 @@
         (or @hl.scala{Iterator[Array[Byte]]}s) into structured data
 
     @p
-        This first example demonstrates a basic byte-parser, which parses the
-        two bytes @code{1} and @code{2}:
+        This is an example @lnk("UDP Datagram", "https://en.wikipedia.org/wiki/User_Datagram_Protocol")
+        packet-parser implemented using FastParse's byte-parsing api:
 
-    @hl.ref(tests/"ByteTests.scala", Seq("'sequence", ""))
+    @hl.ref(tests/"ByteTests.scala", Seq("'udp", ""), "val bytes =")
 
     @p
         As you can see it has the same underlying structure as previous
-        @sect.ref{Basic} string-parsers, but with some differences:
+        @sect.ref{Basic} string-parsers: it uses @code{~} to @sect.ref{Sequence}
+        parsers, @hl.scala{for}-comprehensions to @sect.ref{FlatMap} them,
+        @hl.scala{!} to @sect.ref{Capture} them, etc..
 
-    @sect{Equivalent Byte Parsers}
-        @p
-            Byte Parsers doesn't bring anything new to the basic set of parsers.
-            @sect.ref{Optional}, @sect.ref{Repeat}, @sect.ref{Capture} and etc.
-            are still here with the same logic, but there are some new names for
-            @hl.scala{Byte} versions of some of them:
+    @p
+        Here is how we use it:
 
-        @ul
-            @li
-                @hl.scala{BS} or @hl.scala{ByteSeq} is an alias for
-                @hl.scala{Array[Byte]}, and is used when defining byte parsers
-                as a replacement for literal strings.
-            @li
-                @sect.ref{AnyChar} becomes @hl.scala{AnyByte}
-             @li
-                @sect.ref{CharPred} becomes @hl.scala{BytePred}
-             @li
-                @sect.ref{CharIn} becomes @hl.scala{ByteIn}
-             @li
-                @sect.ref{CharsWhile} becomes @hl.scala{BytesWhile}
-             @li
-                @p
-                    @hl.scala{StringIn} becomes @hl.scala{SeqIn}
-                @i
-                    It isn't a simple replacement of substrings, and the reason for
-                    this is described in @sect.ref{Abstraction}.
+    @hl.ref(tests/"ByteTests.scala", Seq("'udp", "", "val bytes ="))
 
-         @p
-            For instance, the basic parser with @hl.scala{AnyByte}, used with a
-            @sect.ref{Capture} @code{.!}, works and looks the same as @sect.ref{AnyChar}
-            did, except now it captures a @code{BS} (or @code{Array[Byte]})
-            rather than a @code{String}
+    @p
+        About the same as what you would expect, if you had used FastParse
+        to parse textual Strings.
 
-         @hl.ref(tests/"ByteTests.scala", Seq("'anychar", ""))
+    @p
+        While FastParse's byte-parsing API is similar to the string-parsing
+        API, there are some new primitives that are specific to byte parsers,
+        and some existing primitives that are named slightly differently.
 
     @sect{Byte-Specific Parsers}
         @p
@@ -1162,11 +1209,57 @@
             so you have to pick which one you want to use. You can also @hl.scala{import LE._}
             or @hl.scala{import BE._} if the endian-ness is the same throughout
             your parser, and then use @code{Int16}/@code{Int32}/@code{Int64} directly.
+            Typically, big-endian formats are common in networking applications
+            (e.g. UDP packets) while little-endian formats are common in operating
+            systems and micro-processors.
+
+    @sect{Equivalent Byte Parsers}
+        @p
+            Apart from the byte-specific parsers mentioned above, Fastparse's
+            byte-parsing API has many of the
+
+        @ul
+            @li
+                @hl.scala{BS} or @hl.scala{ByteSeq} is an alias for
+                @hl.scala{Array[Byte]}, and is used for parsing hard-coded
+                sequences of bytes. This is equivalent to the most basic
+                @sect.ref("Basic", "literal string parsers") in Fastparse's
+                string-parsing API
+            @li
+                @sect.ref{AnyChar} becomes @hl.scala{AnyByte}
+            @li
+                @sect.ref{CharPred} becomes @hl.scala{BytePred}
+            @li
+                @sect.ref{CharIn} becomes @hl.scala{ByteIn}
+            @li
+                @sect.ref{CharsWhile} becomes @hl.scala{BytesWhile}
+            @li
+                @hl.scala{StringIn} becomes @hl.scala{SeqIn}
+
+        @p
+            For example, here is a small example using @hl.scala{BS}
+            primitives and @hl.scala{AnyByte}
+
+        @hl.ref(tests/"ByteTests.scala", Seq("'anybyte", ""))
+
+    @sect{Byte Parser Similarities}
+
+        @p
+            Apart from the changes listed above, FastParse's byte-parsing API works about
+            same as it's string-parsing API. @sect.ref{Sequence}, @sect.ref{Repeat},
+            @sect.ref{Optional}, @sect.ref{Either}, @sect.ref{Capture}, @sect.ref{Map},
+            @sect.ref{FlatMap}, @sect.ref{Filter} and many other operators all work
+            the same when parsing bytes as they do when parsing strings.
+
+            The process of @sect.ref{Debugging Parsers}, @sect.ref{Using Cuts}
+            or @sect.ref{Using Log} to figure out what is going on, is all identical
+            between FastParse's byte-parsing and string-parsing APIs.
+
 
     @sect{Example Byte Parsers}
         @sect{BmpParser}
             @p
-                @hl.scala{BmpParser} is a good first example of byte parser:
+                @hl.scala{BmpParser} is a good example of a slightly more complex byte parser:
                 a parser for @lnk("Bitmap image files", "https://en.wikipedia.org/wiki/BMP_file_format").
                 It's not small, but structure is pretty simple. It does not
                 support the full breadth of the Bitmap format, but it supports
@@ -1226,10 +1319,12 @@
                         and the easiest and fastest method to parse them is to write @hl.scala{.rep(exactly=...)}.
                     @li
                         @b
-                            The same extensive usage of @hl.scala{.flatMap}.@br
-                        @hl.scala{flatMap} allows to retrieve data from one parser and pass it to the next.
-                        The most popular and primitive example is dynamic-sized array with length written at the beginning.
-                        Similar algorithm is used in the @hl.scala{bmp} when header information is passed to the @hl.scala{bmpRow}
+                            The same extensive usage of @hl.scala{for}-comprehensions.@br
+                        @hl.scala{for}-comprehensions (equivalent to @hl.scala{flatMap})
+                        allow to retrieve data from one parser and pass it to the next.
+                        The most popular and primitive example is dynamic-sized array with
+                        length written at the beginning. Similar algorithm is used in the
+                        @hl.scala{bmp} when header information is passed to the @hl.scala{bmpRow}
                         that returns new parser for row in this particular bmp file.
 
         @sect{ClassParser}
@@ -1277,48 +1372,8 @@
                 demo, or you can download the sources and compile them yourself
                 with @code{javac} before uploading the generated class file.
 
-@sect{ScalaParse}
-
-    @div(id := "scaladiv")
-    @script(raw("""demo.DemoMain().scalaparser(document.getElementById("scaladiv"))"""))
-
-    @p
-        ScalaParse is a parser for the entire Scala programming language, written using FastParse. This is notable for a few reasons:
-
-    @ul
-        @li
-            ScalaParse is about 700 lines of code, making it about 1/10th the size of the default parser in @hl.scala{tools.nsc.Global}
-        @li
-            ScalaParse runs about @sect.ref("Performance", "1/8th the speed") of of the default parser in @hl.scala{tools.nsc.Global}
-        @li
-            ScalaParse has excellent error reporting due to proper use of @sect.ref{Cuts}, without any code explicitly dedicated to error reporting
-    @p
-        ScalaParse does not currently generate an AST. As you can see, the parse result above is listed as @hl.scala{undefined}. However, that does not make it useless! Even without generating an AST, ScalaParse can be used to:
-
-    @ul
-        @li
-            Check for errors! ScalaParse provides excellent error reporting on parses, equal or better than that provided by the tools.nsc.Global parser, entirely for free.
-        @li
-            Prototype extensions to the Scala grammar! Unlike the default tools.nsc.Global parser, ScalaParse makes it trivial to add new rules at various sections of the grammar.
-        @li
-            Manipulate Scala code sections! It's trivial to wrap various rules in ScalaParse in an @sect.ref{Capture} and use it to pull out the relevant bits of a Scala file for you to use.
-
-
-    @sect{Using ScalaParse}
-        @p
-        To begin using ScalaParse, add
-
-        @hl.scala
-            "com.lihaoyi" %% "scalaparse" % "@fastparse.Constants.version"
-
-        @p
-            To your SBT configuration. To use with Scala.js, you'll need
-
-        @hl.scala
-            "com.lihaoyi" %%% "scalaparse" % "@fastparse.Constants.version"
-
 @sect{Change Log}
-    @sect{0.4}
+    @sect{0.4.0}
         @ul
             @li
                 New @sect.ref{CssParse} in cssparse module, as an example CSS parser
