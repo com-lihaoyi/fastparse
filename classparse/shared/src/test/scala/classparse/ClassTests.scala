@@ -19,7 +19,7 @@ object ClassTests extends TestSuite {
 
     'basic {
       'book {
-        val classFile = strToBytes("CA FE BA BE " +
+        val classFile = hexBytes("CA FE BA BE " +
           "00 00 00 34 00 1D 0A 00 05 00 18 09 00 04 00 19 09 00 04 00 1A 07 00 " +
           "1B 07 00 1C 01 00 05 74 69 74 6C 65 01 00 12 4C 6A 61 76 61 2F 6C 61 " +
           "6E 67 2F 53 74 72 69 6E 67 3B 01 00 07 70 75 62 59 65 61 72 01 00 01 " +
@@ -98,7 +98,7 @@ object ClassTests extends TestSuite {
                 CodeAttribute(1, 1,
                   ArrayBuffer(ALoad0, InvokeSpecial(1), Return),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", strToBytes("00 01 00 00 00 01")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 01 00 00 00 01")))
                 )
               )
             ),
@@ -109,7 +109,7 @@ object ClassTests extends TestSuite {
                 CodeAttribute(1, 1,
                   ArrayBuffer(ALoad0, GetField(2), AReturn),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", strToBytes("00 01 00 00 00 06")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 01 00 00 00 06")))
                 )
               )
             ),
@@ -120,7 +120,7 @@ object ClassTests extends TestSuite {
                 CodeAttribute(1, 1,
                   ArrayBuffer(ALoad0, GetField(3), IReturn),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", strToBytes("00 01 00 00 00 0A")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 01 00 00 00 0A")))
                 )
               )
             ),
@@ -131,7 +131,7 @@ object ClassTests extends TestSuite {
                 CodeAttribute(2, 2,
                   ArrayBuffer(ALoad0, ALoad1, PutField(2), Return),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", strToBytes("00 02 00 00 00 0E 00 05 00 0F")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 02 00 00 00 0E 00 05 00 0F")))
                 )
               )
             ),
@@ -142,7 +142,7 @@ object ClassTests extends TestSuite {
                 CodeAttribute(2, 2,
                   ArrayBuffer(ALoad0, ILoad1, PutField(3), Return),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", strToBytes("00 02 00 00 00 12 00 05 00 13")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 02 00 00 00 12 00 05 00 13")))
                 )
               )
             )
@@ -166,7 +166,7 @@ object ClassTests extends TestSuite {
       }
 
       'book2 {
-        val classFile = strToBytes("CA FE BA BE " +
+        val classFile = hexBytes("CA FE BA BE " +
           "00 00 00 34 00 4D 0A 00 12 00 34 09 00 11 00 35 09 00 11 00 36 09 " +
           "00 11 00 37 09 00 11 00 38 08 00 39 08 00 3A 08 00 3B 08 00 3C 07 " +
           "00 3D 0A 00 0A 00 34 0A 00 0A 00 3E 08 00 3F 0A 00 40 00 41 0A 00 " +
@@ -354,7 +354,7 @@ object ClassTests extends TestSuite {
                     InvokeSpecial(1),
                     Return),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", strToBytes("00 01 00 00 00 01")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 01 00 00 00 01")))
                 )
               )
             ),
@@ -369,7 +369,7 @@ object ClassTests extends TestSuite {
                     GetField(2),
                     AReturn),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", strToBytes("00 01 00 00 00 0a")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 01 00 00 00 0a")))
                 )
               )
             ),
@@ -384,7 +384,7 @@ object ClassTests extends TestSuite {
                     GetField(3),
                     IReturn),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", strToBytes("00 01 00 00 00 0e")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 01 00 00 00 0e")))
                 )
               )
             ),
@@ -399,7 +399,7 @@ object ClassTests extends TestSuite {
                     GetField(4),
                     AReturn),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", strToBytes("00 01 00 00 00 12")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 01 00 00 00 12")))
                 )
               )
             ),
@@ -414,7 +414,7 @@ object ClassTests extends TestSuite {
                     GetField(5),
                     IReturn),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", strToBytes("00 01 00 00 00 16")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 01 00 00 00 16")))
                 )
               )
             ),
@@ -430,7 +430,7 @@ object ClassTests extends TestSuite {
                     PutField(2),
                     Return),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", strToBytes("00 02 00 00 00 1a 00 05 00 1b")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 02 00 00 00 1a 00 05 00 1b")))
                 )
               )
             ),
@@ -446,7 +446,7 @@ object ClassTests extends TestSuite {
                     PutField(3),
                     Return),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", strToBytes("00 02 00 00 00 1e 00 05 00 1f")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 02 00 00 00 1e 00 05 00 1f")))
                 )
               )
             ),
@@ -462,7 +462,7 @@ object ClassTests extends TestSuite {
                     PutField(4),
                     Return),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", strToBytes("00 02 00 00 00 22 00 05 00 23")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 02 00 00 00 22 00 05 00 23")))
                 )
               )
             ),
@@ -478,7 +478,7 @@ object ClassTests extends TestSuite {
                     PutField(5),
                     Return),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", strToBytes("00 02 00 00 00 26 00 05 00 27")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 02 00 00 00 26 00 05 00 27")))
                 )
               )
             ),
@@ -531,11 +531,11 @@ object ClassTests extends TestSuite {
                   ArrayBuffer(
                     BasicAttribute(
                       "LineNumberTable",
-                      strToBytes("00 06 00 00 00 2c 00 20 00 2d 00 26 00 2e 00 2c 00 2f 00 32 00 30 00 35 00 32")
+                      hexBytes("00 06 00 00 00 2c 00 20 00 2d 00 26 00 2e 00 2c 00 2f 00 32 00 30 00 35 00 32")
                     ),
                     BasicAttribute(
                       "StackMapTable",
-                      strToBytes("00 05 20 05 05 05 fc 00 02 07 00 31")
+                      hexBytes("00 05 20 05 05 05 fc 00 02 07 00 31")
                     )
                   )
                 )
@@ -573,7 +573,7 @@ object ClassTests extends TestSuite {
       }
 
       'attributes {
-        val classFile = strToBytes("CA FE BA BE " +
+        val classFile = hexBytes("CA FE BA BE " +
           "00 00 00 34 00 27 0A 00 08 00 1E 07 00 1F 0A 00 02 00 20 07 00 21 " +
           "09 00 02 00 22 07 00 23 0A 00 06 00 1E 07 00 24 01 00 0A 49 6E 6E " +
           "65 72 43 6C 61 73 73 01 00 0C 49 6E 6E 65 72 43 6C 61 73 73 65 73 " +
@@ -643,13 +643,13 @@ object ClassTests extends TestSuite {
                   AThrow),
                 ArrayBuffer(),
                 ArrayBuffer(
-                  BasicAttribute("LineNumberTable", strToBytes("00 03 00 00 00 0c 00 09 00 0d 00 0f 00 0e"))
+                  BasicAttribute("LineNumberTable", hexBytes("00 03 00 00 00 0c 00 09 00 0d 00 0f 00 0e"))
                 )
               ),
               ExceptionsAttribute(ArrayBuffer(Class("java/io/IOException"))),
               DeprecatedAttribute,
               SignatureAttribute("()TT;"),
-              BasicAttribute("RuntimeVisibleAnnotations", strToBytes("00 01 00 1a 00 00"))
+              BasicAttribute("RuntimeVisibleAnnotations", hexBytes("00 01 00 1a 00 00"))
             )
           )
         )

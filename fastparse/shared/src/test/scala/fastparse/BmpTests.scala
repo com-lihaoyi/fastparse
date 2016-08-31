@@ -36,7 +36,7 @@ object BmpTests extends TestSuite {
     }
 
     import BmpAst._
-    import fastparse.ByteUtils.LE._
+    import LE._
 
     val fileHeader = {
       val headerType = UInt16
@@ -88,8 +88,7 @@ object BmpTests extends TestSuite {
     val v4Header = P( BS(108, 0, 0, 0) ~/ v4HeaderPart )
     val v5Header = P( BS(124, 0, 0, 0) ~/ v5HeaderPart )
 
-    val header = P( infoHeader | v2Header |
-      v3Header | v4Header | v5Header)
+    val header = P( infoHeader | v2Header | v3Header | v4Header | v5Header)
 
     def bmpRow(width: Int, bitsPerPixel: Int): P[Seq[Pixel]] = {
       val bytesPerPixel = bitsPerPixel / 8
@@ -99,16 +98,14 @@ object BmpTests extends TestSuite {
       )
     }
 
-    val bmp = P( fileHeader ~ header.flatMap {
-      case header: BitmapHeader =>
-        val infoPart = header.infoPart
-        bmpRow(infoPart.width, infoPart.bitsPerPixel)
-          .rep(exactly=infoPart.height)
-          .map(pixels => (header, pixels))
-    } ).map{
-      case (fileHeader, (bitmapHeader, pixels)) =>
-        Bmp(fileHeader, bitmapHeader, pixels.reverse)
-    }
+    val bmp = P(
+      for{
+        fileHeaderData <- fileHeader
+        headerData <- header
+        pixels <- bmpRow(headerData.infoPart.width, headerData.infoPart.bitsPerPixel)
+                    .rep(exactly=headerData.infoPart.height)
+      }yield Bmp(fileHeaderData, headerData, pixels.reverse)
+    )
   }
 
   import BmpParse._
@@ -124,7 +121,7 @@ object BmpTests extends TestSuite {
     'wiki {
       /* These tests were taken from wiki page https://en.wikipedia.org/wiki/BMP_file_format */
       'example1 {
-        val file1 = strToBytes(
+        val file1 = hexBytes(
           /*file header*/ "42 4d  46 00 00 00  00 00  00 00  36 00 00 00 " +
             /*bitmap header*/ "28 00 00 00  02 00 00 00  02 00 00 00  01 00  18 00  " +
             "00 00 00 00  10 00 00 00  13 0b 00 00  13 0b 00 00  " +
@@ -156,7 +153,7 @@ object BmpTests extends TestSuite {
       }
 
       'example2 {
-        val file1 = strToBytes(
+        val file1 = hexBytes(
           /*file header*/ "42 4d  9A 00 00 00  00 00  00 00  7A 00 00 00 " +
             /*bitmap header*/ "6C 00 00 00  04 00 00 00  02 00 00 00  01 00  20 00  " +
             "03 00 00 00  20 00 00 00  13 0B 00 00  13 0B 00 00 " +
