@@ -454,6 +454,21 @@ object ExampleTests extends TestSuite{
         assert(capturedString == expectedString)
       }
     }
+    'folding{
+      sealed trait AndOr
+      case object And extends AndOr
+      case object Or extends AndOr
+      val and = P(IgnoreCase("And")).map(_ => And)
+      val or = P(IgnoreCase("Or")).map(_ => Or)
+      val andOr = P(and | or)
+
+      def check(input: String, expectedOutput: String) =
+        assert(andOr.parse(input).fold((_, _, _) => s"Cannot parse $input as an AndOr", (v, _) => s"Parsed: $v") == expectedOutput)
+
+      check("AnD", "Parsed: And")
+      check("oR", "Parsed: Or")
+      check("IllegalBooleanOperation", "Cannot parse IllegalBooleanOperation as an AndOr")
+    }
 
   }
 }
