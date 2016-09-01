@@ -12,8 +12,8 @@ object Transformers {
   /**
    * Applies a transformation [[f]] to the result of [[p]]
    */
-  case class Mapper[T, V, ElemType, R](p: Parser[T, ElemType, R], f: T => V) extends Parser[V, ElemType, R]{
-    def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
+  case class Mapper[T, V, ElemType, Repr](p: Parser[T, ElemType, Repr], f: T => V) extends Parser[V, ElemType, Repr]{
+    def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
       p.parseRec(cfg, index) match{
         case s: Mutable.Success[T, ElemType] => success(s, f(s.value), s.index, s.traceParsers, s.cut)
         case f: Mutable.Failure[ElemType] => failMore(f, index, cfg.logDepth)
@@ -22,9 +22,9 @@ object Transformers {
     override def toString = p.toString
   }
 
-  case class FlatMapped[T, V, ElemType, R](p1: Parser[T, ElemType, R], func: T => Parser[V, ElemType, R])
-    extends Parser[V, ElemType, R] {
-    def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
+  case class FlatMapped[T, V, ElemType, Repr](p1: Parser[T, ElemType, Repr], func: T => Parser[V, ElemType, Repr])
+    extends Parser[V, ElemType, Repr] {
+    def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
       p1.parseRec(cfg, index) match{
         case f: Mutable.Failure[ElemType] => failMore(f, index, cfg.logDepth, cut = false)
         case s: Mutable.Success[T, ElemType] => func(s.value).parseRec(cfg, s.index)
@@ -32,9 +32,9 @@ object Transformers {
     }
   }
 
-  case class Filtered[T, ElemType, R](p: Parser[T, ElemType, R], predicate: T => Boolean)
-    extends Parser[T, ElemType, R] {
-    override def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
+  case class Filtered[T, ElemType, Repr](p: Parser[T, ElemType, Repr], predicate: T => Boolean)
+    extends Parser[T, ElemType, Repr] {
+    override def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
       p.parseRec(cfg, index) match{
         case f: Mutable.Failure[ElemType] => failMore(f, index, cfg.logDepth, cut = false)
         case s: Mutable.Success[T, ElemType] =>

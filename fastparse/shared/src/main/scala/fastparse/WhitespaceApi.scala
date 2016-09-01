@@ -22,7 +22,7 @@ object WhitespaceApi {
    */
   case class CustomSequence[+T, +R, +V](WL: P0, p0: P[T], p: P[V], cut: Boolean)
                                        (implicit ev: Sequencer[T, V, R]) extends P[R] {
-    def parseRec(cfg: ParseCtx[Char], index: Int) = {
+    def parseRec(cfg: ParseCtx[Char, String], index: Int) = {
       p0.parseRec(cfg, index) match {
         case f: Mutable.Failure[Char] => failMore(f, index, cfg.logDepth, f.traceParsers, false)
         case Mutable.Success(value0, index0, traceParsers0, cut0) =>

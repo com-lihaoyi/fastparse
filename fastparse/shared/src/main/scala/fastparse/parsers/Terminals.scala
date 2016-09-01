@@ -18,30 +18,30 @@ object Terminals {
   /**
    * A parser that always succeeds, consuming no input
    */
-  case class Pass[ElemType, R]() extends Parser[Unit, ElemType, R]{
-    def parseRec(cfg: ParseCtx[ElemType], index: Int) = success(cfg.success, (), index, Set.empty, false)
+  case class Pass[ElemType, Repr]() extends Parser[Unit, ElemType, Repr]{
+    def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = success(cfg.success, (), index, Set.empty, false)
     override val toString = "Pass"
   }
 
   /**
     * A parser that always succeeds with given result value `t`, consuming no input
     */
-  case class PassWith[T, ElemType, R](t: T) extends Parser[T, ElemType, R]{
-    def parseRec(cfg: ParseCtx[ElemType], index: Int) = success(cfg.success, t, index, Set.empty, false)
+  case class PassWith[T, ElemType, Repr](t: T) extends Parser[T, ElemType, Repr]{
+    def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = success(cfg.success, t, index, Set.empty, false)
   }
 
   /**
    * A parser that always fails immediately
    */
-  case class Fail[ElemType, R]() extends Parser[Nothing, ElemType, R]{
-    def parseRec(cfg: ParseCtx[ElemType], index: Int) = fail(cfg.failure, index)
+  case class Fail[ElemType, Repr]() extends Parser[Nothing, ElemType, Repr]{
+    def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = fail(cfg.failure, index)
     override val toString = "Fail"
   }
   /**
    * Succeeds, consuming a single element
    */
-  case class AnyElem[ElemType, R]() extends Parser[Unit, ElemType, R]{
-    def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
+  case class AnyElem[ElemType, Repr]() extends Parser[Unit, ElemType, Repr]{
+    def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
       val input = cfg.input
       if (!input.isReachable(index)) fail(cfg.failure, index)
       else success(cfg.success, input(index), index+1, Set.empty, false)
@@ -53,8 +53,8 @@ object Terminals {
    * Succeeds if at the start of the input, consuming no input
    */
 
-  case class Start[ElemType, R]() extends Parser[Unit, ElemType, R]{
-    def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
+  case class Start[ElemType, Repr]() extends Parser[Unit, ElemType, Repr]{
+    def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
       if (index == 0) success(cfg.success, (), index, Set.empty, false)
       else fail(cfg.failure, index)
     }
@@ -64,8 +64,8 @@ object Terminals {
   /**
    * Succeeds if at the end of the input, consuming no input
    */
-  case class End[ElemType, R]() extends Parser[Unit, ElemType, R]{
-    def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
+  case class End[ElemType, Repr]() extends Parser[Unit, ElemType, Repr]{
+    def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
       if (!cfg.input.isReachable(index)) success(cfg.success, (), index, Set.empty, false)
       else fail(cfg.failure, index)
     }
@@ -104,10 +104,10 @@ object Terminals {
   /**
    * Parses a literal `IndexedSeq[ElemType]`
    */
-  case class Literal[ElemType, R](s: IndexedSeq[ElemType])
-                              (implicit formatter: ElemTypeFormatter[ElemType])
-       extends Parser[Unit, ElemType, R]{
-    def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
+  case class Literal[ElemType, Repr](s: IndexedSeq[ElemType])
+                                    (implicit formatter: ElemTypeFormatter[ElemType])
+       extends Parser[Unit, ElemType, Repr]{
+    def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
 
       if (startsWith(cfg.input, s, index)) success(cfg.success, (), index + s.length, Set.empty, false)
       else fail(cfg.failure, index)
@@ -118,11 +118,11 @@ object Terminals {
   /**
    * Parses a literal `String` ignoring case
    */
-  case class IgnoreCase[R](s: IndexedSeq[Char])
-                       (implicit formatter: ElemTypeFormatter[Char])
-       extends Parser[Unit, Char, R]{
+  case class IgnoreCase[Repr](s: IndexedSeq[Char])
+                             (implicit formatter: ElemTypeFormatter[Char])
+       extends Parser[Unit, Char, Repr]{
 
-    def parseRec(cfg: ParseCtx[Char], index: Int) = {
+    def parseRec(cfg: ParseCtx[Char, Repr], index: Int) = {
       if (startsWithIgnoreCase(cfg.input, s, index)) success(cfg.success, (), index + s.length, Set.empty, false)
       else fail(cfg.failure, index)
     }
@@ -132,10 +132,10 @@ object Terminals {
   /**
    * Parses a single element
    */
-  case class ElemLiteral[ElemType, R](c: ElemType)
-                                     (implicit formatter: ElemTypeFormatter[ElemType])
-       extends Parser[Unit, ElemType, R]{
-    def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
+  case class ElemLiteral[ElemType, Repr](c: ElemType)
+                                        (implicit formatter: ElemTypeFormatter[ElemType])
+       extends Parser[Unit, ElemType, Repr]{
+    def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
       val input = cfg.input
       if (!input.isReachable(index)) fail(cfg.failure, index)
       else if (input(index) == c) success(cfg.success, c.toString, index + 1, Set.empty, false)
@@ -149,8 +149,8 @@ object Terminals {
    * parse into the input. e.g. useful for providing
    * source locations for AST nodes. Consumes no input.
    */
-  case class Index[ElemType, R]() extends Parser[Int, ElemType, R]{
-    def parseRec(cfg: ParseCtx[ElemType], index: Int) = {
+  case class Index[ElemType, Repr]() extends Parser[Int, ElemType, Repr]{
+    def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
       success(cfg.success, index, index, Set.empty, false)
     }
   }

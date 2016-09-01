@@ -2,6 +2,8 @@ package fastparse
 import all._
 import utest._
 
+import scala.collection.mutable
+
 /**
  * Demonstrates simultaneously parsing and
  * evaluating simple arithmetic expressions
@@ -76,6 +78,76 @@ object MathTests extends TestSuite{
         """ / divMul:1:4 / factor:1:4 / parens:1:4 / (")" | CharIn("+-")):1:8 ..."x))+4" """,
         """ ")":7 ..."x))+4" """
       )
+    }
+
+    'instrument{
+      'simple{
+        val callCount = mutable.Map.empty[String, Int]
+
+
+        val instrumentFunction = (parser: Parser[_], index: Int, continuation: () => Parsed[_]) => {
+          callCount(parser.toString) = callCount.getOrElse(parser.toString, 0) + 1
+        }
+
+        expr.parse("((1+1*2)+(3*4*5))/3", instrument = instrumentFunction)
+
+        val expectedCallCount = Map(
+          "expr" -> 1,
+          "addSub" -> 4,
+          "divMul" -> 6,
+          "factor" -> 10,
+          "number" -> 10,
+          "parens" -> 3
+        )
+        assert(callCount == expectedCallCount)
+      }
+      'continuation{
+        val resultCount = mutable.Map.empty[(String, Boolean), Int]
+        val instrumentFunction = (parser: Parser[_], index: Int, continuation: () => Parsed[_]) => {
+          val result = continuation()
+          val resultKey = (parser.toString, result.isInstanceOf[Parsed.Success[_]])
+          resultCount(resultKey) = resultCount.getOrElse(resultKey, 0) + 1
+        }
+
+        // Good Parse
+        expr.parse("((1+1*2)+(3*4*5))/3", instrument = instrumentFunction)
+
+        val expectedResultCount = Map(
+          ("expr", true) -> 1,
+          ("addSub", true) -> 4,
+          ("divMul", true) -> 6,
+          ("factor", true) -> 10,
+          ("number", true) -> 7,
+          ("number", false) -> 3,
+          ("parens", true) -> 3
+        )
+        assert(resultCount == expectedResultCount)
+
+        // Bad Parse
+        resultCount.clear()
+        expr.parse("((1+1*2)+(3*4*))/3", instrument = instrumentFunction)
+
+        val expectedResultCount2 = Map(
+          ("expr", false) -> 1,
+
+          ("addSub", true) -> 1,
+          ("addSub", false) -> 3,
+
+          ("divMul", true) -> 3,
+          ("divMul", false) -> 3,
+
+          ("factor", true) -> 6,
+          ("factor", false) -> 3,
+
+          ("number", true) -> 5,
+          ("number", false) -> 4,
+
+          ("parens", true) -> 1,
+          ("parens", false) -> 3
+        )
+        assert(resultCount == expectedResultCount2)
+      }
+
     }
   }
 

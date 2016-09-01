@@ -1,0 +1,12 @@
+@import Main._
+@sect{Comparisons}
+    @p
+        FastParse differs from all other parser-combinator libraries in the Scala universe, in quite substantial ways:
+
+    @ul
+        @li
+            Compared to @a("Parboiled2", href:="https://github.com/sirthias/parboiled2"), FastParse does not use macros to compile-time-generate fast parser code. Rather, it acts as an efficient interpreter, sacrificing some speed (1-4x slower) for huge amounts of usability. Parboiled2 in particular has @a("usability problems and bugs", href:="https://groups.google.com/forum/#!msg/scala-internals/4N-uK5YOtKI/9vAdsH1VhqAJ") that make it excruciating difficult to use, and also does not support higher-order rules. FastParse suffers from none of these problems.
+        @li
+            @a("Parboiled1", href:="https://github.com/sirthias/parboiled/wiki") is a Java library, and does not/cannot work on Scala.js
+        @li
+            @a("scala-parser-combinators", href:="https://github.com/scala/scala-parser-combinators") is similar, but poorly executed. It is ~100x slower than FastParse, has an awkward inheritance-based API, and is full of bugs despite being half a decade old. FastParse is faster, has self-contained pure-functional parsers, and fixes bugs e.g. by having the @hl.scala{.log} operator actually work.

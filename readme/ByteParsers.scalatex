@@ -1,0 +1,223 @@
+@import Main._
+@val tests = wd/'fastparse/'shared/'src/'test/'scala/'fastparse
+@val main = wd/'fastparse/'shared/'src/'main/'scala/'fastparse
+
+@sect{Byte Parsers}
+    @p
+        While FastParse was originally designed to parse @hl.scala{String}s,
+        it also provides an API that allows parsing of @hl.scala{Array[Byte]}s
+        (or @hl.scala{Iterator[Array[Byte]]}s) into structured data
+
+    @p
+        This is an example @lnk("UDP Datagram", "https://en.wikipedia.org/wiki/User_Datagram_Protocol")
+        packet-parser implemented using FastParse's byte-parsing api:
+
+    @hl.ref(tests/"ByteTests.scala", Seq("'udp", ""), "val bytes =")
+
+    @p
+        As you can see it has the same underlying structure as previous
+        @sect.ref{Basic} string-parsers: it uses @code{~} to @sect.ref{Sequence}
+        parsers, @hl.scala{for}-comprehensions to @sect.ref{FlatMap} them,
+        @hl.scala{!} to @sect.ref{Capture} them, etc..
+
+    @p
+        Here is how we use it:
+
+    @hl.ref(tests/"ByteTests.scala", Seq("'udp", "", "val bytes ="))
+
+    @p
+        About the same as what you would expect, if you had used FastParse
+        to parse textual Strings.
+
+    @p
+        While FastParse's byte-parsing API is similar to the string-parsing
+        API, there are some new primitives that are specific to byte parsers,
+        and some existing primitives that are named slightly differently.
+
+    @sect{Byte-Specific Parsers}
+        @p
+            Many byte formats use such concepts as Word and Double-Word that just
+            means 2 and 4 bytes, so FastParse's API for Byte Parsing provides
+            special parsers for these cases:
+        @ul
+            @li
+                @code{Word16}, @code{Word32}, @code{Word64}: parses 2 and 4 bytes
+                and 8 bytes respectively, but discards the results
+            @li
+                @code{LE.Int16}, @code{LE.Int32}, @code{LE.Int64}: parses 2 and 4 bytes
+                and 8 bytes respectively, and returns a signed @code{Short}s,
+                @code{Int}s and @code{Long}s from the little-endian bytes
+            @li
+                @code{BE.Int16}, @code{BE.Int32}, @code{BE.Int64}: parses 2 and 4 bytes
+                and 8 bytes respectively, and returns a signed @code{Short}s,
+                @code{Int}s and @code{Long}s from the big-endian bytes
+
+        @p
+            Note the difference between @code{LE} and @code{BE} versions of the
+            @code{IntN} parsers; there are
+            @a("two standards of ordering bytes", href:="https://en.wikipedia.org/wiki/Endianness"),
+            so you have to pick which one you want to use. You can also @hl.scala{import LE._}
+            or @hl.scala{import BE._} if the endian-ness is the same throughout
+            your parser, and then use @code{Int16}/@code{Int32}/@code{Int64} directly.
+            Typically, big-endian formats are common in networking applications
+            (e.g. UDP packets) while little-endian formats are common in operating
+            systems and micro-processors.
+
+    @sect{Equivalent Byte Parsers}
+        @p
+            Apart from the byte-specific parsers mentioned above, Fastparse's
+            byte-parsing API has many of the
+
+        @ul
+            @li
+                @hl.scala{BS} or @hl.scala{ByteSeq} is an alias for
+                @hl.scala{Array[Byte]}, and is used for parsing hard-coded
+                sequences of bytes. This is equivalent to the most basic
+                @sect.ref("Basic", "literal string parsers") in Fastparse's
+                string-parsing API
+            @li
+                @sect.ref{AnyChar} becomes @hl.scala{AnyByte}
+            @li
+                @sect.ref{CharPred} becomes @hl.scala{BytePred}
+            @li
+                @sect.ref{CharIn} becomes @hl.scala{ByteIn}
+            @li
+                @sect.ref{CharsWhile} becomes @hl.scala{BytesWhile}
+            @li
+                @hl.scala{StringIn} becomes @hl.scala{SeqIn}
+
+        @p
+            For example, here is a small example using @hl.scala{BS}
+            primitives and @hl.scala{AnyByte}
+
+        @hl.ref(tests/"ByteTests.scala", Seq("'anybyte", ""))
+
+    @sect{Byte Parser Similarities}
+
+        @p
+            Apart from the changes listed above, FastParse's byte-parsing API works about
+            same as it's string-parsing API. @sect.ref{Sequence}, @sect.ref{Repeat},
+            @sect.ref{Optional}, @sect.ref{Either}, @sect.ref{Capture}, @sect.ref{Map},
+            @sect.ref{FlatMap}, @sect.ref{Filter} and many other operators all work
+            the same when parsing bytes as they do when parsing strings.
+
+            The process of @sect.ref{Debugging Parsers}, @sect.ref{Using Cuts}
+            or @sect.ref{Using Log} to figure out what is going on, is all identical
+            between FastParse's byte-parsing and string-parsing APIs.
+
+
+    @sect{Example Byte Parsers}
+        @sect{BmpParser}
+            @p
+                @hl.scala{BmpParser} is a good example of a slightly more complex byte parser:
+                a parser for @lnk("Bitmap image files", "https://en.wikipedia.org/wiki/BMP_file_format").
+                It's not small, but structure is pretty simple. It does not
+                support the full breadth of the Bitmap format, but it supports
+                enough to parse many common images.
+            @p
+                Like all other FastParse parsers, FastParse's Byte parsers all
+                run in the browser via Scala.js, and so does BmpParser! Here
+                we have a live demo: upload a bitmap file, and will parse it
+                and print out some simple metadata (width, height, etc.):
+
+            @div(id := "bmpdiv")
+            @script(raw("""demo.DemoMain().bmp(document.getElementById("bmpdiv"))"""))
+            @i
+                If you haven't any bmp around, you can download classic
+                @a("lena", href:="https://raw.githubusercontent.com/lihaoyi/fastparse/master/fastparse/jvm/src/test/resources/lena.bmp").
+
+            @sect{BmpParser Walkthrough}
+                @p
+                    Here, we'll walk through the implementation of BmpParser,
+                    which should give you a taste of how FastParse's
+                    @sect.ref{Byte Parsers} work in general.
+                @hl.scala{import fastparse.ByteUtils.LE._}
+
+                @p
+                    First of all we import package for Little-Endian support, because BMP format use it.
+
+                @hl.ref(tests/"BmpTests.scala", "val bmp")
+
+                @p
+                    Bmp file consists of two headers (file header and info header) and pixels in rows with padding,
+                    the difficulties are that there are several versions of headers and the parser should distinct them and
+                    process them correctly, and that the size and padding of rows in bmp file depends on information from header.
+
+                @hl.ref(tests/"BmpTests.scala", "val fileHeader", "def bmpRow")
+
+                @p
+                    The first problem is reflected in similar parsers describing 5 versions of info header
+                    (@hl.scala{v2HeaderPart}, @hl.scala{v2Header}, @hl.scala{v3HeaderPart}, @hl.scala{v3Header}...).
+
+                @hl.ref(tests/"BmpTests.scala", "def bmpRow", "val bmp")
+
+                @p
+                    The second problem in the @hl.scala{bmpRow} function that computes the parameters of row and creates parser on a fly.
+
+                @p
+                    Note also few tricks for parsing binary data.
+                @ul
+                    @li
+                        @b
+                            Most of main elements in bmp format has very simple and plain structure. @br
+                         For instance @hl.scala{fileHeader} and @hl.scala{infoHeaderPart}
+                         are just sequences of @hl.scala{AnyDwordI} or @hl.scala{AnyWordI}
+                    @li
+                        @b
+                            The extensive usage of @hl.scala{.rep(exactly=...)}.@br
+                        This is due to the fact that many binary formats depends on constant-sized blocks
+                        and the easiest and fastest method to parse them is to write @hl.scala{.rep(exactly=...)}.
+                    @li
+                        @b
+                            The same extensive usage of @hl.scala{for}-comprehensions.@br
+                        @hl.scala{for}-comprehensions (equivalent to @hl.scala{flatMap})
+                        allow to retrieve data from one parser and pass it to the next.
+                        The most popular and primitive example is dynamic-sized array with
+                        length written at the beginning. Similar algorithm is used in the
+                        @hl.scala{bmp} when header information is passed to the @hl.scala{bmpRow}
+                        that returns new parser for row in this particular bmp file.
+
+        @sect{ClassParser}
+            @p
+                The other example byte-parser that FastParse provides is @hl.scala{ClassParser}.
+                It's quite a complex parser that process @code{.class} files with java bytecode,
+                and parses them into a simple structured format. You can see the code here:
+
+            @ul
+                @li
+                    @a("ClassParse", href:="https://github.com/lihaoyi/fastparse/tree/master/classparse/shared/src/main/scala/classparse")
+            @p
+                ClassParse is able to retrieve almost full information about given
+                class including all methods, fields, subclasses, code and pack it
+                into the convenient AST. On the similarity with other big parsers
+                it has good set of unit-tests with tests which compile real projects
+                from github (joda-time, junit4, jenkins and etc.) and check each built file.
+
+            @p
+                Like all FastParse parsers, ClassParse compiles to Javascript using
+                Scala.js and can run in the browser. Below is a short demo of ClassParse
+                in action: upload any @code{.class} file full of Java byte code, and it
+                will parse it and print out the names and signatures of all fields and
+                methods define in that class:
+
+            @div(id := "clssdiv")
+            @script(raw("""demo.DemoMain().clss(document.getElementById("clssdiv"))"""))
+
+            @p
+
+                If you haven't any .class files around, you can download some examples
+                to try:
+            @ul
+                @val files = Seq(
+                    "Book.java", "Book.class",
+                    "Book2.java", "Book2.class",
+                    "CodeTest.java", "CodeTest.class"
+                )
+                @for(file <- files)
+                    @li
+                        @a(file, href:=s"https://github.com/lihaoyi/fastparse/raw/master/fastparse/shared/src/test/resources/$file")
+
+            @p
+                You can download the classfiles and directly try them in this
+                demo, or you can download the sources and compile them yourself
+                with @code{javac} before uploading the generated class file.

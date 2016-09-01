@@ -284,15 +284,15 @@ object Mutable{
  *                   reporting. `-1` disables tracing, and any other number
  *                   enables recording of stack-traces and
  */
-case class ParseCtx[ElemType](input: ParserInput[ElemType],
-                              var logDepth: Int,
-                              traceIndex: Int,
-                              originalParser: Parser[_, ElemType, _],
-                              originalIndex: Int,
-                              instrument: (Parser[_, ElemType, _], Int, () => Parsed[_, ElemType]) => Unit,
-                              var isFork: Boolean,
-                              var isCapturing: Boolean,
-                              var isNoCut: Boolean) {
+case class ParseCtx[ElemType, Repr](input: ParserInput[ElemType],
+                                    var logDepth: Int,
+                                    traceIndex: Int,
+                                    originalParser: Parser[_, ElemType, _],
+                                    originalIndex: Int,
+                                    instrument: (Parser[_, ElemType, Repr], Int, () => Parsed[_, ElemType]) => Unit,
+                                    var isFork: Boolean,
+                                    var isCapturing: Boolean,
+                                    var isNoCut: Boolean) {
   require(logDepth >= -1, "logDepth can only be -1 (for no logs) or >= 0")
   require(traceIndex >= -1, "traceIndex can only be -1 (for no tracing) or an index 0")
   val failure = Mutable.Failure[ElemType](
@@ -334,7 +334,7 @@ trait Parser[+T, ElemType, Repr] extends ParserResults[T, ElemType] with Precede
    */
   def parse(input: Repr,
             index: Int = 0,
-            instrument: (Parser[_, _, _], Int, () => Parsed[_, ElemType]) => Unit = null)
+            instrument: (Parser[_, ElemType, Repr], Int, () => Parsed[_, ElemType]) => Unit = null)
            (implicit formatter: ElemTypeFormatter[ElemType],
                      converter: ResultConverter[ElemType, Repr])
       : Parsed[T, ElemType] = {
@@ -343,7 +343,7 @@ trait Parser[+T, ElemType, Repr] extends ParserResults[T, ElemType] with Precede
 
   def parseIterator(input: Iterator[Repr],
                     index: Int = 0,
-                    instrument: (Parser[_, _, _], Int, () => Parsed[_, ElemType]) => Unit = null)
+                    instrument: (Parser[_, ElemType, Repr], Int, () => Parsed[_, ElemType]) => Unit = null)
                    (implicit formatter: ElemTypeFormatter[ElemType],
                     converter: ResultConverter[ElemType, Repr],
                     ct: ClassTag[ElemType])
@@ -353,7 +353,7 @@ trait Parser[+T, ElemType, Repr] extends ParserResults[T, ElemType] with Precede
 
   def parseInput(input: ParserInput[ElemType],
                  index: Int = 0,
-                 instrument: (Parser[_, _, _], Int, () => Parsed[_, ElemType]) => Unit = null)
+                 instrument: (Parser[_, ElemType, Repr], Int, () => Parsed[_, ElemType]) => Unit = null)
                 (implicit formatter: ElemTypeFormatter[ElemType])
       : Parsed[T, ElemType] = {
     parseRec(
@@ -386,7 +386,7 @@ trait Parser[+T, ElemType, Repr] extends ParserResults[T, ElemType] with Precede
   /**
    * Parses the given `input` starting from the given `index` and `logDepth`
    */
-  def parseRec(cfg: ParseCtx[ElemType], index: Int): Mutable[T, ElemType]
+  def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int): Mutable[T, ElemType]
 
   /**
    * Whether or not this parser should show up when [[Parsed.TracedFailure.trace]] is
