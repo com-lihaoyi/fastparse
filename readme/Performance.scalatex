@@ -1,0 +1,51 @@
+@import Main._
+@sect{Performance}
+    @p
+        FastParse will never be able to compete with hand-written recursive descent parsers for speed. However, it's no slouch either; here's a comparison of FastParse with alternatives, using Parboiled2's JSON parsing benchmark, which parses a ~21,500 line JSON file:
+
+    @table(width := "100%", cls := "pure-table")
+        @thead
+            @th{Benchmark}@th{Score}@th{Error}
+        @tbody
+            @tr
+                @td{fastparse}@td{80.536}@td{± 0.942}
+            @tr
+                @td{fastparse-no-trace}@td{89.873}@td{± 0.875}
+            @tr
+                @td{argonaut}@td{164.092}@td{± 2.869}
+            @tr
+                @td{json4s-jackson}@td{285.637}@td{± 3.954}
+            @tr
+                @td{json4s-native}@td{142.964}@td{± 2.076}
+            @tr
+                @td{parboiled2}@td{87.586}@td{± 1.176}
+            @tr
+                @td{scala-parser-combinators}@td{0.976}@td{± 0.018}
+            @tr
+                @td{spray-json}@td{189.784}@td{± 2.825}
+
+
+    @p
+        These numbers are the number of iterations/second of parsing a sample @code{test.json} file, averaged over 200 runs. As you can see, the FastParse based parser comes within a factor of 4 of the fastest hand written parser (Jackson), is just as fast as the Parboiled2 based parser (slightly faster/slower depending if full tracing is enabled), and is almost 100x faster than the scala-parser-combinators library.
+
+    @p
+        In exchange for the perf hit compared to hand-rolled solutions, you get the @sect.ref("Json", "short, super-simple parser definition"), and excellent error free error reporting. While for super-high-performance use cases you may still want a hand-rolled parser, for many ad-hoc situations a FastParse parser would do just fine. Remember, even at "only" 89 iterations per second that is still parsing 1,900,000 lines of JSON every second!
+
+    @p
+        A similar speed ratio can be seen in parsing a @a("sample Scala file", href:="https://github.com/scala-js/scala-js/blob/master/compiler/src/main/scala/org/scalajs/core/compiler/GenJSCode.scala") using FastParse, Parboiled2 and Scalac's inbuilt hand-written Scala-language parser:
+
+    @table(width := "100%", cls := "pure-table")
+        @thead
+            @th{Benchmark}@th{Score}@th{Error}
+        @tbody
+            @tr
+                @td{fastparse}@td{320.7}@td{15.4}
+            @tr
+                @td{fastparse-no-trace}@td{434.7}@td{23.4}
+            @tr
+                @td{parboiled2}@td{1354}@td{7.97}
+            @tr
+                @td{scalac}@td{4888}@td{113}
+
+    @p
+        These numbers are the number of iterations over 30 seconds, average of 4 runs, with 2 runs of warmup (discarded). FastParse performs worse here, at 11.5x slower than Scalac's in-built parser, and 3x slower than the equivalent Parboiled2-based parser. Depending on what you're doing, that may or may not be a problem: ScalaParse still makes progress at 57,027 lines of Scala per second, which despite being slower than the others is still blazing fast.

@@ -1,0 +1,100 @@
+@import Main._
+@val tests = wd/'fastparse/'shared/'src/'test/'scala/'fastparse
+@val main = wd/'fastparse/'shared/'src/'main/'scala/'fastparse
+
+@sect{API Highlights}
+
+    @sect{Parser[T, ElemType, Repr]}
+        @p
+            Fastparse revolves around @hl.scala{Parser[T, ElemType, Repr]}s:
+            a parser that can attempt to parse a value @hl.scala{T} from an input sequence of elements of type @hl.scala{ElemType}.
+            The @hl.scala{Repr} type-parameter is responsible for output type in @sect.ref{Capture},
+            since input is converted to the @hl.scala{IndexedSeq[ElemType]} or @hl.scala{Iterator[IndexedSeq[ElemType]]}
+            during all parsing operations.
+            These are defined as:
+
+        @hl.ref(main/'core/"Parsing.scala", Seq("// Parser", "/*"), "// End Parser")
+
+        @p
+            Typically, you will be dealing with the aliased version of
+            this inside @hl.scala{import fastparse.all._}:
+
+        @hl.scala
+            type Parsed[+T] = core.Parsed[T, String]
+            type Parser[+T] = core.Parser[T, Char, String]
+        @p
+            Or if you're writing @sect.ref{Byte Parsers}:
+
+        @hl.scala
+            type Parsed[+T] = core.Parsed[T, Array[Byte]]
+            type Parser[+T] = core.Parser[T, Byte, Array[Byte]]
+
+        @p
+            The main external API is @hl.scala{.parse} for parsing regular arrays of data
+            and @hl.scala{.parseIterator} for parsing streaming data. (@i{See also @sect.ref{Streaming Parsing}}).
+            As you can see, apart from the @hl.scala{input} parameter,
+            there are a few parameters that you can use to configure the parse.
+            Apart from that, each @hl.scala{Parser[T, ElemType, Repr]} needs
+            to implement @hl.scala{parseRec} which is a less-convenient but
+            more-performant version that FastParse uses internally when
+            performing a parse.
+
+        @p
+            This class also supports an @sect.ref{Unapply} method, which can
+            be used in Scala @hl.scala{match} expressions.
+
+        @p
+            Although the core of @sect.ref{Parser[T, ElemType, Repr]} is simple,
+            a lot of additional functionality is included in the @hl.scala{ParserApi[T, ElemType, Repr]} trait
+            in order to make constructing parsers convenient and concise.
+
+    @sect{ParserApi[T, ElemType, Repr]}
+        @p
+            Apart from the core @hl.scala{Parser},
+            FastParse includes a large set of operations that you can perform on a @hl.scala{Parser}
+            to make composing them more pleasant.
+            These all live in @hl.scala{ParserApi}:
+
+        @hl.ref(main/"ParserApi.scala", "trait ParserApi", "class ParserApiImpl")
+
+        @p
+            There are essentially all short-hand constructors for the parsers in the @hl.scala{object Parser} companion.
+            This is the list of operators that you have available when writing your own parsers using FastParse.
+        @p
+            As mentioned in @sect.ref("Whitespace Handling"),
+            you can choose to ignore the default set of operators by using @hl.scala{import fastparse.noApi}
+            instead of @hl.scala{import fastparse.all}. That way you can use your own set of operators,
+            e.g. the whitespace-sensitive operators described in that section.
+
+    @sect{Parsing Results}
+        @p
+            The two kinds of a @hl.scala{Parsed} result reflect the status of a parse:
+            a success (@hl.scala{Parsed.Success}) or a failure (@hl.scala{Parsed.Failure}).
+            First, both classes can be used in pattern matching to discriminate the parse status.
+            Second, they allow to extract the most commonly-used values.
+            @hl.scala{Parsed.Success} provides the parsed value -
+            the value you are probably most interested in -
+            and the index in the input string till where the parse was performed.
+            @hl.scala{Parsed.Failure} allows you to retrieve the last parser that failed and the index where it failed.
+            Additionally, failure provides an @hl.scala{Parsed.Failure.extra} field that provides precise details about the failure:
+            line and column numbers (via @hl.scala{extra.line} and @hl.scala{extra.col})
+            and most importantly a complete stack trace of the involved parsers, which is accessible via @hl.scala{extra.traced}.
+
+        @p
+            An overview of @hl.scala{Parsed}:
+
+        @hl.ref(main/'core/"Parsing.scala", Seq("object Parsed", "/*"), "/*")
+        @hl.ref(main/'core/"Parsing.scala", Seq("case class Success", "/*"), "object Failure")
+
+        @p
+            Note how @hl.scala{Failure} only contains the parser which failed and a single index where the parse failed.
+            Further debugging information is available via the @hl.scala{Failure.Extra} class.
+            Especially the @hl.scala{TracedFailure} that is lazily-computed via @hl.scala{Extra.traced},
+            provides valuable information: It performs a whole new parse on the input data with additional instrumentation,
+            and provides additional insight into why the parse failed:
+
+        @hl.ref(main/'core/"Parsing.scala", Seq("// TracedFailure", "/*"), "object TracedFailure")
+        @p
+            Computing the @hl.scala{Extra.traced} data is not done by default for performance reasons:
+            the additional run takes about 3x longer than the initial run due to the instrumentation,
+            for a total of 4x slowdown. If you want the information for debugging, though, it will be there.

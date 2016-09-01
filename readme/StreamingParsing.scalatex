@@ -1,0 +1,154 @@
+@import Main._
+@val tests = wd/'fastparse/'shared/'src/'test/'scala/'fastparse
+@val main = wd/'fastparse/'shared/'src/'main/'scala/'fastparse
+
+@sect{Streaming Parsing}
+    @p
+        In addition to the parsing strings, you can also parse "streaming"
+        data from @hl.scala{Iterator}s. To do so, call @hl.scala{.parseIterator}
+        instead of @hl.scala{.parse} in your parser and pass the
+        @hl.scala{Iterator[String]} (or @hl.scala{Iterator[Array[Byte]]} for
+        @sect.ref{Byte Parsers}).
+
+    @hl.ref(tests/"IteratorTests.scala", Seq("'basic", ""))
+
+    @p
+        Note that fastparse does not parse @hl.scala{Iterator[Char]} or
+        @hl.scala{Iterator[Byte]}s for performance reasons: most input
+        sources make data available in chunks, such as network packets or
+        lines from file on the disk.
+        By parsing chunks, FastParse better matches any underlying
+        data source, and itself has better performance parsing larger chunks.
+    @p
+        Streaming parsing still needs to buffer input in-memory: in particular,
+        parsers like @sect.ref{Optional}, @sect.ref{Repeat} or
+        @sect.ref{Either} means a parser may backtrack, and thus FastParse
+        needs to buffer any input from where such a parsers starts parsing.
+        Other parsers like @sect.ref{Capture} do not backtrack, but need
+        to buffer data in order to return the data that gets captured. Using
+        @sect.ref{Cuts} to prevent backtracking, apart from making
+        @sect.ref{Debugging Parsers} easier, also allows FastParse to flush
+        parts of the buffer that it no longer needs to backtrack into.
+
+    @p
+        @i
+            In general every cut in your parser possibly reduces the memory
+            used to buffer input for iterator parsing
+
+
+    @sect{Streaming Parsing Buffer Size}
+        @p
+            This first benchmark measures the maximum size of buffered input
+            when using streaming parsing, for some sample parsers we have in
+            the test suite, for input-chunks of size 1 and 1024:
+
+        @table(width := "100%", cls := "pure-table")
+            @thead
+                @th{Parser}
+                @th{Maximum buffer @br for 1-sized chunk}
+                @th{Maximum buffer @br for 1024-sized chunk}
+                @th{Size of input}
+                @th{Used memory}
+            @tbody
+                @tr
+                    @td{ScalaParse}@td{1555}@td{2523}@td{147894}@td{1.4%}
+                @tr
+                    @td{PythonParse}@td{2006}@td{2867}@td{68558}@td{3.6%}
+                @tr
+                    @td{BmpParse}@td{36}@td{1026}@td{786486}@td{0.01%}
+                @tr
+                    @td{ClassParse}@td{476}@td{1371}@td{332142}@td{0.3%}
+
+        @p
+            As you can see, for these "typical" parsers, some input needs to
+            be buffered to allow backtracking, but it turns out to be only a
+            few percent of the total file size.
+        @p
+            These parsers make heavy use of backtracking operators like
+            @sect.ref{Either} or @sect.ref{Repeat}, but also make
+            heavy use of @sect.ref{Cuts}. This lets FastParse drop buffered
+            input when it knows it can no longer backtrack.
+        @p
+            Another thing to note is the chunk size: a smaller chunk size
+            reduces the granularity of the chunks that get buffered,
+            reducing the buffer size. However, this comes at a performance
+            cost, as you can see below...
+
+
+    @sect{Streaming Parsing Performance}
+        @p
+            This next benchmark measures the effect of streaming parsing on
+            runtime performance, using two different chunk-sizes, compared
+            to the performance of non-streaming parsing:
+
+        @table(width := "100%", cls := "pure-table")
+            @thead
+                @th{Parser}
+                @th{Score on the plain parsing}
+                @th{Score on the iterator parsing @br for 1-sized chunk}
+                @th{Score on the iterator parsing @br for 1024-sized chunk}
+            @tbody
+                @tr
+                    @td{ScalaParse}@td{43}@td{33}@td{43}
+                @tr
+                    @td{PythonParse}@td{1150}@td{600}@td{890}
+                @tr
+                    @td{BmpParse}@td{195}@td{15}@td{40}
+                @tr
+                    @td{ClassParse}@td{160}@td{40}@td{100}
+
+        @p
+            Here, we can see that streaming parsing has a non-trivial effect
+            on performance: ScalaParse seems unaffected by a chunks of size
+            1024, and takes a 25% performance hit for chunks of size 1, but
+            PythonParse takes a significant hit (25%, 47%) and ClassParse
+            and BmpParse have it much worse. While smaller chunk sizes
+            results in smaller buffers, it also comes with a performance
+            cost. Exactly how big you want your input chunks to be is up to
+            you to decide: FastParse will accept an iterator of chunks
+            as large or as small as you want.
+
+        @p
+            In general, Streaming Parsing it always going to be a
+            performance hit over parsing a single @code{String} you
+            pre-loaded in memory. The point of streaming parsing is to
+            handle cases where you can't/don't-want-to load everything in
+            memory. In that case, if the choice is between slightly-slower
+            parsing or an @code{OutOfMemory} error, streaming parsing is
+            a good option to have.
+
+    @sect{Streaming Parsing Limitations}
+        @p
+            Apart from the performance/memory tradeoff mentioned above,
+            streaming parsing has some limitations that it is worth being aware of:
+        @ul
+            @li
+                Performance of iterator parsing is always going to be
+                slower than performance of raw @code{String} or @code{Array[Byte]}
+                parsing: this is unavoidable given the overhead of maintaining
+                and trimming the input buffer
+            @li
+                Memory use when parsing iterators is always going to depend
+                on aggressive use of @sect.ref{Cuts} within the parser: most
+                real-world parsers rely heavily on @sect.ref{Optional},
+                @sect.ref{Repeat} and @sect.ref{Either}, all of which will
+                cause input to be buffered in memory unless you use
+                @sect.ref{Cuts} to avoid backtracking
+            @li
+                You can't use @sect.ref{Tracing} after parsing an iterator:
+                tracing performs a second parse on the same input to generate
+                its error information, and the iterator input gets exhausted after
+                the first parsing pass and are not available for a second time.
+            @li
+                Streaming parsing does not support parsing
+                @code{scala.Stream[String]}, as @code{scala.Stream} buffers
+                everything in memory, making it pretty useless from a
+                perspective of "streaming parsing" where you explicitly
+                @i{don't} want to do that.
+            @li
+                Streaming parsing does not (and will likely never) support
+                @lnk("\"async\" or \"push\" parsing", "http://stackoverflow.com/questions/15895124/what-is-push-approach-and-pull-approach-to-parsing").
+                This is because FastParse's entire execution model is based
+                on a straightforward recursive-descent over the input stream.
+                It's unlikely we'll ever be able to graft async-parsing
+                on top of this execution model.

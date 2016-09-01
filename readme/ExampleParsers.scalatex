@@ -1,0 +1,216 @@
+@import Main._
+@val tests = wd/'fastparse/'shared/'src/'test/'scala/'fastparse
+@val main = wd/'fastparse/'shared/'src/'main/'scala/'fastparse
+
+@sect{Example Parsers}
+    @p
+        Above, we've already covered all the individual bits and pieces that make writing a parser possible. But how does that fit together? Let's take a look at some examples.
+
+    @sect{Math}
+        @hl.ref(tests/"MathTests.scala", "val number", "val tests")
+
+
+        @p
+            This is a small arithmetic expression parser, the same one shown at the top of this page. It parses only whole integers, parentheses, @hl.scala{+-*/}, and no whitespace.
+        @p
+            Things to note:
+
+        @ul
+            @li
+                The various sub-parsers are all of type @hl.scala{Parser[Int]}, indicating that they result in an @hl.scala{Int} if successful. Many of the type annotations could be removed due to type-inference, but they're shown here for clarity
+            @li
+                @hl.scala{divMul} and @hl.scala{addSub} are separated out, in order to properly account for precedence
+            @li
+                We evaluate the expression as the parse progresses, meaning we never actually build an tree structure from the input string
+            @li
+                In order to convert the parsed strings to integers, we @hl.scala{map} on the @hl.scala{eval} function, which itself is defined earlier:
+
+        @hl.ref(tests/"MathTests.scala", "def eval", "val number")
+
+        @p
+            This is a small example, but it works. We check it using a helper to verify that every parse results in the expected integer:
+
+        @hl.ref(tests/"MathTests.scala", "def check")
+
+        @p
+            Try it out yourself! Remember that it does not handle whitespace:
+
+        @div(id := "mathdiv")
+        @script(raw("""demo.DemoMain().math(document.getElementById("mathdiv"))"""))
+    @sect{Whitespace Handling}
+        @hl.ref(tests/"WhiteSpaceMathTests.scala", "val White", "val tests")
+
+        @p
+            To handle whitespace and other non-significant characters with FastParse, use the @hl.scala{WhitespaceApi} as a substitue for the normal API that is provided for parsers. This modifies the @hl.scala{~} and @hl.scala{.rep} operators to consume all non-trailing whitespace and ignoring it.
+
+        @p
+            Note how you can pass in whatever definition of whitespace you want: here we're passing in a simple @hl.scala{" ".rep}, but in a more sophisticated parser you may wish to include tabs, newlines, comments or even nested comments. The whitespace parser can be arbitrarily complex.
+
+        @p
+            Note also how we're importing from @hl.scala{fastparse.noApi} instead of @hl.scala{fastparse.all}, and then substituting it with our one whitespace-consuming parser API. Other than that, the parser is identical except for added whitespace parsers at the start and end of the @hl.scala{expr} rule.
+
+        @p
+            Here it is in action:
+
+        @hl.ref(tests/"WhiteSpaceMathTests.scala", "def check")
+
+        @p
+            Or try it yourself:
+
+        @div(id := "wsmathdiv")
+        @script(raw("""demo.DemoMain().whitespaceMath(document.getElementById("wsmathdiv"))"""))
+
+    @sect{Indentation Grammars}
+        @hl.ref(tests/"IndentationTests.scala", "def eval", "val tests")
+        @p
+            Here is a grammar that is used to parse a simple indentation-based math grammar. To understand the grammar it is trying to parse, it is worth looking at the test data:
+
+        @hl.ref(tests/"IndentationTests.scala", "def check", Seq("check(", "check(", "check("))
+
+        @p
+            As you can see, it is basically a prefix math evaluator, where you use indentation to pass the numbers or expressions to each operator to operate on.
+
+        @p
+            As for the parser, the novel things are:
+
+        @ul
+            @li
+                All the rules live in a class parametrized on the @hl.scala{indent} that is currently in place
+            @li
+                At each level, the @hl.scala{factor}s (@hl.scala{number}s or further @hl.scala{block}s) inside a block are separated by a newline and @hl.scala{indent} spaces
+            @li
+                The initial top-level @hl.scala{expr} rule starts off with indentation @hl.scala{0}
+            @li
+                After parsing an operator, we use @hl.scala{deeper} to figure out how deep the first line of the indented block is.
+            @li
+                We then use @hl.scala{.flatMap} to increment the indentation to the new value and parse the @hl.scala{factor}s at that indentation.
+
+        @p
+            Note how there is no pre-processing, and no lexining phase where the lexer has to guess where in the token stream to inject synthetic indent and dedent tokens, Everything happens in a single pass.
+        @p
+            Try it out!
+        @div(id := "indentdiv")
+        @script(raw("""demo.DemoMain().indentation(document.getElementById("indentdiv"))"""))
+
+    @sect{Json}
+        @hl.ref(tests/"JsonTests.scala", "Here is the parser", "val tests")
+
+        @p
+            This is a somewhat larger example than the math parser shown above. In it, we parse a JSON expression from a string, including all the proper handling for whitespace and error-handling built in.
+
+        @p
+            Things to note:
+
+        @ul
+            @li
+                We use cuts (@hl.scala{~/}) liberally in order to improve the quality of errors. Anywhere there's an @sect.ref{Either} or @sect.ref{Repeat}, the children have cuts once the parse has progressed far enough backtracking isn't an option.
+            @li
+                We use @hl.scala{CharIn} and @hl.scala{CharsWhile} quite a lot, in order to speed up the common case of consuming lots of boring characters.
+            @li
+                In @hl.scala{strChars}, we break out of @hl.scala{CharsWhile} closing quote (@hl.scala{'"'}) or whenever we see the start of an escape sequence (@hl.scala{'\'}). Although @hl.scala{CharsWhile} can't process these multi-char sequences, we let the @hl.scala{escape} parser deal with these before trying to fall back to @hl.scala{strChars} after. This lets us speed up the "common" case of consuming large numbers of non-escape characters, while still properly handling escapes.
+            @li
+                We use @hl.scala{.map} to convert the various things we parse into instances of our own @hl.scala{Js.Val} JSON AST:
+
+
+        @hl.ref(tests/"JsonTests.scala", "object Js {", "Here is the parser")
+
+        @p
+            We can verify that this parser builds the JSON tree that we expect:
+
+        @hl.ref(tests/"JsonTests.scala", Seq("'jsonExpr", ""))
+
+        @p
+            And that it provides good error messages in the case of mal-formed JSON, even for moderately-sized fragemnts
+
+        @val failPath = Seq("'fail", "* -", "* -", "* -", "* -", "* -", "* -", "\"\"\"", "")
+        @hl.ref(tests/"JsonTests.scala", failPath, "\"\"\"")
+
+        @hl.ref(tests/"JsonTests.scala", failPath ++ Seq("\"\"\"", "\"\"\"", ""), "\"\"\"")
+
+        @p
+            Here, we're missing a square bracket after the @hl.scala{"phoneNumbers"} key, and so the parser expects to find a single JSON expression. It finds a JSON object, and then fails reporting that it expected to find the next key (a string), but instead found @hl.scala{"{\n"} at that index.
+
+        @p
+            Try it out!
+
+        @div(id := "jsondiv")
+        @script(raw("""demo.DemoMain().json(document.getElementById("jsondiv"))"""))
+
+    @sect{ScalaParse}
+
+        @div(id := "scaladiv")
+        @script(raw("""demo.DemoMain().scalaparser(document.getElementById("scaladiv"))"""))
+
+        @p
+            ScalaParse is a parser for the entire Scala programming language, written using FastParse. This is notable for a few reasons:
+
+        @ul
+            @li
+                ScalaParse is about 700 lines of code, making it about 1/10th the size of the default parser in @hl.scala{tools.nsc.Global}
+            @li
+                ScalaParse runs about @sect.ref("Performance", "1/8th the speed") of of the default parser in @hl.scala{tools.nsc.Global}
+            @li
+                ScalaParse has excellent error reporting due to proper use of @sect.ref{Cuts}, without any code explicitly dedicated to error reporting
+        @p
+            ScalaParse does not currently generate an AST. As you can see, the parse result above is listed as @hl.scala{undefined}. However, that does not make it useless! Even without generating an AST, ScalaParse can be used to:
+
+        @ul
+            @li
+                Check for errors! ScalaParse provides excellent error reporting on parses, equal or better than that provided by the tools.nsc.Global parser, entirely for free.
+            @li
+                Prototype extensions to the Scala grammar! Unlike the default tools.nsc.Global parser, ScalaParse makes it trivial to add new rules at various sections of the grammar.
+            @li
+                Manipulate Scala code sections! It's trivial to wrap various rules in ScalaParse in an @sect.ref{Capture} and use it to pull out the relevant bits of a Scala file for you to use.
+
+
+        @sect{Using ScalaParse}
+            @p
+            To begin using ScalaParse, add
+
+            @hl.scala
+                "com.lihaoyi" %% "scalaparse" % "@fastparse.Constants.version"
+
+            @p
+                To your SBT configuration. To use with Scala.js, you'll need
+
+            @hl.scala
+                "com.lihaoyi" %%% "scalaparse" % "@fastparse.Constants.version"
+
+    @sect{PythonParse}
+        @p
+            There is now an @a("example Python parser", href:="https://github.com/lihaoyi/fastparse/tree/master/pythonparse/shared/src/main/scala/pythonparse") available under a subproject in the repo. This is a good example of a real-world parser: parsing knotty syntax (including indentation-delimited blocks!), building an AST, and with heavy unit tests.
+
+        @p
+            PythonParse is currently compatible enough to parse all the python sources in Zulip, Ansible, Changes, Django, and Flask. It isn't published yet on maven central, but feel free to look at it if you want an idea of how to write a complex, real parser.
+
+    @sect{CssParse}
+        @p
+            CssParse is a parser that parses CSS files into an abstract syntax tree (AST).
+            The implementation is too large to show in-line, but can be found here:
+        @ul
+            @li
+                @a("CssParse", href:="https://github.com/lihaoyi/fastparse/tree/master/cssparse/shared/src/main/scala/cssparse")
+
+        @p
+            This AST can then be used for a variety of reasons: you could
+            analyze the CSS to try and find bugs, transform the CSS in some
+            custom way (e.g. prefixing class-names with the name of the file)
+            or just re-formatting the CSS when printing it back out.
+        @p
+            CssParse compiles to Javascript via Scala.js, and we have a demo
+            here that demonstrates the use of CssParse as a CSS pretty-printer.
+            Enter some CSS in the box below, no matter how it's formatted or
+            minified, and CssParse will add the necessary spaces and tabs to make
+            the file readable and good-looking.
+
+        @div(id := "cssdiv")
+        @script(raw("""demo.DemoMain().css(document.getElementById("cssdiv"))"""))
+
+        @p
+            As mentioned above, CssParse builds and AST that stores
+            information about tags and rules in the given CSS, this AST isn't
+            complete, because of complexity of initial CSS format,
+            but it provides all the essential information about basic elements
+            of file (blocks, selectors, rules). The correctness of CssParse is
+            tested by parsing and then printing several huge files including CSS
+            from Bootstrap and Primer.
