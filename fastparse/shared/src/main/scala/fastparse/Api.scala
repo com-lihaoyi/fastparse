@@ -124,6 +124,10 @@ object byte extends ByteApi {
   /**
     * Parses a two-byte word
     */
+  val Word8 = P( AnyByte.rep(exactly=1) )
+  /**
+    * Parses a two-byte word
+    */
   val Word16 = P( AnyByte.rep(exactly=2) )
   /**
     * Parses a four-byte word
@@ -140,6 +144,7 @@ object byte extends ByteApi {
     val UInt16 = P(Word16.!).map(wrapByteBuffer(_).getShort & 0xffff)
     val UInt32 = P(Word32.!).map(wrapByteBuffer(_).getInt & 0x00000000ffffffffL )
 
+    val Int8 =  P(Word8.!).map(_(0))
     val Int16 = P(Word16.!).map(wrapByteBuffer(_).getShort)
     val Int32 = P(Word32.!).map(wrapByteBuffer(_).getInt)
     val Int64 = P(Word64.!).map(wrapByteBuffer(_).getLong)
