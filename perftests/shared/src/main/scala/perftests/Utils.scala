@@ -18,7 +18,7 @@ object Utils {
     count
   }
 
-  def benchmark(name: String, fs: Seq[() => Any], iterations: Int = 5, maxTime: Int = 10000): Seq[Seq[Int]] = {
+  def benchmark(name: String, fs: Seq[() => Any], iterations: Int = 5, maxTime: Int = 1000000): Seq[Seq[Int]] = {
     println(name)
     println(s"Max time - $maxTime ms. Iterations - $iterations.")
     (1 to iterations).map(i => {

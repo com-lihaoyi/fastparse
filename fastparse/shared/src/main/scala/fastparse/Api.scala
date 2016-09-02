@@ -141,14 +141,15 @@ object byte extends ByteApi {
   trait ByteFormat {
     def wrapByteBuffer(byteSeq: ByteSeq): ByteBuffer
 
-    val UInt8: P[Short] = P(Word8.!).map(a => (a(0) & 0xff).toShort)
-    val UInt16: P[Int] = P(Word16.!).map(wrapByteBuffer(_).getShort & 0xffff)
-    val UInt32: P[Long] = P(Word32.!).map(wrapByteBuffer(_).getInt & 0x00000000ffffffffL )
 
     val Int8: P[Byte] =  P(Word8.!).map(_(0))
     val Int16: P[Short] = P(Word16.!).map(wrapByteBuffer(_).getShort)
     val Int32: P[Int] = P(Word32.!).map(wrapByteBuffer(_).getInt)
     val Int64: P[Long] = P(Word64.!).map(wrapByteBuffer(_).getLong)
+
+    val UInt8: P[Short] = P( Int8.map(a => (a & 0xff).toShort) )
+    val UInt16: P[Int] = P( Int16.map(_ & 0xffff) )
+    val UInt32: P[Long] = P( Int32.map(_ & 0x00000000ffffffffL ) )
 
     // TODO Dword should be unsigned, but the only option is to change it to Long, what seems quite bad
 

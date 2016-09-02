@@ -10,7 +10,7 @@ object Main {
     println("Parsing Midi...")
     val bytes = MidiTests.readResourceBytes("/" + args(0) + ".mid")
     MidiTests.hexBytes(bytes)
-    val parsed = MidiParser.midiParser.parse(bytes).get.value
+    val parsed = MidiParse.midiParser.parse(bytes).get.value
     println("format:\t"+parsed.format)
     println("tickDiv:\t"+parsed.tickDiv)
     play(parsed)
