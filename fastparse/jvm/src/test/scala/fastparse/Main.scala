@@ -3,12 +3,16 @@ package fastparse
 import javax.sound.midi.MidiSystem
 
 /**
-  * Created by haoyi on 9/2/16.
+  * Exercise MidiParse by using it to parse and then play some music!
+  *
+  * - sbt "~fastparseJVM/test:run canon.mid"
+  * - sbt "~fastparseJVM/test:run go.mid"
+  * - sbt "~fastparseJVM/test:run ctend.mid"
   */
 object Main {
   def main(args: Array[String]): Unit = {
     println("Parsing Midi...")
-    val bytes = MidiTests.readResourceBytes("/" + args(0) + ".mid")
+    val bytes = MidiTests.readResourceBytes("/" + args(0))
     MidiTests.hexBytes(bytes)
     val parsed = MidiParse.midiParser.parse(bytes).get.value
     println("format:\t"+parsed.format)
@@ -35,8 +39,7 @@ object Main {
     println("playing...")
     while({
       val remaining = allTracks.filter(_.track != Nil)
-//      println("remaining")
-//      println(allTracks.map(_.track.length))
+
       if (remaining.isEmpty) false
       else{
         val nextTrack = remaining.minBy(_.tillNext)
@@ -56,6 +59,7 @@ object Main {
         nextTrack.savedTicks = 0
         val nextEvent = nextTrack.track.head._2
         nextTrack.track = nextTrack.track.tail
+
         nextEvent match{
           case MetaEvent.Tempo(n) =>
             println(s"Tempo\t$n")

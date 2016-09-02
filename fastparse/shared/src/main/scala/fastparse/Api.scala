@@ -124,10 +124,6 @@ object byte extends ByteApi {
   /**
     * Parses a two-byte word
     */
-  val Word8 = P( AnyByte.rep(exactly=1) )
-  /**
-    * Parses a two-byte word
-    */
   val Word16 = P( AnyByte.rep(exactly=2) )
   /**
     * Parses a four-byte word
@@ -142,7 +138,7 @@ object byte extends ByteApi {
     def wrapByteBuffer(byteSeq: ByteSeq): ByteBuffer
 
 
-    val Int8: P[Byte] =  P(Word8.!).map(_(0))
+    val Int8: P[Byte] =  P(AnyByte.!).map(_(0))
     val Int16: P[Short] = P(Word16.!).map(wrapByteBuffer(_).getShort)
     val Int32: P[Int] = P(Word32.!).map(wrapByteBuffer(_).getInt)
     val Int64: P[Long] = P(Word64.!).map(wrapByteBuffer(_).getLong)

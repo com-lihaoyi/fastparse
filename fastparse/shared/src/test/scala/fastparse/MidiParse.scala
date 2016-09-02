@@ -133,7 +133,7 @@ object MidiParse{
     val SmpteOffset = (BS(0x05) ~ Int8 ~ Int8 ~ Int8 ~ Int8 ~ Int8).map(MetaEvent.SmpteOffset.tupled)
     val TimeSignature = (BS(0x04) ~ Int8 ~ Int8 ~ Int8 ~ Int8).map(MetaEvent.TimeSignature.tupled)
     val KeySignature = (BS(0x02) ~ Int8 ~ Int8).map{case (x, y) => MetaEvent.KeySignature(x, y != 0)}
-    val SequencerSpecificEvent = varInt.flatMap(x => AnyByte.rep(exactly = x).!).map(MetaEvent.SequencerSpecificEvent)
+    val SequencerSpecificEvent = varBytes.map(MetaEvent.SequencerSpecificEvent)
     val Unknown = varBytes.map(MetaEvent.Unknown)
 
     P(
