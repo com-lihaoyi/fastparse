@@ -5,26 +5,24 @@ import javax.sound.midi.MidiSystem
 
 import utest._
 
-/**
-  * Built based on the definitions:
-  *
-  * http://www.ccarh.org/courses/253/handout/smf/
-  * http://www.somascape.org/midi/tech/mfile.html#midi
-  */
-object MidiTests extends TestSuite{
-  val lenaBytes = Files.readAllBytes(Paths.get(getClass.getResource("/ctend.mid").toURI.getPath))
-  case class Midi(format: Int, tickDiv: Int, tracks: Seq[Seq[(Int, TrackEvent)]])
+case class Midi(format: Int, tickDiv: Midi.TickDiv, tracks: Seq[Seq[(Int, Midi.TrackEvent)]])
+object Midi{
+  sealed trait TickDiv
+  object TickDiv {
+    case class Metric(divisionsPerQuarterBeat: Short) extends TickDiv
+    case class TimeCode(framesPerSecond: Int, subFrameDivisions: Int) extends TickDiv
+  }
   sealed trait TrackEvent
-  sealed trait MidiEvent extends TrackEvent
-
-  object MidiEvent{
-    case class NoteOff(note: Byte, velocity: Byte) extends MidiEvent
-    case class NoteOn(note: Byte, velocity: Byte) extends MidiEvent
-    case class PolyphonicPressure(note: Byte, pressure: Byte) extends MidiEvent
-    case class Controller(controller: Byte, value: Byte) extends MidiEvent
-    case class ProgramChange(program: Byte) extends MidiEvent
-    case class ChannelPressure(pressure: Byte) extends MidiEvent
-    case class PitchBend(lsb: Byte, msb: Byte) extends MidiEvent
+  case class MidiEvent(channel: Byte, data: MidiData) extends TrackEvent
+  sealed trait MidiData
+  object MidiData{
+    case class NoteOff(note: Byte, velocity: Byte) extends MidiData
+    case class NoteOn(note: Byte, velocity: Byte) extends MidiData
+    case class PolyphonicPressure(note: Byte, pressure: Byte) extends MidiData
+    case class Controller(controller: Byte, value: Byte) extends MidiData
+    case class ProgramChange(program: Byte) extends MidiData
+    case class ChannelPressure(pressure: Byte) extends MidiData
+    case class PitchBend(pitch: Short) extends MidiData
   }
 
   sealed trait MetaEvent extends TrackEvent
@@ -42,138 +40,251 @@ object MidiTests extends TestSuite{
     case class MidiChannelPrefix(channel: Byte) extends MetaEvent
     case class MidiPort(port: Byte) extends MetaEvent
     case object EndOfTrack extends MetaEvent
-    case class Tempo(temp: Int) extends MetaEvent
+    case class Tempo(microSecondsPerQuarterBeat: Int) extends MetaEvent
     case class SmpteOffset(hour: Byte, minute: Byte, seconds: Byte, frames: Byte, fractional: Byte) extends MetaEvent
     case class TimeSignature(numerator: Byte, denominator: Byte, clocks: Byte, notatedNotes: Byte) extends MetaEvent
     case class KeySignature(sf: Byte, majorKey: Boolean) extends MetaEvent
     case class SequencerSpecificEvent(data: Array[Byte]) extends MetaEvent
+    case class Unknown(data: Array[Byte]) extends MetaEvent
   }
   sealed trait SysExEvent extends TrackEvent
   object SysExEvent{
     case class Message(data: Array[Byte]) extends SysExEvent
   }
-  val tests = TestSuite{
-    'hello{
-      import fastparse.byte._
-      import BE._
-      println(
-        lenaBytes
-          .take(256)
-          .grouped(16)
-          .map(ElemTypeFormatter.ByteFormatter.prettyPrint(_))
-          .mkString("\n")
-      )
-      val header = P( hexBytes("4d 54 68 64 00 00 00 06") ~ Int16 ~ Int16 ~ Int16 ).log()
-      val deltaTime = P( BytesWhile(_ < 0, min = 0) ~ AnyByte )
+}
 
-      val vLength: P[Int] = P( BytesWhile(b => (b & 0x80) != 0, min = 0).! ~ Int8 ).map{
-        case (bytes, last) => bytes.foldLeft[Int](last)(_ << 7 + _)
-      }
-      val vTime: P[Int] = P( vLength )
 
-      val midiEvent: P[MidiEvent] = {
-        val NoteOff = (Int8 ~ Int8).map(MidiEvent.NoteOff.tupled)
-        val NoteOn = (Int8 ~ Int8).map(MidiEvent.NoteOn.tupled)
-        val PolyphonicPressure = (Int8 ~ Int8).map(MidiEvent.PolyphonicPressure.tupled)
-        val Controller = (Int8 ~ Int8).map(MidiEvent.Controller.tupled)
-        val ProgramChange = Int8.map(MidiEvent.ProgramChange)
-        val ChannelPressure = Int8.map(MidiEvent.ChannelPressure)
-        val PitchBend = (Int8 ~ Int8).map(MidiEvent.PitchBend.tupled)
-        val statusByte: P[Byte] = P( ByteIn((0x80 to 0xef).map(_.toByte)).!.map(_(0)) )
-        P(
-          for{
-            byte <- statusByte.~/
-            event <- byte & 0xf0 match{
-              case 0x80 => NoteOff
-              case 0x90 => NoteOn
-              case 0xA0 => PolyphonicPressure
-              case 0xB0 => Controller
-              case 0xC0 => ProgramChange
-              case 0xD0 => ChannelPressure
-              case 0xE0 => PitchBend
+/**
+  * Built based on the definitions:
+  *
+  * http://www.ccarh.org/courses/253/handout/smf/
+  * http://www.somascape.org/midi/tech/mfile.html#midi
+  */
+object MidiParser{
+  import fastparse.byte._
+  import BE._
+  import Midi._
+  val midiHeader = P( hexBytes("4d 54 68 64 00 00 00 06") ~ Int16 ~ Int16 ~ Int16 )
+  val deltaTime = P( BytesWhile(_ < 0, min = 0) ~ AnyByte )
 
-            }
-          } yield event
-        )
-      }
+  /**
+    * Represents a variable length integer, in the midi file format. If a byte
+    * starts with a 1 in it's high-order-bit, it is a "continuation" byte and
+    * the `varInt` continues, until it reaches a byte with a 0 in it's
+    * high-order-bit. To get the value out, remove every high-order bit and
+    * concat all the 7-bit numbers into one entire, unsigned integer
+    */
+  val varInt: P[Int] = P( BytesWhile(b => (b & 0x80) != 0, min = 0) ~ Int8 ).!.map{ r =>
+    r.map(_ & 0xff).foldLeft(0)((a, b) => (a << 7) + (b & ~0x80))
+  }
 
-      val metaEvent = {
-        val varString = vLength.flatMap(x => AnyByte.rep(exactly = x).!.map(new String(_)))
-        val SequenceNumber = (BS(0x02) ~ Int8 ~ Int8).map{case (x, y) => MetaEvent.SequenceNumber((x << 8 + y).toShort)}
-        val Text = varString.map(MetaEvent.Text)
-        val Copyright = varString.map(MetaEvent.Copyright)
-        val TrackName = varString.map(MetaEvent.TrackName)
-        val InstrumentName = varString.map(MetaEvent.InstrumentName)
-        val Lyric = varString.map(MetaEvent.Lyric)
-        val Marker = varString.map(MetaEvent.Marker)
-        val CuePoint = varString.map(MetaEvent.CuePoint)
-        val ProgramName = varString.map(MetaEvent.ProgramName)
-        val DeviceName = varString.map(MetaEvent.DeviceName)
-        val MidiChannelPrefix = (BS(0x01) ~ Int8).map(MetaEvent.MidiChannelPrefix)
-        val MidiPort = (BS(0x01) ~ Int8).map(MetaEvent.MidiPort)
-        val EndOfTrack = wspByteSeq(BS(0x00)).map(_ => MetaEvent.EndOfTrack)
-        val Tempo = (BS(0x03) ~ Int8 ~ Int8 ~ Int8).map{case (a, b, c) => MetaEvent.Tempo(a << 16 + b << 8 + c)}
-        val SmpteOffset = (BS(0x05) ~ Int8 ~ Int8 ~ Int8 ~ Int8 ~ Int8).map(MetaEvent.SmpteOffset.tupled)
-        val TimeSignature = (BS(0x04) ~ Int8 ~ Int8 ~ Int8 ~ Int8).map(MetaEvent.TimeSignature.tupled)
-        val KeySignature = (BS(0x02) ~ Int8 ~ Int8).map{case (x, y) => MetaEvent.KeySignature(x, y != 0)}
-        val SequencerSpecificEvent = vLength.flatMap(x => AnyByte.rep(exactly = x).!).map(MetaEvent.SequencerSpecificEvent)
 
-        P(
-          for{
-            _ <- BS(0xFF) ~/ Pass
-            `type` <- Int8
-            length <- Int8
-            result <- `type` match {
-              case 0x00 => SequenceNumber
-              case 0x01 => Text
-              case 0x02 => Copyright
-              case 0x03 => TrackName
-              case 0x04 => InstrumentName
-              case 0x05 => Lyric
-              case 0x06 => Marker
-              case 0x07 => CuePoint
-              case 0x08 => ProgramName
-              case 0x09 => DeviceName
-              case 0x20 => MidiChannelPrefix
-              case 0x21 => MidiPort
-              case 0x2F => EndOfTrack
-              case 0x51 => Tempo
-              case 0x54 => SmpteOffset
-              case 0x58 => TimeSignature
-              case 0x59 => KeySignature
-              case 0x7F => SequencerSpecificEvent
-            }
-          } yield result
-        )
-      }
-
-      val sysexEvent = {
-        P(
-          for{
-            _ <- BS(0xF0).~/
-            length <- vLength
-            message <- AnyByte.rep(exactly = length).!
-          } yield SysExEvent.Message(message)
-        )
-      }
-      val trackEvent = P( midiEvent | metaEvent | sysexEvent  )
-
-      val trackChunk: P[Seq[(Int, TrackEvent)]] = {
-        P( hexBytes("4d 54 72 6b") ~ Int32 ~ (vTime ~ trackEvent).filter(_._2 != MetaEvent.EndOfTrack).rep() ~ (vTime ~ trackEvent) ).map{
-          case (length, events, last) => events :+ last
+  val midiEvent: P[(MidiEvent, Seq[(Int, MidiEvent)])] = {
+    val posInt8 = Int8.filter(_>=0)
+    val NoteOff = (posInt8 ~ posInt8).map(MidiData.NoteOff.tupled)
+    val NoteOn = (posInt8 ~ posInt8).map{
+      // A default value of 64 is used in the absence of velocity sensors.
+      // A value of 0 has a special meaning and is interpreted as a Note Off
+      // (thus allowing the use of running status for a sequence of Note On and Off commands).
+      case (note, 0) => MidiData.NoteOff(note, 64)
+      case (note, velocity) => MidiData.NoteOn(note, velocity)
+    }
+    val PolyphonicPressure = (posInt8 ~ posInt8).map(MidiData.PolyphonicPressure.tupled)
+    val Controller = (posInt8 ~ posInt8).map(MidiData.Controller.tupled)
+    val ProgramChange = posInt8.map(MidiData.ProgramChange)
+    val ChannelPressure = posInt8.map(MidiData.ChannelPressure)
+    val PitchBend = (posInt8 ~ posInt8).map{case (a, b) => MidiData.PitchBend(((a >> 7) + b).toShort)}
+    val statusByte: P[Byte] = P( ByteIn((0x80 to 0xef).map(_.toByte)).!.map(_(0)) )
+    P(
+      for{
+        byte <- statusByte
+        dataParser = byte & 0xf0 match{
+          case 0x80 => NoteOff
+          case 0x90 => NoteOn
+          case 0xA0 => PolyphonicPressure
+          case 0xB0 => Controller
+          case 0xC0 => ProgramChange
+          case 0xD0 => ChannelPressure
+          case 0xE0 => PitchBend
         }
-      }
-      val midiParser: P[Midi] = P(
-        for{
-          (format, nTracks, tickDiv) <- header
-          tracks <- trackChunk.rep(1) ~ End
-        } yield Midi(format, tickDiv, tracks)
+        parser = dataParser.map(MidiEvent((byte & 0x0f).toByte, _))
+        // Allow repetitions of `parser` without needing to re-parse the
+        // `statusByte` to support Midi "running status" syntax
+        result <- parser ~ (varInt ~ parser).rep()
+      } yield result
+    )
+  }
+
+  val metaEvent = {
+    val varString = varInt.flatMap(x => AnyByte.rep(exactly = x).!.map(new String(_)))
+    val SequenceNumber = (BS(0x02) ~ Int8 ~ Int8).map{case (x, y) => MetaEvent.SequenceNumber((x << 8 + y).toShort)}
+    val Text = varString.map(MetaEvent.Text)
+    val Copyright = varString.map(MetaEvent.Copyright)
+    val TrackName = varString.map(MetaEvent.TrackName)
+    val InstrumentName = varString.map(MetaEvent.InstrumentName)
+    val Lyric = varString.map(MetaEvent.Lyric)
+    val Marker = varString.map(MetaEvent.Marker)
+    val CuePoint = varString.map(MetaEvent.CuePoint)
+    val ProgramName = varString.map(MetaEvent.ProgramName)
+    val DeviceName = varString.map(MetaEvent.DeviceName)
+    val MidiChannelPrefix = (BS(0x01) ~ Int8).map(MetaEvent.MidiChannelPrefix)
+    val MidiPort = (BS(0x01) ~ Int8).map(MetaEvent.MidiPort)
+    val EndOfTrack = wspByteSeq(BS(0x00)).map(_ => MetaEvent.EndOfTrack)
+    val Tempo = (BS(0x03) ~ UInt8 ~ UInt8 ~ UInt8).map{case (a, b, c) => MetaEvent.Tempo((a << 16) + (b << 8) + c) }
+    val SmpteOffset = (BS(0x05) ~ Int8 ~ Int8 ~ Int8 ~ Int8 ~ Int8).map(MetaEvent.SmpteOffset.tupled)
+    val TimeSignature = (BS(0x04) ~ Int8 ~ Int8 ~ Int8 ~ Int8).map(MetaEvent.TimeSignature.tupled)
+    val KeySignature = (BS(0x02) ~ Int8 ~ Int8).map{case (x, y) => MetaEvent.KeySignature(x, y != 0)}
+    val SequencerSpecificEvent = varInt.flatMap(x => AnyByte.rep(exactly = x).!).map(MetaEvent.SequencerSpecificEvent)
+    val Unknown = varInt.flatMap(x => AnyByte.rep(exactly = x).!).map(MetaEvent.Unknown)
+
+    P(
+      for{
+        tpe <- Int8
+        result <- tpe match {
+          case 0x00 => SequenceNumber
+          case 0x01 => Text
+          case 0x02 => Copyright
+          case 0x03 => TrackName
+          case 0x04 => InstrumentName
+          case 0x05 => Lyric
+          case 0x06 => Marker
+          case 0x07 => CuePoint
+          case 0x08 => ProgramName
+          case 0x09 => DeviceName
+          case 0x20 => MidiChannelPrefix
+          case 0x21 => MidiPort
+          case 0x2F => EndOfTrack
+          case 0x51 => Tempo
+          case 0x54 => SmpteOffset
+          case 0x58 => TimeSignature
+          case 0x59 => KeySignature
+          case 0x7F => SequencerSpecificEvent
+          case _ => Unknown
+        }
+      } yield result
+    )
+  }
+
+  val sysexEvent = {
+    P(
+      for{
+        length <- varInt
+        message <- AnyByte.rep(exactly = length).!
+      } yield SysExEvent.Message(message)
+    )
+  }
+  val trackEvent: P[(TrackEvent, Seq[(Int, TrackEvent)])] = {
+    P( BS(0xFF)  ~/ metaEvent.map(_ -> Nil) | BS(0xF0) ~/ sysexEvent.map(_ -> Nil) | midiEvent )
+  }
+
+  val trackItem: P[Seq[(Int, TrackEvent)]] = P( varInt ~ trackEvent.filter(_._1 != MetaEvent.EndOfTrack) ).map{
+    case (time, (event, rest)) => (time, event) +: rest
+  }
+  val trackHeader = P( hexBytes("4d 54 72 6b") ~/ Int32 )
+  val trackChunk: P[Seq[(Int, TrackEvent)]] = {
+    val end: P[(Int, TrackEvent)] = P( varInt ~ BS(0xFF)  ~/ metaEvent )
+    P( trackHeader ~ trackItem.rep() ~ end ).map{
+      case (length, events, last) => events.flatten :+ last
+    }.log()
+  }
+
+  val midiParser: P[Midi] = P(
+    for{
+      (format, nTracks, rawTickDiv) <- midiHeader
+      tracks <- trackChunk.rep(1) ~ End
+    } yield {
+      assert(nTracks == tracks.length)
+      val tickDiv =
+        if((rawTickDiv & 0x8000) == 0) TickDiv.Metric((rawTickDiv & ~0x80).toShort)
+        else {
+          println(rawTickDiv)
+          TickDiv.TimeCode(-(rawTickDiv >> 8).toByte, (rawTickDiv & 0xff).toShort)
+        }
+      Midi(format, tickDiv, tracks)
+    }
+  )
+}
+
+object MidiTests extends TestSuite{
+  def readResourceBytes(file: String) = {
+    Files.readAllBytes(Paths.get(getClass.getResource(file).toURI.getPath))
+  }
+
+  def hexBytes(bytes: Array[Byte]) = {
+    println(" \t" + 0.until(16).map(x => " " * (if (x >= 10) 0 else 1) + x).mkString(" "))
+    println()
+
+    println(
+      bytes
+        .take(512)
+        .grouped(16)
+        .zipWithIndex
+        .map{case (v, i) => (i * 16) + "\t" + ElemTypeFormatter.ByteFormatter.prettyPrint(v)}
+        .mkString("\n")
+    )
+  }
+
+  val tests = TestSuite{
+    'canon{
+      import Midi._
+      val bytes = readResourceBytes("/canon.mid")
+      val parsed = MidiParser.midiParser.parse(bytes).get.value
+      println(parsed.tracks.map(_.length))
+      val expectedTrack0 = Seq(
+        (0, MetaEvent.TimeSignature(4, 2, 24, 8)),
+        (0, MetaEvent.KeySignature(0, false)),
+        (0, MetaEvent.TimeSignature(4, 2, 24, 8)),
+        (0, MetaEvent.Tempo(750000)),
+        (1, MetaEvent.EndOfTrack)
+      )
+      val channels1 = parsed.tracks(1).collect{ case (dt, MidiEvent(channel, _)) => channel}
+
+      assert(
+        parsed.format == 1,
+        parsed.tickDiv == Midi.TickDiv.Metric(256),
+        parsed.tracks.length == 2,
+        parsed.tracks(0) == expectedTrack0,
+        // This is a simple midi with only one channel
+        channels1.forall(_ == 0),
+        parsed.tracks(1).length == 293
       )
 
+      parsed.tracks(1).foreach(println)
+    }
+    'chronoTrigger{
+      import Midi._
+      val bytes = readResourceBytes("/ctend.mid")
+      val parsed = MidiParser.midiParser.parse(bytes).get.value
 
-      val parsed = midiParser.parse(lenaBytes)
-      println(parsed.asInstanceOf[Parsed.Failure].extra.traced.trace)
-      parsed
+      val expectedTrack0 = Seq(
+        (0, MetaEvent.TimeSignature(1,2,24,8)),
+        (0, MetaEvent.KeySignature(7,false)),
+        (0, MetaEvent.Tempo(495867)),
+        (120, MetaEvent.TimeSignature(4,2,24,8)),
+        (37920, MetaEvent.KeySignature(-1,false)),
+        (23040, MetaEvent.Tempo(472440)),
+        (0, MetaEvent.EndOfTrack)
+      )
+      assert(
+        parsed.format == 1,
+        parsed.tickDiv == Midi.TickDiv.Metric(120),
+        parsed.tracks.length == 19,
+        // Compare first item separately since == does not work
+        // on Array[Byte]
+        parsed.tracks(0)(0)._2.isInstanceOf[SysExEvent.Message],
+        parsed.tracks(0).drop(1) == expectedTrack0
+      )
+      parsed.tracks(0).foreach(println)
+      assert()
+
+    }
+    'tonghua{
+      import Midi._
+      val bytes = readResourceBytes("/tonghua.mid")
+
+      val parsed = MidiParser.midiParser.parse(bytes).get.value
+
     }
   }
+
 }
