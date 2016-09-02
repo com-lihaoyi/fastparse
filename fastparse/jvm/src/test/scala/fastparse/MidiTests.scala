@@ -77,6 +77,9 @@ object MidiParser{
   val varInt: P[Int] = P( BytesWhile(b => (b & 0x80) != 0, min = 0) ~ Int8 ).!.map{ r =>
     r.map(_ & 0xff).foldLeft(0)((a, b) => (a << 7) + (b & ~0x80))
   }
+  // Variable-length str/byte-array parsers, parsing {length + contents}
+  val varBytes = varInt.flatMap(x => AnyByte.rep(exactly = x).!)
+  val varString = varBytes.map(new String(_))
 
 
   val midiEvent: P[(MidiEvent, Seq[(Int, MidiEvent)])] = {
@@ -116,7 +119,7 @@ object MidiParser{
   }
 
   val metaEvent = {
-    val varString = varInt.flatMap(x => AnyByte.rep(exactly = x).!.map(new String(_)))
+
     val SequenceNumber = (BS(0x02) ~ Int8 ~ Int8).map{case (x, y) => MetaEvent.SequenceNumber((x << 8 + y).toShort)}
     val Text = varString.map(MetaEvent.Text)
     val Copyright = varString.map(MetaEvent.Copyright)
@@ -135,7 +138,7 @@ object MidiParser{
     val TimeSignature = (BS(0x04) ~ Int8 ~ Int8 ~ Int8 ~ Int8).map(MetaEvent.TimeSignature.tupled)
     val KeySignature = (BS(0x02) ~ Int8 ~ Int8).map{case (x, y) => MetaEvent.KeySignature(x, y != 0)}
     val SequencerSpecificEvent = varInt.flatMap(x => AnyByte.rep(exactly = x).!).map(MetaEvent.SequencerSpecificEvent)
-    val Unknown = varInt.flatMap(x => AnyByte.rep(exactly = x).!).map(MetaEvent.Unknown)
+    val Unknown = varBytes.map(MetaEvent.Unknown)
 
     P(
       for{
@@ -159,20 +162,16 @@ object MidiParser{
           case 0x58 => TimeSignature
           case 0x59 => KeySignature
           case 0x7F => SequencerSpecificEvent
+          // Not sure why this is necessary: I'm seeing `0x10` flags turning up
+          // in some of my MIDIs but I can't find any reference to them online
           case _ => Unknown
         }
       } yield result
     )
   }
 
-  val sysexEvent = {
-    P(
-      for{
-        length <- varInt
-        message <- AnyByte.rep(exactly = length).!
-      } yield SysExEvent.Message(message)
-    )
-  }
+  val sysexEvent = P( varBytes.map(SysExEvent.Message) )
+
   val trackEvent: P[(TrackEvent, Seq[(Int, TrackEvent)])] = {
     P( BS(0xFF)  ~/ metaEvent.map(_ -> Nil) | BS(0xF0) ~/ sysexEvent.map(_ -> Nil) | midiEvent )
   }
@@ -182,10 +181,10 @@ object MidiParser{
   }
   val trackHeader = P( hexBytes("4d 54 72 6b") ~/ Int32 )
   val trackChunk: P[Seq[(Int, TrackEvent)]] = {
-    val end: P[(Int, TrackEvent)] = P( varInt ~ BS(0xFF)  ~/ metaEvent )
+    val end = P( varInt ~ BS(0xFF)  ~/ metaEvent )
     P( trackHeader ~ trackItem.rep() ~ end ).map{
       case (length, events, last) => events.flatten :+ last
-    }.log()
+    }
   }
 
   val midiParser: P[Midi] = P(
@@ -283,6 +282,12 @@ object MidiTests extends TestSuite{
       val bytes = readResourceBytes("/tonghua.mid")
 
       val parsed = MidiParser.midiParser.parse(bytes).get.value
+      assert(
+        parsed.format == 1,
+        parsed.tickDiv == Midi.TickDiv.Metric(352),
+        parsed.tracks.length == 2,
+        parsed.tracks.map(_.length) == Seq(1514, 894)
+      )
 
     }
   }

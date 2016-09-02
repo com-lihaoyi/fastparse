@@ -57,18 +57,35 @@ object Main {
         val nextEvent = nextTrack.track.head._2
         nextTrack.track = nextTrack.track.tail
         nextEvent match{
-          case MetaEvent.Tempo(n) => currentTempo = n
+          case MetaEvent.Tempo(n) =>
+            println(s"Tempo\t$n")
+            currentTempo = n
 
           case MidiEvent(channelId, midiData) =>
             val channel = channels(channelId)
             midiData match{
               case NoteOn(note, velocity) => channel.noteOn(note, velocity)
               case NoteOff(note, velocity) => channel.noteOff(note, velocity)
-              case ChannelPressure(p) => channel.setChannelPressure(p)
-              case PitchBend(p) => channel.setPitchBend(p)
-              case PolyphonicPressure(note, p) => channel.setPolyPressure(note, p)
-              case Controller(c, v) => channel.controlChange(c, v)
-              case ProgramChange(p) => channel.programChange(p)
+
+              case ChannelPressure(p) =>
+                println(s"Channel Pressure\t$p")
+                channel.setChannelPressure(p)
+
+              case PitchBend(p) =>
+                println(s"Pitch Bend\t$p")
+                channel.setPitchBend(p)
+
+              case PolyphonicPressure(note, p) =>
+                println(s"Pressure\t$note $p")
+                channel.setPolyPressure(note, p)
+
+              case Controller(c, v) =>
+                println(s"Controller\t$c $v")
+                channel.controlChange(c, v)
+
+              case ProgramChange(p) =>
+                println(s"Program Change\t$p")
+                channel.programChange(p)
             }
 
           case _ => // do nothing
