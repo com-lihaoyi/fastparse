@@ -85,15 +85,6 @@ object FailureTests extends TestSuite{
       found ="1\n"
     )
     * - checkNeg(
-      """package scalatex
-        |object ParserTests{
-        |  new (1)
-        |}
-      """.stripMargin,
-      expected = """NamedType ~ Refinement.? | Refinement | ")" """,
-      found = "1)"
-    )
-    * - checkNeg(
       """
         |object Moo{
         |  a
@@ -483,31 +474,12 @@ object FailureTests extends TestSuite{
     )
 
     * - checkNeg(
-      """
-        |
-        |object GenJSCode {
-        |  code: @ 12
-        |}
-      """.stripMargin,
-      expected = """TupleType | TypeId ~ ("." ~ `type`).? | `_`""",
-      found = "12\n}"
-    )
-
-    * - checkNeg(
       """object B {
         |  { a: L = }
         |}
       """.stripMargin,
       expected = """BacktickId | PlainId | "with" | ";" | Newline.rep(1) | "}" | `case`""",
       found = "= }"
-    )
-    * - checkNeg(
-      """object O{
-        |    (i: Int => 10)
-        |}
-      """.stripMargin,
-      expected = "NamedType ~ Refinement.? | Refinement",
-      found = "10)"
     )
       * - checkNeg(
         """object GenJSCode{
@@ -744,7 +716,7 @@ object FailureTests extends TestSuite{
       s"""
          |object X{type T = A with}
         """.stripMargin,
-      expected = """TupleType | TypeId ~ ("." ~ `type`).? | `_`""",
+      expected = """TupleType | Literal | TypeId ~ ("." ~ `type`).? | `_`""",
       found = "}"
     )
     * - checkNeg(
