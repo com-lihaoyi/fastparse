@@ -28,7 +28,6 @@ object WhitespaceApi {
         case Mutable.Success(value0, index0, traceParsers0, cut0) =>
           if (index0 > index && cfg.checkForDrop(cut0 | cut)) cfg.input.dropBuffer(index0)
 
-
           val oldCapturing = cfg.isCapturing // completely disallow dropBuffer
           cfg.isCapturing = true
           val resWL = WL.parseRec(cfg, index0)
