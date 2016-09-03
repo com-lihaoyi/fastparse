@@ -301,7 +301,11 @@ case class ParseCtx[ElemType, Repr](input: ParserInput[ElemType],
   )
   val success = Mutable.Success[Any, ElemType](null, 0, Set.empty, false)
 
-  def checkForDrop(outerCut: Boolean) = !isCapturing && ((outerCut && !isNoCut) || !isFork)
+  def checkForDrop(outerCut: Boolean) = {
+    val res = !isCapturing && ((outerCut && !isNoCut) || !isFork)
+    println("checkForDrop\t" + res)
+    res
+  }
 }
 
 // Parser

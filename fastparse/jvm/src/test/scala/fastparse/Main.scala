@@ -88,8 +88,12 @@ object Main {
                 channel.controlChange(c, v)
 
               case ProgramChange(p) =>
-                println(s"Program Change\t$p")
-                channel.programChange(p)
+                // Skipping this is as for some reason
+                // it makes things sound bad
+
+
+                // println(s"Program Change\t$p")
+                // channel.programChange(p)
             }
 
           case _ => // do nothing

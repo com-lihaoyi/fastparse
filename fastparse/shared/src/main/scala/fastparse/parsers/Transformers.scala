@@ -26,7 +26,7 @@ object Transformers {
     extends Parser[V, ElemType, Repr] {
     def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
       p1.parseRec(cfg, index) match{
-        case f: Mutable.Failure[ElemType] => failMore(f, index, cfg.logDepth, cut = false)
+        case f: Mutable.Failure[ElemType] => failMore(f, index, cfg.logDepth, cut = f.cut)
         case s: Mutable.Success[T, ElemType] => func(s.value).parseRec(cfg, s.index)
       }
     }
@@ -36,10 +36,10 @@ object Transformers {
     extends Parser[T, ElemType, Repr] {
     override def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
       p.parseRec(cfg, index) match{
-        case f: Mutable.Failure[ElemType] => failMore(f, index, cfg.logDepth, cut = false)
+        case f: Mutable.Failure[ElemType] => failMore(f, index, cfg.logDepth, cut = f.cut)
         case s: Mutable.Success[T, ElemType] =>
           if (predicate(s.value)) s
-          else fail(cfg.failure,index, s.traceParsers, cut = false)
+          else fail(cfg.failure,index, s.traceParsers, cut = s.cut)
       }
     }
 

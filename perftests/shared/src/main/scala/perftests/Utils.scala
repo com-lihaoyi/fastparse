@@ -63,6 +63,7 @@ object Utils {
 
 
     sizes.foreach(s => {
+      println("Parsing for batch size " + s)
       val input = new LoggedMaxBufferLengthParserInput(iteratorFactory(s).map(converter.convertFromRepr))
       parser.parseInput(input)
       println(s"Batch size: $s. Max buffer size: ${input.maxInnerLength}.")
@@ -91,15 +92,15 @@ object Utils {
                                             converter: ResultConverter[ElemType, Repr],
                                             ct: ClassTag[ElemType]): Unit = {
 
-    val results = Utils.benchmark(s"$name Benchmark",
-      Seq(
-        Some(() => parser.parse(data)),
-        dataFailOpt.map(dataFail =>
-          () => parser.parse(dataFail).asInstanceOf[Parsed.Failure[ElemType]].extra.traced
-        )
-      ).flatten
-    )
-    println(results.map(_.mkString(" ")).mkString("\n"))
+//    val results = Utils.benchmark(s"$name Benchmark",
+//      Seq(
+//        Some(() => parser.parse(data)),
+//        dataFailOpt.map(dataFail =>
+//          () => parser.parse(dataFail).asInstanceOf[Parsed.Failure[ElemType]].extra.traced
+//        )
+//      ).flatten
+//    )
+//    println(results.map(_.mkString(" ")).mkString("\n"))
 
     val sizes = Seq(1, 2, 4, 16, 64, 1024, 4096)
     Utils.benchmarkIteratorBufferSizes(parser, sizes, iteratorFactory)
