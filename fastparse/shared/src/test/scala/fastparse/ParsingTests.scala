@@ -103,6 +103,10 @@ object ParsingTests extends TestSuite{
         check(("Hello" ~ "Bye").?, ("HelloBoo", 0), Success((), 0))
         checkFail(("Hello" ~/ "Bye").?, ("HelloBoo", 0), 5)
       }
+      'flatMap{
+        checkFail(("Hello" ~/ "Boo").flatMap(_ => Fail).?, ("HelloBoo", 0), 8)
+        checkFail((("Hello" ~/ "Boo").flatMap(_ => Pass) ~ Fail).?, ("HelloBoo", 0), 8)
+      }
     }
   }
 }
