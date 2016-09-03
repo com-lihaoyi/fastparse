@@ -215,6 +215,7 @@ trait Mutable[+T, ElemType]{
    * this success, which prevents backtracking.
    */
   def cut: Boolean
+  def cut_=(c: Boolean): Unit
 }
 object Mutable{
 
