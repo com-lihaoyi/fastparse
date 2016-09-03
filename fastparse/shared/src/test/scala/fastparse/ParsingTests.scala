@@ -107,6 +107,9 @@ object ParsingTests extends TestSuite{
         checkFail(("Hello" ~/ "Boo").flatMap(_ => Fail).?, ("HelloBoo", 0), 8)
         checkFail((("Hello" ~/ "Boo").flatMap(_ => Pass) ~ Fail).?, ("HelloBoo", 0), 8)
       }
+      'filter{
+        checkFail(("Hello" ~/ "Boo").filter(_ => false) | "", ("HelloBoo", 0), 0)
+      }
       'lookaheadNot{
         // ! disables cuts: since the whole point of it is to backtrack there
         // isn't any use case where a user would *want* the cuts to take effect
