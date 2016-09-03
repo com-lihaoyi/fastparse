@@ -43,7 +43,7 @@ object Transformers {
         case f: Mutable.Failure[ElemType] => failMore(f, index, cfg.logDepth, cut = false)
         case s: Mutable.Success[T, ElemType] =>
           if (predicate(s.value)) s
-          else fail(cfg.failure,index, s.traceParsers, cut = s.cut)
+          else fail(cfg.failure, index, s.traceParsers, cut = s.cut)
       }
     }
 
