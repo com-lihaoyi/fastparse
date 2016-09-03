@@ -72,7 +72,7 @@ object MidiParse{
     */
   val varInt: P[Int] = P( BytesWhile(b => (b & 0x80) != 0, min = 0) ~ Int8 ).!.map{ r =>
     r.map(_ & 0xff).foldLeft(0)((a, b) => (a << 7) + (b & ~0x80))
-  }
+  }.log()
   // Variable-length str/byte-array parsers, parsing {length + contents}
   val varBytes = varInt.flatMap(x => AnyByte.rep(exactly = x).!)
   val varString = varBytes.map(new String(_))

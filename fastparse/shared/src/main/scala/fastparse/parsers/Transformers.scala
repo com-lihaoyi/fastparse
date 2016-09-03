@@ -36,7 +36,7 @@ object Transformers {
     }
   }
 
-  case class Filtered[T, ElemType, Repr](p: Pa  rser[T, ElemType, Repr], predicate: T => Boolean)
+  case class Filtered[T, ElemType, Repr](p: Parser[T, ElemType, Repr], predicate: T => Boolean)
     extends Parser[T, ElemType, Repr] {
     override def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
       p.parseRec(cfg, index) match{
