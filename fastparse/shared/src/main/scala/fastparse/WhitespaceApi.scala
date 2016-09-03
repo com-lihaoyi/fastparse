@@ -26,10 +26,8 @@ object WhitespaceApi {
       p0.parseRec(cfg, index) match {
         case f: Mutable.Failure[Char] => failMore(f, index, cfg.logDepth, f.traceParsers, false)
         case Mutable.Success(value0, index0, traceParsers0, cut0) =>
-          if (index0 > index && cfg.checkForDrop(cut0 | cut)) {
-            println("D")
-            cfg.input.dropBuffer(index0)
-          }
+          if (index0 > index && cfg.checkForDrop(cut0 | cut)) cfg.input.dropBuffer(index0)
+
 
           val oldCapturing = cfg.isCapturing // completely disallow dropBuffer
           cfg.isCapturing = true

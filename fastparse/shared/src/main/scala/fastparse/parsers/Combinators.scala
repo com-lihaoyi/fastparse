@@ -172,10 +172,10 @@ object Combinators {
    */
   case class Lookahead[ElemType, Repr](p: Parser[_, ElemType, Repr]) extends Parser[Unit, ElemType, Repr]{
     def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
-      val oldFork = cfg.isFork
-      cfg.isFork = true
+      val oldNoCut = cfg.isNoCut
+      cfg.isNoCut = true
       val res = p.parseRec(cfg, index)
-      cfg.isFork = oldFork
+      cfg.isNoCut = oldNoCut
 
       res match{
         case s: Mutable.Success[_, ElemType] =>
@@ -194,10 +194,10 @@ object Combinators {
    */
   case class Not[ElemType, Repr](p: Parser[_, ElemType, Repr]) extends Parser[Unit, ElemType, Repr]{
     def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
-      val oldFork = cfg.isFork
-      cfg.isFork = true
+      val oldNoCut = cfg.isNoCut
+      cfg.isNoCut = true
       val res0 = p.parseRec(cfg, index)
-      cfg.isFork = oldFork
+      cfg.isNoCut = oldNoCut
       val res = res0 match{
         case s: Mutable.Success[_, ElemType] => fail(cfg.failure, s.index)
         case f: Mutable.Failure[ElemType] => success(cfg.success, (), index, Set.empty, false)
@@ -277,7 +277,7 @@ object Combinators {
                          traceParsers: Set[Parser[_, ElemType, _]]): Mutable[R, ElemType] = {
           val currParserCut = if (vIndex < ps.length) ps(vIndex).cut else false
           if (rIndex > index && cfg.checkForDrop(rCut | currParserCut)) {
-            println(s"A\t$rCut\t$currParserCut")
+//            println(s"A\t$rCut\t$currParserCut")
             cfg.input.dropBuffer(rIndex)
           }
 
@@ -363,7 +363,7 @@ object Combinators {
           )
         case Mutable.Success(value0, index0, traceParsers0, cut0) =>
           if (index0 > index && cfg.checkForDrop(cut | cut0)) {
-            println("B")
+//            println("B")
             cfg.input.dropBuffer(index0)
           }
           p2.parseRec(cfg, index0) match{
@@ -376,7 +376,7 @@ object Combinators {
             )
             case Mutable.Success(value1, index1, traceParsers1, cut1)  =>
               if (index1 > index0 && cfg.checkForDrop(cut | cut0 | cut)) {
-                println("C")
+//                println("C")
                 cfg.input.dropBuffer(index0)
               }
 
