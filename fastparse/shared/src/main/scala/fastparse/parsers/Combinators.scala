@@ -281,7 +281,7 @@ object Combinators {
           if (vIndex >= ps.length) success(cfg.success, r1, rIndex, traceParsers, rCut)
           else {
             val c = ps(vIndex)
-            c.p.parseRec(cfg, rIndex) match{
+            c.p.parseRec(cfg, rIndex) match {
               case f: Mutable.Failure[ElemType] => failMore(
                 f,
                 rIndex,
@@ -351,14 +351,14 @@ object Combinators {
     def ev2: Implicits.Sequencer[_, _, _] = ev
     def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
 
-      p1.parseRec(cfg, index) match {
+      p1.parseRec(cfg, index) match{
         case f: Mutable.Failure[ElemType] =>
           failMore(
             f, index, cfg.logDepth,
             traceParsers = mergeTrace(cfg.traceIndex, Set(p1), Set.empty),
             cut = f.cut
           )
-        case Mutable.Success(value0, index0, traceParsers0, cut0) =>
+        case Mutable.Success(value0, index0, traceParsers0, cut0)  =>
           if (index0 > index && cfg.checkForDrop(cut | cut0)) cfg.input.dropBuffer(index0)
 
           p2.parseRec(cfg, index0) match{
