@@ -60,7 +60,7 @@ object MidiParse{
   import fastparse.byte._
   import BE._
   import Midi._
-  val midiHeader = P( hexBytes("4d 54 68 64 00 00 00 06") ~ Int16 ~ Int16 ~ Int16 ).log()
+  val midiHeader = P( hexBytes("4d 54 68 64 00 00 00 06") ~ Int16 ~ Int16 ~ Int16 )
   val deltaTime = P( BytesWhile(_ < 0, min = 0) ~ AnyByte )
 
   /**
@@ -72,7 +72,7 @@ object MidiParse{
     */
   val varInt: P[Int] = P( BytesWhile(b => (b & 0x80) != 0, min = 0) ~ Int8 ).!.map{ r =>
     r.map(_ & 0xff).foldLeft(0)((a, b) => (a << 7) + (b & ~0x80))
-  }.log()
+  }
   // Variable-length str/byte-array parsers, parsing {length + contents}
   val varBytes = varInt.flatMap(x => AnyByte.rep(exactly = x).!)
   val varString = varBytes.map(new String(_))
@@ -113,7 +113,7 @@ object MidiParse{
       } yield result
     )
   }
-
+  val EndOfTrack = wspByteSeq(BS(0x00)).map(_ => MetaEvent.EndOfTrack)
   val metaEvent = {
 
     val SequenceNumber = (BS(0x02) ~ Int8 ~ Int8).map{case (x, y) => MetaEvent.SequenceNumber((x << 8 + y).toShort)}
@@ -128,7 +128,7 @@ object MidiParse{
     val DeviceName = varString.map(MetaEvent.DeviceName)
     val MidiChannelPrefix = (BS(0x01) ~ Int8).map(MetaEvent.MidiChannelPrefix)
     val MidiPort = (BS(0x01) ~ Int8).map(MetaEvent.MidiPort)
-    val EndOfTrack = wspByteSeq(BS(0x00)).map(_ => MetaEvent.EndOfTrack)
+
     val Tempo = (BS(0x03) ~ UInt8 ~ UInt8 ~ UInt8).map{case (a, b, c) => MetaEvent.Tempo((a << 16) + (b << 8) + c) }
     val SmpteOffset = (BS(0x05) ~ Int8 ~ Int8 ~ Int8 ~ Int8 ~ Int8).map(MetaEvent.SmpteOffset.tupled)
     val TimeSignature = (BS(0x04) ~ Int8 ~ Int8 ~ Int8 ~ Int8).map(MetaEvent.TimeSignature.tupled)
@@ -172,15 +172,15 @@ object MidiParse{
     P( BS(0xFF)  ~/ metaEvent.map(_ -> Nil) | BS(0xF0) ~/ sysexEvent.map(_ -> Nil) | midiEvent )
   }
 
-  val trackItem: P[Seq[(Int, TrackEvent)]] = P( varInt ~ trackEvent.filter(_._1 != MetaEvent.EndOfTrack) ).map{
+  val trackItemEnd = P( varInt ~ BS(0xFF, 0x2F)  ~/ EndOfTrack )
+  val trackItem = P( !trackItemEnd ~ varInt ~ trackEvent ).map{
     case (time, (event, rest)) => (time, event) +: rest
-  }.log()
-  val trackHeader = P( hexBytes("4d 54 72 6b") ~/ Int32 ).log()
+  }
+  val trackHeader = P( hexBytes("4d 54 72 6b") ~/ Int32 )
   val trackChunk: P[Seq[(Int, TrackEvent)]] = {
-    val end = P( varInt.log() ~ BS(0xFF).log()  ~/ metaEvent.log() ).log()
-    P( trackHeader ~ trackItem.rep() ~ end ).map{
+    P( trackHeader ~ trackItem.rep() ~ trackItemEnd ).map{
       case (length, events, last) => events.flatten :+ last
-    }.log()
+    }
   }
 
   val midiParser: P[Midi] = P(
@@ -191,11 +191,9 @@ object MidiParse{
       assert(nTracks == tracks.length)
       val tickDiv =
         if((rawTickDiv & 0x8000) == 0) TickDiv.Metric((rawTickDiv & ~0x80).toShort)
-        else {
-          println(rawTickDiv)
-          TickDiv.TimeCode(-(rawTickDiv >> 8).toByte, (rawTickDiv & 0xff).toShort)
-        }
+        else TickDiv.TimeCode(-(rawTickDiv >> 8).toByte, (rawTickDiv & 0xff).toShort)
+
       Midi(format, tickDiv, tracks)
     }
-  ).log()
+  )
 }

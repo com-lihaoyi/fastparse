@@ -103,7 +103,7 @@ case class IteratorParserInput[ElemType](data: Iterator[IndexedSeq[ElemType]])
     */
   override def apply(index: Int): ElemType = {
     requestUntil(index)
-    println("apply\tindex:" + index + "\tfirstIdx:" + firstIdx + "\t(index - firstIdx):" + (index - firstIdx))
+//    println("apply\tindex:" + index + "\tfirstIdx:" + firstIdx + "\t(index - firstIdx):" + (index - firstIdx))
     buffer(index - firstIdx)
   }
 
@@ -111,7 +111,7 @@ case class IteratorParserInput[ElemType](data: Iterator[IndexedSeq[ElemType]])
     * Drops all elements before index not inclusive.
     */
   override def dropBuffer(index: Int): Unit = {
-    println("dropBuffer:\t" + index)
+//    println("dropBuffer:\t" + index)
     if (index > firstIdx) {
       buffer.drop(index - firstIdx)
       firstIdx = index
@@ -144,7 +144,7 @@ case class IteratorParserInput[ElemType](data: Iterator[IndexedSeq[ElemType]])
     * when it's possible, returns true, otherwise false.
     */
   override def isReachable(index: Int): Boolean = {
-    println("isReachable\t" + index + "\t" + (index < length) + "\t" + requestUntil(index))
+//    println("isReachable\t" + index + "\t" + (index < length) + "\t" + requestUntil(index))
     index < length || requestUntil(index)
   }
 

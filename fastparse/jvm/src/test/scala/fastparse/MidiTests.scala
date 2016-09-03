@@ -29,6 +29,7 @@ object MidiTests extends TestSuite{
     'canon{
       import Midi._
       val bytes = readResourceBytes("/canon.mid")
+
       val parsed = MidiParse.midiParser.parse(bytes).get.value
       println(parsed.tracks.map(_.length))
       val expectedTrack0 = Seq(
