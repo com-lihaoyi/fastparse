@@ -104,8 +104,7 @@ object ParsingTests extends TestSuite{
         checkFail(("Hello" ~/ "Bye").?, ("HelloBoo", 0), 5)
       }
       'flatMap{
-        checkFail(("Hello" ~/ "Boo").flatMap(_ => Fail).?, ("HelloBoo", 0), 8)
-        checkFail((("Hello" ~/ "Boo").flatMap(_ => Pass) ~ Fail).?, ("HelloBoo", 0), 8)
+        checkFlatmap()
       }
       'filter{
         checkFail(("Hello" ~/ "Boo").filter(_ => false) | "", ("HelloBoo", 0), 0)
@@ -120,6 +119,12 @@ object ParsingTests extends TestSuite{
         check(&("Hello" ~/ "Boo") ~ "lol" | "", ("HelloBoo", 0), Success((), 0))
       }
     }
+  }
+  // Broken out of the TestSuite block to avoid problems in our 2.10.x
+  // build due to https://issues.scala-lang.org/browse/SI-7987
+  def checkFlatmap() = {
+    checkFail(("Hello" ~/ "Boo").flatMap(_ => Fail).?, ("HelloBoo", 0), 8)
+    checkFail((("Hello" ~/ "Boo").flatMap(_ => Pass) ~ Fail).?, ("HelloBoo", 0), 8)
   }
 }
 
