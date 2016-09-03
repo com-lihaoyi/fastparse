@@ -194,7 +194,10 @@ object Combinators {
    */
   case class Not[ElemType, Repr](p: Parser[_, ElemType, Repr]) extends Parser[Unit, ElemType, Repr]{
     def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
+      val oldFork = cfg.isFork
+      cfg.isFork = true
       val res0 = p.parseRec(cfg, index)
+      cfg.isFork = oldFork
       val res = res0 match{
         case s: Mutable.Success[_, ElemType] => fail(cfg.failure, s.index)
         case f: Mutable.Failure[ElemType] => success(cfg.success, (), index, Set.empty, false)
@@ -273,7 +276,10 @@ object Combinators {
                          vIndex: Int,
                          traceParsers: Set[Parser[_, ElemType, _]]): Mutable[R, ElemType] = {
           val currParserCut = if (vIndex < ps.length) ps(vIndex).cut else false
-          if (rIndex > index && cfg.checkForDrop(rCut | currParserCut)) cfg.input.dropBuffer(rIndex)
+          if (rIndex > index && cfg.checkForDrop(rCut | currParserCut)) {
+            println(s"A\t$rCut\t$currParserCut")
+            cfg.input.dropBuffer(rIndex)
+          }
 
           if (vIndex >= ps.length) success(cfg.success, r1, rIndex, traceParsers, rCut)
           else {
@@ -348,16 +354,18 @@ object Combinators {
     def ev2: Implicits.Sequencer[_, _, _] = ev
     def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
 
-      p1.parseRec(cfg, index) match{
+      p1.parseRec(cfg, index) match {
         case f: Mutable.Failure[ElemType] =>
           failMore(
             f, index, cfg.logDepth,
             traceParsers = mergeTrace(cfg.traceIndex, Set(p1), Set.empty),
             cut = f.cut
           )
-        case Mutable.Success(value0, index0, traceParsers0, cut0)  =>
-          if (index0 > index && cfg.checkForDrop(cut | cut0)) cfg.input.dropBuffer(index0)
-
+        case Mutable.Success(value0, index0, traceParsers0, cut0) =>
+          if (index0 > index && cfg.checkForDrop(cut | cut0)) {
+            println("B")
+            cfg.input.dropBuffer(index0)
+          }
           p2.parseRec(cfg, index0) match{
             case f: Mutable.Failure[ElemType] => failMore(
               f,
@@ -367,7 +375,10 @@ object Combinators {
               cut = cut | f.cut | cut0
             )
             case Mutable.Success(value1, index1, traceParsers1, cut1)  =>
-              if (index1 > index0 && cfg.checkForDrop(cut | cut0 | cut)) cfg.input.dropBuffer(index0)
+              if (index1 > index0 && cfg.checkForDrop(cut | cut0 | cut)) {
+                println("C")
+                cfg.input.dropBuffer(index0)
+              }
 
               success(
                 cfg.success, ev(value0, value1), index1,

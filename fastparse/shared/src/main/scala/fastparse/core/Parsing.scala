@@ -304,7 +304,8 @@ case class ParseCtx[ElemType, Repr](input: ParserInput[ElemType],
 
   def checkForDrop(outerCut: Boolean) = {
     val res = !isCapturing && ((outerCut && !isNoCut) || !isFork)
-//    println("checkForDrop\t" + res)
+    println("checkForDrop\t" + res)
+    println(s"isCapturing:$isCapturing\touterCut:$outerCut\tisNoCut:$isNoCut\tisFork:$isFork")
     res
   }
 }
