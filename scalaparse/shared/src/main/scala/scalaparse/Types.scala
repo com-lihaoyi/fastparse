@@ -41,7 +41,7 @@ trait Types extends Core{
     // Can't `cut` after the opening paren, because we might be trying to parse `()`
     // or `() => T`! only cut after parsing one type
     val TupleType = P( "(" ~/ Type.rep(sep= ",".~/) ~ ")" )
-    val BasicType = P( TupleType | TypeId ~ ("." ~ `type`).? | `_` )
+    val BasicType = P( TupleType | Literals.Expr.Literal | TypeId ~ ("." ~ `type`).?  | `_` )
     P( BasicType ~ (TypeArgs | `#` ~/ Id).rep )
   }
 
