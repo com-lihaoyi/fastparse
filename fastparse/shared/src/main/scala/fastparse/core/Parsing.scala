@@ -32,6 +32,14 @@ sealed trait Parsed[+T, ElemType]{
     case s: Parsed.Success[T, ElemType] => s
     case f: Parsed.Failure[ElemType] => throw new ParseError[ElemType](f)
   }
+
+  /**
+    * Returns the result of $onSuccess if the parsing is successful, otherwise it returns the result of $onFailure
+    */
+  def fold[X](onFailure: (Parser[_, ElemType, _], Int, Parsed.Failure.Extra[ElemType]) => X, onSuccess: (T, Int) => X): X = this match {
+    case Parsed.Success(t, i) => onSuccess(t, i)
+    case f: Parsed.Failure[ElemType] => onFailure(f.lastParser, f.index, f.extra)
+  }
 }
 
 case class ParseError[ElemType](failure: Parsed.Failure[ElemType]) extends Exception(
