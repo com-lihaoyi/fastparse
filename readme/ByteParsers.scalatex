@@ -184,20 +184,12 @@
                 parsing @lnk("MIDI music files", "https://en.wikipedia.org/wiki/MIDI").
                 Like all FastParse parsers, it compiles to Javascript via Scala.js and
                 can run in the browser: below is a small widget that uses MidiParse to
-                parse, analyze and play any Midi file you upload.
+                parse, analyze and play any Midi file you upload use Keith Horwood's
+                @lnk("AudioSynth", "https://github.com/keithwhor/audiosynth") Javascript
+                library.
 
             @div(id := "mididiv")
-            @script(src:="shim/Base64.js", `type`:="text/javascript")
-            @script(src:="shim/Base64binary.js", `type`:="text/javascript")
-            @script(src:="shim/WebAudioAPI.js", `type`:="text/javascript")
-            @script(src:="midi/audioDetect.js", `type`:="text/javascript")
-            @script(src:="midi/gm.js", `type`:="text/javascript")
-            @script(src:="midi/loader.js", `type`:="text/javascript")
-            @script(src:="midi/plugin.audiotag.js", `type`:="text/javascript")
-            @script(src:="midi/plugin.webaudio.js", `type`:="text/javascript")
-            @script(src:="midi/plugin.webmidi.js", `type`:="text/javascript")
-            @script(src:="util/dom_request_xhr.js", `type`:="text/javascript")
-            @script(src:="util/dom_request_script.js", `type`:="text/javascript")
+            @script(src:="Audio.js", `type`:="text/javascript")
             @script(raw("""demo.DemoMain().midiparser(document.getElementById("mididiv"))"""))
 
             @p
@@ -214,9 +206,11 @@
                 @code{sbt "fastparseJVM/test:run go.mid"} from the command line
                 to play the same MIDI file using the same parser, but running on
                 Scala-JVM and using the JVM's MIDI player rather than the browser's.
-                In general, the JVM player is much more robust than the Web player,
-                and can play other tunes (included in the repo) that the Web player
-                can't handle.
+                In general, the JVM player is much more robust than the Web player:
+                the Web player doesn't know how to handle changes in pitch bend,
+                polyphonic pressure, channel pressure or controller, and plays
+                all notes as a single piano-like instrument
+
             @p
                 MidiParse comprises about 50 lines of @hl.scala{case class}es that
                 define the structure of the midi file, and another 140 lines of

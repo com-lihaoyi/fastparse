@@ -25,7 +25,9 @@ object DemoMain {
     val metadataBox = pre(
       display.flex, flex := 1, overflowX.scroll,
       "Upload a MIDI file and MidiParse will parse it, show you some metadata ",
-      "extracted from it, and play it using WebAudio"
+      "extracted from it, and play it using HTML5 Audio.\n\nNote that when you ",
+      "first upload a file, the browser takes time to generate the necessary sounds ",
+      "and it may take a few seconds before the music starts."
     ).render
     val loggerBox = pre(display.flex, flex := 1, overflowX.scroll).render
 
@@ -54,36 +56,36 @@ object DemoMain {
       ).mkString("\n")
     }
 
-    def onMidiLoaded = {
-      uploadFile.onchange = (e: dom.Event) => {
-        val reader = new dom.FileReader()
-        reader.readAsArrayBuffer(uploadFile.files.item(0))
-        reader.onload = (e: UIEvent) => {
-          val array = new Uint8Array(reader.result.asInstanceOf[ArrayBuffer])
-          val contents = (for (i <- 0 until array.length) yield array.get(i).toByte).toArray
-          dom.console.log(contents.length)
-          fastparse.MidiParse.midiParser.parse(contents) match{
-            case Parsed.Success(midi, index) =>
-              metadataBox.textContent =
-                s"""Successfully parsed ${index} bytes
-                    |Midi Format: ${midi.format}
-                    |Tick Division: ${midi.tickDiv}
-                    |${midi.tracks.length} Tracks:
-                    |${midi.tracks.zipWithIndex.map{case (t, i) => s"Track $i: ${t.length} events"}.mkString("\n")}
-                   """.stripMargin
-              playMusic(midi, {x => notes = x +: notes; updateLogBox()}, {x => progress = x; updateLogBox()})
-            case Parsed.Failure(lastParser, index, extra) =>
-              metadataBox.textContent = "Failed to parse midi\n" + extra.traced.trace
-          }
+    uploadFile.onchange = (e: dom.Event) => {
+      val reader = new dom.FileReader()
+      reader.readAsArrayBuffer(uploadFile.files.item(0))
+      reader.onload = (e: UIEvent) => {
+        val array = new Uint8Array(reader.result.asInstanceOf[ArrayBuffer])
+        val contents = (for (i <- 0 until array.length) yield array.get(i).toByte).toArray
+        dom.console.log(contents.length)
+        fastparse.MidiParse.midiParser.parse(contents) match{
+          case Parsed.Success(midi, index) =>
+            metadataBox.textContent =
+              s"""Successfully parsed ${index} bytes
+                  |Midi Format: ${midi.format}
+                  |Tick Division: ${midi.tickDiv}
+                  |${midi.tracks.length} Tracks:
+                  |${midi.tracks.zipWithIndex.map{case (t, i) => s"Track $i: ${t.length} events"}.mkString("\n")}
+                 """.stripMargin
+            playMusic(midi, {x => notes = x +: notes; updateLogBox()}, {x => progress = x; updateLogBox()})
+          case Parsed.Failure(lastParser, index, extra) =>
+            metadataBox.textContent = "Failed to parse midi\n" + extra.traced.trace
         }
       }
-
     }
 
-    js.Dynamic.global.MIDI.loadPlugin(js.Dynamic.literal(
-      instrument = "acoustic_grand_piano",
-      onsuccess = () => onMidiLoaded
-    ))
+  }
+  val notes = Vector("C","C#","D","D#","E","F","F#","G","G#","A","A#","B")
+  lazy val allNotes = for(octave <- 0 to 10; note <- notes) yield (note, octave)
+  def makeNote(note: String, octave: Int) = {
+    js.Dynamic.newInstance(js.Dynamic.global.Audio)(
+      js.Dynamic.global.Synth.generate(0, note, octave - 2, 10)
+    )
   }
   def playMusic(midi: fastparse.Midi,
                 noteLogger: String => Unit,
@@ -92,16 +94,22 @@ object DemoMain {
     case class TrackInfo(var savedTicks: Int, var track: List[(Int, Midi.TrackEvent)]){
       def tillNext = track.head._1 - savedTicks
     }
-    val MIDI = js.Dynamic.global.MIDI
-    val channels = MIDI.channels.asInstanceOf[js.Array[js.Dynamic]]
+    noteLogger("Initializing Musical Notes...")
+    val notes =
+      midi.tracks
+          .flatten
+          .collect{case (_, MidiEvent(channel, NoteOn(note, velocity))) => (channel, note)}
+          .distinct
+          .map{ case (channel, note) => ((channel, note), makeNote(allNotes(note)._1, allNotes(note)._2)) }
+          .toMap
+
     val allTracks = midi.tracks.map(_.toList).map(TrackInfo(0, _))
     // 120bpm, in microseconds-per-quarter-beat
     var currentTempo = 1000000 * 120 / 60 / 4
 
     def tick(): Unit = {
 
-
-      var logs = collection.mutable.Buffer.empty[String]
+      val logs = collection.mutable.Buffer.empty[String]
       progressLogger(allTracks.map(_.track.length).mkString(", "))
       while ({
         val remaining = allTracks.filter(_.track != Nil)
@@ -117,12 +125,14 @@ object DemoMain {
             case MetaEvent.Tempo(n) =>
               currentTempo = n
 
-            case MidiEvent(channelId, midiData) =>
-              val channel = channels(channelId)
+            case MidiEvent(channel, midiData) =>
               midiData match{
-                case NoteOn(note, velocity) => MIDI.noteOn(channelId, note, velocity, 0)
-                case NoteOff(note, velocity) => MIDI.noteOff(channelId, note, 0)
-                case PitchBend(p) => channel.pitchbend = p
+                case NoteOn(note, velocity) =>
+                  notes((channel, note)).volume = velocity * 1.0 / 127
+                  notes((channel, note)).play()
+                case NoteOff(note, velocity) =>
+                  notes((channel, note)).pause()
+                  notes((channel, note)).currentTime = 0
                 case _ => // skip the rest
               }
 
