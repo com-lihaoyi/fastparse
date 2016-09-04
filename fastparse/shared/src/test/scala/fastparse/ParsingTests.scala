@@ -103,7 +103,28 @@ object ParsingTests extends TestSuite{
         check(("Hello" ~ "Bye").?, ("HelloBoo", 0), Success((), 0))
         checkFail(("Hello" ~/ "Bye").?, ("HelloBoo", 0), 5)
       }
+      'flatMap{
+        checkFlatmap()
+      }
+      'filter{
+        checkFail(("Hello" ~/ "Boo").filter(_ => false) | "", ("HelloBoo", 0), 0)
+      }
+      'lookaheadNot{
+        // ! disables cuts: since the whole point of it is to backtrack there
+        // isn't any use case where a user would *want* the cuts to take effect
+        check(!("Hello" ~/ "Bye"), ("HelloBoo", 0), Success((), 0))
+        // &() disables cuts: whether it succeeds or fails, the whole point
+        // of &() is to backtrack and re-parse things
+        check(&("Hello" ~/ "Bye") ~ "lol" | "", ("HelloBoo", 0), Success((), 0))
+        check(&("Hello" ~/ "Boo") ~ "lol" | "", ("HelloBoo", 0), Success((), 0))
+      }
     }
+  }
+  // Broken out of the TestSuite block to avoid problems in our 2.10.x
+  // build due to https://issues.scala-lang.org/browse/SI-7987
+  def checkFlatmap() = {
+    checkFail(("Hello" ~/ "Boo").flatMap(_ => Fail).?, ("HelloBoo", 0), 8)
+    checkFail((("Hello" ~/ "Boo").flatMap(_ => Pass) ~ Fail).?, ("HelloBoo", 0), 8)
   }
 }
 

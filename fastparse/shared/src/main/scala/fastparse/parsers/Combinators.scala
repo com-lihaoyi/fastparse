@@ -172,10 +172,10 @@ object Combinators {
    */
   case class Lookahead[ElemType, Repr](p: Parser[_, ElemType, Repr]) extends Parser[Unit, ElemType, Repr]{
     def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
-      val oldFork = cfg.isFork
-      cfg.isFork = true
+      val oldNoCut = cfg.isNoCut
+      cfg.isNoCut = true
       val res = p.parseRec(cfg, index)
-      cfg.isFork = oldFork
+      cfg.isNoCut = oldNoCut
 
       res match{
         case s: Mutable.Success[_, ElemType] =>
@@ -194,7 +194,10 @@ object Combinators {
    */
   case class Not[ElemType, Repr](p: Parser[_, ElemType, Repr]) extends Parser[Unit, ElemType, Repr]{
     def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
+      val oldNoCut = cfg.isNoCut
+      cfg.isNoCut = true
       val res0 = p.parseRec(cfg, index)
+      cfg.isNoCut = oldNoCut
       val res = res0 match{
         case s: Mutable.Success[_, ElemType] => fail(cfg.failure, s.index)
         case f: Mutable.Failure[ElemType] => success(cfg.success, (), index, Set.empty, false)
