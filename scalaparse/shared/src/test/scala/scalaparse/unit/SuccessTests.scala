@@ -1404,6 +1404,56 @@ object SuccessTests extends TestSuite{
         |  contents += 1
         |}""".stripMargin
     )
-
+    * - check(
+        """
+        |object X {
+        |  val foo: 23 = 23
+        |  val foo: -23 = -23
+        |  val foo: 23L = 23L
+        |  val foo: -23L = -23L
+        |  val foo: 23.0 = 23.0
+        |  val foo: -23.0 = -23.0
+        |  val foo: 23.0F = 23.0F
+        |  val foo: -23.0F = -23.0F
+        |  val foo: "foo" = "foo"
+        |  val foo: 'f' = 'f'
+        |  val foo: 'foo = 'foo
+        |  val foo: true = true
+        |}""".stripMargin
+    )
+    * - check(
+        """
+        |object X {
+        |  val foo = bar[23]
+        |  val foo = bar[-23]
+        |  val foo = bar[23L]
+        |  val foo = bar[-23L]
+        |  val foo = bar[23.0]
+        |  val foo = bar[-23.0]
+        |  val foo = bar[23.0F]
+        |  val foo = bar[-23.0F]
+        |  val foo = bar["foo"]
+        |  val foo = bar['f']
+        |  val foo = bar['foo]
+        |  val foo = bar[true]
+        |}""".stripMargin
+    )
+    * - check(
+        """
+        |object X {
+        |  def foo[T <: 23](t: T): T = ???
+        |  def foo[T <: -23](t: T): T = ???
+        |  def foo[T <: 23L](t: T): T = ???
+        |  def foo[T <: -23L](t: T): T = ???
+        |  def foo[T <: 23.0](t: T): T = ???
+        |  def foo[T <: -23.0](t: T): T = ???
+        |  def foo[T <: 23.0F](t: T): T = ???
+        |  def foo[T <: -23.0F](t: T): T = ???
+        |  def foo[T <: "foo"](t: T): T = ???
+        |  def foo[T <: 'f'](t: T): T = ???
+        |  def foo[T <: 'foo](t: T): T = ???
+        |  def foo[T <: true](t: T): T = ???
+        |}""".stripMargin
+    )
   }
 }

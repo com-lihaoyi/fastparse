@@ -68,10 +68,8 @@
 
     @sect{Parsing Results}
         @p
-            The two kinds of a @hl.scala{Parsed} result reflect the status of a parse:
-            a success (@hl.scala{Parsed.Success}) or a failure (@hl.scala{Parsed.Failure}).
-            First, both classes can be used in pattern matching to discriminate the parse status.
-            Second, they allow to extract the most commonly-used values.
+            The result of a parser comes in two flavors of @hl.scala{Parsed};
+            the first is a success (@hl.scala{Parsed.Success}) and the second is a failure (@hl.scala{Parsed.Failure}).
             @hl.scala{Parsed.Success} provides the parsed value -
             the value you are probably most interested in -
             and the index in the input string till where the parse was performed.
@@ -79,6 +77,19 @@
             Additionally, failure provides an @hl.scala{Parsed.Failure.extra} field that provides precise details about the failure:
             line and column numbers (via @hl.scala{extra.line} and @hl.scala{extra.col})
             and most importantly a complete stack trace of the involved parsers, which is accessible via @hl.scala{extra.traced}.
+
+        @p
+            The recommended method for dealing with @hl.scala{Parsed} is to use @hl.scala{fold} which accepts two callbacks.
+            The first callback deals with a failed parse attempt and has a type signature of @hl.scala{(Parser[_], Int, Failure.Extra) => X}.
+            Each input parameter corresponds to what is available in @hl.scala{Parsed.Failure}.
+            The second callback deals with a successful parsing and has type signature @hl.scala{(T, Int) => X} where @hl.scala{T} is the parsed result
+            and the @hl.scala{Int} is the index of the string where the parsing was performed.
+
+        @hl.ref(tests/"ExampleTests.scala", start = "sealed trait AndOr", end = "}")
+
+        @p
+            It is also possible to pattern match over @hl.scala{Parsed}, however, you may experience spurious warnings related to @a("SI-4440", href:="https://issues.scala-lang.org/browse/SI-4440").
+            In order to prevent these warnings @hl.scala{import fastparse.core.Result} in versions 0.2.x and @hl.scala{import fastparse.core.Parsed} in higher versions than 0.2.x.
 
         @p
             An overview of @hl.scala{Parsed}:
