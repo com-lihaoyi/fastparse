@@ -103,6 +103,8 @@ lazy val fastparse = crossProject
       Seq(file)
     }
   )
+  // In order to make the midi-parser-test in fastparseJVM/test:run work
+  .jvmSettings(fork in (Test, run) := true)
 
 lazy val fastparseJS = fastparse.js
 lazy val fastparseJVM = fastparse.jvm

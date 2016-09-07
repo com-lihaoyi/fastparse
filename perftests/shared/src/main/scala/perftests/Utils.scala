@@ -63,6 +63,7 @@ object Utils {
 
 
     sizes.foreach(s => {
+      println("Parsing for batch size " + s)
       val input = new LoggedMaxBufferLengthParserInput(iteratorFactory(s).map(converter.convertFromRepr))
       parser.parseInput(input)
       println(s"Batch size: $s. Max buffer size: ${input.maxInnerLength}.")

@@ -110,7 +110,7 @@ object Combinators {
   case class Logged[+T, ElemType, Repr](p: Parser[T, ElemType, Repr],
                                         msg: String, output: String => Unit) extends Parser[T, ElemType, Repr]{
     def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
-      if (cfg.logDepth == -1) p.parseRec(cfg, index)
+      if (cfg.logDepth == -1 || cfg.traceIndex != -1) p.parseRec(cfg, index)
       else {
         val indent = "  " * cfg.logDepth
         output(s"$indent+$msg:$index")

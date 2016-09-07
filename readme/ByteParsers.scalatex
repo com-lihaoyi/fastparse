@@ -107,6 +107,7 @@
 
 
     @sect{Example Byte Parsers}
+
         @sect{BmpParser}
             @p
                 @hl.scala{BmpParser} is a good example of a slightly more complex byte parser:
@@ -176,6 +177,81 @@
                         length written at the beginning. Similar algorithm is used in the
                         @hl.scala{bmp} when header information is passed to the @hl.scala{bmpRow}
                         that returns new parser for row in this particular bmp file.
+
+        @sect{MidiParse}
+            @p
+                MidiParse is an example byte-parser written using FastParse, for
+                parsing @lnk("MIDI music files", "https://en.wikipedia.org/wiki/MIDI").
+                Like all FastParse parsers, it compiles to Javascript via Scala.js and
+                can run in the browser: below is a small widget that uses MidiParse to
+                parse, analyze and play any Midi file you upload use Keith Horwood's
+                @lnk("AudioSynth", "https://github.com/keithwhor/audiosynth") Javascript
+                library.
+
+            @div(id := "mididiv")
+            @script(src:="Audio.js", `type`:="text/javascript")
+            @script(raw("""demo.DemoMain().midiparser(document.getElementById("mididiv"))"""))
+
+            @p
+                If you don't have any midi files lying around, perhaps you could
+                try one of these:
+
+            @ul
+                @for(name <- Seq("canon.mid", "go.mid", "tonghua.mid"))
+                    @li
+                        @lnk(name, s"https://raw.githubusercontent.com/lihaoyi/fastparse/master/fastparse/jvm/src/test/resources/$name")
+
+            @p
+                If you wish, you can also check out this project and run
+                @code{sbt "fastparseJVM/test:run go.mid"} from the command line
+                to play the same MIDI file using the same parser, but running on
+                Scala-JVM and using the JVM's MIDI player rather than the browser's.
+                In general, the JVM player is much more robust than the Web player:
+                the Web player doesn't know how to handle changes in pitch bend,
+                polyphonic pressure, channel pressure or controller, and plays
+                all notes as a single piano-like instrument
+
+            @p
+                MidiParse comprises about 50 lines of @hl.scala{case class}es that
+                define the structure of the midi file, and another 140 lines of
+                FastParse code for parsing the MIDI from binary input:
+
+            @ul
+                @li
+                    @a("MidiParse Source", href:="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/MidiParse.scala")
+
+            @p
+                MidiParse illustrates many of the quirks of writing a parser for
+                a real-world binary format:
+
+            @ul
+                @li
+                    How to parse various sorts of bit-packed integers: 8-bit,
+                    16-bit, or 32-bit signed and unsigned integers (e.g. @code{UInt8}).
+                    Even more obscure things like the 24-bit integer used to
+                    store the @code{Tempo} of the music, or the variable-length
+                    @code{varInt} parser keeps consuming individual bytes
+                    until it finds one whose high-order bit is set, and then
+                    concats them all into one variable-length integer.
+                @li
+                    @code{varString} and @code{varByte} parsers are a common
+                    case of using @sect.ref{FlatMap} to parse a variable-length
+                    data-field whose length is defined up-front
+                @li
+                    @code{midiEvent} and @code{metaEvent} show how to switch
+                    on a single byte upfront and use that to decide how to
+                    continue parsing a particular item, using
+                    @sect.ref{FlatMap}/@hl.scala{for}-comprehensions
+                @li
+                    How to use @sect.ref{Filter} to narrow down the sort of
+                    input a parser can parse, e.g. to narrow a
+                    @hl.scala{Int8: Parser[Byte]} into a parser that only
+                    accepts non-negative bytes
+
+            @p
+                Other than these quirks, the majority of the parser is
+                relatively straightforward FastParse code.
+
 
         @sect{ClassParser}
             @p
