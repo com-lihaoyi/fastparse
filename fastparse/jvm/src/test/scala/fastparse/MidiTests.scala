@@ -25,15 +25,13 @@ object MidiTests extends TestSuite{
     )
   }
 
-  def variousParses(bytes: Array[Byte]) = Seq(
-    MidiParse.midiParser.parse(bytes).get.value,
-    MidiParse.midiParser.parseIterator(bytes.grouped(1)).get.value,
-    MidiParse.midiParser.parseIterator(bytes.grouped(4)).get.value,
-    MidiParse.midiParser.parseIterator(bytes.grouped(16)).get.value,
-    MidiParse.midiParser.parseIterator(bytes.grouped(64)).get.value,
-    MidiParse.midiParser.parseIterator(bytes.grouped(256)).get.value,
-    MidiParse.midiParser.parseIterator(bytes.grouped(1024)).get.value
-  )
+  def variousParses(bytes: Array[Byte]) = {
+    val stringParse = MidiParse.midiParser.parse(bytes).get.value
+    val iteratorParses =
+      for(i <- Seq(1, 4, 16, 64, 256, 1024))
+        yield MidiParse.midiParser.parseIterator(bytes.grouped(i)).get.value
+    stringParse +: iteratorParses
+  }
 
   val tests = TestSuite{
     'canon{
