@@ -1,7 +1,6 @@
 package fastparse
 
 import java.nio.file.{Files, Paths}
-import javax.sound.midi.MidiSystem
 
 import utest._
 
@@ -11,25 +10,14 @@ object MidiTests extends TestSuite{
     Files.readAllBytes(Paths.get(getClass.getResource(file).toURI.getPath))
   }
 
-  def hexBytes(bytes: Array[Byte]) = {
-    println(" \t" + 0.until(16).map(x => " " * (if (x >= 10) 0 else 1) + x).mkString(" "))
-    println()
 
-    println(
-      bytes
-        .take(512)
-        .grouped(16)
-        .zipWithIndex
-        .map{case (v, i) => (i * 16) + "\t" + ElemTypeFormatter.ByteFormatter.prettyPrint(v)}
-        .mkString("\n")
-    )
-  }
 
   def variousParses(bytes: Array[Byte]) = {
     val stringParse = MidiParse.midiParser.parse(bytes).get.value
     val iteratorParses =
       for(i <- Seq(1, 4, 16, 64, 256, 1024))
-        yield MidiParse.midiParser.parseIterator(bytes.grouped(i)).get.value
+      yield MidiParse.midiParser.parseIterator(bytes.grouped(i)).get.value
+
     stringParse +: iteratorParses
   }
 

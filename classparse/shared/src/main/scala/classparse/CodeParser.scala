@@ -499,7 +499,7 @@ object CodeParser {
     val opCodes =
       P( (AnyByte.! ~ Index).flatMap {
           case (bs: Array[Byte], idx: Int) => (bs(0) & 0xff) match {
-            case b @ (0xab | 0xaa) => AnyByte.rep(exactly=(4 - idx % 4) % 4) ~ opCodeParsers(b)
+            case b @ (0xab | 0xaa) => AnyBytes((4 - idx % 4) % 4) ~ opCodeParsers(b)
             case b: Int => opCodeParsers(b)
           }
         }.rep

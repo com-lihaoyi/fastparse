@@ -2,7 +2,7 @@ package fastparse
 
 import java.io.InputStream
 
-import fastparse.{IteratorParserInput, Utils}
+
 import utest._
 import fastparse.byte._
 import fastparse.BmpTests.BmpParse._

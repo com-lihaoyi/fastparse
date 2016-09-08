@@ -13,7 +13,7 @@ object Main {
   def main(args: Array[String]): Unit = {
     println("Parsing Midi...")
     val bytes = MidiTests.readResourceBytes("/" + args(0))
-    MidiTests.hexBytes(bytes)
+
     val parsed = MidiParse.midiParser.parse(bytes).get.value
     println("format:\t"+parsed.format)
     println("tickDiv:\t"+parsed.tickDiv)

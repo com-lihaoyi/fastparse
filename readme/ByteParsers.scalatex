@@ -5,63 +5,150 @@
 @sect{Byte Parsers}
     @p
         While FastParse was originally designed to parse @hl.scala{String}s,
-        it also provides an API that allows parsing of @hl.scala{Array[Byte]}s
-        (or @hl.scala{Iterator[Array[Byte]]}s) into structured data
+        it also provides a @code{fastparse.byte} package that allows parsing
+        of @hl.scala{Array[Byte]}s (or @hl.scala{Iterator[Array[Byte]]}s) into
+        structured data.
 
     @p
-        This is an example @lnk("UDP Datagram", "https://en.wikipedia.org/wiki/User_Datagram_Protocol")
-        packet-parser implemented using FastParse's byte-parsing api:
+        Here is a small example parser that parsers an imaginary struct-like
+        format: a fixed header, two fixed-length fields (big-endian), one
+        @lnk("0-terminated C-style string", "https://en.wikipedia.org/wiki/String_(computer_science)#Null-terminated"),
+        and one @lnk("length-prefixed", "https://en.wikipedia.org/wiki/String_(computer_science)#Length-prefixed")
+        binary blob up to 65535 bytes
+        long (the max size of the UInt16 length field):
 
-    @hl.ref(tests/"ByteTests.scala", Seq("'udp", ""), "val bytes =")
+
+    @hl.ref(tests/"ByteTests.scala", Seq("'splash", ""), "val bytes =")
 
     @p
         As you can see it has the same underlying structure as previous
         @sect.ref{Basic} string-parsers: it uses @code{~} to @sect.ref{Sequence}
-        parsers, @hl.scala{for}-comprehensions to @sect.ref{FlatMap} them,
-        @hl.scala{!} to @sect.ref{Capture} them, etc..
+        parsers, @hl.scala{!} to @sect.ref{Capture} sections of bytes,
+        @sect.ref{Map}, to turn them into useful structures, etc..
 
     @p
         Here is how we use it:
 
-    @hl.ref(tests/"ByteTests.scala", Seq("'udp", "", "val bytes ="))
+    @hl.ref(tests/"ByteTests.scala", Seq("'splash", "", "val bytes ="))
 
     @p
         About the same as what you would expect, if you had used FastParse
         to parse textual Strings.
 
     @p
-        While FastParse's byte-parsing API is similar to the string-parsing
+        While @code{fastparse.byte} is similar to the string-parsing
         API, there are some new primitives that are specific to byte parsers,
         and some existing primitives that are named slightly differently.
 
+    @sect{Byte Helpers}
+        @p
+            Apart from providing an equivalent API for byte parsing, FastParse's
+            byte-parsers also provide some helper functions for conveniently dealing
+            with binary blobs.
+
+        @sect{BS}
+            @hl.ref(tests/"ByteTests.scala", Seq("'bs", ""))
+            @p
+                This is a shorthand for @code{Array[Byte](...)} that is shorter
+                and saves you a bunch of annoying @code{.toByte} calls.
+
+        @sect{hexBytes}
+            @hl.ref(tests/"ByteTests.scala", Seq("'hexBytes", ""))
+            @p
+                Another shorthand for @code{Array[Byte](...)}, that lets you
+                pass in lower-case hexadecimal bytes.
+
+        @sect{prettyBytes}
+            @hl.ref(tests/"ByteTests.scala", Seq("'prettyBytesBare", ""))
+            @p
+                This function converts a byte array into a nicely-readable
+                hex-grid. This makes it easier for you to look for byte-ranges,
+                count offsets, and that sort of thing. By default, it only shows
+                the first 8 rows of the byte array. You can specify
+                @code{markers} if you want to view portions of the byte
+                array around other indices, and @code{prettyBytes} will add
+                markers so you can see exactly the spots you specified:
+
+            @hl.ref(tests/"ByteTests.scala", Seq("'prettyBytesMarker", ""))
+
     @sect{Byte-Specific Parsers}
         @p
-            Many byte formats use such concepts as Word and Double-Word that just
-            means 2 and 4 bytes, so FastParse's API for Byte Parsing provides
-            special parsers for these cases:
-        @ul
-            @li
-                @code{Word16}, @code{Word32}, @code{Word64}: parses 2 and 4 bytes
-                and 8 bytes respectively, but discards the results
-            @li
-                @code{LE.Int16}, @code{LE.Int32}, @code{LE.Int64}: parses 2 and 4 bytes
-                and 8 bytes respectively, and returns a signed @code{Short}s,
-                @code{Int}s and @code{Long}s from the little-endian bytes
-            @li
-                @code{BE.Int16}, @code{BE.Int32}, @code{BE.Int64}: parses 2 and 4 bytes
-                and 8 bytes respectively, and returns a signed @code{Short}s,
-                @code{Int}s and @code{Long}s from the big-endian bytes
+            Many byte formats heavily use the concept of a fixed width "word"
+            or "double"-word, always a multiple-of-two bytes, and usually
+            parsed into the corresponding @lnk("twos-complement",
+            "https://en.wikipedia.org/wiki/Two%27s_complement") integer or
+            @lnk("floating point", "https://en.wikipedia.org/wiki/Floating_point")
+            number. @code{fastparse.byte} provides built in support for these.
 
-        @p
-            Note the difference between @code{LE} and @code{BE} versions of the
-            @code{IntN} parsers; there are
-            @a("two standards of ordering bytes", href:="https://en.wikipedia.org/wiki/Endianness"),
-            so you have to pick which one you want to use. You can also @hl.scala{import LE._}
-            or @hl.scala{import BE._} if the endian-ness is the same throughout
-            your parser, and then use @code{Int16}/@code{Int32}/@code{Int64} directly.
-            Typically, big-endian formats are common in networking applications
-            (e.g. UDP packets) while little-endian formats are common in operating
-            systems and micro-processors.
+        @sect{WordN}
+            @hl.ref(tests/"ByteTests.scala", Seq("'words", ""))
+            @p
+                @code{fastparse.byte} provides convenient parsers for the common
+                case of parsing 1, 2, 4, and 8-byte "words". These parsers do
+                not capture any result, but merely consume the bytes and move
+                the index forward.
+
+            @p
+                If you want to capture the bytes as an
+                @code{Array[Byte]}, use the @code{.!} to @sect.ref{Capture}
+                them. If you want to capture them as various sorts of
+                integers or numbers, use one of the @sect.ref{IntN} parsers
+                listed below
+
+        @sect{IntN}
+            @hl.ref(tests/"ByteTests.scala", Seq("'int8", ""))
+
+            @p
+                FastParse provides parsers to capture single bytes and return
+                them, as signed @code{Byte}s. An unsigned versions of the parser
+                is available, that lifts the result into a @code{Short} since
+                the higher-values of an unsigned byte (e.g. @code{128}) cannot
+                fit into a signed @code{Byte}, which maxes out at positive
+                @code{127}.
+
+            @hl.ref(tests/"ByteTests.scala", Seq("'uint8", ""))
+
+            @val endian = lnk("endian", "https://en.wikipedia.org/wiki/Endianness")
+            @p
+                Apart from capturing @code{Byte}s, FastParse also provides
+                parsers which capture @code{Short}s, @code{Int}s and @code{Long}s.
+                These come in both big-@endian (@code{BE} below) and little-@endian
+                (@code{LE}) versions:
+
+            @hl.ref(tests/"ByteTests.scala", Seq("'endian", ""))
+
+            @p
+                As well as signed and un-signed versions
+
+            @hl.ref(tests/"ByteTests.scala", Seq("'unsignedEndian", ""))
+
+            @p
+                The unsigned versions of all these parsers max out at
+                @code{Int32}; this is because there is no primitive type in
+                Scala that can hold the higher-values of an unsigned 64-bit
+                @code{Long}.
+
+            @p
+                Note the difference between @code{LE} and @code{BE} versions of the
+                @code{IntN} parsers; there are
+                @lnk("two standards of ordering bytes", "https://en.wikipedia.org/wiki/Endianness"),
+                so you have to pick which one you want to use. You can also @hl.scala{import LE._}
+                or @hl.scala{import BE._} if the endian-ness is the same throughout
+                your parser, and then use @code{Int16}/@code{Int32}/@code{Int64} directly.
+                Typically, big-endian formats are common in networking applications
+                (e.g. UDP packets) while little-endian formats are common in operating
+                systems and micro-processors.
+
+        @sect{FloatN}
+            @hl.ref(tests/"ByteTests.scala", Seq("'floats", ""))
+
+            @p
+                Apart from parsing integers using @sect.ref{IntN},
+                @code{fastparse.byte} also contains parsers for common floating
+                point numbers. These come in both big-endian/little-endian
+                and 32/64-bit versions.
+
+
 
     @sect{Equivalent Byte Parsers}
         @p
@@ -76,7 +163,7 @@
                 @sect.ref("Basic", "literal string parsers") in Fastparse's
                 string-parsing API
             @li
-                @sect.ref{AnyChar} becomes @hl.scala{AnyByte}
+                @sect.ref{AnyChar}/@code{AnyChars} becomes @hl.scala{AnyByte}/@code{AnyBytes}
             @li
                 @sect.ref{CharPred} becomes @hl.scala{BytePred}
             @li
@@ -92,21 +179,34 @@
 
         @hl.ref(tests/"ByteTests.scala", Seq("'anybyte", ""))
 
-    @sect{Byte Parser Similarities}
-
         @p
             Apart from the changes listed above, FastParse's byte-parsing API works about
             same as it's string-parsing API. @sect.ref{Sequence}, @sect.ref{Repeat},
             @sect.ref{Optional}, @sect.ref{Either}, @sect.ref{Capture}, @sect.ref{Map},
             @sect.ref{FlatMap}, @sect.ref{Filter} and many other operators all work
-            the same when parsing bytes as they do when parsing strings.
+            the same when parsing bytes as they do when parsing strings:
 
+        @hl.ref(tests/"ByteTests.scala", Seq("'splash", ""))
+
+        @p
             The process of @sect.ref{Debugging Parsers}, @sect.ref{Using Cuts}
             or @sect.ref{Using Log} to figure out what is going on, is all identical
             between FastParse's byte-parsing and string-parsing APIs.
 
 
     @sect{Example Byte Parsers}
+
+        @sect{UDP Packets}
+            @p
+                This is an example @lnk("UDP Datagram", "https://en.wikipedia.org/wiki/User_Datagram_Protocol")
+                packet-parser implemented using FastParse's byte-parsing api:
+
+            @hl.ref(tests/"ByteTests.scala", Seq("'udp", ""), "val bytes =")
+
+            @p
+                Here's how to use it:
+
+            @hl.ref(tests/"ByteTests.scala", Seq("'udp", "val bytes ="))
 
         @sect{BmpParser}
             @p

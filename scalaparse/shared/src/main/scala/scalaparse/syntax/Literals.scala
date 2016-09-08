@@ -2,8 +2,8 @@ package scalaparse.syntax
 
 import acyclic.file
 import fastparse.all._
-import fastparse.parsers.Intrinsics
-import Basic._
+
+
 import Identifiers._
 
 trait Literals { l =>
@@ -85,7 +85,7 @@ trait Literals { l =>
        * to be a dud and we go back into a CharsChunk next rep
        */
       val StringChars = P( CharsWhile(!"\n\"\\$".contains(_)) )
-      val NonTripleQuoteChar = P( "\"" ~ "\"".? ~ !"\"" | Intrinsics.ElemIn("\\$\n") )
+      val NonTripleQuoteChar = P( "\"" ~ "\"".? ~ !"\"" | CharIn("\\$\n") )
       val TripleChars = P( (StringChars | Interp | NonTripleQuoteChar).rep )
       val TripleTail = P( TQ ~ "\"".rep )
       def SingleChars(allowSlash: Boolean) = {
