@@ -13,7 +13,8 @@ import fastparse.Utils.HexUtils
 
 class Api[ElemType, Repr]()(implicit elemSetHelper: ElemSetHelper[ElemType],
                             elemFormatter: ElemTypeFormatter[ElemType],
-                            ordering: Ordering[ElemType]) {
+                            ordering: Ordering[ElemType])
+  extends ToArityMethods[ElemType, Repr] {
   type Parsed[+T] = core.Parsed[T, ElemType]
   object Parsed {
     type Failure = core.Parsed.Failure[ElemType]
