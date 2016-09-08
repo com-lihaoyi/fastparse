@@ -27,27 +27,33 @@ object Intrinsics {
   /**
    * Parses a single character if it passes the predicate
    */
-  case class ElemPred[ElemType, Repr](predicate: ElemType => Boolean)
+  case class ElemPred[ElemType, Repr](name: String,
+                                      predicate: ElemType => Boolean)
                                      (implicit helper: ElemSetHelper[ElemType],
                                                ordering: Ordering[ElemType])
-    extends ElemSet[ElemType, Repr](helper.allValues.filter(predicate)){}
+    extends ElemSet[ElemType, Repr](helper.allValues.filter(predicate)){
+
+    override def toString = s"$name($predicate)"
+  }
 
   /**
    * Parses a single character if its contained in the lists of allowed characters
    */
-  case class ElemIn[ElemType, Repr](strings: IndexedSeq[ElemType]*)
+  case class ElemIn[ElemType, Repr](name: String,
+                                    strings: IndexedSeq[ElemType]*)
                                    (implicit formatter: ElemTypeFormatter[ElemType],
                                     ehelper: ElemSetHelper[ElemType],
                                     ordering: Ordering[ElemType])
       extends ElemSet[ElemType, Repr](strings.flatten){
-    override def toString = s"CharIn(${formatter.literalize(strings.flatten.toIndexedSeq)})"
+    override def toString = s"$name(${formatter.literalize(strings.flatten.toIndexedSeq)})"
   }
 
   /**
    * Keeps consuming characters until the predicate [[pred]] becomes false.
    * Functionally equivalent to using `.rep` and [[ElemPred]], but much faster.
    */
-  case class ElemsWhile[ElemType, Repr](pred: ElemType => Boolean, min: Int = 1)
+  case class ElemsWhile[ElemType, Repr](name: String,
+                                        pred: ElemType => Boolean, min: Int = 1)
                                        (implicit helper: ElemSetHelper[ElemType],
                                                  ordering: Ordering[ElemType])
       extends Parser[Unit, ElemType, Repr]{
@@ -60,6 +66,7 @@ object Intrinsics {
       if (curr - index < min) fail(cfg.failure, curr)
       else success(cfg.success, (), curr, Set.empty, false)
     }
+    override def toString = s"$name($pred)"
   }
   /**
    * Very efficiently attempts to parse a set of strings, by

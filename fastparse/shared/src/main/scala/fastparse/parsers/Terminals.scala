@@ -40,13 +40,24 @@ object Terminals {
   /**
    * Succeeds, consuming a single element
    */
-  case class AnyElem[ElemType, Repr]() extends Parser[Unit, ElemType, Repr]{
+  case class AnyElem[ElemType, Repr](name: String) extends Parser[Unit, ElemType, Repr]{
     def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
       val input = cfg.input
       if (!input.isReachable(index)) fail(cfg.failure, index)
-      else success(cfg.success, input(index), index+1, Set.empty, false)
+      else success(cfg.success, (), index+1, Set.empty, false)
     }
-    override val toString = "AnyElem"
+    override val toString = name
+  }
+  /**
+   * Consumes up to `count` elements, if they are available
+   */
+  case class AnyElems[ElemType, Repr](name: String, count: Int) extends Parser[Unit, ElemType, Repr]{
+    def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
+      val input = cfg.input
+      if (!input.isReachable(index + count - 1)) fail(cfg.failure, index)
+      else success(cfg.success, (), index + count, Set.empty, false)
+    }
+    override val toString = name + "(" + count + ")"
   }
 
   /**

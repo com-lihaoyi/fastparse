@@ -84,4 +84,9 @@ matrix:
 script:
 - sbt ++$TRAVIS_SCALA_VERSION "; $CI_SCRIPT"
 
-sudo: false
+# Turn off containers, since that is apparently the only way to get a more
+# recent JVM version that doesn't seg-fault on perfectly-correct code in the
+# MidiParse test suite during CI
+#
+# https://github.com/travis-ci/travis-ci/issues/3259#issuecomment-243534696
+sudo: required

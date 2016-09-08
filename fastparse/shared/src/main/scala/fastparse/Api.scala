@@ -1,19 +1,18 @@
 package fastparse
-import java.nio.ByteBuffer
-import java.nio.ByteOrder._
 
 import language.experimental.macros
 import fastparse.parsers.{Intrinsics, Terminals}
 import fastparse.Utils.HexUtils
+import fastparse.parsers.Terminals.AnyElems
 
 /**
  * This is basically a trait which contains
  * the "public" API to fastparse packages
  */
 
-class Api[ElemType, Repr]()(implicit elemSetHelper: ElemSetHelper[ElemType],
-                            elemFormatter: ElemTypeFormatter[ElemType],
-                            ordering: Ordering[ElemType]) {
+abstract class Api[ElemType, Repr]()(implicit elemSetHelper: ElemSetHelper[ElemType],
+                                     elemFormatter: ElemTypeFormatter[ElemType],
+                                     ordering: Ordering[ElemType]) {
   type Parsed[+T] = core.Parsed[T, ElemType]
   object Parsed {
     type Failure = core.Parsed.Failure[ElemType]
@@ -28,12 +27,11 @@ class Api[ElemType, Repr]()(implicit elemSetHelper: ElemSetHelper[ElemType],
   val Start = parsers.Terminals.Start[ElemType, Repr]()
   val End = parsers.Terminals.End[ElemType, Repr]()
   val Index = parsers.Terminals.Index[ElemType, Repr]()
-  val AnyElem = parsers.Terminals.AnyElem[ElemType, Repr]()
+  val AnyElem: P0
+  def ElemPred(pred: ElemType => Boolean): P0
+  def ElemIn(seqs: Seq[ElemType]*): P0
+  def ElemsWhile(pred: ElemType => Boolean, min: Int = 1): P0
 
-
-  val ElemPred = Intrinsics.ElemPred[ElemType, Repr] _
-  def ElemIn(seqs: Seq[ElemType]*) = Intrinsics.ElemIn[ElemType, Repr](seqs.map(_.toIndexedSeq): _*)
-  def ElemsWhile(pred: ElemType => Boolean, min: Int = 1) = Intrinsics.ElemsWhile[ElemType, Repr](pred, min)
   def SeqIn(seqs: Seq[ElemType]*) = Intrinsics.StringIn[ElemType, Repr](seqs.map(_.toIndexedSeq): _*)
 
   val NoTrace = parsers.Combinators.NoTrace
@@ -53,11 +51,21 @@ class Api[ElemType, Repr]()(implicit elemSetHelper: ElemSetHelper[ElemType],
 
 class StringApi() extends Api[Char, String]() {
 
-  val AnyChar = AnyElem
+  val AnyChar = parsers.Terminals.AnyElem[Char, String]("AnyChar")
+  def AnyChars(count: Int) = AnyElems[Char, String]("AnyChars", count)
 
-  val CharPred = ElemPred
-  def CharIn(strings: Seq[Char]*) = ElemIn(strings: _*)
-  def CharsWhile(pred: Char => Boolean, min: Int = 1) = ElemsWhile(pred, min)
+  val AnyElem = AnyChar
+  def AnyElem(count: Int) = AnyChars(count)
+  def CharPred(pred: Char => Boolean): P0 = Intrinsics.ElemPred("CharPred", pred)
+  def CharIn(strings: Seq[Char]*) = Intrinsics.ElemIn[Char, String]("CharIn", strings.map(_.toIndexedSeq): _*)
+  def CharsWhile(pred: Char => Boolean, min: Int = 1) = Intrinsics.ElemsWhile[Char, String]("CharsWhile", pred, min)
+
+
+  def ElemPred(pred: Char => Boolean) = CharPred(pred)
+  def ElemIn(strings: Seq[Char]*) = CharIn(strings:_*)
+  def ElemsWhile(pred: Char => Boolean, min: Int = 1) = CharsWhile(pred, min)
+
+
   def StringIn(strings: Seq[Char]*) = SeqIn(strings: _*)
 
   val CharPredicates = fastparse.CharPredicates
@@ -77,16 +85,24 @@ object noApi extends StringApi
 
 class ByteApi() extends Api[Byte, Array[Byte]]() {
 
-  val AnyByte = AnyElem
+  val AnyByte = parsers.Terminals.AnyElem[Byte, Array[Byte]]("AnyByte")
+  def AnyBytes(count: Int) = Terminals.AnyElems[Byte, Array[Byte]]("AnyBytes", count)
+  def BytePred(pred: Byte => Boolean): P0 = Intrinsics.ElemPred("BytePred", pred)
+  def ByteIn(seqs: Seq[Byte]*) = Intrinsics.ElemIn[Byte, Array[Byte]]("ByteIn", seqs.map(_.toIndexedSeq): _*)
+  def BytesWhile(pred: Byte => Boolean, min: Int = 1) = Intrinsics.ElemsWhile[Byte, Array[Byte]]("BytesWhile", pred, min)
 
-  val BytePred = ElemPred
-  def ByteIn(seqs: Seq[Byte]*) = ElemIn(seqs: _*)
-  def BytesWhile(pred: Byte => Boolean, min: Int = 1) = ElemsWhile(pred, min)
 
-  def ByteSeq[T](bytes: T*)(implicit num: Numeric[T]) = bytes.map(b => num.toInt(b).toByte).toArray
-  def BS[T](bytes: T*)(implicit num: Numeric[T]) = ByteSeq[T](bytes: _*)
-  type ByteSeq = Array[Byte]
-  type BS = ByteSeq
+  val AnyElem = AnyByte
+  def AnyElems(count: Int) = AnyBytes(count)
+  def ElemPred(pred: Byte => Boolean) = BytePred(pred)
+  def ElemIn(strings: Seq[Byte]*) = ByteIn(strings:_*)
+  def ElemsWhile(pred: Byte => Boolean, min: Int = 1) = BytesWhile(pred, min)
+
+  def BS[T](bytes: T*)(implicit num: Numeric[T]): Array[Byte] = {
+    bytes.iterator.map(num.toInt(_).toByte).toArray
+  }
+
+  type BS = Array[Byte]
 
   implicit def wspByteSeq(seq: Array[Byte]): P0 =
     if (seq.length == 1) parsers.Terminals.ElemLiteral(seq(0))
@@ -102,8 +118,9 @@ class ByteApi() extends Api[Byte, Array[Byte]]() {
     }
 
     val hexDigit = all.P(CharIn('0' to '9', 'a' to 'f', 'A' to 'F'))
-    val byte = all.P("0x".? ~ hexDigit.rep(exactly = 2).!).map(s => charsToByte(s.toLowerCase))
-    val byteSep = all.P(" ".rep)
+    val byte = all.P(hexDigit.rep(exactly = 2).!).map(s => charsToByte(s.toLowerCase))
+    val whitespace = " \n\r".toSet
+    val byteSep = all.P(CharsWhile(whitespace, min = 0))
     val bytes = all.P(byteSep ~ byte.rep(sep = byteSep)).map(_.toArray)
   }
 
@@ -114,6 +131,42 @@ class ByteApi() extends Api[Byte, Array[Byte]]() {
   def hexBytes(s: String): Array[Byte] = {
     HexBytesParser.bytes.parse(s).get.value
   }
+
+
+  type GenericIntegerParser[T] = ByteUtils.GenericIntegerParser[T]
+  val LE = ByteUtils.EndianByteParsers.LE
+  val BE = ByteUtils.EndianByteParsers.BE
+  /**
+    * Parses a two-byte word
+    */
+  val Word16: P[Unit] = new GenericIntegerParser(2, (input, n) => ())
+  /**
+    * Parses a four-byte word
+    */
+  val Word32: P[Unit] = new GenericIntegerParser(4, (input, n) => ())
+  /**
+    * Parses an eight-byte word
+    */
+  val Word64: P[Unit] = new GenericIntegerParser(8, (input, n) => ())
+
+  val Int8 = ByteUtils.Int8
+
+  val UInt8 = ByteUtils.UInt8
+  /**
+    * Prettify an array of `bytes` as an easy-to-ready 16-wide grid of hex-values
+    * into a string you can print and read.
+    *
+    * By default, only prints the first 8 rows. You can pass in a set of `markers`
+    * in order to label other parts of the input `bytes` with a caret and also print
+    * the rows around those points, or set `contextRows` to some other value than
+    * 8 if you want to see more or less rows (e.g. set it to Int.MaxValue to show
+    * the whole input)
+    */
+  def prettyBytes(bytes: Array[Byte],
+                  markers: Seq[Int] = Seq(-1),
+                  contextRows: Int = 8) = {
+    ByteUtils.prettyBytes(bytes, markers, contextRows)
+  }
 }
 
 object byte extends ByteApi {
@@ -122,51 +175,10 @@ object byte extends ByteApi {
     new ParserApiImpl[V, Byte, Array[Byte]](p)
 
   /**
-    * Parses a two-byte word
+    * Parses the `sizeParser` to get a number `n`, and then parses `p` exactly
+    * that many times, and returns the results as a `Seq`
     */
-  val Word16 = P( AnyByte.rep(exactly=2) )
-  /**
-    * Parses a four-byte word
-    */
-  val Word32 = P( AnyByte.rep(exactly=4) )
-  /**
-    * Parses an eight-byte word
-    */
-  val Word64 = P( AnyByte.rep(exactly=8) )
-
-  trait ByteFormat {
-    def wrapByteBuffer(byteSeq: ByteSeq): ByteBuffer
-
-
-    val Int8: P[Byte] =  P(AnyByte.!).map(_(0))
-    val Int16: P[Short] = P(Word16.!).map(wrapByteBuffer(_).getShort)
-    val Int32: P[Int] = P(Word32.!).map(wrapByteBuffer(_).getInt)
-    val Int64: P[Long] = P(Word64.!).map(wrapByteBuffer(_).getLong)
-
-    val UInt8: P[Short] = P( Int8.map(a => (a & 0xff).toShort) )
-    val UInt16: P[Int] = P( Int16.map(_ & 0xffff) )
-    val UInt32: P[Long] = P( Int32.map(_ & 0x00000000ffffffffL ) )
-
-    // TODO Dword should be unsigned, but the only option is to change it to Long, what seems quite bad
-
-    def repeatWithSize[T](p: Parser[T], sizeParser: Parser[Int] = UInt16): Parser[Seq[T]] =
-      P( sizeParser.flatMap(l => p.rep(exactly = l)) )
-  }
-  /**
-    * Parsers for parsing 16, 32 and 64 bit integers in little-endian format
-    */
-  object LE extends ByteFormat {
-    // Little Endian format
-    def wrapByteBuffer(byteSeq: ByteSeq): ByteBuffer = ByteBuffer.wrap(byteSeq).order(LITTLE_ENDIAN)
-  }
-  /**
-    * Parsers for parsing 16, 32 and 64 bit integers in big-endian format
-    */
-  object BE extends ByteFormat {
-    // Big Endian format
-    def wrapByteBuffer(byteSeq: ByteSeq): ByteBuffer = ByteBuffer.wrap(byteSeq).order(BIG_ENDIAN)
-  }
-
-
+  def repeatWithSize[Num: Numeric, T](sizeParser: Parser[Num], p: Parser[T]): Parser[Seq[T]] =
+    P( sizeParser.flatMap(l => p.rep(exactly = implicitly[Numeric[Num]].toInt(l))) )
 }
 object byteNoApi extends ByteApi

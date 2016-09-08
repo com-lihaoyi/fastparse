@@ -56,13 +56,13 @@ object MiscTests extends TestSuite{
         check(Start, """Start""")
         check(Pass, """Pass""")
         check(Fail, """Fail""")
-        check(AnyChar, """AnyElem""")
+        check(AnyChar, """AnyChar""")
         check(CharIn("abc", "d", Seq('1', '2', '3')), """CharIn("abcd123")""")
         check(
           StringIn("mango", "mandarin", "mangosteen"),
           """StringIn("mango", "mandarin", "mangosteen")"""
         )
-        check(CharPred(_.isUpper), """ElemPred(<function1>)""")
+        check(CharPred(_.isUpper), """CharPred(<function1>)""")
       }
     }
     'logging{

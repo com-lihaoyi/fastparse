@@ -361,17 +361,17 @@ object ClassParse {
     P( BS(8) ~/ string_index ).map(StringInfo)
   }
 
-  val constantIntInfo = P( BS(3) ~/ Word32.! ).map(bs =>
-    BasicElemInfo(IntElem(wrapByteBuffer(bs).getInt))
+  val constantIntInfo = P( BS(3) ~/ Int32 ).map(i =>
+    BasicElemInfo(IntElem(i))
   )
-  val constantFloatInfo = P( BS(4) ~/ Word32.! ).map(bs =>
-    BasicElemInfo(FloatElem(wrapByteBuffer(bs).getFloat))
+  val constantFloatInfo = P( BS(4) ~/ Float32 ).map(f =>
+    BasicElemInfo(FloatElem(f))
   )
-  val constantLongInfo = P( BS(5) ~/ AnyByte.rep(exactly=8).! ).map(bs =>
-    BasicElemInfo(LongElem(wrapByteBuffer(bs).getLong))
+  val constantLongInfo = P( BS(5) ~/ Int64 ).map(i =>
+    BasicElemInfo(LongElem(i))
   )
-  val constantDoubleInfo = P( BS(6) ~/ AnyByte.rep(exactly=8).! ).map(bs =>
-    BasicElemInfo(DoubleElem(wrapByteBuffer(bs).getDouble))
+  val constantDoubleInfo = P( BS(6) ~/ Float64 ).map(f =>
+    BasicElemInfo(DoubleElem(f))
   )
 
   val constantNameAndTypeInfo = {
@@ -381,7 +381,7 @@ object ClassParse {
   }
 
   val constantUtf8Info =
-    P( BS(1) ~/ UInt16.flatMap(l => AnyByte.rep(exactly=l).!) ).map(Utf8Info)
+    P( BS(1) ~/ UInt16.flatMap(l => AnyBytes(l).!) ).map(Utf8Info)
 
   val constantMethodHandleInfo = {
     val reference_kind = AnyByte.!
@@ -432,7 +432,7 @@ object ClassParse {
     val access_flags = Word16.!
     val name_index = UInt16
     val descriptor_index = UInt16
-    val attributes = repeatWithSize(attributeInfo.~/)
+    val attributes = repeatWithSize(UInt16, attributeInfo.~/)
 
     P( access_flags ~ name_index ~ descriptor_index ~ attributes ).map(FieldInfo.tupled)
   }
@@ -441,7 +441,7 @@ object ClassParse {
     val access_flags = Word16.!
     val name_index = UInt16
     val descriptor_index = UInt16
-    val attributes = repeatWithSize(attributeInfo.~/)
+    val attributes = repeatWithSize(UInt16, attributeInfo.~/)
 
     P(access_flags ~ name_index ~ descriptor_index ~ attributes).map(MethodInfo.tupled)
   }
@@ -453,10 +453,10 @@ object ClassParse {
     val access_flags = Word16.!
     val this_class = UInt16
     val super_class = UInt16
-    val interfaces = repeatWithSize(UInt16.~/)
-    val fields = repeatWithSize(fieldInfo.~/)
-    val methods = repeatWithSize(methodInfo.~/)
-    val attributes = repeatWithSize(attributeInfo.~/)
+    val interfaces = repeatWithSize(UInt16, UInt16.~/)
+    val fields = repeatWithSize(UInt16, fieldInfo.~/)
+    val methods = repeatWithSize(UInt16, methodInfo.~/)
+    val attributes = repeatWithSize(UInt16, attributeInfo.~/)
 
     P(
       BS(0xCA, 0xFE, 0xBA, 0xBE) ~/

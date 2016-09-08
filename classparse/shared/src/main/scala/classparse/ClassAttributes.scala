@@ -84,9 +84,9 @@ object ClassAttributes {
 
     val max_stack = UInt16
     val max_locals = UInt16
-    val code = Int32.flatMap(l => AnyByte.rep(exactly=l).!).map(parseCode)
-    val exception_table = repeatWithSize(exceptionHandler.~/)
-    val attributes = repeatWithSize(attributeInfo.~/)
+    val code = Int32.flatMap(l => AnyBytes(l).!).map(parseCode)
+    val exception_table = repeatWithSize(UInt16, exceptionHandler.~/)
+    val attributes = repeatWithSize(UInt16, attributeInfo.~/)
 
     P( max_stack ~ max_locals ~ code ~ exception_table ~ attributes ).map {
        case (maxs: Int, maxl: Int, code: Seq[OpCode], exceptions, attrs: Seq[AttributeInfo]) =>
@@ -121,12 +121,12 @@ object ClassAttributes {
       }
     }
 
-    repeatWithSize(innerClass).map(
+    repeatWithSize(UInt16, innerClass).map(
       ics => (classInfo: ClassFileInfo) => InnerClassesAttribute(ics.map(_(classInfo))))
   }
 
   val exceptions =
-    repeatWithSize(UInt16).map(exceptionsIdxs =>
+    repeatWithSize(UInt16, UInt16).map(exceptionsIdxs =>
       (classInfo: ClassFileInfo) => ExceptionsAttribute(
         exceptionsIdxs.map(idx => Class(classInfo, classInfo.getInfoByIndex[ClassInfo](idx).get))
       ))
@@ -156,7 +156,7 @@ object ClassAttributes {
 
   val bootstrapMethods = {
     val bootstrap_method_ref = UInt16
-    val bootstrap_arguments = repeatWithSize(UInt16)
+    val bootstrap_arguments = repeatWithSize(UInt16, UInt16)
 
     val bootstrapMethod =
       P( bootstrap_method_ref ~ bootstrap_arguments ).map {
@@ -168,7 +168,7 @@ object ClassAttributes {
           )
       }
 
-    repeatWithSize(bootstrapMethod).map(
+    repeatWithSize(UInt16, bootstrapMethod).map(
       bms => (classInfo: ClassFileInfo) => BootstrapMethodsAttribute(bms.map(_(classInfo))))
   }
 

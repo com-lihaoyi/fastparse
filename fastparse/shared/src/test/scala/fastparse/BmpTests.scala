@@ -29,7 +29,7 @@ object BmpTests extends TestSuite {
 
       case class BitmapInfoHeader(infoPart: BitmapInfoHeaderPart) extends BitmapHeader(infoPart)
 
-      case class Pixel(colors: ByteSeq)
+      case class Pixel(colors: Array[Byte])
 
       case class Bmp(fileHeader: FileHeader, bitmapHeader: BitmapHeader, pixels: Seq[Seq[Pixel]])
 
@@ -68,18 +68,18 @@ object BmpTests extends TestSuite {
     }
 
     val v2HeaderPart = {
-      val RgbPart = P( AnyByte.rep(exactly=4) )
+      val RgbPart = P( Word32 )
       P( infoHeaderPart ~ RgbPart.rep(exactly=3) )
     }
 
     val v3HeaderPart = {
-      val AlphaPart = P( AnyByte.rep(exactly=4) )
+      val AlphaPart = P( Word32 )
       P( v2HeaderPart ~ AlphaPart )
     }
 
-    val v4HeaderPart = P( v3HeaderPart ~ AnyByte.rep(exactly=52) )
+    val v4HeaderPart = P( v3HeaderPart ~ AnyBytes(52) )
 
-    val v5HeaderPart = P( v4HeaderPart ~ AnyByte.rep(exactly=16) )
+    val v5HeaderPart = P( v4HeaderPart ~ AnyBytes(16) )
 
 
     val infoHeader = P( BS(40, 0, 0, 0) /* 40 bytes */ ~/ infoHeaderPart )
@@ -93,7 +93,7 @@ object BmpTests extends TestSuite {
     def bmpRow(width: Int, bitsPerPixel: Int): P[Seq[Pixel]] = {
       val bytesPerPixel = bitsPerPixel / 8
       val padding = (width * bytesPerPixel) % 4
-      P( AnyByte.rep(exactly=bytesPerPixel).!.~/.rep(exactly=width) ~/ AnyByte.rep(exactly=padding) ).map(
+      P( AnyBytes(bytesPerPixel).!.~/.rep(exactly=width) ~/ AnyBytes(padding) ).map(
         pixels => pixels.map(Pixel)
       )
     }

@@ -88,13 +88,21 @@
                     @hl.scala{captureOpt} is a @hl.scala{Parser[Option[String]]}
             @p
                 In general, if you have a parser of type @hl.scala{TupleN}, capturing one more section turns it into a @hl.scala{TupleN+1}. Furthermore, if you capture within a @hl.scala{.rep} or @hl.scala{.?} optional parser, it becomes a @hl.scala{Parser[Seq[T]]} or @hl.scala{Parser[Option[T]]} respectively
+
         @sect{AnyChar}
             @i
                 See also @hl.scala{AnyElem} in @sect.ref{Abstraction}
             @hl.ref(tests/"ExampleTests.scala", Seq("'anychar", ""))
 
             @p
-                This parser parses any single character successfully.
+                This parser parses any single character successfully. It almost
+                always succeeds, except if there simply aren't any characters left
+                to parse.
+
+            @p
+                There is also a plural @hl.scala{AnyChars(count: Int)} version that
+                parses exactly @code{count} characters in a row, regardless of
+                what they are.
 
         @sect{Positive Lookahead}
             @hl.ref(tests/"ExampleTests.scala", Seq("'lookahead", ""))
