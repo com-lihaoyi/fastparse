@@ -287,7 +287,7 @@ object ExampleTests extends TestSuite{
         val alpha = P( CharIn('a' to 'z') )
         val nocut = P( "val " ~/ alpha.rep(1).! | "def " ~/ alpha.rep(1).!)
 
-//        val Result.Success("abcd", _) = nocut.parse("val abcd")
+        val Parsed.Success("abcd", _) = nocut.parse("val abcd")
 
         val failure = nocut.parse("val 1234").asInstanceOf[Parsed.Failure]
         assert(
@@ -301,8 +301,9 @@ object ExampleTests extends TestSuite{
         val stmt = P( "val " ~ alpha.rep(1).! ~ ";" ~ " ".rep )
         val stmts = P( stmt.rep(1) ~ End )
 
-//        val Result.Success(Seq("abcd"), _) = stmts.parse("val abcd;")
-//        val Result.Success(Seq("abcd", "efg"), _) = stmts.parse("val abcd; val efg;")
+        val Parsed.Success(Seq("abcd"), _) = stmts.parse("val abcd;")
+        val Parsed.Success(Seq("abcd", "efg"), _) = stmts.parse("val abcd; val efg;")
+
         val failure = stmts.parse("val abcd; val ").asInstanceOf[Parsed.Failure]
         assert(
           failure.index == 10,

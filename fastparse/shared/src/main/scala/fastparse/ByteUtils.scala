@@ -21,7 +21,7 @@ object ByteUtils{
       s"Cannot show indices $markers outside input bounds 0 -> ${bytes.length}"
     )
 
-    val maxIndexWidth = math.floor(math.max(0, math.log10(99))).toInt + 1
+    val maxIndexWidth = math.floor(math.max(0, math.log10(bytes.length))).toInt + 1
     val gutter = 4
     val output = new StringBuffer
     val emptyGutter = " " * (maxIndexWidth + gutter)
