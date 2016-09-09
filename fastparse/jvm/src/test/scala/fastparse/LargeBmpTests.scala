@@ -3,7 +3,6 @@ import java.awt.Color
 import java.awt.image.BufferedImage
 import java.nio.file.{Files, Paths}
 import javax.imageio.ImageIO
-import scodec.bits.ByteVector
 import utest._
 import fastparse.byte._
 
@@ -15,7 +14,7 @@ object LargeBmpTests extends TestSuite {
     'lena {
       val lenaRecource = getClass.getResource("/lena.bmp")
       val Parsed.Success(lenaBmp, _) = bmp.parse(
-        ByteVector(Files.readAllBytes(Paths.get(lenaRecource.toURI.getPath)))
+        Bytes(Files.readAllBytes(Paths.get(lenaRecource.toURI.getPath)))
       )
 
       def compareBmpImg(bmp: Bmp, img: BufferedImage): Unit = {
