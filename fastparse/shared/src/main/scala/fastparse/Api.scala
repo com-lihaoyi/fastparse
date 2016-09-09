@@ -126,14 +126,14 @@ class ByteApi() extends Api[Byte, ByteVector]() {
 
 
   /**
-    * Helper method to convert a space-separated string of hexidecimal bytes
-    * (e.g. "01 bc 21 04") into the corresponding ByteVector
+    * Shorthand for ByteVector.fromHex
     */
-  def hexBytes(s: String): ByteVector = {
-    HexBytesParser.bytes.parse(s).get.value.getOrElse(
-      throw new Exception("Invalid hexBytes contents: " + s)
-    )
-  }
+  def hexBytes(s: String): ByteVector = ByteVector.fromHex(s).get
+
+  /**
+    * Shorthand for ByteVector.apply
+    */
+  val bytes = ByteVector
 
 
   type GenericIntegerParser[T] = ByteUtils.GenericIntegerParser[T]

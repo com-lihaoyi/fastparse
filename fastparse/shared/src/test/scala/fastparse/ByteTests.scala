@@ -284,8 +284,9 @@ object ByteTests extends TestSuite {
           // Constructing a short ByteVector from bytes
           val a = ByteVector(0x01, 0xff)
           assert(a.toString == "ByteVector(2 bytes, 0x01ff)")
-          val b  = ByteVector("hello":_*)
+
           // Constructing a ByteVector from an ASCII string
+          val b  = ByteVector("hello":_*)
           assert(b.toString == "ByteVector(5 bytes, 0x68656c6c6f)")
 
           // Constructing a ByteVector copying from a Array[Byte]
@@ -331,25 +332,52 @@ object ByteTests extends TestSuite {
             c.toHex == "ffff0101",
             c.toBase64 == "//8BAQ==",
             ByteVector.fromHex("ffff0101").get == c,
+            ByteVector.fromHex("""
+              ff ff
+              01 01
+            """).get == c,
             ByteVector.fromBase64("//8BAQ==").get == c
           )
 
 
         }
       }
+      'bytes{
+        'construction{
+          import fastparse.byte._
+
+          // Constructing a short ByteVector from bytes
+          val a = bytes(0x01, 0xff)
+          assert(a.toString == "ByteVector(2 bytes, 0x01ff)")
+
+          // Constructing a ByteVector from an ASCII string
+          val b  = bytes("hello":_*)
+          assert(b.toString == "ByteVector(5 bytes, 0x68656c6c6f)")
+
+          // Constructing a ByteVector copying from a Array[Byte]
+          val byteArray = Array[Byte](1, 2, 3, 4)
+          val c = bytes(byteArray)
+          assert(c.toString == "ByteVector(4 bytes, 0x01020304)")
+
+          // Unsafe construction from an Array[Byte], without copying; assumes
+          // You do not mutate the underlying array, otherwise things break.
+          val d = bytes.view(byteArray)
+          assert(d.toString == "ByteVector(4 bytes, 0x01020304)")
+        }
+      }
       'hexBytes{
         import fastparse.byte._
 
-        assert(hexBytes("01 ff").toSeq == ByteVector(0x01, 0xff).toSeq)
-
-        val multiLine = """
-          de ad be ef
-          ca fe ba be
-        """
-        assert(hexBytes(multiLine).toSeq == ByteVector(
-          0xde, 0xad, 0xbe, 0xef,
-          0xca, 0xfe, 0xba, 0xbe
-        ).toSeq)
+        assert(
+          hexBytes("01 ff") == ByteVector.fromHex("01 ff").get,
+          hexBytes("""
+            de ad be ef
+            ca fe ba be
+          """) == ByteVector.fromHex("""
+            de ad be ef
+            ca fe ba be
+          """).get
+        )
       }
       'prettyBytesBare{
         import fastparse.byte._
@@ -432,6 +460,13 @@ object ByteTests extends TestSuite {
 
       }
 
+      'bs{
+        import fastparse.byte._
+        val parser = P( BS(0xDE, 0xAD, 0xBE, 0xEF) )
+
+        val Parsed.Success((), 4) = parser.parse(ByteVector(0xDE, 0xAD, 0xBE, 0xEF))
+        val Parsed.Failure(_, 0, _) = parser.parse(ByteVector(0xCA, 0xFE, 0xBA, 0xBE))
+      }
       'udp{
         import fastparse.byte._
         case class UdpPacket(sourcePort: Int,

@@ -82,21 +82,21 @@
 
     @sect{Byte Helpers}
         @p
-            Apart from providing an equivalent API for byte parsing, FastParse's
-            byte-parsers also provide some helper functions for conveniently dealing
-            with binary blobs.
+            Apart from providing an equivalent API for byte parsing,
+            FastParse's byte-parsers also provide some helper functions for
+            conveniently dealing with binary blobs.
 
-        @sect{BS}
-            @hl.ref(tests/"ByteTests.scala", Seq("'bs", ""))
+        @sect{bytes}
+            @hl.ref(tests/"ByteTests.scala", Seq("'bytes", ""))
             @p
-                This is a shorthand for @code{Array[Byte](...)} that is shorter
-                and saves you a bunch of annoying @code{.toByte} calls.
+                A shorthand for the various @code{ByteVector.apply}
+                constructors; purely for convenience/conciseness
 
         @sect{hexBytes}
             @hl.ref(tests/"ByteTests.scala", Seq("'hexBytes", ""))
             @p
-                Another shorthand for @code{Array[Byte](...)}, that lets you
-                pass in lower-case hexadecimal bytes.
+                A shorthand for the various @code{ByteVector.fromHex}
+                constructor; purely for convenience/conciseness
 
         @sect{prettyBytes}
             @hl.ref(tests/"ByteTests.scala", Seq("'prettyBytesBare", ""))
@@ -119,6 +119,14 @@
             "https://en.wikipedia.org/wiki/Two%27s_complement") integer or
             @lnk("floating point", "https://en.wikipedia.org/wiki/Floating_point")
             number. @code{fastparse.byte} provides built in support for these.
+
+        @sect{BS}
+            @hl.ref(tests/"ByteTests.scala", Seq("'bs", ""))
+            @p
+                This is the equivalent to the @sect.ref{Basic} literal string
+                parser in when parsing strings. If the input matches the given
+                sequence of bytes exactly, it the parse succeeds; if the input
+                does not match or there's not enough input, the parse fails.
 
         @sect{WordN}
             @hl.ref(tests/"ByteTests.scala", Seq("'words", ""))
