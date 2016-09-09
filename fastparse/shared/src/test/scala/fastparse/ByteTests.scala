@@ -307,7 +307,7 @@ object ByteTests extends TestSuite {
           import fastparse.byte._
 
           val a = Bytes(0xff, 0xff)
-          val b  = Bytes(0x01, 0x01)
+          val b = Bytes(0x01, 0x01)
 
           // Simple operations
           assert(

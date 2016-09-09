@@ -63,7 +63,7 @@
         @p
             As well as many useful operations:
 
-        @hl.ref(tests/"ByteTests.scala", Seq("'bytevector", "'construction", ""))
+        @hl.ref(tests/"ByteTests.scala", Seq("'bytevector", "'operations", ""))
 
         @p
             These are just the highlights of the most common operations on a
