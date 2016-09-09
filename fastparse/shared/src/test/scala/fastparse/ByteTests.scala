@@ -123,22 +123,22 @@ object ByteTests extends TestSuite {
         val capture2 = P(BS(1).rep.! ~ BS(2).! ~ End)
 
         val Parsed.Success(res2, 4) = capture2.parse(hexBytes("01 01 01 02"))
-        assert(res2 == (BS(1, 1, 1), BS(2)))
+        assert(res2 == (ByteVector(1, 1, 1), ByteVector(2)))
 
         val capture3 = P(BS(1).rep.! ~ BS(2).! ~ BS(3).! ~ End)
 
         val Parsed.Success(res3, 5) = capture3.parse(hexBytes("01 01 01 02 03"))
-        assert(res3 == (BS(1, 1, 1), BS(2), BS(3)))
+        assert(res3 == (ByteVector(1, 1, 1), ByteVector(2), ByteVector(3)))
 
         val captureRep = P(BS(1).!.rep ~ BS(2) ~ End)
 
         val Parsed.Success(res4, 4) = captureRep.parse(hexBytes("01 01 01 02"))
-        assert(res4 == Seq(BS(1), BS(1), BS(1)))
+        assert(res4 == Seq(ByteVector(1), ByteVector(1), ByteVector(1)))
 
         val captureOpt = P(BS(1).rep ~ BS(2).!.? ~ End)
 
         val Parsed.Success(res5, 4) = captureOpt.parse(hexBytes("01 01 01 02"))
-        assert(res5 == Some(BS(2)))
+        assert(res5 == Some(ByteVector(2)))
       }
       'unapply {
         import fastparse.byte._
@@ -163,12 +163,12 @@ object ByteTests extends TestSuite {
         val captureRep = P(BS(1).!.rep ~ BS(2) ~ End)
 
         val captureRep(res4) = hexBytes("01 01 01 02")
-        assert(res4 == Seq(BS(1), BS(1), BS(1)))
+        assert(res4 == Seq(ByteVector(1), ByteVector(1), ByteVector(1)))
 
         val captureOpt = P(BS(1).rep ~ BS(2).!.? ~ End)
 
         val captureOpt(res5) = hexBytes("01 01 01 02")
-        assert(res5 == Some(BS(2)))
+        assert(res5 == Some(ByteVector(2)))
       }
       'anybyte {
         import fastparse.byte._
@@ -201,7 +201,7 @@ object ByteTests extends TestSuite {
         val keyword = P(BS(1, 2, 3) ~ !BS(0) ~ AnyByte ~ BS(5, 6, 7)).!
 
         val Parsed.Success(res, _) = keyword.parse(hexBytes("01 02 03 42 05 06 07"))
-        assert(res == Array(1, 2, 3, 0x42, 5, 6, 7))
+        assert(res == ByteVector(1, 2, 3, 0x42, 5, 6, 7))
 
         val Parsed.Failure(parser, 4, _) = keyword.parse(hexBytes("01 02 03 00 05 06 07"))
         assert(parser == !BS(0))

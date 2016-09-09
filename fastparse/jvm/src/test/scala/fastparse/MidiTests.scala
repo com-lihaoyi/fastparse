@@ -47,7 +47,6 @@ object MidiTests extends TestSuite{
           parsed.tracks(1).length == 293
         )
 
-        parsed.tracks(1).foreach(println)
       }
     }
     'chronoTrigger{
@@ -73,7 +72,6 @@ object MidiTests extends TestSuite{
           parsed.tracks(0)(0)._2.isInstanceOf[SysExEvent.Message],
           parsed.tracks(0).drop(1) == expectedTrack0
         )
-        parsed.tracks(0).foreach(println)
         assert()
 
       }

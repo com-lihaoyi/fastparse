@@ -55,7 +55,7 @@ object ByteUtils{
       val endRow = grouped.last / 16 + contextRows
       for{
         i <- startRow to endRow
-        sliced = bytes.slice(i * 16, (i + 1) * 16)
+        sliced = bytes.slice(math.max(0, i * 16), math.max(0, (i + 1) * 16))
         if sliced.nonEmpty
       }{
 
