@@ -2,7 +2,7 @@ package fastparse
 
 import java.io.InputStream
 
-
+import scodec.bits.ByteVector
 import utest._
 import fastparse.byte._
 import fastparse.BmpTests.BmpParse._
@@ -10,7 +10,7 @@ import fastparse.BmpTests.BmpParse._
 import scala.collection.mutable
 object LargeBmpIteratorTests extends TestSuite {
 
-  class StreamToIteratorByte(stream: InputStream, bufferSize: Int) extends Iterator[Array[Byte]] {
+  class StreamToIteratorByte(stream: InputStream, bufferSize: Int) extends Iterator[ByteVector] {
     val buffer = new Array[Byte](bufferSize)
     var bufferLen = 0
     var isRead = false
@@ -28,11 +28,11 @@ object LargeBmpIteratorTests extends TestSuite {
         bufferLen != -1
       }
 
-    override def next(): Array[Byte] = {
+    override def next(): ByteVector = {
       if (!isRead)
         readBuffer()
       isRead = false
-      buffer.take(bufferLen)
+      ByteVector.view(buffer.take(bufferLen))
     }
   }
 
@@ -46,7 +46,7 @@ object LargeBmpIteratorTests extends TestSuite {
     }
 
     'maxInnerLength {
-      val loggedInput = new IteratorParserInput[Byte](lenaIterator.map(wrapByteArray)) {
+      val loggedInput = new IteratorParserInput[Byte](lenaIterator.map(_.toArray)) {
         var maxInnerLength = 0
 
         override def dropBuffer(index: Int): Unit = {

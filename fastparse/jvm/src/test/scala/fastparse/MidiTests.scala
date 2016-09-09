@@ -2,21 +2,22 @@ package fastparse
 
 import java.nio.file.{Files, Paths}
 
+import scodec.bits.ByteVector
 import utest._
 
 
 object MidiTests extends TestSuite{
   def readResourceBytes(file: String) = {
-    Files.readAllBytes(Paths.get(getClass.getResource(file).toURI.getPath))
+    ByteVector(Files.readAllBytes(Paths.get(getClass.getResource(file).toURI.getPath)))
   }
 
 
 
-  def variousParses(bytes: Array[Byte]) = {
+  def variousParses(bytes: ByteVector) = {
     val stringParse = MidiParse.midiParser.parse(bytes).get.value
     val iteratorParses =
       for(i <- Seq(1, 4, 16, 64, 256, 1024))
-      yield MidiParse.midiParser.parseIterator(bytes.grouped(i)).get.value
+      yield MidiParse.midiParser.parseIterator(bytes.toArray.grouped(i).map(ByteVector.view)).get.value
 
     stringParse +: iteratorParses
   }

@@ -1,5 +1,7 @@
 package fastparse
 
+import scodec.bits.ByteVector
+
 
 case class Midi(format: Int, tickDiv: Midi.TickDiv, tracks: Seq[Seq[(Int, Midi.TrackEvent)]])
 object Midi{
@@ -40,12 +42,12 @@ object Midi{
     case class SmpteOffset(hour: Byte, minute: Byte, seconds: Byte, frames: Byte, fractional: Byte) extends MetaEvent
     case class TimeSignature(numerator: Byte, denominator: Byte, clocks: Byte, notatedNotes: Byte) extends MetaEvent
     case class KeySignature(sf: Byte, majorKey: Boolean) extends MetaEvent
-    case class SequencerSpecificEvent(data: Array[Byte]) extends MetaEvent
-    case class Unknown(data: Array[Byte]) extends MetaEvent
+    case class SequencerSpecificEvent(data: ByteVector) extends MetaEvent
+    case class Unknown(data: ByteVector) extends MetaEvent
   }
   sealed trait SysExEvent extends TrackEvent
   object SysExEvent{
-    case class Message(data: Array[Byte]) extends SysExEvent
+    case class Message(data: ByteVector) extends SysExEvent
   }
 }
 
@@ -71,12 +73,12 @@ object MidiParse{
     * concat all the 7-bit numbers into one entire, unsigned integer
     */
   val varInt: P[Int] = P( BytesWhile(b => (b & 0x80) != 0, min = 0) ~ Int8 ).!.map{ r =>
-    r.map(_ & 0xff).foldLeft(0)((a, b) => (a << 7) + (b & ~0x80))
+    r.toArray.map(_ & 0xff).foldLeft(0)((a, b) => (a << 7) + (b & ~0x80))
   }
   // Variable-length str/byte-array parsers, parsing {length + contents}
   val varBytes = varInt.flatMap(x => AnyBytes(x).!)
 
-  val varString = varBytes.map(new String(_))
+  val varString = varBytes.map(x => new String(x.toArray))
 
 
   val midiEvent: P[(MidiEvent, Seq[(Int, MidiEvent)])] = {
@@ -114,7 +116,7 @@ object MidiParse{
       } yield result
     )
   }
-  val EndOfTrack = wspByteSeq(BS(0x00)).map(_ => MetaEvent.EndOfTrack)
+  val EndOfTrack = BS(0x00).map(_ => MetaEvent.EndOfTrack)
   val metaEvent = {
 
     val SequenceNumber = (BS(0x02) ~ Int8 ~ Int8).map{case (x, y) => MetaEvent.SequenceNumber((x << 8 + y).toShort)}

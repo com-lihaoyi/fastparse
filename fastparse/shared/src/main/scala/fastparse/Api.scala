@@ -4,7 +4,7 @@ import language.experimental.macros
 import fastparse.parsers.{Intrinsics, Terminals}
 import fastparse.Utils.HexUtils
 import fastparse.parsers.Terminals.AnyElems
-
+import scodec.bits.ByteVector
 /**
  * This is basically a trait which contains
  * the "public" API to fastparse packages
@@ -78,18 +78,18 @@ class StringApi() extends Api[Char, String]() {
 
 object all extends StringApi{
   implicit def parserApi[T, V](p: T)(implicit c: T => core.Parser[V, Char, String]): ParserApi[V, Char, String] =
-    new ParserApiImpl[V, Char, String](p)
+    new ParserApiImpl[V, Char, String](p)(ResultConverter.CharBuilder)
 }
 object noApi extends StringApi
 
 
-class ByteApi() extends Api[Byte, Array[Byte]]() {
+class ByteApi() extends Api[Byte, ByteVector]() {
 
-  val AnyByte = parsers.Terminals.AnyElem[Byte, Array[Byte]]("AnyByte")
-  def AnyBytes(count: Int) = Terminals.AnyElems[Byte, Array[Byte]]("AnyBytes", count)
+  val AnyByte = parsers.Terminals.AnyElem[Byte, ByteVector]("AnyByte")
+  def AnyBytes(count: Int) = Terminals.AnyElems[Byte, ByteVector]("AnyBytes", count)
   def BytePred(pred: Byte => Boolean): P0 = Intrinsics.ElemPred("BytePred", pred)
-  def ByteIn(seqs: Seq[Byte]*) = Intrinsics.ElemIn[Byte, Array[Byte]]("ByteIn", seqs.map(_.toIndexedSeq): _*)
-  def BytesWhile(pred: Byte => Boolean, min: Int = 1) = Intrinsics.ElemsWhile[Byte, Array[Byte]]("BytesWhile", pred, min)
+  def ByteIn(seqs: Seq[Byte]*) = Intrinsics.ElemIn[Byte, ByteVector]("ByteIn", seqs.map(_.toIndexedSeq): _*)
+  def BytesWhile(pred: Byte => Boolean, min: Int = 1) = Intrinsics.ElemsWhile[Byte, ByteVector]("BytesWhile", pred, min)
 
 
   val AnyElem = AnyByte
@@ -98,15 +98,14 @@ class ByteApi() extends Api[Byte, Array[Byte]]() {
   def ElemIn(strings: Seq[Byte]*) = ByteIn(strings:_*)
   def ElemsWhile(pred: Byte => Boolean, min: Int = 1) = BytesWhile(pred, min)
 
-  def BS[T](bytes: T*)(implicit num: Numeric[T]): Array[Byte] = {
-    bytes.iterator.map(num.toInt(_).toByte).toArray
+  def BS[T](bytes: T*)(implicit num: Integral[T]): P0 = {
+    ByteVector(bytes:_*)
   }
 
-  type BS = Array[Byte]
 
-  implicit def wspByteSeq(seq: Array[Byte]): P0 =
-    if (seq.length == 1) parsers.Terminals.ElemLiteral(seq(0))
-    else parsers.Terminals.Literal(seq)
+  implicit def wspByteSeq(seq: ByteVector): P0 =
+    if (seq.length == 1) parsers.Terminals.ElemLiteral[Byte, ByteVector](seq(0))
+    else parsers.Terminals.Literal[Byte, ByteVector](seq.toArray)
 
   object HexBytesParser {
     import all._
@@ -118,18 +117,21 @@ class ByteApi() extends Api[Byte, Array[Byte]]() {
     }
 
     val hexDigit = all.P(CharIn('0' to '9', 'a' to 'f', 'A' to 'F'))
-    val byte = all.P(hexDigit.rep(exactly = 2).!).map(s => charsToByte(s.toLowerCase))
+    val byte = all.P(hexDigit.rep(exactly = 2))
     val whitespace = " \n\r".toSet
     val byteSep = all.P(CharsWhile(whitespace, min = 0))
-    val bytes = all.P(byteSep ~ byte.rep(sep = byteSep)).map(_.toArray)
+    val bytes = all.P(byteSep ~ byte.rep(sep = byteSep)).!.map(ByteVector.fromHex(_))
   }
+
 
   /**
     * Helper method to convert a space-separated string of hexidecimal bytes
-    * (e.g. "01 bc 21 04") into the corresponding Array[Byte]
+    * (e.g. "01 bc 21 04") into the corresponding ByteVector
     */
-  def hexBytes(s: String): Array[Byte] = {
-    HexBytesParser.bytes.parse(s).get.value
+  def hexBytes(s: String): ByteVector = {
+    HexBytesParser.bytes.parse(s).get.value.getOrElse(
+      throw new Exception("Invalid hexBytes contents: " + s)
+    )
   }
 
 
@@ -162,7 +164,7 @@ class ByteApi() extends Api[Byte, Array[Byte]]() {
     * 8 if you want to see more or less rows (e.g. set it to Int.MaxValue to show
     * the whole input)
     */
-  def prettyBytes(bytes: Array[Byte],
+  def prettyBytes(bytes: ByteVector,
                   markers: Seq[Int] = Seq(-1),
                   contextRows: Int = 8) = {
     ByteUtils.prettyBytes(bytes, markers, contextRows)
@@ -171,8 +173,8 @@ class ByteApi() extends Api[Byte, Array[Byte]]() {
 
 object byte extends ByteApi {
   implicit def parserApi[T, V](p: T)
-                              (implicit c: T => core.Parser[V, Byte, Array[Byte]]): ParserApi[V, Byte, Array[Byte]] =
-    new ParserApiImpl[V, Byte, Array[Byte]](p)
+                              (implicit c: T => core.Parser[V, Byte, ByteVector]): ParserApi[V, Byte, ByteVector] =
+    new ParserApiImpl[V, Byte, ByteVector](p)(ResultConverter.ByteBuilder)
 
   /**
     * Parses the `sizeParser` to get a number `n`, and then parses `p` exactly

@@ -2,7 +2,10 @@ package fastparse
 
 import java.nio.{ByteBuffer, ByteOrder}
 
+import scodec.bits.ByteVector
 import utest._
+
+import scala.collection.generic.SeqFactory
 
 object ByteTests extends TestSuite {
 
@@ -12,10 +15,10 @@ object ByteTests extends TestSuite {
         import fastparse.byte._
         val parseA = P(BS(1))
 
-        val Parsed.Success(value, successIndex) = parseA.parse(BS(1))
+        val Parsed.Success(value, successIndex) = parseA.parse(ByteVector(1))
         assert(value ==(), successIndex == 1)
 
-        val failure = parseA.parse(BS(2)).asInstanceOf[Parsed.Failure]
+        val failure = parseA.parse(ByteVector(2)).asInstanceOf[Parsed.Failure]
         assert(
           failure.lastParser == (BS(1): P0),
           failure.index == 0,
@@ -27,7 +30,7 @@ object ByteTests extends TestSuite {
         import fastparse.byte._
         val ab = P(BS(1) ~ BS(2)) // or P(Array[Byte](1) ~ Array[Byte](2))
 
-        val Parsed.Success(_, 2) = ab.parse(BS(1, 2)) // BS(1, 2) == Array[Byte](1, 2)
+        val Parsed.Success(_, 2) = ab.parse(ByteVector(1, 2)) // BS(1, 2) == Array[Byte](1, 2)
 
         val Parsed.Failure(parser, 1, _) = ab.parse(hexBytes("01 01")) // or BS(1, 1)
         assert(parser == (BS(2): P0))
@@ -57,8 +60,11 @@ object ByteTests extends TestSuite {
         import fastparse.byte._
         val option = P(BS(3).? ~ BS(1).rep(sep = BS(2)).! ~ End)
 
-        val Parsed.Success(Array(1, 2, 1), 3) = option.parse(hexBytes("01 02 01"))
-        val Parsed.Success(Array(1, 2, 1), 3) = option.parse(hexBytes("01 02 01"))
+        val Parsed.Success(res1, 3) = option.parse(hexBytes("01 02 01"))
+        assert(res1 == ByteVector(1, 2, 1))
+
+        val Parsed.Success(res2, 3) = option.parse(hexBytes("01 02 01"))
+        assert(res2 == ByteVector(1, 2, 1))
       }
 
       'either {
@@ -84,8 +90,11 @@ object ByteTests extends TestSuite {
         import fastparse.byte._
         val ab = P(((BS(1) | Start) ~ BS(2)).rep ~ End).!
 
-        val Parsed.Success(Array(1, 2, 1, 2), 4) = ab.parse(hexBytes("01 02 01 02"))
-        val Parsed.Success(Array(2, 1, 2, 1, 2), 5) = ab.parse(hexBytes("02 01 02 01 02"))
+        val Parsed.Success(res1, 4) = ab.parse(hexBytes("01 02 01 02"))
+        assert(res1 == ByteVector(1, 2, 1, 2))
+
+        val Parsed.Success(res2, 5) = ab.parse(hexBytes("02 01 02 01 02"))
+        assert(res2 == ByteVector(2, 1, 2, 1, 2))
 
         val Parsed.Failure(parser, 2, _) = ab.parse(hexBytes("01 02 02"))
 
@@ -108,51 +117,65 @@ object ByteTests extends TestSuite {
         import fastparse.byte._
         val capture1 = P(BS(1).rep.! ~ BS(2) ~ End)
 
-        val Parsed.Success(Array(1, 1, 1), 4) = capture1.parse(hexBytes("01 01 01 02"))
+        val Parsed.Success(res1, 4) = capture1.parse(hexBytes("01 01 01 02"))
+        assert(res1 == ByteVector(1, 1, 1))
 
         val capture2 = P(BS(1).rep.! ~ BS(2).! ~ End)
 
-        val Parsed.Success((Array(1, 1, 1), Array(2)), 4) = capture2.parse(hexBytes("01 01 01 02"))
+        val Parsed.Success(res2, 4) = capture2.parse(hexBytes("01 01 01 02"))
+        assert(res2 == (BS(1, 1, 1), BS(2)))
 
         val capture3 = P(BS(1).rep.! ~ BS(2).! ~ BS(3).! ~ End)
 
-        val Parsed.Success((Array(1, 1, 1), Array(2), Array(3)), 5) = capture3.parse(hexBytes("01 01 01 02 03"))
+        val Parsed.Success(res3, 5) = capture3.parse(hexBytes("01 01 01 02 03"))
+        assert(res3 == (BS(1, 1, 1), BS(2), BS(3)))
 
         val captureRep = P(BS(1).!.rep ~ BS(2) ~ End)
 
-        val Parsed.Success(Seq(Array(1), Array(1), Array(1)), 4) = captureRep.parse(hexBytes("01 01 01 02"))
+        val Parsed.Success(res4, 4) = captureRep.parse(hexBytes("01 01 01 02"))
+        assert(res4 == Seq(BS(1), BS(1), BS(1)))
 
         val captureOpt = P(BS(1).rep ~ BS(2).!.? ~ End)
 
-        val Parsed.Success(Some(Array(2)), 4) = captureOpt.parse(hexBytes("01 01 01 02"))
+        val Parsed.Success(res5, 4) = captureOpt.parse(hexBytes("01 01 01 02"))
+        assert(res5 == Some(BS(2)))
       }
       'unapply {
         import fastparse.byte._
         val capture1 = P(BS(1).rep.! ~ BS(2) ~ End)
 
-        val capture1(Array(1, 1, 1)) = hexBytes("01 01 01 02")
+        val capture1(res1) = hexBytes("01 01 01 02")
+        assert(res1 == ByteVector(1, 1, 1))
 
         val capture2 = P(BS(1).rep.! ~ BS(2).! ~ End)
 
-        val capture2(Array(1, 1, 1), Array(2)) = hexBytes("01 01 01 02")
+        val capture2(res2_1, res2_2) = hexBytes("01 01 01 02")
+        assert(res2_1 == ByteVector(1, 1, 1))
+        assert(res2_2 == ByteVector(2))
 
         val capture3 = P(BS(1).rep.! ~ BS(2).! ~ BS(3).! ~ End)
 
-        val capture3(Array(1, 1, 1), Array(2), Array(3)) = hexBytes("01 01 01 02 03")
+        val capture3(res3_1, res3_2, res3_3) = hexBytes("01 01 01 02 03")
+        assert(res3_1 == ByteVector(1, 1, 1))
+        assert(res3_2 == ByteVector(2))
+        assert(res3_3 == ByteVector(3))
 
         val captureRep = P(BS(1).!.rep ~ BS(2) ~ End)
 
-        val captureRep(Seq(Array(1), Array(1), Array(1))) = hexBytes("01 01 01 02")
+        val captureRep(res4) = hexBytes("01 01 01 02")
+        assert(res4 == Seq(BS(1), BS(1), BS(1)))
 
         val captureOpt = P(BS(1).rep ~ BS(2).!.? ~ End)
 
-        val captureOpt(Some(Array(2))) = hexBytes("01 01 01 02")
+        val captureOpt(res5) = hexBytes("01 01 01 02")
+        assert(res5 == Some(BS(2)))
       }
       'anybyte {
         import fastparse.byte._
         val ab = P(BS(1) ~ AnyByte.! ~ BS(1))
 
-        val Parsed.Success(Array(0x42), 3) = ab.parse(hexBytes("01 42 01"))
+        val Parsed.Success(res, 3) = ab.parse(hexBytes("01 42 01"))
+        assert(res == ByteVector(0x42))
 
         val failure @ Parsed.Failure(parser, 2, _) = ab.parse(hexBytes("01 42 43 01"))
 
@@ -168,14 +191,17 @@ object ByteTests extends TestSuite {
         import fastparse.byte._
         val keyword = P((BS(1, 2, 3) ~ &(BS(4))).!.rep)
 
-        val Parsed.Success(Seq(Array(1, 2, 3)), _) = keyword.parse(hexBytes("01 02 03 04"))
+        val Parsed.Success(res, _) = keyword.parse(hexBytes("01 02 03 04"))
+        assert(res == Seq(ByteVector(1, 2, 3))
+        )
         val Parsed.Success(Seq(), __) = keyword.parse(hexBytes("01 02 03 05"))
       }
       'neglookahead {
         import fastparse.byte._
         val keyword = P(BS(1, 2, 3) ~ !BS(0) ~ AnyByte ~ BS(5, 6, 7)).!
 
-        val Parsed.Success(Array(1, 2, 3, 0x42, 5, 6, 7), _) = keyword.parse(hexBytes("01 02 03 42 05 06 07"))
+        val Parsed.Success(res, _) = keyword.parse(hexBytes("01 02 03 42 05 06 07"))
+        assert(res == Array(1, 2, 3, 0x42, 5, 6, 7))
 
         val Parsed.Failure(parser, 4, _) = keyword.parse(hexBytes("01 02 03 00 05 06 07"))
         assert(parser == !BS(0))
@@ -183,38 +209,23 @@ object ByteTests extends TestSuite {
       'map {
         import fastparse.byte._
         val binary = P((BS(0) | BS(1)).rep.!)
-        val binaryNum = P(binary.map(_.sum))
+        val binaryNum = P(binary.map(_.toArray.sum))
 
-        val Parsed.Success(Array(1, 1, 0, 0), _) = binary.parse(hexBytes("01 01 00 00"))
+        val Parsed.Success(res, _) = binary.parse(hexBytes("01 01 00 00"))
+        assert(res == ByteVector(1, 1, 0, 0))
+
         val Parsed.Success(2, _) = binaryNum.parse(hexBytes("01 01 00 00"))
       }
     }
 
     'debugging{
       def check(a: Any, s: String) = assert(a.toString == s.trim)
-
-      def bytesToInt(bytes: Array[Byte]): Int = {
-        var res = 0
-        for (i <- bytes.indices) {
-          res += bytes(i).toInt << ((3 - i) * 4)
-        }
-        res
-      }
-
-      def bytesToLongInt(bytes: Array[Byte]): Long = {
-        var res: Long = 0
-        for (i <- bytes.indices) {
-          res += bytes(i).toLong << ((3 - i) * 4)
-        }
-        res
-      }
-
       'original{
         import fastparse.byte._
         object Foo{
 
-          val int = P( BS(0) ~ AnyByte.rep(exactly=4).! ).map(bytesToInt)
-          val longInt = P( BS(-1) ~ AnyByte.rep(exactly=8).! ).map(bytesToLongInt)
+          val int = P( BS(0) ~ AnyByte.rep(exactly=4).! ).map(_.toInt())
+          val longInt = P( BS(-1) ~ AnyByte.rep(exactly=8).! ).map(_.toLong())
           val ints = P( (int | longInt).rep(1) )
         }
 
@@ -228,8 +239,8 @@ object ByteTests extends TestSuite {
         import fastparse.byte._
         object Foo{
 
-          val int = P( BS(0) ~/ AnyBytes(4).! ).map(bytesToInt)
-          val longInt = P( BS(-1) ~/ AnyByte.rep(exactly=8).! ).map(bytesToLongInt)
+          val int = P( BS(0) ~/ AnyBytes(4).! ).map(_.toInt())
+          val longInt = P( BS(-1) ~/ AnyByte.rep(exactly=8).! ).map(_.toLong())
           val ints = P( (int | longInt).rep(1) )
         }
         check(
@@ -243,8 +254,8 @@ object ByteTests extends TestSuite {
         implicit val logger = Logger(captured.append(_))
         object Foo{
 
-          val int = P( BS(0) ~/ AnyByte.rep(exactly=4).! ).map(bytesToInt).log()
-          val longInt = P( BS(-1) ~/ AnyByte.rep(exactly=8).! ).map(bytesToLongInt).log()
+          val int = P( BS(0) ~/ AnyByte.rep(exactly=4).! ).map(_.toInt()).log()
+          val longInt = P( BS(-1) ~/ AnyByte.rep(exactly=8).! ).map(_.toLong()).log()
           val ints = P( (int | longInt).rep(1) ).log()
         }
 
@@ -270,26 +281,26 @@ object ByteTests extends TestSuite {
       'bs{
         import fastparse.byte._
 
-        assert(BS(0x01, 0xff).toSeq == Array[Byte](0x01.toByte, 0xff.toByte).toSeq)
-        assert(BS("hello":_*).toSeq == Array[Byte](104, 101, 108, 108, 111).toSeq)
+        assert(ByteVector(0x01, 0xff) == ByteVector(0x01.toByte, 0xff.toByte))
+        assert(ByteVector("hello":_*) == ByteVector(104, 101, 108, 108, 111))
       }
       'hexBytes{
         import fastparse.byte._
 
-        assert(hexBytes("01 ff").toSeq == BS(0x01, 0xff).toSeq)
+        assert(hexBytes("01 ff").toSeq == ByteVector(0x01, 0xff).toSeq)
 
         val multiLine = """
           de ad be ef
           ca fe ba be
         """
-        assert(hexBytes(multiLine).toSeq == BS(
+        assert(hexBytes(multiLine).toSeq == ByteVector(
           0xde, 0xad, 0xbe, 0xef,
           0xca, 0xfe, 0xba, 0xbe
         ).toSeq)
       }
       'prettyBytesBare{
         import fastparse.byte._
-        val blob = BS(
+        val blob = ByteVector(
           "The quick brown fox jumps over the lazy dog. She sells " +
           "sea shells on the sea shore but the shells she sells she " +
           "sells no more. Peter piper picked a pack of pickled peppers.":_*
@@ -311,7 +322,7 @@ object ByteTests extends TestSuite {
       }
       'prettyBytesMarker{
         import fastparse.byte._
-        val blob = BS(
+        val blob = ByteVector(
           "The quick brown fox jumps over the lazy dog. She sells " +
           "sea shells on the sea shore but the shells she sells she " +
           "sells no more. Peter piper picked a pack of pickled peppers.":_*
@@ -338,17 +349,17 @@ object ByteTests extends TestSuite {
       'splash{
         import fastparse.byte._
 
-        case class Struct(f: Float, i: Int, s: String, b: Array[Byte])
+        case class Struct(f: Float, i: Int, s: String, b: ByteVector)
 
         val header = P( BS(0xDE, 0xAD, 0xBE, 0xEF) ~ BE.Float32 ~ BE.Int32 )
 
-        val cString = P( BytesWhile(_ != 0).! ~ BS(0x0) ).map(new String(_))
+        val cString = P( BytesWhile(_ != 0).! ~ BS(0x0) ).map(x => new String(x.toArray))
 
         val varLengthBlob = BE.UInt16.flatMap{AnyBytes(_).!}
 
         val structThing = P( header ~ cString ~ varLengthBlob ~ End).map(Struct.tupled)
 
-        val bytes = BS(
+        val bytes = ByteVector(
           0xDE, 0xAD, 0xBE, 0xEF,
           64, 73, 15, -37,
           0, 0, 122, 105,
@@ -363,7 +374,7 @@ object ByteTests extends TestSuite {
           math.abs(result.f - Math.PI) < 0.0001,
           result.i == 31337,
           result.s == "hello",
-          new String(result.b) == "world"
+          new String(result.b.toArray) == "world"
         )
 
       }
@@ -373,7 +384,7 @@ object ByteTests extends TestSuite {
         case class UdpPacket(sourcePort: Int,
                              destPort: Int,
                              checkSum: Int,
-                             data: Array[Byte])
+                             data: ByteVector)
 
         // BE.UInt16 stands for big-endian unsigned-16-bit-integer parsers
         val udpHeader = P( BE.UInt16 ~ BE.UInt16 ~ BE.UInt16 ~ BE.UInt16 )
@@ -408,7 +419,7 @@ object ByteTests extends TestSuite {
       'words{
         import fastparse.byte._
 
-        def allZeroesByteArray = BS(0, 0, 0, 0, 0, 0, 0, 0)
+        def allZeroesByteArray = ByteVector(0, 0, 0, 0, 0, 0, 0, 0)
 
         val p1 = P( AnyByte )
         val Parsed.Success((), index1) = p1.parse(allZeroesByteArray)
@@ -436,15 +447,15 @@ object ByteTests extends TestSuite {
         val p = P( Int8 )
 
 
-        val Parsed.Success(result1, _) = p.parse(BS(123)) // 7b
+        val Parsed.Success(result1, _) = p.parse(ByteVector(123)) // 7b
         assert(result1 == 123)
 
 
-        val Parsed.Success(result2, _) = p.parse(BS(-123)) // 85
+        val Parsed.Success(result2, _) = p.parse(ByteVector(-123)) // 85
         assert(result2 == -123)
 
 
-        val Parsed.Success(result3, _) = p.parse(BS(-1)) // ff
+        val Parsed.Success(result3, _) = p.parse(ByteVector(-1)) // ff
         assert(result3 == -1)
       }
 
@@ -455,15 +466,15 @@ object ByteTests extends TestSuite {
         val p = P( UInt8 )
 
 
-        val Parsed.Success(result1, _) = p.parse(BS(123)) // 7b
+        val Parsed.Success(result1, _) = p.parse(ByteVector(123)) // 7b
         assert(result1 == 123)
 
 
-        val Parsed.Success(result2, _) = p.parse(BS(-123)) // 85
+        val Parsed.Success(result2, _) = p.parse(ByteVector(-123)) // 85
         assert(result2 == 133)
 
 
-        val Parsed.Success(result3, _) = p.parse(BS(-1)) // ff
+        val Parsed.Success(result3, _) = p.parse(ByteVector(-1)) // ff
         assert(result3 == 255)
       }
 
@@ -471,23 +482,23 @@ object ByteTests extends TestSuite {
         import fastparse.byte._
 
         val p1 = P( BE.Int16 )
-        val Parsed.Success(result1, _) = p1.parse(BS(1, 0)) // 01 00
+        val Parsed.Success(result1, _) = p1.parse(ByteVector(1, 0)) // 01 00
         assert(result1 == 256)
 
 
         val p2 = P( LE.Int16 )
-        val Parsed.Success(result2, _) = p2.parse(BS(1, 0)) // 01 00
+        val Parsed.Success(result2, _) = p2.parse(ByteVector(1, 0)) // 01 00
         assert(result2 == 1)
 
 
         val p3 = P( BE.Int32 )
-        val bytes3 = BS(-128, 0, 0, 0) // ff 00 00 00
+        val bytes3 = ByteVector(-128, 0, 0, 0) // ff 00 00 00
         val Parsed.Success(result3, _) = p3.parse(bytes3)
         assert(result3 == -2147483648)
 
 
         val p4 = P( LE.Int32 )
-        val bytes4 = BS(-128, 0, 0, 0) // ff 00 00 00
+        val bytes4 = ByteVector(-128, 0, 0, 0) // ff 00 00 00
         val Parsed.Success(result4, _) = p4.parse(bytes4)
         assert(result4 == 128)
       }
@@ -498,19 +509,19 @@ object ByteTests extends TestSuite {
 
 
         val p1 = P( BE.Int64 )
-        val bytes1 = BS(1, 0, 0, 0, 0, 0, 0, 0) // 01 00 00 00 00 00 00 00
+        val bytes1 = ByteVector(1, 0, 0, 0, 0, 0, 0, 0) // 01 00 00 00 00 00 00 00
         val Parsed.Success(result2, _) = p1.parse(bytes1)
         assert(result2 == 72057594037927936L)
 
 
         val p2 = P( BE.Int32 )
-        val bytes2 = BS(-128, -128, -128, -128) // 80 80 80 80
+        val bytes2 = ByteVector(-128, -128, -128, -128) // 80 80 80 80
         val Parsed.Success(result3, _) = p2.parse(bytes2)
         assert(result3 == -2139062144)
 
 
         val p3 = P( BE.UInt32 )
-        val bytes3 = BS(-128, -128, -128, -128) // 80 80 80 80
+        val bytes3 = ByteVector(-128, -128, -128, -128) // 80 80 80 80
         val Parsed.Success(result4, _) = p3.parse(bytes3)
         assert(result4 == 2155905152L)
       }
@@ -521,19 +532,19 @@ object ByteTests extends TestSuite {
 
 
         val p1 = P( BE.Float32 )
-        val bytes1 = BS(64, 73, 15, -37) // 40 49 0f db
+        val bytes1 = ByteVector(64, 73, 15, -37) // 40 49 0f db
         val Parsed.Success(result1, _) = p1.parse(bytes1)
         assert(math.abs(result1 - 3.1415927) < 0.00001)
 
 
         val p2 = P( LE.Float32 )
-        val bytes2 = BS(-37, 15, 73, 64) // db 0f 49 40
+        val bytes2 = ByteVector(-37, 15, 73, 64) // db 0f 49 40
         val Parsed.Success(result2, _) = p2.parse(bytes2)
         assert(math.abs(result2 - 3.1415927) < 0.00001)
 
 
         val p3 = P( BE.Float64 )
-        val bytes3 = BS(64, 9, 33, -5, 84, 68, 45, 24) // 40 09 21 fb 54 44 2d 18
+        val bytes3 = ByteVector(64, 9, 33, -5, 84, 68, 45, 24) // 40 09 21 fb 54 44 2d 18
         val Parsed.Success(result3, _) = p3.parse(bytes3)
         assert(math.abs(result3 - 3.1415927) < 0.00001)
       }
@@ -796,7 +807,7 @@ object ByteTests extends TestSuite {
             ByteOrder.LITTLE_ENDIAN -> leParser
           )
           for((enum, parser) <- cases){
-            val arr = put(ByteBuffer.allocate(size).order(enum), i).array()
+            val arr = ByteVector.view(put(ByteBuffer.allocate(size).order(enum), i).array())
             val fastparse.byte.Parsed.Success(`i`, `size`) = parser.parse(arr)
           }
 
