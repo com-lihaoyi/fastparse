@@ -98,51 +98,50 @@ class ByteApi() extends Api[Byte, ByteVector]() {
   def ElemIn(strings: Seq[Byte]*) = ByteIn(strings:_*)
   def ElemsWhile(pred: Byte => Boolean, min: Int = 1) = BytesWhile(pred, min)
 
+  /**
+    * Construct a literal byte-parser out of raw byte values. Any integral
+    * values can be used, but they will be truncated down to `Byte`s before
+    * being used in the parser
+    */
   def BS[T](bytes: T*)(implicit num: Integral[T]): P0 = {
     parsers.Terminals.Literal[Byte, Bytes](bytes.map(num.toInt(_).toByte).toArray[Byte])
   }
+
+  /**
+    * Construct a literal byte-parser out of an immutable `Bytes` value
+    */
   def BS[T](bytes: Bytes): P0 = {
     parsers.Terminals.Literal[Byte, Bytes](bytes.toArray)
   }
 
+  /**
+    * Convenient, more-concise alias for `scodec.bits.ByteVector`
+    */
   val Bytes = scodec.bits.ByteVector
   type Bytes = scodec.bits.ByteVector
 
   implicit def HexStringSyntax(sc: StringContext) = new scodec.bits.HexStringSyntax(sc)
 
-  object HexBytesParser {
-    import all._
-
-    val hexChars = HexUtils.hexChars
-
-    def charsToByte(s: String): Byte = {
-      (hexChars.indexOf(s(1)) + hexChars.indexOf(s(0)) * 16).toByte
-    }
-
-    val hexDigit = all.P(CharIn('0' to '9', 'a' to 'f', 'A' to 'F'))
-    val byte = all.P(hexDigit.rep(exactly = 2))
-    val whitespace = " \n\r".toSet
-    val byteSep = all.P(CharsWhile(whitespace, min = 0))
-    val bytes = all.P(byteSep ~ byte.rep(sep = byteSep)).!.map(Bytes.fromHex(_))
-  }
-
-
-
-  type GenericIntegerParser[T] = ByteUtils.GenericIntegerParser[T]
+  /**
+    * Little-endian integer parsers
+    */
   val LE = ByteUtils.EndianByteParsers.LE
+  /**
+    * Big-endian integer parsers
+    */
   val BE = ByteUtils.EndianByteParsers.BE
   /**
     * Parses a two-byte word
     */
-  val Word16: P[Unit] = new GenericIntegerParser(2, (input, n) => ())
+  val Word16: P[Unit] = new ByteUtils.GenericIntegerParser[T](2, (input, n) => ())
   /**
     * Parses a four-byte word
     */
-  val Word32: P[Unit] = new GenericIntegerParser(4, (input, n) => ())
+  val Word32: P[Unit] = new ByteUtils.GenericIntegerParser[T](4, (input, n) => ())
   /**
     * Parses an eight-byte word
     */
-  val Word64: P[Unit] = new GenericIntegerParser(8, (input, n) => ())
+  val Word64: P[Unit] = new ByteUtils.GenericIntegerParser[T](8, (input, n) => ())
 
   val Int8 = ByteUtils.Int8
 
