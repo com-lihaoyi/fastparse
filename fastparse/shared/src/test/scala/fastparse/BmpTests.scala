@@ -2,7 +2,6 @@ package fastparse
 
 import scala.collection.mutable.ArrayBuffer
 import fastparse.byte._
-import scodec.bits.ByteVector
 import utest._
 
 /*
@@ -30,7 +29,7 @@ object BmpTests extends TestSuite {
 
       case class BitmapInfoHeader(infoPart: BitmapInfoHeaderPart) extends BitmapHeader(infoPart)
 
-      case class Pixel(colors: ByteVector)
+      case class Pixel(colors: Bytes)
 
       case class Bmp(fileHeader: FileHeader, bitmapHeader: BitmapHeader, pixels: Seq[Seq[Pixel]])
 
@@ -135,11 +134,11 @@ object BmpTests extends TestSuite {
           FileHeader(19778, 70, 54),
           BitmapInfoHeader(BitmapInfoHeaderPart(2, 2, 1, 24, 0, 16, 2835, 2835, 0, 0)),
           ArrayBuffer(ArrayBuffer(
-            Pixel(ByteVector(0xff, 0, 0)),
-            Pixel(ByteVector(0, 0xff, 0))),
+            Pixel(Bytes(0xff, 0, 0)),
+            Pixel(Bytes(0, 0xff, 0))),
             ArrayBuffer(
-              Pixel(ByteVector(0, 0, 0xff)),
-              Pixel(ByteVector(0xff, 0xff, 0xff))
+              Pixel(Bytes(0, 0, 0xff)),
+              Pixel(Bytes(0xff, 0xff, 0xff))
             )
           )
         )
@@ -149,7 +148,7 @@ object BmpTests extends TestSuite {
 
         for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
           val Parsed.Success(bmp1, _) = bmp.parseIterator(
-            file1.toArray.grouped(chunkSize).map(ByteVector.view)
+            file1.toArray.grouped(chunkSize).map(Bytes.view)
           )
           assert(compareBmps(bmp1, expected))
         }
@@ -171,15 +170,15 @@ object BmpTests extends TestSuite {
         val expected = Bmp(FileHeader(19778, 154, 122),
           BitmapInfoHeader(BitmapInfoHeaderPart(4, 2, 1, 32, 3, 32, 2835, 2835, 0, 0)),
           ArrayBuffer(ArrayBuffer(
-            Pixel(ByteVector(0xff, 0, 0, 0xff)),
-            Pixel(ByteVector(0, 0xff, 0, 0xff)),
-            Pixel(ByteVector(0, 0, 0xff, 0xff)),
-            Pixel(ByteVector(0xff, 0xff, 0xff, 0xff))),
+            Pixel(Bytes(0xff, 0, 0, 0xff)),
+            Pixel(Bytes(0, 0xff, 0, 0xff)),
+            Pixel(Bytes(0, 0, 0xff, 0xff)),
+            Pixel(Bytes(0xff, 0xff, 0xff, 0xff))),
             ArrayBuffer(
-              Pixel(ByteVector(0xff, 0, 0, 0x7f)),
-              Pixel(ByteVector(0, 0xff, 0, 0x7f)),
-              Pixel(ByteVector(0, 0, 0xff, 0x7f)),
-              Pixel(ByteVector(0, 0, 0xff, 0x7f))
+              Pixel(Bytes(0xff, 0, 0, 0x7f)),
+              Pixel(Bytes(0, 0xff, 0, 0x7f)),
+              Pixel(Bytes(0, 0, 0xff, 0x7f)),
+              Pixel(Bytes(0, 0, 0xff, 0x7f))
             )
           )
         )
@@ -189,7 +188,7 @@ object BmpTests extends TestSuite {
 
         for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
           val Parsed.Success(bmp2, _) = bmp.parseIterator(
-            file1.toArray.grouped(chunkSize).map(ByteVector.view)
+            file1.toArray.grouped(chunkSize).map(Bytes.view)
           )
           assert(compareBmps(bmp2, expected))
         }
