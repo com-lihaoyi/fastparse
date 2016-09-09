@@ -2,7 +2,6 @@ package fastparse
 
 import java.nio.{ByteBuffer, ByteOrder}
 
-import scodec.bits.ByteVector
 import utest._
 
 import scala.collection.generic.SeqFactory
@@ -278,11 +277,65 @@ object ByteTests extends TestSuite {
       }
     }
     'example{
-      'bs{
-        import fastparse.byte._
+      'bytevector{
+        'construction{
+          import fastparse.byte._
 
-        assert(ByteVector(0x01, 0xff) == ByteVector(0x01.toByte, 0xff.toByte))
-        assert(ByteVector("hello":_*) == ByteVector(104, 101, 108, 108, 111))
+          // Constructing a short ByteVector from bytes
+          val a = ByteVector(0x01, 0xff)
+          assert(a.toString == "ByteVector(2 bytes, 0x01ff)")
+          val b  = ByteVector("hello":_*)
+          // Constructing a ByteVector from an ASCII string
+          assert(b.toString == "ByteVector(5 bytes, 0x68656c6c6f)")
+
+          // Constructing a ByteVector copying from a Array[Byte]
+          val byteArray = Array[Byte](1, 2, 3, 4)
+          val c = ByteVector(byteArray)
+          assert(c.toString == "ByteVector(4 bytes, 0x01020304)")
+
+          // Unsafe construction from an Array[Byte], without copying; assumes
+          // You do not mutate the underlying array, otherwise things break.
+          val d = ByteVector.view(byteArray)
+          assert(d.toString == "ByteVector(4 bytes, 0x01020304)")
+        }
+        'operations{
+          import fastparse.byte._
+
+          val a = ByteVector(0xff, 0xff)
+          val b  = ByteVector(0x01, 0x01)
+
+          // Simple operations
+          assert(
+            a.length == 2,
+            a(0) == 0xff.toByte,
+            b(0) == 0x01.toByte
+          )
+
+          // Concatenating byte vectors
+          val c = a ++ b
+          assert(c.toString == "ByteVector(4 bytes, 0xffff0101)")
+
+          val d = b ++ a
+          assert(d.toString == "ByteVector(4 bytes, 0x0101ffff)")
+
+          // Converting to Arrays
+          val arr = d.toArray
+          assert(
+            arr(0) == 1, arr(1) == 1,
+            arr(2) == -1, arr(3) == -1
+          )
+
+
+          // Convenient conversions
+          assert(
+            c.toHex == "ffff0101",
+            c.toBase64 == "//8BAQ==",
+            ByteVector.fromHex("ffff0101").get == c,
+            ByteVector.fromBase64("//8BAQ==").get == c
+          )
+
+
+        }
       }
       'hexBytes{
         import fastparse.byte._

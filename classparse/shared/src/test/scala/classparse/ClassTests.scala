@@ -157,7 +157,7 @@ object ClassTests extends TestSuite {
 
         for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
           val Parsed.Success(parsedClassInfo, _) = ClassParse.classFile.parseIterator(
-            classFile.grouped(chunkSize)
+            classFile.toArray.grouped(chunkSize).map(ByteVector.view)
           )
           val parsedClass = ClassParse.Ast.convertToAst(parsedClassInfo)
 
@@ -564,7 +564,7 @@ object ClassTests extends TestSuite {
 
         for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
           val Parsed.Success(parsedClassInfo, _) = ClassParse.classFile.parseIterator(
-            classFile.grouped(chunkSize)
+            classFile.toArray.grouped(chunkSize).map(ByteVector.view)
           )
           val parsedClass = ClassParse.Ast.convertToAst(parsedClassInfo)
 
@@ -655,7 +655,8 @@ object ClassTests extends TestSuite {
         )
       }
       'code {
-        val classFile = ("yv66vgAAADQA2AoACgBoCQBpAGoIAGsKAGwAbQgAbggAbwoAbA" +
+        val classFile = fastparse.byte.ByteVector(
+          ("yv66vgAAADQA2AoACgBoCQBpAGoIAGsKAGwAbQgAbggAbwoAbA" +
           "BwCABxCAByBwBzBwB0BkAJIftURC0YCgB1AHYKAGwAdwUAAAAAAAGGoARDaoAABkBe2ZmZmZmaB" +
           "kAFvwmVqveQBwB4CAB5CgAXAHoHAHsKABoAfAgAfQoAGgB6CAB+CAB/CACABwCBCACCCACDCACE" +
           "CACFBwCGCgAmAGgIAIcKACYAiAoAJgCJCgAmAIoIAIsIAIwIAI0IAI4IAI8IAJAKACYAkQgAkgg" +
@@ -727,7 +728,7 @@ object ClassTests extends TestSuite {
           "cAYwcAZAcAZQcAYwcAZAcAZQEBAQEAABEH/AACART8ABwB/AAuAfoAFPwAAgH8AAkBFfoABfoAB" +
           "f8APAAlBwBfAQEBAQEBBAIDAQEBAAMHAGAHAGEHAGEHAGIHAGIHAGIHAGMHAGQHAGUHAGMHAGQH" +
           "AGUBAQEBAQEHAGMHAGMBAQAA+AAb/AAdAQYGBvwAAwcAYv4ASgcAYgcAYgEPDwwaCgoK+QAZ/AA" +
-          "OAUEHAGIAAQBmAAAAAgBn").toByteArray
+          "OAUEHAGIAAQBmAAAAAgBn").toByteArray)
         /* CodeTest.class from compiled class CodeTest.java */
 
         val expectedPool = ArrayBuffer(
@@ -1505,7 +1506,9 @@ object ClassTests extends TestSuite {
         )
 
         for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
-          val Parsed.Success(parsedClassInfo, _) = ClassParse.classFile.parseIterator(classFile.grouped(chunkSize))
+          val Parsed.Success(parsedClassInfo, _) = ClassParse.classFile.parseIterator(
+            classFile.toArray.grouped(chunkSize).map(ByteVector.view)
+          )
           val parsedClass = ClassParse.Ast.convertToAst(parsedClassInfo)
 
           assert(parsedClass.pool == expectedPool)

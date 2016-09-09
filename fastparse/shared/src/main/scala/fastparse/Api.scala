@@ -102,7 +102,8 @@ class ByteApi() extends Api[Byte, ByteVector]() {
     ByteVector(bytes:_*)
   }
 
-
+  val ByteVector = scodec.bits.ByteVector
+  type ByteVector = scodec.bits.ByteVector
   implicit def wspByteSeq(seq: ByteVector): P0 =
     if (seq.length == 1) parsers.Terminals.ElemLiteral[Byte, ByteVector](seq(0))
     else parsers.Terminals.Literal[Byte, ByteVector](seq.toArray)

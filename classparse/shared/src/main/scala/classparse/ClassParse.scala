@@ -38,8 +38,8 @@ object ClassParse {
 
     case class NameAndTypeInfo(nameIndex: Int, descriptorIndex: Int) extends PoolInfo
 
-    case class Utf8Info(bytes: Array[Byte]) extends PoolInfo {
-      lazy val getString = new String(bytes, "UTF-8")
+    case class Utf8Info(bytes: ByteVector) extends PoolInfo {
+      lazy val getString = new String(bytes.toArray, "UTF-8")
     }
 
     case class MethodHandleInfo(referenceKind: Int, referenceIndex: Int) extends PoolInfo
@@ -48,16 +48,16 @@ object ClassParse {
 
     case class InvokeDynamicInfo(bootstrapMethodAttrIndex: Int, nameAndTypeIndex: Int) extends PoolInfo
 
-    case class AttributeInfo(nameIndex: Int, info: Array[Byte])
+    case class AttributeInfo(nameIndex: Int, info: ByteVector)
 
-    case class FieldInfo(accessFlags: Array[Byte], nameIndex: Int,
+    case class FieldInfo(accessFlags: ByteVector, nameIndex: Int,
                          descriptorIndex: Int,     attributes: Seq[AttributeInfo])
 
-    case class MethodInfo(accessFlags: Array[Byte], nameIndex: Int,
+    case class MethodInfo(accessFlags: ByteVector, nameIndex: Int,
                           descriptorIndex: Int,     attributes: Seq[AttributeInfo])
 
     case class ClassFileInfo(minorVersion: Int,           majorVersion: Int,
-                             pool: Seq[PoolInfo],         accessFlags: Array[Byte],
+                             pool: Seq[PoolInfo],         accessFlags: ByteVector,
                              thisClassIndex: Int,         superClassIndex: Int,
                              interfacesIndexes: Seq[Int], fields: Seq[FieldInfo],
                              methods: Seq[MethodInfo],    attributes: Seq[AttributeInfo]) {
@@ -209,7 +209,7 @@ object ClassParse {
                                accAbstract: Boolean, accSynthetic: Boolean, accAnnotation: Boolean,
                                accEnum: Boolean){
 
-      def this(fs: Array[Byte]) = this(
+      def this(fs: ByteVector) = this(
         getFlag(fs(1), 0x01), getFlag(fs(1), 0x02), getFlag(fs(1), 0x04),
         getFlag(fs(1), 0x08), getFlag(fs(1), 0x10), getFlag(fs(0), 0x02),
         getFlag(fs(0), 0x04), getFlag(fs(0), 0x10), getFlag(fs(0), 0x20),
@@ -218,21 +218,21 @@ object ClassParse {
 
 
     object InnerClassFlags {
-      def apply(fs: Array[Byte]) = new InnerClassFlags(fs)
+      def apply(fs: ByteVector) = new InnerClassFlags(fs)
     }
 
     case class FieldFlags(accPublic: Boolean,    accPrivate: Boolean,   accProtected: Boolean,
                           accStatic: Boolean,    accFinal: Boolean,     accVolatile: Boolean,
                           accTransient: Boolean, accSynthetic: Boolean, accEnum: Boolean) {
 
-      def this(fs: Array[Byte]) = this(
+      def this(fs: ByteVector) = this(
         getFlag(fs(1), 0x01), getFlag(fs(1), 0x02), getFlag(fs(1), 0x04),
         getFlag(fs(1), 0x08), getFlag(fs(1), 0x10), getFlag(fs(1), 0x40),
         getFlag(fs(1), 0x80), getFlag(fs(0), 0x10), getFlag(fs(0), 0x40))
     }
 
     object FieldFlags {
-      def apply(fs: Array[Byte]) = new FieldFlags(fs)
+      def apply(fs: ByteVector) = new FieldFlags(fs)
     }
 
     case class MethodFlags(accPublic: Boolean,    accPrivate: Boolean,   accProtected: Boolean,
@@ -240,7 +240,7 @@ object ClassParse {
                            accBridge: Boolean,    accVarargs: Boolean,   accNative: Boolean,
                            accAbstract: Boolean,  accStrict: Boolean,    accSynthetic: Boolean) {
 
-      def this(fs: Array[Byte]) = this(
+      def this(fs: ByteVector) = this(
         getFlag(fs(1), 0x01), getFlag(fs(1), 0x02), getFlag(fs(1), 0x04),
         getFlag(fs(1), 0x08), getFlag(fs(1), 0x10), getFlag(fs(1), 0x20),
         getFlag(fs(1), 0x40), getFlag(fs(1), 0x80), getFlag(fs(0), 0x01),
@@ -248,21 +248,21 @@ object ClassParse {
     }
 
     object MethodFlags {
-      def apply(fs: Array[Byte]) = new MethodFlags(fs)
+      def apply(fs: ByteVector) = new MethodFlags(fs)
     }
 
     case class ClassFlags(accPublic: Boolean,     accFinal: Boolean,    accSuper: Boolean,
                           accInterface: Boolean,  accAbstract: Boolean, accSynthetic: Boolean,
                           accAnnotation: Boolean, accEnum: Boolean){
 
-      def this(fs: Array[Byte]) = this(
+      def this(fs: ByteVector) = this(
         getFlag(fs(1), 0x01), getFlag(fs(1), 0x10), getFlag(fs(1), 0x20),
         getFlag(fs(0), 0x02), getFlag(fs(0), 0x04), getFlag(fs(0), 0x10),
         getFlag(fs(0), 0x20), getFlag(fs(0), 0x40))
     }
 
     object ClassFlags {
-      def apply(fs: Array[Byte]) = new ClassFlags(fs)
+      def apply(fs: ByteVector) = new ClassFlags(fs)
     }
 
     case class Field(name: String, descriptor: String, flags: FieldFlags, attributes: Seq[Attribute])

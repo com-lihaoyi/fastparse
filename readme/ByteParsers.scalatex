@@ -40,6 +40,46 @@
         API, there are some new primitives that are specific to byte parsers,
         and some existing primitives that are named slightly differently.
 
+    @sect{ByteVector}
+        @p
+            The primary data-structure @code{fastparse.byte} works with is
+            @code{ByteVector}. This gets imported when you
+            @hl.scala{import fastparse.byte._}, and is an alias for the
+            excellent @code{ByteVector} class from @lnk("scodec-bits",
+            "https://github.com/scodec/scodec-bits") by
+            @lnk("Michael Pilquist", "https://www.github.com/mpilquist").
+            A @code{ByteVector} is basically an immutable version of
+            @code{Array[Byte]}, with structural equality, a useful
+            @code{toString}, and convenient operations for all the things you
+            typically want to do with blobs of bytes. @code{fastparse.byte}'s
+            @code{.parse} method takes @code{ByteVector}s as input, and its
+            @sect.ref{Capture} operator captures @code{ByteVector}s as output.
+
+        @p
+            @code{ByteVector} provides convenient methods for construction:
+
+        @hl.ref(tests/"ByteTests.scala", Seq("'bytevector", "'construction", ""))
+
+        @p
+            As well as many useful operations:
+
+        @hl.ref(tests/"ByteTests.scala", Seq("'bytevector", "'construction", ""))
+
+        @p
+            These are just the highlights of the most common operations on a
+            @code{ByteVector}. There are many more methods on @code{ByteVector}
+            instances as well as on the @code{ByteVector} companion object, but
+            you can explore those yourselves in your editor's autocomplete
+            menu.
+
+        @p
+            In general, it is reasonable to use @code{ByteVector} throughout
+            your codebase where-ever you need to represent binary data. In the
+            few cases where performance is of utmost importance, or you really
+            need read-write mutability, an @code{Array[Byte]} will be
+            necessary, but for the majority of un-changing blobs-of-bytes a
+            @code{ByteVector} will do just fine.
+
     @sect{Byte Helpers}
         @p
             Apart from providing an equivalent API for byte parsing, FastParse's
