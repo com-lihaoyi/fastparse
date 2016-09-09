@@ -1,6 +1,6 @@
 package fastparse
-
-import scodec.bits.ByteVector
+import fastparse.byte._
+import BE._
 
 
 case class Midi(format: Int, tickDiv: Midi.TickDiv, tracks: Seq[Seq[(Int, Midi.TrackEvent)]])
@@ -42,12 +42,12 @@ object Midi{
     case class SmpteOffset(hour: Byte, minute: Byte, seconds: Byte, frames: Byte, fractional: Byte) extends MetaEvent
     case class TimeSignature(numerator: Byte, denominator: Byte, clocks: Byte, notatedNotes: Byte) extends MetaEvent
     case class KeySignature(sf: Byte, majorKey: Boolean) extends MetaEvent
-    case class SequencerSpecificEvent(data: ByteVector) extends MetaEvent
-    case class Unknown(data: ByteVector) extends MetaEvent
+    case class SequencerSpecificEvent(data: Bytes) extends MetaEvent
+    case class Unknown(data: Bytes) extends MetaEvent
   }
   sealed trait SysExEvent extends TrackEvent
   object SysExEvent{
-    case class Message(data: ByteVector) extends SysExEvent
+    case class Message(data: Bytes) extends SysExEvent
   }
 }
 
@@ -59,8 +59,7 @@ object Midi{
   * http://www.somascape.org/midi/tech/mfile.html#midi
   */
 object MidiParse{
-  import fastparse.byte._
-  import BE._
+
   import Midi._
   val midiHeader = P( BS(hex"4d 54 68 64 00 00 00 06") ~ Int16 ~ Int16 ~ Int16 )
   val deltaTime = P( BytesWhile(_ < 0, min = 0) ~ AnyByte )
