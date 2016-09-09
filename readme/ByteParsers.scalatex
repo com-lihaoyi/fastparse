@@ -52,8 +52,8 @@
             @code{Array[Byte]}, with structural equality, a useful
             @code{toString}, and convenient operations for all the things you
             typically want to do with blobs of bytes. @code{fastparse.byte}'s
-            @code{.parse} method takes @code{Bytes}s as input, and its
-            @sect.ref{Capture} operator captures @code{Bytes}s as output.
+            @code{.parse} method takes @code{Bytes} as input, and its
+            @sect.ref{Capture} operator captures @code{Bytes} as output.
 
         @p
             @code{Bytes} provides convenient methods for construction:
