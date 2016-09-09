@@ -15,7 +15,7 @@ object TestUtils {
     }
   }
 
-  def checkClassAndClassFile(javaClass: Class[_], classFile: ByteVector) = {
+  def checkClassAndClassFile(javaClass: Class[_], classFile: Bytes) = {
     val classInfo = ClassParse.classFile.parse(classFile) match {
       case Parsed.Success(info, _) => Some(info)
       case f: Parsed.Failure => None

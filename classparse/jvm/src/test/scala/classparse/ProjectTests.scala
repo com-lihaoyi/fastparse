@@ -35,7 +35,7 @@ object ProjectTests extends TestSuite {
           javaClassOpt match {
             case Some(javaClass) =>
               print(".")
-              val classFile = fastparse.byte.ByteVector.view(
+              val classFile = fastparse.byte.Bytes.view(
                 Files.readAllBytes(Paths.get(classesPath + relativePath + ".class"))
               )
               TestUtils.checkClassAndClassFile(javaClass, classFile)

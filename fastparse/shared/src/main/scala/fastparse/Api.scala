@@ -85,11 +85,11 @@ object noApi extends StringApi
 
 class ByteApi() extends Api[Byte, ByteVector]() {
 
-  val AnyByte = parsers.Terminals.AnyElem[Byte, ByteVector]("AnyByte")
-  def AnyBytes(count: Int) = Terminals.AnyElems[Byte, ByteVector]("AnyBytes", count)
+  val AnyByte = parsers.Terminals.AnyElem[Byte, Bytes]("AnyByte")
+  def AnyBytes(count: Int) = Terminals.AnyElems[Byte, Bytes]("AnyBytes", count)
   def BytePred(pred: Byte => Boolean): P0 = Intrinsics.ElemPred("BytePred", pred)
-  def ByteIn(seqs: Seq[Byte]*) = Intrinsics.ElemIn[Byte, ByteVector]("ByteIn", seqs.map(_.toIndexedSeq): _*)
-  def BytesWhile(pred: Byte => Boolean, min: Int = 1) = Intrinsics.ElemsWhile[Byte, ByteVector]("BytesWhile", pred, min)
+  def ByteIn(seqs: Seq[Byte]*) = Intrinsics.ElemIn[Byte, Bytes]("ByteIn", seqs.map(_.toIndexedSeq): _*)
+  def BytesWhile(pred: Byte => Boolean, min: Int = 1) = Intrinsics.ElemsWhile[Byte, Bytes]("BytesWhile", pred, min)
 
 
   val AnyElem = AnyByte
@@ -99,14 +99,16 @@ class ByteApi() extends Api[Byte, ByteVector]() {
   def ElemsWhile(pred: Byte => Boolean, min: Int = 1) = BytesWhile(pred, min)
 
   def BS[T](bytes: T*)(implicit num: Integral[T]): P0 = {
-    ByteVector(bytes:_*)
+    parsers.Terminals.Literal[Byte, Bytes](bytes.map(num.toInt(_).toByte).toArray[Byte])
+  }
+  def BS[T](bytes: Bytes): P0 = {
+    parsers.Terminals.Literal[Byte, Bytes](bytes.toArray)
   }
 
-  val ByteVector = scodec.bits.ByteVector
-  type ByteVector = scodec.bits.ByteVector
-  implicit def wspByteSeq(seq: ByteVector): P0 =
-    if (seq.length == 1) parsers.Terminals.ElemLiteral[Byte, ByteVector](seq(0))
-    else parsers.Terminals.Literal[Byte, ByteVector](seq.toArray)
+  val Bytes = scodec.bits.ByteVector
+  type Bytes = scodec.bits.ByteVector
+
+  implicit def HexStringSyntax(sc: StringContext) = new scodec.bits.HexStringSyntax(sc)
 
   object HexBytesParser {
     import all._
@@ -121,19 +123,9 @@ class ByteApi() extends Api[Byte, ByteVector]() {
     val byte = all.P(hexDigit.rep(exactly = 2))
     val whitespace = " \n\r".toSet
     val byteSep = all.P(CharsWhile(whitespace, min = 0))
-    val bytes = all.P(byteSep ~ byte.rep(sep = byteSep)).!.map(ByteVector.fromHex(_))
+    val bytes = all.P(byteSep ~ byte.rep(sep = byteSep)).!.map(Bytes.fromHex(_))
   }
 
-
-  /**
-    * Shorthand for ByteVector.fromHex
-    */
-  def hexBytes(s: String): ByteVector = ByteVector.fromHex(s).get
-
-  /**
-    * Shorthand for ByteVector.apply
-    */
-  val bytes = ByteVector
 
 
   type GenericIntegerParser[T] = ByteUtils.GenericIntegerParser[T]
@@ -165,7 +157,7 @@ class ByteApi() extends Api[Byte, ByteVector]() {
     * 8 if you want to see more or less rows (e.g. set it to Int.MaxValue to show
     * the whole input)
     */
-  def prettyBytes(bytes: ByteVector,
+  def prettyBytes(bytes: Bytes,
                   markers: Seq[Int] = Seq(-1),
                   contextRows: Int = 8) = {
     ByteUtils.prettyBytes(bytes, markers, contextRows)
@@ -174,8 +166,8 @@ class ByteApi() extends Api[Byte, ByteVector]() {
 
 object byte extends ByteApi {
   implicit def parserApi[T, V](p: T)
-                              (implicit c: T => core.Parser[V, Byte, ByteVector]): ParserApi[V, Byte, ByteVector] =
-    new ParserApiImpl[V, Byte, ByteVector](p)(ResultConverter.ByteBuilder)
+                              (implicit c: T => core.Parser[V, Byte, Bytes]): ParserApi[V, Byte, Bytes] =
+    new ParserApiImpl[V, Byte, Bytes](p)(ResultConverter.ByteBuilder)
 
   /**
     * Parses the `sizeParser` to get a number `n`, and then parses `p` exactly

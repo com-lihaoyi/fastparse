@@ -62,7 +62,7 @@ object MidiParse{
   import fastparse.byte._
   import BE._
   import Midi._
-  val midiHeader = P( hexBytes("4d 54 68 64 00 00 00 06") ~ Int16 ~ Int16 ~ Int16 )
+  val midiHeader = P( BS(hex"4d 54 68 64 00 00 00 06") ~ Int16 ~ Int16 ~ Int16 )
   val deltaTime = P( BytesWhile(_ < 0, min = 0) ~ AnyByte )
 
   /**
@@ -180,7 +180,7 @@ object MidiParse{
   val trackItem = P( negTrackItemEnd ~ varInt ~ trackEvent ).map{
     case (time, (event, rest)) => (time, event) +: rest
   }
-  val trackHeader = P( hexBytes("4d 54 72 6b") ~/ Int32 )
+  val trackHeader = P( BS(hex"4d 54 72 6b") ~/ Int32 )
   val trackChunk: P[Seq[(Int, TrackEvent)]] = {
     P( trackHeader ~ trackItem.rep() ~ trackItemEnd ).map{
       case (length, events, last) => events.flatten :+ last

@@ -61,7 +61,7 @@ object DemoMain {
       reader.readAsArrayBuffer(uploadFile.files.item(0))
       reader.onload = (e: UIEvent) => {
         val array = new Uint8Array(reader.result.asInstanceOf[ArrayBuffer])
-        val contents = fastparse.byte.ByteVector.view(
+        val contents = fastparse.byte.Bytes.view(
           (for (i <- 0 until array.length) yield array.get(i).toByte).toArray
         )
         dom.console.log(contents.length)
@@ -327,7 +327,7 @@ object DemoMain {
     container.appendChild(div(inputBox, outputBox, div(clear.both)).render)
   }
 
-  def helperByteFile(container: html.Div, parser: Parser[_, Byte, fastparse.byte.ByteVector]) = {
+  def helperByteFile(container: html.Div, parser: Parser[_, Byte, fastparse.byte.Bytes]) = {
     import scalatags.JsDom.all._
     val uploadFile = input(
       width := "30%",
@@ -344,7 +344,7 @@ object DemoMain {
       reader.readAsArrayBuffer(uploadFile.files.item(0))
       reader.onload = (e: UIEvent) => {
         val array = new Uint8Array(reader.result.asInstanceOf[ArrayBuffer])
-        val contents = fastparse.byte.ByteVector.view(
+        val contents = fastparse.byte.Bytes.view(
           (for (i <- 0 until array.length) yield array.get(i).toByte).toArray
         )
 
