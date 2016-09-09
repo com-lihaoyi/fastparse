@@ -133,15 +133,15 @@ class ByteApi() extends Api[Byte, ByteVector]() {
   /**
     * Parses a two-byte word
     */
-  val Word16: P[Unit] = new ByteUtils.GenericIntegerParser[T](2, (input, n) => ())
+  val Word16: P[Unit] = new ByteUtils.GenericIntegerParser[Unit](2, (input, n) => ())
   /**
     * Parses a four-byte word
     */
-  val Word32: P[Unit] = new ByteUtils.GenericIntegerParser[T](4, (input, n) => ())
+  val Word32: P[Unit] = new ByteUtils.GenericIntegerParser[Unit](4, (input, n) => ())
   /**
     * Parses an eight-byte word
     */
-  val Word64: P[Unit] = new ByteUtils.GenericIntegerParser[T](8, (input, n) => ())
+  val Word64: P[Unit] = new ByteUtils.GenericIntegerParser[Unit](8, (input, n) => ())
 
   val Int8 = ByteUtils.Int8
 
