@@ -61,7 +61,9 @@
         @hl.ref(tests/"ByteTests.scala", Seq("'bytevector", "'construction", ""))
 
         @p
-            As well as many useful operations:
+            @code{Bytes} provides many of the common operations that you would
+            want to perform on binary-blobs build in. These more or less match
+            what you would expect from the standard Scala collections:
 
         @hl.ref(tests/"ByteTests.scala", Seq("'bytevector", "'operations", ""))
 
@@ -86,6 +88,16 @@
             Apart from providing an equivalent API for byte parsing,
             FastParse's byte-parsers also provide some helper functions for
             conveniently dealing with binary blobs.
+
+        @sect{Hex Bytes}
+            @hl.ref(tests/"ByteTests.scala", Seq("'hexBytes", ""))
+
+            @p
+                FastParse includes Scodec's hex-interpolator; this is a macro
+                that converts the hex literal in a @code{Bytes} value at
+                compile time. This should be both fast and safe: if you have
+                a type in your hex literal it generates and error at compile
+                time.
 
         @sect{prettyBytes}
             @hl.ref(tests/"ByteTests.scala", Seq("'prettyBytesBare", ""))

@@ -112,21 +112,18 @@ object BmpTests extends TestSuite {
   import BmpParse.BmpAst._
 
   val tests = TestSuite {
-    def compareBmps(bmp1: Bmp, bmp2: Bmp): Boolean ={
-      bmp1.fileHeader == bmp2.fileHeader &&
-      bmp1.bitmapHeader == bmp2.bitmapHeader &&
-      bmp1.pixels == bmp2.pixels
-    }
 
     'wiki {
       /* These tests were taken from wiki page https://en.wikipedia.org/wiki/BMP_file_format */
       'example1 {
-        val file1 =
-          /*file header*/ hex"42 4d  46 00 00 00  00 00  00 00  36 00 00 00 " ++
-          /*bitmap header*/ hex"28 00 00 00  02 00 00 00  02 00 00 00  01 00  18 00  " ++
-          hex"00 00 00 00  10 00 00 00  13 0b 00 00  13 0b 00 00  " ++
-          hex"00 00 00 00  00 00 00 00" ++
-          /*pixels*/  hex"00 00 ff  ff ff ff  00 00  ff 00 00  00 ff 00  00 00"
+        val fileHeader = hex"42 4d  46 00 00 00  00 00  00 00  36 00 00 00"
+        val bitmapHeader = hex"""
+          28 00 00 00  02 00 00 00  02 00 00 00  01 00  18 00
+          00 00 00 00  10 00 00 00  13 0b 00 00  13 0b 00 00
+          00 00 00 00  00 00 00 00
+        """
+        val pixels = hex"00 00 ff  ff ff ff  00 00  ff 00 00  00 ff 00  00 00"
+        val file1 = hex"$fileHeader $bitmapHeader $pixels"
 
 
 
@@ -144,28 +141,31 @@ object BmpTests extends TestSuite {
         )
 
         val Parsed.Success(bmp1, _) = bmp.parse(file1)
-        assert(compareBmps(bmp1, expected))
+        assert(bmp1 == expected)
 
         for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
           val Parsed.Success(bmp1, _) = bmp.parseIterator(
             file1.toArray.grouped(chunkSize).map(Bytes.view)
           )
-          assert(compareBmps(bmp1, expected))
+          assert(bmp1 == expected)
         }
       }
 
       'example2 {
 
-        val file1 =
-          /*file header*/ hex"42 4d  9A 00 00 00  00 00  00 00  7A 00 00 00 " ++
-          /*bitmap header*/ hex"6C 00 00 00  04 00 00 00  02 00 00 00  01 00  20 00  " ++
-          hex"03 00 00 00  20 00 00 00  13 0B 00 00  13 0B 00 00 " ++
-          hex"00 00 00 00  00 00 00 00  00 00 FF 00  00 FF 00 00 " ++
-          hex"FF 00 00 00  00 00 00 FF  20 6E 69 57 " ++ Bytes.fill(36)(0) ++
-          hex"00 00 00 00  00 00 00 00  00 00 00 00" ++
-          /*pixels*/  hex"FF 00 00 7F  00 FF 00 7F  00 00 FF 7F  00 00 FF 7F " ++
-          hex"FF 00 00 FF  00 FF 00 FF  00 00 FF FF  FF FF FF FF"
-
+        val fileHeader = hex"42 4d  9A 00 00 00  00 00  00 00  7A 00 00 00"
+        val bitmapHeader = hex"""
+          6C 00 00 00  04 00 00 00  02 00 00 00  01 00  20 00
+          03 00 00 00  20 00 00 00  13 0B 00 00  13 0B 00 00
+          00 00 00 00  00 00 00 00  00 00 FF 00  00 FF 00 00
+          FF 00 00 00  00 00 00 FF  20 6E 69 57 ${Bytes.fill(36)(0)}
+          00 00 00 00  00 00 00 00  00 00 00 00
+        """
+        val pixels = hex"""
+          FF 00 00 7F  00 FF 00 7F  00 00 FF 7F  00 00 FF 7F
+          FF 00 00 FF  00 FF 00 FF  00 00 FF FF  FF FF FF FF
+        """
+        val file1 = fileHeader ++ bitmapHeader ++ pixels
 
         val expected = Bmp(FileHeader(19778, 154, 122),
           BitmapInfoHeader(BitmapInfoHeaderPart(4, 2, 1, 32, 3, 32, 2835, 2835, 0, 0)),
@@ -184,13 +184,13 @@ object BmpTests extends TestSuite {
         )
 
         val Parsed.Success(bmp2, _) = bmp.parse(file1)
-        assert(compareBmps(bmp2, expected))
+        assert(bmp2 == expected)
 
         for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
           val Parsed.Success(bmp2, _) = bmp.parseIterator(
             file1.toArray.grouped(chunkSize).map(Bytes.view)
           )
-          assert(compareBmps(bmp2, expected))
+          assert(bmp2 == expected)
         }
       }
     }

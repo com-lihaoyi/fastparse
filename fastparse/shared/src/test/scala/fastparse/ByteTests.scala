@@ -345,43 +345,45 @@ object ByteTests extends TestSuite {
 
 
         }
-      }
-      'bytes{
-        'construction{
+        'hexBytes{
           import fastparse.byte._
 
-          // Constructing a short ByteVector from bytes
-          val a = Bytes(0x01, 0xff)
-          assert(a.toString == "ByteVector(2 bytes, 0x01ff)")
+          // Constructing `Bytes` via their hex values
+          assert(
+            hex"01 ff" == Bytes(0x01, 0xff),
 
-          // Constructing a ByteVector from an ASCII string
-          val b  = Bytes("hello":_*)
-          assert(b.toString == "ByteVector(5 bytes, 0x68656c6c6f)")
+            hex"01 ff" == Bytes.fromHex("01 ff").get,
 
-          // Constructing a ByteVector copying from a Array[Byte]
-          val byteArray = Array[Byte](1, 2, 3, 4)
-          val c = Bytes(byteArray)
-          assert(c.toString == "ByteVector(4 bytes, 0x01020304)")
+            hex"""
+              de ad be ef
+              ca fe ba be
+            """ == Bytes(
+              0xde, 0xad, 0xbe, 0xef,
+              0xca, 0xfe, 0xba, 0xbe
+            ),
 
-          // Unsafe construction from an Array[Byte], without copying; assumes
-          // You do not mutate the underlying array, otherwise things break.
-          val d = Bytes.view(byteArray)
-          assert(d.toString == "ByteVector(4 bytes, 0x01020304)")
+            hex"""
+            de ad be ef
+            ca fe ba be
+            """ == Bytes.fromHex("""
+              de ad be ef
+              ca fe ba be
+            """).get
+          )
+
+
+          // You can interpolate Bytes into hex literals
+
+          val beef = hex"de ad be ef"
+          val cafeBytes = Bytes(0xca, 0xfe)
+          assert(
+            hex"$beef $cafeBytes ba be" == Bytes(
+              0xde, 0xad, 0xbe, 0xef,
+              0xca, 0xfe, 0xba, 0xbe
+            )
+          )
+
         }
-      }
-      'hexBytes{
-        import fastparse.byte._
-
-        assert(
-          hex"01 ff" == Bytes.fromHex("01 ff").get,
-          hex"""
-            de ad be ef
-            ca fe ba be
-          """ == Bytes.fromHex("""
-            de ad be ef
-            ca fe ba be
-          """).get
-        )
       }
       'prettyBytesBare{
         import fastparse.byte._
