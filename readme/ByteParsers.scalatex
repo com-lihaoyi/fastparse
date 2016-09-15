@@ -543,7 +543,7 @@
 
             @ul
                 @li
-                    @a("MidiParse Source", href:="https://github.com/lihaoyi/fastparse/tree/master/fastparse/shared/src/test/scala/fastparse/MidiParse.scala")
+                    @a("MidiParse Source", href:="https://github.com/lihaoyi/fastparse/tree/master/fastparseByte/shared/src/test/scala/fastparse/byte/MidiParse.scala")
 
             @p
                 MidiParse illustrates many of the quirks of writing a parser for
