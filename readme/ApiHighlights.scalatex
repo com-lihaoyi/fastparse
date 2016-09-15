@@ -55,7 +55,7 @@
             to make composing them more pleasant.
             These all live in @hl.scala{ParserApi}:
 
-        @hl.ref(main/"ParserApi.scala", "trait ParserApi", "class ParserApiImpl")
+        @hl.ref(main/"core"/"ParserApi.scala", "class ParserApi", "class ParserApiImpl")
 
         @p
             There are essentially all short-hand constructors for the parsers in the @hl.scala{object Parser} companion.
