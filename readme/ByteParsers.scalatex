@@ -450,7 +450,7 @@
             @script(raw("""demo.DemoMain().bmp(document.getElementById("bmpdiv"))"""))
             @i
                 If you haven't any bmp around, you can download classic
-                @a("lena", href:="https://raw.githubusercontent.com/lihaoyi/fastparse/master/fastparse/jvm/src/test/resources/lena.bmp").
+                @a("lena", href:="https://raw.githubusercontent.com/lihaoyi/fastparse/master/fastparseByte/jvm/src/test/resources/lena.bmp").
 
             @sect{BmpParser Walkthrough}
                 @p
@@ -616,7 +616,7 @@
                 )
                 @for(file <- files)
                     @li
-                        @a(file, href:=s"https://github.com/lihaoyi/fastparse/raw/master/fastparse/shared/src/test/resources/$file")
+                        @a(file, href:=s"https://github.com/lihaoyi/fastparse/raw/master/classparse/shared/src/test/resources/$file")
 
             @p
                 You can download the classfiles and directly try them in this
