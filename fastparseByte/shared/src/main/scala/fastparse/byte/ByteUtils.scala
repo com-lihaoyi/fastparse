@@ -89,7 +89,7 @@ object ByteUtils{
 
 
   class GenericIntegerParser[T](n: Int, creator: (IsReachable[Byte], Int) => T)
-                                (implicit name: sourcecode.Name) extends Parser[T]()(ByteReprOps){
+                               (implicit name: sourcecode.Name) extends Parser[T]()(ByteReprOps){
 
     override def toString = name.value
 

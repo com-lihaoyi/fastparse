@@ -7,78 +7,100 @@ object ByteTests extends TestSuite {
 
   val tests = TestSuite {
     'basic {
-      import fastparse.byte.all._
       'simple {
-        val parseA = P(BS(1))
+        import fastparse.byte.all._
 
-        val Parsed.Success(value, successIndex) = parseA.parse(Bytes(1))
-        assert(value ==(), successIndex == 1)
+        val parseA = P( BS(1, 2, 3) )
 
-        val failure = parseA.parse(Bytes(2)).asInstanceOf[Parsed.Failure]
+        val Parsed.Success((), 3) = parseA.parse(Bytes(1, 2, 3))
+
+        val Parsed.Success((), 3) = parseA.parse(hex"01 02 03")
+
+        val Parsed.Failure(lastParser, index, extra) = parseA.parse(Bytes(2))
         assert(
-          failure.lastParser == (BS(1): P0),
-          failure.index == 0,
-          failure.extra.traced.trace == """parseA:0 / "01":0 ..."02""""
+          lastParser == (BS(1, 2, 3): P0),
+          index == 0,
+          extra.traced.trace == """parseA:0 / "01 02 03":0 ..."02""""
         )
       }
 
       'sequence {
-        val ab = P(BS(1) ~ BS(2)) // or P(Array[Byte](1) ~ Array[Byte](2))
+        import fastparse.byte.all._
 
-        val Parsed.Success(_, 2) = ab.parse(Bytes(1, 2)) // BS(1, 2) == Array[Byte](1, 2)
+        val ab = P( BS(1) ~ BS(2) )
+
+        val Parsed.Success(_, 2) = ab.parse(Bytes(1, 2))
 
         val Parsed.Failure(parser, 1, _) = ab.parse(hex"01 01") // or BS(1, 1)
         assert(parser == (BS(2): P0))
       }
 
       'repeat {
-        val ab = P(BS(1).rep ~ BS(2))
+        import fastparse.byte.all._
+
+        val ab = P( BS(1).rep ~ BS(2) )
         val Parsed.Success(_, 8) = ab.parse(hex"01 01 01 01 01 01 01 02")
         val Parsed.Success(_, 4) = ab.parse(hex"01 01 01 02")
 
-        val abc = P(BS(1).rep(sep = BS(2)) ~ BS(3))
+        val abc = P( BS(1).rep(sep = BS(2)) ~ BS(3) )
         val Parsed.Success(_, 8) = abc.parse(hex"01 02 01 02 01 02 01 03")
         val Parsed.Failure(parser, 3, _) = abc.parse(hex"01 02 01 01 02 01 03")
 
-        val ab4 = P(BS(1).rep(min = 2, max = 4, sep = BS(2)))
+        val ab4 = P( BS(1).rep(min = 2, max = 4, sep = BS(2)) )
         val Parsed.Success(_, 7) = ab4.parse(hex"01 02 01 02 01 02 01 02 01 02 01 02 01 02 01 02")
 
-        val ab4c = P(BS(1).rep(min = 2, max = 4, sep = BS(2)) ~ BS(3))
+        val ab4c = P( BS(1).rep(min = 2, max = 4, sep = BS(2)) ~ BS(3) )
         val Parsed.Failure(_, 1, _) = ab4c.parse(hex"01 03")
         val Parsed.Success(_, 4) = ab4c.parse(hex"01 02 01 03")
         val Parsed.Success(_, 8) = ab4c.parse(hex"01 02 01 02 01 02 01 03")
         val Parsed.Failure(_, 7, _) = ab4c.parse(hex"01 02 01 02 01 02 01 02 01 03")
       }
 
-      'option {
-        val option = P(BS(3).? ~ BS(1).rep(sep = BS(2)).! ~ End)
+      'optional {
+        import fastparse.byte.all._
 
-        val Parsed.Success(res1, 3) = option.parse(hex"01 02 01")
-        assert(res1 == Bytes(1, 2, 1))
+        val option = P( BS(3).? ~ BS(1).rep().! ~ End )
 
-        val Parsed.Success(res2, 3) = option.parse(hex"01 02 01")
-        assert(res2 == Bytes(1, 2, 1))
+        val Parsed.Success(res1, 3) = option.parse(hex"03 01 01")
+        assert(res1 == Bytes(1, 1))
+
+        val Parsed.Success(res2, 2) = option.parse(hex"01 01")
+        assert(res2 == Bytes(1, 1))
+
+        val Parsed.Success(res3, 1) = option.parse(hex"01")
+        assert(res3 == Bytes(1))
       }
 
       'either {
-        val either = P(BS(1).rep ~ (BS(2) | BS(3) | BS(4)) ~ End)
+        import fastparse.byte.all._
 
-        val Parsed.Success(_, 6) = either.parse(hex"01 01 01 01 01 02")
-        val Parsed.Failure(parser, 5, _) = either.parse(hex"01 01 01 01 01 05")
-        assert(parser == (BS(2) | BS(3) | BS(4)))
+        val either = P( (BS(2, 2) | BS(3, 3, 3) | BS(4)).rep() ~ End )
+
+        // any combination of 04 or 02 02 or 03 03 03 succeeds
+        val Parsed.Success(_, 6) = either.parse(hex"02 02 04 03 03 03")
+        val Parsed.Success(_, 6) = either.parse(hex"02 02 04 02 02 04")
+
+        // if there's a 01, which is none of the above options, fails
+        val Parsed.Failure(parser, 3, _) = either.parse(hex"02 02 04 01")
+
       }
 
 
       'end {
-        val noEnd = P(BS(1).rep ~ BS(2))
-        val withEnd = P(BS(1).rep ~ BS(2) ~ End)
+        import fastparse.byte.all._
+
+        val noEnd = P( BS(1).rep ~ BS(2) )
+        val withEnd = P( BS(1).rep ~ BS(2) ~ End )
 
         val Parsed.Success(_, 4) = noEnd.parse(hex"01 01 01 02 01")
         val Parsed.Failure(End, 4, _) = withEnd.parse(hex"01 01 01 02 01")
 
       }
+
       'start {
-        val ab = P(((BS(1) | Start) ~ BS(2)).rep ~ End).!
+        import fastparse.byte.all._
+
+        val ab = P( ((BS(1) | Start) ~ BS(2)).rep ~ End ).!
 
         val Parsed.Success(res1, 4) = ab.parse(hex"01 02 01 02")
         assert(res1 == Bytes(1, 2, 1, 2))
@@ -91,73 +113,85 @@ object ByteTests extends TestSuite {
       }
 
       'passfail {
+        import fastparse.byte.all._
+
         val Parsed.Success((), 0) = Pass.parse(hex"04 08 15 16 23 42")
         val Parsed.Failure(Fail, 0, _) = Fail.parse(hex"04 08 15 16 23 42")
       }
 
       'index {
-        val finder = P(BS(1, 1, 1).rep ~ Index ~ BS(2, 2, 2) ~ BS(3, 3, 3).rep)
+        import fastparse.byte.all._
+
+        val finder = P( BS(1, 1, 1).rep ~ Index ~ BS(2, 2, 2) ~ BS(3, 3, 3).rep )
 
         val Parsed.Success(9, _) = finder.parse(hex" 01 01 01  01 01 01  01 01 01  02 02 02  03 03 03")
       }
 
-      'capturing {
-        val capture1 = P(BS(1).rep.! ~ BS(2) ~ End)
+      'capture {
+        import fastparse.byte.all._
+
+        val capture1 = P( BS(1).rep.! ~ BS(2) ~ End )
 
         val Parsed.Success(res1, 4) = capture1.parse(hex"01 01 01 02")
         assert(res1 == Bytes(1, 1, 1))
 
-        val capture2 = P(BS(1).rep.! ~ BS(2).! ~ End)
+        val capture2 = P( BS(1).rep.! ~ BS(2).! ~ End )
 
         val Parsed.Success(res2, 4) = capture2.parse(hex"01 01 01 02")
         assert(res2 == (Bytes(1, 1, 1), Bytes(2)))
 
-        val capture3 = P(BS(1).rep.! ~ BS(2).! ~ BS(3).! ~ End)
+        val capture3 = P( BS(1).rep.! ~ BS(2).! ~ BS(3).! ~ End )
 
         val Parsed.Success(res3, 5) = capture3.parse(hex"01 01 01 02 03")
         assert(res3 == (Bytes(1, 1, 1), Bytes(2), Bytes(3)))
 
-        val captureRep = P(BS(1).!.rep ~ BS(2) ~ End)
+        val captureRep = P( BS(1).!.rep ~ BS(2) ~ End )
 
         val Parsed.Success(res4, 4) = captureRep.parse(hex"01 01 01 02")
         assert(res4 == Seq(Bytes(1), Bytes(1), Bytes(1)))
 
-        val captureOpt = P(BS(1).rep ~ BS(2).!.? ~ End)
+        val captureOpt = P( BS(1).rep ~ BS(2).!.? ~ End )
 
         val Parsed.Success(res5, 4) = captureOpt.parse(hex"01 01 01 02")
         assert(res5 == Some(Bytes(2)))
       }
+
       'unapply {
-        val capture1 = P(BS(1).rep.! ~ BS(2) ~ End)
+        import fastparse.byte.all._
+
+        val capture1 = P( BS(1).rep.! ~ BS(2) ~ End )
 
         val capture1(res1) = hex"01 01 01 02"
         assert(res1 == Bytes(1, 1, 1))
 
-        val capture2 = P(BS(1).rep.! ~ BS(2).! ~ End)
+        val capture2 = P( BS(1).rep.! ~ BS(2).! ~ End )
 
         val capture2(res2_1, res2_2) = hex"01 01 01 02"
         assert(res2_1 == Bytes(1, 1, 1))
         assert(res2_2 == Bytes(2))
 
-        val capture3 = P(BS(1).rep.! ~ BS(2).! ~ BS(3).! ~ End)
+        val capture3 = P( BS(1).rep.! ~ BS(2).! ~ BS(3).! ~ End )
 
         val capture3(res3_1, res3_2, res3_3) = hex"01 01 01 02 03"
         assert(res3_1 == Bytes(1, 1, 1))
         assert(res3_2 == Bytes(2))
         assert(res3_3 == Bytes(3))
 
-        val captureRep = P(BS(1).!.rep ~ BS(2) ~ End)
+        val captureRep = P( BS(1).!.rep ~ BS(2) ~ End )
 
         val captureRep(res4) = hex"01 01 01 02"
         assert(res4 == Seq(Bytes(1), Bytes(1), Bytes(1)))
 
-        val captureOpt = P(BS(1).rep ~ BS(2).!.? ~ End)
+        val captureOpt = P( BS(1).rep ~ BS(2).!.? ~ End )
 
         val captureOpt(res5) = hex"01 01 01 02"
         assert(res5 == Some(Bytes(2)))
       }
+
       'anybyte {
-        val ab = P(BS(1) ~ AnyByte.! ~ BS(1))
+        import fastparse.byte.all._
+
+        val ab = P( BS(1) ~ AnyByte.! ~ BS(1) )
 
         val Parsed.Success(res, 3) = ab.parse(hex"01 42 01")
         assert(res == Bytes(0x42))
@@ -171,17 +205,21 @@ object ByteTests extends TestSuite {
 
       }
 
-
       'lookahead {
-        val keyword = P((BS(1, 2, 3) ~ &(BS(4))).!.rep)
+        import fastparse.byte.all._
+
+        val keyword = P( (BS(1, 2, 3) ~ &(BS(4))).!.rep )
 
         val Parsed.Success(res, _) = keyword.parse(hex"01 02 03 04")
         assert(res == Seq(Bytes(1, 2, 3))
         )
         val Parsed.Success(Seq(), __) = keyword.parse(hex"01 02 03 05")
       }
+
       'neglookahead {
-        val keyword = P(BS(1, 2, 3) ~ !BS(0) ~ AnyByte ~ BS(5, 6, 7)).!
+        import fastparse.byte.all._
+
+        val keyword = P( BS(1, 2, 3) ~ !BS(0) ~ AnyByte ~ BS(5, 6, 7) ).!
 
         val Parsed.Success(res, _) = keyword.parse(hex"01 02 03 42 05 06 07")
         assert(res == Bytes(1, 2, 3, 0x42, 5, 6, 7))
@@ -189,14 +227,62 @@ object ByteTests extends TestSuite {
         val Parsed.Failure(parser, 4, _) = keyword.parse(hex"01 02 03 00 05 06 07")
         assert(parser == !BS(0))
       }
+
       'map {
-        val binary = P((BS(0) | BS(1)).rep.!)
-        val binaryNum = P(binary.map(_.toArray.sum))
+        import fastparse.byte.all._
+
+        val binary = P( (BS(0) | BS(1)).rep.! )
 
         val Parsed.Success(res, _) = binary.parse(hex"01 01 00 00")
         assert(res == Bytes(1, 1, 0, 0))
 
-        val Parsed.Success(2, _) = binaryNum.parse(hex"01 01 00 00")
+        val binaryNum = P( binary.map(_.toArray.sum) )
+        val Parsed.Success(2, _) = binaryNum.parse(Bytes(0x01, 0x01, 0x00, 0x00))
+      }
+
+      'filter {
+        import fastparse.byte.all._
+
+        val nullTerminated = P( (Int8.filter(_ != 0).rep().! ~ BS(0)).rep() )
+
+        val Parsed.Success(res, _) = nullTerminated .parse(
+          hex"de ad be ef 00 13 37 00"
+        )
+        assert(res == Seq(hex"de ad be ef", hex"13 37"))
+      }
+
+      'flatMap {
+        import fastparse.byte.all._
+
+        val lengthPrefixed = P( Int8.flatMap(AnyBytes(_).!).rep() )
+
+        val Parsed.Success(res, _) = lengthPrefixed.parse(
+          Bytes(0x04, 0xde, 0xad, 0xbe, 0xef, 0x02, 0x13, 0x37)
+        )
+        assert(res == Seq(Bytes(0xde, 0xad, 0xbe, 0xef), Bytes(0x13, 0x37)))
+      }
+
+
+      'bytesWhile {
+        import fastparse.byte.all._
+
+        val nullTerminated = P( (BytesWhile(_ != 0).! ~ BS(0)).rep() )
+
+        val Parsed.Success(res, _) = nullTerminated .parse(
+          hex"de ad be ef 00 13 37 00"
+        )
+        assert(res == Seq(hex"de ad be ef", hex"13 37"))
+      }
+
+      'bytePred{
+        import fastparse.byte.all._
+
+        val nullTerminated = P( (BytePred(_ != 0).rep().! ~ BS(0)).rep() )
+
+        val Parsed.Success(res, _) = nullTerminated .parse(
+          Bytes(0xde, 0xad, 0xbe, 0xef, 0x00, 0x13, 0x37, 0x00)
+        )
+        assert(res == Seq(Bytes(0xde, 0xad, 0xbe, 0xef), Bytes(0x13, 0x37)))
       }
     }
 

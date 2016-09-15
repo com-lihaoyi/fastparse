@@ -6,7 +6,7 @@
     @p
         While FastParse was originally designed to parse @hl.scala{String}s,
         it also provides a @code{fastparse.byte} package that allows parsing
-        of @hl.scala{Array[Byte]}s (or @hl.scala{Iterator[Array[Byte]]}s) into
+        of @hl.scala{Bytes} (or @hl.scala{Iterator[Bytes]}s) into
         structured data.
 
     @p
@@ -247,15 +247,167 @@
             same as it's string-parsing API. @sect.ref{Sequence}, @sect.ref{Repeat},
             @sect.ref{Optional}, @sect.ref{Either}, @sect.ref{Capture}, @sect.ref{Map},
             @sect.ref{FlatMap}, @sect.ref{Filter} and many other operators all work
-            the same when parsing bytes as they do when parsing strings:
-
-        @hl.ref(tests/"ByteTests.scala", Seq("'splash", ""))
+            the same when parsing bytes as they do when parsing strings.
 
         @p
             The process of @sect.ref{Debugging Parsers}, @sect.ref{Using Cuts}
             or @sect.ref{Using Log} to figure out what is going on, is all identical
             between FastParse's byte-parsing and string-parsing APIs.
 
+        @p
+            Here are a bunch of examples demonstrating the use of most of
+            FastParse's byte-parsing features:
+
+        @sect{Simple Bytes}
+            @hl.ref(tests/"ByteTests.scala", Seq("'simple", ""))
+            @p
+                This is the simplest byte-parser available: a single @code{BS}
+                containing the bytes you want to match.
+
+        @sect{Sequence Bytes}
+            @hl.ref(tests/"ByteTests.scala", Seq("'sequence", ""))
+            @p
+                @code{~} matches the left-side parser, and then the right-side
+                parser. You can chain arbitrarily many of these
+
+        @sect{Repeat Bytes}
+            @hl.ref(tests/"ByteTests.scala", Seq("'repeat", ""))
+            @p
+                @code{.rep} lets you repeat a parser zero or more times. By
+                default, this also allows the parser to not match at all
+                (zero times), but you can pass in @code{min = } and @code{max = }
+                to bound the number of repetitions within a certain range,
+                @code{exactly = } to match only a fixed number of bytes (useful
+                for fixed-with data-fields) or a separator via @code{sep = } if
+                you are parsing bytes delimited by zeroes or some other
+                separator.
+
+        @sect{Optional Bytes}
+            @hl.ref(tests/"ByteTests.scala", Seq("'optional", ""))
+
+            @p
+                @code{.?} lets the parser continue if it failed, trying the
+                next thing if it doesn't parse. Above, you can see it
+                can either parse the `01` with or without a preceding `03`.
+
+        @sect{Either Bytes}
+            @hl.ref(tests/"ByteTests.scala", Seq("'either", ""))
+
+            @p
+                @code{|} tries the parser on the left, and if that fails,
+                tries the parser on the right; if either of them passes it
+                passes, but if both sides fail then whole either parser fails.
+
+        @sect{End/Start Bytes}
+            @hl.ref(tests/"ByteTests.scala", Seq("'end", ""))
+            @p
+                @code{End} only succeeds if it is at the end of the input. By
+                default, byte parsers can succeed parsing prefixes of the
+                input. If you want a parser to fail if it doesn't reach the end
+                of an input, use @code{End}.
+            @p
+                @code{Start} is the opposite, only succeeding if at the start
+                of the input:
+
+            @hl.ref(tests/"ByteTests.scala", Seq("'start", ""))
+
+        @sect{Pass/Fail Bytes}
+            @hl.ref(tests/"ByteTests.scala", Seq("'passfail", ""))
+            @p
+                @code{Pass}/@code{Fail} pass or fail all the time. This is
+                useful if you need a "stub" @code{Parser} that always behaves
+                in some fixed way.
+
+        @sect{Index Bytes}
+            @hl.ref(tests/"ByteTests.scala", Seq("'index", ""))
+            @p
+                @code{Index} consumes no input, but returns the current index
+                that we've parsed until. Useful for capturing information for
+                debugging later.
+
+        @sect{Capture Bytes}
+            @hl.ref(tests/"ByteTests.scala", Seq("'capture", ""))
+            @p
+                @code{.!} captures the range of the modified bytes as a
+                @sect.ref{Bytes} object, which you can then use for whatever
+                you want. A @code{.!} inside an @sect.ref{Optional Bytes}
+                parser becomes an @code{Option}, and a @code{.!} inside a
+                @sect.ref{Repeat Bytes} parser becomes a @code{Seq}.
+
+            @p
+                If you want to capture one of the common formats of 8-, 16-,
+                32- or 64-bit integers of floating point numbers, you should
+                probably use some of the @sect.ref{Byte-Specific Parsers}
+                instead. You could do it yourself by assembling the number
+                from the raw @code{Bytes}, but use the built-ins is less
+                tedious and will have better performance.
+
+        @sect{Any Bytes}
+            @hl.ref(tests/"ByteTests.scala", Seq("'anybyte", ""))
+
+            @p
+                Consumes any single byte. You can also use
+                @code{AnyBytes(count: Int)} to consume a fixed number of bytes.
+                Does not capture anything unless you explicitly
+                @sect.ref{Capture Bytes}, and
+
+        @sect{Positive Lookahead Bytes}
+            @hl.ref(tests/"ByteTests.scala", Seq("'lookahead", ""))
+
+            @p
+                @code{&(...)} tries the inner parser to ensure it passes,
+                but if so it backtracks to where it started before the
+                subsequent parser runs. If the inner parser fails, it
+                fails.
+
+        @sect{Negative Lookahead Bytes}
+            @hl.ref(tests/"ByteTests.scala", Seq("'neglookahead", ""))
+
+            @p
+                @code{!(...)} tries the inner parser to ensure it fails,
+                but if so it backtracks to where it started before the
+                subsequent parser runs. If the inner parser succeeds, this
+                fails.
+
+        @sect{Map Bytes}
+            @hl.ref(tests/"ByteTests.scala", Seq("'map", ""))
+
+            @p
+                Lets you transform the current result of this parser (whether
+                a @code{Byte}/@code{Short}/@code{Int}/@code{Long}/@code{Float}/@code{Double}
+                from one of the @sect.ref{Byte-Specific Parsers} or a
+                @sect.ref{Bytes} from a @sect.ref{Capture Bytes}) into
+                something else: put it in a @hl.scala{case class}, convert
+                it to a @code{Array[Byte]}, whatever.
+
+        @sect{Filter Bytes}
+            @hl.ref(tests/"ByteTests.scala", Seq("'filter", ""))
+
+            @p
+                Lets you check a parser with a predicate; if the predicate
+                fails, that parser fails.
+
+
+        @sect{FlatMap Bytes}
+            @hl.ref(tests/"ByteTests.scala", Seq("'flatMap", ""))
+            @p
+                Lets you choose the subsequent parser based on the result of
+                the previous parser; useful for length-delimited fields, where
+                a preceding fixed-width length field determines how many
+                subsequent bytes make up the actual contents of the field.
+
+        @sect{BytesWhile}
+            @hl.ref(tests/"ByteTests.scala", Seq("'bytesWhile", ""))
+            @p
+                A fast way of consuming lots of bytes as long as the given
+                predicate returns true. Useful for things like 0-delimited
+                fields, where you want to consume the input until the next
+                0 byte.
+
+        @sect{BytePred}
+            @hl.ref(tests/"ByteTests.scala", Seq("'bytePred", ""))
+            @p
+                Consumes a single-byte, satisfying any arbitrary predicate.
 
     @sect{Example Byte Parsers}
 
