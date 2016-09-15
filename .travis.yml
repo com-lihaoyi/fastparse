@@ -25,19 +25,19 @@ matrix:
     # Cross-test the core fastparse test suite to make sure the core all works
     # on each platform.
     - env:
-      - CI_SCRIPT: '"fastparseJVM/test; fastparseJS/test"'
+      - CI_SCRIPT: '"fastparseJVM/test; fastparseJS/test; fastparseByteJVM/test; fastparseByteJS/test"'
       scala: 2.10.4
       jdk: oraclejdk7
     - env:
-      - CI_SCRIPT: '"fastparseJVM/test; fastparseJS/test"'
+      - CI_SCRIPT: '"fastparseJVM/test; fastparseJS/test; fastparseByteJVM/test; fastparseByteJS/test"'
       scala: 2.11.7
       jdk: oraclejdk7
     - env:
-      - CI_SCRIPT: '"fastparseJVM/test; fastparseJS/test"'
+      - CI_SCRIPT: '"fastparseJVM/test; fastparseJS/test; fastparseByteJVM/test; fastparseByteJS/test"'
       scala: 2.10.4
       jdk: oraclejdk8
     - env:
-      - CI_SCRIPT: '"fastparseJVM/test; fastparseJS/test"'
+      - CI_SCRIPT: '"fastparseJVM/test; fastparseJS/test; fastparseByteJVM/test; fastparseByteJS/test"'
       scala: 2.11.7
       jdk: oraclejdk8
 
