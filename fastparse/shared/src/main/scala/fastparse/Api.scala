@@ -15,6 +15,14 @@ abstract class Api[ElemType, Repr]()(implicit elemSetHelper: ElemSetHelper[ElemT
                                      elemFormatter: ElemTypeFormatter[ElemType],
                                      converter: ResultConverter[ElemType, Repr],
                                      ordering: Ordering[ElemType]) {
+  type ParseCtx = core.ParseCtx[ElemType, Repr]
+  object Mutable{
+    type Success[T] = core.Mutable.Success[T, ElemType]
+    val Success = core.Mutable.Success
+    type Failure = core.Mutable.Failure[ElemType]
+    val Failure = core.Mutable.Failure
+  }
+
   type Parsed[+T] = core.Parsed[T, ElemType]
   object Parsed {
     type Failure = core.Parsed.Failure[ElemType]
