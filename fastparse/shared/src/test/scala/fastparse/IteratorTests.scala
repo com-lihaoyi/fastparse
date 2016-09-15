@@ -228,9 +228,9 @@ object IteratorTests extends TestSuite {
     }
     'traceFailure{
       import fastparse.all._
-      P("[" ~ "]").parse("[ ]").asInstanceOf[fastparse.core.Parsed.Failure[_, _]].extra.traced
+      P("[" ~ "]").parse("[ ]").asInstanceOf[Parsed.Failure].extra.traced
       val e = intercept[RuntimeException] {
-        P("[" ~ "]").parseIterator(Iterator("[", " ", "]")).asInstanceOf[fastparse.core.Parsed.Failure[_, _]].extra.traced
+        P("[" ~ "]").parseIterator(Iterator("[", " ", "]")).asInstanceOf[Parsed.Failure].extra.traced
       }
       assert(e.getMessage.contains("Cannot perform `.traced` on an `IteratorParserInput`"))
     }
