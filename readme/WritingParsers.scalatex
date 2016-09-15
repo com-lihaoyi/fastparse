@@ -232,7 +232,22 @@
                 if you want to match things case-insensitively.
     @sect{Cuts}
         @p
-            A "cut" is a marker in a recursive-descent parser that states "you cannot backtrack past this point". Although in theory it allows you to save on memory usage by discarding earlier portions of the input, in FastParse this operator is mostly used to improve on the quality of error reporting.
+            A "cut" is a marker in a recursive-descent parser that states "you
+            cannot backtrack past this point". In FastParse, this serves two
+            purposes:
+
+        @ul
+            @li
+                Improving the quality of error-reporting while
+                @sect.ref{Debugging Parsers}: whether it's the parser that's
+                incorrect or the input that's incorrect, the improved error
+                messages due to Cuts makes it easier to figure out what's wrong
+            @li
+                Allowing @sect.ref{Streaming Parsing}: Even when parsing
+                streaming input, FastParse parsers have to buffer the input
+                in-memory in case the parser needs to backtrack, but adding
+                Cuts tells the parser it can safely drop earlier parts of the
+                input it can no longer backtrack to.
 
         @sect{No Cuts}
             @hl.ref(tests/"ExampleTests.scala", Seq("'nocut", ""))

@@ -12,7 +12,7 @@
                 combinators you may already be familiar with
 
             @li
-                New @sect.ref{MidiParser}, @sect.ref{BmpParser} and
+                New @sect.ref{MidiParse}, @sect.ref{BmpParser} and
                 @sect.ref{ClassParser} example parsers, as working examples of
                 how Fastparse's new @sect.ref{Byte Parsers} are written.
 
@@ -47,8 +47,8 @@
                 thanks to @a("volth", href:="https://github.com/volth").
 
             @li
-                Added a @sect.ref{StringInIgnoreCase} parser to allow matching
-                on multiple strings case-insensitively, thanks to ,
+                Added a @code{StringInIgnoreCase} parser to allow matching
+                on multiple strings like @sect.ref{StringIn} but case-insensitively,
                 thanks to @a("Jim Dickinson", href:="https://github.com/jimdickinson").
 
     @sect{0.3.7}
