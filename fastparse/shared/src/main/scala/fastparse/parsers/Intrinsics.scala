@@ -14,7 +14,6 @@ object Intrinsics {
 
   abstract class ElemSet[Elem, Repr](elems: Seq[Elem])
                                     (implicit helper: ElemSetHelper[Elem],
-                                     ordering: Ordering[Elem],
                                      formatter: ReprOps[Elem, Repr])
       extends Parser[Unit, Elem, Repr]{
     private[this] val uberSet = BitSet(elems)
@@ -31,7 +30,6 @@ object Intrinsics {
   case class ElemPred[Elem, Repr](name: String,
                                   predicate: Elem => Boolean)
                                  (implicit helper: ElemSetHelper[Elem],
-                                  ordering: Ordering[Elem],
                                   formatter: ReprOps[Elem, Repr])
     extends ElemSet[Elem, Repr](helper.allValues.filter(predicate)){
 
@@ -44,8 +42,7 @@ object Intrinsics {
   case class ElemIn[Elem, Repr](name: String,
                                 strings: Seq[Elem]*)
                                (implicit formatter: ReprOps[Elem, Repr],
-                                ehelper: ElemSetHelper[Elem],
-                                ordering: Ordering[Elem])
+                                ehelper: ElemSetHelper[Elem])
       extends ElemSet[Elem, Repr](formatter.toArray(formatter.flatten(strings.map(formatter.fromSeq)))){
     override def toString = s"$name(${formatter.literalize(formatter.flatten(strings.map(formatter.fromSeq)))})"
   }
@@ -57,7 +54,6 @@ object Intrinsics {
   case class ElemsWhile[Elem, Repr](name: String,
                                         pred: Elem => Boolean, min: Int = 1)
                                        (implicit helper: ElemSetHelper[Elem],
-                                                 ordering: Ordering[Elem],
                                         formatter: ReprOps[Elem, Repr])
       extends Parser[Unit, Elem, Repr]{
     private[this] val uberSet = BitSet(helper.allValues.filter(pred))

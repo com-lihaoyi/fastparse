@@ -1,9 +1,8 @@
 package fastparse.byte
-
+import acyclic.file
 import scodec.bits.ByteVector
 import fastparse.utils.Utils.IsReachable
 import fastparse.core.ParseCtx
-import fastparse.byte.all._
 import scala.collection.mutable
 
 /**
@@ -89,7 +88,6 @@ object ByteUtils{
   private[this] type Parser[+T] = fastparse.core.Parser[T, Byte, ByteVector]
 
 
-  import ByteApi._
   class GenericIntegerParser[T](n: Int, creator: (IsReachable[Byte], Int) => T)
                                 (implicit name: sourcecode.Name) extends Parser[T]()(ByteReprOps){
 

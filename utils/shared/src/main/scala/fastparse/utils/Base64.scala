@@ -1,5 +1,5 @@
 package fastparse.utils
-
+import acyclic.file
 import scala.collection.mutable.ArrayBuilder
 
 /**

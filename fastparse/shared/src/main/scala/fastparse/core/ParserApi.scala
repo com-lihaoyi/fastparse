@@ -1,5 +1,5 @@
 package fastparse.core
-
+import acyclic.file
 import fastparse.core.Implicits._
 import fastparse.parsers.Combinators.{Capturing, Cut, Either, Logged, Not, Opaque, Optional, Repeat, Sequence}
 import fastparse.parsers.Terminals.Pass

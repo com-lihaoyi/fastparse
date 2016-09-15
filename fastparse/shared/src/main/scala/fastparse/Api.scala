@@ -1,5 +1,5 @@
 package fastparse
-
+import acyclic.file
 import fastparse.core.{ParserApi, ParserApiImpl}
 
 import language.experimental.macros
@@ -13,11 +13,15 @@ import scala.reflect.ClassTag
  * the "public" API to fastparse packages
  */
 
-abstract class Api[Elem, Repr]()(implicit elemSetHelper: ElemSetHelper[Elem],
-                                 ordering: Ordering[Elem],
-                                 ct: ClassTag[Elem]) {
+abstract class Api[Elem, Repr](ct: ClassTag[Elem],
+                               elemSetHelper: ElemSetHelper[Elem],
+                               reprOps: ReprOps[Elem, Repr],
+                               ordering: Ordering[Elem]) {
 
-  implicit val elemFormatter: ReprOps[Elem, Repr]
+  implicit val implicitReprOps = reprOps
+  implicit val implicitElemSetHelper = elemSetHelper
+  protected[this] implicit val implicitClassTag = ct
+  protected[this] implicit val implicitOrdering = ordering
 
   class IndexedParserInput(data: Repr)
   extends fastparse.utils.IndexedParserInput[Elem, Repr](data)

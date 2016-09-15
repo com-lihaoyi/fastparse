@@ -1,8 +1,14 @@
 package fastparse.byte
-
-import fastparse.utils.{ParserInput, ReprOps}
+import acyclic.file
+import fastparse.utils.{ElemSetHelper, ParserInput, ReprOps}
 import fastparse.utils.Utils.HexUtils
 import scodec.bits.ByteVector
+
+object ByteBitSetHelper extends ElemSetHelper[Byte] {
+  def toInt(a: Byte): Int = a
+  def ordering = implicitly[Ordering[Byte]]
+  val allValues = (Byte.MinValue.toInt to Byte.MaxValue.toInt).map(_.toByte)
+}
 
 object ByteReprOps extends ReprOps[Byte, ByteVector] {
   private[this] type Bytes = ByteVector

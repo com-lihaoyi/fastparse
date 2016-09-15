@@ -1,5 +1,6 @@
 package fastparse
-import fastparse.utils.{IndexedParserInput, ParserInput, ReprOps, Utils}
+import fastparse.utils._
+import acyclic.file
 
 object StringReprOps extends ReprOps[Char, String] {
   def apply0(input: String, i: Int) = input.charAt(i)

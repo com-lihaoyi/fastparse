@@ -1,23 +1,12 @@
 package fastparse.byte
-
-import fastparse.utils.Utils.HexUtils
+import acyclic.file
 import fastparse._
 import fastparse.core.ParserApi
 import fastparse.parsers.{Intrinsics, Terminals}
-import fastparse.utils.{ElemSetHelper, ParserInput, ReprOps}
 import scodec.bits.ByteVector
-object ByteApi {
 
-  implicit val ByteBitSetHelper = new ElemSetHelper[Byte] {
-    def toInt(a: Byte): Int = a
 
-    val allValues = (Byte.MinValue.toInt to Byte.MaxValue.toInt).map(_.toByte)
-  }
-}
-import ByteApi._
-class ByteApi() extends Api[Byte, ByteVector]() {
-
-  implicit val elemFormatter = ByteReprOps
+class ByteApi() extends Api[Byte, ByteVector](implicitly, ByteBitSetHelper, ByteReprOps, ByteBitSetHelper.ordering) {
 
   class IndexedParserInput(data: Bytes)
   extends fastparse.utils.IndexedParserInput(data)

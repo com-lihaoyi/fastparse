@@ -1,6 +1,6 @@
 package fastparse.utils
 
-
+import acyclic.file
 
 import scala.annotation.{switch, tailrec}
 import scala.collection.mutable.ArrayBuffer
@@ -18,7 +18,9 @@ object MacroUtils{
   def preComputeImpl(c: Compat.Context)(pred: c.Expr[Char => Boolean]): c.Expr[Utils.BitSet[Char]] = {
     import c.universe._
     val evaled = c.eval(c.Expr[Char => Boolean](c.resetLocalAttrs(pred.tree.duplicate)))
-    val (first, last, array) = Utils.BitSet.compute((Char.MinValue to Char.MaxValue).filter(evaled))
+    val (first, last, array) = Utils.BitSet.compute(
+      (Char.MinValue to Char.MaxValue).filter(evaled)
+    )(CharBitSetHelper)
     val txt = Utils.HexUtils.ints2Hex(array)
     c.Expr[Utils.BitSet[Char]](q"""
       new fastparse.utils.Utils.BitSet(fastparse.utils.Utils.HexUtils.hex2Ints($txt), $first, $last)
@@ -88,16 +90,17 @@ object Utils {
 
   object BitSet {
     def compute[Elem](elems: Seq[Elem])
-                     (implicit helper: ElemSetHelper[Elem], ordering: Ordering[Elem]) = {
-      val first = helper.toInt(elems.min)
-      val last = helper.toInt(elems.max)
+                     (implicit helper: ElemSetHelper[Elem]) = {
+
+      val first = helper.toInt(elems.min(helper.ordering))
+      val last = helper.toInt(elems.max(helper.ordering))
       val span = last - first
       val array = new Array[Int](span / 32 + 1)
       for(c <- elems) array((helper.toInt(c) - first) >> 5) |= 1 << ((helper.toInt(c) - first) & 31)
       (first, last, array)
     }
     def apply[Elem](chars: Seq[Elem])
-                   (implicit helper: ElemSetHelper[Elem], ordering: Ordering[Elem]) = {
+                   (implicit helper: ElemSetHelper[Elem]) = {
       val (first, last, array) = compute(chars)
       new BitSet[Elem](array, first, last)
     }
