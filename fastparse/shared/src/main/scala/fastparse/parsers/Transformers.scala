@@ -13,7 +13,7 @@ object Transformers {
    * Applies a transformation [[f]] to the result of [[p]]
    */
   case class Mapper[T, V, Elem, Repr](p: Parser[T, Elem, Repr], f: T => V)
-                                         (implicit  repr: ReprOps[Elem, Repr])
+                                         (implicit repr: ReprOps[Elem, Repr])
     extends Parser[V, Elem, Repr]{
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       p.parseRec(cfg, index) match{
