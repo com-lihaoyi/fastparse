@@ -8,6 +8,16 @@
         it also provides a @code{fastparse.byte} package that allows parsing
         of @hl.scala{Bytes} (or @hl.scala{Iterator[Bytes]}s) into
         structured data.
+    @p
+        To begin using FastParse to parse bytes, add
+
+    @hl.scala
+        "com.lihaoyi" %% "fastparse-byte" % "@fastparse.Constants.version"
+
+    @p
+        To your SBT configuration. To use with Scala.js, you'll need
+    @hl.scala
+        "com.lihaoyi" %%% "fastparse-byte" % "@fastparse.Constants.version"
 
     @p
         Here is a small example parser that parsers an imaginary struct-like

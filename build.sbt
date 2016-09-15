@@ -189,6 +189,8 @@ lazy val modules = project
   .aggregate(
     fastparseJS,
     fastparseJVM,
+    fastparseByteJS,
+    fastparseByteJVM,
     pythonparseJS,
     pythonparseJVM,
     cssparseJS,
