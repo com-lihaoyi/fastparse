@@ -1,8 +1,9 @@
-package fastparse
-import scodec.bits.ByteVector
-import fastparse.Utils.IsReachable
-import fastparse.core.ParseCtx
+package fastparse.byte
 
+import scodec.bits.ByteVector
+import fastparse.utils.Utils.IsReachable
+import fastparse.core.ParseCtx
+import fastparse.byte.all._
 import scala.collection.mutable
 
 /**
@@ -59,7 +60,7 @@ object ByteUtils{
         if sliced.nonEmpty
       }{
 
-        val prettyRow = ElemTypeFormatter.ByteFormatter.prettyPrint(sliced.toArray)
+        val prettyRow = fastparse.byte.ByteApi.ByteFormatter.prettyPrint(sliced.toArray)
         output.append('\n')
         output.append((i * 16).toString.padTo(maxIndexWidth + gutter, ' '))
         output.append(prettyRow)
@@ -88,7 +89,7 @@ object ByteUtils{
   private[this] type Parser[+T] = fastparse.core.Parser[T, Byte, ByteVector]
 
 
-
+  import ByteApi._
   class GenericIntegerParser[T](n: Int, creator: (IsReachable[Byte], Int) => T)
                                (implicit name: sourcecode.Name) extends Parser[T]{
 
@@ -169,13 +170,13 @@ object ByteUtils{
     object LE extends EndianByteParsers {
       def inputToLong(input: IsReachable[Byte], n: Int) = {
         ((input(n+7) & 0xffL) << 56) | ((input(n+6) & 0xffL) << 48) |
-        ((input(n+5) & 0xffL) << 40) | ((input(n+4) & 0xffL) << 32 ) |
-        ((input(n+3) & 0xffL) << 24) | ((input(n+2) & 0xffL) << 16) |
-        ((input(n+1) & 0xffL) << 8) | (input(n) & 0xffL)
+          ((input(n+5) & 0xffL) << 40) | ((input(n+4) & 0xffL) << 32 ) |
+          ((input(n+3) & 0xffL) << 24) | ((input(n+2) & 0xffL) << 16) |
+          ((input(n+1) & 0xffL) << 8) | (input(n) & 0xffL)
       }
       def inputToInt(input: IsReachable[Byte], n: Int) = {
         ((input(n+3) & 0xff) << 24) | ((input(n+2) & 0xff) << 16) |
-        ((input(n+1) & 0xff) << 8) | (input(n) & 0xff)
+          ((input(n+1) & 0xff) << 8) | (input(n) & 0xff)
       }
       def inputToShort(input: IsReachable[Byte], n: Int) = {
         (((input(n+1) & 0xff) << 8) | (input(n) & 0xff)).toShort
@@ -188,13 +189,13 @@ object ByteUtils{
     object BE extends EndianByteParsers {
       def inputToLong(input: IsReachable[Byte], n: Int) = {
         ((input(n) & 0xffL) << 56) | ((input(n+1) & 0xffL) << 48) |
-        ((input(n+2) & 0xffL) << 40) | ((input(n+3) & 0xffL) << 32 ) |
-        ((input(n+4) & 0xffL) << 24) | ((input(n+5) & 0xffL) << 16) |
-        ((input(n+6) & 0xffL) << 8) | (input(n+7) & 0xffL)
+          ((input(n+2) & 0xffL) << 40) | ((input(n+3) & 0xffL) << 32 ) |
+          ((input(n+4) & 0xffL) << 24) | ((input(n+5) & 0xffL) << 16) |
+          ((input(n+6) & 0xffL) << 8) | (input(n+7) & 0xffL)
       }
       def inputToInt(input: IsReachable[Byte], n: Int) = {
         ((input(n) & 0xff) << 24) | ((input(n+1) & 0xff) << 16) |
-        ((input(n+2) & 0xff) << 8) | (input(n+3) & 0xff)
+          ((input(n+2) & 0xff) << 8) | (input(n+3) & 0xff)
       }
       def inputToShort(input: IsReachable[Byte], n: Int) = {
         (((input(n) & 0xff) << 8) | (input(n+1) & 0xff)).toShort

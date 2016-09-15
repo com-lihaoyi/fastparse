@@ -1,7 +1,4 @@
-package fastparse
-
-import fastparse.Utils.HexUtils
-import scodec.bits.ByteVector
+package fastparse.utils
 
 abstract class ElemTypeFormatter[ElemType] {
   def prettyPrint(input: IndexedSeq[ElemType]): String
@@ -49,35 +46,11 @@ object ElemTypeFormatter {
     }
   }
 
-  implicit val ByteFormatter = new ElemTypeFormatter[Byte] {
-    private def ByteToHex(b: Byte) = s"${HexUtils.hexChars((b & 0xf0) >> 4)}${HexUtils.hexChars(b & 15)}"
-
-    override def prettyPrint(input: IndexedSeq[Byte]): String = input.map(ByteToHex).mkString(" ")
-    override def literalize(input: IndexedSeq[Byte]): String = '"' + prettyPrint(input) + '"'
-
-    override def errorMessage(input: ParserInput[Byte], expected: String, idx: Int): String = {
-      val locationCode = {
-        val first = input.slice(idx - 20, idx)
-        val last = input.slice(idx, idx + 20)
-
-        prettyPrint(first) + prettyPrint(last) + "\n" + (" " * first.length) + "^"
-      }
-      val literal = literalize(input.slice(idx, idx + 20))
-      s"found $literal, expected $expected at index $idx\n$locationCode"
-    }
-
-    override def prettyIndex(input: ParserInput[Byte], index: Int): String = String.valueOf(index)
-  }
 }
 
 object ResultConverter {
   implicit val CharBuilder = new ResultConverter[Char, String] {
     override def convertToRepr(input: IndexedSeq[Char]): String = input.mkString
     override def convertFromRepr(input: String): IndexedSeq[Char] = wrapString(input)
-  }
-
-  implicit val ByteBuilder = new ResultConverter[Byte, ByteVector] {
-    override def convertToRepr(input: IndexedSeq[Byte]): ByteVector = ByteVector(input:_*)
-    override def convertFromRepr(input: ByteVector): IndexedSeq[Byte] = input.toArray
   }
 }

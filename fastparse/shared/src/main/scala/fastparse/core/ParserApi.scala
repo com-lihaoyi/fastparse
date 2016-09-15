@@ -1,12 +1,13 @@
-package fastparse
-import acyclic.file
-import parsers.Terminals._
-import parsers.Combinators._
-import parsers.Transformers._
-import Implicits._
-import core.Parser
+package fastparse.core
 
-trait ParserApi[+T, ElemType, Repr] {
+import fastparse.core.Implicits._
+import fastparse.parsers.Combinators.{Capturing, Cut, Either, Logged, Not, Opaque, Optional, Repeat, Sequence}
+import fastparse.parsers.Terminals.Pass
+import fastparse.parsers.Transformers.{Filtered, FlatMapped, Mapper}
+import fastparse.utils.{ElemTypeFormatter, ResultConverter}
+
+abstract class ParserApi[+T, ElemType, Repr]()(implicit converter: ResultConverter[ElemType, Repr],
+                                               formatter: ElemTypeFormatter[ElemType]) {
 
   /**
    * Wraps this in a [[Logged]]. This prints out information
@@ -85,7 +86,8 @@ trait ParserApi[+T, ElemType, Repr] {
 }
 
 class ParserApiImpl[+T, ElemType, Repr](self: Parser[T, ElemType, Repr])
-                                       (implicit builder: ResultConverter[ElemType, Repr])
+                                       (implicit builder: ResultConverter[ElemType, Repr],
+                                        formatter: ElemTypeFormatter[ElemType])
     extends ParserApi[T, ElemType, Repr] {
 
   def log(msg: String = self.toString)(implicit output: Logger) = Logged(self, msg, output.f)

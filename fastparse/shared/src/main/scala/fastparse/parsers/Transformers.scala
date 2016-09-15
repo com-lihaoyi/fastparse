@@ -2,8 +2,8 @@ package fastparse.parsers
 import acyclic.file
 import fastparse.core.Mutable
 import fastparse.core.Parser
-import fastparse.core.Parsed.{Failure, Success}
-import fastparse.core.{ParseCtx, Parsed}
+import fastparse.core.ParseCtx
+import fastparse.utils.{ElemTypeFormatter, ResultConverter}
 
 /**
  * Parsers that work with the output of a successful parse
@@ -12,7 +12,10 @@ object Transformers {
   /**
    * Applies a transformation [[f]] to the result of [[p]]
    */
-  case class Mapper[T, V, ElemType, Repr](p: Parser[T, ElemType, Repr], f: T => V) extends Parser[V, ElemType, Repr]{
+  case class Mapper[T, V, ElemType, Repr](p: Parser[T, ElemType, Repr], f: T => V)
+                                         (implicit converter: ResultConverter[ElemType, Repr],
+                                          formatter: ElemTypeFormatter[ElemType])
+    extends Parser[V, ElemType, Repr]{
     def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
       p.parseRec(cfg, index) match{
         case s: Mutable.Success[T, ElemType] => success(s, f(s.value), s.index, s.traceParsers, s.cut)
@@ -23,6 +26,8 @@ object Transformers {
   }
 
   case class FlatMapped[T, V, ElemType, Repr](p1: Parser[T, ElemType, Repr], func: T => Parser[V, ElemType, Repr])
+                                             (implicit converter: ResultConverter[ElemType, Repr],
+                                              formatter: ElemTypeFormatter[ElemType])
     extends Parser[V, ElemType, Repr] {
     def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
       p1.parseRec(cfg, index) match{
@@ -37,6 +42,8 @@ object Transformers {
   }
 
   case class Filtered[T, ElemType, Repr](p: Parser[T, ElemType, Repr], predicate: T => Boolean)
+                                        (implicit converter: ResultConverter[ElemType, Repr],
+                                         formatter: ElemTypeFormatter[ElemType])
     extends Parser[T, ElemType, Repr] {
     override def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
       p.parseRec(cfg, index) match{

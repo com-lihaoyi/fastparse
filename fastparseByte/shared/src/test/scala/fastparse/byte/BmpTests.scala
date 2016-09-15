@@ -1,8 +1,8 @@
-package fastparse
+package fastparse.byte
 
-import scala.collection.mutable.ArrayBuffer
-import fastparse.byte._
 import utest._
+import fastparse.byte.all._
+import scala.collection.mutable.ArrayBuffer
 
 /*
   The basic parser of BMP format https://en.wikipedia.org/wiki/BMP_file_format .
@@ -36,7 +36,6 @@ object BmpTests extends TestSuite {
     }
 
     import BmpAst._
-    import LE._
 
     val fileHeader = {
       val headerType = UInt16
@@ -108,8 +107,8 @@ object BmpTests extends TestSuite {
     )
   }
 
-  import BmpParse._
   import BmpParse.BmpAst._
+  import BmpParse._
 
   val tests = TestSuite {
 

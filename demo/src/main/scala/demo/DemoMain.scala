@@ -6,6 +6,7 @@ import fastparse.Midi
 import org.scalajs.dom
 import org.scalajs.dom.{Event, UIEvent, html}
 import fastparse.core.{Parsed, Parser}
+import fastparse.utils.Utils
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSExport
@@ -309,7 +310,7 @@ object DemoMain {
           )
 
         case Parsed.Failure(lastParser, index, extra) =>
-          val pretty = fastparse.Utils.literalize( extra.input.slice( index, index + 15)).toString
+          val pretty = Utils.literalize( extra.input.slice( index, index + 15)).toString
           table(
             width := "100%",
             tr(td("Failure!")),

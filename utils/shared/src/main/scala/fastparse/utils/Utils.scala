@@ -1,11 +1,8 @@
-package fastparse
+package fastparse.utils
 
-import java.io.InputStream
+
 
 import scala.annotation.{switch, tailrec}
-import acyclic.file
-
-import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.language.experimental.macros
 
@@ -16,7 +13,7 @@ object MacroUtils{
    * Char predicates that are unfeasible at runtime, e.g. because they're too
    * slow or because they don't work in Scala.js
    */
-  def preCompute(pred: Char => Boolean): fastparse.Utils.BitSet[Char] = macro preComputeImpl
+  def preCompute(pred: Char => Boolean): Utils.BitSet[Char] = macro preComputeImpl
 
   def preComputeImpl(c: Compat.Context)(pred: c.Expr[Char => Boolean]): c.Expr[Utils.BitSet[Char]] = {
     import c.universe._
@@ -24,7 +21,7 @@ object MacroUtils{
     val (first, last, array) = Utils.BitSet.compute((Char.MinValue to Char.MaxValue).filter(evaled))
     val txt = Utils.HexUtils.ints2Hex(array)
     c.Expr[Utils.BitSet[Char]](q"""
-      new fastparse.Utils.BitSet(fastparse.Utils.HexUtils.hex2Ints($txt), $first, $last)
+      new fastparse.utils.Utils.BitSet(fastparse.utils.Utils.HexUtils.hex2Ints($txt), $first, $last)
     """)
   }
 }

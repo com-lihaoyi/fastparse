@@ -1,6 +1,6 @@
 package pythonparse
 
-import fastparse.Implicits.Sequencer
+import fastparse.core.Implicits.Sequencer
 import fastparse.noApi._
 import WsApi._
 import acyclic.file

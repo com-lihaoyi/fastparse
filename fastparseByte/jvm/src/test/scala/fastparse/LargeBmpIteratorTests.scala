@@ -45,7 +45,7 @@ object LargeBmpIteratorTests extends TestSuite {
     }
 
     'maxInnerLength {
-      val loggedInput = new IteratorParserInput[Byte](lenaIterator.map(_.toArray)) {
+      val loggedInput = new utils.IteratorParserInput(lenaIterator.map(_.toArray)) {
         var maxInnerLength = 0
 
         override def dropBuffer(index: Int): Unit = {

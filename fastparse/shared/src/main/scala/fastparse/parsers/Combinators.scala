@@ -1,10 +1,12 @@
 package fastparse.parsers
 import acyclic.file
-import fastparse.{Implicits, ResultConverter, ResultConverter$}
+import fastparse.utils.ResultConverter
+import fastparse.core.Implicits
 import Terminals._
 import fastparse.core.Parsed._
 import fastparse.core.Mutable
 import fastparse.core.{ParseCtx, Parsed, Parser, Precedence}
+import fastparse.utils.{ElemTypeFormatter, ResultConverter}
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ArrayBuffer
@@ -18,7 +20,8 @@ object Combinators {
    * Captures the string parsed by the given parser [[p]].
    */
   case class Capturing[ElemType, Repr](p: Parser[_, ElemType, Repr])
-                                      (implicit converter: ResultConverter[ElemType, Repr])
+                                      (implicit converter: ResultConverter[ElemType, Repr],
+                                       formatter: ElemTypeFormatter[ElemType])
       extends Parser[Repr, ElemType, Repr] {
     def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
       val oldCapturing = cfg.isCapturing
@@ -44,7 +47,9 @@ object Combinators {
   /**
    * Wrap a parser in this if you don't want for it to show up in a stack trace
    */
-  case class NoTrace[T, ElemType, Repr](p: Parser[T, ElemType, Repr]) extends Parser[T, ElemType, Repr]{
+  case class NoTrace[T, ElemType, Repr](p: Parser[T, ElemType, Repr])
+                                       (implicit converter: ResultConverter[ElemType, Repr],
+                                        formatter: ElemTypeFormatter[ElemType]) extends Parser[T, ElemType, Repr]{
     def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
       p.parseRec(cfg, index) match {
         case s: Mutable.Success[_, ElemType] =>
@@ -66,6 +71,8 @@ object Combinators {
    * @param msg The message for the wrapper
    */
   case class Opaque[+T, ElemType, Repr](p: Parser[T, ElemType, Repr], msg: String)
+                                       (implicit converter: ResultConverter[ElemType, Repr],
+                                        formatter: ElemTypeFormatter[ElemType])
     extends Parser[T, ElemType, Repr]{
     def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
       p.parseRec(cfg, index) match {
@@ -85,7 +92,9 @@ object Combinators {
   /**
    *
    */
-  case class NoCut[T, ElemType, Repr](p: Parser[T, ElemType, Repr]) extends Parser[T, ElemType, Repr]{
+  case class NoCut[T, ElemType, Repr](p: Parser[T, ElemType, Repr])
+                                     (implicit converter: ResultConverter[ElemType, Repr],
+                                      formatter: ElemTypeFormatter[ElemType]) extends Parser[T, ElemType, Repr]{
     def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
       val oldNoCut = cfg.isNoCut
       cfg.isNoCut = true
@@ -108,7 +117,9 @@ object Combinators {
    * and ends, together with its result
    */
   case class Logged[+T, ElemType, Repr](p: Parser[T, ElemType, Repr],
-                                        msg: String, output: String => Unit) extends Parser[T, ElemType, Repr]{
+                                        msg: String, output: String => Unit)
+                                       (implicit converter: ResultConverter[ElemType, Repr],
+                                        formatter: ElemTypeFormatter[ElemType]) extends Parser[T, ElemType, Repr]{
     def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
       if (cfg.logDepth == -1 || cfg.traceIndex != -1) p.parseRec(cfg, index)
       else {
@@ -143,6 +154,8 @@ object Combinators {
    * dependencies between parsers.
    */
   case class Rule[+T, ElemType, Repr](name: String, p: () => Parser[T, ElemType, Repr])
+                                     (implicit converter: ResultConverter[ElemType, Repr],
+                                      formatter: ElemTypeFormatter[ElemType])
     extends Parser[T, ElemType, Repr]{
     private[this] lazy val pCached = p()
 
@@ -170,7 +183,9 @@ object Combinators {
    * Wraps another parser, succeeding/failing identically
    * but consuming no input
    */
-  case class Lookahead[ElemType, Repr](p: Parser[_, ElemType, Repr]) extends Parser[Unit, ElemType, Repr]{
+  case class Lookahead[ElemType, Repr](p: Parser[_, ElemType, Repr])
+                                      (implicit converter: ResultConverter[ElemType, Repr],
+                                       formatter: ElemTypeFormatter[ElemType]) extends Parser[Unit, ElemType, Repr]{
     def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
       val oldNoCut = cfg.isNoCut
       cfg.isNoCut = true
@@ -192,7 +207,9 @@ object Combinators {
    * Wraps another parser, succeeding it it fails and failing
    * if it succeeds. Neither case consumes any input
    */
-  case class Not[ElemType, Repr](p: Parser[_, ElemType, Repr]) extends Parser[Unit, ElemType, Repr]{
+  case class Not[ElemType, Repr](p: Parser[_, ElemType, Repr])
+                                (implicit converter: ResultConverter[ElemType, Repr],
+                                 formatter: ElemTypeFormatter[ElemType]) extends Parser[Unit, ElemType, Repr]{
     def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
       val oldNoCut = cfg.isNoCut
       cfg.isNoCut = true
@@ -214,7 +231,9 @@ object Combinators {
    * and succeeds with `None` if [[p]] fails.
    */
   case class Optional[+T, R, ElemType, Repr](p: Parser[T, ElemType, Repr])
-                            (implicit ev: Implicits.Optioner[T, R]) extends Parser[R, ElemType, Repr]{
+                            (implicit ev: Implicits.Optioner[T, R],
+                             converter: ResultConverter[ElemType, Repr],
+                             formatter: ElemTypeFormatter[ElemType]) extends Parser[R, ElemType, Repr]{
 
     def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
       val oldFork = cfg.isFork
@@ -253,8 +272,11 @@ object Combinators {
      */
     case class Chain[R, ElemType, Repr](p: Parser[R, ElemType, Repr], cut: Boolean)
                                        (val ev: Implicits.Sequencer[R, R, R])
+
     case class Flat[R, ElemType, Repr](p0: Parser[R, ElemType, Repr],
                                        ps: ArrayBuffer[Chain[R, ElemType, Repr]])
+                                      (implicit converter: ResultConverter[ElemType, Repr],
+                                       formatter: ElemTypeFormatter[ElemType])
       extends Parser[R, ElemType, Repr] {
 
       def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int): Mutable[R, ElemType] = {
@@ -324,7 +346,9 @@ object Combinators {
      * A ~ B ~ C ~ D
      * ((A ~ B) ~ C) ~ D
      */
-    def flatten[R, ElemType, Repr](s: Sequence[R, R, R, ElemType, Repr]): Flat[R, ElemType, Repr] = {
+    def flatten[R, ElemType, Repr](s: Sequence[R, R, R, ElemType, Repr])
+                                  (implicit converter: ResultConverter[ElemType, Repr],
+                                   formatter: ElemTypeFormatter[ElemType]): Flat[R, ElemType, Repr] = {
       def rec(s: Sequence[R, R, R, ElemType, Repr]): Flat[R, ElemType, Repr] = {
         val ev2 = s.ev2.asInstanceOf[Implicits.Sequencer[R, R, R]]
         s.p1 match{
@@ -347,7 +371,9 @@ object Combinators {
   case class Sequence[+T1, +T2, R,
                       ElemType, Repr](p1: Parser[T1, ElemType, Repr],
                                       p2: Parser[T2, ElemType, Repr], cut: Boolean)
-                               (implicit ev: Implicits.Sequencer[T1, T2, R]) extends Parser[R, ElemType, Repr]{
+                               (implicit ev: Implicits.Sequencer[T1, T2, R],
+                                converter: ResultConverter[ElemType, Repr],
+                                formatter: ElemTypeFormatter[ElemType]) extends Parser[R, ElemType, Repr]{
     def ev2: Implicits.Sequencer[_, _, _] = ev
     def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
 
@@ -388,7 +414,9 @@ object Combinators {
   }
 
 
-  case class Cut[T, ElemType, Repr](p: Parser[T, ElemType, Repr]) extends Parser[T, ElemType, Repr]{
+  case class Cut[T, ElemType, Repr](p: Parser[T, ElemType, Repr])
+                                   (implicit converter: ResultConverter[ElemType, Repr],
+                                    formatter: ElemTypeFormatter[ElemType])extends Parser[T, ElemType, Repr]{
     def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
       p.parseRec(cfg, index) match{
         case f: Mutable.Failure[ElemType] => failMore(f, index, cfg.logDepth, cut = false)
@@ -409,7 +437,9 @@ object Combinators {
    */
   case class Repeat[T, +R, ElemType, Repr](p: Parser[T, ElemType, Repr], min: Int, max: Int,
                                            delimiter: Parser[_, ElemType, Repr])
-                          (implicit ev: Implicits.Repeater[T, R]) extends Parser[R, ElemType, Repr]{
+                          (implicit ev: Implicits.Repeater[T, R],
+                           converter: ResultConverter[ElemType, Repr],
+                           formatter: ElemTypeFormatter[ElemType]) extends Parser[R, ElemType, Repr]{
 
 
     def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
@@ -493,7 +523,9 @@ object Combinators {
    * Parses using one parser or the other, if the first one fails. Returns
    * the first one that succeeds and fails if both fail
    */
-  case class Either[T, ElemType, Repr](ps: Parser[T, ElemType, Repr]*) extends Parser[T, ElemType, Repr]{
+  case class Either[T, ElemType, Repr](ps: Parser[T, ElemType, Repr]*)
+                                      (implicit converter: ResultConverter[ElemType, Repr],
+                                       formatter: ElemTypeFormatter[ElemType]) extends Parser[T, ElemType, Repr]{
     private[this] val ps0 = ps.toArray
     private[this] val n = ps0.length
     def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {

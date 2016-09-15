@@ -1,6 +1,7 @@
 package fastparse
 
 import all._
+import fastparse.core.Logger
 import utest._
 
 /**

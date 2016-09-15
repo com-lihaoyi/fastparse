@@ -1,5 +1,5 @@
-package fastparse
-import acyclic.file
+package fastparse.core
+
 import scala.collection.mutable
 
 /**

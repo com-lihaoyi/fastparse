@@ -1,8 +1,9 @@
 package fastparse.parsers
 import acyclic.file
-import fastparse.Utils._
+import fastparse.utils.Utils._
 import fastparse.core.{ParseCtx, Parsed, Parser, Precedence}
-import fastparse.{ElemSetHelper, ElemTypeFormatter, Utils}
+import fastparse.utils.{ElemSetHelper, ElemTypeFormatter, ResultConverter}
+import fastparse.utils.{ElemTypeFormatter, ResultConverter, Utils}
 
 /**
  * High-performance intrinsics for parsing common patterns. All
@@ -14,7 +15,9 @@ object Intrinsics {
 
   abstract class ElemSet[ElemType, Repr](elems: Seq[ElemType])
                                         (implicit helper: ElemSetHelper[ElemType],
-                                                  ordering: Ordering[ElemType])
+                                                  ordering: Ordering[ElemType],
+                                         converter: ResultConverter[ElemType, Repr],
+                                         formatter: ElemTypeFormatter[ElemType])
       extends Parser[Unit, ElemType, Repr]{
     private[this] val uberSet = BitSet(elems)
     def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
@@ -30,7 +33,9 @@ object Intrinsics {
   case class ElemPred[ElemType, Repr](name: String,
                                       predicate: ElemType => Boolean)
                                      (implicit helper: ElemSetHelper[ElemType],
-                                               ordering: Ordering[ElemType])
+                                               ordering: Ordering[ElemType],
+                                               converter: ResultConverter[ElemType, Repr],
+                                      formatter: ElemTypeFormatter[ElemType])
     extends ElemSet[ElemType, Repr](helper.allValues.filter(predicate)){
 
     override def toString = s"$name($predicate)"
@@ -43,7 +48,8 @@ object Intrinsics {
                                     strings: IndexedSeq[ElemType]*)
                                    (implicit formatter: ElemTypeFormatter[ElemType],
                                     ehelper: ElemSetHelper[ElemType],
-                                    ordering: Ordering[ElemType])
+                                    ordering: Ordering[ElemType],
+                                    converter: ResultConverter[ElemType, Repr])
       extends ElemSet[ElemType, Repr](strings.flatten){
     override def toString = s"$name(${formatter.literalize(strings.flatten.toIndexedSeq)})"
   }
@@ -55,7 +61,9 @@ object Intrinsics {
   case class ElemsWhile[ElemType, Repr](name: String,
                                         pred: ElemType => Boolean, min: Int = 1)
                                        (implicit helper: ElemSetHelper[ElemType],
-                                                 ordering: Ordering[ElemType])
+                                                 ordering: Ordering[ElemType],
+                                        converter: ResultConverter[ElemType, Repr],
+                                        formatter: ElemTypeFormatter[ElemType])
       extends Parser[Unit, ElemType, Repr]{
     private[this] val uberSet = BitSet(helper.allValues.filter(pred))
 
@@ -76,7 +84,8 @@ object Intrinsics {
   case class StringIn[ElemType, Repr](strings: IndexedSeq[ElemType]*)
                                      (implicit formatter: ElemTypeFormatter[ElemType],
                                       helper: ElemSetHelper[ElemType],
-                                      ordering: Ordering[ElemType])
+                                      ordering: Ordering[ElemType],
+                                      converter: ResultConverter[ElemType, Repr])
       extends Parser[Unit, ElemType, Repr] {
 
     private[this] val trie = new TrieNode[ElemType](strings)

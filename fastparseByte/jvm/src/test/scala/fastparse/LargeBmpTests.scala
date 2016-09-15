@@ -1,4 +1,5 @@
 package fastparse
+
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.nio.file.{Files, Paths}

@@ -1,6 +1,6 @@
 package fastparse
 
-import fastparse.Implicits.{Repeater, Sequencer}
+import fastparse.core.Implicits.{Repeater, Sequencer}
 import fastparse.core.{Parser, _}
 import fastparse.all._
 import fastparse.parsers.Combinators.Repeat

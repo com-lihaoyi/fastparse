@@ -63,8 +63,7 @@ lazy val utils = crossProject
     unmanagedSourceDirectories in Compile ++= {
       if (scalaVersion.value startsWith "2.10.") Seq(baseDirectory.value / ".."/"shared"/"src"/ "main" / "scala-2.10")
       else Seq(baseDirectory.value / ".."/"shared" / "src"/"main" / "scala-2.11")
-    },
-    libraryDependencies += "org.scodec" %%% "scodec-bits" % "1.1.0"
+    }
   )
 lazy val utilsJS = utils.js
 lazy val utilsJVM= utils.jvm
@@ -76,7 +75,7 @@ lazy val fastparse = crossProject
   .settings(
     name := "fastparse",
     sourceGenerators in Compile <+= sourceManaged in Compile map { dir =>
-      val file = dir/"fastparse"/"SequencerGen.scala"
+      val file = dir/"fastparse"/"core"/"SequencerGen.scala"
       // Only go up to 21, because adding the last element makes it 22
       val tuples = (2 to 21).map{ i =>
         val ts = (1 to i) map ("T" + _)
@@ -90,7 +89,7 @@ lazy val fastparse = crossProject
           """
       }
       val output = s"""
-          package fastparse
+          package fastparse.core
           trait SequencerGen[Sequencer[_, _, _]] extends LowestPriSequencer[Sequencer]{
             protected[this] def Sequencer0[A, B, C](f: (A, B) => C): Sequencer[A, B, C]
             ${tuples.mkString("\n")}
@@ -102,8 +101,7 @@ lazy val fastparse = crossProject
         """.stripMargin
       IO.write(file, output)
       Seq(file)
-    },
-    libraryDependencies += "org.scodec" %%% "scodec-bits" % "1.1.0"
+    }
   )
   // In order to make the midi-parser-test in fastparseJVM/test:run work
   .jvmSettings(fork in (Test, run) := true)
@@ -111,9 +109,21 @@ lazy val fastparse = crossProject
 lazy val fastparseJS = fastparse.js
 lazy val fastparseJVM = fastparse.jvm
 
-lazy val scalaparse = crossProject
+lazy val fastparseByte = crossProject
+  .dependsOn(fastparse)
   .settings(shared:_*)
-  .dependsOn(fastparse).settings(
+  .settings(
+    name := "fastparse-byte",
+    libraryDependencies += "org.scodec" %%% "scodec-bits" % "1.1.0"
+  )
+
+lazy val fastparseByteJS = fastparseByte.js
+lazy val fastparseByteJVM = fastparseByte.jvm
+
+lazy val scalaparse = crossProject
+  .dependsOn(fastparse)
+  .settings(shared:_*)
+  .settings(
     name := "scalaparse"
     )
   .jvmSettings(
@@ -148,7 +158,7 @@ lazy val cssparseJVM = cssparse.jvm
 lazy val cssparseJS = cssparse.js
 
 lazy val classparse = crossProject
-  .dependsOn(fastparse)
+  .dependsOn(fastparseByte)
   .settings(shared:_*)
   .settings(
     name := "classparse"

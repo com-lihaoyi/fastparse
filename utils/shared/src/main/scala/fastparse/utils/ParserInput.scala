@@ -1,8 +1,6 @@
-package fastparse
+package fastparse.utils
 
-import java.nio.BufferUnderflowException
-
-import fastparse.Utils.IsReachable
+import fastparse.utils.Utils.IsReachable
 
 import scala.reflect.ClassTag
 

@@ -1,4 +1,4 @@
-package fastparse
+package fastparse.utils
 
 trait ElemSetHelper[Elem] {
   def toInt(a: Elem): Int

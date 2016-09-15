@@ -1,4 +1,4 @@
-package fastparse
+package fastparse.utils
 
 import scala.reflect.ClassTag
 

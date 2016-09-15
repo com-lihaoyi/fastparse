@@ -1,8 +1,7 @@
 package classparse
 
-import classparse.ClassParse
-import fastparse.Base64.Decoder
-import fastparse.byte._
+import fastparse.utils.Base64.Decoder
+import fastparse.byte.all._
 import utest._
 
 import scala.collection.mutable.ArrayBuffer
@@ -661,7 +660,7 @@ object ClassTests extends TestSuite {
         )
       }
       'code {
-        val classFile = fastparse.byte.Bytes(
+        val classFile = Bytes(
           ("yv66vgAAADQA2AoACgBoCQBpAGoIAGsKAGwAbQgAbggAbwoAbA" +
           "BwCABxCAByBwBzBwB0BkAJIftURC0YCgB1AHYKAGwAdwUAAAAAAAGGoARDaoAABkBe2ZmZmZmaB" +
           "kAFvwmVqveQBwB4CAB5CgAXAHoHAHsKABoAfAgAfQoAGgB6CAB+CAB/CACABwCBCACCCACDCACE" +

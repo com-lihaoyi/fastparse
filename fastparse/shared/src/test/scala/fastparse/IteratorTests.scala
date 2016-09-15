@@ -1,5 +1,6 @@
 package fastparse
 
+import fastparse.utils.{ElemTypeFormatter, IteratorParserInput}
 import utest._
 
 import scala.collection.mutable

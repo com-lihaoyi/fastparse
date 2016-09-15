@@ -1,5 +1,7 @@
 package fastparse
 import all._
+import fastparse.core.Logger
+import fastparse.utils.{IndexedParserInput, Utils}
 import utest._
 
 import scala.collection.mutable
@@ -67,7 +69,7 @@ object MiscTests extends TestSuite{
     }
     'logging{
       val logged = mutable.Buffer.empty[String]
-      implicit val logger = fastparse.Logger(logged.append(_))
+      implicit val logger = Logger(logged.append(_))
 
       val DeepFailure = P( "C" )
       val Foo = P( (DeepFailure.log() | "A".log()) ~ "B".!.log() ).log()

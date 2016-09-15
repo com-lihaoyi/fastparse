@@ -1,9 +1,9 @@
 package fastparse
 package core
 import acyclic.file
-import fastparse.Utils._
-import fastparse.ElemTypeFormatter._
-import fastparse.IndexedParserInput
+import fastparse.utils.Utils._
+import fastparse.utils.ElemTypeFormatter._
+import fastparse.utils._
 
 import scala.collection.mutable
 import scala.reflect.ClassTag
@@ -323,7 +323,10 @@ case class ParseCtx[ElemType, Repr](input: ParserInput[ElemType],
  * [[parsers.Combinators.Sequence.Flat]]s. These optimizations together appear to make
  * things faster but any 10%, whether or not you activate tracing.
  */
-trait Parser[+T, ElemType, Repr] extends ParserResults[T, ElemType] with Precedence{
+abstract class Parser[+T, ElemType, Repr]()
+                                         (implicit val converter: ResultConverter[ElemType, Repr],
+                                          formatter: ElemTypeFormatter[ElemType])
+  extends ParserResults[T, ElemType] with Precedence{
   /*
    * Parses the given `input` starting from the given `index`
    *
@@ -344,8 +347,6 @@ trait Parser[+T, ElemType, Repr] extends ParserResults[T, ElemType] with Precede
   def parse(input: Repr,
             index: Int = 0,
             instrument: (Parser[_, ElemType, Repr], Int, () => Parsed[_, ElemType]) => Unit = null)
-           (implicit formatter: ElemTypeFormatter[ElemType],
-                     converter: ResultConverter[ElemType, Repr])
       : Parsed[T, ElemType] = {
     parseInput(IndexedParserInput(converter.convertFromRepr(input)), index, instrument)
   }
@@ -353,9 +354,7 @@ trait Parser[+T, ElemType, Repr] extends ParserResults[T, ElemType] with Precede
   def parseIterator(input: Iterator[Repr],
                     index: Int = 0,
                     instrument: (Parser[_, ElemType, Repr], Int, () => Parsed[_, ElemType]) => Unit = null)
-                   (implicit formatter: ElemTypeFormatter[ElemType],
-                    converter: ResultConverter[ElemType, Repr],
-                    ct: ClassTag[ElemType])
+                   (implicit ct: ClassTag[ElemType])
       : Parsed[T, ElemType] = {
     parseInput(IteratorParserInput(input.map(converter.convertFromRepr)), index, instrument)
   }
@@ -363,7 +362,7 @@ trait Parser[+T, ElemType, Repr] extends ParserResults[T, ElemType] with Precede
   def parseInput(input: ParserInput[ElemType],
                  index: Int = 0,
                  instrument: (Parser[_, ElemType, Repr], Int, () => Parsed[_, ElemType]) => Unit = null)
-                (implicit formatter: ElemTypeFormatter[ElemType])
+
       : Parsed[T, ElemType] = {
     parseRec(
       new ParseCtx(input, 0, -1, this, index, instrument, false, false, false),
@@ -383,10 +382,8 @@ trait Parser[+T, ElemType, Repr] extends ParserResults[T, ElemType] with Precede
    *  }
    * }}}
    */
-  def unapply(input: Repr)
-             (implicit formatter: ElemTypeFormatter[ElemType],
-                       converter: ResultConverter[ElemType, Repr]): Option[T] = {
-    parse(input)(formatter, converter) match {
+  def unapply(input: Repr): Option[T] = {
+    parse(input) match {
       case Parsed.Success(r, _) => Some(r)
       case _ => None
     }

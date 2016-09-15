@@ -3,6 +3,7 @@ package fastparse
 import fastparse.all._
 import utest._
 import fastparse.JsonTests._
+import fastparse.utils.IteratorParserInput
 
 import scala.io.Source
 

@@ -44,7 +44,7 @@
         @p
             The primary data-structure @code{fastparse.byte} works with is
             @code{Bytes}. This gets imported when you
-            @hl.scala{import fastparse.byte._}, and is an alias for the
+            @hl.scala{import byteparse.byte._}, and is an alias for the
             excellent @code{scodec.bits.ByteVector} class from
             @lnk("scodec-bits", "https://github.com/scodec/scodec-bits") by
             @lnk("Michael Pilquist", "https://www.github.com/mpilquist").

@@ -1,5 +1,7 @@
 package fastparse
 
+import fastparse.core.Implicits
+
 /**
  * Make sure the type-level logic does the right thing. Doesn't
  * actually need to execute; compiling is enough!

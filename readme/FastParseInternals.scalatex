@@ -83,7 +83,7 @@
                 @hl.scala{import fastparse.noApi._} for parsing @code{String}s,
                 in combination with custom @sect.ref{Whitespace Handling}
             @li
-                @hl.scala{import fastparse.byte._} for parsing @code{Array[Byte]}s
+                @hl.scala{import byteparse.byte._} for parsing @code{Array[Byte]}s
 
         @p
             Each FastParse API has type aliases that narrow the type for its particular

@@ -1,6 +1,6 @@
 package classparse
 
-import fastparse.byte._
+import fastparse.byte.all._
 import BE._
 object ClassAttributes {
   import ClassParse.Info._
@@ -19,7 +19,7 @@ object ClassAttributes {
       }
 
     override def toString = {
-      import fastparse.ElemTypeFormatter.ByteFormatter
+      import fastparse.byte.ByteApi.ByteFormatter
       s"BasicAttribute($name,${ByteFormatter.prettyPrint(info.toArray)})"
     }
   }
