@@ -317,14 +317,24 @@ case class ParseCtx[Elem, Repr](input: ParserInput[Elem, Repr],
  * A single, self-contained, immutable parser. The primary method is
  * `parse`, which returns a [[T]] on success and a stack trace on failure.
  *
- * Some small optimizations are performed in-line: collapsing [[parsers.Combinators.Either]]
- * cells into large ones and collapsing [[parsers.Combinators.Sequence]] cells into
- * [[parsers.Combinators.Sequence.Flat]]s. These optimizations together appear to make
- * things faster but any 10%, whether or not you activate tracing.
+ * Some small optimizations are performed in-line: collapsing
+ * [[parsers.Combinators.Either]] cells into large ones and collapsing
+ * [[parsers.Combinators.Sequence]] cells into
+ * [[parsers.Combinators.Sequence.Flat]]s. These optimizations together appear
+ * to make things faster but any 10%, whether or not you activate tracing.
  */
 abstract class Parser[+T, Elem, Repr]()(implicit val reprOps: ReprOps[Elem, Repr])
   extends ParserResults[T, Elem, Repr] with Precedence{
-  /*
+
+  /**
+    * Can be passed into a `.parse` call to let you inject logic around
+    * the parsing of top-level parsers, e.g. for logging and debugging.
+    */
+  type InstrumentCallback = (
+    (Parser[_, Elem, Repr], Int, () => Parsed[_, Elem, Repr]) => Unit
+  )
+
+  /**
    * Parses the given `input` starting from the given `index`
    *
    * @param input The string we want to parse
@@ -343,14 +353,14 @@ abstract class Parser[+T, Elem, Repr]()(implicit val reprOps: ReprOps[Elem, Repr
    */
   def parse(input: Repr,
             index: Int = 0,
-            instrument: (Parser[_, Elem, Repr], Int, () => Parsed[_, Elem, Repr]) => Unit = null)
+            instrument: InstrumentCallback = null)
       : Parsed[T, Elem, Repr] = {
     parseInput(IndexedParserInput(input), index, instrument)
   }
 
   def parseIterator(input: Iterator[Repr],
                     index: Int = 0,
-                    instrument: (Parser[_, Elem, Repr], Int, () => Parsed[_, Elem, Repr]) => Unit = null)
+                    instrument: InstrumentCallback = null)
                    (implicit ct: ClassTag[Elem])
       : Parsed[T, Elem, Repr] = {
     parseInput(IteratorParserInput(input), index, instrument)
@@ -358,7 +368,7 @@ abstract class Parser[+T, Elem, Repr]()(implicit val reprOps: ReprOps[Elem, Repr
 
   def parseInput(input: ParserInput[Elem, Repr],
                  index: Int = 0,
-                 instrument: (Parser[_, Elem, Repr], Int, () => Parsed[_, Elem, Repr]) => Unit = null)
+                 instrument: InstrumentCallback = null)
 
       : Parsed[T, Elem, Repr] = {
     parseRec(
@@ -392,8 +402,9 @@ abstract class Parser[+T, Elem, Repr]()(implicit val reprOps: ReprOps[Elem, Repr
   def parseRec(cfg: ParseCtx[Elem, Repr], index: Int): Mutable[T, Elem, Repr]
 
   /**
-   * Whether or not this parser should show up when [[Parsed.TracedFailure.trace]] is
-   * called. If not set, the parser will only show up in [[Parsed.TracedFailure.fullStack]]
+   * Whether or not this parser should show up when
+   * [[Parsed.TracedFailure.trace]] is called. If not set, the parser will
+    * only show up in [[Parsed.TracedFailure.fullStack]]
    */
   def shortTraced: Boolean = false
 

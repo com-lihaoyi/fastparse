@@ -90,20 +90,26 @@
             conveniently dealing with binary blobs.
 
         @sect{Hex Bytes}
+            @p
+                FastParse includes Scodec's hex-interpolator:
+
             @hl.ref(tests/"ByteTests.scala", Seq("'hexBytes", ""))
 
             @p
-                FastParse includes Scodec's hex-interpolator; this is a macro
+                This is a macro
                 that converts the hex literal in a @code{Bytes} value at
                 compile time. This should be both fast and safe: if you have
                 a type in your hex literal it generates and error at compile
                 time.
 
         @sect{prettyBytes}
-            @hl.ref(tests/"ByteTests.scala", Seq("'prettyBytesBare", ""))
             @p
                 This function converts a byte array into a nicely-readable
-                hex-grid. This makes it easier for you to look for byte-ranges,
+                hex-grid.
+
+            @hl.ref(tests/"ByteTests.scala", Seq("'prettyBytesBare", ""))
+            @p
+                This makes it easier for you to look for byte-ranges,
                 count offsets, and that sort of thing. By default, it only shows
                 the first 8 rows of the byte array. You can specify
                 @code{markers} if you want to view portions of the byte
@@ -137,14 +143,15 @@
             @hl.ref(tests/"ByteTests.scala", Seq("'bsBytes", ""))
 
         @sect{WordN}
-            @hl.ref(tests/"ByteTests.scala", Seq("'words", ""))
             @p
                 @code{fastparse.byte} provides convenient parsers for the common
-                case of parsing 1, 2, 4, and 8-byte "words". These parsers do
-                not capture any result, but merely consume the bytes and move
-                the index forward.
+                case of parsing 1, 2, 4, and 8-byte "words".
+            @hl.ref(tests/"ByteTests.scala", Seq("'words", ""))
+
 
             @p
+                These parsers do not capture any result, but merely consume the
+                bytes and move the index forward.
                 If you want to capture the bytes as an
                 @code{Array[Byte]}, use the @code{.!} to @sect.ref{Capture}
                 them. If you want to capture them as various sorts of
@@ -152,11 +159,13 @@
                 listed below
 
         @sect{IntN}
+            @p
+                FastParse provides parsers to capture single bytes and return
+                them, as signed @code{Byte}s.
             @hl.ref(tests/"ByteTests.scala", Seq("'int8", ""))
 
             @p
-                FastParse provides parsers to capture single bytes and return
-                them, as signed @code{Byte}s. An unsigned versions of the parser
+                An unsigned versions of the parser
                 is available, that lifts the result into a @code{Short} since
                 the higher-values of an unsigned byte (e.g. @code{128}) cannot
                 fit into a signed @code{Byte}, which maxes out at positive
@@ -196,15 +205,13 @@
                 systems and micro-processors.
 
         @sect{FloatN}
-            @hl.ref(tests/"ByteTests.scala", Seq("'floats", ""))
-
             @p
                 Apart from parsing integers using @sect.ref{IntN},
                 @code{fastparse.byte} also contains parsers for common floating
                 point numbers. These come in both big-endian/little-endian
                 and 32/64-bit versions.
 
-
+            @hl.ref(tests/"ByteTests.scala", Seq("'floats", ""))
 
     @sect{Equivalent Byte Parsers}
         @p

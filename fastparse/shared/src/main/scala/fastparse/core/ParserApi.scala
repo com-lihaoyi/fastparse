@@ -12,13 +12,13 @@ abstract class ParserApi[+T, Elem, Repr]()(implicit formatter: ReprOps[Elem, Rep
    * Wraps this in a [[Logged]]. This prints out information
    * where a parser was tried and its result, which is useful for debugging
    */
-  def log(msg: String = this.toString)(implicit output: Logger): Parser[T, Elem, Repr]
+  def log(msg: String = toString)(implicit out: Logger): Parser[T, Elem, Repr]
 
   /**
    * Makes this parser opaque, i.e. hides it and its inner parsers
    * from the stack trace, providing the specified message instead.
    */
-  def opaque(msg: String = this.toString): Parser[T, Elem, Repr]
+  def opaque(msg: String = toString): Parser[T, Elem, Repr]
 
   /**
    * Repeats this parser 0 or more times
@@ -38,7 +38,9 @@ abstract class ParserApi[+T, Elem, Repr]()(implicit formatter: ReprOps[Elem, Rep
   /**
    * Parses using this followed by the parser `p`
    */
-  def ~[V, R](p: Parser[V, Elem, Repr])(implicit ev: Sequencer[T, V, R]): Parser[R, Elem, Repr]
+  def ~[V, R](p: Parser[V, Elem, Repr])
+             (implicit ev: Sequencer[T, V, R]): Parser[R, Elem, Repr]
+
   /**
    * Parses using this followed by the parser `p`, performing a Cut if
    * this parses successfully. That means that if `p` fails to parse, the
@@ -47,12 +49,14 @@ abstract class ParserApi[+T, Elem, Repr]()(implicit formatter: ReprOps[Elem, Rep
    * This lets you greatly narrow the error position by avoiding unwanted
    * backtracking.
    */
-  def ~/[V, R](p: Parser[V, Elem, Repr])(implicit ev: Sequencer[T, V, R]): Parser[R, Elem, Repr]
+  def ~/[V, R](p: Parser[V, Elem, Repr])
+              (implicit ev: Sequencer[T, V, R]): Parser[R, Elem, Repr]
 
   /**
    * Performs a cut if this parses successfully.
    */
   def ~/ : Parser[T, Elem, Repr]
+
   /**
    * Parses this, optionally
    */
@@ -72,6 +76,7 @@ abstract class ParserApi[+T, Elem, Repr]()(implicit formatter: ReprOps[Elem, Rep
    * Transforms the result of this Parser with the given function
    */
   def map[V](f: T => V): Parser[V, Elem, Repr]
+
   /**
    * Uses the result of this parser to create another parser that
    * will be used for the next parse
@@ -79,7 +84,8 @@ abstract class ParserApi[+T, Elem, Repr]()(implicit formatter: ReprOps[Elem, Rep
   def flatMap[V](f: T => Parser[V, Elem, Repr]): Parser[V, Elem, Repr]
 
   /**
-   * applies the supplied predicate to the current parser succeeding on true failing on false
+   * applies the supplied predicate to the current parser succeeding
+     on true failing on false
    */
   def filter(predicate: T => Boolean): Parser[T, Elem, Repr]
 }
