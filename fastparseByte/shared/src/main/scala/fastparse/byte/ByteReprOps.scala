@@ -27,7 +27,7 @@ object ByteReprOps extends ReprOps[Byte, ByteVector] {
       val first = input.slice(idx - 20, idx)
       val last = input.slice(idx, idx + 20)
 
-      prettyPrint(first) + prettyPrint(last) + "\n" + (" " * length0(first)) + "^"
+      prettyPrint(first) + prettyPrint(last) + "\n" + (" " * length(first)) + "^"
     }
     val literal = literalize(input.slice(idx, idx + 20))
     s"found $literal, expected $expected at index $idx\n$locationCode"
@@ -35,13 +35,13 @@ object ByteReprOps extends ReprOps[Byte, ByteVector] {
 
   def prettyIndex(input: ParserInput[Byte, Bytes], index: Int): String = String.valueOf(index)
 
-  def slice0(value: Bytes, start: Int, end: Int) = {
+  def slice(value: Bytes, start: Int, end: Int) = {
     value.slice(math.max(0, start), math.min(end, value.length))
   }
 
-  def apply0(value: Bytes, i: Int) = value(i)
+  def apply(value: Bytes, i: Int) = value(i)
 
-  def length0(value: Bytes) = value.length.toInt
+  def length(value: Bytes) = value.length.toInt
 
   def fromSingle(input: Byte) = ByteVector(input)
 

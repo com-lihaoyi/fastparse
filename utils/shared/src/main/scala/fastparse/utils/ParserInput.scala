@@ -17,9 +17,9 @@ abstract class ReprOps[Elem, Repr] {
   def errorMessage(input: ParserInput[Elem, Repr], expected: String, idx: Int): String
   def prettyIndex(input: ParserInput[Elem, Repr], index: Int): String
 
-  def slice0(value: Repr, start: Int, end: Int): Repr
-  def apply0(value: Repr, i: Int): Elem
-  def length0(value: Repr): Int
+  def slice(value: Repr, start: Int, end: Int): Repr
+  def apply(value: Repr, i: Int): Elem
+  def length(value: Repr): Int
   def fromArray(input: Array[Elem]): Repr
   def fromSeq(input: Seq[Elem]): Repr
   def fromSingle(input: Elem): Repr
@@ -70,19 +70,19 @@ abstract class ParserInput[Elem, Repr] extends IsReachable[Elem] {
 case class IndexedParserInput[Elem, Repr](data: Repr)
                                          (implicit val repr: ReprOps[Elem, Repr])
     extends ParserInput[Elem, Repr] {
-  override def apply(index: Int) = repr.apply0(data, index)
+  override def apply(index: Int) = repr.apply(data, index)
 
   /**
     * As for `IndexedSeq` mode `dropBuffer` does nothing.
     */
   override def dropBuffer(index: Int) = {}
 
-  override def slice(from: Int, until: Int) = repr.slice0(data, from, until)
+  override def slice(from: Int, until: Int) = repr.slice(data, from, until)
 
   /**
     * @return Length of internal immutable data. It works equally as `innerLength`.
     */
-  override def length: Int = repr.length0(data)
+  override def length: Int = repr.length(data)
   /**
     * @return Length of internal immutable data. It works equally as `length`.
     */

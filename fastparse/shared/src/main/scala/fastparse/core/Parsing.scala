@@ -239,9 +239,9 @@ object Mutable{
    *            backtrack
    */
   case class Success[T, Elem, Repr](var value: T,
-                                        var index: Int,
-                                        var traceParsers: Set[Parser[_, Elem, Repr]],
-                                        var cut: Boolean = false) extends Mutable[T, Elem, Repr]{
+                                    var index: Int,
+                                    var traceParsers: Set[Parser[_, Elem, Repr]],
+                                    var cut: Boolean = false) extends Mutable[T, Elem, Repr]{
 
     override def toString = s"Success($value, $index)"
     def toResult = Parsed.Success(value, index)
@@ -265,14 +265,14 @@ object Mutable{
    *                     any the [[traceParsers]] of any of their results.
    */
   case class Failure[Elem, Repr](var input: ParserInput[Elem, Repr],
-                                     fullStack: mutable.Buffer[Frame],
-                                     var index: Int,
-                                     var lastParser: Parser[_, Elem, Repr],
-                                     originalParser: Parser[_, Elem, Repr],
-                                     originalIndex: Int,
-                                     traceIndex: Int,
-                                     var traceParsers: Set[Parser[_, Elem, Repr]],
-                                     var cut: Boolean) extends Mutable[Nothing, Elem, Repr]{
+                                 fullStack: mutable.Buffer[Frame],
+                                 var index: Int,
+                                 var lastParser: Parser[_, Elem, Repr],
+                                 originalParser: Parser[_, Elem, Repr],
+                                 originalIndex: Int,
+                                 traceIndex: Int,
+                                 var traceParsers: Set[Parser[_, Elem, Repr]],
+                                 var cut: Boolean) extends Mutable[Nothing, Elem, Repr]{
     def toResult = {
       val extra = new Parsed.Failure.Extra.Impl(input, originalParser, originalIndex, lastParser, index)
       Parsed.Failure(lastParser, index, extra)
@@ -293,14 +293,14 @@ object Mutable{
  *                   enables recording of stack-traces and
  */
 case class ParseCtx[Elem, Repr](input: ParserInput[Elem, Repr],
-                                    var logDepth: Int,
-                                    traceIndex: Int,
-                                    originalParser: Parser[_, Elem, Repr],
-                                    originalIndex: Int,
-                                    instrument: (Parser[_, Elem, Repr], Int, () => Parsed[_, Elem, Repr]) => Unit,
-                                    var isFork: Boolean,
-                                    var isCapturing: Boolean,
-                                    var isNoCut: Boolean) {
+                                var logDepth: Int,
+                                traceIndex: Int,
+                                originalParser: Parser[_, Elem, Repr],
+                                originalIndex: Int,
+                                instrument: (Parser[_, Elem, Repr], Int, () => Parsed[_, Elem, Repr]) => Unit,
+                                var isFork: Boolean,
+                                var isCapturing: Boolean,
+                                var isNoCut: Boolean) {
   require(logDepth >= -1, "logDepth can only be -1 (for no logs) or >= 0")
   require(traceIndex >= -1, "traceIndex can only be -1 (for no tracing) or an index 0")
   val failure = Mutable.Failure[Elem, Repr](

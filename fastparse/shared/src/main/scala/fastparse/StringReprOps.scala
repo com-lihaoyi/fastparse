@@ -3,9 +3,9 @@ import fastparse.utils._
 import acyclic.file
 
 object StringReprOps extends ReprOps[Char, String] {
-  def apply0(input: String, i: Int) = input.charAt(i)
-  def slice0(input: String, start: Int, end: Int) = input.slice(start, end)
-  def length0(input: String) = input.length
+  def apply(input: String, i: Int) = input.charAt(i)
+  def slice(input: String, start: Int, end: Int) = input.slice(start, end)
+  def length(input: String) = input.length
 
   def fromArray(input: Array[Char]): String = input.mkString
   def fromSeq(input: Seq[Char]): String = input.mkString

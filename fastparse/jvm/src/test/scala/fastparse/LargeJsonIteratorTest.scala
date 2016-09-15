@@ -3,7 +3,6 @@ package fastparse
 import fastparse.all._
 import utest._
 import fastparse.JsonTests._
-import fastparse.utils.IteratorParserInput
 
 import scala.io.Source
 
@@ -18,7 +17,7 @@ object LargeJsonIteratorTest extends TestSuite {
     }
 
     'maxInnerLength {
-      val loggedInput = new IteratorParserInput[Char, String](source.getLines().map(_.repr)) {
+      val loggedInput = new IteratorParserInput(source.getLines().map(_.repr)) {
         var maxInnerLength = 0
         override def dropBuffer(index: Int) = {
           maxInnerLength = math.max(maxInnerLength, this.innerLength)

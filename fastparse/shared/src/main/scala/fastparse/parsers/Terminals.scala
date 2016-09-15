@@ -88,9 +88,9 @@ object Terminals {
   def startsWith[Elem, Repr](src: ParserInput[Elem, Repr], prefix: Repr, offset: Int)
                                 (implicit repr: ReprOps[Elem, Repr])= {
     @tailrec def rec(i: Int): Boolean = {
-      if (i >= repr.length0(prefix)) true
+      if (i >= repr.length(prefix)) true
       else if (!src.isReachable(i + offset)) false
-      else if (src(i + offset) != repr.apply0(prefix, i)) false
+      else if (src(i + offset) != repr.apply(prefix, i)) false
       else rec(i + 1)
     }
     rec(0)
@@ -119,7 +119,7 @@ object Terminals {
        extends Parser[Unit, Elem, Repr]{
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
 
-      if (startsWith(cfg.input, s, index)) success(cfg.success, (), index + repr.length0(s), Set.empty, false)
+      if (startsWith(cfg.input, s, index)) success(cfg.success, (), index + repr.length(s), Set.empty, false)
       else fail(cfg.failure, index)
     }
     override def toString = repr.literalize(s)
