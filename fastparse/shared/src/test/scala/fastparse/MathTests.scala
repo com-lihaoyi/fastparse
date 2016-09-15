@@ -1,5 +1,5 @@
 package fastparse
-import all._
+
 import utest._
 
 import scala.collection.mutable
@@ -17,6 +17,8 @@ object MathTests extends TestSuite{
     }}
   }
 
+  import fastparse.all._
+
   val number: P[Int] = P( CharIn('0'to'9').rep(1).!.map(_.toInt) )
   val parens: P[Int] = P( "(" ~/ addSub ~ ")" )
   val factor: P[Int] = P( number | parens )
@@ -27,25 +29,11 @@ object MathTests extends TestSuite{
 
   val tests = TestSuite{
     'pass {
-      def check(str: String, num: Int) = {
-        // Normal parsing
-
-        val Parsed.Success(value, _) = expr.parse(str)
-        assert(value == num)
-        // Iterator parsing
-        for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
-          val Parsed.Success(value, _) = expr.parseIterator(str.grouped(chunkSize))
-          assert(value == num)
-        }
-      }
-
-      check("1+1", 2)
-      check("1+1*2", 3)
-      check("(1+1*2)+(3*4*5)", 63)
-      check("15/3", 5)
-      check("63/3", 21)
-      check("(1+1*2)+(3*4*5)/20", 6)
-      check("((1+1*2)+(3*4*5))/3", 21)
+      val Parsed.Success(2, _) = expr.parse("1+1")
+      val Parsed.Success(15, _) = expr.parse("(1+1*2)+3*4")
+      val Parsed.Success(21, _) = expr.parse("((1+1*2)+(3*4*5))/3")
+      val Parsed.Failure(expected, failIndex, extra) = expr.parse("1+1*")
+      assert(expected == (number | parens), failIndex == 4)
     }
     'fail{
       def check(input: String, expectedTrace: String, expectedShortTrace: String) = {

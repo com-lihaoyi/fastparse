@@ -3,22 +3,33 @@
 @val tests = wd/'fastparse/'shared/'src/'test/'scala/'fastparse
 @val main = wd/'fastparse/'shared/'src/'main/'scala/'fastparse
 
-@hl.ref(tests/"MathTests.scala", "val number", "val tests")
-@hl.ref(tests/"MathTests.scala", Seq("def check", "check"))
+@hl.ref(tests/"MathTests.scala", "import fastparse", "val tests")
+@hl.ref(tests/"MathTests.scala", Seq("'pass", ""))
 @div(id := "splashdiv")
 @script(raw("""demo.DemoMain().math(document.getElementById("splashdiv"))"""))
 @p
-    FastParse is a parser-combinator library for Scala that lets you quickly and easily write recursive descent parsers in Scala. Features include:
+    FastParse is a parser-combinator library for Scala that lets you quickly
+    and easily write recursive descent @sect.ref("Writing Parsers", "text")-
+    and @sect.ref("Byte Parsers", "binary data") parsers in Scala. Features
+    include:
 
 @ul
     @li
-        Up to 1/5 the speed of a hand-written parser, 100x faster than @a("scala-parser-combinators", href:="https://github.com/scala/scala-parser-combinators"), comparable (though slightly slower than) @a("Parboiled2", href:="https://github.com/sirthias/parboiled2")
+        @sect.ref("Performance", "Up to 1/5 the speed of a hand-written parser"),
+        100x faster than @a("scala-parser-combinators",
+        href:="https://github.com/scala/scala-parser-combinators"), comparable
+        (though slightly slower than) @a("Parboiled2",
+        href:="https://github.com/sirthias/parboiled2")
     @li
         1/10th the size of a hand-written parser
     @li
-        Automatic, excellent error-reporting and diagnostics.
+        Automatic, excellent @sect.ref("Debugging Parsers", "error-reporting and diagnostics").
     @li
-        Zero allocations during a parse
+        Able to write parsers for both @sect.ref("Writing Parsers", "structured text")
+        as well as @sect.ref("Byte Parsers", "binary data"), using the same API
+    @li
+        @sect.ref{Streaming Parsing} of data-sets to avoid pre-loading
+        everything into memory
     @li
         Compatible with both Scala-JVM and Scala.js
 @p
