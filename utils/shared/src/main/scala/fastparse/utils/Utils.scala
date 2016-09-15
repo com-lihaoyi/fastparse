@@ -20,7 +20,7 @@ object MacroUtils{
     val evaled = c.eval(c.Expr[Char => Boolean](c.resetLocalAttrs(pred.tree.duplicate)))
     val (first, last, array) = Utils.BitSet.compute(
       (Char.MinValue to Char.MaxValue).filter(evaled)
-    )(CharBitSetHelper)
+    )
     val txt = Utils.HexUtils.ints2Hex(array)
     c.Expr[Utils.BitSet[Char]](q"""
       new fastparse.utils.Utils.BitSet(fastparse.utils.Utils.HexUtils.hex2Ints($txt), $first, $last)

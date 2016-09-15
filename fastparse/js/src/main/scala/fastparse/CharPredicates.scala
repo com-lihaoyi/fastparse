@@ -3,6 +3,7 @@ package fastparse
 import fastparse.utils.MacroUtils
 
 object CharPredicates{
+
   // Not available in Scala.js
   lazy val isPrintableChar = MacroUtils.preCompute{c =>
     val block = java.lang.Character.UnicodeBlock.of(c)

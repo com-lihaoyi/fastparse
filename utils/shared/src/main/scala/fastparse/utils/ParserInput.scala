@@ -68,7 +68,7 @@ abstract class ParserInput[Elem, Repr] extends IsReachable[Elem] {
 }
 
 case class IndexedParserInput[Elem, Repr](data: Repr)
-                                             (implicit val formatter: ReprOps[Elem, Repr])
+                                         (implicit val formatter: ReprOps[Elem, Repr])
     extends ParserInput[Elem, Repr] {
   override def apply(index: Int) = formatter.apply0(data, index)
 

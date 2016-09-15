@@ -7,21 +7,24 @@ import scala.reflect.ClassTag
 
 object IteratorTests extends TestSuite {
 
-  class LoggedDropsParserInput(data: Iterator[String])
-    extends fastparse.all.IteratorParserInput(data) {
 
-    val drops = mutable.SortedSet.empty[Int]
 
-    override def dropBuffer(index: Int): Unit = {
-      drops.add(index)
-      super.dropBuffer(index)
+  def toInput(string: String) = {
+    import fastparse.all._
+    class LoggedDropsParserInput(data: Iterator[String])
+      extends IteratorParserInput(data) {
+
+      val drops = mutable.SortedSet.empty[Int]
+
+      override def dropBuffer(index: Int): Unit = {
+        drops.add(index)
+        super.dropBuffer(index)
+      }
+
+      override def toString = s"LoggedDropsParserInput($drops)"
     }
-    override def toString = s"LoggedDropsParserInput($drops)"
+    new LoggedDropsParserInput(string.grouped(1).map(wrapString))
   }
-
-  def toInput(string: String) = new LoggedDropsParserInput(
-    string.grouped(1).map(wrapString)
-  )
 
   val tests = TestSuite {
 

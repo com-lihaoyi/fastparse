@@ -5,10 +5,12 @@ import fastparse.core.{ParserApi, ParserApiImpl}
 import language.experimental.macros
 import fastparse.parsers.Intrinsics
 import fastparse.parsers.Terminals.AnyElems
-import fastparse.utils.CharBitSetHelper
+import fastparse.utils.ElemSetHelper.CharBitSetHelper
 
 
-class StringApi() extends Api[Char, String](implicitly, CharBitSetHelper, StringReprOps, CharBitSetHelper.ordering) {
+class StringApi() extends Api[Char, String](
+  implicitly, CharBitSetHelper, StringReprOps, CharBitSetHelper.ordering
+) {
 
   val AnyChar = parsers.Terminals.AnyElem[Char, String]("AnyChar")
   def AnyChars(count: Int) = AnyElems[Char, String]("AnyChars", count)

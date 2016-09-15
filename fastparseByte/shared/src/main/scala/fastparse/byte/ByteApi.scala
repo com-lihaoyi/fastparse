@@ -6,13 +6,9 @@ import fastparse.parsers.{Intrinsics, Terminals}
 import scodec.bits.ByteVector
 
 
-class ByteApi() extends Api[Byte, ByteVector](implicitly, ByteBitSetHelper, ByteReprOps, ByteBitSetHelper.ordering) {
-
-  class IndexedParserInput(data: Bytes)
-  extends fastparse.utils.IndexedParserInput(data)
-
-  class IteratorParserInput(data: Iterator[Bytes])
-  extends fastparse.utils.IteratorParserInput(data)
+class ByteApi() extends Api[Byte, ByteVector](
+  implicitly, ByteBitSetHelper, ByteReprOps, ByteBitSetHelper.ordering
+) {
 
   val AnyByte = parsers.Terminals.AnyElem[Byte, Bytes]("AnyByte")
   def AnyBytes(count: Int) = Terminals.AnyElems[Byte, Bytes]("AnyBytes", count)

@@ -23,11 +23,8 @@ abstract class Api[Elem, Repr](ct: ClassTag[Elem],
   protected[this] implicit val implicitClassTag = ct
   protected[this] implicit val implicitOrdering = ordering
 
-  class IndexedParserInput(data: Repr)
-  extends fastparse.utils.IndexedParserInput[Elem, Repr](data)
-
-  class IteratorParserInput(data: Iterator[Repr])
-  extends fastparse.utils.IteratorParserInput[Elem, Repr](data)
+  type IndexedParserInput = fastparse.utils.IndexedParserInput[Elem, Repr]
+  type IteratorParserInput = fastparse.utils.IteratorParserInput[Elem, Repr]
 
   type ParseCtx = core.ParseCtx[Elem, Repr]
   object Mutable{

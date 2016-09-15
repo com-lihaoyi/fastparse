@@ -19,8 +19,8 @@ object ClassAttributes {
       }
 
     override def toString = {
-      import fastparse.byte.ByteApi.ByteFormatter
-      s"BasicAttribute($name,${ByteFormatter.prettyPrint(info.toArray)})"
+      import fastparse.byte.ByteReprOps
+      s"BasicAttribute($name,${ByteReprOps.prettyPrint(info)})"
     }
   }
 
