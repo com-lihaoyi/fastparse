@@ -1,30 +1,36 @@
 package fastparse.utils
 
-abstract class ElemTypeFormatter[ElemType] {
-  def prettyPrint(input: IndexedSeq[ElemType]): String
-  def literalize(input: IndexedSeq[ElemType]): String
-  def errorMessage(input: ParserInput[ElemType], expected: String, idx: Int): String
-  def prettyIndex(input: ParserInput[ElemType], index: Int): String
+abstract class ElemFormatter[Elem, Repr] {
+  def prettyPrint(input: Repr): String
+  def literalize(input: Repr): String
+  def errorMessage(input: ParserInput[Elem, Repr], expected: String, idx: Int): String
+  def prettyIndex(input: ParserInput[Elem, Repr], index: Int): String
+  def slice0(value: Repr, start: Int, end: Int): Repr
+  def apply0(value: Repr, i: Int): Elem
+  def length0(value: Repr): Int
 }
 
-trait ResultConverter[ElemType, ResultType] {
-  def convertToRepr(input: IndexedSeq[ElemType]): ResultType
-  def convertFromRepr(input: ResultType): IndexedSeq[ElemType]
+trait ResultConverter[Elem, ResultType] {
+  def convertToRepr(input: IndexedSeq[Elem]): ResultType
+  def convertFromRepr(input: ResultType): IndexedSeq[Elem]
 }
 
-object ElemTypeFormatter {
+object ElemFormatter {
 
-  implicit val CharFormatter = new ElemTypeFormatter[Char] {
-    override def prettyPrint(input: IndexedSeq[Char]): String = input.mkString
-    override def literalize(input: IndexedSeq[Char]): String = Utils.literalize(input.mkString)
+  implicit val CharFormatter = new ElemFormatter[Char, String] {
+    def apply0(input: String, i: Int) = input.charAt(i)
+    def slice0(input: String, start: Int, end: Int) = input.substring(start, end)
+    def length0(input: String) = input.length
+    override def prettyPrint(input: String): String = input
+    override def literalize(input: String): String = Utils.literalize(input)
 
-    override def errorMessage(input: ParserInput[Char], expected: String, idx: Int): String = {
+    override def errorMessage(input: ParserInput[Char, String], expected: String, idx: Int): String = {
       val locationCode = {
         val first = input.slice(idx - 20, idx)
         val last = input.slice(idx, idx + 20)
-        val emptyString: IndexedSeq[Char] = ""
-        val lastSnippet = Utils.split(last, '\n').headOption.getOrElse(emptyString)
-        val firstSnippet = Utils.split(first.reverse, '\n').headOption.getOrElse(emptyString).reverse
+        val emptyString = ""
+        val lastSnippet: String = last.lines.toSeq.headOption.getOrElse(emptyString)
+        val firstSnippet: String = first.reverse.lines.toSeq.headOption.getOrElse(emptyString).reverse
 
         prettyPrint(firstSnippet) + prettyPrint(lastSnippet) + "\n" + (" " * firstSnippet.length) + "^"
       }
@@ -34,12 +40,12 @@ object ElemTypeFormatter {
       //TODO but it reduces the abstraction
     }
 
-    override def prettyIndex(input: ParserInput[Char], index: Int): String = {
+    override def prettyIndex(input: ParserInput[Char, String], index: Int): String = {
       input match {
         case IndexedParserInput(data) =>
-          val lines = Utils.split(data.take(1 + index), '\n')
+          val lines = data.take(1 + index).lines
           val line = lines.length
-          val col = lines.lastOption.map(_.length).getOrElse(0)
+          val col = lines.toSeq.lastOption.map(_.length).getOrElse(0)
           s"$line:$col"
         case _ => String.valueOf(index)
       }

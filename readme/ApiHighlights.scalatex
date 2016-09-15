@@ -4,12 +4,12 @@
 
 @sect{API Highlights}
 
-    @sect{Parser[T, ElemType, Repr]}
+    @sect{Parser[T, Elem, Repr]}
         @p
-            Fastparse revolves around @hl.scala{Parser[T, ElemType, Repr]}s:
-            a parser that can attempt to parse a value @hl.scala{T} from an input sequence of elements of type @hl.scala{ElemType}.
+            Fastparse revolves around @hl.scala{Parser[T, Elem, Repr]}s:
+            a parser that can attempt to parse a value @hl.scala{T} from an input sequence of elements of type @hl.scala{Elem}.
             The @hl.scala{Repr} type-parameter is responsible for output type in @sect.ref{Capture},
-            since input is converted to the @hl.scala{IndexedSeq[ElemType]} or @hl.scala{Iterator[IndexedSeq[ElemType]]}
+            since input is converted to the @hl.scala{IndexedSeq[Elem]} or @hl.scala{Iterator[IndexedSeq[Elem]]}
             during all parsing operations.
             These are defined as:
 
@@ -34,7 +34,7 @@
             and @hl.scala{.parseIterator} for parsing streaming data. (@i{See also @sect.ref{Streaming Parsing}}).
             As you can see, apart from the @hl.scala{input} parameter,
             there are a few parameters that you can use to configure the parse.
-            Apart from that, each @hl.scala{Parser[T, ElemType, Repr]} needs
+            Apart from that, each @hl.scala{Parser[T, Elem, Repr]} needs
             to implement @hl.scala{parseRec} which is a less-convenient but
             more-performant version that FastParse uses internally when
             performing a parse.
@@ -44,11 +44,11 @@
             be used in Scala @hl.scala{match} expressions.
 
         @p
-            Although the core of @sect.ref{Parser[T, ElemType, Repr]} is simple,
-            a lot of additional functionality is included in the @hl.scala{ParserApi[T, ElemType, Repr]} trait
+            Although the core of @sect.ref{Parser[T, Elem, Repr]} is simple,
+            a lot of additional functionality is included in the @hl.scala{ParserApi[T, Elem, Repr]} trait
             in order to make constructing parsers convenient and concise.
 
-    @sect{ParserApi[T, ElemType, Repr]}
+    @sect{ParserApi[T, Elem, Repr]}
         @p
             Apart from the core @hl.scala{Parser},
             FastParse includes a large set of operations that you can perform on a @hl.scala{Parser}

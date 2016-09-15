@@ -69,8 +69,8 @@
             input and output types, hence the rather complex signatures:
 
         @hl.scala
-            trait Parser[+T, ElemType, Repr]
-            sealed trait Parsed[+T, ElemType]
+            trait Parser[+T, Elem, Repr]
+            sealed trait Parsed[+T, Elem]
         @p
             From this generic baseline, FastParse defines multiple "Api"
             modules. Each of these specializes the "generic" FastParse API
@@ -106,7 +106,7 @@
             generically to work in any Api module. If you wished to, you
             too could write a custom parser that can parse both @code{String}s
             and @code{Array[Byte]}, by inheriting from the more generic
-            @hl.scala{Parser[+T, ElemType, Repr]} trait.
+            @hl.scala{Parser[+T, Elem, Repr]} trait.
 
         @p
             Apart from the direct aliases, FastParse also provides alternate names

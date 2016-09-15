@@ -4,7 +4,7 @@ import fastparse.utils.Utils.HexUtils
 import fastparse._
 import fastparse.core.ParserApi
 import fastparse.parsers.{Intrinsics, Terminals}
-import fastparse.utils.{ElemTypeFormatter, IteratorParserInput, ParserInput, ResultConverter}
+import fastparse.utils.{ElemFormatter, IteratorParserInput, ParserInput, ResultConverter}
 import scodec.bits.ByteVector
 
 object ByteApi{
@@ -15,7 +15,7 @@ object ByteApi{
   }
 
 
-  implicit val ByteFormatter = new ElemTypeFormatter[Byte] {
+  implicit val ByteFormatter = new ElemFormatter[Byte] {
     private def ByteToHex(b: Byte) = s"${HexUtils.hexChars((b & 0xf0) >> 4)}${HexUtils.hexChars(b & 15)}"
 
     override def prettyPrint(input: IndexedSeq[Byte]): String = input.map(ByteToHex).mkString(" ")

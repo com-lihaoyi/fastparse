@@ -56,27 +56,6 @@ object Utils {
     sb.result()
   }
 
-  /**
-    * Split a sequence by the delimiter element.
-    */
-  def split[ElemType](seq: IndexedSeq[ElemType], delim: ElemType): Seq[IndexedSeq[ElemType]] = {
-    var curBuilder = seq.genericBuilder[ElemType]
-    val res = ArrayBuffer[IndexedSeq[ElemType]]()
-    for (x <- seq) {
-      if (x == delim) {
-        res += curBuilder.result()
-        curBuilder = seq.genericBuilder[ElemType]
-      } else {
-        curBuilder += x
-      }
-    }
-
-    if (curBuilder.result().nonEmpty)
-      res += curBuilder.result()
-
-    res
-  }
-
   object HexUtils {
     val hexChars = Seq(
       '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',

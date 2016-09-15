@@ -10,8 +10,8 @@ import scala.reflect.ClassTag
   * It can be regular `IndexedSeq` that behaves as simple array or
   * `Iterator` of `IndexedSeq` batches which is optimized by `dropBuffer` method.
   */
-abstract class ParserInput[ElemType] extends IsReachable[ElemType] {
-  def apply(index: Int): ElemType
+abstract class ParserInput[Elem, Repr] extends IsReachable[Elem] {
+  def apply(index: Int): Elem
 
   /**
     * Special method for `Iterator` mode. It drops the prefix of the internal buffer
@@ -26,7 +26,7 @@ abstract class ParserInput[ElemType] extends IsReachable[ElemType] {
     *         Same for `Iterator` mode, but it requests batches while the index of last retrieved element is less than `until`
     *         and if `until` is farther away than any element, it ignores this too.
     */
-  def slice(from: Int, until: Int): IndexedSeq[ElemType]
+  def slice(from: Int, until: Int): Repr
 
   def length: Int
   def innerLength: Int
@@ -36,27 +36,27 @@ abstract class ParserInput[ElemType] extends IsReachable[ElemType] {
     */
   def isReachable(index: Int): Boolean
 
-  val formatter: ElemTypeFormatter[ElemType]
+  val formatter: ElemFormatter[Elem, Repr]
 
   def checkTraceable(): Unit
 }
 
-case class IndexedParserInput[ElemType](data: IndexedSeq[ElemType])
-                                       (implicit val formatter: ElemTypeFormatter[ElemType])
-    extends ParserInput[ElemType] {
-  override def apply(index: Int) = data(index)
+case class IndexedParserInput[Elem, Repr](data: Repr)
+                                             (implicit val formatter: ElemFormatter[Elem, Repr])
+    extends ParserInput[Elem, Repr] {
+  override def apply(index: Int) = formatter.apply0(data, index)
 
   /**
     * As for `IndexedSeq` mode `dropBuffer` does nothing.
     */
   override def dropBuffer(index: Int) = {}
 
-  override def slice(from: Int, until: Int): IndexedSeq[ElemType] = data.slice(from, until)
+  override def slice(from: Int, until: Int) = formatter.slice0(data, from, until)
 
   /**
     * @return Length of internal immutable data. It works equally as `innerLength`.
     */
-  override def length: Int = data.length
+  override def length: Int = formatter.length0(data)
   /**
     * @return Length of internal immutable data. It works equally as `length`.
     */
@@ -81,17 +81,18 @@ case class IndexedParserInput[ElemType](data: IndexedSeq[ElemType])
   * either the new batches are requested to extend the buffer, either it's inaccessible at all,
   * so calling of `dropBuffer` should guarantee that there won't be any attempts to access to the elements in dropped part of input.
   */
-case class IteratorParserInput[ElemType](data: Iterator[IndexedSeq[ElemType]])
-                                        (implicit val formatter: ElemTypeFormatter[ElemType],
-                                         ct: ClassTag[ElemType])
-    extends ParserInput[ElemType] {
-  private val buffer: UberBuffer[ElemType] = new UberBuffer[ElemType](16)
+case class IteratorParserInput[Elem, Repr](data: Iterator[Repr])
+                                              (implicit val formatter: ElemFormatter[Elem, Repr],
+                                               converter: ResultConverter[Elem, Repr],
+                                               ct: ClassTag[Elem])
+    extends ParserInput[Elem, Repr] {
+  private val buffer: UberBuffer[Elem] = new UberBuffer[Elem](16)
   private var firstIdx: Int = 0 // index in the data corresponding to the 0th element in the buffer
 
   private def requestUntil(until: Int): Boolean = {
     while (this.length <= until && data.hasNext) {
       val chunk = data.next()
-      buffer.write(chunk.toArray)
+      buffer.write(converter.convertFromRepr(chunk).toArray)
     }
     this.length > until
   }
@@ -99,7 +100,7 @@ case class IteratorParserInput[ElemType](data: Iterator[IndexedSeq[ElemType]])
   /**
     * Requests batches until given `index` and in case of success returns needed element.
     */
-  override def apply(index: Int): ElemType = {
+  override def apply(index: Int): Elem = {
     requestUntil(index)
     buffer(index - firstIdx)
   }
@@ -119,10 +120,10 @@ case class IteratorParserInput[ElemType](data: Iterator[IndexedSeq[ElemType]])
     * If the current buffer is too small to provide some part of data after `from` bound,
     * lower bound of slice is cut to the minimum of `from` and first index of accessible element in the buffer.
     */
-  override def slice(from: Int, until: Int): IndexedSeq[ElemType] = {
+  override def slice(from: Int, until: Int): Repr = {
     requestUntil(until - 1)
     val lo = math.max(from, firstIdx)
-    buffer.slice(lo - firstIdx, until - firstIdx)
+    converter.convertToRepr(buffer.slice(lo - firstIdx, until - firstIdx))
   }
 
   /**

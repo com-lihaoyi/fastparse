@@ -1,6 +1,6 @@
 package fastparse
 
-import fastparse.utils.{ElemTypeFormatter, IteratorParserInput}
+import fastparse.utils.{ElemFormatter, IteratorParserInput, ResultConverter}
 import utest._
 
 import scala.collection.mutable
@@ -8,9 +8,10 @@ import scala.reflect.ClassTag
 
 object IteratorTests extends TestSuite {
 
-  class LoggedDropsParserInput[ElemType: ClassTag](data: Iterator[IndexedSeq[ElemType]])
-                                                  (implicit formatter: ElemTypeFormatter[ElemType])
-    extends IteratorParserInput[ElemType](data) {
+  class LoggedDropsParserInput[Elem: ClassTag, Repr](data: Iterator[Repr])
+                                                        (implicit formatter: ElemFormatter[Elem, Repr],
+                                                         converter: ResultConverter[Elem, Repr])
+    extends IteratorParserInput[Elem, Repr](data) {
 
     val drops = mutable.SortedSet.empty[Int]
 
@@ -21,7 +22,9 @@ object IteratorTests extends TestSuite {
     override def toString = s"LoggedDropsParserInput($drops)"
   }
 
-  def toInput(string: String) = new LoggedDropsParserInput[Char](string.grouped(1).map(wrapString))
+  def toInput(string: String) = new LoggedDropsParserInput[Char, String](
+    string.grouped(1).map(wrapString)
+  )
 
   val tests = TestSuite {
 
@@ -225,9 +228,9 @@ object IteratorTests extends TestSuite {
     }
     'traceFailure{
       import fastparse.all._
-      P("[" ~ "]").parse("[ ]").asInstanceOf[fastparse.core.Parsed.Failure[_]].extra.traced
+      P("[" ~ "]").parse("[ ]").asInstanceOf[fastparse.core.Parsed.Failure[_, _]].extra.traced
       val e = intercept[RuntimeException] {
-        P("[" ~ "]").parseIterator(Iterator("[", " ", "]")).asInstanceOf[fastparse.core.Parsed.Failure[_]].extra.traced
+        P("[" ~ "]").parseIterator(Iterator("[", " ", "]")).asInstanceOf[fastparse.core.Parsed.Failure[_, _]].extra.traced
       }
       assert(e.getMessage.contains("Cannot perform `.traced` on an `IteratorParserInput`"))
     }

@@ -2,7 +2,7 @@ package perftests
 
 import fastparse.{IteratorParserInput, ResultConverter}
 import fastparse.core.{Parsed, Parser}
-import fastparse.utils.{ElemTypeFormatter, IteratorParserInput, ResultConverter}
+import fastparse.utils.{ElemFormatter, IteratorParserInput, ResultConverter}
 
 import scala.collection.mutable
 import scala.reflect.ClassTag
@@ -33,15 +33,15 @@ object Utils {
     })
   }
 
-  def benchmarkIteratorBufferSizes[ElemType, Repr](parser: Parser[_, ElemType, Repr],
+  def benchmarkIteratorBufferSizes[Elem, Repr](parser: Parser[_, Elem, Repr],
                                                    sizes: Seq[Int],
                                                    iteratorFactory: Int => Iterator[Repr])
-                                                  (implicit formatter: ElemTypeFormatter[ElemType],
-                                                            converter: ResultConverter[ElemType, Repr],
-                                                            ct: ClassTag[ElemType]): Unit = {
+                                                  (implicit formatter: ElemFormatter[Elem, Repr],
+                                                            converter: ResultConverter[Elem, Repr],
+                                                            ct: ClassTag[Elem]): Unit = {
 
-    class LoggedMaxBufferLengthParserInput(data: Iterator[IndexedSeq[ElemType]])
-      extends IteratorParserInput[ElemType](data) {
+    class LoggedMaxBufferLengthParserInput(data: Iterator[IndexedSeq[Elem]])
+      extends IteratorParserInput[Elem, Repr](data) {
 
       var maxInnerLength = 0
 
@@ -51,8 +51,8 @@ object Utils {
       }
     }
 
-    class LoggedDistributionBufferLengthParserInput(data: Iterator[IndexedSeq[ElemType]])
-      extends IteratorParserInput[ElemType](data) {
+    class LoggedDistributionBufferLengthParserInput(data: Iterator[IndexedSeq[Elem]])
+      extends IteratorParserInput[Elem, Repr](data) {
 
       val drops = mutable.Map.empty[Int, Int].withDefaultValue(0)
 
@@ -85,19 +85,19 @@ object Utils {
     }
   }
 
-  def benchmarkAll[ElemType, Repr](name: String,
-                                   parser: Parser[_, ElemType, Repr],
+  def benchmarkAll[Elem, Repr](name: String,
+                                   parser: Parser[_, Elem, Repr],
                                    data: Repr, dataFailOpt: Option[Repr],
                                    iteratorFactory: Int => Iterator[Repr])
-                                  (implicit formatter: ElemTypeFormatter[ElemType],
-                                            converter: ResultConverter[ElemType, Repr],
-                                            ct: ClassTag[ElemType]): Unit = {
+                                  (implicit formatter: ElemFormatter[Elem, Repr],
+                                            converter: ResultConverter[Elem, Repr],
+                                            ct: ClassTag[Elem]): Unit = {
 
     val results = Utils.benchmark(s"$name Benchmark",
       Seq(
         Some(() => parser.parse(data)),
         dataFailOpt.map(dataFail =>
-          () => parser.parse(dataFail).asInstanceOf[Parsed.Failure[ElemType]].extra.traced
+          () => parser.parse(dataFail).asInstanceOf[Parsed.Failure[Elem]].extra.traced
         )
       ).flatten
     )

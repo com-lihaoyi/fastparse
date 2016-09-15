@@ -18,7 +18,7 @@ object LargeJsonIteratorTest extends TestSuite {
     }
 
     'maxInnerLength {
-      val loggedInput = new IteratorParserInput[Char](source.getLines().map(_.repr)) {
+      val loggedInput = new IteratorParserInput[Char, String](source.getLines().map(_.repr)) {
         var maxInnerLength = 0
         override def dropBuffer(index: Int) = {
           maxInnerLength = math.max(maxInnerLength, this.innerLength)

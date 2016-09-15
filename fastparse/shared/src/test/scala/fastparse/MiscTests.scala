@@ -154,7 +154,7 @@ object MiscTests extends TestSuite{
         val names = (0 until 1000).map(_.toString.flatMap(_.toString * 5).toIndexedSeq)
         val trie = new Utils.TrieNode[Char](names)
         for (name <- names)
-          assert(trie.query(IndexedParserInput(name), 0) != -1)
+          assert(trie.query(IndexedParserInput[Char, String](name.mkString), 0) != -1)
       }
     }
   }

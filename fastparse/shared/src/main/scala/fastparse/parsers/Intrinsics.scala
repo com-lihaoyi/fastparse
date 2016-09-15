@@ -2,8 +2,8 @@ package fastparse.parsers
 import acyclic.file
 import fastparse.utils.Utils._
 import fastparse.core.{ParseCtx, Parsed, Parser, Precedence}
-import fastparse.utils.{ElemSetHelper, ElemTypeFormatter, ResultConverter}
-import fastparse.utils.{ElemTypeFormatter, ResultConverter, Utils}
+import fastparse.utils.{ElemSetHelper, ElemFormatter, ResultConverter}
+import fastparse.utils.{ElemFormatter, ResultConverter, Utils}
 
 /**
  * High-performance intrinsics for parsing common patterns. All
@@ -13,14 +13,14 @@ import fastparse.utils.{ElemTypeFormatter, ResultConverter, Utils}
  */
 object Intrinsics {
 
-  abstract class ElemSet[ElemType, Repr](elems: Seq[ElemType])
-                                        (implicit helper: ElemSetHelper[ElemType],
-                                                  ordering: Ordering[ElemType],
-                                         converter: ResultConverter[ElemType, Repr],
-                                         formatter: ElemTypeFormatter[ElemType])
-      extends Parser[Unit, ElemType, Repr]{
+  abstract class ElemSet[Elem, Repr](elems: Seq[Elem])
+                                        (implicit helper: ElemSetHelper[Elem],
+                                                  ordering: Ordering[Elem],
+                                         converter: ResultConverter[Elem, Repr],
+                                         formatter: ElemFormatter[Elem, Repr])
+      extends Parser[Unit, Elem, Repr]{
     private[this] val uberSet = BitSet(elems)
-    def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
+    def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       val input = cfg.input
       if (!input.isReachable(index)) fail(cfg.failure, index)
       else if (uberSet(input(index))) success(cfg.success, (), index + 1, Set.empty, false)
@@ -30,13 +30,13 @@ object Intrinsics {
   /**
    * Parses a single character if it passes the predicate
    */
-  case class ElemPred[ElemType, Repr](name: String,
-                                      predicate: ElemType => Boolean)
-                                     (implicit helper: ElemSetHelper[ElemType],
-                                               ordering: Ordering[ElemType],
-                                               converter: ResultConverter[ElemType, Repr],
-                                      formatter: ElemTypeFormatter[ElemType])
-    extends ElemSet[ElemType, Repr](helper.allValues.filter(predicate)){
+  case class ElemPred[Elem, Repr](name: String,
+                                      predicate: Elem => Boolean)
+                                     (implicit helper: ElemSetHelper[Elem],
+                                               ordering: Ordering[Elem],
+                                               converter: ResultConverter[Elem, Repr],
+                                      formatter: ElemFormatter[Elem, Repr])
+    extends ElemSet[Elem, Repr](helper.allValues.filter(predicate)){
 
     override def toString = s"$name($predicate)"
   }
@@ -44,30 +44,30 @@ object Intrinsics {
   /**
    * Parses a single character if its contained in the lists of allowed characters
    */
-  case class ElemIn[ElemType, Repr](name: String,
-                                    strings: IndexedSeq[ElemType]*)
-                                   (implicit formatter: ElemTypeFormatter[ElemType],
-                                    ehelper: ElemSetHelper[ElemType],
-                                    ordering: Ordering[ElemType],
-                                    converter: ResultConverter[ElemType, Repr])
-      extends ElemSet[ElemType, Repr](strings.flatten){
-    override def toString = s"$name(${formatter.literalize(strings.flatten.toIndexedSeq)})"
+  case class ElemIn[Elem, Repr](name: String,
+                                    strings: IndexedSeq[Elem]*)
+                                   (implicit formatter: ElemFormatter[Elem, Repr],
+                                    ehelper: ElemSetHelper[Elem],
+                                    ordering: Ordering[Elem],
+                                    converter: ResultConverter[Elem, Repr])
+      extends ElemSet[Elem, Repr](strings.flatten){
+    override def toString = s"$name(${formatter.literalize(converter.convertToRepr(strings.flatten.toIndexedSeq))})"
   }
 
   /**
    * Keeps consuming characters until the predicate [[pred]] becomes false.
    * Functionally equivalent to using `.rep` and [[ElemPred]], but much faster.
    */
-  case class ElemsWhile[ElemType, Repr](name: String,
-                                        pred: ElemType => Boolean, min: Int = 1)
-                                       (implicit helper: ElemSetHelper[ElemType],
-                                                 ordering: Ordering[ElemType],
-                                        converter: ResultConverter[ElemType, Repr],
-                                        formatter: ElemTypeFormatter[ElemType])
-      extends Parser[Unit, ElemType, Repr]{
+  case class ElemsWhile[Elem, Repr](name: String,
+                                        pred: Elem => Boolean, min: Int = 1)
+                                       (implicit helper: ElemSetHelper[Elem],
+                                                 ordering: Ordering[Elem],
+                                        converter: ResultConverter[Elem, Repr],
+                                        formatter: ElemFormatter[Elem, Repr])
+      extends Parser[Unit, Elem, Repr]{
     private[this] val uberSet = BitSet(helper.allValues.filter(pred))
 
-    def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
+    def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       var curr = index
       val input = cfg.input
       while(input.isReachable(curr) && uberSet(input(curr))) curr += 1
@@ -81,22 +81,22 @@ object Intrinsics {
    * first converting it into an array-backed Trie and then walking it once.
    * If multiple strings match the input, longest match wins.
    */
-  case class StringIn[ElemType, Repr](strings: IndexedSeq[ElemType]*)
-                                     (implicit formatter: ElemTypeFormatter[ElemType],
-                                      helper: ElemSetHelper[ElemType],
-                                      ordering: Ordering[ElemType],
-                                      converter: ResultConverter[ElemType, Repr])
-      extends Parser[Unit, ElemType, Repr] {
+  case class StringIn[Elem, Repr](strings: IndexedSeq[Elem]*)
+                                     (implicit formatter: ElemFormatter[Elem, Repr],
+                                      helper: ElemSetHelper[Elem],
+                                      ordering: Ordering[Elem],
+                                      converter: ResultConverter[Elem, Repr])
+      extends Parser[Unit, Elem, Repr] {
 
-    private[this] val trie = new TrieNode[ElemType](strings)
+    private[this] val trie = new TrieNode[Elem](strings)
 
-    def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
+    def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       val length = trie.query(cfg.input, index)
       if (length != -1) success(cfg.success, (), index + length + 1, Set.empty, false)
       else fail(cfg.failure, index)
     }
     override def toString = {
-      s"StringIn(${strings.map(formatter.literalize).mkString(", ")})"
+      s"StringIn(${strings.map(converter.convertToRepr).map(formatter.literalize).mkString(", ")})"
     }
   }
 }

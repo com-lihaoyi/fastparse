@@ -1,13 +1,13 @@
 package fastparse.parsers
 import acyclic.file
 import fastparse.utils.{ParserInput, ResultConverter}
-import fastparse.utils.ElemTypeFormatter._
+import fastparse.utils.ElemFormatter._
 import fastparse.utils.Utils._
 import fastparse.core.ParseCtx
 
 import scala.annotation.tailrec
 import fastparse.core.Parser
-import fastparse.utils.{ElemTypeFormatter, ParserInput, ResultConverter}
+import fastparse.utils.{ElemFormatter, ParserInput, ResultConverter}
 
 import scala.collection.mutable.ArrayBuffer
 /**
@@ -19,34 +19,34 @@ object Terminals {
   /**
    * A parser that always succeeds, consuming no input
    */
-  case class Pass[ElemType, Repr]()(implicit converter: ResultConverter[ElemType, Repr],
-                                    formatter: ElemTypeFormatter[ElemType]) extends Parser[Unit, ElemType, Repr]{
-    def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = success(cfg.success, (), index, Set.empty, false)
+  case class Pass[Elem, Repr]()(implicit converter: ResultConverter[Elem, Repr],
+                                    formatter: ElemFormatter[Elem, Repr]) extends Parser[Unit, Elem, Repr]{
+    def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = success(cfg.success, (), index, Set.empty, false)
     override val toString = "Pass"
   }
 
   /**
     * A parser that always succeeds with given result value `t`, consuming no input
     */
-  case class PassWith[T, ElemType, Repr](t: T)(implicit converter: ResultConverter[ElemType, Repr],
-                                               formatter: ElemTypeFormatter[ElemType]) extends Parser[T, ElemType, Repr]{
-    def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = success(cfg.success, t, index, Set.empty, false)
+  case class PassWith[T, Elem, Repr](t: T)(implicit converter: ResultConverter[Elem, Repr],
+                                               formatter: ElemFormatter[Elem, Repr]) extends Parser[T, Elem, Repr]{
+    def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = success(cfg.success, t, index, Set.empty, false)
   }
 
   /**
    * A parser that always fails immediately
    */
-  case class Fail[ElemType, Repr]()(implicit converter: ResultConverter[ElemType, Repr],
-                                    formatter: ElemTypeFormatter[ElemType]) extends Parser[Nothing, ElemType, Repr]{
-    def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = fail(cfg.failure, index)
+  case class Fail[Elem, Repr]()(implicit converter: ResultConverter[Elem, Repr],
+                                    formatter: ElemFormatter[Elem, Repr]) extends Parser[Nothing, Elem, Repr]{
+    def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = fail(cfg.failure, index)
     override val toString = "Fail"
   }
   /**
    * Succeeds, consuming a single element
    */
-  case class AnyElem[ElemType, Repr](name: String)(implicit converter: ResultConverter[ElemType, Repr],
-                                                   formatter: ElemTypeFormatter[ElemType]) extends Parser[Unit, ElemType, Repr]{
-    def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
+  case class AnyElem[Elem, Repr](name: String)(implicit converter: ResultConverter[Elem, Repr],
+                                                   formatter: ElemFormatter[Elem, Repr]) extends Parser[Unit, Elem, Repr]{
+    def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       val input = cfg.input
       if (!input.isReachable(index)) fail(cfg.failure, index)
       else success(cfg.success, (), index+1, Set.empty, false)
@@ -56,9 +56,9 @@ object Terminals {
   /**
    * Consumes up to `count` elements, if they are available
    */
-  case class AnyElems[ElemType, Repr](name: String, count: Int)(implicit converter: ResultConverter[ElemType, Repr],
-                                                                formatter: ElemTypeFormatter[ElemType]) extends Parser[Unit, ElemType, Repr]{
-    def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
+  case class AnyElems[Elem, Repr](name: String, count: Int)(implicit converter: ResultConverter[Elem, Repr],
+                                                                formatter: ElemFormatter[Elem, Repr]) extends Parser[Unit, Elem, Repr]{
+    def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       val input = cfg.input
       if (!input.isReachable(index + count - 1)) fail(cfg.failure, index)
       else success(cfg.success, (), index + count, Set.empty, false)
@@ -70,9 +70,9 @@ object Terminals {
    * Succeeds if at the start of the input, consuming no input
    */
 
-  case class Start[ElemType, Repr]()(implicit converter: ResultConverter[ElemType, Repr],
-                                     formatter: ElemTypeFormatter[ElemType]) extends Parser[Unit, ElemType, Repr]{
-    def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
+  case class Start[Elem, Repr]()(implicit converter: ResultConverter[Elem, Repr],
+                                     formatter: ElemFormatter[Elem, Repr]) extends Parser[Unit, Elem, Repr]{
+    def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       if (index == 0) success(cfg.success, (), index, Set.empty, false)
       else fail(cfg.failure, index)
     }
@@ -82,9 +82,9 @@ object Terminals {
   /**
    * Succeeds if at the end of the input, consuming no input
    */
-  case class End[ElemType, Repr]()(implicit converter: ResultConverter[ElemType, Repr],
-                                   formatter: ElemTypeFormatter[ElemType]) extends Parser[Unit, ElemType, Repr]{
-    def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
+  case class End[Elem, Repr]()(implicit converter: ResultConverter[Elem, Repr],
+                                   formatter: ElemFormatter[Elem, Repr]) extends Parser[Unit, Elem, Repr]{
+    def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       if (!cfg.input.isReachable(index)) success(cfg.success, (), index, Set.empty, false)
       else fail(cfg.failure, index)
     }
@@ -95,17 +95,19 @@ object Terminals {
    * Workaround https://github.com/scala-js/scala-js/issues/1603
    * by implementing startsWith myself
    */
-  def startsWith[ElemType](src: ParserInput[ElemType], prefix: IndexedSeq[ElemType], offset: Int) = {
+  def startsWith[Elem, Repr](src: ParserInput[Elem, Repr], prefix: Repr, offset: Int)
+                                (implicit formatter: ElemFormatter[Elem, Repr],
+                                 converter: ResultConverter[Elem, Repr])= {
     @tailrec def rec(i: Int): Boolean = {
-      if (i >= prefix.length) true
+      if (i >= formatter.length0(prefix)) true
       else if (!src.isReachable(i + offset)) false
-      else if (src(i + offset) != prefix(i)) false
+      else if (src(i + offset) != formatter.apply0(prefix, i)) false
       else rec(i + 1)
     }
     rec(0)
   }
 
-  def startsWithIgnoreCase(src: ParserInput[Char], prefix: IndexedSeq[Char], offset: Int) = {
+  def startsWithIgnoreCase(src: ParserInput[Char, String], prefix: IndexedSeq[Char], offset: Int) = {
     val max = prefix.length
     @tailrec def rec(i: Int): Boolean = {
       if (i >= prefix.length) true
@@ -121,15 +123,15 @@ object Terminals {
   }
 
   /**
-   * Parses a literal `IndexedSeq[ElemType]`
+   * Parses a literal `IndexedSeq[Elem]`
    */
-  case class Literal[ElemType, Repr](s: IndexedSeq[ElemType])
-                                    (implicit formatter: ElemTypeFormatter[ElemType],
-                                    converter: ResultConverter[ElemType, Repr])
-       extends Parser[Unit, ElemType, Repr]{
-    def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
+  case class Literal[Elem, Repr](s: Repr)
+                                    (implicit formatter: ElemFormatter[Elem, Repr],
+                                    converter: ResultConverter[Elem, Repr])
+       extends Parser[Unit, Elem, Repr]{
+    def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
 
-      if (startsWith(cfg.input, s, index)) success(cfg.success, (), index + s.length, Set.empty, false)
+      if (startsWith(cfg.input, s, index)) success(cfg.success, (), index + formatter.length0(s), Set.empty, false)
       else fail(cfg.failure, index)
     }
     override def toString = formatter.literalize(s)
@@ -138,32 +140,32 @@ object Terminals {
   /**
    * Parses a literal `String` ignoring case
    */
-  case class IgnoreCase[Repr](s: IndexedSeq[Char])
-                             (implicit formatter: ElemTypeFormatter[Char],
-                              converter: ResultConverter[Char, Repr])
-       extends Parser[Unit, Char, Repr]()(converter, formatter){
+  case class IgnoreCase(s: IndexedSeq[Char])
+                       (implicit formatter: ElemFormatter[Char, String],
+                        converter: ResultConverter[Char, String])
+       extends Parser[Unit, Char, String]()(converter, formatter){
 
-    def parseRec(cfg: ParseCtx[Char, Repr], index: Int) = {
+    def parseRec(cfg: ParseCtx[Char, String], index: Int) = {
       if (startsWithIgnoreCase(cfg.input, s, index)) success(cfg.success, (), index + s.length, Set.empty, false)
       else fail(cfg.failure, index)
     }
-    override def toString = formatter.literalize(s)
+    override def toString = formatter.literalize(s.mkString)
   }
 
   /**
    * Parses a single element
    */
-  case class ElemLiteral[ElemType, Repr](c: ElemType)
-                                        (implicit formatter: ElemTypeFormatter[ElemType],
-                                         converter: ResultConverter[ElemType, Repr])
-       extends Parser[Unit, ElemType, Repr]{
-    def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
+  case class ElemLiteral[Elem, Repr](c: Elem)
+                                        (implicit formatter: ElemFormatter[Elem, Repr],
+                                         converter: ResultConverter[Elem, Repr])
+       extends Parser[Unit, Elem, Repr]{
+    def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       val input = cfg.input
       if (!input.isReachable(index)) fail(cfg.failure, index)
       else if (input(index) == c) success(cfg.success, c.toString, index + 1, Set.empty, false)
       else fail(cfg.failure, index)
     }
-    override def toString = formatter.literalize(ArrayBuffer(c)).toString
+    override def toString = formatter.literalize(converter.convertToRepr(ArrayBuffer(c))).toString
   }
 
   /**
@@ -171,9 +173,9 @@ object Terminals {
    * parse into the input. e.g. useful for providing
    * source locations for AST nodes. Consumes no input.
    */
-  case class Index[ElemType, Repr]()(implicit converter: ResultConverter[ElemType, Repr],
-                                     formatter: ElemTypeFormatter[ElemType]) extends Parser[Int, ElemType, Repr]{
-    def parseRec(cfg: ParseCtx[ElemType, Repr], index: Int) = {
+  case class Index[Elem, Repr]()(implicit converter: ResultConverter[Elem, Repr],
+                                     formatter: ElemFormatter[Elem, Repr]) extends Parser[Int, Elem, Repr]{
+    def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       success(cfg.success, index, index, Set.empty, false)
     }
   }
