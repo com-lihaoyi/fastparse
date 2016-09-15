@@ -130,8 +130,8 @@ object MiscTests extends TestSuite{
       }
     }
     'wspStr{
-      val literal = wspStr("ab")
-      val charLiteral = wspStr("a")
+      val literal = Literal("ab")
+      val charLiteral = Literal("a")
       assert(
         literal.isInstanceOf[parsers.Terminals.Literal[Char, String]],
         charLiteral.isInstanceOf[parsers.Terminals.ElemLiteral[Char, String]]

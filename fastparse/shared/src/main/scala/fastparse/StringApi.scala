@@ -32,7 +32,7 @@ class StringApi() extends Api[Char, String](
   val CharPredicates = fastparse.CharPredicates
   val IgnoreCase = parsers.Terminals.IgnoreCase
 
-  implicit def wspStr(s: String): P0 =
+  implicit def Literal(s: String): P0 =
     if (s.length == 1) parsers.Terminals.ElemLiteral(s(0))
     else parsers.Terminals.Literal(s)
 }
