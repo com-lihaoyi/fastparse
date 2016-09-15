@@ -62,27 +62,27 @@ abstract class ParserInput[Elem, Repr] extends IsReachable[Elem] {
     */
   def isReachable(index: Int): Boolean
 
-  val formatter: ReprOps[Elem, Repr]
+  val repr: ReprOps[Elem, Repr]
 
   def checkTraceable(): Unit
 }
 
 case class IndexedParserInput[Elem, Repr](data: Repr)
-                                         (implicit val formatter: ReprOps[Elem, Repr])
+                                         (implicit val repr: ReprOps[Elem, Repr])
     extends ParserInput[Elem, Repr] {
-  override def apply(index: Int) = formatter.apply0(data, index)
+  override def apply(index: Int) = repr.apply0(data, index)
 
   /**
     * As for `IndexedSeq` mode `dropBuffer` does nothing.
     */
   override def dropBuffer(index: Int) = {}
 
-  override def slice(from: Int, until: Int) = formatter.slice0(data, from, until)
+  override def slice(from: Int, until: Int) = repr.slice0(data, from, until)
 
   /**
     * @return Length of internal immutable data. It works equally as `innerLength`.
     */
-  override def length: Int = formatter.length0(data)
+  override def length: Int = repr.length0(data)
   /**
     * @return Length of internal immutable data. It works equally as `length`.
     */
@@ -108,7 +108,7 @@ case class IndexedParserInput[Elem, Repr](data: Repr)
   * so calling of `dropBuffer` should guarantee that there won't be any attempts to access to the elements in dropped part of input.
   */
 case class IteratorParserInput[Elem, Repr](data: Iterator[Repr])
-                                          (implicit val formatter: ReprOps[Elem, Repr],
+                                          (implicit val repr: ReprOps[Elem, Repr],
                                            converter: ReprOps[Elem, Repr],
                                            ct: ClassTag[Elem])
     extends ParserInput[Elem, Repr] {

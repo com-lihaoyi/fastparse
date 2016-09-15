@@ -129,7 +129,7 @@ object MiscTests extends TestSuite{
         checkOpaqueness(p, "fo", "fooz")
       }
     }
-    'wspStr{
+    'LiteralStr{
       val literal = LiteralStr("ab")
       val charLiteral = LiteralStr("a")
       assert(

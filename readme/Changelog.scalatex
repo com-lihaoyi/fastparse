@@ -10,19 +10,42 @@
                 FastParse now supports @sect.ref{Byte Parsers}! You can parse
                 binary data using FastParse, using all the same operators and
                 combinators you may already be familiar with
+
             @li
-                New @sect.ref{BmpParser} and @sect.ref{ClassParser} parsers, as
-                working examples of how Fastparse's new @sect.ref{Byte Parsers}
-                are written.
+                New @sect.ref{MidiParser}, @sect.ref{BmpParser} and
+                @sect.ref{ClassParser} example parsers, as working examples of
+                how Fastparse's new @sect.ref{Byte Parsers} are written.
 
             @li
                 Support for @sect.ref{Streaming Parsing}
 
             @li
+                Many internal refactors in order to support the new
+                @sect.ref{Byte Parsers} and @sect.ref{Streaming Parsing}.
+                @code{Parser} and @code{ParserApi} are now
+                @hl.scala{abstract class}es instead of @hl.scala{trait}s, and
+                take implicits that are necessary for them to operate.
+
+            @li
+                Many of the original types have been moved from the
+                @code{fastparse} package into @code{fastparse.core}, and have
+                grown additional type-parameters and implicits. If you
+                @hl.scala{import fastparse.all._} or
+                @hl.scala{import fastparse.byte.all._}, that should include
+                aliases for most of the useful objects and types with the
+                relevant type-parameters set to the correct values, and bring
+                in the necessary implicits for things to work.
+
+            @li
+                The old @hl.scala{def wspStr(s: String): P0} implicit has been
+                renamed {def LiteralStr(s: String): P0}; the old name was a
+                copy-paste from scala-parser-combinators, and never made much
+                sense anyway
+
+            @li
                 @sect.ref{Unapply} method to allow pattern matching on parsers,
                 thanks to @a("volth", href:="https://github.com/volth").
-            @li
-                Sharding of build configuration to several separate groups of tests
+
     @sect{0.3.7}
         @ul
             @li

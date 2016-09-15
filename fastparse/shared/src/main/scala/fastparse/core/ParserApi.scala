@@ -4,9 +4,9 @@ import fastparse.core.Implicits._
 import fastparse.parsers.Combinators.{Capturing, Cut, Either, Logged, Not, Opaque, Optional, Repeat, Sequence}
 import fastparse.parsers.Terminals.Pass
 import fastparse.parsers.Transformers.{Filtered, FlatMapped, Mapper}
-import fastparse.utils.{ReprOps}
+import fastparse.utils.ReprOps
 
-abstract class ParserApi[+T, Elem, Repr]()(implicit formatter: ReprOps[Elem, Repr]) {
+abstract class ParserApi[+T, Elem, Repr]()(implicit repr: ReprOps[Elem, Repr]) {
 
   /**
    * Wraps this in a [[Logged]]. This prints out information
@@ -91,7 +91,7 @@ abstract class ParserApi[+T, Elem, Repr]()(implicit formatter: ReprOps[Elem, Rep
 }
 
 class ParserApiImpl[+T, Elem, Repr](self: Parser[T, Elem, Repr])
-                                       (implicit formatter: ReprOps[Elem, Repr])
+                                       (implicit repr: ReprOps[Elem, Repr])
     extends ParserApi[T, Elem, Repr] {
 
   def log(msg: String = self.toString)(implicit output: Logger) = Logged(self, msg, output.f)

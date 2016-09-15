@@ -14,7 +14,7 @@ object Intrinsics {
 
   abstract class ElemSet[Elem, Repr](elems: Seq[Elem])
                                     (implicit helper: ElemSetHelper[Elem],
-                                     formatter: ReprOps[Elem, Repr])
+                                     repr: ReprOps[Elem, Repr])
       extends Parser[Unit, Elem, Repr]{
     private[this] val uberSet = BitSet(elems)
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
@@ -30,7 +30,7 @@ object Intrinsics {
   case class ElemPred[Elem, Repr](name: String,
                                   predicate: Elem => Boolean)
                                  (implicit helper: ElemSetHelper[Elem],
-                                  formatter: ReprOps[Elem, Repr])
+                                  repr: ReprOps[Elem, Repr])
     extends ElemSet[Elem, Repr](helper.allValues.filter(predicate)){
 
     override def toString = s"$name($predicate)"
@@ -41,10 +41,10 @@ object Intrinsics {
    */
   case class ElemIn[Elem, Repr](name: String,
                                 strings: Seq[Elem]*)
-                               (implicit formatter: ReprOps[Elem, Repr],
+                               (implicit repr: ReprOps[Elem, Repr],
                                 ehelper: ElemSetHelper[Elem])
-      extends ElemSet[Elem, Repr](formatter.toArray(formatter.flatten(strings.map(formatter.fromSeq)))){
-    override def toString = s"$name(${formatter.literalize(formatter.flatten(strings.map(formatter.fromSeq)))})"
+      extends ElemSet[Elem, Repr](repr.toArray(repr.flatten(strings.map(repr.fromSeq)))){
+    override def toString = s"$name(${repr.literalize(repr.flatten(strings.map(repr.fromSeq)))})"
   }
 
   /**
@@ -54,7 +54,7 @@ object Intrinsics {
   case class ElemsWhile[Elem, Repr](name: String,
                                         pred: Elem => Boolean, min: Int = 1)
                                        (implicit helper: ElemSetHelper[Elem],
-                                        formatter: ReprOps[Elem, Repr])
+                                        repr: ReprOps[Elem, Repr])
       extends Parser[Unit, Elem, Repr]{
     private[this] val uberSet = BitSet(helper.allValues.filter(pred))
 
@@ -73,12 +73,12 @@ object Intrinsics {
    * If multiple strings match the input, longest match wins.
    */
   case class StringIn[Elem, Repr](strings: Repr*)
-                                 (implicit formatter: ReprOps[Elem, Repr],
+                                 (implicit repr: ReprOps[Elem, Repr],
                                   helper: ElemSetHelper[Elem],
                                   ordering: Ordering[Elem])
       extends Parser[Unit, Elem, Repr] {
 
-    private[this] val trie = new TrieNode[Elem](strings.map(formatter.toArray(_): IndexedSeq[Elem]))
+    private[this] val trie = new TrieNode[Elem](strings.map(repr.toArray(_): IndexedSeq[Elem]))
 
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       val length = trie.query(cfg.input, index)
@@ -86,7 +86,7 @@ object Intrinsics {
       else fail(cfg.failure, index)
     }
     override def toString = {
-      s"StringIn(${strings.map(formatter.literalize).mkString(", ")})"
+      s"StringIn(${strings.map(repr.literalize).mkString(", ")})"
     }
   }
 }

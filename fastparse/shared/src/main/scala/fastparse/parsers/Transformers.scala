@@ -13,7 +13,7 @@ object Transformers {
    * Applies a transformation [[f]] to the result of [[p]]
    */
   case class Mapper[T, V, Elem, Repr](p: Parser[T, Elem, Repr], f: T => V)
-                                         (implicit  formatter: ReprOps[Elem, Repr])
+                                         (implicit  repr: ReprOps[Elem, Repr])
     extends Parser[V, Elem, Repr]{
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       p.parseRec(cfg, index) match{
@@ -25,7 +25,7 @@ object Transformers {
   }
 
   case class FlatMapped[T, V, Elem, Repr](p1: Parser[T, Elem, Repr], func: T => Parser[V, Elem, Repr])
-                                             (implicit formatter: ReprOps[Elem, Repr])
+                                             (implicit repr: ReprOps[Elem, Repr])
     extends Parser[V, Elem, Repr] {
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       p1.parseRec(cfg, index) match{
@@ -40,7 +40,7 @@ object Transformers {
   }
 
   case class Filtered[T, Elem, Repr](p: Parser[T, Elem, Repr], predicate: T => Boolean)
-                                        (implicit formatter: ReprOps[Elem, Repr])
+                                        (implicit repr: ReprOps[Elem, Repr])
     extends Parser[T, Elem, Repr] {
     override def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       p.parseRec(cfg, index) match{

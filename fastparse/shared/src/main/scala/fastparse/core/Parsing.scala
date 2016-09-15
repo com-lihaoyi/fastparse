@@ -42,12 +42,12 @@ sealed trait Parsed[+T, Elem, Repr]{
 }
 
 case class ParseError[Elem, Repr](failure: Parsed.Failure[Elem, Repr]) extends Exception(
-  failure.extra.input.formatter.errorMessage(failure.extra.input, failure.extra.traced.expected, failure.index)
+  failure.extra.input.repr.errorMessage(failure.extra.input, failure.extra.traced.expected, failure.index)
 )
 
 object ParseError{
   def msg[Elem, Repr](input: ParserInput[Elem, Repr], expected: String, idx: Int) = {
-    "SyntaxError: " + input.formatter.errorMessage(input, expected, idx)
+    "SyntaxError: " + input.repr.errorMessage(input, expected, idx)
   }
 }
 
@@ -115,7 +115,7 @@ object Parsed {
 
 
     def formatParser[Elem, Repr](p: Precedence, input: ParserInput[Elem, Repr], index: Int) = {
-      s"${Precedence.opWrap(p, Precedence.`:`)}:${input.formatter.prettyIndex(input, index)}"
+      s"${Precedence.opWrap(p, Precedence.`:`)}:${input.repr.prettyIndex(input, index)}"
     }
 
     def formatStackTrace[Elem, Repr](stack: Seq[Frame],
@@ -125,7 +125,7 @@ object Parsed {
       val body =
         for (Frame(index, p) <- stack)
         yield formatParser(p, input, index)
-      (body :+ last).mkString(" / ") + " ..." + input.formatter.literalize(input.slice(index, index + 10))
+      (body :+ last).mkString(" / ") + " ..." + input.repr.literalize(input.slice(index, index + 10))
     }
     def filterFullStack(fullStack: Seq[Frame]) = {
       fullStack.collect { case f @ Frame(i, p) if p.shortTraced => f }

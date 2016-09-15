@@ -16,7 +16,7 @@ object Terminals {
   /**
    * A parser that always succeeds, consuming no input
    */
-  case class Pass[Elem, Repr]()(implicit  formatter: ReprOps[Elem, Repr]) extends Parser[Unit, Elem, Repr]{
+  case class Pass[Elem, Repr]()(implicit  repr: ReprOps[Elem, Repr]) extends Parser[Unit, Elem, Repr]{
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = success(cfg.success, (), index, Set.empty, false)
     override val toString = "Pass"
   }
@@ -24,21 +24,21 @@ object Terminals {
   /**
     * A parser that always succeeds with given result value `t`, consuming no input
     */
-  case class PassWith[T, Elem, Repr](t: T)(implicit       formatter: ReprOps[Elem, Repr]) extends Parser[T, Elem, Repr]{
+  case class PassWith[T, Elem, Repr](t: T)(implicit       repr: ReprOps[Elem, Repr]) extends Parser[T, Elem, Repr]{
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = success(cfg.success, t, index, Set.empty, false)
   }
 
   /**
    * A parser that always fails immediately
    */
-  case class Fail[Elem, Repr]()(implicit  formatter: ReprOps[Elem, Repr]) extends Parser[Nothing, Elem, Repr]{
+  case class Fail[Elem, Repr]()(implicit  repr: ReprOps[Elem, Repr]) extends Parser[Nothing, Elem, Repr]{
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = fail(cfg.failure, index)
     override val toString = "Fail"
   }
   /**
    * Succeeds, consuming a single element
    */
-  case class AnyElem[Elem, Repr](name: String)(implicit           formatter: ReprOps[Elem, Repr]) extends Parser[Unit, Elem, Repr]{
+  case class AnyElem[Elem, Repr](name: String)(implicit           repr: ReprOps[Elem, Repr]) extends Parser[Unit, Elem, Repr]{
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       val input = cfg.input
       if (!input.isReachable(index)) fail(cfg.failure, index)
@@ -49,7 +49,7 @@ object Terminals {
   /**
    * Consumes up to `count` elements, if they are available
    */
-  case class AnyElems[Elem, Repr](name: String, count: Int)(implicit                        formatter: ReprOps[Elem, Repr]) extends Parser[Unit, Elem, Repr]{
+  case class AnyElems[Elem, Repr](name: String, count: Int)(implicit                        repr: ReprOps[Elem, Repr]) extends Parser[Unit, Elem, Repr]{
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       val input = cfg.input
       if (!input.isReachable(index + count - 1)) fail(cfg.failure, index)
@@ -62,7 +62,7 @@ object Terminals {
    * Succeeds if at the start of the input, consuming no input
    */
 
-  case class Start[Elem, Repr]()(implicit  formatter: ReprOps[Elem, Repr]) extends Parser[Unit, Elem, Repr]{
+  case class Start[Elem, Repr]()(implicit  repr: ReprOps[Elem, Repr]) extends Parser[Unit, Elem, Repr]{
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       if (index == 0) success(cfg.success, (), index, Set.empty, false)
       else fail(cfg.failure, index)
@@ -73,7 +73,7 @@ object Terminals {
   /**
    * Succeeds if at the end of the input, consuming no input
    */
-  case class End[Elem, Repr]()(implicit  formatter: ReprOps[Elem, Repr]) extends Parser[Unit, Elem, Repr]{
+  case class End[Elem, Repr]()(implicit  repr: ReprOps[Elem, Repr]) extends Parser[Unit, Elem, Repr]{
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       if (!cfg.input.isReachable(index)) success(cfg.success, (), index, Set.empty, false)
       else fail(cfg.failure, index)
@@ -86,11 +86,11 @@ object Terminals {
    * by implementing startsWith myself
    */
   def startsWith[Elem, Repr](src: ParserInput[Elem, Repr], prefix: Repr, offset: Int)
-                                (implicit formatter: ReprOps[Elem, Repr])= {
+                                (implicit repr: ReprOps[Elem, Repr])= {
     @tailrec def rec(i: Int): Boolean = {
-      if (i >= formatter.length0(prefix)) true
+      if (i >= repr.length0(prefix)) true
       else if (!src.isReachable(i + offset)) false
-      else if (src(i + offset) != formatter.apply0(prefix, i)) false
+      else if (src(i + offset) != repr.apply0(prefix, i)) false
       else rec(i + 1)
     }
     rec(0)
@@ -115,35 +115,35 @@ object Terminals {
    * Parses a literal `IndexedSeq[Elem]`
    */
   case class Literal[Elem, Repr](s: Repr)
-                                (implicit formatter: ReprOps[Elem, Repr])
+                                (implicit repr: ReprOps[Elem, Repr])
        extends Parser[Unit, Elem, Repr]{
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
 
-      if (startsWith(cfg.input, s, index)) success(cfg.success, (), index + formatter.length0(s), Set.empty, false)
+      if (startsWith(cfg.input, s, index)) success(cfg.success, (), index + repr.length0(s), Set.empty, false)
       else fail(cfg.failure, index)
     }
-    override def toString = formatter.literalize(s)
+    override def toString = repr.literalize(s)
   }
 
   /**
    * Parses a literal `String` ignoring case
    */
   case class IgnoreCase(s: IndexedSeq[Char])
-                       (implicit formatter: ReprOps[Char, String])
+                       (implicit repr: ReprOps[Char, String])
        extends Parser[Unit, Char, String](){
 
     def parseRec(cfg: ParseCtx[Char, String], index: Int) = {
       if (startsWithIgnoreCase(cfg.input, s, index)) success(cfg.success, (), index + s.length, Set.empty, false)
       else fail(cfg.failure, index)
     }
-    override def toString = formatter.literalize(s.mkString)
+    override def toString = repr.literalize(s.mkString)
   }
 
   /**
    * Parses a single element
    */
   case class ElemLiteral[Elem, Repr](c: Elem)
-                                    (implicit formatter: ReprOps[Elem, Repr])
+                                    (implicit repr: ReprOps[Elem, Repr])
        extends Parser[Unit, Elem, Repr]{
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       val input = cfg.input
@@ -151,7 +151,7 @@ object Terminals {
       else if (input(index) == c) success(cfg.success, c.toString, index + 1, Set.empty, false)
       else fail(cfg.failure, index)
     }
-    override def toString = formatter.literalize(formatter.fromSingle(c)).toString
+    override def toString = repr.literalize(repr.fromSingle(c)).toString
   }
 
   /**
@@ -159,7 +159,7 @@ object Terminals {
    * parse into the input. e.g. useful for providing
    * source locations for AST nodes. Consumes no input.
    */
-  case class Index[Elem, Repr]()(implicit formatter: ReprOps[Elem, Repr]) extends Parser[Int, Elem, Repr]{
+  case class Index[Elem, Repr]()(implicit repr: ReprOps[Elem, Repr]) extends Parser[Int, Elem, Repr]{
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       success(cfg.success, index, index, Set.empty, false)
     }

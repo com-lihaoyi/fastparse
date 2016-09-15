@@ -6,7 +6,7 @@
 
     @sect{Parser}
         @p
-            Fastparse revolves around @hl.scala{Parser[T, Elem, Repr]}s:
+            Fastparse revolves around @hl.scala{Parser}s objects:
             a parser that can attempt to parse a value @hl.scala{T} from an input sequence of elements of type @hl.scala{Elem}.
             The @hl.scala{Repr} type-parameter is responsible for output type in @sect.ref{Capture},
             since input is converted to the @hl.scala{IndexedSeq[Elem]} or @hl.scala{Iterator[IndexedSeq[Elem]]}
@@ -50,7 +50,7 @@
             be used in Scala @hl.scala{match} expressions.
 
         @p
-            Although the core of @sect.ref{Parser[T, Elem, Repr]} is simple,
+            Although the core of @sect.ref{Parser} is simple,
             a lot of additional functionality is included in the @hl.scala{ParserApi[T, Elem, Repr]} trait
             in order to make constructing parsers convenient and concise.
 

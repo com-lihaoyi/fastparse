@@ -36,7 +36,7 @@ object Utils {
   def benchmarkIteratorBufferSizes[Elem, Repr](parser: Parser[_, Elem, Repr],
                                                    sizes: Seq[Int],
                                                    iteratorFactory: Int => Iterator[Repr])
-                                                  (implicit formatter: ReprOps[Elem, Repr],
+                                                  (implicit repr: ReprOps[Elem, Repr],
                                                    ct: ClassTag[Elem]): Unit = {
 
     class LoggedMaxBufferLengthParserInput(data: Iterator[Repr])
@@ -88,7 +88,7 @@ object Utils {
                                    parser: Parser[_, Elem, Repr],
                                    data: Repr, dataFailOpt: Option[Repr],
                                    iteratorFactory: Int => Iterator[Repr])
-                                  (implicit formatter: ReprOps[Elem, Repr],
+                                  (implicit repr: ReprOps[Elem, Repr],
                                    ct: ClassTag[Elem]): Unit = {
 
     val results = Utils.benchmark(s"$name Benchmark",
