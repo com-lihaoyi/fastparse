@@ -7,6 +7,7 @@ import scodec.bits.ByteVector
 object ByteBitSetHelper extends ElemSetHelper[Byte] {
   def toInt(a: Byte): Int = a
   def ordering = implicitly[Ordering[Byte]]
+  def toLowerCase(in: Char) = in
   val allValues = (Byte.MinValue.toInt to Byte.MaxValue.toInt).map(_.toByte)
 }
 

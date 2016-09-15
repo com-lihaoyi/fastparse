@@ -3,7 +3,6 @@ package fastparse.utils
 import acyclic.file
 
 import scala.annotation.{switch, tailrec}
-import scala.collection.mutable.ArrayBuffer
 import scala.language.experimental.macros
 
 object MacroUtils{
@@ -140,14 +139,15 @@ object Utils {
    * An trie node for quickly matching multiple strings which
    * share the same prefix, one char at a time.
    */
-  final class TrieNode[Elem](strings: Seq[IndexedSeq[Elem]])
+  final class TrieNode[Elem](strings: Seq[IndexedSeq[Elem]], ignoreCase: Boolean = false)
                             (implicit helper: ElemSetHelper[Elem], ordering: Ordering[Elem]) {
 
     val (min, max, arr) = {
-      val children = strings.filter(_.nonEmpty)
-                            .groupBy(_(0))
-                            .map { case (k,ss) => k -> new TrieNode(ss.map(_.tail)) }
-      if (children.isEmpty) (0, 0, new Array[TrieNode[Elem]](0))
+      val ignoreCaseStrings = if (ignoreCase) strings.map(_.map(helper.toLowerCase)) else strings
+      val children = ignoreCaseStrings.filter(!_.isEmpty)
+                                      .groupBy(_(0))
+                                      .map { case (k,ss) => k -> new TrieNode(ss.map(_.tail), ignoreCase) }
+      if (children.size == 0) (0, 0, new Array[TrieNode[Elem]](0))
       else {
         val min = helper.toInt(children.keysIterator.min)
         val max = helper.toInt(children.keysIterator.max)
@@ -157,6 +157,7 @@ object Utils {
       }
     }
     val word: Boolean = strings.exists(_.isEmpty) || arr.isEmpty
+
     def apply(c: Elem): TrieNode[Elem] = {
       val ci = helper.toInt(c)
       if (ci > max || ci < min) null
@@ -170,7 +171,9 @@ object Utils {
       @tailrec def rec(offset: Int, currentNode: TrieNode[Elem], currentRes: Int): Int = {
         if (!input.isReachable(index + offset)) currentRes
         else {
-          val elem = input(index + offset)
+
+          val elem0 = input(index + offset)
+          val elem = if(ignoreCase) helper.toLowerCase(elem0) else elem0
           val next = currentNode(elem)
           if (next == null) currentRes
           else rec(

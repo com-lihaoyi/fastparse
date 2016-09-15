@@ -1,18 +1,29 @@
 package fastparse
 import acyclic.file
-import fastparse.core.{ParserApi, ParserApiImpl}
 
 import language.experimental.macros
 import fastparse.parsers.Intrinsics
-import fastparse.parsers.Terminals.AnyElems
 import fastparse.utils.{ElemSetHelper, ReprOps}
 
 import scala.reflect.ClassTag
 /**
- * This is basically a trait which contains
- * the "public" API to fastparse packages
- */
-
+  * This is basically a trait which contains the "public" API to fastparse
+  * packages.
+  *
+  * It aliases all the different parsers available in `fastparse.parsers.*`,
+  * as well as many of the other useful types such as `Mutable` and `Parsed`
+  * and `ParserInput`, and fixes their type-parameters to `[Elem, Repr]`, so
+  * that anyone who uses the aliases defined here will not need to worry about
+  * filling in these type parameters every time they want to use it.
+  *
+  * If someone wants to write a parser that works on both bytes and strings,
+  * they still have the option of using the "raw" types and doing that, but
+  * most people shouldn't need to bother.
+  *
+  * Also provides the implicits necessary for people who want to construct
+  * their own parsers, in the cases where we couldn't provide the implicit
+  * directly, e.g. for people defining their own subclass of `Parser`
+  */
 abstract class Api[Elem, Repr](ct: ClassTag[Elem],
                                elemSetHelper: ElemSetHelper[Elem],
                                reprOps: ReprOps[Elem, Repr],
@@ -23,6 +34,7 @@ abstract class Api[Elem, Repr](ct: ClassTag[Elem],
   protected[this] implicit val implicitClassTag = ct
   protected[this] implicit val implicitOrdering = ordering
 
+  type ParserInput = fastparse.utils.ParserInput[Elem, Repr]
   type IndexedParserInput = fastparse.utils.IndexedParserInput[Elem, Repr]
   type IteratorParserInput = fastparse.utils.IteratorParserInput[Elem, Repr]
 

@@ -226,6 +226,10 @@
 
             @p
                 As a result, this is much faster to execute than if you had combined the individual strings with @hl.scala{"cow" | "cattle" | ...}.
+
+            @p
+                There is also a @code{StringInIgnoreCase} parser you can use
+                if you want to match things case-insensitively.
     @sect{Cuts}
         @p
             A "cut" is a marker in a recursive-descent parser that states "you cannot backtrack past this point". Although in theory it allows you to save on memory usage by discarding earlier portions of the input, in FastParse this operator is mostly used to improve on the quality of error reporting.

@@ -119,6 +119,11 @@ object ParsingTests extends TestSuite{
         check(&("Hello" ~/ "Boo") ~ "lol" | "", ("HelloBoo", 0), Success((), 0))
       }
     }
+    'stringInIgnoreCase {
+       check(StringInIgnoreCase("Hello", "Hello World"), ("hElLo WOrld!", 0), Success((), 11))
+       check(StringInIgnoreCase("abc","abde","abdgh").!, ("ABCDE", 0), Success(("ABC"), 3))
+       checkFail(StringInIgnoreCase("abc","def","ghi"), ("bcde", 0), 0)
+    }
   }
   // Broken out of the TestSuite block to avoid problems in our 2.10.x
   // build due to https://issues.scala-lang.org/browse/SI-7987

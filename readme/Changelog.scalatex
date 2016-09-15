@@ -46,6 +46,11 @@
                 @sect.ref{Unapply} method to allow pattern matching on parsers,
                 thanks to @a("volth", href:="https://github.com/volth").
 
+            @li
+                Added a @sect.ref{StringInIgnoreCase} parser to allow matching
+                on multiple strings case-insensitively, thanks to ,
+                thanks to @a("Jim Dickinson", href:="https://github.com/jimdickinson").
+
     @sect{0.3.7}
         @ul
             @li

@@ -28,6 +28,8 @@ class StringApi() extends Api[Char, String](
 
 
   def StringIn(strings: String*) = SeqIn(strings: _*)
+  def StringInIgnoreCase(strings: String*) =
+    Intrinsics.StringInIgnoreCase[Char, String](strings: _*)
 
   val CharPredicates = fastparse.CharPredicates
   val IgnoreCase = parsers.Terminals.IgnoreCase

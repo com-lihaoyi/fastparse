@@ -72,13 +72,13 @@ object Intrinsics {
    * first converting it into an array-backed Trie and then walking it once.
    * If multiple strings match the input, longest match wins.
    */
-  case class StringIn[Elem, Repr](strings: Repr*)
-                                 (implicit repr: ReprOps[Elem, Repr],
-                                  helper: ElemSetHelper[Elem],
-                                  ordering: Ordering[Elem])
+  class StringInBase[Elem, Repr](ignoreCase: Boolean, strings: Repr*)
+                                (implicit repr: ReprOps[Elem, Repr],
+                                 helper: ElemSetHelper[Elem],
+                                 ordering: Ordering[Elem])
       extends Parser[Unit, Elem, Repr] {
 
-    private[this] val trie = new TrieNode[Elem](strings.map(repr.toArray(_): IndexedSeq[Elem]))
+    private[this] val trie = new TrieNode[Elem](strings.map(repr.toArray(_): IndexedSeq[Elem]), ignoreCase)
 
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       val length = trie.query(cfg.input, index)
@@ -89,4 +89,14 @@ object Intrinsics {
       s"StringIn(${strings.map(repr.literalize).mkString(", ")})"
     }
   }
+
+  case class StringIn[Elem, Repr](strings: Repr*)
+                                 (implicit repr: ReprOps[Elem, Repr],
+                                  helper: ElemSetHelper[Elem],
+                                  ordering: Ordering[Elem]) extends StringInBase(false, strings:_*)
+
+  case class StringInIgnoreCase[Elem, Repr](strings: Repr*)
+                                           (implicit repr: ReprOps[Elem, Repr],
+                                            helper: ElemSetHelper[Elem],
+                                            ordering: Ordering[Elem]) extends StringInBase(true, strings:_*)
 }
