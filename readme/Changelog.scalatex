@@ -38,7 +38,7 @@
 
             @li
                 The old @hl.scala{def wspStr(s: String): P0} implicit has been
-                renamed {def LiteralStr(s: String): P0}; the old name was a
+                renamed @hl.scala{def LiteralStr(s: String): P0}; the old name was a
                 copy-paste from scala-parser-combinators, and never made much
                 sense anyway
 
