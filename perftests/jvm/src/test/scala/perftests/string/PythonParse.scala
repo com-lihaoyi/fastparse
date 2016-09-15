@@ -2,7 +2,7 @@ package perftests.string
 
 import perftests.Utils
 import utest._
-
+import fastparse.all._
 object PythonParse extends TestSuite {
   val crossValidationStream = getClass.getResourceAsStream("/cross_validation.py")
   val crossValidationSource = scala.io.Source.fromInputStream(crossValidationStream).mkString

@@ -2,10 +2,9 @@ package demo
 
 import classparse.ClassParse
 import cssparse.PrettyPrinter
-import fastparse.Midi
+import fastparse.byte.Midi
 import org.scalajs.dom
 import org.scalajs.dom.{Event, UIEvent, html}
-import fastparse.core.{Parsed, Parser}
 import fastparse.utils.Utils
 
 import scala.scalajs.js
@@ -62,12 +61,12 @@ object DemoMain {
       reader.readAsArrayBuffer(uploadFile.files.item(0))
       reader.onload = (e: UIEvent) => {
         val array = new Uint8Array(reader.result.asInstanceOf[ArrayBuffer])
-        val contents = fastparse.byte.Bytes.view(
+        val contents = fastparse.byte.all.Bytes.view(
           (for (i <- 0 until array.length) yield array.get(i).toByte).toArray
         )
         dom.console.log(contents.length)
-        fastparse.MidiParse.midiParser.parse(contents) match{
-          case Parsed.Success(midi, index) =>
+        fastparse.byte.MidiParse.midiParser.parse(contents) match{
+          case fastparse.byte.all.Parsed.Success(midi, index) =>
             metadataBox.textContent =
               s"""Successfully parsed ${index} bytes
                   |Midi Format: ${midi.format}
@@ -76,7 +75,7 @@ object DemoMain {
                   |${midi.tracks.zipWithIndex.map{case (t, i) => s"Track $i: ${t.length} events"}.mkString("\n")}
                  """.stripMargin
             playMusic(midi, {x => notes = x +: notes; updateLogBox()}, {x => progress = x; updateLogBox()})
-          case Parsed.Failure(lastParser, index, extra) =>
+          case fastparse.byte.all.Parsed.Failure(lastParser, index, extra) =>
             metadataBox.textContent = "Failed to parse midi\n" + extra.traced.trace
         }
       }
@@ -90,10 +89,10 @@ object DemoMain {
       js.Dynamic.global.Synth.generate(0, note, octave - 2, 10)
     )
   }
-  def playMusic(midi: fastparse.Midi,
+  def playMusic(midi: fastparse.byte.Midi,
                 noteLogger: String => Unit,
                 progressLogger: String => Unit) = {
-    import fastparse.Midi._, MidiData._
+    import fastparse.byte.Midi._, MidiData._
     case class TrackInfo(var savedTicks: Int, var track: List[(Int, Midi.TrackEvent)]){
       def tillNext = track.head._1 - savedTicks
     }
@@ -145,10 +144,10 @@ object DemoMain {
         } else if (remaining.nonEmpty){
 
           val milliSleep = midi.tickDiv match{
-            case fastparse.Midi.TickDiv.Metric(divisionsPerQuarterBeat) =>
+            case fastparse.byte.Midi.TickDiv.Metric(divisionsPerQuarterBeat) =>
               val milliTempo = currentTempo / 1000
               milliTempo * tillNext / divisionsPerQuarterBeat
-            case fastparse.Midi.TickDiv.TimeCode(fps, divs) =>
+            case fastparse.byte.Midi.TickDiv.TimeCode(fps, divs) =>
               ???
           }
 
@@ -255,8 +254,8 @@ object DemoMain {
   }
   @JSExport
   def bmp(container: html.Div) = {
-    import fastparse.byte._
-    import fastparse.BmpTests.BmpParse
+    import fastparse.byte.all._
+    import fastparse.byte.BmpTests.BmpParse
 
     helperByteFile(container, BmpParse.bmp.map(bmp => {
       bmp.bitmapHeader match {
@@ -275,7 +274,7 @@ object DemoMain {
   }
   @JSExport
   def clss(container: html.Div) = {
-    import fastparse.byte._
+    import fastparse.byte.all._
     helperByteFile(container, classparse.ClassParse.classFile.map(c => {
       val ast = ClassParse.Ast.convertToAst(c)
       s"""
@@ -287,7 +286,7 @@ object DemoMain {
        """.stripMargin
     }))
   }
-  def helper(container: html.Div, parser: Parser[_, Char, String], default: String) = {
+  def helper(container: html.Div, parser: fastparse.all.Parser[_], default: String) = {
     import scalatags.JsDom.all._
     val inputBox = textarea(
       width := "45%",
@@ -302,14 +301,14 @@ object DemoMain {
     def recalc() = {
       inputBox.rows = inputBox.value.lines.length
       val details = parser.parse(inputBox.value) match{
-        case s: Parsed.Success[_, Char] =>
+        case s: fastparse.all.Parsed.Success[_] =>
           table(
             width := "100%",
             tr(td("Success!")),
             tr(td("value:"), td(pre(s.value.toString)))
           )
 
-        case Parsed.Failure(lastParser, index, extra) =>
+        case fastparse.all.Parsed.Failure(lastParser, index, extra) =>
           val pretty = Utils.literalize( extra.input.slice( index, index + 15)).toString
           table(
             width := "100%",
@@ -328,7 +327,7 @@ object DemoMain {
     container.appendChild(div(inputBox, outputBox, div(clear.both)).render)
   }
 
-  def helperByteFile(container: html.Div, parser: Parser[_, Byte, fastparse.byte.Bytes]) = {
+  def helperByteFile(container: html.Div, parser: fastparse.byte.all.Parser[_]) = {
     import scalatags.JsDom.all._
     val uploadFile = input(
       width := "30%",
@@ -345,19 +344,19 @@ object DemoMain {
       reader.readAsArrayBuffer(uploadFile.files.item(0))
       reader.onload = (e: UIEvent) => {
         val array = new Uint8Array(reader.result.asInstanceOf[ArrayBuffer])
-        val contents = fastparse.byte.Bytes.view(
+        val contents = fastparse.byte.all.Bytes.view(
           (for (i <- 0 until array.length) yield array.get(i).toByte).toArray
         )
 
         val details = parser.parse(contents) match {
-          case s: Parsed.Success[_, Byte] =>
+          case s: fastparse.byte.all.Parsed.Success[_] =>
             table(
               width := "100%",
               tr(td("Success!")),
               tr(td("value:"), td(pre(s.value.toString)))
             )
 
-          case Parsed.Failure(lastParser, index, extra) =>
+          case fastparse.byte.all.Parsed.Failure(lastParser, index, extra) =>
             table(
               width := "100%",
               tr(td("Failure!")),

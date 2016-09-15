@@ -1,8 +1,8 @@
 package perftests
 
-import fastparse.{IteratorParserInput, ResultConverter}
+import fastparse.utils.IteratorParserInput
 import fastparse.core.{Parsed, Parser}
-import fastparse.utils.{ReprOps$, IteratorParserInput, ResultConverter}
+import fastparse.utils.{IteratorParserInput, ReprOps}
 
 import scala.collection.mutable
 import scala.reflect.ClassTag
@@ -39,7 +39,7 @@ object Utils {
                                                   (implicit formatter: ReprOps[Elem, Repr],
                                                    ct: ClassTag[Elem]): Unit = {
 
-    class LoggedMaxBufferLengthParserInput(data: Iterator[IndexedSeq[Elem]])
+    class LoggedMaxBufferLengthParserInput(data: Iterator[Repr])
       extends IteratorParserInput[Elem, Repr](data) {
 
       var maxInnerLength = 0
@@ -50,7 +50,7 @@ object Utils {
       }
     }
 
-    class LoggedDistributionBufferLengthParserInput(data: Iterator[IndexedSeq[Elem]])
+    class LoggedDistributionBufferLengthParserInput(data: Iterator[Repr])
       extends IteratorParserInput[Elem, Repr](data) {
 
       val drops = mutable.Map.empty[Int, Int].withDefaultValue(0)
@@ -64,12 +64,12 @@ object Utils {
 
     sizes.foreach(s => {
       println("Parsing for batch size " + s)
-      val input = new LoggedMaxBufferLengthParserInput(iteratorFactory(s).map(converter.convertFromRepr))
+      val input = new LoggedMaxBufferLengthParserInput(iteratorFactory(s))
       parser.parseInput(input)
       println(s"Batch size: $s. Max buffer size: ${input.maxInnerLength}.")
     })
 
-    val input = new LoggedDistributionBufferLengthParserInput(iteratorFactory(1).map(converter.convertFromRepr))
+    val input = new LoggedDistributionBufferLengthParserInput(iteratorFactory(1))
     parser.parseInput(input)
     println("Distibutions of buffer size:")
 
@@ -95,7 +95,7 @@ object Utils {
       Seq(
         Some(() => parser.parse(data)),
         dataFailOpt.map(dataFail =>
-          () => parser.parse(dataFail).asInstanceOf[Parsed.Failure[Elem]].extra.traced
+          () => parser.parse(dataFail).asInstanceOf[Parsed.Failure[Elem, Repr]].extra.traced
         )
       ).flatten
     )
