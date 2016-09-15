@@ -4,7 +4,27 @@
 
 @sect{Debugging Parsers}
     @p
-        The vast majority of your time working with FastParse, your parsers will be incorrect. This is almost by definition, because once your parser is correct, you'll be done and can go do something else with your life! Thus FastParse puts a lot of effort into making working with broken parsers as easy as possible
+        The vast majority of your time working with FastParse, your parsers
+        will be incorrect. This is almost by definition, because once your
+        parser is correct, you'll be done and can go do something else with
+        your life!
+
+    @p
+        Even if your parsers are correct, often you'll find
+        yourself parsing broken input:
+    @ul
+        @li
+            Perhaps a user typed in mal-formed code for your custom programming-language?
+        @li
+            Or someone corrupted your data files?
+        @li
+            Or some external service isn't properly following your
+            protocol spec?
+
+    @p
+        No matter what goes wrong, @i{someone} will need to figure
+        it out and fix it. Thus FastParse puts a lot of effort
+        into making working with broken parsers and input as easy as possible.
 
     @p
         Let's take an example Parser:
@@ -149,7 +169,7 @@
             use to run the current parser and run code @i{after} the parser is
             run:
 
-        @hl.ref(tests/"MathTests.scala", Seq("'instrument", "continuation", ""), "// Good Parse")
+        @hl.ref(tests/"MathTests.scala", Seq("'instrument", "'continuation", ""), "// Good Parse")
 
         @p
             In this case, we are using it to count not just how many times each
@@ -157,13 +177,13 @@
             succeeds and fails. We can parse a "good" input and see that
             most of the attempts by named parser succeed:
 
-        @hl.ref(tests/"MathTests.scala", Seq("'instrument", "continuation", "", "// Good Parse"), "// Bad Parse")
+        @hl.ref(tests/"MathTests.scala", Seq("'instrument", "'continuation", "", "// Good Parse"), "// Bad Parse")
 
         @p
             And we can parse invalid input, and see that it results in many of
             the named parsers failing repeatedly in the course of the parse:
 
-        @hl.ref(tests/"MathTests.scala", Seq("'instrument", "continuation", "", "// Bad Parse"))
+        @hl.ref(tests/"MathTests.scala", Seq("'instrument", "'continuation", "", "// Bad Parse"))
 
         @p
             Which is what you would expect, since the parse overall failed!

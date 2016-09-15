@@ -232,9 +232,9 @@
                 if you want to match things case-insensitively.
     @sect{Cuts}
         @p
-            A "cut" is a marker in a recursive-descent parser that states "you
-            cannot backtrack past this point". In FastParse, this serves two
-            purposes:
+            A "cut" (@code{~/} in Fastparse) is a marker in a recursive-descent
+            parser that states "you cannot backtrack past this point". In
+            FastParse, this serves two purposes:
 
         @ul
             @li
