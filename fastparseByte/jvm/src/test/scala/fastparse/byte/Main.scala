@@ -1,4 +1,4 @@
-package fastparse
+package fastparse.byte
 
 import javax.sound.midi.MidiSystem
 
@@ -22,7 +22,8 @@ object Main {
   def play(midi: Midi) = {
 
 
-    import Midi._, MidiData._
+    import Midi._
+    import MidiData._
     // 120bpm, in microseconds-per-quarter-beat
     var currentTempo = 1000000 * 120 / 60 / 4
     println("defaultTempo:\t"+currentTempo)

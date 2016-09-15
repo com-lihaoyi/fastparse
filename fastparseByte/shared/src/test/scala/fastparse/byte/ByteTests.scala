@@ -231,7 +231,7 @@ object ByteTests extends TestSuite {
       }
       'log{
         val captured = collection.mutable.Buffer.empty[String]
-        implicit val logger = Logger(captured.append(_))
+        implicit val logger = fastparse.core.Logger(captured.append(_))
         object Foo{
 
           val int = P( BS(0) ~/ AnyByte.rep(exactly=4).! ).map(_.toInt()).log()
@@ -651,8 +651,8 @@ object ByteTests extends TestSuite {
                 expected: String,
                 markers: Seq[Int] = Seq(-1),
                 contextRows: Int = 8) = {
-        val pretty = fastparse.byte.prettyBytes(
-          fastparse.byte.Bytes.fromHex(inputHex).get, markers, contextRows
+        val pretty = fastparse.byte.all.prettyBytes(
+          fastparse.byte.all.Bytes.fromHex(inputHex).get, markers, contextRows
         )
         assert(pretty == expected)
       }
@@ -903,7 +903,7 @@ object ByteTests extends TestSuite {
           )
           for((enum, parser) <- cases){
             val arr = Bytes.view(put(ByteBuffer.allocate(size).order(enum), i).array())
-            val fastparse.byte.Parsed.Success(`i`, `size`) = parser.parse(arr)
+            val fastparse.byte.all.Parsed.Success(`i`, `size`) = parser.parse(arr)
           }
 
         }
@@ -914,8 +914,8 @@ object ByteTests extends TestSuite {
         check[Short](
           2,
           iterateShorts.map(_.toShort),
-          fastparse.byte.BE.Int16,
-          fastparse.byte.LE.Int16,
+          fastparse.byte.all.BE.Int16,
+          fastparse.byte.all.LE.Int16,
           (b, i) => b.putShort(i)
         )
       }
@@ -923,8 +923,8 @@ object ByteTests extends TestSuite {
         check[Int](
           4,
           iterateShorts.map(_ * Short.MaxValue),
-          fastparse.byte.BE.Int32,
-          fastparse.byte.LE.Int32,
+          fastparse.byte.all.BE.Int32,
+          fastparse.byte.all.LE.Int32,
           (b, i) => b.putInt(i)
         )
       }
@@ -932,8 +932,8 @@ object ByteTests extends TestSuite {
         check[Long](
           8,
           iterateShorts.map(_.toLong * Int.MaxValue * Short.MaxValue),
-          fastparse.byte.BE.Int64,
-          fastparse.byte.LE.Int64,
+          fastparse.byte.all.BE.Int64,
+          fastparse.byte.all.LE.Int64,
           (b, i) => b.putLong(i)
         )
       }
@@ -942,8 +942,8 @@ object ByteTests extends TestSuite {
           4,
           iterateShorts.map(i => java.lang.Float.intBitsToFloat(i * Short.MaxValue))
                        .filterNot(java.lang.Float.isNaN),
-          fastparse.byte.BE.Float32,
-          fastparse.byte.LE.Float32,
+          fastparse.byte.all.BE.Float32,
+          fastparse.byte.all.LE.Float32,
           (b, i) => b.putFloat(i)
         )
       }
@@ -952,8 +952,8 @@ object ByteTests extends TestSuite {
           8,
           iterateShorts.map(i => java.lang.Double.longBitsToDouble(i.toLong * Int.MaxValue * Short.MaxValue))
                        .filterNot(java.lang.Double.isNaN),
-          fastparse.byte.BE.Float64,
-          fastparse.byte.LE.Float64,
+          fastparse.byte.all.BE.Float64,
+          fastparse.byte.all.LE.Float64,
           (b, i) => b.putDouble(i)
         )
       }

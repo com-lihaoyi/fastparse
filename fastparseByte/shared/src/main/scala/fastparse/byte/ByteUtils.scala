@@ -60,7 +60,7 @@ object ByteUtils{
         if sliced.nonEmpty
       }{
 
-        val prettyRow = fastparse.byte.ByteApi.ByteFormatter.prettyPrint(sliced.toArray)
+        val prettyRow = ByteReprOps.prettyPrint(sliced)
         output.append('\n')
         output.append((i * 16).toString.padTo(maxIndexWidth + gutter, ' '))
         output.append(prettyRow)
@@ -91,7 +91,7 @@ object ByteUtils{
 
   import ByteApi._
   class GenericIntegerParser[T](n: Int, creator: (IsReachable[Byte], Int) => T)
-                               (implicit name: sourcecode.Name) extends Parser[T]{
+                                (implicit name: sourcecode.Name) extends Parser[T]()(ByteReprOps){
 
     override def toString = name.value
 

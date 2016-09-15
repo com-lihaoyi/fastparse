@@ -2,7 +2,7 @@ package perftests
 
 import fastparse.{IteratorParserInput, ResultConverter}
 import fastparse.core.{Parsed, Parser}
-import fastparse.utils.{ElemFormatter, IteratorParserInput, ResultConverter}
+import fastparse.utils.{ReprOps$, IteratorParserInput, ResultConverter}
 
 import scala.collection.mutable
 import scala.reflect.ClassTag
@@ -36,9 +36,8 @@ object Utils {
   def benchmarkIteratorBufferSizes[Elem, Repr](parser: Parser[_, Elem, Repr],
                                                    sizes: Seq[Int],
                                                    iteratorFactory: Int => Iterator[Repr])
-                                                  (implicit formatter: ElemFormatter[Elem, Repr],
-                                                            converter: ResultConverter[Elem, Repr],
-                                                            ct: ClassTag[Elem]): Unit = {
+                                                  (implicit formatter: ReprOps[Elem, Repr],
+                                                   ct: ClassTag[Elem]): Unit = {
 
     class LoggedMaxBufferLengthParserInput(data: Iterator[IndexedSeq[Elem]])
       extends IteratorParserInput[Elem, Repr](data) {
@@ -89,9 +88,8 @@ object Utils {
                                    parser: Parser[_, Elem, Repr],
                                    data: Repr, dataFailOpt: Option[Repr],
                                    iteratorFactory: Int => Iterator[Repr])
-                                  (implicit formatter: ElemFormatter[Elem, Repr],
-                                            converter: ResultConverter[Elem, Repr],
-                                            ct: ClassTag[Elem]): Unit = {
+                                  (implicit formatter: ReprOps[Elem, Repr],
+                                   ct: ClassTag[Elem]): Unit = {
 
     val results = Utils.benchmark(s"$name Benchmark",
       Seq(

@@ -3,7 +3,7 @@ import acyclic.file
 import fastparse.core.Mutable
 import fastparse.core.Parser
 import fastparse.core.ParseCtx
-import fastparse.utils.{ElemFormatter, ResultConverter}
+import fastparse.utils.ReprOps
 
 /**
  * Parsers that work with the output of a successful parse
@@ -13,8 +13,7 @@ object Transformers {
    * Applies a transformation [[f]] to the result of [[p]]
    */
   case class Mapper[T, V, Elem, Repr](p: Parser[T, Elem, Repr], f: T => V)
-                                         (implicit converter: ResultConverter[Elem, Repr],
-                                          formatter: ElemFormatter[Elem, Repr])
+                                         (implicit  formatter: ReprOps[Elem, Repr])
     extends Parser[V, Elem, Repr]{
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       p.parseRec(cfg, index) match{
@@ -26,8 +25,7 @@ object Transformers {
   }
 
   case class FlatMapped[T, V, Elem, Repr](p1: Parser[T, Elem, Repr], func: T => Parser[V, Elem, Repr])
-                                             (implicit converter: ResultConverter[Elem, Repr],
-                                              formatter: ElemFormatter[Elem, Repr])
+                                             (implicit formatter: ReprOps[Elem, Repr])
     extends Parser[V, Elem, Repr] {
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       p1.parseRec(cfg, index) match{
@@ -42,8 +40,7 @@ object Transformers {
   }
 
   case class Filtered[T, Elem, Repr](p: Parser[T, Elem, Repr], predicate: T => Boolean)
-                                        (implicit converter: ResultConverter[Elem, Repr],
-                                         formatter: ElemFormatter[Elem, Repr])
+                                        (implicit formatter: ReprOps[Elem, Repr])
     extends Parser[T, Elem, Repr] {
     override def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       p.parseRec(cfg, index) match{

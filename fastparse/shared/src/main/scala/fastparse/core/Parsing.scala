@@ -1,8 +1,7 @@
 package fastparse
 package core
 import acyclic.file
-import fastparse.utils.Utils._
-import fastparse.utils.ElemFormatter._
+
 import fastparse.utils._
 
 import scala.collection.mutable
@@ -73,8 +72,8 @@ object Parsed {
    *              For details see [[Parsed.Failure.Extra]]
    */
   case class Failure[Elem, Repr](lastParser: Parser[_, Elem, Repr],
-                                     index: Int,
-                                     extra: Failure.Extra[Elem, Repr]) extends Parsed[Nothing, Elem, Repr]{
+                                 index: Int,
+                                 extra: Failure.Extra[Elem, Repr]) extends Parsed[Nothing, Elem, Repr]{
 
     def msg = Failure.formatStackTrace(
       Nil, extra.input, index, Failure.formatParser(lastParser, extra.input, index)
@@ -323,9 +322,7 @@ case class ParseCtx[Elem, Repr](input: ParserInput[Elem, Repr],
  * [[parsers.Combinators.Sequence.Flat]]s. These optimizations together appear to make
  * things faster but any 10%, whether or not you activate tracing.
  */
-abstract class Parser[+T, Elem, Repr]()
-                                         (implicit val converter: ResultConverter[Elem, Repr],
-                                          formatter: ElemFormatter[Elem, Repr])
+abstract class Parser[+T, Elem, Repr]()(implicit val reprOps: ReprOps[Elem, Repr])
   extends ParserResults[T, Elem, Repr] with Precedence{
   /*
    * Parses the given `input` starting from the given `index`

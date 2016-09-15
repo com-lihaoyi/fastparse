@@ -3,15 +3,14 @@ package fastparse.byte
 import utest._
 import fastparse.byte.all._
 import scala.collection.mutable.ArrayBuffer
-
-/*
-  The basic parser of BMP format https://en.wikipedia.org/wiki/BMP_file_format .
-
-  https://en.wikipedia.org/wiki/BMP_file_format#/media/File:BMPfileFormat.png
-  It covers only main cases, where image contains only "Bitmap File Header", "DIB HEADER" and "Image data"
-  without gaps and optional fields.
- */
-
+import LE._
+/**
+  * The basic parser of BMP format https://en.wikipedia.org/wiki/BMP_file_format .
+  *
+  * https://en.wikipedia.org/wiki/BMP_file_format#/media/File:BMPfileFormat.png
+  * It covers only main cases, where image contains only "Bitmap File Header", "DIB HEADER" and "Image data"
+  * without gaps and optional fields.
+  */
 object BmpTests extends TestSuite {
 
   object BmpParse {

@@ -1,12 +1,10 @@
-package fastparse
+package fastparse.byte
 
 import java.io.InputStream
 
+import fastparse.byte.all._
 import utest._
-import fastparse.byte._
-import fastparse.BmpTests.BmpParse._
 
-import scala.collection.mutable
 object LargeBmpIteratorTests extends TestSuite {
 
   class StreamToIteratorByte(stream: InputStream, bufferSize: Int) extends Iterator[Bytes] {
@@ -45,7 +43,7 @@ object LargeBmpIteratorTests extends TestSuite {
     }
 
     'maxInnerLength {
-      val loggedInput = new utils.IteratorParserInput(lenaIterator.map(_.toArray)) {
+      val loggedInput = new IteratorParserInput(lenaIterator) {
         var maxInnerLength = 0
 
         override def dropBuffer(index: Int): Unit = {

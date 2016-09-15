@@ -1,9 +1,9 @@
-package fastparse
+package fastparse.byte
 
 import java.nio.file.{Files, Paths}
 
+import fastparse.byte.all.Bytes
 import utest._
-import fastparse.byte.Bytes
 
 object MidiTests extends TestSuite{
   def readResourceBytes(file: String) = {
@@ -76,7 +76,6 @@ object MidiTests extends TestSuite{
       }
     }
     'tonghua{
-      import Midi._
       val bytes = readResourceBytes("/tonghua.mid")
 
       for(parsed <- variousParses(bytes)) {

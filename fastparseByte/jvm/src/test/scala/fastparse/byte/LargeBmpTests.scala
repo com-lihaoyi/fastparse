@@ -1,15 +1,16 @@
-package fastparse
+package fastparse.byte
 
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.nio.file.{Files, Paths}
 import javax.imageio.ImageIO
+
 import utest._
-import fastparse.byte._
+import fastparse.byte.all._
 
 object LargeBmpTests extends TestSuite {
-  import BmpTests.BmpParse._
   import BmpTests.BmpParse.BmpAst._
+  import BmpTests.BmpParse._
 
   val tests = TestSuite {
     'lena {

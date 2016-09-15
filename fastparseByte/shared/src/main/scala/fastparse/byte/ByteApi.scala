@@ -4,41 +4,25 @@ import fastparse.utils.Utils.HexUtils
 import fastparse._
 import fastparse.core.ParserApi
 import fastparse.parsers.{Intrinsics, Terminals}
-import fastparse.utils.{ElemFormatter, IteratorParserInput, ParserInput, ResultConverter}
+import fastparse.utils.{ElemSetHelper, ParserInput, ReprOps}
 import scodec.bits.ByteVector
+object ByteApi {
 
-object ByteApi{
+  implicit val ByteBitSetHelper = new ElemSetHelper[Byte] {
+    def toInt(a: Byte): Int = a
 
-  implicit val ByteBuilder = new ResultConverter[Byte, ByteVector] {
-    override def convertToRepr(input: IndexedSeq[Byte]): ByteVector = ByteVector(input:_*)
-    override def convertFromRepr(input: ByteVector): IndexedSeq[Byte] = input.toArray
-  }
-
-
-  implicit val ByteFormatter = new ElemFormatter[Byte] {
-    private def ByteToHex(b: Byte) = s"${HexUtils.hexChars((b & 0xf0) >> 4)}${HexUtils.hexChars(b & 15)}"
-
-    override def prettyPrint(input: IndexedSeq[Byte]): String = input.map(ByteToHex).mkString(" ")
-    override def literalize(input: IndexedSeq[Byte]): String = '"' + prettyPrint(input) + '"'
-
-    override def errorMessage(input: ParserInput[Byte], expected: String, idx: Int): String = {
-      val locationCode = {
-        val first = input.slice(idx - 20, idx)
-        val last = input.slice(idx, idx + 20)
-
-        prettyPrint(first) + prettyPrint(last) + "\n" + (" " * first.length) + "^"
-      }
-      val literal = literalize(input.slice(idx, idx + 20))
-      s"found $literal, expected $expected at index $idx\n$locationCode"
-    }
-
-    override def prettyIndex(input: ParserInput[Byte], index: Int): String = String.valueOf(index)
+    val allValues = (Byte.MinValue.toInt to Byte.MaxValue.toInt).map(_.toByte)
   }
 }
 import ByteApi._
 class ByteApi() extends Api[Byte, ByteVector]() {
 
-  class IteratorParserInput(data: Iterator[IndexedSeq[Byte]])
+  implicit val elemFormatter = ByteReprOps
+
+  class IndexedParserInput(data: Bytes)
+  extends fastparse.utils.IndexedParserInput(data)
+
+  class IteratorParserInput(data: Iterator[Bytes])
   extends fastparse.utils.IteratorParserInput(data)
 
   val AnyByte = parsers.Terminals.AnyElem[Byte, Bytes]("AnyByte")
@@ -59,15 +43,15 @@ class ByteApi() extends Api[Byte, ByteVector]() {
     * values can be used, but they will be truncated down to `Byte`s before
     * being used in the parser
     */
-  def BS[T](bytes: T*)(implicit num: Integral[T]): P0 = {
-    parsers.Terminals.Literal[Byte, Bytes](bytes.map(num.toInt(_).toByte).toArray[Byte])
+  def BS[T: Integral](bytes: T*): P0 = {
+    parsers.Terminals.Literal[Byte, Bytes](ByteVector(bytes:_*))
   }
 
   /**
     * Construct a literal byte-parser out of an immutable `Bytes` value
     */
   def BS[T](bytes: Bytes): P0 = {
-    parsers.Terminals.Literal[Byte, Bytes](bytes.toArray)
+    parsers.Terminals.Literal[Byte, Bytes](bytes)
   }
 
   /**

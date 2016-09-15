@@ -5,16 +5,26 @@ import fastparse.core.{ParserApi, ParserApiImpl}
 import language.experimental.macros
 import fastparse.parsers.Intrinsics
 import fastparse.parsers.Terminals.AnyElems
-import fastparse.utils.{ElemSetHelper, ElemFormatter, ResultConverter}
+import fastparse.utils.{ElemSetHelper, ReprOps}
+
+import scala.reflect.ClassTag
 /**
  * This is basically a trait which contains
  * the "public" API to fastparse packages
  */
 
 abstract class Api[Elem, Repr]()(implicit elemSetHelper: ElemSetHelper[Elem],
-                                     elemFormatter: ElemFormatter[Elem, Repr],
-                                     converter: ResultConverter[Elem, Repr],
-                                     ordering: Ordering[Elem]) {
+                                 ordering: Ordering[Elem],
+                                 ct: ClassTag[Elem]) {
+
+  implicit val elemFormatter: ReprOps[Elem, Repr]
+
+  class IndexedParserInput(data: Repr)
+  extends fastparse.utils.IndexedParserInput[Elem, Repr](data)
+
+  class IteratorParserInput(data: Iterator[Repr])
+  extends fastparse.utils.IteratorParserInput[Elem, Repr](data)
+
   type ParseCtx = core.ParseCtx[Elem, Repr]
   object Mutable{
     type Success[T] = core.Mutable.Success[T, Elem, Repr]
@@ -42,7 +52,7 @@ abstract class Api[Elem, Repr]()(implicit elemSetHelper: ElemSetHelper[Elem],
   def ElemIn(seqs: Seq[Elem]*): P0
   def ElemsWhile(pred: Elem => Boolean, min: Int = 1): P0
 
-  def SeqIn(seqs: Seq[Elem]*) = Intrinsics.StringIn[Elem, Repr](seqs.map(_.toIndexedSeq): _*)
+  def SeqIn(seqs: Repr*) = Intrinsics.StringIn[Elem, Repr](seqs: _*)
 
   val NoTrace = parsers.Combinators.NoTrace
   val NoCut = parsers.Combinators.NoCut
@@ -58,36 +68,3 @@ abstract class Api[Elem, Repr]()(implicit elemSetHelper: ElemSetHelper[Elem],
   val ParseError = core.ParseError[Elem, Repr] _
   type ParseError = core.ParseError[Elem, Repr]
 }
-
-class StringApi() extends Api[Char, String]() {
-
-  val AnyChar = parsers.Terminals.AnyElem[Char, String]("AnyChar")
-  def AnyChars(count: Int) = AnyElems[Char, String]("AnyChars", count)
-
-  val AnyElem = AnyChar
-  def AnyElem(count: Int) = AnyChars(count)
-  def CharPred(pred: Char => Boolean): P0 = Intrinsics.ElemPred("CharPred", pred)
-  def CharIn(strings: Seq[Char]*) = Intrinsics.ElemIn[Char, String]("CharIn", strings.map(_.toIndexedSeq): _*)
-  def CharsWhile(pred: Char => Boolean, min: Int = 1) = Intrinsics.ElemsWhile[Char, String]("CharsWhile", pred, min)
-
-
-  def ElemPred(pred: Char => Boolean) = CharPred(pred)
-  def ElemIn(strings: Seq[Char]*) = CharIn(strings:_*)
-  def ElemsWhile(pred: Char => Boolean, min: Int = 1) = CharsWhile(pred, min)
-
-
-  def StringIn(strings: Seq[Char]*) = SeqIn(strings: _*)
-
-  val CharPredicates = fastparse.CharPredicates
-  val IgnoreCase = parsers.Terminals.IgnoreCase
-
-  implicit def wspStr(s: String): P0 =
-    if (s.length == 1) parsers.Terminals.ElemLiteral(s(0))
-    else parsers.Terminals.Literal(s)
-}
-
-object all extends StringApi{
-  implicit def parserApi[T, V](p: T)(implicit c: T => core.Parser[V, Char, String]): ParserApi[V, Char, String] =
-    new ParserApiImpl[V, Char, String](p)
-}
-object noApi extends StringApi

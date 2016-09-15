@@ -1,6 +1,5 @@
 package fastparse
 
-import fastparse.utils.{ElemFormatter, IteratorParserInput, ResultConverter}
 import utest._
 
 import scala.collection.mutable
@@ -8,10 +7,8 @@ import scala.reflect.ClassTag
 
 object IteratorTests extends TestSuite {
 
-  class LoggedDropsParserInput[Elem: ClassTag, Repr](data: Iterator[Repr])
-                                                        (implicit formatter: ElemFormatter[Elem, Repr],
-                                                         converter: ResultConverter[Elem, Repr])
-    extends IteratorParserInput[Elem, Repr](data) {
+  class LoggedDropsParserInput(data: Iterator[String])
+    extends fastparse.all.IteratorParserInput(data) {
 
     val drops = mutable.SortedSet.empty[Int]
 
@@ -22,7 +19,7 @@ object IteratorTests extends TestSuite {
     override def toString = s"LoggedDropsParserInput($drops)"
   }
 
-  def toInput(string: String) = new LoggedDropsParserInput[Char, String](
+  def toInput(string: String) = new LoggedDropsParserInput(
     string.grouped(1).map(wrapString)
   )
 

@@ -36,13 +36,13 @@ abstract class ParserInput[Elem, Repr] extends IsReachable[Elem] {
     */
   def isReachable(index: Int): Boolean
 
-  val formatter: ElemFormatter[Elem, Repr]
+  val formatter: ReprOps[Elem, Repr]
 
   def checkTraceable(): Unit
 }
 
 case class IndexedParserInput[Elem, Repr](data: Repr)
-                                             (implicit val formatter: ElemFormatter[Elem, Repr])
+                                             (implicit val formatter: ReprOps[Elem, Repr])
     extends ParserInput[Elem, Repr] {
   override def apply(index: Int) = formatter.apply0(data, index)
 
@@ -82,9 +82,9 @@ case class IndexedParserInput[Elem, Repr](data: Repr)
   * so calling of `dropBuffer` should guarantee that there won't be any attempts to access to the elements in dropped part of input.
   */
 case class IteratorParserInput[Elem, Repr](data: Iterator[Repr])
-                                              (implicit val formatter: ElemFormatter[Elem, Repr],
-                                               converter: ResultConverter[Elem, Repr],
-                                               ct: ClassTag[Elem])
+                                          (implicit val formatter: ReprOps[Elem, Repr],
+                                           converter: ReprOps[Elem, Repr],
+                                           ct: ClassTag[Elem])
     extends ParserInput[Elem, Repr] {
   private val buffer: UberBuffer[Elem] = new UberBuffer[Elem](16)
   private var firstIdx: Int = 0 // index in the data corresponding to the 0th element in the buffer
@@ -92,7 +92,7 @@ case class IteratorParserInput[Elem, Repr](data: Iterator[Repr])
   private def requestUntil(until: Int): Boolean = {
     while (this.length <= until && data.hasNext) {
       val chunk = data.next()
-      buffer.write(converter.convertFromRepr(chunk).toArray)
+      buffer.write(converter.toArray(chunk))
     }
     this.length > until
   }
@@ -123,7 +123,7 @@ case class IteratorParserInput[Elem, Repr](data: Iterator[Repr])
   override def slice(from: Int, until: Int): Repr = {
     requestUntil(until - 1)
     val lo = math.max(from, firstIdx)
-    converter.convertToRepr(buffer.slice(lo - firstIdx, until - firstIdx))
+    converter.fromArray(buffer.slice(lo - firstIdx, until - firstIdx))
   }
 
   /**
