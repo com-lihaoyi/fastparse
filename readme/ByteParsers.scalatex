@@ -40,23 +40,64 @@
         API, there are some new primitives that are specific to byte parsers,
         and some existing primitives that are named slightly differently.
 
+    @sect{Bytes}
+        @p
+            The primary data-structure @code{fastparse.byte} works with is
+            @code{Bytes}. This gets imported when you
+            @hl.scala{import fastparse.byte._}, and is an alias for the
+            excellent @code{scodec.bits.ByteVector} class from
+            @lnk("scodec-bits", "https://github.com/scodec/scodec-bits") by
+            @lnk("Michael Pilquist", "https://www.github.com/mpilquist").
+            @code{Bytes} is basically an immutable version of
+            @code{Array[Byte]}, with structural equality, a useful
+            @code{toString}, and convenient operations for all the things you
+            typically want to do with blobs of bytes. @code{fastparse.byte}'s
+            @code{.parse} method takes @code{Bytes} as input, and its
+            @sect.ref{Capture} operator captures @code{Bytes} as output.
+
+        @p
+            @code{Bytes} provides convenient methods for construction:
+
+        @hl.ref(tests/"ByteTests.scala", Seq("'bytevector", "'construction", ""))
+
+        @p
+            @code{Bytes} provides many of the common operations that you would
+            want to perform on binary-blobs build in. These more or less match
+            what you would expect from the standard Scala collections:
+
+        @hl.ref(tests/"ByteTests.scala", Seq("'bytevector", "'operations", ""))
+
+        @p
+            These are just the highlights of the most common operations on a
+            @code{Bytes}. There are many more methods on @code{Bytes}
+            instances as well as on the @code{Bytes} companion object, but
+            you can explore those yourselves in your editor's autocomplete
+            menu.
+
+        @p
+            In general, it is reasonable to use @code{Bytes} throughout
+            your codebase where-ever you need to represent binary data. In the
+            few cases where performance is of utmost importance, or you really
+            need read-write mutability, an @code{Array[Byte]} will be
+            necessary, but for the majority of un-changing blobs-of-bytes a
+            @code{Bytes} will do just fine.
+
+
     @sect{Byte Helpers}
         @p
-            Apart from providing an equivalent API for byte parsing, FastParse's
-            byte-parsers also provide some helper functions for conveniently dealing
-            with binary blobs.
+            Apart from providing an equivalent API for byte parsing,
+            FastParse's byte-parsers also provide some helper functions for
+            conveniently dealing with binary blobs.
 
-        @sect{BS}
-            @hl.ref(tests/"ByteTests.scala", Seq("'bs", ""))
-            @p
-                This is a shorthand for @code{Array[Byte](...)} that is shorter
-                and saves you a bunch of annoying @code{.toByte} calls.
-
-        @sect{hexBytes}
+        @sect{Hex Bytes}
             @hl.ref(tests/"ByteTests.scala", Seq("'hexBytes", ""))
+
             @p
-                Another shorthand for @code{Array[Byte](...)}, that lets you
-                pass in lower-case hexadecimal bytes.
+                FastParse includes Scodec's hex-interpolator; this is a macro
+                that converts the hex literal in a @code{Bytes} value at
+                compile time. This should be both fast and safe: if you have
+                a type in your hex literal it generates and error at compile
+                time.
 
         @sect{prettyBytes}
             @hl.ref(tests/"ByteTests.scala", Seq("'prettyBytesBare", ""))
@@ -79,6 +120,21 @@
             "https://en.wikipedia.org/wiki/Two%27s_complement") integer or
             @lnk("floating point", "https://en.wikipedia.org/wiki/Floating_point")
             number. @code{fastparse.byte} provides built in support for these.
+
+        @sect{BS}
+            @hl.ref(tests/"ByteTests.scala", Seq("'bs", ""))
+
+            @p
+                This is the equivalent to the @sect.ref{Basic} literal string
+                parser in when parsing strings. If the input matches the given
+                sequence of bytes exactly, it the parse succeeds; if the input
+                does not match or there's not enough input, the parse fails.
+
+            @p
+                You can also pass in a ByteString to @code{BS} instead of
+                individual byte values:
+
+            @hl.ref(tests/"ByteTests.scala", Seq("'bsBytes", ""))
 
         @sect{WordN}
             @hl.ref(tests/"ByteTests.scala", Seq("'words", ""))

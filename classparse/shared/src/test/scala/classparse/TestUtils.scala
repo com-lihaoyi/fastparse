@@ -1,6 +1,5 @@
 package classparse
 
-import classparse.ClassParse
 import fastparse.byte._
 import utest._
 
@@ -16,7 +15,7 @@ object TestUtils {
     }
   }
 
-  def checkClassAndClassFile(javaClass: Class[_], classFile: Array[Byte]) = {
+  def checkClassAndClassFile(javaClass: Class[_], classFile: Bytes) = {
     val classInfo = ClassParse.classFile.parse(classFile) match {
       case Parsed.Success(info, _) => Some(info)
       case f: Parsed.Failure => None

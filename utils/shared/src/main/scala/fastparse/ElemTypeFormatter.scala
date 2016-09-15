@@ -1,6 +1,7 @@
 package fastparse
 
 import fastparse.Utils.HexUtils
+import scodec.bits.ByteVector
 
 abstract class ElemTypeFormatter[ElemType] {
   def prettyPrint(input: IndexedSeq[ElemType]): String
@@ -75,8 +76,8 @@ object ResultConverter {
     override def convertFromRepr(input: String): IndexedSeq[Char] = wrapString(input)
   }
 
-  implicit val ByteBuilder = new ResultConverter[Byte, Array[Byte]] {
-    override def convertToRepr(input: IndexedSeq[Byte]): Array[Byte] = input.toArray
-    override def convertFromRepr(input: Array[Byte]): IndexedSeq[Byte] = wrapByteArray(input)
+  implicit val ByteBuilder = new ResultConverter[Byte, ByteVector] {
+    override def convertToRepr(input: IndexedSeq[Byte]): ByteVector = ByteVector(input:_*)
+    override def convertFromRepr(input: ByteVector): IndexedSeq[Byte] = input.toArray
   }
 }

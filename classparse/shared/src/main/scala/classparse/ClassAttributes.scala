@@ -11,16 +11,16 @@ object ClassAttributes {
 
   sealed abstract class Attribute
 
-  case class BasicAttribute(name: String, info: Array[Byte]) extends Attribute {
+  case class BasicAttribute(name: String, info: Bytes) extends Attribute {
     override def equals(other: Any): Boolean =
       other match {
-        case attr: BasicAttribute => name == attr.name && info.deep == attr.info.deep
+        case attr: BasicAttribute => name == attr.name && info == attr.info
         case _ => false
       }
 
     override def toString = {
       import fastparse.ElemTypeFormatter.ByteFormatter
-      s"BasicAttribute($name,${ByteFormatter.prettyPrint(info)})"
+      s"BasicAttribute($name,${ByteFormatter.prettyPrint(info.toArray)})"
     }
   }
 
@@ -109,7 +109,7 @@ object ClassAttributes {
 
       P( inner_class_info_index ~ outer_class_info_index ~
          inner_name_index ~ inner_class_access_flags ).map {
-        case (inIdx: Int, outIdx: Int, inName: Int, inFlags: Array[Byte]) =>
+        case (inIdx: Int, outIdx: Int, inName: Int, inFlags: Bytes) =>
           (classInfo: ClassFileInfo) => InnerClass(
             Class(classInfo, classInfo.getInfoByIndex[ClassInfo](inIdx).get),
             if (outIdx == 0) None

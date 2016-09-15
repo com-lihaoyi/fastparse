@@ -416,10 +416,10 @@ object CodeParser {
       0x11 -> P( UInt16 ).map(i => i.toShort).map(SIPush),
       0xbc -> P( AnyByte.! ).map(_(0)).map(NewArray),
       0x84 -> P( AnyByte.! ~ AnyByte.!).map {
-        case (idx: Array[Byte], const: Array[Byte]) => IInc(idx(0) & 0xff, const(0).toInt)
+        case (idx: Bytes, const: Bytes) => IInc(idx(0) & 0xff, const(0).toInt)
       },
       0xc5 -> P( UInt16 ~ AnyByte.! ).map {
-        case (index: Int, dims: Array[Byte]) => MutliANewArray(index, dims(0) & 0xff)
+        case (index: Int, dims: Bytes) => MutliANewArray(index, dims(0) & 0xff)
       },
 
       0x19 -> localIndex.map(ALoad),
@@ -473,7 +473,7 @@ object CodeParser {
 
       0xba -> P( UInt16 ~ BS(0, 0) ).map(InvokeDynamic),
       0xb9 -> P( UInt16 ~ AnyByte.! ~ BS(0) ).map {
-        case (idx: Int, count: Array[Byte]) => InvokeInterface(idx, count(0) & 0xff)
+        case (idx: Int, count: Bytes) => InvokeInterface(idx, count(0) & 0xff)
       },
 
       0xab ->
@@ -495,10 +495,10 @@ object CodeParser {
     )
   }
 
-  def parseCode(code: Array[Byte]): Seq[OpCode] = {
+  def parseCode(code: Bytes): Seq[OpCode] = {
     val opCodes =
       P( (AnyByte.! ~ Index).flatMap {
-          case (bs: Array[Byte], idx: Int) => (bs(0) & 0xff) match {
+          case (bs: Bytes, idx: Int) => (bs(0) & 0xff) match {
             case b @ (0xab | 0xaa) => AnyBytes((4 - idx % 4) % 4) ~ opCodeParsers(b)
             case b: Int => opCodeParsers(b)
           }

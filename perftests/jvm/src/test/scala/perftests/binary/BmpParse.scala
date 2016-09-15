@@ -9,7 +9,7 @@ import utest._
 object BmpParse extends TestSuite {
   val lenaRecource = getClass.getResource("/lena.bmp")
   val lenaSource = Files.readAllBytes(Paths.get(lenaRecource.toURI.getPath))
-  def lenaIterator(size: Int) = lenaSource.grouped(size)
+  def lenaIterator(size: Int) = lenaSource.grouped(size).map(fastparse.byte.Bytes.view)
   val parser = fastparse.BmpTests.BmpParse.bmp
 
   val tests = TestSuite {
@@ -17,7 +17,7 @@ object BmpParse extends TestSuite {
       Utils.benchmarkAll(
         "ByteParse",
         parser,
-        lenaSource, None,
+        fastparse.byte.Bytes(lenaSource), None,
         lenaIterator
       )
     }

@@ -19,31 +19,33 @@ object ClassTests extends TestSuite {
 
     'basic {
       'book {
-        val classFile = hexBytes("CA FE BA BE " +
-          "00 00 00 34 00 1D 0A 00 05 00 18 09 00 04 00 19 09 00 04 00 1A 07 00 " +
-          "1B 07 00 1C 01 00 05 74 69 74 6C 65 01 00 12 4C 6A 61 76 61 2F 6C 61 " +
-          "6E 67 2F 53 74 72 69 6E 67 3B 01 00 07 70 75 62 59 65 61 72 01 00 01 " +
-          "49 01 00 06 3C 69 6E 69 74 3E 01 00 03 28 29 56 01 00 04 43 6F 64 65 " +
-          "01 00 0F 4C 69 6E 65 4E 75 6D 62 65 72 54 61 62 6C 65 01 00 08 67 65 " +
-          "74 54 69 74 6C 65 01 00 14 28 29 4C 6A 61 76 61 2F 6C 61 6E 67 2F 53 " +
-          "74 72 69 6E 67 3B 01 00 0A 67 65 74 50 75 62 59 65 61 72 01 00 03 28 " +
-          "29 49 01 00 08 73 65 74 54 69 74 6C 65 01 00 15 28 4C 6A 61 76 61 2F " +
-          "6C 61 6E 67 2F 53 74 72 69 6E 67 3B 29 56 01 00 0A 73 65 74 50 75 62 " +
-          "59 65 61 72 01 00 04 28 49 29 56 01 00 0A 53 6F 75 72 63 65 46 69 6C " +
-          "65 01 00 09 42 6F 6F 6B 2E 6A 61 76 61 0C 00 0A 00 0B 0C 00 06 00 07 " +
-          "0C 00 08 00 09 01 00 04 42 6F 6F 6B 01 00 10 6A 61 76 61 2F 6C 61 6E " +
-          "67 2F 4F 62 6A 65 63 74 00 20 00 04 00 05 00 00 00 02 00 02 00 06 00 " +
-          "07 00 00 00 02 00 08 00 09 00 00 00 05 00 00 00 0A 00 0B 00 01 00 0C " +
-          "00 00 00 1D 00 01 00 01 00 00 00 05 2A B7 00 01 B1 00 00 00 01 00 0D " +
-          "00 00 00 06 00 01 00 00 00 01 00 01 00 0E 00 0F 00 01 00 0C 00 00 00 " +
-          "1D 00 01 00 01 00 00 00 05 2A B4 00 02 B0 00 00 00 01 00 0D 00 00 00 " +
-          "06 00 01 00 00 00 06 00 01 00 10 00 11 00 01 00 0C 00 00 00 1D 00 01 " +
-          "00 01 00 00 00 05 2A B4 00 03 AC 00 00 00 01 00 0D 00 00 00 06 00 01 " +
-          "00 00 00 0A 00 01 00 12 00 13 00 01 00 0C 00 00 00 22 00 02 00 02 00 " +
-          "00 00 06 2A 2B B5 00 02 B1 00 00 00 01 00 0D 00 00 00 0A 00 02 00 00 " +
-          "00 0E 00 05 00 0F 00 01 00 14 00 15 00 01 00 0C 00 00 00 22 00 02 00 " +
-          "02 00 00 00 06 2A 1B B5 00 03 B1 00 00 00 01 00 0D 00 00 00 0A 00 02 " +
-          "00 00 00 12 00 05 00 13 00 01 00 16 00 00 00 02 00 17")
+        val classFile = hex"""
+          CA FE BA BE
+          00 00 00 34 00 1D 0A 00 05 00 18 09 00 04 00 19 09 00 04 00 1A 07 00
+          1B 07 00 1C 01 00 05 74 69 74 6C 65 01 00 12 4C 6A 61 76 61 2F 6C 61
+          6E 67 2F 53 74 72 69 6E 67 3B 01 00 07 70 75 62 59 65 61 72 01 00 01
+          49 01 00 06 3C 69 6E 69 74 3E 01 00 03 28 29 56 01 00 04 43 6F 64 65
+          01 00 0F 4C 69 6E 65 4E 75 6D 62 65 72 54 61 62 6C 65 01 00 08 67 65
+          74 54 69 74 6C 65 01 00 14 28 29 4C 6A 61 76 61 2F 6C 61 6E 67 2F 53
+          74 72 69 6E 67 3B 01 00 0A 67 65 74 50 75 62 59 65 61 72 01 00 03 28
+          29 49 01 00 08 73 65 74 54 69 74 6C 65 01 00 15 28 4C 6A 61 76 61 2F
+          6C 61 6E 67 2F 53 74 72 69 6E 67 3B 29 56 01 00 0A 73 65 74 50 75 62
+          59 65 61 72 01 00 04 28 49 29 56 01 00 0A 53 6F 75 72 63 65 46 69 6C
+          65 01 00 09 42 6F 6F 6B 2E 6A 61 76 61 0C 00 0A 00 0B 0C 00 06 00 07
+          0C 00 08 00 09 01 00 04 42 6F 6F 6B 01 00 10 6A 61 76 61 2F 6C 61 6E
+          67 2F 4F 62 6A 65 63 74 00 20 00 04 00 05 00 00 00 02 00 02 00 06 00
+          07 00 00 00 02 00 08 00 09 00 00 00 05 00 00 00 0A 00 0B 00 01 00 0C
+          00 00 00 1D 00 01 00 01 00 00 00 05 2A B7 00 01 B1 00 00 00 01 00 0D
+          00 00 00 06 00 01 00 00 00 01 00 01 00 0E 00 0F 00 01 00 0C 00 00 00
+          1D 00 01 00 01 00 00 00 05 2A B4 00 02 B0 00 00 00 01 00 0D 00 00 00
+          06 00 01 00 00 00 06 00 01 00 10 00 11 00 01 00 0C 00 00 00 1D 00 01
+          00 01 00 00 00 05 2A B4 00 03 AC 00 00 00 01 00 0D 00 00 00 06 00 01
+          00 00 00 0A 00 01 00 12 00 13 00 01 00 0C 00 00 00 22 00 02 00 02 00
+          00 00 06 2A 2B B5 00 02 B1 00 00 00 01 00 0D 00 00 00 0A 00 02 00 00
+          00 0E 00 05 00 0F 00 01 00 14 00 15 00 01 00 0C 00 00 00 22 00 02 00
+          02 00 00 00 06 2A 1B B5 00 03 B1 00 00 00 01 00 0D 00 00 00 0A 00 02
+          00 00 00 12 00 05 00 13 00 01 00 16 00 00 00 02 00 17
+        """
         /* Book.class from compiled class Book.java */
 
         val expected = ClassFile(0, 52,
@@ -98,7 +100,7 @@ object ClassTests extends TestSuite {
                 CodeAttribute(1, 1,
                   ArrayBuffer(ALoad0, InvokeSpecial(1), Return),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 01 00 00 00 01")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 01 00 00 00 01"))
                 )
               )
             ),
@@ -109,7 +111,7 @@ object ClassTests extends TestSuite {
                 CodeAttribute(1, 1,
                   ArrayBuffer(ALoad0, GetField(2), AReturn),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 01 00 00 00 06")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 01 00 00 00 06"))
                 )
               )
             ),
@@ -120,7 +122,7 @@ object ClassTests extends TestSuite {
                 CodeAttribute(1, 1,
                   ArrayBuffer(ALoad0, GetField(3), IReturn),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 01 00 00 00 0A")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 01 00 00 00 0A"))
                 )
               )
             ),
@@ -131,7 +133,7 @@ object ClassTests extends TestSuite {
                 CodeAttribute(2, 2,
                   ArrayBuffer(ALoad0, ALoad1, PutField(2), Return),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 02 00 00 00 0E 00 05 00 0F")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 02 00 00 00 0E 00 05 00 0F"))
                 )
               )
             ),
@@ -142,7 +144,7 @@ object ClassTests extends TestSuite {
                 CodeAttribute(2, 2,
                   ArrayBuffer(ALoad0, ILoad1, PutField(3), Return),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 02 00 00 00 12 00 05 00 13")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 02 00 00 00 12 00 05 00 13"))
                 )
               )
             )
@@ -157,7 +159,7 @@ object ClassTests extends TestSuite {
 
         for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
           val Parsed.Success(parsedClassInfo, _) = ClassParse.classFile.parseIterator(
-            classFile.grouped(chunkSize)
+            classFile.toArray.grouped(chunkSize).map(Bytes.view)
           )
           val parsedClass = ClassParse.Ast.convertToAst(parsedClassInfo)
 
@@ -166,72 +168,74 @@ object ClassTests extends TestSuite {
       }
 
       'book2 {
-        val classFile = hexBytes("CA FE BA BE " +
-          "00 00 00 34 00 4D 0A 00 12 00 34 09 00 11 00 35 09 00 11 00 36 09 " +
-          "00 11 00 37 09 00 11 00 38 08 00 39 08 00 3A 08 00 3B 08 00 3C 07 " +
-          "00 3D 0A 00 0A 00 34 0A 00 0A 00 3E 08 00 3F 0A 00 40 00 41 0A 00 " +
-          "13 00 42 0A 00 0A 00 43 07 00 44 07 00 45 07 00 46 01 00 05 47 65 " +
-          "6E 72 65 01 00 0C 49 6E 6E 65 72 43 6C 61 73 73 65 73 01 00 05 74 " +
-          "69 74 6C 65 01 00 12 4C 6A 61 76 61 2F 6C 61 6E 67 2F 53 74 72 69 " +
-          "6E 67 3B 01 00 07 70 75 62 59 65 61 72 01 00 01 49 01 00 05 67 65 " +
-          "6E 72 65 01 00 0D 4C 42 6F 6F 6B 32 24 47 65 6E 72 65 3B 01 00 06 " +
-          "63 6F 70 69 65 73 01 00 06 3C 69 6E 69 74 3E 01 00 03 28 29 56 01 " +
-          "00 04 43 6F 64 65 01 00 0F 4C 69 6E 65 4E 75 6D 62 65 72 54 61 62 " +
-          "6C 65 01 00 08 67 65 74 54 69 74 6C 65 01 00 14 28 29 4C 6A 61 76 " +
-          "61 2F 6C 61 6E 67 2F 53 74 72 69 6E 67 3B 01 00 0A 67 65 74 50 75 " +
-          "62 59 65 61 72 01 00 03 28 29 49 01 00 08 67 65 74 47 65 6E 67 65 " +
-          "01 00 0F 28 29 4C 42 6F 6F 6B 32 24 47 65 6E 72 65 3B 01 00 09 67 " +
-          "65 74 43 6F 70 69 65 73 01 00 08 73 65 74 54 69 74 6C 65 01 00 15 " +
-          "28 4C 6A 61 76 61 2F 6C 61 6E 67 2F 53 74 72 69 6E 67 3B 29 56 01 " +
-          "00 0A 73 65 74 50 75 62 59 65 61 72 01 00 04 28 49 29 56 01 00 08 " +
-          "73 65 74 47 65 6E 72 65 01 00 10 28 4C 42 6F 6F 6B 32 24 47 65 6E " +
-          "72 65 3B 29 56 01 00 09 73 65 74 43 6F 70 69 65 73 01 00 08 74 6F " +
-          "53 74 72 69 6E 67 01 00 0D 53 74 61 63 6B 4D 61 70 54 61 62 6C 65 " +
-          "07 00 47 01 00 0A 53 6F 75 72 63 65 46 69 6C 65 01 00 0A 42 6F 6F " +
-          "6B 32 2E 6A 61 76 61 0C 00 1D 00 1E 0C 00 16 00 17 0C 00 18 00 19 " +
-          "0C 00 1A 00 1B 0C 00 1C 00 19 01 00 09 4E 6F 20 63 6F 70 69 65 73 " +
-          "01 00 0D 4F 6E 6C 79 20 6F 6E 65 20 63 6F 70 79 01 00 0A 54 77 6F " +
-          "20 63 6F 70 69 65 73 01 00 10 41 20 6C 6F 74 20 6F 66 20 63 6F 70 " +
-          "69 65 73 21 01 00 17 6A 61 76 61 2F 6C 61 6E 67 2F 53 74 72 69 6E " +
-          "67 42 75 69 6C 64 65 72 0C 00 48 00 49 01 00 01 20 07 00 47 0C 00 " +
-          "4A 00 4B 0C 00 4C 00 22 0C 00 2F 00 22 01 00 05 42 6F 6F 6B 32 01 " +
-          "00 10 6A 61 76 61 2F 6C 61 6E 67 2F 4F 62 6A 65 63 74 01 00 0B 42 " +
-          "6F 6F 6B 32 24 47 65 6E 72 65 01 00 10 6A 61 76 61 2F 6C 61 6E 67 " +
-          "2F 53 74 72 69 6E 67 01 00 06 61 70 70 65 6E 64 01 00 2D 28 4C 6A " +
-          "61 76 61 2F 6C 61 6E 67 2F 53 74 72 69 6E 67 3B 29 4C 6A 61 76 61 " +
-          "2F 6C 61 6E 67 2F 53 74 72 69 6E 67 42 75 69 6C 64 65 72 3B 01 00 " +
-          "07 76 61 6C 75 65 4F 66 01 00 15 28 49 29 4C 6A 61 76 61 2F 6C 61 " +
-          "6E 67 2F 53 74 72 69 6E 67 3B 01 00 04 6E 61 6D 65 00 20 00 11 00 " +
-          "12 00 00 00 04 00 02 00 16 00 17 00 00 00 02 00 18 00 19 00 00 00 " +
-          "02 00 1A 00 1B 00 00 00 02 00 1C 00 19 00 00 00 0A 00 00 00 1D 00 " +
-          "1E 00 01 00 1F 00 00 00 1D 00 01 00 01 00 00 00 05 2A B7 00 01 B1 " +
-          "00 00 00 01 00 20 00 00 00 06 00 01 00 00 00 01 00 01 00 21 00 22 " +
-          "00 01 00 1F 00 00 00 1D 00 01 00 01 00 00 00 05 2A B4 00 02 B0 00 " +
-          "00 00 01 00 20 00 00 00 06 00 01 00 00 00 0A 00 01 00 23 00 24 00 " +
-          "01 00 1F 00 00 00 1D 00 01 00 01 00 00 00 05 2A B4 00 03 AC 00 00 " +
-          "00 01 00 20 00 00 00 06 00 01 00 00 00 0E 00 01 00 25 00 26 00 01 " +
-          "00 1F 00 00 00 1D 00 01 00 01 00 00 00 05 2A B4 00 04 B0 00 00 00 " +
-          "01 00 20 00 00 00 06 00 01 00 00 00 12 00 01 00 27 00 24 00 01 00 " +
-          "1F 00 00 00 1D 00 01 00 01 00 00 00 05 2A B4 00 05 AC 00 00 00 01 " +
-          "00 20 00 00 00 06 00 01 00 00 00 16 00 01 00 28 00 29 00 01 00 1F " +
-          "00 00 00 22 00 02 00 02 00 00 00 06 2A 2B B5 00 02 B1 00 00 00 01 " +
-          "00 20 00 00 00 0A 00 02 00 00 00 1A 00 05 00 1B 00 01 00 2A 00 2B " +
-          "00 01 00 1F 00 00 00 22 00 02 00 02 00 00 00 06 2A 1B B5 00 03 B1 " +
-          "00 00 00 01 00 20 00 00 00 0A 00 02 00 00 00 1E 00 05 00 1F 00 01 " +
-          "00 2C 00 2D 00 01 00 1F 00 00 00 22 00 02 00 02 00 00 00 06 2A 2B " +
-          "B5 00 04 B1 00 00 00 01 00 20 00 00 00 0A 00 02 00 00 00 22 00 05 " +
-          "00 23 00 01 00 2E 00 2B 00 01 00 1F 00 00 00 22 00 02 00 02 00 00 " +
-          "00 06 2A 1B B5 00 05 B1 00 00 00 01 00 20 00 00 00 0A 00 02 00 00 " +
-          "00 26 00 05 00 27 00 01 00 2F 00 22 00 01 00 1F 00 00 00 AC 00 02 " +
-          "00 02 00 00 00 6E 2A B4 00 05 AA 00 00 00 00 00 00 2E 00 00 00 00 " +
-          "00 00 00 02 00 00 00 1C 00 00 00 22 00 00 00 28 12 06 4C A7 00 12 " +
-          "12 07 4C A7 00 0C 12 08 4C A7 00 06 12 09 4C BB 00 0A 59 B7 00 0B " +
-          "2A B4 00 02 B6 00 0C 12 0D B6 00 0C 2A B4 00 03 B8 00 0E B6 00 0C " +
-          "12 0D B6 00 0C 2A B4 00 04 B6 00 0F B6 00 0C 12 0D B6 00 0C 2B B6 " +
-          "00 0C B6 00 10 B0 00 00 00 02 00 20 00 00 00 1A 00 06 00 00 00 2C " +
-          "00 20 00 2D 00 26 00 2E 00 2C 00 2F 00 32 00 30 00 35 00 32 00 30 " +
-          "00 00 00 0C 00 05 20 05 05 05 FC 00 02 07 00 31 00 02 00 32 00 00 " +
-          "00 02 00 33 00 15 00 00 00 0A 00 01 00 13 00 11 00 14 40 19")
+        val classFile = hex"""
+          CA FE BA BE
+          00 00 00 34 00 4D 0A 00 12 00 34 09 00 11 00 35 09 00 11 00 36 09
+          00 11 00 37 09 00 11 00 38 08 00 39 08 00 3A 08 00 3B 08 00 3C 07
+          00 3D 0A 00 0A 00 34 0A 00 0A 00 3E 08 00 3F 0A 00 40 00 41 0A 00
+          13 00 42 0A 00 0A 00 43 07 00 44 07 00 45 07 00 46 01 00 05 47 65
+          6E 72 65 01 00 0C 49 6E 6E 65 72 43 6C 61 73 73 65 73 01 00 05 74
+          69 74 6C 65 01 00 12 4C 6A 61 76 61 2F 6C 61 6E 67 2F 53 74 72 69
+          6E 67 3B 01 00 07 70 75 62 59 65 61 72 01 00 01 49 01 00 05 67 65
+          6E 72 65 01 00 0D 4C 42 6F 6F 6B 32 24 47 65 6E 72 65 3B 01 00 06
+          63 6F 70 69 65 73 01 00 06 3C 69 6E 69 74 3E 01 00 03 28 29 56 01
+          00 04 43 6F 64 65 01 00 0F 4C 69 6E 65 4E 75 6D 62 65 72 54 61 62
+          6C 65 01 00 08 67 65 74 54 69 74 6C 65 01 00 14 28 29 4C 6A 61 76
+          61 2F 6C 61 6E 67 2F 53 74 72 69 6E 67 3B 01 00 0A 67 65 74 50 75
+          62 59 65 61 72 01 00 03 28 29 49 01 00 08 67 65 74 47 65 6E 67 65
+          01 00 0F 28 29 4C 42 6F 6F 6B 32 24 47 65 6E 72 65 3B 01 00 09 67
+          65 74 43 6F 70 69 65 73 01 00 08 73 65 74 54 69 74 6C 65 01 00 15
+          28 4C 6A 61 76 61 2F 6C 61 6E 67 2F 53 74 72 69 6E 67 3B 29 56 01
+          00 0A 73 65 74 50 75 62 59 65 61 72 01 00 04 28 49 29 56 01 00 08
+          73 65 74 47 65 6E 72 65 01 00 10 28 4C 42 6F 6F 6B 32 24 47 65 6E
+          72 65 3B 29 56 01 00 09 73 65 74 43 6F 70 69 65 73 01 00 08 74 6F
+          53 74 72 69 6E 67 01 00 0D 53 74 61 63 6B 4D 61 70 54 61 62 6C 65
+          07 00 47 01 00 0A 53 6F 75 72 63 65 46 69 6C 65 01 00 0A 42 6F 6F
+          6B 32 2E 6A 61 76 61 0C 00 1D 00 1E 0C 00 16 00 17 0C 00 18 00 19
+          0C 00 1A 00 1B 0C 00 1C 00 19 01 00 09 4E 6F 20 63 6F 70 69 65 73
+          01 00 0D 4F 6E 6C 79 20 6F 6E 65 20 63 6F 70 79 01 00 0A 54 77 6F
+          20 63 6F 70 69 65 73 01 00 10 41 20 6C 6F 74 20 6F 66 20 63 6F 70
+          69 65 73 21 01 00 17 6A 61 76 61 2F 6C 61 6E 67 2F 53 74 72 69 6E
+          67 42 75 69 6C 64 65 72 0C 00 48 00 49 01 00 01 20 07 00 47 0C 00
+          4A 00 4B 0C 00 4C 00 22 0C 00 2F 00 22 01 00 05 42 6F 6F 6B 32 01
+          00 10 6A 61 76 61 2F 6C 61 6E 67 2F 4F 62 6A 65 63 74 01 00 0B 42
+          6F 6F 6B 32 24 47 65 6E 72 65 01 00 10 6A 61 76 61 2F 6C 61 6E 67
+          2F 53 74 72 69 6E 67 01 00 06 61 70 70 65 6E 64 01 00 2D 28 4C 6A
+          61 76 61 2F 6C 61 6E 67 2F 53 74 72 69 6E 67 3B 29 4C 6A 61 76 61
+          2F 6C 61 6E 67 2F 53 74 72 69 6E 67 42 75 69 6C 64 65 72 3B 01 00
+          07 76 61 6C 75 65 4F 66 01 00 15 28 49 29 4C 6A 61 76 61 2F 6C 61
+          6E 67 2F 53 74 72 69 6E 67 3B 01 00 04 6E 61 6D 65 00 20 00 11 00
+          12 00 00 00 04 00 02 00 16 00 17 00 00 00 02 00 18 00 19 00 00 00
+          02 00 1A 00 1B 00 00 00 02 00 1C 00 19 00 00 00 0A 00 00 00 1D 00
+          1E 00 01 00 1F 00 00 00 1D 00 01 00 01 00 00 00 05 2A B7 00 01 B1
+          00 00 00 01 00 20 00 00 00 06 00 01 00 00 00 01 00 01 00 21 00 22
+          00 01 00 1F 00 00 00 1D 00 01 00 01 00 00 00 05 2A B4 00 02 B0 00
+          00 00 01 00 20 00 00 00 06 00 01 00 00 00 0A 00 01 00 23 00 24 00
+          01 00 1F 00 00 00 1D 00 01 00 01 00 00 00 05 2A B4 00 03 AC 00 00
+          00 01 00 20 00 00 00 06 00 01 00 00 00 0E 00 01 00 25 00 26 00 01
+          00 1F 00 00 00 1D 00 01 00 01 00 00 00 05 2A B4 00 04 B0 00 00 00
+          01 00 20 00 00 00 06 00 01 00 00 00 12 00 01 00 27 00 24 00 01 00
+          1F 00 00 00 1D 00 01 00 01 00 00 00 05 2A B4 00 05 AC 00 00 00 01
+          00 20 00 00 00 06 00 01 00 00 00 16 00 01 00 28 00 29 00 01 00 1F
+          00 00 00 22 00 02 00 02 00 00 00 06 2A 2B B5 00 02 B1 00 00 00 01
+          00 20 00 00 00 0A 00 02 00 00 00 1A 00 05 00 1B 00 01 00 2A 00 2B
+          00 01 00 1F 00 00 00 22 00 02 00 02 00 00 00 06 2A 1B B5 00 03 B1
+          00 00 00 01 00 20 00 00 00 0A 00 02 00 00 00 1E 00 05 00 1F 00 01
+          00 2C 00 2D 00 01 00 1F 00 00 00 22 00 02 00 02 00 00 00 06 2A 2B
+          B5 00 04 B1 00 00 00 01 00 20 00 00 00 0A 00 02 00 00 00 22 00 05
+          00 23 00 01 00 2E 00 2B 00 01 00 1F 00 00 00 22 00 02 00 02 00 00
+          00 06 2A 1B B5 00 05 B1 00 00 00 01 00 20 00 00 00 0A 00 02 00 00
+          00 26 00 05 00 27 00 01 00 2F 00 22 00 01 00 1F 00 00 00 AC 00 02
+          00 02 00 00 00 6E 2A B4 00 05 AA 00 00 00 00 00 00 2E 00 00 00 00
+          00 00 00 02 00 00 00 1C 00 00 00 22 00 00 00 28 12 06 4C A7 00 12
+          12 07 4C A7 00 0C 12 08 4C A7 00 06 12 09 4C BB 00 0A 59 B7 00 0B
+          2A B4 00 02 B6 00 0C 12 0D B6 00 0C 2A B4 00 03 B8 00 0E B6 00 0C
+          12 0D B6 00 0C 2A B4 00 04 B6 00 0F B6 00 0C 12 0D B6 00 0C 2B B6
+          00 0C B6 00 10 B0 00 00 00 02 00 20 00 00 00 1A 00 06 00 00 00 2C
+          00 20 00 2D 00 26 00 2E 00 2C 00 2F 00 32 00 30 00 35 00 32 00 30
+          00 00 00 0C 00 05 20 05 05 05 FC 00 02 07 00 31 00 02 00 32 00 00
+          00 02 00 33 00 15 00 00 00 0A 00 01 00 13 00 11 00 14 40 19
+        """
         /* Book2.class from compiled class Book2.java */
 
         val expected = ClassFile(0, 52,
@@ -354,7 +358,7 @@ object ClassTests extends TestSuite {
                     InvokeSpecial(1),
                     Return),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 01 00 00 00 01")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 01 00 00 00 01"))
                 )
               )
             ),
@@ -369,7 +373,7 @@ object ClassTests extends TestSuite {
                     GetField(2),
                     AReturn),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 01 00 00 00 0a")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 01 00 00 00 0a"))
                 )
               )
             ),
@@ -384,7 +388,7 @@ object ClassTests extends TestSuite {
                     GetField(3),
                     IReturn),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 01 00 00 00 0e")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 01 00 00 00 0e"))
                 )
               )
             ),
@@ -399,7 +403,7 @@ object ClassTests extends TestSuite {
                     GetField(4),
                     AReturn),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 01 00 00 00 12")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 01 00 00 00 12"))
                 )
               )
             ),
@@ -414,7 +418,7 @@ object ClassTests extends TestSuite {
                     GetField(5),
                     IReturn),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 01 00 00 00 16")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 01 00 00 00 16"))
                 )
               )
             ),
@@ -430,7 +434,7 @@ object ClassTests extends TestSuite {
                     PutField(2),
                     Return),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 02 00 00 00 1a 00 05 00 1b")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 02 00 00 00 1a 00 05 00 1b"))
                 )
               )
             ),
@@ -446,7 +450,7 @@ object ClassTests extends TestSuite {
                     PutField(3),
                     Return),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 02 00 00 00 1e 00 05 00 1f")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 02 00 00 00 1e 00 05 00 1f"))
                 )
               )
             ),
@@ -462,7 +466,7 @@ object ClassTests extends TestSuite {
                     PutField(4),
                     Return),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 02 00 00 00 22 00 05 00 23")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 02 00 00 00 22 00 05 00 23"))
                 )
               )
             ),
@@ -478,7 +482,7 @@ object ClassTests extends TestSuite {
                     PutField(5),
                     Return),
                   ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hexBytes("00 02 00 00 00 26 00 05 00 27")))
+                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 02 00 00 00 26 00 05 00 27"))
                 )
               )
             ),
@@ -531,11 +535,11 @@ object ClassTests extends TestSuite {
                   ArrayBuffer(
                     BasicAttribute(
                       "LineNumberTable",
-                      hexBytes("00 06 00 00 00 2c 00 20 00 2d 00 26 00 2e 00 2c 00 2f 00 32 00 30 00 35 00 32")
+                      hex"00 06 00 00 00 2c 00 20 00 2d 00 26 00 2e 00 2c 00 2f 00 32 00 30 00 35 00 32"
                     ),
                     BasicAttribute(
                       "StackMapTable",
-                      hexBytes("00 05 20 05 05 05 fc 00 02 07 00 31")
+                      hex"00 05 20 05 05 05 fc 00 02 07 00 31"
                     )
                   )
                 )
@@ -564,7 +568,7 @@ object ClassTests extends TestSuite {
 
         for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
           val Parsed.Success(parsedClassInfo, _) = ClassParse.classFile.parseIterator(
-            classFile.grouped(chunkSize)
+            classFile.toArray.grouped(chunkSize).map(Bytes.view)
           )
           val parsedClass = ClassParse.Ast.convertToAst(parsedClassInfo)
 
@@ -573,39 +577,41 @@ object ClassTests extends TestSuite {
       }
 
       'attributes {
-        val classFile = hexBytes("CA FE BA BE " +
-          "00 00 00 34 00 27 0A 00 08 00 1E 07 00 1F 0A 00 02 00 20 07 00 21 " +
-          "09 00 02 00 22 07 00 23 0A 00 06 00 1E 07 00 24 01 00 0A 49 6E 6E " +
-          "65 72 43 6C 61 73 73 01 00 0C 49 6E 6E 65 72 43 6C 61 73 73 65 73 " +
-          "01 00 09 43 4F 4E 53 54 5F 56 41 4C 01 00 01 49 01 00 0D 43 6F 6E " +
-          "73 74 61 6E 74 56 61 6C 75 65 03 00 00 00 2A 01 00 06 3C 69 6E 69 " +
-          "74 3E 01 00 03 28 29 56 01 00 04 43 6F 64 65 01 00 0F 4C 69 6E 65 " +
-          "4E 75 6D 62 65 72 54 61 62 6C 65 01 00 06 6D 65 74 68 6F 64 01 00 " +
-          "14 28 29 4C 6A 61 76 61 2F 6C 61 6E 67 2F 4F 62 6A 65 63 74 3B 01 " +
-          "00 0A 45 78 63 65 70 74 69 6F 6E 73 01 00 0A 44 65 70 72 65 63 61 " +
-          "74 65 64 01 00 09 53 69 67 6E 61 74 75 72 65 01 00 05 28 29 54 54 " +
-          "3B 01 00 19 52 75 6E 74 69 6D 65 56 69 73 69 62 6C 65 41 6E 6E 6F " +
-          "74 61 74 69 6F 6E 73 01 00 16 4C 6A 61 76 61 2F 6C 61 6E 67 2F 44 " +
-          "65 70 72 65 63 61 74 65 64 3B 01 00 28 3C 54 3A 4C 6A 61 76 61 2F " +
-          "6C 61 6E 67 2F 4F 62 6A 65 63 74 3B 3E 4C 6A 61 76 61 2F 6C 61 6E " +
-          "67 2F 4F 62 6A 65 63 74 3B 01 00 0A 53 6F 75 72 63 65 46 69 6C 65 " +
-          "01 00 12 41 74 74 72 69 62 75 74 65 54 65 73 74 2E 6A 61 76 61 0C " +
-          "00 0F 00 10 01 00 18 41 74 74 72 69 62 75 74 65 54 65 73 74 24 49 " +
-          "6E 6E 65 72 43 6C 61 73 73 0C 00 0F 00 25 01 00 0D 41 74 74 72 69 " +
-          "62 75 74 65 54 65 73 74 0C 00 26 00 0C 01 00 13 6A 61 76 61 2F 69 " +
-          "6F 2F 49 4F 45 78 63 65 70 74 69 6F 6E 01 00 10 6A 61 76 61 2F 6C " +
-          "61 6E 67 2F 4F 62 6A 65 63 74 01 00 12 28 4C 41 74 74 72 69 62 75 " +
-          "74 65 54 65 73 74 3B 29 56 01 00 0A 69 6E 6E 65 72 46 69 65 6C 64 " +
-          "00 21 00 04 00 08 00 00 00 01 00 19 00 0B 00 0C 00 01 00 0D 00 00 " +
-          "00 02 00 0E 00 02 00 01 00 0F 00 10 00 01 00 11 00 00 00 1D 00 01 " +
-          "00 01 00 00 00 05 2A B7 00 01 B1 00 00 00 01 00 12 00 00 00 06 00 " +
-          "01 00 00 00 03 00 01 00 13 00 14 00 05 00 11 00 00 00 37 00 03 00 " +
-          "02 00 00 00 17 BB 00 02 59 2A B7 00 03 4C 2B 10 2A B5 00 05 BB 00 " +
-          "06 59 B7 00 07 BF 00 00 00 01 00 12 00 00 00 0E 00 03 00 00 00 0C " +
-          "00 09 00 0D 00 0F 00 0E 00 15 00 00 00 04 00 01 00 06 00 16 00 00 " +
-          "00 00 00 17 00 00 00 02 00 18 00 19 00 00 00 06 00 01 00 1A 00 00 " +
-          "00 03 00 17 00 00 00 02 00 1B 00 1C 00 00 00 02 00 1D 00 0A 00 00 " +
-          "00 0A 00 01 00 02 00 04 00 09 00 01")
+        val classFile = hex"""
+          CA FE BA BE
+          00 00 00 34 00 27 0A 00 08 00 1E 07 00 1F 0A 00 02 00 20 07 00 21
+          09 00 02 00 22 07 00 23 0A 00 06 00 1E 07 00 24 01 00 0A 49 6E 6E
+          65 72 43 6C 61 73 73 01 00 0C 49 6E 6E 65 72 43 6C 61 73 73 65 73
+          01 00 09 43 4F 4E 53 54 5F 56 41 4C 01 00 01 49 01 00 0D 43 6F 6E
+          73 74 61 6E 74 56 61 6C 75 65 03 00 00 00 2A 01 00 06 3C 69 6E 69
+          74 3E 01 00 03 28 29 56 01 00 04 43 6F 64 65 01 00 0F 4C 69 6E 65
+          4E 75 6D 62 65 72 54 61 62 6C 65 01 00 06 6D 65 74 68 6F 64 01 00
+          14 28 29 4C 6A 61 76 61 2F 6C 61 6E 67 2F 4F 62 6A 65 63 74 3B 01
+          00 0A 45 78 63 65 70 74 69 6F 6E 73 01 00 0A 44 65 70 72 65 63 61
+          74 65 64 01 00 09 53 69 67 6E 61 74 75 72 65 01 00 05 28 29 54 54
+          3B 01 00 19 52 75 6E 74 69 6D 65 56 69 73 69 62 6C 65 41 6E 6E 6F
+          74 61 74 69 6F 6E 73 01 00 16 4C 6A 61 76 61 2F 6C 61 6E 67 2F 44
+          65 70 72 65 63 61 74 65 64 3B 01 00 28 3C 54 3A 4C 6A 61 76 61 2F
+          6C 61 6E 67 2F 4F 62 6A 65 63 74 3B 3E 4C 6A 61 76 61 2F 6C 61 6E
+          67 2F 4F 62 6A 65 63 74 3B 01 00 0A 53 6F 75 72 63 65 46 69 6C 65
+          01 00 12 41 74 74 72 69 62 75 74 65 54 65 73 74 2E 6A 61 76 61 0C
+          00 0F 00 10 01 00 18 41 74 74 72 69 62 75 74 65 54 65 73 74 24 49
+          6E 6E 65 72 43 6C 61 73 73 0C 00 0F 00 25 01 00 0D 41 74 74 72 69
+          62 75 74 65 54 65 73 74 0C 00 26 00 0C 01 00 13 6A 61 76 61 2F 69
+          6F 2F 49 4F 45 78 63 65 70 74 69 6F 6E 01 00 10 6A 61 76 61 2F 6C
+          61 6E 67 2F 4F 62 6A 65 63 74 01 00 12 28 4C 41 74 74 72 69 62 75
+          74 65 54 65 73 74 3B 29 56 01 00 0A 69 6E 6E 65 72 46 69 65 6C 64
+          00 21 00 04 00 08 00 00 00 01 00 19 00 0B 00 0C 00 01 00 0D 00 00
+          00 02 00 0E 00 02 00 01 00 0F 00 10 00 01 00 11 00 00 00 1D 00 01
+          00 01 00 00 00 05 2A B7 00 01 B1 00 00 00 01 00 12 00 00 00 06 00
+          01 00 00 00 03 00 01 00 13 00 14 00 05 00 11 00 00 00 37 00 03 00
+          02 00 00 00 17 BB 00 02 59 2A B7 00 03 4C 2B 10 2A B5 00 05 BB 00
+          06 59 B7 00 07 BF 00 00 00 01 00 12 00 00 00 0E 00 03 00 00 00 0C
+          00 09 00 0D 00 0F 00 0E 00 15 00 00 00 04 00 01 00 06 00 16 00 00
+          00 00 00 17 00 00 00 02 00 18 00 19 00 00 00 06 00 01 00 1A 00 00
+          00 03 00 17 00 00 00 02 00 1B 00 1C 00 00 00 02 00 1D 00 0A 00 00
+          00 0A 00 01 00 02 00 04 00 09 00 01
+        """
         /* AttributeTest.class from compiled class AttributeTest.java */
 
 
@@ -643,19 +649,20 @@ object ClassTests extends TestSuite {
                   AThrow),
                 ArrayBuffer(),
                 ArrayBuffer(
-                  BasicAttribute("LineNumberTable", hexBytes("00 03 00 00 00 0c 00 09 00 0d 00 0f 00 0e"))
+                  BasicAttribute("LineNumberTable", hex"00 03 00 00 00 0c 00 09 00 0d 00 0f 00 0e")
                 )
               ),
               ExceptionsAttribute(ArrayBuffer(Class("java/io/IOException"))),
               DeprecatedAttribute,
               SignatureAttribute("()TT;"),
-              BasicAttribute("RuntimeVisibleAnnotations", hexBytes("00 01 00 1a 00 00"))
+              BasicAttribute("RuntimeVisibleAnnotations", hex"00 01 00 1a 00 00")
             )
           )
         )
       }
       'code {
-        val classFile = ("yv66vgAAADQA2AoACgBoCQBpAGoIAGsKAGwAbQgAbggAbwoAbA" +
+        val classFile = fastparse.byte.Bytes(
+          ("yv66vgAAADQA2AoACgBoCQBpAGoIAGsKAGwAbQgAbggAbwoAbA" +
           "BwCABxCAByBwBzBwB0BkAJIftURC0YCgB1AHYKAGwAdwUAAAAAAAGGoARDaoAABkBe2ZmZmZmaB" +
           "kAFvwmVqveQBwB4CAB5CgAXAHoHAHsKABoAfAgAfQoAGgB6CAB+CAB/CACABwCBCACCCACDCACE" +
           "CACFBwCGCgAmAGgIAIcKACYAiAoAJgCJCgAmAIoIAIsIAIwIAI0IAI4IAI8IAJAKACYAkQgAkgg" +
@@ -727,7 +734,7 @@ object ClassTests extends TestSuite {
           "cAYwcAZAcAZQcAYwcAZAcAZQEBAQEAABEH/AACART8ABwB/AAuAfoAFPwAAgH8AAkBFfoABfoAB" +
           "f8APAAlBwBfAQEBAQEBBAIDAQEBAAMHAGAHAGEHAGEHAGIHAGIHAGIHAGMHAGQHAGUHAGMHAGQH" +
           "AGUBAQEBAQEHAGMHAGMBAQAA+AAb/AAdAQYGBvwAAwcAYv4ASgcAYgcAYgEPDwwaCgoK+QAZ/AA" +
-          "OAUEHAGIAAQBmAAAAAgBn").toByteArray
+          "OAUEHAGIAAQBmAAAAAgBn").toByteArray)
         /* CodeTest.class from compiled class CodeTest.java */
 
         val expectedPool = ArrayBuffer(
@@ -1505,7 +1512,9 @@ object ClassTests extends TestSuite {
         )
 
         for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
-          val Parsed.Success(parsedClassInfo, _) = ClassParse.classFile.parseIterator(classFile.grouped(chunkSize))
+          val Parsed.Success(parsedClassInfo, _) = ClassParse.classFile.parseIterator(
+            classFile.toArray.grouped(chunkSize).map(Bytes.view)
+          )
           val parsedClass = ClassParse.Ast.convertToAst(parsedClassInfo)
 
           assert(parsedClass.pool == expectedPool)

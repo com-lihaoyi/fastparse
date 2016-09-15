@@ -63,7 +63,8 @@ lazy val utils = crossProject
     unmanagedSourceDirectories in Compile ++= {
       if (scalaVersion.value startsWith "2.10.") Seq(baseDirectory.value / ".."/"shared"/"src"/ "main" / "scala-2.10")
       else Seq(baseDirectory.value / ".."/"shared" / "src"/"main" / "scala-2.11")
-    }
+    },
+    libraryDependencies += "org.scodec" %%% "scodec-bits" % "1.1.0"
   )
 lazy val utilsJS = utils.js
 lazy val utilsJVM= utils.jvm
@@ -101,7 +102,8 @@ lazy val fastparse = crossProject
         """.stripMargin
       IO.write(file, output)
       Seq(file)
-    }
+    },
+    libraryDependencies += "org.scodec" %%% "scodec-bits" % "1.1.0"
   )
   // In order to make the midi-parser-test in fastparseJVM/test:run work
   .jvmSettings(fork in (Test, run) := true)

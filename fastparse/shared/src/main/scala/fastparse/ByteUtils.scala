@@ -1,5 +1,5 @@
 package fastparse
-
+import scodec.bits.ByteVector
 import fastparse.Utils.IsReachable
 import fastparse.core.ParseCtx
 
@@ -10,7 +10,7 @@ import scala.collection.mutable
   * and not FastParse as a whole.
   */
 object ByteUtils{
-  def prettyBytes(bytes: Array[Byte],
+  def prettyBytes(bytes: ByteVector,
                   markers: Seq[Int] = Seq(-1),
                   contextRows: Int = 8) = {
     val invalidIndices = markers.filter(
@@ -26,7 +26,12 @@ object ByteUtils{
     val output = new StringBuffer
     val emptyGutter = " " * (maxIndexWidth + gutter)
     output.append(emptyGutter)
-    output.append(0.until(math.min(16, bytes.length)).map(x => x.toString.padTo(2, ' ')).mkString(" ").trim)
+    output.append(
+      0.until(math.min(16, bytes.length.toInt))
+        .map(x => x.toString.padTo(2, ' '))
+        .mkString(" ")
+        .trim
+    )
     output.append('\n')
 
     val sortedIndices = markers.sorted
@@ -50,11 +55,11 @@ object ByteUtils{
       val endRow = grouped.last / 16 + contextRows
       for{
         i <- startRow to endRow
-        sliced = bytes.slice(i * 16, (i + 1) * 16)
+        sliced = bytes.slice(math.max(0, i * 16), math.max(0, (i + 1) * 16))
         if sliced.nonEmpty
       }{
 
-        val prettyRow = ElemTypeFormatter.ByteFormatter.prettyPrint(sliced)
+        val prettyRow = ElemTypeFormatter.ByteFormatter.prettyPrint(sliced.toArray)
         output.append('\n')
         output.append((i * 16).toString.padTo(maxIndexWidth + gutter, ' '))
         output.append(prettyRow)
@@ -80,7 +85,7 @@ object ByteUtils{
 
     output.toString
   }
-  private[this] type Parser[+T] = fastparse.core.Parser[T, Byte, Array[Byte]]
+  private[this] type Parser[+T] = fastparse.core.Parser[T, Byte, ByteVector]
 
 
 
@@ -89,7 +94,7 @@ object ByteUtils{
 
     override def toString = name.value
 
-    def parseRec(cfg: ParseCtx[Byte, Array[Byte]], index: Int) = {
+    def parseRec(cfg: ParseCtx[Byte,ByteVector], index: Int) = {
       if (!cfg.input.isReachable(n + index - 1)) fail(cfg.failure, index)
       else success(cfg.success, creator(cfg.input, index), index + n, Set.empty, false)
 

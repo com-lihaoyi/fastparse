@@ -1,4 +1,6 @@
 package fastparse
+import fastparse.byte._
+import BE._
 
 
 case class Midi(format: Int, tickDiv: Midi.TickDiv, tracks: Seq[Seq[(Int, Midi.TrackEvent)]])
@@ -40,12 +42,12 @@ object Midi{
     case class SmpteOffset(hour: Byte, minute: Byte, seconds: Byte, frames: Byte, fractional: Byte) extends MetaEvent
     case class TimeSignature(numerator: Byte, denominator: Byte, clocks: Byte, notatedNotes: Byte) extends MetaEvent
     case class KeySignature(sf: Byte, majorKey: Boolean) extends MetaEvent
-    case class SequencerSpecificEvent(data: Array[Byte]) extends MetaEvent
-    case class Unknown(data: Array[Byte]) extends MetaEvent
+    case class SequencerSpecificEvent(data: Bytes) extends MetaEvent
+    case class Unknown(data: Bytes) extends MetaEvent
   }
   sealed trait SysExEvent extends TrackEvent
   object SysExEvent{
-    case class Message(data: Array[Byte]) extends SysExEvent
+    case class Message(data: Bytes) extends SysExEvent
   }
 }
 
@@ -57,10 +59,9 @@ object Midi{
   * http://www.somascape.org/midi/tech/mfile.html#midi
   */
 object MidiParse{
-  import fastparse.byte._
-  import BE._
+
   import Midi._
-  val midiHeader = P( hexBytes("4d 54 68 64 00 00 00 06") ~ Int16 ~ Int16 ~ Int16 )
+  val midiHeader = P( BS(hex"4d 54 68 64 00 00 00 06") ~ Int16 ~ Int16 ~ Int16 )
   val deltaTime = P( BytesWhile(_ < 0, min = 0) ~ AnyByte )
 
   /**
@@ -71,12 +72,12 @@ object MidiParse{
     * concat all the 7-bit numbers into one entire, unsigned integer
     */
   val varInt: P[Int] = P( BytesWhile(b => (b & 0x80) != 0, min = 0) ~ Int8 ).!.map{ r =>
-    r.map(_ & 0xff).foldLeft(0)((a, b) => (a << 7) + (b & ~0x80))
+    r.toArray.map(_ & 0xff).foldLeft(0)((a, b) => (a << 7) + (b & ~0x80))
   }
   // Variable-length str/byte-array parsers, parsing {length + contents}
   val varBytes = varInt.flatMap(x => AnyBytes(x).!)
 
-  val varString = varBytes.map(new String(_))
+  val varString = varBytes.map(x => new String(x.toArray))
 
 
   val midiEvent: P[(MidiEvent, Seq[(Int, MidiEvent)])] = {
@@ -114,7 +115,7 @@ object MidiParse{
       } yield result
     )
   }
-  val EndOfTrack = wspByteSeq(BS(0x00)).map(_ => MetaEvent.EndOfTrack)
+  val EndOfTrack = BS(0x00).map(_ => MetaEvent.EndOfTrack)
   val metaEvent = {
 
     val SequenceNumber = (BS(0x02) ~ Int8 ~ Int8).map{case (x, y) => MetaEvent.SequenceNumber((x << 8 + y).toShort)}
@@ -178,7 +179,7 @@ object MidiParse{
   val trackItem = P( negTrackItemEnd ~ varInt ~ trackEvent ).map{
     case (time, (event, rest)) => (time, event) +: rest
   }
-  val trackHeader = P( hexBytes("4d 54 72 6b") ~/ Int32 )
+  val trackHeader = P( BS(hex"4d 54 72 6b") ~/ Int32 )
   val trackChunk: P[Seq[(Int, TrackEvent)]] = {
     P( trackHeader ~ trackItem.rep() ~ trackItemEnd ).map{
       case (length, events, last) => events.flatten :+ last
