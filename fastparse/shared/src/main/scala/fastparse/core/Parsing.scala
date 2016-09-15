@@ -96,8 +96,8 @@ object Parsed {
 
     object Extra{
       class Impl[Elem, Repr](val input: ParserInput[Elem, Repr],
-                                 startParser: Parser[_, Elem, Repr], startIndex: Int,
-                                 lastParser: Parser[_, Elem, Repr], index: Int) extends Extra[Elem, Repr] {
+                             startParser: Parser[_, Elem, Repr], startIndex: Int,
+                             lastParser: Parser[_, Elem, Repr], index: Int) extends Extra[Elem, Repr] {
 
         lazy val traced = {
           input.checkTraceable()
@@ -119,9 +119,9 @@ object Parsed {
     }
 
     def formatStackTrace[Elem, Repr](stack: Seq[Frame],
-                                         input: ParserInput[Elem, Repr],
-                                         index: Int,
-                                         last: String) = {
+                                     input: ParserInput[Elem, Repr],
+                                     index: Int,
+                                     last: String) = {
       val body =
         for (Frame(index, p) <- stack)
         yield formatParser(p, input, index)
@@ -146,9 +146,9 @@ object Parsed {
    *                     that this
    */
   case class TracedFailure[Elem, Repr](input: ParserInput[Elem, Repr],
-                                           index: Int,
-                                           fullStack: Vector[Frame],
-                                           traceParsers: Set[Parser[_, Elem, Repr]]) {
+                                       index: Int,
+                                       fullStack: Vector[Frame],
+                                       traceParsers: Set[Parser[_, Elem, Repr]]) {
 
     private[this] lazy val expected0 = new Precedence {
       def opPred = if (traceParsers.size == 1) traceParsers.head.opPred else Precedence.|
@@ -180,7 +180,7 @@ object Parsed {
   }
   object TracedFailure{
     def apply[Elem, Repr](input: ParserInput[Elem, Repr], index: Int,
-                              lastParser: Parser[_, Elem, Repr], traceData: (Int, Parser[_, Elem, Repr])) = {
+                          lastParser: Parser[_, Elem, Repr], traceData: (Int, Parser[_, Elem, Repr])) = {
       val (originalIndex, originalParser) = traceData
 
       val mutFailure = originalParser.parseRec(
