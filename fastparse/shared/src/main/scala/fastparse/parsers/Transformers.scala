@@ -21,7 +21,7 @@ object Transformers {
         case f: Mutable.Failure[Elem, Repr] => failMore(f, index, cfg.logDepth)
       }
     }
-    override def toString = p.toString + ".map()"
+    override def toString = p.toString
   }
 
   case class FlatMapped[T, V, Elem, Repr](p1: Parser[T, Elem, Repr], func: T => Parser[V, Elem, Repr])
@@ -37,7 +37,7 @@ object Transformers {
           res
       }
     }
-    override def toString = p1.toString + ".flatMap()"
+    override def toString = p1.toString
   }
 
   case class Filtered[T, Elem, Repr](p: Parser[T, Elem, Repr], predicate: T => Boolean)
