@@ -139,6 +139,7 @@ object Combinators {
         res
       }
     }
+    override def toString = p.toString + ".log()"
   }
 
 
@@ -321,7 +322,7 @@ object Combinators {
       override def toString = {
 
         val rhs = for(c <- ps) yield {
-          " ~" + (if (c.cut) "!" else "") + " " + opWrap(c.p)
+          " ~" + (if (c.cut) "/" else "") + " " + opWrap(c.p)
         }
         s"${opWrap(p0)}${rhs.mkString}"
       }

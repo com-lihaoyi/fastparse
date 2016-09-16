@@ -32,7 +32,7 @@
     @hl.ref(tests/"ExampleTests.scala", Seq("'debugging", "object Foo"), "check")
 
     @p
-        This is a simple parser that parses some basic arithmetic expressions: @hl.scala{1+2}, @hl.scala{(1+2)+(3+4)}, etc.
+        This is a simple parser that parses some basic arithmetic expressions: @hl.scala{1+2}, @hl.scala{(1+2)+(3+4)}, etc. It's simpler than @sect.ref{Math} parser shown at the top of the page, as it does not handle multiple operators in a row e.g. @hl.scala{1+2+3+4}, nor does it handle operator precedence. Nevertheless it will be enough to show how error handling and debugging works.
 
     @p
         If we run the parser on a bad input, though, we get this:
@@ -85,7 +85,9 @@
                 Look at the logging, see some parser behaving strangely. Go to 1.
 
         @p
-
+            In general, you do not want to add too many @code{.log()} calls otherwise the
+            output becomes noisy and verbose and hard to understand. Adding them incrementally
+            helps you narrow down the problem while still keeping the output readable.
 
     @sect{Tracing}
         @p
@@ -96,25 +98,26 @@
             For example, this is tracing being done on an invalid input we know will fail:
 
         @hl.scala
-            val fail = Foo.expr.parse("(1+(2+3x))+4").asInstanceOf[fastparse.core.Parsed.Failure]
+            val Parsed.Failure(expected, idx, extra) = Foo.expr.parse("(1+(2+3x))+4")
         @p
-            We know that this input will fail, because our grammar (defined earlier) does not contain an @hl.scala{"x"} in it! It only handles numbers and @hl.scala{"+"} and parentheses. Let's see what information @hl.scala{.traced} gives us:
+            We know that this input will fail, because our grammar (defined earlier) does not contain an @hl.scala{"x"} in it! It only handles numbers and @hl.scala{"+"} and parentheses. @code{expected} gives us the parser that it needed in order to continue (with a readable @code{.toString}) and @code{idx} the index that it failed at:
+        @hl.scala
+            > (idx, expected) // Last index and last parser at which it failed
+            (7, ")")
+        @p
+            But there is also the @code{extra} result which contains additional information you can use, e.g. the @code{extra.traced} result.
 
         @hl.scala
-            > fail.traced.trace // The named parsers in the stack when it failed
-            expr:0 / side:0 / expr:1 / side:3 / (")" | CharIn("0123456789")):7 ..."x))+4"
+            > extra.traced.trace // The named parsers in the stack when it failed
+            expr:1:1 / side:1:1 / expr:1:2 / side:1:4 / (")" | CharIn("0123456789")):1:8 ..."x))+4"
 
-            > fail.traced.stack // Same as .trace, but as a List[Frame] rather than String
-            List(
-             Frame(0,expr), // (1+(2+3x))+4
-             Frame(0,side), // (1+(2+3x))+4
-             Frame(1,expr), //  1+(2+3x))+4
-             Frame(3,side)  //    (2+3x))+4
+            > extra.traced.stack // Same as .trace, but as a List[Frame] rather than String
+            Vector(
+              Frame(0,expr), // (1+(2+3x))+4
+              Frame(0,side), // (1+(2+3x))+4
+              Frame(1,expr), //  1+(2+3x))+4
+              Frame(3,side)  //    (2+3x))+4
             )
-
-            > (fail.index, fail.lastParser) // Last index and last parser at which it failed
-            (7, ")")         //        x))+4
-
 
         @p
             As you can see, tracing gives us a much more detailed view: every parser in the stack when the parse failed, what indices they were tried at. Apart from getting it as a readable string via @hl.scala{.trace}, you can also get it as structured data via @hl.scala{.stacK} in case you want to manipulate it programmatically.
@@ -122,7 +125,7 @@
             FastParse also provides the @hl.scala{.traceParsers} value, which tells you every single parser which @i{could} have succeeded at the index parsing failed. In thi
         @hl.scala
             > fail.traced.traceParsers // Every parser that could have succeeded at Failure#index
-            List(")", CharIn("0123456789"))
+            Set(")", CharIn("0123456789"))
         @p
             Thus, we can see that although FastParse last tried the @hl.scala{")"} parser, it earlier @i{also} tried the @hl.scala{CharIn("0123456789")} parser at the same spot. This makes perfect sense: if instead of @hl.scala{"x"} we had a digit of some kind, parsing could have continued! And we do not need to figure this out ourselves; FastParse knows and can tell you.
         @p
@@ -131,15 +134,13 @@
             Every expression in a fastparse parser is itself a parser: @hl.scala{"("} is a parser, @hl.scala{"(" ~ expr ~ ")"} is a parser, and so on. With @hl.scala{.fullStack}, we can see in great detail what FastParse was trying to do when it failed:
 
         @hl.scala
-            > fail.traced.fullStack // Every single parser in the stack when it failed
-            List(
-             Frame(0,expr),   Frame(0,expr), Frame(0,side ~ plus ~ side),
-             Frame(0,side),   Frame(0,"(" ~/ expr ~/ ")" | num), Frame(1,"(" ~/ expr ~/ ")"),
-             Frame(1,expr),   Frame(1,expr), Frame(3,side ~ plus ~ side),
-             Frame(3,side),   Frame(3,"(" ~/ expr ~/ ")" | num), Frame(7,"(" ~/ expr ~/ ")")
+            > extra.traced.fullStack // Every single parser in the stack when it failed
+            Vector(
+              Frame(0,expr), Frame(0,expr),                    Frame(0,side ~ plus ~ side),
+              Frame(0,side), Frame(0,"(" ~/ expr ~ ")" | num), Frame(1,"(" ~/ expr ~ ")"),
+              Frame(1,expr), Frame(1,expr),                    Frame(3,side ~ plus ~ side),
+              Frame(3,side), Frame(3,"(" ~/ expr ~ ")" | num), Frame(7,"(" ~/ expr ~ ")")
             )
-            > (fail.index, fail.lastParser) // Last index and last parser at which it failed
-            (7, ")")         //        x))+4
 
     @sect{Instrumenting Parsers}
         @p
