@@ -323,7 +323,7 @@ object ExampleTests extends TestSuite{
         assert(
           failure.index == 14,
           failure.extra.traced.trace ==
-            """stmts:1:1 / stmt:1:11 / alpha:1:14 / CharIn("abcdefghijklmnopqrstuvwxyz"):1:14 ..."""""
+            """stmts:1:1 / stmt:1:11 / alpha:1:15 / CharIn("abcdefghijklmnopqrstuvwxyz"):1:15 ..."""""
         )
       }
       'delimiternocut{
@@ -433,22 +433,22 @@ object ExampleTests extends TestSuite{
 
 
         val expected = """
-          +expr:0
-            +side:0
-              +expr:1
-                +side:1
-                -side:1:Success(2)
-                +side:3
-                  +expr:4
-                    +side:4
-                    -side:4:Success(5)
-                    +side:6
-                    -side:6:Success(7)
-                  -expr:4:Success(7)
-                -side:3:Failure(side:1:4 / ")":1:8 ..."(2+3x))+4", cut)
-              -expr:1:Failure(expr:1:2 / side:1:4 / ")":1:8 ..."1+(2+3x))+", cut)
-            -side:0:Failure(side:1:1 / expr:1:2 / side:1:4 / ")":1:8 ..."(1+(2+3x))", cut)
-          -expr:0:Failure(expr:1:1 / side:1:1 / expr:1:2 / side:1:4 / ")":1:8 ..."(1+(2+3x))", cut)
+          +expr:1:1
+            +side:1:1
+              +expr:1:2
+                +side:1:2
+                -side:1:2:Success(1:3)
+                +side:1:4
+                  +expr:1:5
+                    +side:1:5
+                    -side:1:5:Success(1:6)
+                    +side:1:7
+                    -side:1:7:Success(1:8)
+                  -expr:1:5:Success(1:8)
+                -side:1:4:Failure(side:1:4 / ")":1:8 ..."(2+3x))+4", cut)
+              -expr:1:2:Failure(expr:1:2 / side:1:4 / ")":1:8 ..."1+(2+3x))+", cut)
+            -side:1:1:Failure(side:1:1 / expr:1:2 / side:1:4 / ")":1:8 ..."(1+(2+3x))", cut)
+          -expr:1:1:Failure(expr:1:1 / side:1:1 / expr:1:2 / side:1:4 / ")":1:8 ..."(1+(2+3x))", cut)
         """.lines.filter(_.trim != "").toSeq
         val minIndent = expected.map(_.takeWhile(_ == ' ').length).min
         val expectedString = expected.map(_.drop(minIndent)).mkString("\n")

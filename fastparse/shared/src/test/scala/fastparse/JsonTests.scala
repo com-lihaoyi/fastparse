@@ -167,7 +167,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:1:0 / (obj | array | string | true | false | null | number):2:9 ..."}\n        "
+          jsonExpr:1:1 / (obj | array | string | true | false | null | number):2:9 ..."}\n        "
         """,
         """
           (obj | array | string | true | false | null | number):9 ..."}\n        "
@@ -198,7 +198,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:1:0 / obj:2:9 / ("}" | "\""):3:13 ..."firstName\""
+          jsonExpr:1:1 / obj:2:9 / ("}" | "\""):3:13 ..."firstName\""
         """,
         """
           "}":23 ..."firstName\""
@@ -229,7 +229,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:1:0 / obj:2:9 / pair:2:9 / ":":3:24 ..." \"John\",\n "
+          jsonExpr:1:1 / obj:2:9 / pair:2:10 / ":":3:24 ..." \"John\",\n "
         """,
         """
           ":":34 ..." \"John\",\n "
@@ -260,7 +260,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:1:0 / obj:2:9 / ("}" | ","):4:14 ..."lastName\":"
+          jsonExpr:1:1 / obj:2:9 / ("}" | ","):4:14 ..."lastName\":"
         """,
         """
           "}":56 ..."lastName\":"
@@ -291,7 +291,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:1:0 / obj:2:9 / ("}" | ","):7:32 ...": \"21 2nd "
+          jsonExpr:1:1 / obj:2:9 / ("}" | ","):7:32 ...": \"21 2nd "
         """,
         """
           "}":154 ...": \"21 2nd "
@@ -322,7 +322,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:1:0 / obj:2:9 / pair:16:18 / string:16:18 / "\"":17:17 ..."{\n        "
+          jsonExpr:1:1 / obj:2:9 / pair:16:19 / string:16:19 / "\"":17:17 ..."{\n        "
         """,
         """
           "\"":455 ..."{\n        "
@@ -353,7 +353,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:1:0 / obj:2:9 / pair:11:14 / jsonExpr:12:27 / obj:13:17 / pair:13:17 / ":":14:27 ..." \"home\",\n "
+          jsonExpr:1:1 / obj:2:9 / pair:11:15 / jsonExpr:12:28 / obj:13:17 / pair:13:18 / ":":14:27 ..." \"home\",\n "
         """,
         """
           ":":365 ..." \"home\",\n "
@@ -384,7 +384,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:1:0 / obj:2:9 / pair:11:14 / jsonExpr:12:28 / array:12:29 / jsonExpr:12:29 / obj:13:17 / ("}" | ","):15:35 ..."555-1234\n "
+          jsonExpr:1:1 / obj:2:9 / pair:11:15 / jsonExpr:12:28 / array:12:29 / jsonExpr:12:30 / obj:13:17 / ("}" | ","):15:35 ..."555-1234\n "
         """,
         """
           "}":411 ..."555-1234\n "
@@ -415,7 +415,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:1:0 / obj:2:9 / pair:11:14 / jsonExpr:12:28 / array:12:29 / jsonExpr:16:18 / obj:17:17 / ("}" | ","):19:35 ..."555-4567\n "
+          jsonExpr:1:1 / obj:2:9 / pair:11:15 / jsonExpr:12:28 / array:12:29 / jsonExpr:16:19 / obj:17:17 / ("}" | ","):19:35 ..."555-4567\n "
         """,
         """
           "}":528 ..."555-4567\n "
@@ -446,7 +446,7 @@ object JsonTests extends TestSuite{
         }
         """,
         """
-          jsonExpr:1:0 / obj:2:9 / pair:11:14 / jsonExpr:12:28 / array:12:29 / ("]" | ","):22:9 ..."}\n        "
+          jsonExpr:1:1 / obj:2:9 / pair:11:15 / jsonExpr:12:28 / array:12:29 / ("]" | ","):22:9 ..."}\n        "
         """,
         """
           "]":566 ..."}\n        "

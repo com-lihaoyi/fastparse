@@ -79,14 +79,14 @@ object MiscTests extends TestSuite{
       val allLogged = logged.mkString("\n")
 
       val expected =
-        """+Foo:0
-          |  +DeepFailure:0
-          |  -DeepFailure:0:Failure(DeepFailure:1:1 / "C":1:1 ..."AB")
-          |  +"A":0
-          |  -"A":0:Success(1)
-          |  +"B":1
-          |  -"B":1:Success(2)
-          |-Foo:0:Success(2)
+        """+Foo:1:1
+          |  +DeepFailure:1:1
+          |  -DeepFailure:1:1:Failure(DeepFailure:1:1 / "C":1:1 ..."AB")
+          |  +"A":1:1
+          |  -"A":1:1:Success(1:2)
+          |  +"B":1:2
+          |  -"B":1:2:Success(1:3)
+          |-Foo:1:1:Success(1:3)
           |
         """.stripMargin.trim
       assert(allLogged == expected)
@@ -146,7 +146,7 @@ object MiscTests extends TestSuite{
     }
     'formatParser{
       assert(
-        Parsed.Failure.formatParser("a", IndexedParserInput(""), 0) == """"a":0:0""",
+        Parsed.Failure.formatParser("a", IndexedParserInput(""), 0) == """"a":1:1""",
         Parsed.Failure.formatParser("A", IndexedParserInput("B"), 0) == """"A":1:1""")
     }
     'utils{

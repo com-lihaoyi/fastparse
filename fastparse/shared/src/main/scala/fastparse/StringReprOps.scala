@@ -33,9 +33,18 @@ object StringReprOps extends ReprOps[Char, String] {
   def prettyIndex(input: ParserInput[Char, String], index: Int): String = {
     input match {
       case IndexedParserInput(data) =>
-        val lines = data.take(1 + index).lines.toVector
-        val line = lines.length
-        val col = lines.lastOption.map(_.length).getOrElse(0)
+        var line = 1
+        var col = 1
+        var i = 0
+        while (i < index){
+          if (data(i) == '\n') {
+            col = 1
+            line += 1
+          }else{
+            col += 1
+          }
+          i += 1
+        }
         s"$line:$col"
       case _ => String.valueOf(index)
     }

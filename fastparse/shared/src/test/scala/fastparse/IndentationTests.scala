@@ -126,14 +126,14 @@ object IndentationTests extends TestSuite{
       }
       * - check(
         "+",
-        """ expr:1:1 / block:1:1 / "\n":1:1 ..."" """
+        """ expr:1:1 / block:1:1 / "\n":1:2 ..."" """
       )
       * - check(
         """+
           |  1
           |1
         """.stripMargin.trim,
-        """ expr:1:1 / (End | "\n  "):2:3 ..."\n1" """
+        """ expr:1:1 / (End | "\n  "):2:4 ..."\n1" """
       )
       * - check(
         """+

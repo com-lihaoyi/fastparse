@@ -118,13 +118,14 @@ object Combinators {
       if (cfg.logDepth == -1 || cfg.traceIndex != -1) p.parseRec(cfg, index)
       else {
         val indent = "  " * cfg.logDepth
-        output(s"$indent+$msg:$index")
+        output(s"$indent+$msg:${repr.prettyIndex(cfg.input, index)}")
         val depth = cfg.logDepth
         cfg.logDepth += 1
         val res = p.parseRec(cfg, index)
         cfg.logDepth = depth
         val strRes = res match{
-          case s: Mutable.Success[T, Elem, Repr] => s"Success(${s.index}${if (s.cut) ", cut" else ""})"
+          case s: Mutable.Success[T, Elem, Repr] =>
+            s"Success(${repr.prettyIndex(cfg.input, s.index)}${if (s.cut) ", cut" else ""})"
           case f: Mutable.Failure[Elem, Repr] =>
             val stack = Failure.filterFullStack(f.fullStack)
             val trace = Failure.formatStackTrace(
@@ -135,7 +136,7 @@ object Combinators {
             )
             s"Failure($trace${if (f.cut) ", cut" else ""})"
         }
-        output(s"$indent-$msg:$index:$strRes")
+        output(s"$indent-$msg:${repr.prettyIndex(cfg.input, index)}:$strRes")
         res
       }
     }
