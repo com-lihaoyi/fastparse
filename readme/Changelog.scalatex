@@ -1,5 +1,17 @@
 @import Main._
 @sect{Change Log}
+    @sect{0.4.1}
+        @ul
+            @li
+                Fix off-by-one error in generation of @code{line:col} indices
+                in error traces for string parsing
+            @li
+                Make @code{.log()} use the same @code{line:col} indices during
+                string-parsing that error traces do, for consistency
+            @li
+                Optimize @code{line:col} message generation to avoid
+                unnecessary allocations and copying.
+
     @sect{0.4.0}
         @ul
             @li
