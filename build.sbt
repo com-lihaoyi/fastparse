@@ -44,8 +44,8 @@ val shared = Seq(
         </license>
       </licenses>
       <scm>
-        <url>git://github.com/lihaoyi/scala-parser.git</url>
-        <connection>scm:git://github.com/lihaoyi/scala-parser.git</connection>
+        <url>git://github.com/lihaoyi/fastparse.git</url>
+        <connection>scm:git://github.com/lihaoyi/fastparse.git</connection>
       </scm>
       <developers>
         <developer>
