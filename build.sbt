@@ -4,7 +4,7 @@ publishArtifact := false
 
 publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
 
-crossScalaVersions := Seq("2.10.4", "2.11.7")
+crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.0-RC2")
 
 scalaJSUseRhino in Global := false
 
@@ -14,25 +14,24 @@ def macroDependencies(version: String) =
     "org.scala-lang" % "scala-compiler" % version % "provided"
   ) ++
   (if (version startsWith "2.10.")
-     Seq(compilerPlugin("org.scalamacros" % s"paradise" % "2.0.0" cross CrossVersion.full),
-         "org.scalamacros" %% s"quasiquotes" % "2.0.0")
+     Seq(compilerPlugin("org.scalamacros" % s"paradise" % "2.1.0" cross CrossVersion.full),
+         "org.scalamacros" %% s"quasiquotes" % "2.1.0")
    else
      Seq())
 
 val shared = Seq(
   libraryDependencies ++= macroDependencies(scalaVersion.value),
   libraryDependencies ++= Seq(
-    "com.lihaoyi" %%% "utest" % "0.4.3" % "test",
-    "com.lihaoyi" %%% "sourcecode" % "0.1.1"
+    "com.lihaoyi" %%% "utest" % "0.4.4" % "test",
+    "com.lihaoyi" %%% "sourcecode" % "0.1.3"
   ),
   scalaJSStage in Global := FullOptStage,
   organization := "com.lihaoyi",
   version := _root_.fastparse.Constants.version,
-  scalaVersion := "2.11.7",
-  libraryDependencies += "com.lihaoyi" %% "acyclic" % "0.1.3" % "provided",
-  addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.3"),
+  scalaVersion := "2.11.8",
+  libraryDependencies += "com.lihaoyi" %% "acyclic" % "0.1.5" % "provided",
+  addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.5"),
   autoCompilerPlugins := true,
-  resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
   testFrameworks += new TestFramework("utest.runner.Framework"),
   publishTo := Some("releases" at "https://oss.sonatype.org/service/local/staging/deploy/maven2"),
   pomExtra :=
@@ -61,8 +60,8 @@ lazy val utils = crossProject
   .settings(
     name := "fastparse-utils",
     unmanagedSourceDirectories in Compile ++= {
-      if (scalaVersion.value startsWith "2.10.") Seq(baseDirectory.value / ".."/"shared"/"src"/ "main" / "scala-2.10")
-      else Seq(baseDirectory.value / ".."/"shared" / "src"/"main" / "scala-2.11")
+      if (scalaVersion.value startsWith "2.12.") Seq(baseDirectory.value / ".."/"shared"/"src"/ "main" / "scala-2.11")
+      else Seq()
     }
   )
 lazy val utilsJS = utils.js
@@ -114,7 +113,7 @@ lazy val fastparseByte = crossProject
   .settings(shared:_*)
   .settings(
     name := "fastparse-byte",
-    libraryDependencies += "org.scodec" %%% "scodec-bits" % "1.1.0"
+    libraryDependencies += "org.scodec" %%% "scodec-bits" % "1.1.2"
   )
 
 lazy val fastparseByteJS = fastparseByte.js
