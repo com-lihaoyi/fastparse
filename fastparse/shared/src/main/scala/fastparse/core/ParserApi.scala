@@ -88,6 +88,11 @@ abstract class ParserApi[+T, Elem, Repr]()(implicit repr: ReprOps[Elem, Repr]) {
      on true failing on false
    */
   def filter(predicate: T => Boolean): Parser[T, Elem, Repr]
+
+  /**
+   * alias for `filter`
+   */
+  final def withFilter(predicate: T => Boolean): Parser[T, Elem, Repr] = filter(predicate)
 }
 
 class ParserApiImpl[+T, Elem, Repr](self: Parser[T, Elem, Repr])
