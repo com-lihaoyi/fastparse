@@ -212,8 +212,8 @@ object ExampleTests extends TestSuite{
         val even = digits.filter(_ % 2 == 0)
         val Parsed.Success(12, _) = even.parse("12")
         val failure = even.parse("123").asInstanceOf[Parsed.Failure]
-        assert(even.toString == "digits.filter(<function1>)")
-        assert(failure.extra.traced.trace == "digits.filter(<function1>):1:1 ...\"123\"")
+        assert("""digits.filter\(.*\)$""".r.findPrefixOf(even.toString).isDefined)
+        assert("""digits.filter\(.*\):1:1 ..."123"$""".r.findPrefixOf(failure.extra.traced.trace).isDefined)
       }
       'opaque{
         val digit = CharIn('0' to '9')

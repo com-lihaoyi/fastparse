@@ -6,6 +6,7 @@ import utest._
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
+import scala.util.matching.Regex
 
 object MiscTests extends TestSuite{
 
@@ -13,6 +14,9 @@ object MiscTests extends TestSuite{
     'toString{
       def check(p: Parser[_], s: String) = {
         assert(p.toString == s.trim)
+      }
+      def checkR(p: Parser[_], r: Regex) = {
+        assert(r.findPrefixOf(p.toString).isDefined)
       }
       'Either {
         check("A" | "B", """ "A" | "B" """)
@@ -64,7 +68,7 @@ object MiscTests extends TestSuite{
           StringIn("mango", "mandarin", "mangosteen"),
           """StringIn("mango", "mandarin", "mangosteen")"""
         )
-        check(CharPred(_.isUpper), """CharPred(<function1>)""")
+        checkR(CharPred(_.isUpper), """CharPred\(.*\)$""".r)
       }
     }
     'logging{
