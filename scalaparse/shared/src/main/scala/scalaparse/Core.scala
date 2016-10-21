@@ -78,6 +78,7 @@ trait Core extends syntax.Literals{
 
   val Id = P( WL ~ Identifiers.Id )
   val VarId = P( WL ~ Identifiers.VarId )
+  val BacktickId = P( WL ~ Identifiers.BacktickId )
   val ExprLiteral = P( WL ~ Literals.Expr.Literal )
   val PatLiteral = P( WL ~ Literals.Pat.Literal )
 
