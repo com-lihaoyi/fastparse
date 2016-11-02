@@ -116,11 +116,11 @@ trait Exprs extends Core with Types with Xml{
 
   val Patterns: P0 = P( Pattern.rep(1, sep = ",".~/) )
   val Pattern: P0 = P( (WL ~ TypeOrBindPattern).rep(1, sep = "|".~/) )
-  val TypePattern = P( (`_` | VarId) ~ `:` ~ TypePat )
+  val TypePattern = P( (`_` | BacktickId | VarId) ~ `:` ~ TypePat )
   val TypeOrBindPattern: P0 = P( TypePattern | BindPattern )
   val BindPattern: P0 = {
     val InfixPattern = P( SimplePattern ~ (Id ~/ SimplePattern).rep | `_*` )
-    val Binding = P( (VarId | `_`) ~ `@` )
+    val Binding = P( (Id | `_`) ~ `@` )
     P( Binding ~ InfixPattern | InfixPattern | VarId )
   }
 
