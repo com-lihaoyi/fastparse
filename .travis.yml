@@ -42,7 +42,7 @@ matrix:
       jdk: oraclejdk8
     - env:
       - CI_SCRIPT: '"fastparseJVM/test; fastparseJS/test; fastparseByteJVM/test; fastparseByteJS/test"'
-      scala: 2.12.0-RC2
+      scala: 2.12.0
       jdk: oraclejdk8
 
     # Also cross-test scalaparse and byteparse to stress-test fastparse in a
@@ -58,7 +58,7 @@ matrix:
       jdk: oraclejdk8
     - env:
       - CI_SCRIPT: '"classparseJVM/test; classparseJS/test"'
-      scala: 2.12.0-RC2
+      scala: 2.12.0
       jdk: oraclejdk8
 
     - env:
@@ -71,7 +71,7 @@ matrix:
       jdk: oraclejdk8
     - env:
       - CI_SCRIPT: '"scalaparseJVM/test; scalaparseJS/test"'
-      scala: 2.12.0-RC2
+      scala: 2.12.0
       jdk: oraclejdk8
 
     # For pythonparse and cssparse, just run it on one JDK/Scala version combo

@@ -4,7 +4,7 @@ publishArtifact := false
 
 publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
 
-crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.0-RC2")
+crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.0")
 
 scalaJSUseRhino in Global := false
 
