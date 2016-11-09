@@ -257,11 +257,23 @@ object ExampleTests extends TestSuite{
         val Parsed.Success("12345", _) = digits.parse("12345abcde")
         val Parsed.Success("123", _) = digits.parse("123abcde45")
       }
+      'charsIn{
+        val ci = P( CharsIn()("abc", "xyz").! ~ End )
+        val ciMin = P( CharsIn(min = 2)("abc", "xyz").! ~ End )
+
+        val Parsed.Success("aaabbccxyz", _) = ci.parse("aaabbccxyz")
+        val Parsed.Failure(_, 7, _) = ci.parse("aaabbccdxyz.")
+        val Parsed.Failure(_, 1, _) = ciMin.parse("a")
+        val Parsed.Success("aa", _) = ciMin.parse("aa")
+      }
       'charsWhile{
         val cw = P( CharsWhile(_ != ' ').! )
+        val cwMin = P( CharsWhile(_ != ' ', min = 6).! )
 
         val Parsed.Success("12345", _) = cw.parse("12345")
         val Parsed.Success("123", _) = cw.parse("123 45")
+        val Parsed.Failure(_, 5, _) = cwMin.parse("12345")
+        val Parsed.Success("123456", _) = cwMin.parse("123456")
       }
       'stringIn{
         val si = P( StringIn("cow", "cattle").!.rep )
