@@ -8,7 +8,7 @@ import fastparse.parsers
  * This is a trait applicable on potentially any sequences but Vector or Array
  * are typically usable in real world.
  */
-abstract class SeqApi[Elem, Repr <: Seq[Elem]](ct: ClassTag[Elem], reprOps: fastparse.utils.ReprOps[Elem, Repr]) {
+abstract class SeqApi[Elem, Repr <: IndexedSeq[Elem]](ct: ClassTag[Elem], reprOps: fastparse.utils.ReprOps[Elem, Repr]) {
   implicit val implicitReprOps = reprOps
 
   protected[this] implicit val implicitClassTag = ct

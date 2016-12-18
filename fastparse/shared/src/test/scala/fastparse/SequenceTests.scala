@@ -23,8 +23,14 @@ object SequenceTests extends TestSuite {
       import allPart._
       import allPart.Parsed
 
-      val countries: Seq[String] = Seq("CHINA", "FRANCE", "GERMANY", "JAPAN",
-        "UNITED-KINGDOM")
+      val countries: Seq[String] = Seq(
+        "CHINA",
+        "FRANCE",
+        "GERMANY",
+        "JAPAN",
+        "UNITED-KINGDOM"
+      )
+
       'ElemIn{
         val elemInCountries: Parser[Unit] = P(ElemIn(countries.map(Text)))
 
@@ -35,13 +41,13 @@ object SequenceTests extends TestSuite {
         val Parsed.Failure(_, 0, _) = elemInCountries.parse(Vector(Text("USA")))
       }
 
-      val nl: Parser[Unit] = ElemIn(Seq(NewLine))
-      val number: Parser[String] = F({ case Number(v) => v })
-      val text: Parser[String] = F({ case Text(v) => v })
-      val country: Parser[String] = F({
+      val nl: Parser[Unit] = P(ElemIn(Seq(NewLine)))
+      val number: Parser[String] = P(F({ case Number(v) => v }))
+      val text: Parser[String] = P(F({ case Text(v) => v }))
+      val country: Parser[String] = P(F({
         case Text(v) if countries.contains(v.toUpperCase) =>
           v.toUpperCase
-      })
+      }))
 
       'PartialFunction{
         val Parsed.Success(r, _) = country.parse(Vector(Text("germany")))
@@ -55,7 +61,8 @@ object SequenceTests extends TestSuite {
       val name: Parser[Any] = P((!nl ~ (number | text)).rep(1)).map(_.mkString(" "))
       val street: Parser[(String, String)] = P((
         (number.filter(_.length < 5) ~ text).map(_.swap) |
-        (text ~ number.filter(_.length < 5))) ~ nl)
+        (text ~ number.filter(_.length < 5))
+      ) ~ nl)
 
       'Either{
         val Parsed.Success(r, _) = street.parse(Vector(Number("456"), Text("Central Park"), NewLine))
@@ -73,14 +80,17 @@ object SequenceTests extends TestSuite {
 
       val postalCodeAndCity: Parser[(String, String)] = P((
         (number.filter(_.length > 4) ~ text) |
-        (text ~ number.filter(_.length > 4)).map(_.swap)) ~ nl)
+        (text ~ number.filter(_.length > 4)).map(_.swap)
+      ) ~ nl)
 
       val occidentalPostalAddress: Parser[PostalAddress] = P(
-        name ~ nl ~ street ~ postalCodeAndCity ~ country).
+        name ~ nl ~ street ~ postalCodeAndCity ~ country
+      ).
         map(l => PostalAddress(l._4, l._3._1, l._3._2, l._2._1, l._2._2, l._1))
 
       val orientalPostalAddress: Parser[PostalAddress] = P(
-        country ~ nl ~ postalCodeAndCity ~ street ~ name).
+        country ~ nl ~ postalCodeAndCity ~ street ~ name
+      ).
         map(l => PostalAddress(l._1, l._2._1, l._2._2, l._3._1, l._3._2, l._4))
 
       val fullPostalAddress = P(orientalPostalAddress | occidentalPostalAddress)
@@ -90,7 +100,8 @@ object SequenceTests extends TestSuite {
           Text("Scala programming"), NewLine,
           Number("123"), Text("rue des Champs Elysees"), NewLine,
           Number("75000"), Text("PARIS"), NewLine,
-          Text("FRANCE"))
+          Text("FRANCE")
+        )
 
         val Parsed.Success(r, _) = fullPostalAddress.parse(parsed, 0)
         assert(r == PostalAddress("FRANCE", "75000", "PARIS", "rue des Champs Elysees", "123", "Scala programming"))
@@ -124,8 +135,8 @@ object SequenceTests extends TestSuite {
         val Parsed.Failure(_, _, _) = date.parse(Vector(Amount(0)))
       }
 
-      val amount: Parser[Amount] = F({ case a: Amount => a })
-      val person: Parser[Person] = F({ case p: Person => p })
+      val amount: Parser[Amount] = P(F({ case a: Amount => a }))
+      val person: Parser[Person] = P(F({ case p: Person => p }))
       val persons: Parser[Seq[Person]] = P(person.rep(1))
 
       'PartialFunctionRep{
@@ -135,28 +146,31 @@ object SequenceTests extends TestSuite {
         val Parsed.Failure(_, _, _) = persons.parse(Vector(Amount(0)))
       }
 
-      val appointmentDateFirst: Parser[(Date, Date, Seq[Person])] = P(
-        (date ~ ((date ~ person.rep(1)) |
-          (person.rep(1) ~ date)))).map({
+      val appointmentDateFirst: Parser[(Date, Date, Seq[Person])] =
+        P((date ~ ((date ~ person.rep(1)) | (person.rep(1) ~ date)))) map {
           case (d1: Date, (d2: Date, p: Seq[Person])) => (d1, d2, p)
           case (d1: Date, (p: Seq[Person], d2: Date)) => (d1, d2, p)
-        })
+        }
 
-      val appointmentPersonFirst: Parser[(Date, Date, Seq[Person])] = P(person.rep(1) ~ date ~ date).map(t => (t._2, t._3, t._1))
+      val appointmentPersonFirst: Parser[(Date, Date, Seq[Person])] =
+        P(person.rep(1) ~ date ~ date).map(t => (t._2, t._3, t._1))
 
-      val appointment: Parser[Appointment] = P(appointmentDateFirst | appointmentPersonFirst).map(x => Appointment.tupled(x))
+      val appointment: Parser[Appointment] =
+        P(appointmentDateFirst | appointmentPersonFirst).map(x => Appointment.tupled(x))
 
       /**
        * Just a crazy test to see where we can go with fastparse !
        *
        * Otherwise a structure like appointment is better
        */
-      def debtPart(avoid: Parser[_]): Parser[Seq[Input]] = P(!avoid ~ (
-        (date ~ debtPart(date | avoid).?) |
-        (amount ~ debtPart(amount | avoid).?) |
-        (person ~ debtPart(person | avoid).?))) map {
-        case (x, y) => x +: y.getOrElse(Nil)
-      }
+      def debtPart(avoid: Parser[_]): Parser[Seq[Input]] =
+        P(!avoid ~ (
+          (date ~ debtPart(date | avoid).?) |
+          (amount ~ debtPart(amount | avoid).?) |
+          (person ~ debtPart(person | avoid).?)
+        )) map {
+          case (x, y) => x +: y.getOrElse(Nil)
+        }
 
       val debt: Parser[PartialDebt] = debtPart(Fail) map {
         case lst =>
@@ -184,11 +198,13 @@ object SequenceTests extends TestSuite {
       val out = P(appointment | debt)
 
       'PartialDebt{
-        val Parsed.Success(PartialDebt(Some(Date(1, 2, 3)), None, Some(Person("a"))), _) = out.parse(Vector(Person("a"), Date(1, 2, 3)))
+        val Parsed.Success(PartialDebt(Some(Date(1, 2, 3)), None, Some(Person("a"))), _) =
+          out.parse(Vector(Person("a"), Date(1, 2, 3)))
       }
 
       'Appointment{
-        val Parsed.Success(Appointment(Date(1, 2, 3), Date(4, 5, 6), Seq(Person("a"), Person("b"))), _) = out.parse(Vector(Person("a"), Person("b"), Date(1, 2, 3), Date(4, 5, 6)))
+        val Parsed.Success(Appointment(Date(1, 2, 3), Date(4, 5, 6), Seq(Person("a"), Person("b"))), _) =
+          out.parse(Vector(Person("a"), Person("b"), Date(1, 2, 3), Date(4, 5, 6)))
       }
 
     }

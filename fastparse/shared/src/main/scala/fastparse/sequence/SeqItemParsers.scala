@@ -22,7 +22,8 @@ object SeqItemParsers {
           if (cfg.instrument == null) {
             if (pf.isDefinedAt(e)) success(cfg.success, pf(e), index + 1, Set.empty, false)
             else failMore(cfg.failure, index, cfg.logDepth)
-          } else {
+          }
+          else {
             lazy val res = if (pf.isDefinedAt(e)) success(cfg.success, pf(e), index + 1, Set.empty, false) else failMore(cfg.failure, index, cfg.logDepth)
             cfg.instrument(this, index, () => res.toResult)
             res
@@ -42,7 +43,7 @@ object SeqItemParsers {
      * Parses a single item if it passes the predicate
      */
     case class ElemPred[Elem, Repr](
-      name: String,
+      name:      String,
       predicate: Elem => Boolean
     )(implicit repr: ReprOps[Elem, Repr])
         extends Parser[Unit, Elem, Repr] {
@@ -60,7 +61,7 @@ object SeqItemParsers {
      * Parses a single item if its contained in the lists of allowed items
      */
     case class ElemIn[Elem, Repr](
-      name: String,
+      name:  String,
       items: Seq[Elem]*
     )(implicit repr: ReprOps[Elem, Repr])
         extends Parser[Unit, Elem, Repr] {
@@ -81,7 +82,7 @@ object SeqItemParsers {
     case class ElemsWhile[Elem, Repr](
       name: String,
       pred: Elem => Boolean,
-      min: Int = 1
+      min:  Int             = 1
     )(implicit repr: ReprOps[Elem, Repr])
         extends Parser[Unit, Elem, Repr] {
       override def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
