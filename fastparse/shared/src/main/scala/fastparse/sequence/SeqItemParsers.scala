@@ -67,7 +67,7 @@ object SeqItemParsers {
       override def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
         val input = cfg.input
         if (!input.isReachable(index)) fail(cfg.failure, index)
-        else if (items.contains(input(index))) success(cfg.success, (), index + 1, Set.empty, false)
+        else if (items.flatten.contains(input(index))) success(cfg.success, (), index + 1, Set.empty, false)
         else fail(cfg.failure, index)
       }
 
