@@ -65,7 +65,7 @@
             @sect.ref{Sequence}, @sect.ref{Repeat}, @sect.ref{Optional},
             etc. are written to work on any sort of input, whether parsing
             @code{String}s or @code{Array[Byte]}. The @code{Parser} and
-            code{Result} types are themselves generic and can work on multiple
+            @code{Result} types are themselves generic and can work on multiple
             input and output types, hence the rather complex signatures:
 
         @hl.scala
