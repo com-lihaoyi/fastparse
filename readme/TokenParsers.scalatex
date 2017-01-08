@@ -1,0 +1,58 @@
+@import Main._
+@val tests = wd/'fastparse/'shared/'src/'test/'scala/'fastparse
+@val main = wd/'fastparse/'shared/'src/'main/'scala/'fastparse
+
+@sect{Token Parsers}
+    @p
+        While FastParse was originally designed to parse @hl.scala{String}s,
+        it also provides a @code{fastparse.sequence} package that allows parsing
+        of any sequence of items into structured data.
+
+    @p
+        Before you can use it for your own sequence of item, you just need to add
+        on top of your code :
+
+    @hl.ref(tests/"TokenTests.scala", "object allToken", "")
+
+    @p
+        And next you just need to import it :
+
+    @hl.ref(tests/"TokenTests.scala", "import allToken", "")
+
+    @sect{PartialFunction}
+            @hl.ref(tests/"TokenTests.scala", "def any ", "")
+
+            @p
+                This parser will let you to use Pattern-Matching immediately
+                for the current input item.
+                It's shorter than @hl.scala{P(AnyElem).flatMap}.
+
+    @p
+        A basic example demonstrates what you can do with writing 
+        a simple arithmetic factorizer learnt at junior high school.
+        (But keep free to enhance it or build any other one)
+
+    @p
+        The sample parser definition :
+
+    @hl.ref(tests/"TokenTests.scala", Seq("object FactorizerParser", ""))
+
+    @p
+        Input classes used :
+
+    @hl.ref(tests/"TokenTests.scala", "sealed abstract trait Part", "with Result")
+
+    @p
+        Result classes :
+
+    @hl.ref(tests/"TokenTests.scala", "sealed abstract trait Part", "with Result")
+
+    @p
+        Now, we can use our parser :
+
+    @hl.ref(tests/"TokenTests.scala", Seq("'testSimple", ""), Seq(".toString", ""))
+
+    @p
+        You can see first two lines, we used a String Parser to parse a String.
+        Next we use the result sequence to factorize this sum in a product.
+

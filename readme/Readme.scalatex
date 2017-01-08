@@ -23,6 +23,8 @@
 
     @ByteParsers()
 
+    @TokenParsers()
+
     @Performance()
 
     @DebuggingParsers()

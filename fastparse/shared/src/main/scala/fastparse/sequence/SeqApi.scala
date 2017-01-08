@@ -2,16 +2,19 @@ package fastparse.sequence
 
 import scala.reflect.ClassTag
 import fastparse.core
+import fastparse.core.{ ParserApi, ParserApiImpl }
 import fastparse.parsers
+import fastparse.utils.ReprOps
+import scala.collection.generic.CanBuildFrom
 
-/**
- * This is a trait applicable on potentially any sequences but Vector or Array
- * are typically usable in real world.
- */
-abstract class SeqApi[Elem, Repr <: IndexedSeq[Elem]](ct: ClassTag[Elem], reprOps: fastparse.utils.ReprOps[Elem, Repr]) {
+class SeqApi[Elem](implicit ct: ClassTag[Elem]) extends AbstractSeqApi[Elem, Seq[Elem]](SeqReprOps())
+
+abstract class AbstractSeqApi[Elem, Repr](reprOps: ReprOps[Elem, Repr])(implicit ct: ClassTag[Elem]) {
   implicit val implicitReprOps = reprOps
 
-  protected[this] implicit val implicitClassTag = ct
+  implicit def parserApi[T, V](p: T)(implicit c: T => core.Parser[V, Elem, Repr]): ParserApi[V, Elem, Repr] =
+    new ParserApiImpl[V, Elem, Repr](p)
+
   type ParserInput = fastparse.utils.ParserInput[Elem, Repr]
   type IndexParserInput = fastparse.utils.IndexedParserInput[Elem, Repr]
   type IteratorParserInput = fastparse.utils.IteratorParserInput[Elem, Repr]
@@ -38,10 +41,14 @@ abstract class SeqApi[Elem, Repr <: IndexedSeq[Elem]](ct: ClassTag[Elem], reprOp
   val Start = parsers.Terminals.Start[Elem, Repr]()
   val End = parsers.Terminals.End[Elem, Repr]()
   val Index = parsers.Terminals.Index[Elem, Repr]()
-  val AnyElem: P0
-  def ElemPred(pred: Elem => Boolean): P0
-  def ElemIn(seqs: Seq[Elem]*): P0
-  def ElemsWhile(pred: Elem => Boolean, min: Int = 1): P0
+  val AnyElem = SeqItemParsers.Terminals.AnyElemRule[Elem, Repr]()
+
+  def ElemPred(pred: Elem => Boolean): P0 =
+    SeqItemParsers.Intrinsics.ElemPred[Elem, Repr]("ElemPred", pred)
+  def ElemIn(items: Elem*): P0 =
+    SeqItemParsers.Intrinsics.ElemIn[Elem, Repr]("ElemIn", items)
+  def ElemsWhile(pred: Elem => Boolean, min: Int = 1) =
+    SeqItemParsers.Intrinsics.ElemsWhile[Elem, Repr]("ElemsWhile", pred, min)
 
   val NoTrace = parsers.Combinators.NoTrace
   val NoCut = parsers.Combinators.NoCut

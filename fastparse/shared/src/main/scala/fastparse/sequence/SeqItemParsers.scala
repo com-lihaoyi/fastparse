@@ -33,6 +33,19 @@ object SeqItemParsers {
       override def toString = name
       override def shortTraced = true
     }
+
+    case class AnyElemRule[Elem, Repr]()(implicit repr: ReprOps[Elem, Repr])
+        extends Parser[Elem, Elem, Repr] {
+      override def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
+        if (!cfg.input.isReachable(index)) failMore(cfg.failure, index, cfg.logDepth)
+        else {
+          val e = cfg.input(index)
+          success(cfg.success, e, index + 1, Set.empty, false)
+        }
+      }
+      override def toString = "AnyElem"
+      override def shortTraced = true
+    }
   }
 
   /**
