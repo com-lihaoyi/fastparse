@@ -232,6 +232,16 @@ object RegressionTests extends TestSuite{
       "while 1:\n\tpass"
     )
 
+    'negative_integer - TestUtils.check(
+      Statements.file_input,
+      Seq(Expr(Num(-1))),
+      "-1"
+    )
+    'unary_subtraction - TestUtils.check(
+      Statements.file_input,
+      Seq(Expr(UnaryOp(USubextends, Name(identifier("foo"), Load)))),
+      "-foo"
+    )
   }
 }
 

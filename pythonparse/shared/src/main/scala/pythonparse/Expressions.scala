@@ -72,8 +72,14 @@ object Expressions {
   val BitOr = op("|", Ast.operator.BitOr)
   val BitAnd = op("&", Ast.operator.BitAnd)
   val BitXor = op("^", Ast.operator.BitXor)
+  val UAdd = op("+", Ast.unaryop.UAdd)
+  val USubextends = op("-", Ast.unaryop.USubextends)
+  val Invert = op("~", Ast.unaryop.Invert)
+  val unary_op = P ( UAdd | USubextends | Invert )
 
 
+  def Unary(p: P[Ast.expr]) =
+    (unary_op ~ p).map{ case (op, operand) => Ast.expr.UnaryOp(op, operand) }
 
   def Chain(p: P[Ast.expr], op: P[Ast.operator]) = P( p ~ (op ~ p).rep ).map{
     case (lhs, chunks) =>
@@ -88,7 +94,10 @@ object Expressions {
 
   val arith_expr: P[Ast.expr] = P( Chain(term, Add | Sub) )
   val term: P[Ast.expr] = P( Chain(factor, Mult | Div | Mod | FloorDiv) )
-  val factor: P[Ast.expr] = P( ("+"|"-"|"~") ~ factor | power )
+  // NUMBER appears here and below in `atom` to give it precedence.
+  // This ensures that "-2" will parse as `Num(-2)` rather than
+  // as `UnaryOp(USubextends, Num(2))`.
+  val factor: P[Ast.expr] = P( NUMBER | Unary(factor) | power )
   val power: P[Ast.expr] = P( atom ~ trailer.rep ~ (Pow ~ factor).? ).map{
     case (lhs, trailers, rhs) =>
       val left = trailers.foldLeft(lhs)((l, t) => t(l))

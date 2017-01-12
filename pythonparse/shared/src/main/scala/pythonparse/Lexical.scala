@@ -48,9 +48,13 @@ object Lexical {
 
   val escapeseq: P0 = P( "\\" ~ AnyChar )
 
+  def negatable[T](p: P[T])(implicit ev: Numeric[T]) = (("+" | "-").?.! ~ p).map {
+    case ("-", i) => ev.negate(i)
+    case (_, i) => i
+  }
 
   val longinteger: P[BigInt] = P( integer ~ ("l" | "L") )
-  val integer: P[BigInt] = P( octinteger | hexinteger | bininteger | decimalinteger)
+  val integer: P[BigInt] = negatable[BigInt](P( octinteger | hexinteger | bininteger | decimalinteger))
   val decimalinteger: P[BigInt] = P( nonzerodigit ~ digit.rep | "0" ).!.map(scala.BigInt(_))
   val octinteger: P[BigInt] = P( "0" ~ ("o" | "O") ~ octdigit.rep(1).! | "0" ~ octdigit.rep(1).! ).map(scala.BigInt(_, 8))
   val hexinteger: P[BigInt] = P( "0" ~ ("x" | "X") ~ hexdigit.rep(1).! ).map(scala.BigInt(_, 16))
@@ -61,7 +65,7 @@ object Lexical {
   val hexdigit: P0 = P( digit | CharIn('a' to 'f', 'A' to 'F') )
 
 
-  val floatnumber: P[BigDecimal] = P( pointfloat | exponentfloat )
+  val floatnumber: P[BigDecimal] = negatable[BigDecimal](P( pointfloat | exponentfloat ))
   val pointfloat: P[BigDecimal] = P( intpart.? ~ fraction | intpart ~ "." ).!.map(BigDecimal(_))
   val exponentfloat: P[BigDecimal] = P( (intpart | pointfloat) ~ exponent ).!.map(BigDecimal(_))
   val intpart: P[BigDecimal] = P( digit.rep(1) ).!.map(BigDecimal(_))
