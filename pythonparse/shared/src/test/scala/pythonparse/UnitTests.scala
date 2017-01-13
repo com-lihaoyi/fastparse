@@ -71,6 +71,10 @@ object UnitTests extends TestSuite{
           ),
           "a < b <= c > d >= e == f != g in h not in i"
         )
+        'parenthetical_grouping - expr(
+          BinOp(BinOp('a, Add, 'b), Mult, BinOp('c, Sub, 'd)),
+          "(a + b) * (c - d)"
+        )
       }
       'chained{
         'attributes - expr(
@@ -104,6 +108,10 @@ object UnitTests extends TestSuite{
         'tuple - expr(
           Tuple(Seq(Num(1.0), Num(2.0), Str("a")), Load),
           "(1, 2, 'a')"
+        )
+        'single_item_tuple - expr(
+          Tuple(Seq(Num(1.0)), Load),
+          "(1,)"
         )
         'set - expr(
           Set(Seq(Num(1.0), Num(2.0), Str("a"))),
