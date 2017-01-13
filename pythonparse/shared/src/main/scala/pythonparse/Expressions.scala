@@ -73,9 +73,9 @@ object Expressions {
   val BitAnd = op("&", Ast.operator.BitAnd)
   val BitXor = op("^", Ast.operator.BitXor)
   val UAdd = op("+", Ast.unaryop.UAdd)
-  val USubextends = op("-", Ast.unaryop.USubextends)
+  val USub = op("-", Ast.unaryop.USub)
   val Invert = op("~", Ast.unaryop.Invert)
-  val unary_op = P ( UAdd | USubextends | Invert )
+  val unary_op = P ( UAdd | USub | Invert )
 
 
   def Unary(p: P[Ast.expr]) =
@@ -96,7 +96,7 @@ object Expressions {
   val term: P[Ast.expr] = P( Chain(factor, Mult | Div | Mod | FloorDiv) )
   // NUMBER appears here and below in `atom` to give it precedence.
   // This ensures that "-2" will parse as `Num(-2)` rather than
-  // as `UnaryOp(USubextends, Num(2))`.
+  // as `UnaryOp(USub, Num(2))`.
   val factor: P[Ast.expr] = P( NUMBER | Unary(factor) | power )
   val power: P[Ast.expr] = P( atom ~ trailer.rep ~ (Pow ~ factor).? ).map{
     case (lhs, trailers, rhs) =>

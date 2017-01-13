@@ -77,14 +77,14 @@ object UnitTests extends TestSuite{
         )
         'unary_negation - expr(
           UnaryOp(
-            USubextends,
+            USub,
             'b
           ),
           "-b"
         )
         'unary_negative_number_negation - expr(
           UnaryOp(
-            USubextends,
+            USub,
             Num(-1)
           ),
           "--1"
@@ -98,7 +98,7 @@ object UnitTests extends TestSuite{
         )
         'unary_precedence - expr(
           BinOp(
-            BinOp(UnaryOp(USubextends, 'a), Add, 'b),
+            BinOp(UnaryOp(USub, 'a), Add, 'b),
             Sub,
             'c
           ),

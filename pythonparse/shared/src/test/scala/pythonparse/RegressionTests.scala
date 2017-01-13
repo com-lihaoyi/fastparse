@@ -239,7 +239,7 @@ object RegressionTests extends TestSuite{
     )
     'unary_subtraction - TestUtils.check(
       Statements.file_input,
-      Seq(Expr(UnaryOp(USubextends, Name(identifier("foo"), Load)))),
+      Seq(Expr(UnaryOp(USub, Name(identifier("foo"), Load)))),
       "-foo"
     )
   }
