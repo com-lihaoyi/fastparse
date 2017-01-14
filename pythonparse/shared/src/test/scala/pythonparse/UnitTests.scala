@@ -24,7 +24,12 @@ object UnitTests extends TestSuite{
 
       'primitives {
         'int - expr(Num(1.0), "1")
+        'negative_int - expr(Num(-1.0), "-1")
         'float - expr(Num(1.5), "1.5")
+        'negative_float - expr(Num(-0.45), "-0.45")
+        'long - expr(Num(10), "10L")
+        'long_lowercase - expr(Num(25), "25l")
+        'negative_long - expr(Num(-50), "-50L")
         'emptyTuple - expr(Tuple(Nil, Load), "()")
         'name - expr(Name(identifier("None"), Load), "None")
         'yield - expr(Yield(None), "(yield)")
@@ -62,6 +67,42 @@ object UnitTests extends TestSuite{
             )
           ),
           "not not a"
+        )
+        'unary_invert - expr(
+          UnaryOp(
+            Invert,
+            'a
+          ),
+          "~a"
+        )
+        'unary_negation - expr(
+          UnaryOp(
+            USub,
+            'b
+          ),
+          "-b"
+        )
+        'unary_negative_number_negation - expr(
+          UnaryOp(
+            USub,
+            Num(-1)
+          ),
+          "--1"
+        )
+        'unary_add - expr(
+          UnaryOp(
+            UAdd,
+            'c
+          ),
+          "+c"
+        )
+        'unary_precedence - expr(
+          BinOp(
+            BinOp(UnaryOp(USub, 'a), Add, 'b),
+            Sub,
+            'c
+          ),
+          "-a + b - c"
         )
         'comparison - expr(
           Compare(
