@@ -114,7 +114,7 @@ object Expressions {
       empty_tuple  |
       empty_list |
       empty_dict |
-      "(" ~ (yield_expr | generator | tuple) ~ ")" |
+      "(" ~ (yield_expr | generator | tuple | test) ~ ")" |
       "[" ~ (list_comp | list) ~ "]" |
       "{" ~ dictorsetmaker ~ "}" |
       "`" ~ testlist1.map(x => Ast.expr.Repr(Ast.expr.Tuple(x, Ast.expr_context.Load))) ~ "`" |
@@ -125,7 +125,8 @@ object Expressions {
   }
   val list_contents = P( test.rep(1, ",") ~ ",".? )
   val list = P( list_contents ).map(Ast.expr.List(_, Ast.expr_context.Load))
-  val tuple = P( list_contents).map(Ast.expr.Tuple(_, Ast.expr_context.Load))
+  val tuple_contents = P( test ~ "," ~ list_contents.?).map { case (head, rest)  => head +: rest.getOrElse(Seq.empty) }
+  val tuple = P( tuple_contents).map(Ast.expr.Tuple(_, Ast.expr_context.Load))
   val list_comp_contents = P( test ~ comp_for.rep(1) )
   val list_comp = P( list_comp_contents ).map(Ast.expr.ListComp.tupled)
   val generator = P( list_comp_contents ).map(Ast.expr.GeneratorExp.tupled)
