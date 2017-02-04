@@ -1,5 +1,9 @@
 @import Main._
 @sect{Change Log}
+    @sect{0.4.2}
+        @ul
+            @li
+                Cross-publish for Scala 2.12.x
     @sect{0.4.1}
         @ul
             @li
