@@ -80,8 +80,8 @@
             the value you are probably most interested in -
             and the index in the input string till where the parse was performed.
             @hl.scala{Parsed.Failure} allows you to retrieve the last parser that failed and the index where it failed.
-            Additionally, failure provides an @hl.scala{Parsed.Failure.extra} field that provides precise details about the failure:
-            line and column numbers (via @hl.scala{extra.line} and @hl.scala{extra.col})
+            Additionally, failure provides an @hl.scala{Parsed.Failure.extra} field that provides precise details about the failure,
+            in particular,
             and most importantly a complete stack trace of the involved parsers, which is accessible via @hl.scala{extra.traced}.
 
         @p
