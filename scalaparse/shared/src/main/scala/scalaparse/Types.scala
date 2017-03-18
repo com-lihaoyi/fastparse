@@ -50,9 +50,9 @@ trait Types extends Core{
 
   val FunSig: P0 = {
     val FunArg = P( Annot.rep ~ Id ~ (`:` ~/ Type).? ~ (`=` ~/ TypeExpr).? )
-    val Args = P( FunArg.repTC() )
+    val Args = P( FunArg.repTC(1) )
     val FunArgs = P( OneNLMax ~ "(" ~/ `implicit`.? ~ Args.? ~ ")" )
-    val FunTypeArgs = P( "[" ~/ (Annot.rep ~ TypeArg).repTC() ~ "]" )
+    val FunTypeArgs = P( "[" ~/ (Annot.rep ~ TypeArg).repTC(1) ~ "]" )
     P( (Id | `this`) ~ (FunTypeArgs).? ~~ FunArgs.rep )
   }
 
@@ -66,7 +66,7 @@ trait Types extends Core{
 
   val TypeArgList: P0 = {
     val Variant: P0 = P( Annot.rep ~ CharIn("+-").? ~ TypeArg )
-    P( "[" ~/ Variant.repTC() ~ "]" )
+    P( "[" ~/ Variant.repTC(1) ~ "]" )
   }
   val Exprs: P0 = P( TypeExpr.rep(1, ",") )
   val TypeDef: P0 = P( Id ~ TypeArgList.? ~ (`=` ~/ Type | TypeBounds) )
