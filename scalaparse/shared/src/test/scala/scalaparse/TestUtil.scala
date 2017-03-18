@@ -26,7 +26,11 @@ object TestUtil {
           expected.trim == parsedExpected.trim && parsedFound.startsWith(found)
         },
           s"""parsed but didn't match expectations
+            |input:
+            |$input
+            |       expected: $expected
             |parsed expected: $parsedExpected
+            |          found: $found
             |parsed    found: $parsedFound
           """.stripMargin
         )
