@@ -8,9 +8,20 @@ import syntax.Identifiers
 import fastparse.noApi._
 trait Core extends syntax.Literals{
   import fastparse.noApi._
-  val WhitespaceApi = new fastparse.WhitespaceApi.Wrapper(WL0)
+
+  class Wrapper2(WL: P0){
+    implicit def parserApi2[T, V](p0: T)(implicit c: T => P[V]): WhitespaceApi2[V] =
+      new WhitespaceApi2[V](p0, WL)
+  }
+
+  val WhitespaceApi = new Wrapper2(WL0)
   import WhitespaceApi._
 
+  class WhitespaceApi2[+T](p0: P[T], WL: P0) extends fastparse.WhitespaceApi[T](p0, WL) {
+    def repTC[R](min: Int = 0, max: Int = Int.MaxValue, exactly: Int = -1)
+                (implicit ev: fastparse.core.Implicits.Repeater[T, R]): P[R] =
+      rep[R](min, ",", max, exactly) ~ ("," ~~ syntax.Basic.Newline).?
+  }
 
   // Aliases for common things. These things are used in almost every parser
   // in the file, so it makes sense to keep them short.
