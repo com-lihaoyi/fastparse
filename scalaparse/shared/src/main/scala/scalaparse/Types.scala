@@ -62,7 +62,7 @@ trait Types extends Core{
     P((Id | `_`) ~ TypeArgList.? ~ TypeBounds ~ CtxBounds)
   }
 
-  val Annot: P0 = P( `@` ~/ SimpleType ~  ("(" ~/ (Exprs ~ (`:` ~/ `_*`).?).? ~ ",".? ~ ")").rep )
+  val Annot: P0 = P( `@` ~/ SimpleType ~  ("(" ~/ (Exprs ~ (`:` ~/ `_*`).?).? ~ TrailingComma ~ ")").rep )
 
   val TypeArgList: P0 = {
     val Variant: P0 = P( Annot.rep ~ CharIn("+-").? ~ TypeArg )

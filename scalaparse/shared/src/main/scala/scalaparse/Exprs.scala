@@ -125,7 +125,7 @@ trait Exprs extends Core with Types with Xml{
   }
 
   val TypePat = P( CompoundType )
-  val ParenArgList = P( "(" ~/ (Exprs ~ (`:` ~/ `_*`).?).? ~ ",".? ~ ")" )
+  val ParenArgList = P( "(" ~/ (Exprs ~ (`:` ~/ `_*`).?).? ~ TrailingComma ~ ")" )
   val ArgList: P0 = P( ParenArgList | OneNLMax ~ BlockExpr )
 
   val CaseClauses: P0 = {
