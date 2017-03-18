@@ -24,9 +24,13 @@ object TestUtil {
         { implicitly(input)
           implicitly(stack)
           expected.trim == parsedExpected.trim && parsedFound.startsWith(found)
-        }
+        },
+          s"""parsed but didn't match expectations
+            |parsed expected: $parsedExpected
+            |parsed    found: $parsedFound
+          """.stripMargin
         )
-      case s: Parsed.Success[_] => assert{implicitly(input); false}
+      case _: Parsed.Success[_] => assert({implicitly(input); false}, "parsed when it shouldn't have")
     }
     for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
       val res = Scala.CompilationUnit.parseIterator(input.grouped(chunkSize))
