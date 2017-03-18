@@ -20,7 +20,7 @@ trait Core extends syntax.Literals{
   class WhitespaceApi2[+T](p0: P[T], WL: P0) extends fastparse.WhitespaceApi[T](p0, WL) {
     def repTC[R](min: Int = 0, max: Int = Int.MaxValue, exactly: Int = -1)
                 (implicit ev: fastparse.core.Implicits.Repeater[T, R]): P[R] =
-      rep[R](min, ",", max, exactly) ~ ("," ~~ syntax.Basic.Newline).?
+      rep[R](min, ",", max, exactly) ~ TrailingComma
   }
 
   // Aliases for common things. These things are used in almost every parser
