@@ -156,7 +156,8 @@ object TrailingCommasTests extends TestSuite {
     }
 
     'neg {
-      // make sure trailing commas are only supported when multi-line
+      //// Multi-line only cases: make sure trailing commas are only supported when multi-line
+
       'ArgumentExprs1 - checkNeg("""trait ArgumentExprs1 { f(23, "bar", )(Ev0, Ev1) }""", expected1, found1)
       'ArgumentExprs2 - checkNeg("""trait ArgumentExprs2 { f(23, "bar")(Ev0, Ev1, ) }""", expected1, found1)
       'ArgumentExprs3 - checkNeg("""trait ArgumentExprs3 { new C(23, "bar", )(Ev0, Ev1) }""", expected1, found1)
@@ -186,6 +187,14 @@ object TrailingCommasTests extends TestSuite {
       'VarDcl - checkNeg("""trait VarDcl { var foo, bar, = 23 }""", expected5, found5)
       'VarDef - checkNeg("""trait VarDef { var foo, bar, = _ }""", expected5, found5)
       'PatDef - checkNeg("""trait PatDef { val Foo(foo), Bar(bar), = bippy }""", expected5, found5)
+
+      //// The Tuple 1 cases
+
+      // the Tuple1 value case: make sure that the possible "(23, )" syntax for Tuple1 doesn't compile to "23"
+      "Tuple1 value case" - checkNeg("trait SimpleExpr2 { (23, ) }", expected1, found1)
+
+      // the Tuple1 type case: make sure that the possible "(Int, )" syntax for Tuple1[Int] doesn't compile to "Int"
+      "Tuple1 type case" - checkNeg("trait SimpleType2 { def f: (Int, ) }", expected1, found1)
 
       val expected1 = """WSChars | Comment | Newline | ")""""
       val expected2 = """WSChars | Comment | Newline | "]""""
