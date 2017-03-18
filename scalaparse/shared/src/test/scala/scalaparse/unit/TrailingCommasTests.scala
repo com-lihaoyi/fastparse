@@ -68,6 +68,11 @@ object TrailingCommasTests extends TestSuite {
         |    23,
         |    "bar",
         |  )
+        |
+        |  // the Tuple1 value case, the trailing comma is ignored so the type is Int and the value 23
+        |  def g: Int = (
+        |    23,
+        |  )
         |}""".stripMargin
       )
       'TypeArgs - check("""
@@ -99,6 +104,11 @@ object TrailingCommasTests extends TestSuite {
         |    Int,
         |    String,
         |  )
+        |
+        |  // the Tuple1 type case, the trailing comma is ignored so the type is Int and the value 23
+        |  def g: (
+        |    Int,
+        |  ) = 23
         |}""".stripMargin
       )
       'FunctionArgTypes - check("""
