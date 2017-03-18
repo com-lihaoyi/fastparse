@@ -105,6 +105,10 @@ class WhitespaceApi[+T](p0: P[T], WL: P0) extends ParserApiImpl[T, Char, String]
       if (sep != Pass) NoCut(WL) ~ sep ~ NoCut(WL) else NoCut(WL))
   }
 
+  def repTC[R](min: Int = 0, max: Int = Int.MaxValue, exactly: Int = -1)
+                     (implicit ev: Repeater[T, R]): P[R] =
+    rep[R](min, ",", max, exactly) ~ ",".?
+
   def ~~[V, R](p: P[V])
               (implicit ev: Sequencer[T, V, R])
   : P[R] =

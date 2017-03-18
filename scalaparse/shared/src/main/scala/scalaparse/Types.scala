@@ -40,19 +40,19 @@ trait Types extends Core{
   val SimpleType: P0 = {
     // Can't `cut` after the opening paren, because we might be trying to parse `()`
     // or `() => T`! only cut after parsing one type
-    val TupleType = P( "(" ~/ Type.rep(sep= ",".~/) ~ ")" )
+    val TupleType = P( "(" ~/ Type.repTC() ~ ")" )
     val BasicType = P( TupleType | Literals.Expr.Literal | TypeId ~ ("." ~ `type`).?  | `_` )
     P( BasicType ~ (TypeArgs | `#` ~/ Id).rep )
   }
 
-  val TypeArgs = P( "[" ~/ Type.rep(sep=",".~/) ~ "]" )
+  val TypeArgs = P( "[" ~/ Type.repTC() ~ "]" )
 
 
   val FunSig: P0 = {
     val FunArg = P( Annot.rep ~ Id ~ (`:` ~/ Type).? ~ (`=` ~/ TypeExpr).? )
-    val Args = P( FunArg.rep(1, ",".~/) )
+    val Args = P( FunArg.repTC() )
     val FunArgs = P( OneNLMax ~ "(" ~/ `implicit`.? ~ Args.? ~ ")" )
-    val FunTypeArgs = P( "[" ~/ (Annot.rep ~ TypeArg).rep(1, ",".~/) ~ "]" )
+    val FunTypeArgs = P( "[" ~/ (Annot.rep ~ TypeArg).repTC() ~ "]" )
     P( (Id | `this`) ~ (FunTypeArgs).? ~~ FunArgs.rep )
   }
 
@@ -62,12 +62,12 @@ trait Types extends Core{
     P((Id | `_`) ~ TypeArgList.? ~ TypeBounds ~ CtxBounds)
   }
 
-  val Annot: P0 = P( `@` ~/ SimpleType ~  ("(" ~/ (Exprs ~ (`:` ~/ `_*`).?).? ~ ")").rep )
+  val Annot: P0 = P( `@` ~/ SimpleType ~  ("(" ~/ (Exprs ~ (`:` ~/ `_*`).?).? ~ ",".? ~ ")").rep )
 
   val TypeArgList: P0 = {
     val Variant: P0 = P( Annot.rep ~ CharIn("+-").? ~ TypeArg )
-    P( "[" ~/ Variant.rep(1, ",".~/) ~ "]" )
+    P( "[" ~/ Variant.repTC() ~ "]" )
   }
-  val Exprs: P0 = P( TypeExpr.rep(1, ",".~/) )
+  val Exprs: P0 = P( TypeExpr.rep(sep = ",") )
   val TypeDef: P0 = P( Id ~ TypeArgList.? ~ (`=` ~/ Type | TypeBounds) )
 }
