@@ -68,6 +68,6 @@ trait Types extends Core{
     val Variant: P0 = P( Annot.rep ~ CharIn("+-").? ~ TypeArg )
     P( "[" ~/ Variant.repTC() ~ "]" )
   }
-  val Exprs: P0 = P( TypeExpr.rep(sep = ",") )
+  val Exprs: P0 = P( TypeExpr.rep(1, ",") )
   val TypeDef: P0 = P( Id ~ TypeArgList.? ~ (`=` ~/ Type | TypeBounds) )
 }
