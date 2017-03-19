@@ -60,6 +60,11 @@ object TrailingCommasTests extends TestSuite {
         |// test class params in the presence of varargs
         |case class D(i: Int*,
         |)
+        |
+        |// test you can have comments after the last parameter
+        |class E(
+        |  foo: Int, // foo is the start of "foo-bar"
+        |)
         |""".stripMargin
       )
       'SimpleExpr1 - check("""
