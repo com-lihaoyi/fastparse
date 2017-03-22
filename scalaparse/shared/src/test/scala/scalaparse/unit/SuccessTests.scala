@@ -1169,6 +1169,16 @@ object SuccessTests extends TestSuite{
       """.stripMargin
     )
     * - check(
+      """object K{
+        |    <xml:unparsed></xml:unparsed>
+        |    <xml:unparsed foo=""></xml:unparsed>
+        |    <xml:unparsed><</xml:unparsed>
+        |    <xml:unparsed>{foo}</xml:unparsed>
+        |    <xml:unparsed></xml:unparse></xml:unparsed>
+        |}
+      """.stripMargin
+    )
+    * - check(
       """object X{
         |   pomExtra :=
         |      <url>https://github.com/lihaoyi/scalatags</url>

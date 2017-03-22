@@ -75,7 +75,12 @@ trait Xml extends Core {
     val ETag = P( "</" ~ Name ~ WL.? ~ ">" )
     val Content = P( (CharData | Content1).rep )
     val Content1  = P( XmlContent | Reference | ScalaExpr )
-    val XmlContent: P0 = P( Element | CDSect | PI | Comment )
+    val XmlContent: P0 = P( Element | CDSect | PI | Comment | Unparsed )
+
+    val Unparsed = P( UnparsedStart ~ UnparsedData ~ UnparsedEnd )
+    val UnparsedStart = P( "<xml:unparsed" ~ (WL ~ Attribute).rep ~ WL.? ~ ">" )
+    val UnparsedEnd = P ( "</xml:unparsed>" )
+    val UnparsedData = P ( (!UnparsedEnd ~ AnyChar).rep )
 
     val CDSect = P( CDStart ~ CData ~ CDEnd )
     val CDStart = P( "<![CDATA[" )
