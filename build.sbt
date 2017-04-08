@@ -149,6 +149,17 @@ lazy val pythonparse = crossProject
 lazy val pythonparseJVM = pythonparse.jvm
 lazy val pythonparseJS = pythonparse.js
 
+lazy val python3parse = crossProject
+  .dependsOn(fastparse)
+  .settings(shared:_*)
+  .settings(
+    name := "python3parse"
+  )
+
+
+lazy val python3parseJVM = python3parse.jvm
+lazy val python3parseJS = python3parse.js
+
 lazy val cssparse = crossProject
   .dependsOn(fastparse)
   .settings(name := "cssparse")
@@ -175,6 +186,7 @@ lazy val perftests = crossProject
     fastparse % "compile->compile;compile->test",
     fastparseByte % "compile->compile;compile->test",
     pythonparse,
+    python3parse,
     scalaparse,
     cssparse,
     classparse
@@ -196,6 +208,8 @@ lazy val modules = project
     fastparseByteJVM,
     pythonparseJS,
     pythonparseJVM,
+    python3parseJS,
+    python3parseJVM,
     cssparseJS,
     cssparseJVM,
     scalaparseJS,
