@@ -17,6 +17,7 @@ object UnitTests extends TestSuite{
     import Ast.unaryop._
     import Ast._
     implicit def strName(s: Symbol) = Name(identifier(s.name), Load)
+    def storeName(s: String) = Name(identifier(s), Store)
     implicit def strIdent(s: Symbol) = identifier(s.name)
     implicit def symArg(s: Symbol) = arg(identifier(s.name))
     'exprs{
@@ -118,7 +119,15 @@ object UnitTests extends TestSuite{
           "(a + b) * (c - d)"
         )
       }
-      'chained{
+      'function_call {
+        'multi - expr(Call('a, Seq('x, Call('b, Seq('y), Nil)), Nil),
+          "a(x, b(y))"
+        )
+        'empty - expr(Call('a, Nil, Nil),
+          "a()"
+        )
+      }
+      'chained {
         'attributes - expr(
           Attribute(Attribute('a, 'b, Load), 'c, Load),
           "a.b.c"
@@ -171,31 +180,31 @@ object UnitTests extends TestSuite{
           "{1 :'1', 2: '2', 'a': a}"
         )
         'list_comp - expr(
-          ListComp('x, Seq(comprehension('y, 'z, Seq('w)))),
+          ListComp('x, Seq(comprehension(storeName("y"), 'z, Seq('w)))),
           "[x for y in z if w]"
         )
 
         'list_comp2 - expr(
           ListComp(Tuple(Seq('x, 'y), Load), Seq(
             comprehension(
-              Tuple(Seq('z, 'a), Load),
+              Tuple(Seq(storeName("z"), storeName("a")), Store),
               Tuple(Seq('b, 'c), Load),
               Seq('d, 'e)
             ),
-            comprehension('j, 'k, Nil)
+            comprehension(storeName("j"), 'k, Nil)
           )),
           "[(x, y) for (z, a) in (b, c) if d if e for j in k]"
         )
         'set_comp - expr(
-          SetComp('x, Seq(comprehension('y, 'z, Seq('w)))),
+          SetComp('x, Seq(comprehension(storeName("y"), 'z, Seq('w)))),
           "{x for y in z if w}"
         )
         'dict_comp - expr(
-          DictComp('x, Num(1.0), Seq(comprehension('y, 'z, Seq('w)))),
+          DictComp('x, Num(1.0), Seq(comprehension(storeName("y"), 'z, Seq('w)))),
           "{x: 1 for y in z if w}"
         )
         'generator - expr(
-          GeneratorExp('x, Seq(comprehension('y, 'z, Seq('w)))),
+          GeneratorExp('x, Seq(comprehension(storeName("y"), 'z, Seq('w)))),
           "(x for y in z if w)"
         )
       }
@@ -318,7 +327,7 @@ object UnitTests extends TestSuite{
             |  if b:
             |    pass
             |  else:
-            |    print 1
+            |    print(1)
             |else:
             |  if c: pass
             |  elif d: pass
@@ -359,13 +368,39 @@ object UnitTests extends TestSuite{
         'function2 - stmt(
           Seq(FunctionDef(
             'foo,
-            arguments(Seq(arg('x)), None, Seq(arg('y)), Seq(Num(1)), Some('z), Nil),
+            arguments(Seq(arg('x), arg('y)), None, Nil, Nil, Some('z), Seq(Num(1))),
             Seq(Return(Some('x))),
             Seq('dec),
             None
           )),
           """@dec
             |def foo(x, y=1, **z):
+            |  return x
+          """.stripMargin
+        )
+        'function3 - stmt(
+          Seq(FunctionDef(
+            'foo,
+            arguments(Seq(arg('x)), None, Seq(arg('y), arg('z)), Seq(Num(1), Num(2)), None, Nil),
+            Seq(Return(Some('x))),
+            Seq('dec),
+            None
+          )),
+          """@dec
+            |def foo(x, *, y=1, z=2):
+            |  return x
+          """.stripMargin
+        )
+        'function4 - stmt(
+          Seq(FunctionDef(
+            'foo,
+            arguments(Seq(arg('x)), Some(arg('y)), Nil, Nil, Some('z), Nil),
+            Seq(Return(Some('x))),
+            Seq('dec),
+            None
+          )),
+          """@dec
+            |def foo(x, *y, **z):
             |  return x
           """.stripMargin
         )

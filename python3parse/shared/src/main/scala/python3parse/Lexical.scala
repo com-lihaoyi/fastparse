@@ -23,14 +23,14 @@ object Lexical {
   val digit      = P( CharIn('0' to '9') )
 
   val keywordList = Set(
-    "and",       "del",       "from",      "not",       "while",
-    "as",        "elif",      "global",    "or",        "with",
-    "assert",    "else",      "if",        "pass",      "yield",
-    "break",     "except",    "import",    "print",
-    "class",     "exec",      "in",        "raise",
-    "continue",  "finally",   "is",        "return",
-    "def",       "for",       "lambda",    "try",
-    "async",     "await"
+    "and",       "def",       "from",      "not",       "while",
+    "as",        "del",       "global",    "nonlocal",  "with",
+    "assert",    "elif",      "if",        "or",        "yield",
+    "async",     "else",      "import",    "pass",
+    "await",     "except",    "in",        "raise",
+    "break",     "finally",   "is",        "return",
+    "class",     "for",       "lambda",    "try",
+    "continue"
   )
 
   val stringliteral: P[String] = P( stringprefix.? ~ (longstring | shortstring) )
