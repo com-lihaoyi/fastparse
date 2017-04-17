@@ -1,4 +1,4 @@
-package pythonparse
+package python3parse
 import utest._
 import fastparse.all._
 
@@ -12,6 +12,7 @@ object RegressionTests extends TestSuite{
   import Ast._
   implicit def strName(s: Symbol) = Name(identifier(s.name), Load)
   implicit def strIdent(s: Symbol) = identifier(s.name)
+  implicit def symArg(s: Symbol) = arg(identifier(s.name))
   val tests = TestSuite{
     'multiple_comments - TestUtils.check(
       Statements.file_input,
@@ -31,7 +32,7 @@ object RegressionTests extends TestSuite{
 
     'multi_line_function - TestUtils.check(
       Statements.file_input,
-      Seq(FunctionDef('session_config, arguments(Nil, None, None, Nil), Seq(Expr('a), Expr('b)), Nil)),
+      Seq(FunctionDef('session_config, arguments.empty, Seq(Expr('a), Expr('b)), Nil, None)),
       """def session_config():
         |    a
         |
@@ -55,7 +56,7 @@ object RegressionTests extends TestSuite{
 
     'try_finally_no_except - TestUtils.check(
       Statements.file_input,
-      Seq(TryFinally(Seq(Expr('a)), Seq(Expr('b)))),
+      Seq(Try(Seq(Expr('a)), Nil, Nil, Seq(Expr('b)))),
       """try:
         |    a
         |finally:
@@ -65,13 +66,14 @@ object RegressionTests extends TestSuite{
     )
     'indented_try_except_with_space - TestUtils.check(
       Statements.file_input,
-      Seq(FunctionDef('f, arguments(Nil, None, None, Nil), Seq(
-        TryExcept(
+      Seq(FunctionDef('f, arguments.empty, Seq(
+        Try(
           Seq(Pass),
           Seq(excepthandler.ExceptHandler(Some('s), None, Seq(Pass))),
+          Nil,
           Nil
         )
-      ), Nil)),
+      ), Nil, None)),
       """def f():
         |    try:
         |        pass
@@ -85,9 +87,10 @@ object RegressionTests extends TestSuite{
       Statements.file_input,
       Seq(FunctionDef(
         'post,
-        arguments(Seq(Name('self, Param)), None, None, Nil),
+        arguments(Seq('self), None, Nil, Nil, None, Nil),
         Seq(If(Num(1), Seq(Expr('a)), Nil)),
-        Nil
+        Nil,
+        None
       )),
       """def post(self):
         |#LOL
@@ -101,12 +104,13 @@ object RegressionTests extends TestSuite{
       Seq(While(
         'a,
         Seq(
-          TryExcept(
+          Try(
             Seq(Expr('a)),
             Seq(
               excepthandler.ExceptHandler(None, None, Seq(Return(Some('a)))),
               excepthandler.ExceptHandler(None, None, Seq(Expr('a)))
             ),
+            Nil,
             Nil
           )
         ),
@@ -134,7 +138,7 @@ object RegressionTests extends TestSuite{
     'ident_looking_string - TestUtils.check(
       Statements.file_input,
       Seq(If(
-        Call('match, Seq(Str("^[a-zA-Z0-9]")), Nil, None, None),
+        Call('match, Seq(Str("^[a-zA-Z0-9]")), Nil),
         Seq(Expr('a)),
         Nil
       )),
@@ -200,7 +204,7 @@ object RegressionTests extends TestSuite{
     )
     'comment_after_decorator - TestUtils.check(
       Statements.file_input,
-      Seq(ClassDef('GenericForeignKeyTests, Nil, Seq(Pass), Seq('override_settings))),
+      Seq(ClassDef('GenericForeignKeyTests, Nil, Nil, Seq(Pass), Seq('override_settings))),
       """@override_settings # ForeignKey(unique=True)
         |class GenericForeignKeyTests:
         |    pass
