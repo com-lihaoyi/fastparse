@@ -1,4 +1,4 @@
-package pythonparse
+package python3parse
 
 import utest._
 
@@ -13,6 +13,10 @@ object TestUtils {
       case f: Parsed.Failure => throw new Exception(f.extra.traced.trace)
       case s: Parsed.Success[T] =>
         val result = s.value
+        if (result != expected) {
+          println("Result: " + result)
+          println("Expected: " + expected)
+        }
         assert(result == expected)
         result
     }

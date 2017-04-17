@@ -1,4 +1,4 @@
-package pythonparse
+package python3parse
 
 import fastparse.core.Implicits.Sequencer
 import fastparse.noApi._

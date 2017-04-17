@@ -1,4 +1,4 @@
-package pythonparse
+package python3parse
 import concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
@@ -15,7 +15,7 @@ object ProjectTests extends TestSuite{
   def check(ignored: Seq[String] = Nil)(implicit testPath: utest.framework.TestPath) = {
     val repo = "https://github.com/" + testPath.value.last
     val name = repo.split("/").last
-    val path = Paths.get("pythonparse/jvm/target/repos/" + name)
+    val path = Paths.get("python3parse/jvm/target/repos/" + name)
     if (!Files.exists(path)) {
       println("Cloning")
       Seq("git", "clone", repo, path.toString, "--depth", "1").!
@@ -29,19 +29,19 @@ object ProjectTests extends TestSuite{
     }
 
     val pythonFiles: Seq[String] = listFiles(new java.io.File(path.toString))
-            .filter(path => path.toString.endsWith(".py") && !ignored.exists(path.endsWith))
+            .filter(path => (path.toString.endsWith(".py") || path.toString.endsWith(".pyi")) && !ignored.exists(path.endsWith))
             .map(_.toString)
             .toSeq
 
     val grouped = Await.result(Future.sequence(pythonFiles.map { p =>
       Future {
         print("-")
-        (Seq("python", "pythonparse/jvm/src/test/resources/pythonparse/parse.py", p).!, p)
+        (Seq("python", "python3parse/jvm/src/test/resources/python3parse/parse.py", p).!, p)
       }
     }), Duration.Inf).groupBy(_._1).mapValues(_.map(_._2))
     val selfParsed = grouped(0) groupBy { x =>
       print(".")
-      pythonparse.Statements.file_input.parse(new String(Files.readAllBytes(Paths.get(x)))).getClass
+      python3parse.Statements.file_input.parse(new String(Files.readAllBytes(Paths.get(x)))).getClass
     }
 
     selfParsed.get(classOf[Parsed.Failure]) match{
@@ -52,19 +52,17 @@ object ProjectTests extends TestSuite{
   }
   val tests = TestSuite{
     "dropbox/changes" - check()
-    "django/django" - check(
-      ignored = Seq("tests/i18n/test_compilation.py")
-    )
-    "mitsuhiko/flask" - check()
-    "zulip/zulip" - check()
-    "ansible/ansible"- check()
+    "python/typeshed" - check()
+    "pallets/flask" - check()
+    //"zulip/zulip" - check()
+    //"ansible/ansible"- check()
     "kennethreitz/requests" - check()
 
     'bench{
-      val path = "pythonparse/jvm/src/test/resources/pythonparse/bench.py"
+      val path = "python3parse/jvm/src/test/resources/python3parse/bench.py"
       val data = Files.readAllBytes(Paths.get(path))
       val code = new String(data)
-      (pythonparse.Statements.file_input ~ End).parse(code).get
+      (python3parse.Statements.file_input ~ End).parse(code).get
     }
   }
 }

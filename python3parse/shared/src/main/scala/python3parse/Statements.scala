@@ -1,11 +1,11 @@
-package pythonparse
+package python3parse
 
 import fastparse.noApi._
 import WsApi._
 import Expressions._
 import acyclic.file
 import Lexical.kw
-import pythonparse.Ast.stmt.{AsyncFor, AsyncWith}
+import python3parse.Ast.stmt.{AsyncFor, AsyncWith}
 
 object Statements extends Statements(0)
 
