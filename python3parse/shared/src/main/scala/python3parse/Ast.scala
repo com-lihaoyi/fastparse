@@ -262,7 +262,7 @@ object Ast {
   case class arguments(args: Seq[arg], vararg: Option[arg], kwonlyargs: Seq[arg], kw_defaults: Seq[expr],
                        kwarg: Option[arg], defaults: Seq[expr])
 
-  case object arguments {
+  case object   arguments {
     val empty = arguments(Seq(), None, Seq(), Seq(), None, Seq())
   }
 

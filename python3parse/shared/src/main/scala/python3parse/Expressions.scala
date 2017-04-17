@@ -4,6 +4,11 @@ import fastparse.core.Implicits.Sequencer
 import fastparse.noApi._
 import WsApi._
 import Lexical.kw
+import fastparse.all.ParseCtx
+import fastparse.core
+import python3parse.Expressions.tfpdef
+
+import scala.collection.mutable
 
 /**
  * Python's expression grammar. This is stuff that can be used within a larger
@@ -16,7 +21,11 @@ object Expressions {
 
   def tuplize(xs: Seq[Ast.expr]) = xs match{
     case Seq(x) => x
-    case xs => Ast.expr.Tuple(xs, Ast.expr_context.Load)
+    case xs => Ast.expr.Tuple(xs, getContext())
+  }
+  def tuplize(xs: Seq[Ast.expr], context: Ast.expr_context) = xs match{
+    case Seq(x) => x
+    case xs => Ast.expr.Tuple(xs, context)
   }
 
   val NAME: P[Ast.identifier] = Lexical.identifier
@@ -85,7 +94,11 @@ object Expressions {
   /// comp_op: '<'|'>'|'=='|'>='|'<='|'<>'|'!='|'in'|'not' 'in'|'is'|'is' 'not'
   val comp_op = P( LtE|GtE|Eq|Gt|Lt|NotEq|In|NotIn|IsNot|Is )
 
-  def getContext(): Ast.expr_context = null // TODO how to set/get expression context?
+  private val contextStack = new mutable.Stack[Ast.expr_context]()
+  def getContext(): Ast.expr_context = {
+    if (contextStack.isEmpty) Ast.expr_context.Load
+    else contextStack.head
+  }
 
   /// star_expr: '*' expr
   val star_expr: P[Ast.expr.Starred] = P( "*" ~ expr ).map(expr => Ast.expr.Starred(expr, getContext()))
@@ -172,28 +185,59 @@ object Expressions {
       empty_tuple  |
       empty_list |
       empty_dict |
-      "(" ~ (yield_expr | testlist_comp) ~ ")" |
-      "[" ~ testlist_comp ~ "]" |
+      "(" ~ (yield_expr | testlist_comp(TupleFactory)) ~ ")" |
+      "[" ~ testlist_comp(ListFactory) ~ "]" |
       "{" ~ dictorsetmaker ~ "}" |
       STRING.rep(1).map(_.mkString).map(Ast.expr.Str) |
-      NAME.map(id => Ast.expr.Name(id, Ast.expr_context.Load)) |
+      NAME.map(id => Ast.expr.Name(id, getContext())) |
       NUMBER
     )
   }
 
+  trait SeqFactory {
+    def seqToExpr(seq: Seq[Ast.expr], trailingComma: Option[String]): Ast.expr
+    def compToExpr(elem: Ast.expr, comps: Seq[Ast.comprehension]): Ast.expr
+  }
+
+  case object ListFactory extends SeqFactory {
+    def seqToExpr(seq: Seq[Ast.expr], trailingComma: Option[String]) = Ast.expr.List(seq, getContext())
+    def compToExpr(elem: Ast.expr, comps: Seq[Ast.comprehension]) = Ast.expr.ListComp(elem, comps)
+  }
+
+  case object TupleFactory extends SeqFactory {
+    def seqToExpr(seq: Seq[Ast.expr], trailingComma: Option[String]) = {
+      if (seq.size == 1 && trailingComma.isEmpty)
+        seq.head
+      else
+        Ast.expr.Tuple(seq, getContext())
+    }
+
+    def compToExpr(elem: Ast.expr, comps: Seq[Ast.comprehension]) = Ast.expr.GeneratorExp(elem, comps)
+  }
+
+  case object SetFactory extends SeqFactory {
+    def seqToExpr(seq: Seq[Ast.expr], trailingComma: Option[String]) = Ast.expr.Set(seq)
+    def compToExpr(elem: Ast.expr, comps: Seq[Ast.comprehension]) = Ast.expr.SetComp(elem, comps)
+  }
+
   /// testlist_comp: (test|star_expr) ( comp_for | (',' (test|star_expr))* [','] )
-  val testlist_comp: P[Ast.expr] = {
+  def testlist_comp(factory: SeqFactory): P[Ast.expr] = {
     val test_or_star = P( test | star_expr )
-    val set: P[Ast.expr.Set] = P( test_or_star.rep(1, ",") ~ ",".?).map(Ast.expr.Set)
-    val set_comp = P( test_or_star ~ comp_for ).map(Ast.expr.SetComp.tupled)
-    P( set_comp | set )
+    val seq = P( test_or_star.rep(1, ",") ~ ",".!.?).map((factory.seqToExpr _).tupled)
+    val seq_comp = P( test_or_star ~ comp_for ).map((factory.compToExpr _).tupled)
+    P( seq_comp | seq )
   }
 
   /// trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
   val trailer: P[Ast.expr => Ast.expr] = {
-    val call = P("(" ~ arglist ~ ")").map { arglist => (lhs: Ast.expr) => Ast.expr.Call(lhs, arglist._1, arglist._2) }
-    val slice = P("[" ~ subscriptlist ~ "]").map(args => (lhs: Ast.expr) => Ast.expr.Subscript(lhs, args, Ast.expr_context.Load))
-    val attr = P("." ~ NAME).map(id => (lhs: Ast.expr) => Ast.expr.Attribute(lhs, id, Ast.expr_context.Load))
+    val call = P("(" ~ arglist.? ~ ")").map {
+      case None =>
+        (lhs: Ast.expr) => Ast.expr.Call(lhs, Nil, Nil)
+      case Some(arglist) =>
+        (lhs: Ast.expr) => Ast.expr.Call(lhs, arglist._1, arglist._2)
+    }
+    val slice = P("[" ~ subscriptlist ~ "]").map(args => (lhs: Ast.expr) => Ast.expr.Subscript(lhs, args, getContext()))
+    val attr = P("." ~ NAME).map(id => (lhs: Ast.expr) => Ast.expr.Attribute(lhs, id, getContext()))
     P( call | slice | attr )
   }
 
@@ -222,6 +266,17 @@ object Expressions {
   /// exprlist: (expr|star_expr) (',' (expr|star_expr))* [',']
   val exprlist: P[Seq[Ast.expr]] = P( (expr | star_expr).rep(1, sep = ",") ~ ",".? )
 
+  object storingExprlist extends core.Parser[Seq[Ast.expr], Char, String] {
+    override def parseRec(cfg: ParseCtx, index: Int) = {
+      contextStack.push(Ast.expr_context.Store)
+      try {
+        exprlist.parseRec(cfg, index)
+      } finally {
+        contextStack.pop()
+      }
+    }
+  }
+
   /// testlist: test (',' test)* [',']
   val testlist: P[Seq[Ast.expr]] = P( test.rep(1, sep = ",") ~ ",".? )
 
@@ -242,7 +297,7 @@ object Expressions {
     val dict_comp = P(
       (dict_item ~ comp_for).map(Ast.expr.DictComp.tupled)
     )
-    P( dict_comp | dict | testlist_comp)
+    P( dict_comp | dict | testlist_comp(SetFactory))
   }
 
   /// arglist: argument (',' argument)*  [',']
@@ -265,7 +320,7 @@ object Expressions {
     val arg_named = P( NAME ~ "=" ~ test  ).map{ case (n, t) => Right(Ast.keyword(Some(n), t)) }
     val arg_starstar = P( "**" ~ test).map(x => Right(Ast.keyword(None, x)))
     val arg_star = P( "*" ~ test).map(x => Left(Ast.expr.Starred(x, getContext())))
-    P( arg_comp | arg_named | arg_starstar | arg_star )
+    P( arg_named | arg_starstar | arg_star | arg_comp )
   }
 
   /// comp_for: [ASYNC] 'for' exprlist 'in' or_test [comp_iter]
@@ -273,13 +328,16 @@ object Expressions {
   /// comp_if: 'if' test_nocond [comp_iter]
   val comp_for: P[Seq[Ast.comprehension]] = {
     val comp_if_rep: P[Seq[Ast.expr]] = P( P( "if" ~ test_nocond ).rep(1) )
-    val comp_iter = P( comp_if_rep.map(Left(_)) | comp_for.map(Right(_)) )
-    P( "async".!.? ~ "for" ~ exprlist ~ "in" ~ or_test ~ comp_iter.? ).map{
+    val comp_iter = P( (comp_if_rep ~ comp_for.?).map(t => Left(t)) | comp_for.map(Right(_)) )
+    P( "async".!.? ~ "for" ~ storingExprlist ~ "in" ~ or_test ~ comp_iter.? ).map{
       case (async, targets, test, iter) =>
-        val c0 = Ast.comprehension(tuplize(targets), iter = test, ifs = Nil, is_async = async.isDefined)
+        val trgs = tuplize(targets, Ast.expr_context.Store)
+        val c0 = Ast.comprehension(trgs, iter = test, ifs = Nil, is_async = async.isDefined)
         iter match {
-          case Some(Left(ifs)) =>
+          case Some(Left( (ifs, None) )) =>
             Seq(c0.copy(ifs = ifs))
+          case Some(Left( (ifs, Some(cn) ))) =>
+            c0.copy(ifs = ifs) +: cn
           case Some(Right(cn)) =>
             c0 +: cn
           case None =>
@@ -295,7 +353,7 @@ object Expressions {
   val yield_expr: P[Ast.expr.Yield] = P( kw("yield") ~ yield_arg.? ).map {
     case None => Ast.expr.Yield(None)
     case Some(list) =>
-      val expr = if (list.size == 1) list.head else Ast.expr.Tuple(list, Ast.expr_context.Load)
+      val expr = if (list.size == 1) list.head else Ast.expr.Tuple(list, getContext())
       Ast.expr.Yield(Some(expr))
   }
 
@@ -313,13 +371,19 @@ object Expressions {
   val typedargslist: P[Ast.arguments] = {
     type NamedArg = (Ast.arg, Option[Ast.expr])
     val named_arg: P[NamedArg] = P( tfpdef ~ ("=" ~ test).? )
+    val named_args: P[Seq[NamedArg]] = P( named_arg.rep(sep = ",") )
     type StarArgs = (Option[Ast.arg], Seq[NamedArg], Option[Ast.arg])
-    val star_args: P[StarArgs] = P( "*" ~ tfpdef.? ~ ("," ~ named_arg.repX(sep = ",")).? ~ ("," ~ "**" ~ tfpdef).? ).map {
-      case (vararg, nargs, kwarg) =>
-        (vararg, nargs.getOrElse(Nil), kwarg)
-    }
     val starstar_args: P[StarArgs] = P( "**" ~ tfpdef ).map(kwarg => (None, Nil, Some(kwarg)))
-    val alt1 = P( named_arg.repX(sep = ",") ~ ("," ~ star_args).? ).map {
+    val named_star_args: P[StarArgs] = P( named_args ~ ("," ~ starstar_args).? ).map {
+      case (nargs, None) => (None, nargs, None)
+      case (nargs, Some(kwarg)) => (None, nargs, kwarg._3)
+    }
+    val sub_star_args: P[StarArgs] = P( starstar_args | named_star_args )
+    val star_args: P[StarArgs] = P( "*" ~ tfpdef.? ~ ("," ~ sub_star_args).?).map {
+      case (vararg, None) => (vararg, Nil, None)
+      case (vararg, Some(sub)) => (vararg, sub._2, sub._3)
+    }
+    val alt1 = P( named_args ~ ("," ~ (starstar_args | star_args)).? ~ ",".?).map {
       case (normal, star) =>
         val (args, defaults) = normal.unzip
         val (vararg, nargs, kwarg) = star.getOrElse((None, Nil, None))
@@ -327,13 +391,13 @@ object Expressions {
         Ast.arguments(args = args, vararg = vararg, kwonlyargs = kwonlyargs, kw_defaults = kw_defaults.flatten,
           kwarg = kwarg, defaults = defaults.flatten)
     }
-    val alt2 = P( starstar_args ).map {
+    val alt2 = P( starstar_args ~ ",".?).map {
       case (vararg, nargs, kwarg) =>
         val (kwonlyargs, kw_defaults) = nargs.unzip
         Ast.arguments(args = Nil, vararg = vararg, kwonlyargs = kwonlyargs, kw_defaults = kw_defaults.flatten,
           kwarg = kwarg, defaults = Nil)
     }
-    P( alt1 | alt2 )
+    P( alt2 | alt1 )
   }
 
   /// tfpdef: NAME [':' test]
@@ -351,13 +415,19 @@ object Expressions {
   val varargslist: P[Ast.arguments] = {
     type NamedArg = (Ast.arg, Option[Ast.expr])
     val named_arg: P[NamedArg] = P( vfpdef ~ ("=" ~ test).? )
+    val named_args: P[Seq[NamedArg]] = P( named_arg.rep(sep = ",") )
     type StarArgs = (Option[Ast.arg], Seq[NamedArg], Option[Ast.arg])
-    val star_args: P[StarArgs] = P( "*" ~ vfpdef.? ~ ("," ~ named_arg.repX(sep = ",")).? ~ ("," ~ "**" ~ vfpdef).? ).map {
-      case (vararg, nargs, kwarg) =>
-        (vararg, nargs.getOrElse(Nil), kwarg)
-    }
     val starstar_args: P[StarArgs] = P( "**" ~ vfpdef ).map(kwarg => (None, Nil, Some(kwarg)))
-    val alt1 = P( named_arg.repX(sep = ",") ~ ("," ~ star_args).? ).map {
+    val named_star_args: P[StarArgs] = P( named_args ~ ("," ~ starstar_args).? ).map {
+      case (nargs, None) => (None, nargs, None)
+      case (nargs, Some(kwarg)) => (None, nargs, kwarg._3)
+    }
+    val sub_star_args: P[StarArgs] = P( starstar_args | named_star_args )
+    val star_args: P[StarArgs] = P( "*" ~ vfpdef.? ~ ("," ~ sub_star_args).?).map {
+      case (vararg, None) => (vararg, Nil, None)
+      case (vararg, Some(sub)) => (vararg, sub._2, sub._3)
+    }
+    val alt1 = P( named_args ~ ("," ~ (starstar_args | star_args)).? ~ ",".?).map {
       case (normal, star) =>
         val (args, defaults) = normal.unzip
         val (vararg, nargs, kwarg) = star.getOrElse((None, Nil, None))
@@ -371,7 +441,7 @@ object Expressions {
         Ast.arguments(args = Nil, vararg = vararg, kwonlyargs = kwonlyargs, kw_defaults = kw_defaults.flatten,
           kwarg = kwarg, defaults = Nil)
     }
-    P( alt1 | alt2 )
+    P( alt2 | alt1 )
   }
 
   /// vfpdef: NAME
