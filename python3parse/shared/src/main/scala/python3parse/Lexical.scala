@@ -26,11 +26,10 @@ object Lexical {
     "and",       "def",       "from",      "not",       "while",
     "as",        "del",       "global",    "nonlocal",  "with",
     "assert",    "elif",      "if",        "or",        "yield",
-    "async",     "else",      "import",    "pass",
-    "await",     "except",    "in",        "raise",
-    "break",     "finally",   "is",        "return",
-    "class",     "for",       "lambda",    "try",
-    "continue"
+    "break",     "else",      "import",    "pass",
+    "class",     "except",    "in",        "raise",
+    "continue",  "finally",   "is",        "return",
+                 "for",       "lambda",    "try"
   )
 
   val stringliteral: P[String] = P( stringprefix.? ~ (longstring | shortstring) )
