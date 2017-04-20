@@ -36,12 +36,16 @@ object ProjectTests extends TestSuite{
     val grouped = Await.result(Future.sequence(pythonFiles.map { p =>
       Future {
         print("-")
-        (Seq("python", "python3parse/jvm/src/test/resources/python3parse/parse.py", p).!, p)
+        (Seq("python3", "python3parse/jvm/src/test/resources/python3parse/parse.py", p).!, p)
       }
     }), Duration.Inf).groupBy(_._1).mapValues(_.map(_._2))
     val selfParsed = grouped(0) groupBy { x =>
       print(".")
-      python3parse.Statements.file_input.parse(new String(Files.readAllBytes(Paths.get(x)))).getClass
+      val parsed = python3parse.Statements.file_input.parse(new String(Files.readAllBytes(Paths.get(x))))
+      if (parsed.isInstanceOf[Parsed.Failure]) {
+        print(parsed)
+      }
+      parsed.getClass
     }
 
     selfParsed.get(classOf[Parsed.Failure]) match{
@@ -52,17 +56,22 @@ object ProjectTests extends TestSuite{
   }
   val tests = TestSuite{
     "dropbox/changes" - check()
-    "python/typeshed" - check()
-    "pallets/flask" - check()
-    //"zulip/zulip" - check()
-    //"ansible/ansible"- check()
+    //"python/typeshed" - check()
+    "pallets/flask" - check(
+      ignored = Seq("scripts/flaskext_compat.py")
+    )
+    "zulip/zulip" - check()
+    "ansible/ansible"- check()
     "kennethreitz/requests" - check()
 
+    /*
     'bench{
       val path = "python3parse/jvm/src/test/resources/python3parse/bench.py"
       val data = Files.readAllBytes(Paths.get(path))
       val code = new String(data)
       (python3parse.Statements.file_input ~ End).parse(code).get
     }
+    */
+
   }
 }

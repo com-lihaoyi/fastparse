@@ -382,26 +382,36 @@ object UnitTests extends TestSuite{
           Seq(FunctionDef(
             'foo,
             arguments(Seq(arg('x)), None, Seq(arg('y), arg('z)), Seq(Num(1), Num(2)), None, Nil),
-            Seq(Return(Some('x))),
-            Seq('dec),
+            Seq(Pass),
+            Nil,
             None
           )),
-          """@dec
-            |def foo(x, *, y=1, z=2):
-            |  return x
+          """def foo(x, *, y=1, z=2):
+            |  pass
           """.stripMargin
         )
         'function4 - stmt(
           Seq(FunctionDef(
             'foo,
-            arguments(Seq(arg('x)), Some(arg('y)), Nil, Nil, Some('z), Nil),
-            Seq(Return(Some('x))),
-            Seq('dec),
+            arguments(Seq(arg('x)), Some('y), Nil, Nil, Some('z), Nil),
+            Seq(Pass),
+            Nil,
             None
           )),
-          """@dec
-            |def foo(x, *y, **z):
-            |  return x
+          """def foo(x, *y, **z):
+            |  pass
+          """.stripMargin
+        )
+        'function5 - stmt(
+          Seq(FunctionDef(
+            'foo,
+            arguments(Nil, Some('args), Nil, Nil, Some('kwargs), Nil),
+            Seq(Pass),
+            Nil,
+            None
+          )),
+          """def foo(*args, **kwargs):
+            |  pass
           """.stripMargin
         )
         'with - stmt(

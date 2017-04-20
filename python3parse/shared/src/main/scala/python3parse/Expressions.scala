@@ -391,7 +391,7 @@ object Expressions {
         Ast.arguments(args = args, vararg = vararg, kwonlyargs = kwonlyargs, kw_defaults = kw_defaults.flatten,
           kwarg = kwarg, defaults = defaults.flatten)
     }
-    val alt2 = P( starstar_args ~ ",".?).map {
+    val alt2 = P( (starstar_args | star_args) ~ ",".?).map {
       case (vararg, nargs, kwarg) =>
         val (kwonlyargs, kw_defaults) = nargs.unzip
         Ast.arguments(args = Nil, vararg = vararg, kwonlyargs = kwonlyargs, kw_defaults = kw_defaults.flatten,
@@ -435,7 +435,7 @@ object Expressions {
         Ast.arguments(args = args, vararg = vararg, kwonlyargs = kwonlyargs, kw_defaults = kw_defaults.flatten,
           kwarg = kwarg, defaults = defaults.flatten)
     }
-    val alt2 = P( starstar_args ).map {
+    val alt2 = P( (starstar_args | star_args) ).map {
       case (vararg, nargs, kwarg) =>
         val (kwonlyargs, kw_defaults) = nargs.unzip
         Ast.arguments(args = Nil, vararg = vararg, kwonlyargs = kwonlyargs, kw_defaults = kw_defaults.flatten,
