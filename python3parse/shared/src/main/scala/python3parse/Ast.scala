@@ -161,7 +161,8 @@ object Ast {
     case class JoinedStr(values: expr) extends expr
     case class Bytes(s: bytes) extends expr
     // NameConstant
-    case object Ellipsis extends expr
+    case class Ellipsis() extends expr
+    val EllipsisValue = Ellipsis()
     case class Constant(value: constant) extends expr
 
     // the following expression can appear in assignment context

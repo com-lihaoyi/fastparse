@@ -31,6 +31,7 @@ object Expressions {
   val NAME: P[Ast.identifier] = Lexical.identifier
   val NUMBER: P[Ast.expr.Num] = P( Lexical.floatnumber | Lexical.longinteger | Lexical.integer | Lexical.imagnumber ).map(Ast.expr.Num)
   val STRING: P[Ast.string] = Lexical.stringliteral
+  val ELLIPSIS: P[Ast.expr.Ellipsis] = P( "...".! ).map(_ => Ast.expr.Ellipsis())
 
   /// test: or_test ['if' or_test 'else' test] | lambdef
   val test: P[Ast.expr] = {
@@ -190,7 +191,8 @@ object Expressions {
       "{" ~ dictorsetmaker ~ "}" |
       STRING.rep(1).map(_.mkString).map(Ast.expr.Str) |
       NAME.map(id => Ast.expr.Name(id, getContext())) |
-      NUMBER
+      NUMBER |
+      ELLIPSIS
     )
   }
 

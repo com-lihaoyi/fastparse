@@ -264,6 +264,10 @@ object UnitTests extends TestSuite{
           Seq(ImportFrom(None, Seq(alias('y, Some('z))), Some(2))),
           "from .. import y as z"
         )
+        'import7 - stmt(
+          Seq(ImportFrom(None, Seq(alias('y, Some('z))), Some(3))),
+          "from ... import y as z"
+        )
         'assign - stmt(
           Seq(Assign(Seq(Name('x, Load)), Num(1))),
           "x = 1"
@@ -421,6 +425,16 @@ object UnitTests extends TestSuite{
         'with2 - stmt(
           Seq(With(Seq(withitem('x, Some(Name('y, Load))), withitem('a, Some(Name('b, Load)))), Seq(Return(Some(Tuple(Seq('y, 'b), Load)))))),
           "with x as y, a as b: return y, b"
+        )
+        'ellipsis - stmt(
+          Seq(FunctionDef(
+            'clear_traces,
+            arguments.empty,
+            Seq(Expr(Ast.expr.EllipsisValue)),
+            Nil,
+            Some(Ast.expr.NoneName)
+          )),
+        "def clear_traces() -> None: ..."
         )
       }
     }

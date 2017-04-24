@@ -56,7 +56,7 @@ object ProjectTests extends TestSuite{
   }
   val tests = TestSuite{
     "dropbox/changes" - check()
-    //"python/typeshed" - check()
+    "python/typeshed" - check()
     "pallets/flask" - check(
       ignored = Seq("scripts/flaskext_compat.py")
     )
