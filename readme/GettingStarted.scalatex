@@ -32,6 +32,12 @@
         everything into memory
     @li
         Compatible with both Scala-JVM and Scala.js
+
+@p
+    FastParse is a project by @lnk("Li Haoyi", "http://www.lihaoyi.com/"). If
+    you use FastParse and enjoyed it, please chip in to support our development
+    at @lnk("https://www.patreon.com/lihaoyi", "https://www.patreon.com/lihaoyi").
+    
 @p
      The following sections will introduce you to FastParse and how to use it. You can also watch this talk:
 @iframe(
