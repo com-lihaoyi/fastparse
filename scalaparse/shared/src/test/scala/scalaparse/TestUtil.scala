@@ -1,11 +1,9 @@
 package scalaparse
 
-import fastparse._
-import utest._
+import utest.asserts.assert
 import fastparse.all._
 
 
-import scalaparse.Scala._
 
 /**
  * Created by haoyi on 5/3/15.

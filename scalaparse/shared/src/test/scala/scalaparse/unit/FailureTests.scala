@@ -560,7 +560,7 @@ object FailureTests extends TestSuite{
         |  } yield x
         |}
       """.stripMargin,
-      expected = """ "." | "}" """,
+      expected = """ "." | `=>` | `⇒` | "}" """,
       found = "{\n"
     )
       * - checkNeg(
@@ -834,6 +834,25 @@ object FailureTests extends TestSuite{
           |  $tq """".stripMargin,
         expected = """ "\"\"\"" | StringChars | Interp | NonTripleQuoteChar """,
         found = ""
+      )
+
+      * - checkNeg(
+        s"""object Foo{
+           |  for(i <- Nil if x: Int => bar) 1
+           |}
+         """.stripMargin,
+        expected = """CharsWhile(<function1>) | BacktickId | PlainId | Semis ~ `val`.? ~ TypeOrBindPattern ~/ (Generator | Assign) | Semis.? ~ Guard | "." | ")" | WL ~ "." ~/ Id | WL ~ TypeArgs | ArgList""",
+        found = ": Int"
+      )
+      * - checkNeg(
+        s"""object Foo{; x: Int => x}""",
+        expected = """ ";" | Newline.rep(1) | "}" """,
+        found = "=> x"
+      )
+      * - checkNeg(
+        s"""object Foo{ (i: Int => +i) }""",
+        expected = """ "," | ")" """,
+        found = "i)"
       )
 
   }

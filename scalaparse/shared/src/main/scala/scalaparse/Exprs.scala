@@ -17,15 +17,23 @@ trait Exprs extends Core with Types with Xml{
     P( `import` ~/ ImportExpr.rep(1, sep = ",".~/) )
   }
 
-  object StatCtx extends WsCtx(curlyBlock=true)
-  object ExprCtx extends WsCtx(curlyBlock=false)
+  // Depending on where an expression is located, subtle behavior around
+  // semicolon inference and arrow-type-ascriptions like i: a => b
+  // varies.
+
+  // Expressions used as statements, directly within a {block}
+  object StatCtx extends WsCtx(semiInference=true, arrowTypeAscriptions=false)
+  // Expressions nested within other expressions
+  object ExprCtx extends WsCtx(semiInference=false, arrowTypeAscriptions=true)
+  // Expressions directly within a `val x = ...` or `def x = ...`
+  object FreeCtx extends WsCtx(semiInference=true, arrowTypeAscriptions=true)
 
   val TypeExpr = ExprCtx.Expr
 
-  class WsCtx(curlyBlock: Boolean){
+  class WsCtx(semiInference: Boolean, arrowTypeAscriptions: Boolean){
 
-    val OneSemiMax = if (curlyBlock) OneNLMax else Pass
-    val NoSemis = if (curlyBlock) NotNewline else Pass
+    val OneSemiMax = if (semiInference) OneNLMax else Pass
+    val NoSemis = if (semiInference) NotNewline else Pass
 
 
     val Enumerators = {
@@ -54,31 +62,32 @@ trait Exprs extends Core with Types with Xml{
       }
       val Throw = P( `throw` ~/ Expr )
       val Return = P( `return` ~/ Expr.? )
-      val LambdaRhs = if (curlyBlock) P( BlockChunk ) else P( Expr )
+      val LambdaRhs = if (semiInference) P( BlockChunk ) else P( Expr )
 
 
       val ImplicitLambda = P( `implicit` ~ (Id | `_`) ~ (`:` ~ InfixType).? ~ `=>` ~ LambdaRhs.? )
-      val ParenedLambda = P( Parened ~~ (WL ~ `=>` ~ LambdaRhs.? | ExprSuffix ~~ PostfixSuffix) )
-      val PostfixLambda = P( PostfixExpr ~ (`=>` ~ LambdaRhs.?).? )
+      val ParenedLambda = P( Parened ~~ (WL ~ `=>` ~ LambdaRhs.? | ExprSuffix ~~ PostfixSuffix ~ SuperPostfixSuffix) )
+      val PostfixLambda = P( PostfixExpr ~ (`=>` ~ LambdaRhs.? | SuperPostfixSuffix).? )
       val SmallerExprOrLambda = P( ParenedLambda | PostfixLambda )
       P(
         If | While | Try | DoWhile | For | Throw | Return |
         ImplicitLambda | SmallerExprOrLambda
       )
     }
-    val AscriptionType = if (curlyBlock) P( PostfixType ) else P( Type )
+    val SuperPostfixSuffix = P( (`=` ~/ Expr).? ~ MatchAscriptionSuffix.? )
+    val AscriptionType = if (arrowTypeAscriptions) P( Type ) else P( InfixType )
     val Ascription = P( `:` ~/ (`_*` |  AscriptionType | Annot.rep(1)) )
     val MatchAscriptionSuffix = P(`match` ~/ "{" ~ CaseClauses | Ascription)
     val ExprPrefix = P( WL ~ CharIn("-+!~") ~~ !syntax.Basic.OpChar ~ WS)
     val ExprSuffix = P( (WL ~ "." ~/ Id | WL ~ TypeArgs | NoSemis ~ ArgList).repX ~~ (NoSemis  ~ `_`).? )
     val PrefixExpr = P( ExprPrefix.? ~ SimpleExpr )
-    
+
     // Intermediate `WL` needs to always be non-cutting, because you need to
     // backtrack out of `InfixSuffix` into `PostFixSuffix` if it doesn't work out
     val InfixSuffix = P( NoSemis ~~ WL ~~ Id ~ TypeArgs.? ~~ OneSemiMax ~ PrefixExpr ~~ ExprSuffix)
     val PostFix = P( NoSemis ~~ WL ~~ Id ~ Newline.? )
 
-    val PostfixSuffix = P( InfixSuffix.repX ~~ PostFix.? ~ (`=` ~/ Expr).? ~ MatchAscriptionSuffix.?)
+    val PostfixSuffix = P( InfixSuffix.repX ~~ PostFix.?)
 
     val PostfixExpr: P0 = P( PrefixExpr ~~ ExprSuffix ~~ PostfixSuffix )
 
