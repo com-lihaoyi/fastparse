@@ -1169,6 +1169,45 @@ object SuccessTests extends TestSuite{
       """.stripMargin
     )
     * - check(
+      """object Unparsed {
+        |    <xml:unparsed></xml:unparsed>
+        |    <xml:unparsed foo=""></xml:unparsed>
+        |    <xml:unparsed><</xml:unparsed>
+        |    <xml:unparsed>{foo}</xml:unparsed>
+        |    <xml:unparsed></xml:unparse></xml:unparsed>
+        |}
+      """.stripMargin
+    )
+    * - check(
+      """object Comment {
+        |    <!---->
+        |    <!----->
+        |    <!--foo-->
+        |    <!--a-b-->
+        |}
+      """.stripMargin
+    )
+    * - check(
+      """object CharRef {
+        |    <a>&#;</a>
+        |}
+      """.stripMargin
+    )
+    * - check(
+      """object CharData {
+        |    <a>]]></a>
+        |}
+      """.stripMargin
+    )
+    * - check(
+      """object XmlPatterns {
+        |  e match {
+        |    case <a>&&#;&#x;&#&&&</a> => // weirdness of scalac
+        |  }
+        |}
+      """.stripMargin
+    )
+    * - check(
       """object X{
         |   pomExtra :=
         |      <url>https://github.com/lihaoyi/scalatags</url>

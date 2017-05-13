@@ -835,6 +835,16 @@ object FailureTests extends TestSuite{
         expected = """ "\"\"\"" | StringChars | Interp | NonTripleQuoteChar """,
         found = ""
       )
+      * - checkNeg(
+        """
+          |object System {
+          |  e match { case <xml:unparsed><</xml:unparsed> => }
+          |}
+          |
+        """.stripMargin,
+        expected = """"</" | CharDataP | ScalaPatterns | ElemPattern""",
+        found = "<</xml:unp"
+      )
 
       * - checkNeg(
         s"""object Foo{
