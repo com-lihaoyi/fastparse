@@ -851,7 +851,7 @@ object FailureTests extends TestSuite{
            |  for(i <- Nil if x: Int => bar) 1
            |}
          """.stripMargin,
-        expected = """CuttingSemis ~ (GenAssign | Guard) | Guard | CharsWhile(<function1>) | BacktickId | PlainId | "." | ")" | WL ~ "." ~/ Id | WL ~ TypeArgs | ArgList""",
+        expected = """CuttingSemis ~ (GenAssign | Guard) | Guard | BacktickId | PlainId | CharsWhile(IdCharacter) | "." | ")" | WL ~ "." ~/ Id | WL ~ TypeArgs | ArgList""",
         found = ": Int"
       )
       * - checkNeg(

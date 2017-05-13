@@ -6,8 +6,17 @@ import fastparse.CharPredicates.{isLetter, isDigit}
 import Basic._
 object Identifiers{
 
+  case class NamedFunction(f: Char => Boolean)
+                          (implicit name: sourcecode.Name) extends (Char => Boolean){
+    def apply(t: Char) = f(t)
+    override def toString() = name.value
+
+  }
+  val OpCharNotSlash = NamedFunction(x => isOpChar(x) && x != '/')
+  val NotBackTick = NamedFunction(_ != '`')
+
   val Operator = P(
-    !Keywords ~ (!("/*" | "//") ~ (CharsWhile(x => isOpChar(x) && x != '/') | "/")).rep(1)
+    !Keywords ~ (!("/*" | "//") ~ (CharsWhile(OpCharNotSlash) | "/")).rep(1)
   )
 
   val VarId = VarId0(true)
@@ -15,14 +24,16 @@ object Identifiers{
   def VarId0(dollar: Boolean) = P( !Keywords ~ Lower ~ IdRest(dollar) )
   val PlainId = P( !Keywords ~ Upper ~ IdRest(true) | VarId | Operator ~ (!OpChar | &("/*" | "//")) )
   val PlainIdNoDollar = P( !Keywords ~ Upper ~ IdRest(false) | VarId0(false) | Operator )
-  val BacktickId = P( "`" ~ CharsWhile(_ != '`') ~ "`" )
+  val BacktickId = P( "`" ~ CharsWhile(NotBackTick) ~ "`" )
   val Id: P0 = P( BacktickId | PlainId )
 
   def IdRest(allowDollar: Boolean) = {
-    val NonLetterDigitId = if(!allowDollar) "" else "$"
-    val IdUnderscoreChunk = P( CharsWhileIn("_", min = 0) ~ CharsWhile(
-      c => NonLetterDigitId.contains(c) || isLetter(c) || isDigit(c)
-    ) )
+
+    val IdCharacter =
+      if(allowDollar) NamedFunction(c => c == '$' || isLetter(c) || isDigit(c))
+      else NamedFunction(c => isLetter(c) || isDigit(c))
+
+    val IdUnderscoreChunk = P( CharsWhileIn("_", min = 0) ~ CharsWhile(IdCharacter) )
     P( IdUnderscoreChunk.rep ~ (CharsWhileIn("_") ~ CharsWhile(isOpChar, min = 0)).? )
   }
 

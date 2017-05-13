@@ -30,10 +30,6 @@
                 performance.
 
             @li
-                Added the Python3Parse project: a FastParse parser for the Python3
-                grammar, thanks to @lnk("Martin Weindel", "https://github.com/MartinWeindel")
-
-            @li
                 Trailing comma support for ScalaParse, thanks to
                 @lnk("Dale Wjinand", "https://github.com/dwijnand")
 

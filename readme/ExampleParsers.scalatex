@@ -183,13 +183,8 @@
         @p
             PythonParse is currently compatible enough to parse all the python sources in Zulip, Ansible, Changes, Django, and Flask. It isn't published yet on maven central, but feel free to look at it if you want an idea of how to write a complex, real parser.
 
-        @p
-            There is also Python3Parse, a Python3 version of PythonParse that supports the
-            new Python 3 syntax grammar. These are available on maven central as
-
         @hl.scala
             "com.lihaoyi" %%% "pythonparse" % "@fastparse.Constants.version"
-            "com.lihaoyi" %%% "python3parse" % "@fastparse.Constants.version"
 
     @sect{CssParse}
         @p
