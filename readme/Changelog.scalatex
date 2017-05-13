@@ -3,6 +3,12 @@
     @sect{0.4.3}
         @ul
             @li
+                Added a @sect.ref{CharsWhileIn} (and the corresponding @code{BytesWhileIn})
+                operator: a hybrid between @sect.ref{CharsWhile} and @sect.ref{CharsIn}.
+                This should make it more convenient to continually consume characters
+                within a certain set.
+
+            @li
                 Added @code{CharIn.raw}, @code{CharsWhile.raw}, @code{CharPred.raw}
                 intrinsics, which are identical to the non-@code{raw} versions except
                 these do not pre-compute a lookup table for use during parsing. This

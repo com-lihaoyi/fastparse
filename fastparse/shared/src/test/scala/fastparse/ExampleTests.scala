@@ -270,6 +270,12 @@ object ExampleTests extends TestSuite{
         val Parsed.Success("12345", _) = cw.parse("12345")
         val Parsed.Success("123", _) = cw.parse("123 45")
       }
+      'charsWhileIn{
+        val cw = P( CharsWhileIn("123456789").! )
+
+        val Parsed.Success("12345", _) = cw.parse("12345")
+        val Parsed.Success("123", _) = cw.parse("123 45")
+      }
       'charsWhileRaw{
         val cw = P( CharsWhile.raw(_ != ' ').! )
 

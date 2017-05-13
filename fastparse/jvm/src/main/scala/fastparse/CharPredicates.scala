@@ -9,6 +9,10 @@ object CharPredicates{
     block != null && block !=
     java.lang.Character.UnicodeBlock.SPECIALS
   }
-  lazy val isMathSymbol = (c: Char) => c.getType == Character.MATH_SYMBOL
-  lazy val isOtherSymbol = (c: Char) => c.getType == Character.OTHER_SYMBOL
+  def isMathSymbol(c: Char) = c.getType == Character.MATH_SYMBOL
+  def isOtherSymbol(c: Char) = c.getType == Character.OTHER_SYMBOL
+  def isLetter(c: Char) = c.isLetter
+  def isDigit(c: Char) = c.isDigit
+  def isLower(c: Char) = c.isLower
+  def isUpper(c: Char) = c.isUpper
 }

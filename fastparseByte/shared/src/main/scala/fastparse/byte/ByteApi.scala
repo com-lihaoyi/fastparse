@@ -15,19 +15,23 @@ class ByteApi() extends Api[Byte, ByteVector](
 
   object ElemPred extends ElemPred{
     def create(pred: Byte => Boolean, precompute: Boolean): P0 =
-      Intrinsics.ElemPred("CharPred", pred, precompute)
+      Intrinsics.ElemPred("BytePred", pred, precompute)
 
   }
 
   def ElemIn(strings: Seq[Byte]*) = {
-    Intrinsics.ElemIn[Byte, Bytes]("CharIn", strings.map(_.toIndexedSeq))
+    Intrinsics.ElemIn[Byte, Bytes]("ByteIn", strings.map(_.toIndexedSeq))
+  }
+  def ElemsWhileIn(strings: Seq[Byte], min: Int = 1) = {
+    Intrinsics.ElemsWhileIn[Byte, Bytes]("BytesWhileIn", Seq(strings), min)
   }
   def ByteIn(strings: Seq[Byte]*) = ElemIn(strings:_*)
+  def BytesWhileIn(strings: Seq[Byte], min: Int = 1) = ElemsWhileIn(strings, min)
 
 
   object ElemsWhile extends ElemsWhile{
     def create(pred: Byte => Boolean, min: Int = 1, precompute: Boolean) =
-      Intrinsics.ElemsWhile[Byte, Bytes]("CharsWhile", pred, min, precompute )
+      Intrinsics.ElemsWhile[Byte, Bytes]("BytesWhile", pred, min, precompute )
   }
 
 

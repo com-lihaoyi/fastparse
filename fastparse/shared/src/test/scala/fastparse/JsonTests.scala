@@ -40,12 +40,10 @@ object JsonTests extends TestSuite{
 
   }
   // Here is the parser
-  val Whitespace = NamedFunction(" \r\n".contains(_: Char), "Whitespace")
-  val Digits = NamedFunction('0' to '9' contains (_: Char), "Digits")
   val StringChars = NamedFunction(!"\"\\".contains(_: Char), "StringChars")
 
-  val space         = P( CharsWhile(Whitespace).? )
-  val digits        = P( CharsWhile(Digits))
+  val space         = P( CharsWhileIn(" \r\n").? )
+  val digits        = P( CharsWhileIn("0123456789"))
   val exponent      = P( CharIn("eE") ~ CharIn("+-").? ~ digits )
   val fractional    = P( "." ~ digits )
   val integral      = P( "0" | CharIn('1' to '9') ~ digits.? )

@@ -69,7 +69,7 @@ abstract class Api[Elem, Repr](ct: ClassTag[Elem],
   }
   val ElemPred: ElemPred
 
-  def ElemIn(seqs: Seq[Elem]*): P0
+
 
   abstract class ElemsWhile{
     def create(pred: Elem => Boolean, min: Int = 1, precompute: Boolean): P0
@@ -77,6 +77,9 @@ abstract class Api[Elem, Repr](ct: ClassTag[Elem],
     def raw(pred: Elem => Boolean, min: Int = 1) = create(pred, min, false)
   }
   val ElemsWhile: ElemsWhile
+
+  def ElemIn(seqs: Seq[Elem]*): P0
+  def ElemsWhileIn(seqs: Seq[Elem], min: Int = 1): P0
 
   def SeqIn(seqs: Repr*) = Intrinsics.StringIn[Elem, Repr](seqs: _*)
 

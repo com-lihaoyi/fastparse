@@ -122,6 +122,8 @@
             @li
                 @hl.scala{ElemsWhile} for @hl.scala{CharsWhile} and @hl.scala{BytesWhile}
             @li
+                @hl.scala{ElemsWhileIn} for @hl.scala{CharsWhileIn} and @hl.scala{BytesWhileIn}
+            @li
                 @hl.scala{SeqIn} for @hl.scala{StringIn}
 
         @p

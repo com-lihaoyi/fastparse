@@ -1,6 +1,6 @@
 package fastparse.byte
 import acyclic.file
-import fastparse.utils.{ElemSetHelper, ParserInput, ReprOps}
+import fastparse.utils.{ElemSetHelper, Generator, ParserInput, ReprOps}
 import fastparse.utils.Utils.HexUtils
 import scodec.bits.ByteVector
 
@@ -8,7 +8,7 @@ object ByteBitSetHelper extends ElemSetHelper[Byte] {
   def toInt(a: Byte): Int = a
   def ordering = implicitly[Ordering[Byte]]
   def toLowerCase(in: Byte) = in
-  def generateValues(f: Byte => Unit) = {
+  def generateValues(f: Generator.Callback[Byte]) = {
     var i = Byte.MinValue.toInt
     while(i <= Byte.MaxValue){
       f(i.toByte)
@@ -23,7 +23,28 @@ object ByteReprOps extends ReprOps[Byte, ByteVector] {
   def toArray(input: ByteVector) = input.toArray
   def fromSeq(input: Seq[Byte]) = ByteVector(input:_*)
 
-  private def ByteToHex(b: Byte) = s"${HexUtils.hexChars((b & 0xf0) >> 4)}${HexUtils.hexChars(b & 15)}"
+  private def ByteToHex(b: Byte) = {
+    def singleHexChar(b: Int) = b match{
+      case 0  => '0'
+      case 1  => '1'
+      case 2  => '2'
+      case 3  => '3'
+      case 4  => '4'
+      case 5  => '5'
+      case 6  => '6'
+      case 7  => '7'
+      case 8  => '8'
+      case 9  => '9'
+      case 10 => 'a'
+      case 11 => 'b'
+      case 12 => 'c'
+      case 13 => 'd'
+      case 14 => 'e'
+      case 15 => 'f'
+    }
+
+    s"${singleHexChar((b & 0xf0) >> 4)}${singleHexChar(b & 15)}"
+  }
 
   def prettyPrint(input: Bytes): String = input.toArray.map(ByteToHex).mkString(" ")
   def literalize(input: Bytes): String = '"' + prettyPrint(input) + '"'

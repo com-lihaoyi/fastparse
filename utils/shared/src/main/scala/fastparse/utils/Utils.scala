@@ -18,9 +18,7 @@ object MacroUtils{
   def preComputeImpl(c: Compat.Context)(pred: c.Expr[Char => Boolean]): c.Expr[Utils.BitSet[Char]] = {
     import c.universe._
     val evaled = c.eval(c.Expr[Char => Boolean](c.resetLocalAttrs(pred.tree.duplicate)))
-    val (first, last, array) = Utils.BitSet.compute[Char](
-      f => (Char.MinValue to Char.MaxValue).foreach(f)
-    )
+    val (first, last, array) = Utils.BitSet.compute[Char](new Generator.Pred(_ => true))
     val txt = Utils.HexUtils.ints2Hex(array)
     c.Expr[Utils.BitSet[Char]](q"""
       new fastparse.utils.Utils.BitSet(fastparse.utils.Utils.HexUtils.hex2Ints($txt), $first, $last)
@@ -59,24 +57,46 @@ object Utils {
   }
 
   object HexUtils {
-    val hexChars = Seq(
-      '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-      'a', 'b', 'c', 'd', 'e', 'f'
-    )
+
     def hex2Int(hex: String): Int = {
       var res = 0
-      for(i <- 0 until hex.length){
-        res += hexChars.indexOf(hex(i)) << (4 * (7 - i))
+      var i = 0
+      while(i < hex.length){
+        val digitValue = hex(i) match{
+          case '0' => 0
+          case '1' => 1
+          case '2' => 2
+          case '3' => 3
+          case '4' => 4
+          case '5' => 5
+          case '6' => 6
+          case '7' => 7
+          case '8' => 8
+          case '9' => 9
+          case 'a' => 10
+          case 'b' => 11
+          case 'c' => 12
+          case 'd' => 13
+          case 'e' => 14
+          case 'f' => 15
+        }
+        res += digitValue << (4 * (7 - i))
+        i += 1
       }
+
       res
     }
     def hex2Ints(hex: String): Array[Int] = {
-      val res = for {
-        i <- 0 to hex.length - 1 by 8
       // parseUnsignedInt not implemented in Scala.js
       // java.lang.Long.parseLong also misbehaves
-      } yield hex2Int(hex.slice(i, i+8))
-      res.toArray
+      val outputArr = new Array[Int](hex.length / 8)
+      var i = 0
+      while(i < hex.length - 1){
+        outputArr(i/8) = hex2Int(hex.slice(i, i+8))
+        i += 8
+      }
+
+      outputArr
     }
 
     def ints2Hex(ints: Array[Int]): String = {
@@ -88,13 +108,18 @@ object Utils {
     }
   }
 
+
   object BitSet {
-    def compute[Elem](generator: (Elem => Unit) => Unit)(implicit helper: ElemSetHelper[Elem]) = {
+    class BitsetComputeCallback[Elem](buffer: mutable.Buffer[Elem] )
+      extends Generator.Callback[Elem]{
+      def apply(v: Elem) = buffer.append(v)
+    }
+
+    def compute[Elem](generator: Generator[Elem])(implicit helper: ElemSetHelper[Elem]) = {
 
       val buffer = mutable.ArrayBuffer.empty[Elem]
-      generator( elem =>
-        buffer.append(elem)
-      )
+
+      generator( new BitsetComputeCallback(buffer) )
 
       val first = helper.toInt(buffer.min(helper.ordering))
       val last = helper.toInt(buffer.max(helper.ordering))
@@ -108,7 +133,7 @@ object Utils {
       }
       (first, last, array)
     }
-    def apply[Elem](generator: (Elem => Unit) => Unit)
+    def apply[Elem](generator: Generator[Elem])
                    (implicit helper: ElemSetHelper[Elem]) = {
       val (first, last, array) = compute(generator)
       new BitSet[Elem](array, first, last)

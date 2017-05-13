@@ -268,10 +268,21 @@ object ByteTests extends TestSuite {
 
         val nullTerminated = P( (BytesWhile(_ != 0).! ~ BS(0)).rep() )
 
-        val Parsed.Success(res, _) = nullTerminated .parse(
+        val Parsed.Success(res, _) = nullTerminated.parse(
           hex"de ad be ef 00 13 37 00"
         )
         assert(res == Seq(hex"de ad be ef", hex"13 37"))
+      }
+
+      'bytesWhileIn {
+        import fastparse.byte.all._
+
+        val nullTerminated = P( (BytesWhileIn(hex"de ad be ef".toSeq).! ~ BS(0)).rep() )
+
+        val Parsed.Success(res, _) = nullTerminated.parse(
+          hex"de ad be ef 00 13 37 00"
+        )
+        assert(res == Seq(hex"de ad be ef"))
       }
 
       'bytePred{
@@ -279,7 +290,7 @@ object ByteTests extends TestSuite {
 
         val nullTerminated = P( (BytePred(_ != 0).rep().! ~ BS(0)).rep() )
 
-        val Parsed.Success(res, _) = nullTerminated .parse(
+        val Parsed.Success(res, _) = nullTerminated.parse(
           Bytes(0xde, 0xad, 0xbe, 0xef, 0x00, 0x13, 0x37, 0x00)
         )
         assert(res == Seq(Bytes(0xde, 0xad, 0xbe, 0xef), Bytes(0x13, 0x37)))

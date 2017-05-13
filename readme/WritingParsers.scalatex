@@ -230,7 +230,7 @@
 
         @sect{CharsWhile}
             @i
-                See also @hl.scala{ElemWhile} in @sect.ref{Abstraction}
+                See also @hl.scala{ElemsWhile} in @sect.ref{Abstraction}
 
             @hl.ref(tests/"ExampleTests.scala", Seq("'charsWhile", ""))
 
@@ -248,6 +248,21 @@
                 This could be useful if you find your parsers are taking too long to
                 initialize and don't mind sacrificing a bit of steady-state
                 performance.
+
+        @sect{CharsWhileIn}
+            @i
+                See also @hl.scala{ElemsWhileIn} in @sect.ref{Abstraction}
+
+            @hl.ref(tests/"ExampleTests.scala", Seq("'charsWhileIn", ""))
+
+            @p
+                A combination of @sect.ref{CharsWhile} and @sect.ref{CharIn}, this
+                parser continues consuming characters as long as they are within
+                the set you characters you passed to it.
+            @p
+                If you find yourself using @sect.ref{CharsWhile} with @code{contains}
+                e.g. @hl.scala{CharsWhile("abc".contains)}, you probably could
+                use @code{CharsWhileIn} instead.
         @sect{StringIn}
             @i
                 See also @hl.scala{SeqIn} in @sect.ref{Abstraction}

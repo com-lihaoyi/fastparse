@@ -2,7 +2,7 @@ package fastparse.parsers
 import acyclic.file
 import fastparse.utils.Utils._
 import fastparse.core.{ParseCtx, Parsed, Parser, Precedence}
-import fastparse.utils.{ElemSetHelper, ReprOps, Utils}
+import fastparse.utils.{ElemSetHelper, Generator, ReprOps, Utils}
 
 /**
  * High-performance intrinsics for parsing common patterns. All
@@ -11,25 +11,6 @@ import fastparse.utils.{ElemSetHelper, ReprOps, Utils}
  * faster or more convenient.
  */
 object Intrinsics {
-  type GenOrPred[Elem] = Either[(Elem => Unit) => Unit, Elem => Boolean]
-  abstract class PrecomputableParser[Elem, Repr](generatorOrPred: GenOrPred[Elem])
-                                                (implicit val helper: ElemSetHelper[Elem],
-                                                 val repr: ReprOps[Elem, Repr])
-    extends Parser[Unit, Elem, Repr]{
-
-    private[this] val uberSet: Utils.BitSet[Elem] = generatorOrPred match{
-      case Left(generator) => BitSet(generator)
-      case Right(pred) => null
-    }
-
-    private[this] val precompute0 = generatorOrPred.isLeft
-    private[this] val predicate0: Elem => Boolean = generatorOrPred match{
-      case Left(generator) => null
-      case Right(pred) => pred
-    }
-
-    def check(e: Elem) = if (precompute0) uberSet(e) else predicate0(e)
-  }
 
   abstract class ElemSet[Elem, Repr](generatorOrPred: GenOrPred[Elem])
                                     (implicit helper: ElemSetHelper[Elem],
@@ -45,17 +26,8 @@ object Intrinsics {
     }
   }
 
-  def makeGenOrPred[Elem](predicate: Elem => Boolean, precompute: Boolean)
-                         (implicit helper: ElemSetHelper[Elem]): GenOrPred[Elem] = {
-    if (precompute){
-      Left(callback =>
-        helper.generateValues{ v =>
-          if(predicate(v)) callback(v)
 
-        }
-      )
-    } else Right(predicate)
-  }
+
 
   /**
    * Parses a single character if it passes the predicate
@@ -70,6 +42,9 @@ object Intrinsics {
     override def toString = s"$name($predicate)"
   }
 
+  def flattenStringsGen[Elem](items: Seq[Seq[Elem]]) = {
+    new Generator.Iter(items.iterator.map(_.iterator).flatten)
+  }
   /**
    * Parses a single character if its contained in the lists of allowed characters
    */
@@ -77,8 +52,23 @@ object Intrinsics {
                                 strings: Seq[Seq[Elem]])
                                (implicit repr: ReprOps[Elem, Repr],
                                 ehelper: ElemSetHelper[Elem])
-      extends ElemSet[Elem, Repr](Left(strings.iterator.map(_.iterator).flatten.foreach)){
-    override def toString = s"$name(${repr.literalize(repr.flatten(strings.map(repr.fromSeq)))})"
+      extends ElemSet[Elem, Repr](Left(flattenStringsGen(strings))){
+    override def toString = prettyPrintStrings(name, strings)
+  }
+
+  /**
+    * Keeps consuming characters as long as they are within
+    * [[strings]]
+    */
+  case class ElemsWhileIn[Elem, Repr](name: String,
+                                      strings: Seq[Seq[Elem]],
+                                      min: Int = 1)
+                                     (implicit helper: ElemSetHelper[Elem],
+                                      repr: ReprOps[Elem, Repr])
+    extends PrecomputableParser[Elem, Repr](Left(flattenStringsGen(strings)))
+    with WhileParser[Elem, Repr]{
+
+    override def toString = prettyPrintStrings(name, strings)
   }
 
   /**
@@ -91,17 +81,12 @@ object Intrinsics {
                                     precompute: Boolean)
                                    (implicit helper: ElemSetHelper[Elem],
                                     repr: ReprOps[Elem, Repr])
-      extends PrecomputableParser[Elem, Repr](makeGenOrPred(predicate, precompute)){
+      extends PrecomputableParser[Elem, Repr](makeGenOrPred(predicate, precompute))
+      with WhileParser[Elem, Repr]{
 
-    def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
-      var curr = index
-      val input = cfg.input
-      while(input.isReachable(curr) && check(input(curr))) curr += 1
-      if (curr - index < min) fail(cfg.failure, curr)
-      else success(cfg.success, (), curr, Set.empty, false)
-    }
     override def toString = s"$name($predicate)"
   }
+
   /**
    * Very efficiently attempts to parse a set of strings, by
    * first converting it into an array-backed Trie and then walking it once.
@@ -134,4 +119,55 @@ object Intrinsics {
                                            (implicit repr: ReprOps[Elem, Repr],
                                             helper: ElemSetHelper[Elem],
                                             ordering: Ordering[Elem]) extends StringInBase(true, strings:_*)
+
+
+
+
+  // ------------------------------ Helpers ------------------------------
+
+
+  def prettyPrintStrings[Elem, Repr](name: String,
+                                     strings: Seq[Seq[Elem]])
+                                    (implicit repr: ReprOps[Elem, Repr]) = {
+
+    s"$name(${repr.literalize(repr.flatten(strings.map(repr.fromSeq)))})"
+  }
+  trait WhileParser[Elem, Repr] extends Parser[Unit, Elem, Repr]{
+    def check(e: Elem): Boolean
+    def min: Int
+    def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
+      var curr = index
+      val input = cfg.input
+      while(input.isReachable(curr) && check(input(curr))) curr += 1
+      if (curr - index < min) fail(cfg.failure, curr)
+      else success(cfg.success, (), curr, Set.empty, false)
+    }
+  }
+
+  type GenOrPred[Elem] = Either[Generator[Elem], Elem => Boolean]
+  abstract class PrecomputableParser[Elem, Repr](generatorOrPred: GenOrPred[Elem])
+                                                (implicit val helper: ElemSetHelper[Elem],
+                                                 val repr: ReprOps[Elem, Repr])
+    extends Parser[Unit, Elem, Repr]{
+
+    private[this] val uberSet: Utils.BitSet[Elem] = generatorOrPred match{
+      case Left(generator) => BitSet(generator)
+      case Right(pred) => null
+    }
+
+    private[this] val precompute0 = generatorOrPred.isLeft
+    private[this] val predicate0: Elem => Boolean = generatorOrPred match{
+      case Left(generator) => null
+      case Right(pred) => pred
+    }
+
+    def check(e: Elem) = if (precompute0) uberSet(e) else predicate0(e)
+  }
+
+
+  def makeGenOrPred[Elem](predicate: Elem => Boolean, precompute: Boolean)
+                         (implicit helper: ElemSetHelper[Elem]): GenOrPred[Elem] = {
+    if (precompute) Left(new Generator.Pred(predicate))
+    else Right(predicate)
+  }
 }

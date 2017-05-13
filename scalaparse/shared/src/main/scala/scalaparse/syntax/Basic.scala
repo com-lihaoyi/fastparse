@@ -13,12 +13,12 @@ object Basic {
   val Digit = P( CharIn(digits) )
   val hexDigits = digits + "abcdefABCDEF"
   val HexDigit = P( CharIn(hexDigits) )
-  val HexNum = P( "0x" ~ CharsWhile(hexDigits.contains(_)) )
-  val DecNum = P( CharsWhile(digits.contains(_)) )
+  val HexNum = P( "0x" ~ CharsWhileIn(hexDigits) )
+  val DecNum = P( CharsWhileIn(digits) )
   val Exp = P( CharIn("Ee") ~ CharIn("+-").? ~ DecNum )
   val FloatType = P( CharIn("fFdD") )
 
-  val WSChars = P( CharsWhile("\u0020\u0009".contains(_)) )
+  val WSChars = P( CharsWhileIn("\u0020\u0009") )
   val Newline = P( StringIn("\r\n", "\n") )
   val Semi = P( ";" | Newline.rep(1) )
   val OpChar = P ( CharPred(isOpChar) )
@@ -26,12 +26,16 @@ object Basic {
   def isOpChar(c: Char) = {
     // scalac 2.10 crashes if OtherOrMathSymbol below is substituted by its body
     // Same thing for LetterDigit, LowerChar, UpperChar
-    fastparse.CharPredicates.isOtherSymbol(c) || fastparse.CharPredicates.isMathSymbol(c) || "!#%&*+-/:<=>?@\\^|~".contains(c)
+    isOtherSymbol(c) ||
+    isMathSymbol(c) ||
+    "!#%&*+-/:<=>?@\\^|~".contains(c)
   }
-  val Letter = P( CharPred(c => c.isLetter | c.isDigit | "$_".contains(c)) )
-  val LetterDigitDollarUnderscore =  P( CharPred(c => c.isLetter | c.isDigit | "$_".contains(c) ) )
-  val Lower = P( CharPred(c => c.isLower || "$_".contains(c)) )
-  val Upper = P( CharPred(_.isUpper) )
+  val Letter = P( CharPred(c => isLetter(c) | isDigit(c) | "$_".contains(c)) )
+  val LetterDigitDollarUnderscore =  P(
+    CharPred(c => isLetter(c) | isDigit(c) | "$_".contains(c) )
+  )
+  val Lower = P( CharPred(c => isLower(c) || "$_".contains(c)) )
+  val Upper = P( CharPred(isUpper) )
 }
 /**
  * Most keywords don't just require the correct characters to match,
