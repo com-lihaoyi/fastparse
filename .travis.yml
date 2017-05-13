@@ -82,6 +82,10 @@ matrix:
       scala: 2.11.8
       jdk: oraclejdk8
     - env:
+      - CI_SCRIPT: '"python3parseJVM/test; python3parseJS/test"'
+      scala: 2.11.8
+      jdk: oraclejdk8
+    - env:
       - CI_SCRIPT: '"cssparseJVM/test; cssparseJS/test"'
       scala: 2.11.8
       jdk: oraclejdk8
