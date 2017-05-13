@@ -61,9 +61,22 @@ abstract class Api[Elem, Repr](ct: ClassTag[Elem],
   val End = parsers.Terminals.End[Elem, Repr]()
   val Index = parsers.Terminals.Index[Elem, Repr]()
   val AnyElem: P0
-  def ElemPred(pred: Elem => Boolean): P0
+
+  abstract class ElemPred{
+    def create(pred: Elem => Boolean, precompute: Boolean): P0
+    def apply(pred: Elem => Boolean) = create(pred, true)
+    def raw(pred: Elem => Boolean) = create(pred, false)
+  }
+  val ElemPred: ElemPred
+
   def ElemIn(seqs: Seq[Elem]*): P0
-  def ElemsWhile(pred: Elem => Boolean, min: Int = 1): P0
+
+  abstract class ElemsWhile{
+    def create(pred: Elem => Boolean, min: Int = 1, precompute: Boolean): P0
+    def apply(pred: Elem => Boolean, min: Int = 1) = create(pred, min, true)
+    def raw(pred: Elem => Boolean, min: Int = 1) = create(pred, min, false)
+  }
+  val ElemsWhile: ElemsWhile
 
   def SeqIn(seqs: Repr*) = Intrinsics.StringIn[Elem, Repr](seqs: _*)
 

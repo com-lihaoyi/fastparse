@@ -205,31 +205,44 @@
             @p
                 Note that this builds a high-performance bit-packed lookup table, the size of the range of valid characters, up to 65k. That means that creating a parser like this has a one-time cost in terms of memory (up to 8k bytes) and time. This should not matter as FastParse parsers are long-lived and re-usable, though you may want to consciously avoid creating too many of these repeatedly.
 
-
-        @sect{CharIn}
-            @i
-                See also @hl.scala{ElemIn} in @sect.ref{Abstraction}
-            @hl.ref(tests/"ExampleTests.scala", Seq("'charIn", ""))
             @p
-                Similar to @sect.ref{CharPred}, except you pass in sequences of valid characters rather than a predicate.
+                You can use @code{CharPred.raw} if you want to avoid pre-computing the lookup table, in which case the predicate is re-run repeatedly during parsing.
 
-            @p
-                As a result, it's much faster to execute than if you had used @hl.scala{"a" | "b" | "c" | "d" | ...} to combine a bunch of single-character parsers together. The same warning as @sect.ref{CharPred} about the one time cost-of-construction applies.
+            @hl.ref(tests/"ExampleTests.scala", Seq("'charPredRaw", ""))
 
             @p
                 This could be useful if you find your parsers are taking too long to
                 initialize and don't mind sacrificing a bit of steady-state
                 performance.
 
+        @sect{CharIn}
+            @i
+                See also @hl.scala{ElemIn} in @sect.ref{Abstraction}
+
+            @hl.ref(tests/"ExampleTests.scala", Seq("'charIn", ""))
+
+            @p
+                Similar to @sect.ref{CharPred}, except you pass in sequences of valid characters rather than a predicate.
+
+            @p
+                @code{CharIn} also builds a lookup table which it uses during parsing. As a result, it's much faster to execute than if you had used @hl.scala{"a" | "b" | "c" | "d" | ...} to combine a bunch of single-character parsers together. The same warning as @sect.ref{CharPred} about the one time cost-of-construction applies.
+
+
         @sect{CharsWhile}
             @i
                 See also @hl.scala{ElemWhile} in @sect.ref{Abstraction}
+
             @hl.ref(tests/"ExampleTests.scala", Seq("'charsWhile", ""))
+
             @p
                 A repeated version of @sect.ref{CharPred}: this parser continually chomps away at characters as long as they continue passes the given predicate.
 
             @p
                 This is a very fast parser, ideal for quickly consuming large numbers of characters. The same warning as @sect.ref{CharPred} about the one time cost-of-construction applies.
+            @p
+                You can use @code{CharsWhile.raw} if you want to avoid pre-computing the lookup table, in which case the predicate is re-run repeatedly during parsing.
+
+            @hl.ref(tests/"ExampleTests.scala", Seq("'charsWhileRaw", ""))
 
             @p
                 This could be useful if you find your parsers are taking too long to

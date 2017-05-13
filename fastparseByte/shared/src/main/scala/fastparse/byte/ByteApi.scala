@@ -12,16 +12,30 @@ class ByteApi() extends Api[Byte, ByteVector](
 
   val AnyByte = parsers.Terminals.AnyElem[Byte, Bytes]("AnyByte")
   def AnyBytes(count: Int) = Terminals.AnyElems[Byte, Bytes]("AnyBytes", count)
-  def BytePred(pred: Byte => Boolean): P0 = Intrinsics.ElemPred("BytePred", pred)
-  def ByteIn(seqs: Seq[Byte]*) = Intrinsics.ElemIn[Byte, Bytes]("ByteIn", seqs.map(_.toIndexedSeq))
-  def BytesWhile(pred: Byte => Boolean, min: Int = 1) = Intrinsics.ElemsWhile[Byte, Bytes]("BytesWhile", pred, min)
+
+  object ElemPred extends ElemPred{
+    def create(pred: Byte => Boolean, precompute: Boolean): P0 =
+      Intrinsics.ElemPred("CharPred", pred, precompute)
+
+  }
+
+  def ElemIn(strings: Seq[Byte]*) = {
+    Intrinsics.ElemIn[Byte, Bytes]("CharIn", strings.map(_.toIndexedSeq))
+  }
+  def ByteIn(strings: Seq[Byte]*) = ElemIn(strings:_*)
+
+
+  object ElemsWhile extends ElemsWhile{
+    def create(pred: Byte => Boolean, min: Int = 1, precompute: Boolean) =
+      Intrinsics.ElemsWhile[Byte, Bytes]("CharsWhile", pred, min, precompute )
+  }
 
 
   val AnyElem = AnyByte
   def AnyElems(count: Int) = AnyBytes(count)
-  def ElemPred(pred: Byte => Boolean) = BytePred(pred)
-  def ElemIn(strings: Seq[Byte]*) = ByteIn(strings:_*)
-  def ElemsWhile(pred: Byte => Boolean, min: Int = 1) = BytesWhile(pred, min)
+
+  val BytePred = ElemPred
+  val BytesWhile = ElemsWhile
 
   /**
     * Construct a literal byte-parser out of raw byte values. Any integral

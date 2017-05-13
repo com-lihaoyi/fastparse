@@ -93,7 +93,7 @@ object Utils {
 
       val buffer = mutable.ArrayBuffer.empty[Elem]
       generator( elem =>
-        buffer += elem
+        buffer.append(elem)
       )
 
       val first = helper.toInt(buffer.min(helper.ordering))

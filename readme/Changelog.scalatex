@@ -3,6 +3,14 @@
     @sect{0.4.3}
         @ul
             @li
+                Added @code{CharIn.raw}, @code{CharsWhile.raw}, @code{CharPred.raw}
+                intrinsics, which are identical to the non-@code{raw} versions except
+                these do not pre-compute a lookup table for use during parsing. This
+                could be useful if you find your parsers are taking too long to
+                initialize and don't mind sacrificing a bit of steady-state
+                performance.
+
+            @li
                 Added the Python3Parse project: a FastParse parser for the Python3
                 grammar, thanks to @lnk("Martin Weindel", "https://github.com/MartinWeindel")
 

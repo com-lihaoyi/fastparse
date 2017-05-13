@@ -246,6 +246,12 @@ object ExampleTests extends TestSuite{
         val Parsed.Success("ABC", _) = cp.parse("ABC.")
         val Parsed.Failure(_, 2, _) = cp.parse("ABc.")
       }
+      'charPredRaw{
+        val cp = P( CharPred.raw(_.isUpper).rep.! ~ "." ~ End )
+
+        val Parsed.Success("ABC", _) = cp.parse("ABC.")
+        val Parsed.Failure(_, 2, _) = cp.parse("ABc.")
+      }
       'charIn{
         val ci = P( CharIn("abc", "xyz").rep.! ~ End )
 
@@ -257,8 +263,15 @@ object ExampleTests extends TestSuite{
         val Parsed.Success("12345", _) = digits.parse("12345abcde")
         val Parsed.Success("123", _) = digits.parse("123abcde45")
       }
+
       'charsWhile{
         val cw = P( CharsWhile(_ != ' ').! )
+
+        val Parsed.Success("12345", _) = cw.parse("12345")
+        val Parsed.Success("123", _) = cw.parse("123 45")
+      }
+      'charsWhileRaw{
+        val cw = P( CharsWhile.raw(_ != ' ').! )
 
         val Parsed.Success("12345", _) = cw.parse("12345")
         val Parsed.Success("123", _) = cw.parse("123 45")

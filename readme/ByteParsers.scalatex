@@ -413,11 +413,22 @@
                 predicate returns true. Useful for things like 0-delimited
                 fields, where you want to consume the input until the next
                 0 byte.
+            @p
+                The predicate is used to build a lookup table, which is then used
+                to speed up parsing. You can use @code{BytesWhile.raw} if you want to
+                avoid pre-computing the lookup table, in which case the predicate is
+                re-run repeatedly during parsing.
 
         @sect{BytePred}
             @hl.ref(tests/"ByteTests.scala", Seq("'bytePred", ""))
             @p
                 Consumes a single-byte, satisfying any arbitrary predicate.
+
+            @p
+                The predicate is used to build a lookup table, which is then used
+                to speed up parsing. You can use @code{BytePred.raw} if you want to
+                avoid pre-computing the lookup table, in which case the predicate is
+                re-run repeatedly during parsing.
 
     @sect{Example Byte Parsers}
 

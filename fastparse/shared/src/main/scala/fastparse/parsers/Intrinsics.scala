@@ -11,16 +11,27 @@ import fastparse.utils.{ElemSetHelper, ReprOps, Utils}
  * faster or more convenient.
  */
 object Intrinsics {
-  type Generator[Elem] = (Elem => Unit) => Unit
-  abstract class PrecomputableParser[Elem, Repr](generator: Generator[Elem])
+  type GenOrPred[Elem] = Either[(Elem => Unit) => Unit, Elem => Boolean]
+  abstract class PrecomputableParser[Elem, Repr](generatorOrPred: GenOrPred[Elem])
                                                 (implicit val helper: ElemSetHelper[Elem],
                                                  val repr: ReprOps[Elem, Repr])
     extends Parser[Unit, Elem, Repr]{
 
-    protected[this] val uberSet: Utils.BitSet[Elem] = BitSet(generator)
+    private[this] val uberSet: Utils.BitSet[Elem] = generatorOrPred match{
+      case Left(generator) => BitSet(generator)
+      case Right(pred) => null
+    }
+
+    private[this] val precompute0 = generatorOrPred.isLeft
+    private[this] val predicate0: Elem => Boolean = generatorOrPred match{
+      case Left(generator) => null
+      case Right(pred) => pred
+    }
+
+    def check(e: Elem) = if (precompute0) uberSet(e) else predicate0(e)
   }
 
-  abstract class ElemSet[Elem, Repr](generatorOrPred: Generator[Elem])
+  abstract class ElemSet[Elem, Repr](generatorOrPred: GenOrPred[Elem])
                                     (implicit helper: ElemSetHelper[Elem],
                                      repr: ReprOps[Elem, Repr])
       extends PrecomputableParser[Elem, Repr](generatorOrPred){
@@ -29,27 +40,32 @@ object Intrinsics {
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       val input = cfg.input
       if (!input.isReachable(index)) fail(cfg.failure, index)
-      else if (uberSet(input(index))) success(cfg.success, (), index + 1, Set.empty, false)
+      else if (check(input(index))) success(cfg.success, (), index + 1, Set.empty, false)
       else fail(cfg.failure, index)
     }
   }
 
+  def makeGenOrPred[Elem](predicate: Elem => Boolean, precompute: Boolean)
+                         (implicit helper: ElemSetHelper[Elem]): GenOrPred[Elem] = {
+    if (precompute){
+      Left(callback =>
+        helper.generateValues{ v =>
+          if(predicate(v)) callback(v)
 
-  class PredGenerator[Elem](predicate: Elem => Boolean)
-                           (implicit helper: ElemSetHelper[Elem]) extends Generator[Elem]{
-    def apply(callback: Elem => Unit): Unit = {
-      helper.generateValues{ v => if(predicate(v)) callback(v)}
-    }
+        }
+      )
+    } else Right(predicate)
   }
 
   /**
    * Parses a single character if it passes the predicate
    */
   case class ElemPred[Elem, Repr](name: String,
-                                  predicate: Elem => Boolean)
+                                  predicate: Elem => Boolean,
+                                  precompute: Boolean)
                                  (implicit helper: ElemSetHelper[Elem],
                                   repr: ReprOps[Elem, Repr])
-    extends ElemSet[Elem, Repr](new PredGenerator(predicate)){
+    extends ElemSet[Elem, Repr](makeGenOrPred(predicate, precompute)){
 
     override def toString = s"$name($predicate)"
   }
@@ -61,7 +77,7 @@ object Intrinsics {
                                 strings: Seq[Seq[Elem]])
                                (implicit repr: ReprOps[Elem, Repr],
                                 ehelper: ElemSetHelper[Elem])
-      extends ElemSet[Elem, Repr](strings.iterator.map(_.iterator).flatten.foreach){
+      extends ElemSet[Elem, Repr](Left(strings.iterator.map(_.iterator).flatten.foreach)){
     override def toString = s"$name(${repr.literalize(repr.flatten(strings.map(repr.fromSeq)))})"
   }
 
@@ -71,15 +87,16 @@ object Intrinsics {
    */
   case class ElemsWhile[Elem, Repr](name: String,
                                     predicate: Elem => Boolean,
-                                    min: Int = 1)
+                                    min: Int = 1,
+                                    precompute: Boolean)
                                    (implicit helper: ElemSetHelper[Elem],
                                     repr: ReprOps[Elem, Repr])
-      extends PrecomputableParser[Elem, Repr](new PredGenerator(predicate)){
+      extends PrecomputableParser[Elem, Repr](makeGenOrPred(predicate, precompute)){
 
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       var curr = index
       val input = cfg.input
-      while(input.isReachable(curr) && uberSet(input(curr))) curr += 1
+      while(input.isReachable(curr) && check(input(curr))) curr += 1
       if (curr - index < min) fail(cfg.failure, curr)
       else success(cfg.success, (), curr, Set.empty, false)
     }
