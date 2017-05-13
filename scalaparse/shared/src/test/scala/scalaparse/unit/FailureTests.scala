@@ -584,8 +584,8 @@ object FailureTests extends TestSuite{
           |}
           |
         """.stripMargin,
-        expected = "NamedType ~ Refinement.? | Refinement",
-        found = "]) = 1"
+        expected = """WSChars | Comment | Newline | "]" """,
+        found = ", ]"
       )
       * - checkNeg(
         """
@@ -688,8 +688,8 @@ object FailureTests extends TestSuite{
          |  val (x,) = 1
          |}
         """.stripMargin,
-      expected = "TypePattern | BindPattern",
-      found = ") = 1"
+      expected = """WSChars | Comment | Newline | ")" """,
+      found = ",)"
     )
     * - checkNeg(
       s"""
@@ -723,22 +723,22 @@ object FailureTests extends TestSuite{
       s"""
          |object X{def f(x: Int, ) = 1}
         """.stripMargin,
-      expected = """ "@" | BacktickId | PlainId""",
-      found = ") = 1"
+      expected = """WSChars | Comment | Newline | ")" """,
+      found = ", )"
     )
     * - checkNeg(
       s"""
          |object X{val x = (1, 2,)}
         """.stripMargin,
-      expected = """If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | SmallerExprOrLambda""",
-      found = ")"
+      expected = """WSChars | Comment | Newline | ")" """,
+      found = ",)"
     )
     * - checkNeg(
       s"""
          |object X{f[A,]}
         """.stripMargin,
-      expected = """NamedType ~ Refinement.? | Refinement""",
-      found = "]"
+      expected = """WSChars | Comment | Newline | "]" """,
+      found = ",]"
     )
     * - checkNeg(
       s"""
@@ -751,8 +751,8 @@ object FailureTests extends TestSuite{
       s"""
          |object X{def f[T, B,] = 1}
         """.stripMargin,
-      expected = """ "@" | Id | `_` """ ,
-      found = "]"
+      expected = """WSChars | Comment | Newline | "]" """ ,
+      found = ",]"
     )
     * - checkNeg(
       s"""

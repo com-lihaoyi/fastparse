@@ -24,7 +24,7 @@ object TestUtil {
           expected.trim == parsedExpected.trim && parsedFound.startsWith(found)
         }
         )
-      case s: Parsed.Success[_] => assert{implicitly(input); false}
+      case _: Parsed.Success[_] => assert({implicitly(input); false})
     }
     for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
       val res = Scala.CompilationUnit.parseIterator(input.grouped(chunkSize))

@@ -59,47 +59,51 @@ object ProjectTests extends TestSuite{
       checkDir("target/repos/"+name, filter)
     }
 
-//
-//    "lihaoyi/fastparse" - checkRepo()
-//    "scala-js/scala-js" - checkRepo()
-//    "scalaz/scalaz" - checkRepo()
-//    "milessabin/shapeless" - checkRepo()
-//    "akka/akka"- checkRepo()
-//    "lift/framework" - checkRepo()
-//    "playframework/playframework" - checkRepo()
-//    "PredictionIO/PredictionIO" - checkRepo()
-//    "apache/spark" - checkRepo()
-//    "sbt/sbt" - checkRepo(
-//      x => !Seq(
-//        // Unicode escapes in weird places
-//        "target/repos/sbt/main-settings/src/main/scala/sbt/std/InputWrapper.scala",
-//        // uses a package called `macro`
-//        "target/repos/sbt/sbt/src/sbt-test/source-dependencies/inherited-macros",
-//        "target/repos/sbt/sbt/src/sbt-test/source-dependencies/macro"
-//      ).exists(x.startsWith)
-//    )
-//    "non/cats" - checkRepo()
-//    "twitter/finagle" - checkRepo()
-//    "apache/kafka" - checkRepo()
-//    "scalanlp/breeze" - checkRepo()
-//    "non/spire" - checkRepo()
-//    "saddle/saddle" - checkRepo()
-//    "scala-ide/scala-ide" - checkRepo()
-//    "scalafx/scalafx" - checkRepo()
-//    "scalafx/scalafx-ensemble"- checkRepo()
-//    "takezoe/gitbucket" - checkRepo()
-//    "twitter/scalding" - checkRepo()
-//    "pocorall/scaloid" - checkRepo()
-//    "mesosphere/marathon" - checkRepo()
-//    "scalatra/scalatra" - checkRepo()
-//    "slick/slick" - checkRepo()
-//    "ensime/ensime-server" - checkRepo()
-//    "GravityLabs/goose" - checkRepo()
-//    "ornicar/lila" - checkRepo(
-//      x => !Seq(
-//        "target/repos/lila/modules/lobby/src/main/SocketHandler.scala"
-//      ).exists(x.startsWith)
-//    )
+
+    "lihaoyi/fastparse" - checkRepo()
+    "scala-js/scala-js" - checkRepo()
+    "scalaz/scalaz" - checkRepo()
+    "milessabin/shapeless" - checkRepo()
+    "akka/akka"- checkRepo(
+      // Strange Array(-41, -107) characters
+      _ != "target/repos/akka/akka-stream-tests/src/test/scala/akka/stream/scaladsl/FlowGroupedWithinSpec.scala"
+    )
+    "lift/framework" - checkRepo()
+    "playframework/playframework" - checkRepo()
+    "PredictionIO/PredictionIO" - checkRepo()
+    "apache/spark" - checkRepo()
+    "sbt/sbt" - checkRepo(
+      x => !Seq(
+        // Unicode escapes in weird places
+        "target/repos/sbt/main-settings/src/main/scala/sbt/std/InputWrapper.scala",
+        // uses a package called `macro`
+        "target/repos/sbt/sbt/src/sbt-test/source-dependencies/inherited-macros",
+        "target/repos/sbt/sbt/src/sbt-test/source-dependencies/macro"
+      ).exists(x.startsWith)
+    )
+    "non/cats" - checkRepo()
+    "twitter/finagle" - checkRepo()
+    "apache/kafka" - checkRepo()
+    "scalanlp/breeze" - checkRepo()
+    "non/spire" - checkRepo()
+    "saddle/saddle" - checkRepo()
+    "scala-ide/scala-ide" - checkRepo()
+    "scalafx/scalafx" - checkRepo()
+    "scalafx/scalafx-ensemble"- checkRepo()
+    "takezoe/gitbucket" - checkRepo()
+    "twitter/scalding" - checkRepo()
+    "pocorall/scaloid" - checkRepo()
+    "mesosphere/marathon" - checkRepo()
+    "scalatra/scalatra" - checkRepo()
+    "slick/slick" - checkRepo()
+    "ensime/ensime-server" - checkRepo()
+    "GravityLabs/goose" - checkRepo()
+    "ornicar/lila" - checkRepo(
+      x => !Seq(
+        "target/repos/lila/modules/lobby/src/main/SocketHandler.scala"
+      ).exists(x.startsWith)
+    )
+
     "precog/platform" - checkRepo()
     "twitter/util" - checkRepo()
     "scala/pickling" - checkRepo()
