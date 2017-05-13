@@ -3,8 +3,21 @@
     @sect{0.4.3}
         @ul
             @li
+                Added documentation on @sect.ref{Improving Performance} and
+                @sect.ref{Startup Performance}, along with many micro-optimizations
+                and additional tools for improving startup performance. Using these
+                tools & techniques, you can expect about a 10x reduction in time
+                taken to initialize your FastParse parsers. This is particularly
+                relevant for using FastParse in interactive websites via Scala.js.
+
+            @li
+                Added @hl.scala{fastparse.CharPredicates}, which provides faster
+                versions of methods like @hl.scala{.isDigit} or @hl.scala{.isUpper}
+                which tend to be slow on Scala.js
+
+            @li
                 Added a @sect.ref{CharsWhileIn} (and the corresponding @code{BytesWhileIn})
-                operator: a hybrid between @sect.ref{CharsWhile} and @sect.ref{CharsIn}.
+                operator: a hybrid between @sect.ref{CharsWhile} and @sect.ref{CharIn}.
                 This should make it more convenient to continually consume characters
                 within a certain set.
 

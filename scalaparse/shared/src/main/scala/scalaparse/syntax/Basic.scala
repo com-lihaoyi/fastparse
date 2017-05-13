@@ -23,18 +23,16 @@ object Basic {
   val Semi = P( ";" | Newline.rep(1) )
   val OpChar = P ( CharPred(isOpChar) )
 
-  def isOpChar(c: Char) = {
-    // scalac 2.10 crashes if OtherOrMathSymbol below is substituted by its body
-    // Same thing for LetterDigit, LowerChar, UpperChar
-    isOtherSymbol(c) ||
-    isMathSymbol(c) ||
-    "!#%&*+-/:<=>?@\\^|~".contains(c)
+  def isOpChar(c: Char) = c match{
+    case '!' | '#' | '%' | '&' | '*' | '+' | '-' | '/' |
+         ':' | '<' | '=' | '>' | '?' | '@' | '\\' | '^' | '|' | '~' => true
+    case _ => isOtherSymbol(c) || isMathSymbol(c)
   }
-  val Letter = P( CharPred(c => isLetter(c) | isDigit(c) | "$_".contains(c)) )
+  val Letter = P( CharPred(c => isLetter(c) | isDigit(c) | c == '$' | c == '_' ) )
   val LetterDigitDollarUnderscore =  P(
-    CharPred(c => isLetter(c) | isDigit(c) | "$_".contains(c) )
+    CharPred(c => isLetter(c) | isDigit(c) | c == '$' | c == '_' )
   )
-  val Lower = P( CharPred(c => isLower(c) || "$_".contains(c)) )
+  val Lower = P( CharPred(c => isLower(c) || c == '$' | c == '_') )
   val Upper = P( CharPred(isUpper) )
 }
 /**

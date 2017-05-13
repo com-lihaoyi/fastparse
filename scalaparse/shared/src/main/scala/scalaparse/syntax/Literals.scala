@@ -49,9 +49,9 @@ trait Literals { l =>
     // Comments cannot have cuts in them, because they appear before every
     // terminal node. That means that a comment before any terminal will
     // prevent any backtracking from working, which is not what we want!
-    val CommentChunk = P( CharsWhile(!"/*".contains(_)) | MultilineComment | !"*/" ~ AnyChar )
+    val CommentChunk = P( CharsWhile(c => c != '/' && c != '*') | MultilineComment | !"*/" ~ AnyChar )
     val MultilineComment: P0 = P( "/*" ~/ CommentChunk.rep ~ "*/" )
-    val SameLineCharChunks = P( CharsWhile(!"\n\r".contains(_))  | !Basic.Newline ~ AnyChar )
+    val SameLineCharChunks = P( CharsWhile(c => c != '\n' && c != '\r')  | !Basic.Newline ~ AnyChar )
     val LineComment = P( "//" ~ SameLineCharChunks.rep ~ &(Basic.Newline | End) )
     val Comment: P0 = P( MultilineComment | LineComment )
 
@@ -85,7 +85,7 @@ trait Literals { l =>
        * it's a "real" escape sequence: worst come to worst it turns out
        * to be a dud and we go back into a CharsChunk next rep
        */
-      val StringChars = P( CharsWhile(!"\n\"\\$".contains(_)) )
+      val StringChars = P( CharsWhile(c => c != '\n' && c != '"' && c != '\\' && c != '$') )
       val NonTripleQuoteChar = P( "\"" ~ "\"".? ~ !"\"" | CharIn("\\$\n") )
       val TripleChars = P( (StringChars | Interp | NonTripleQuoteChar).rep )
       val TripleTail = P( TQ ~ "\"".rep )
