@@ -63,6 +63,7 @@ abstract class Api[Elem, Repr](ct: ClassTag[Elem],
   val AnyElem: P0
   def ElemPred(pred: Elem => Boolean): P0
   def ElemIn(seqs: Seq[Elem]*): P0
+  def ElemsIn(min: Int = 1)(seqs: Seq[Elem]*): P0
   def ElemsWhile(pred: Elem => Boolean, min: Int = 1): P0
 
   def SeqIn(seqs: Repr*) = Intrinsics.StringIn[Elem, Repr](seqs: _*)

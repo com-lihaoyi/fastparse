@@ -14,6 +14,7 @@ class ByteApi() extends Api[Byte, ByteVector](
   def AnyBytes(count: Int) = Terminals.AnyElems[Byte, Bytes]("AnyBytes", count)
   def BytePred(pred: Byte => Boolean): P0 = Intrinsics.ElemPred("BytePred", pred)
   def ByteIn(seqs: Seq[Byte]*) = Intrinsics.ElemIn[Byte, Bytes]("ByteIn", seqs.map(_.toIndexedSeq): _*)
+  def BytesIn(min: Int = 1)(seqs: Seq[Byte]*) = Intrinsics.ElemsIn[Byte, Bytes]("ByteIn", min)(seqs.map(_.toIndexedSeq): _*)
   def BytesWhile(pred: Byte => Boolean, min: Int = 1) = Intrinsics.ElemsWhile[Byte, Bytes]("BytesWhile", pred, min)
 
 
@@ -21,6 +22,7 @@ class ByteApi() extends Api[Byte, ByteVector](
   def AnyElems(count: Int) = AnyBytes(count)
   def ElemPred(pred: Byte => Boolean) = BytePred(pred)
   def ElemIn(strings: Seq[Byte]*) = ByteIn(strings:_*)
+  def ElemsIn (min: Int = 1)(strings: Seq[Byte]*) = BytesIn(min)(strings:_*)
   def ElemsWhile(pred: Byte => Boolean, min: Int = 1) = BytesWhile(pred, min)
 
   /**

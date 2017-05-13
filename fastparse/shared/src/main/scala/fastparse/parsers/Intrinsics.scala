@@ -48,6 +48,31 @@ object Intrinsics {
   }
 
   /**
+   * Parses multiple characters while they are contained in the lists of allowed characters
+   * Equivalent to [[ElemIn]] and `.rep`, but much faster (and faster to initialize)
+   */
+  case class ElemsIn[Elem, Repr](name: String,
+                                 min: Int = 1)(val strings: Seq[Elem]*)
+                               (implicit repr: ReprOps[Elem, Repr],
+                                ehelper: ElemSetHelper[Elem])
+      extends Parser[Unit, Elem, Repr]{
+    private[this] val uberSet = BitSet(repr.toArray(repr.flatten(strings.map(repr.fromSeq))))
+
+    override def toString = s"$name(${repr.literalize(repr.flatten(strings.map(repr.fromSeq)))}).rep"
+    /**
+      * Parses the given `input` starting from the given `index` and `logDepth`
+      */
+    override def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
+      var curr = index
+      val input = cfg.input
+      while(input.isReachable(curr) && uberSet(input(curr))) curr += 1
+      if (curr - index < min) fail(cfg.failure, curr)
+      else success(cfg.success, (), curr, Set.empty, false)
+    }
+}
+
+
+  /**
    * Keeps consuming characters until the predicate [[pred]] becomes false.
    * Functionally equivalent to using `.rep` and [[ElemPred]], but much faster.
    */
