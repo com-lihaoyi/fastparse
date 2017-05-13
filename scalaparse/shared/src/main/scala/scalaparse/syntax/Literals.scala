@@ -32,7 +32,7 @@ trait Literals { l =>
     val ConsumeComments = P( (Basic.WSChars.? ~ Literals.Comment ~ Basic.WSChars.? ~ Basic.Newline).rep )
     P( NoCut( WS ~ Basic.Newline.? ~ ConsumeComments ~ NotNewline) )
   }
-  val TrailingComma: P0 = ("," ~ WS.rep ~ Basic.Newline).?
+  val TrailingComma: P0 = P( ("," ~ WS ~ Basic.Newline).? )
   def Pattern: P0
   object Literals{
     import Basic._

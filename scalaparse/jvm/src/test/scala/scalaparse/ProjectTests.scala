@@ -64,7 +64,10 @@ object ProjectTests extends TestSuite{
     "scala-js/scala-js" - checkRepo()
     "scalaz/scalaz" - checkRepo()
     "milessabin/shapeless" - checkRepo()
-    "akka/akka"- checkRepo()
+    "akka/akka"- checkRepo(
+      // Strange Array(-41, -107) characters
+      _ != "target/repos/akka/akka-stream-tests/src/test/scala/akka/stream/scaladsl/FlowGroupedWithinSpec.scala"
+    )
     "lift/framework" - checkRepo()
     "playframework/playframework" - checkRepo()
     "PredictionIO/PredictionIO" - checkRepo()
