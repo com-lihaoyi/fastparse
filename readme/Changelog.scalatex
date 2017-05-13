@@ -1,5 +1,25 @@
 @import Main._
 @sect{Change Log}
+    @sect{0.4.3}
+        @ul
+            @li
+                Added the Python3Parse project: a FastParse parser for the Python3
+                grammar, thanks to @lnk("Martin Weindel", "https://github.com/MartinWeindel")
+
+            @li
+                Trailing comma support for ScalaParse, thanks to
+                @lnk("Dale Wjinand", "https://github.com/dwijnand")
+
+            @li
+                Removed unnecessary runtime dependency from CssParse on
+                @code{net.sourceforge.cssparser}, since we were only using it
+                in tests, thanks to @lnk("ritschwumm", "https://github.com/ritschwumm")
+            @li
+                Tightening up Scalaparse: added some cuts to improve the error
+                positioning after semicolons within for-comprehensions,
+                reduced the number of places postfix expressions were allowed by our
+                parser to better reflect the actual Scala grammar
+
     @sect{0.4.2}
         @ul
             @li

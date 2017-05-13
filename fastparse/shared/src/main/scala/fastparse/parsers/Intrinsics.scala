@@ -11,12 +11,21 @@ import fastparse.utils.{ElemSetHelper, ReprOps, Utils}
  * faster or more convenient.
  */
 object Intrinsics {
+  type Generator[Elem] = (Elem => Unit) => Unit
+  abstract class PrecomputableParser[Elem, Repr](generator: Generator[Elem])
+                                                (implicit val helper: ElemSetHelper[Elem],
+                                                 val repr: ReprOps[Elem, Repr])
+    extends Parser[Unit, Elem, Repr]{
 
-  abstract class ElemSet[Elem, Repr](elems: Seq[Elem])
+    protected[this] val uberSet: Utils.BitSet[Elem] = BitSet(generator)
+  }
+
+  abstract class ElemSet[Elem, Repr](generatorOrPred: Generator[Elem])
                                     (implicit helper: ElemSetHelper[Elem],
                                      repr: ReprOps[Elem, Repr])
-      extends Parser[Unit, Elem, Repr]{
-    private[this] val uberSet = BitSet(elems)
+      extends PrecomputableParser[Elem, Repr](generatorOrPred){
+
+
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       val input = cfg.input
       if (!input.isReachable(index)) fail(cfg.failure, index)
@@ -24,6 +33,15 @@ object Intrinsics {
       else fail(cfg.failure, index)
     }
   }
+
+
+  class PredGenerator[Elem](predicate: Elem => Boolean)
+                           (implicit helper: ElemSetHelper[Elem]) extends Generator[Elem]{
+    def apply(callback: Elem => Unit): Unit = {
+      helper.generateValues{ v => if(predicate(v)) callback(v)}
+    }
+  }
+
   /**
    * Parses a single character if it passes the predicate
    */
@@ -31,7 +49,7 @@ object Intrinsics {
                                   predicate: Elem => Boolean)
                                  (implicit helper: ElemSetHelper[Elem],
                                   repr: ReprOps[Elem, Repr])
-    extends ElemSet[Elem, Repr](helper.allValues.filter(predicate)){
+    extends ElemSet[Elem, Repr](new PredGenerator(predicate)){
 
     override def toString = s"$name($predicate)"
   }
@@ -40,23 +58,23 @@ object Intrinsics {
    * Parses a single character if its contained in the lists of allowed characters
    */
   case class ElemIn[Elem, Repr](name: String,
-                                strings: Seq[Elem]*)
+                                strings: Seq[Seq[Elem]])
                                (implicit repr: ReprOps[Elem, Repr],
                                 ehelper: ElemSetHelper[Elem])
-      extends ElemSet[Elem, Repr](repr.toArray(repr.flatten(strings.map(repr.fromSeq)))){
+      extends ElemSet[Elem, Repr](strings.iterator.map(_.iterator).flatten.foreach){
     override def toString = s"$name(${repr.literalize(repr.flatten(strings.map(repr.fromSeq)))})"
   }
 
   /**
-   * Keeps consuming characters until the predicate [[pred]] becomes false.
+   * Keeps consuming characters until the predicate [[predicate]] becomes false.
    * Functionally equivalent to using `.rep` and [[ElemPred]], but much faster.
    */
   case class ElemsWhile[Elem, Repr](name: String,
-                                        pred: Elem => Boolean, min: Int = 1)
-                                       (implicit helper: ElemSetHelper[Elem],
-                                        repr: ReprOps[Elem, Repr])
-      extends Parser[Unit, Elem, Repr]{
-    private[this] val uberSet = BitSet(helper.allValues.filter(pred))
+                                    predicate: Elem => Boolean,
+                                    min: Int = 1)
+                                   (implicit helper: ElemSetHelper[Elem],
+                                    repr: ReprOps[Elem, Repr])
+      extends PrecomputableParser[Elem, Repr](new PredGenerator(predicate)){
 
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       var curr = index
@@ -65,7 +83,7 @@ object Intrinsics {
       if (curr - index < min) fail(cfg.failure, curr)
       else success(cfg.success, (), curr, Set.empty, false)
     }
-    override def toString = s"$name($pred)"
+    override def toString = s"$name($predicate)"
   }
   /**
    * Very efficiently attempts to parse a set of strings, by

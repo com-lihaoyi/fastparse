@@ -13,7 +13,7 @@ class ByteApi() extends Api[Byte, ByteVector](
   val AnyByte = parsers.Terminals.AnyElem[Byte, Bytes]("AnyByte")
   def AnyBytes(count: Int) = Terminals.AnyElems[Byte, Bytes]("AnyBytes", count)
   def BytePred(pred: Byte => Boolean): P0 = Intrinsics.ElemPred("BytePred", pred)
-  def ByteIn(seqs: Seq[Byte]*) = Intrinsics.ElemIn[Byte, Bytes]("ByteIn", seqs.map(_.toIndexedSeq): _*)
+  def ByteIn(seqs: Seq[Byte]*) = Intrinsics.ElemIn[Byte, Bytes]("ByteIn", seqs.map(_.toIndexedSeq))
   def BytesWhile(pred: Byte => Boolean, min: Int = 1) = Intrinsics.ElemsWhile[Byte, Bytes]("BytesWhile", pred, min)
 
 

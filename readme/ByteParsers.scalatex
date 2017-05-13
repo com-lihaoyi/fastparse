@@ -622,3 +622,9 @@
                 You can download the classfiles and directly try them in this
                 demo, or you can download the sources and compile them yourself
                 with @code{javac} before uploading the generated class file.
+
+            @p
+                This is available on Maven Central as
+
+            @hl.scala
+                "com.lihaoyi" %%% "classparse" % "@fastparse.Constants.version"

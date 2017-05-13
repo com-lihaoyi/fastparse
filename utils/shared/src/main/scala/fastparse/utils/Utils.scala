@@ -3,6 +3,7 @@ package fastparse.utils
 import acyclic.file
 
 import scala.annotation.{switch, tailrec}
+import scala.collection.mutable
 import scala.language.experimental.macros
 
 object MacroUtils{
@@ -17,8 +18,8 @@ object MacroUtils{
   def preComputeImpl(c: Compat.Context)(pred: c.Expr[Char => Boolean]): c.Expr[Utils.BitSet[Char]] = {
     import c.universe._
     val evaled = c.eval(c.Expr[Char => Boolean](c.resetLocalAttrs(pred.tree.duplicate)))
-    val (first, last, array) = Utils.BitSet.compute(
-      (Char.MinValue to Char.MaxValue).filter(evaled)
+    val (first, last, array) = Utils.BitSet.compute[Char](
+      f => (Char.MinValue to Char.MaxValue).foreach(f)
     )
     val txt = Utils.HexUtils.ints2Hex(array)
     c.Expr[Utils.BitSet[Char]](q"""
@@ -88,19 +89,28 @@ object Utils {
   }
 
   object BitSet {
-    def compute[Elem](elems: Seq[Elem])
-                     (implicit helper: ElemSetHelper[Elem]) = {
+    def compute[Elem](generator: (Elem => Unit) => Unit)(implicit helper: ElemSetHelper[Elem]) = {
 
-      val first = helper.toInt(elems.min(helper.ordering))
-      val last = helper.toInt(elems.max(helper.ordering))
+      val buffer = mutable.ArrayBuffer.empty[Elem]
+      generator( elem =>
+        buffer += elem
+      )
+
+      val first = helper.toInt(buffer.min(helper.ordering))
+      val last = helper.toInt(buffer.max(helper.ordering))
       val span = last - first
       val array = new Array[Int](span / 32 + 1)
-      for(c <- elems) array((helper.toInt(c) - first) >> 5) |= 1 << ((helper.toInt(c) - first) & 31)
+      var i = 0
+      while(i < buffer.length){
+        val c = buffer(i)
+        array((helper.toInt(c) - first) >> 5) |= 1 << ((helper.toInt(c) - first) & 31)
+        i += 1
+      }
       (first, last, array)
     }
-    def apply[Elem](chars: Seq[Elem])
+    def apply[Elem](generator: (Elem => Unit) => Unit)
                    (implicit helper: ElemSetHelper[Elem]) = {
-      val (first, last, array) = compute(chars)
+      val (first, last, array) = compute(generator)
       new BitSet[Elem](array, first, last)
     }
   }

@@ -17,6 +17,15 @@
         @p
             You can also wrap the strings in an @hl.scala{IgnoreCase("...")} if you want the matching to be case-insensitive.
 
+        @p
+            The @code{P(...)} lets you write mutually recursive parsers;
+            without it you run into circular initialization problems and
+            @code{NullPointerException}s. It also provides that parser with a
+            nice, human-readable name that is derived from the @hl.scala{{val}
+            it is being assigned to. In general, every time you assign a parser
+            to a @hl.scala{val}, you should wrap it in @code{P(...)} to allow
+            for recursion and assist your future debugging.
+
         @sect{Sequence}
 
             @hl.ref(tests/"ExampleTests.scala", Seq("'sequence", ""))
@@ -196,6 +205,7 @@
             @p
                 Note that this builds a high-performance bit-packed lookup table, the size of the range of valid characters, up to 65k. That means that creating a parser like this has a one-time cost in terms of memory (up to 8k bytes) and time. This should not matter as FastParse parsers are long-lived and re-usable, though you may want to consciously avoid creating too many of these repeatedly.
 
+
         @sect{CharIn}
             @i
                 See also @hl.scala{ElemIn} in @sect.ref{Abstraction}
@@ -205,6 +215,11 @@
 
             @p
                 As a result, it's much faster to execute than if you had used @hl.scala{"a" | "b" | "c" | "d" | ...} to combine a bunch of single-character parsers together. The same warning as @sect.ref{CharPred} about the one time cost-of-construction applies.
+
+            @p
+                This could be useful if you find your parsers are taking too long to
+                initialize and don't mind sacrificing a bit of steady-state
+                performance.
 
         @sect{CharsWhile}
             @i
@@ -216,6 +231,10 @@
             @p
                 This is a very fast parser, ideal for quickly consuming large numbers of characters. The same warning as @sect.ref{CharPred} about the one time cost-of-construction applies.
 
+            @p
+                This could be useful if you find your parsers are taking too long to
+                initialize and don't mind sacrificing a bit of steady-state
+                performance.
         @sect{StringIn}
             @i
                 See also @hl.scala{SeqIn} in @sect.ref{Abstraction}

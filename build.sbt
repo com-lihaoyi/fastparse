@@ -245,11 +245,11 @@ lazy val readme = scalatex.ScalatexReadme(
   wd = file(""),
   url = "https://github.com/lihaoyi/fastparse/tree/master",
   source = "Readme",
-  autoResources = List("demo-opt.js")
+  autoResources = List("demo-fastopt.js")
 ).settings(
   (resources in Compile) += {
-    (fullOptJS in (demo, Compile)).value
-    (artifactPath in (demo,  Compile, fullOptJS)).value
+    (fastOptJS in (demo, Compile)).value
+    (artifactPath in (demo,  Compile, fastOptJS)).value
   },
   (unmanagedSources in Compile) += baseDirectory.value/".."/"project"/"Constants.scala",
   publishArtifact := false,

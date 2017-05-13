@@ -8,7 +8,13 @@ object ByteBitSetHelper extends ElemSetHelper[Byte] {
   def toInt(a: Byte): Int = a
   def ordering = implicitly[Ordering[Byte]]
   def toLowerCase(in: Byte) = in
-  val allValues = (Byte.MinValue.toInt to Byte.MaxValue.toInt).map(_.toByte)
+  def generateValues(f: Byte => Unit) = {
+    var i = Byte.MinValue.toInt
+    while(i <= Byte.MaxValue){
+      f(i.toByte)
+      i += 1
+    }
+  }
 }
 
 object ByteReprOps extends ReprOps[Byte, ByteVector] {

@@ -18,8 +18,12 @@ class StringApi() extends Api[Char, String](
   val AnyElem = AnyChar
   def AnyElem(count: Int) = AnyChars(count)
   def CharPred(pred: Char => Boolean): P0 = Intrinsics.ElemPred("CharPred", pred)
-  def CharIn(strings: Seq[Char]*) = Intrinsics.ElemIn[Char, String]("CharIn", strings.map(_.toIndexedSeq): _*)
-  def CharsWhile(pred: Char => Boolean, min: Int = 1) = Intrinsics.ElemsWhile[Char, String]("CharsWhile", pred, min)
+  def CharIn(strings: Seq[Char]*) = {
+    Intrinsics.ElemIn[Char, String]("CharIn", strings.map(_.toIndexedSeq))
+  }
+  def CharsWhile(pred: Char => Boolean, min: Int = 1) = {
+    Intrinsics.ElemsWhile[Char, String]("CharsWhile", pred, min)
+  }
 
 
   def ElemPred(pred: Char => Boolean) = CharPred(pred)
