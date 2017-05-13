@@ -1455,5 +1455,15 @@ object SuccessTests extends TestSuite{
         |  def foo[T <: true](t: T): T = ???
         |}""".stripMargin
     )
+    * - check(
+        """
+        |object X {
+        |  for{
+        |    a <- List(1)
+        |    ;
+        |    if a > 0
+        |  } yield a
+        |}""".stripMargin
+    )
   }
 }

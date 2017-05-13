@@ -81,7 +81,7 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      expected = """ ";" | Newline.rep(1) | "}" | `case`""",
+      expected = """ ";" | Newline.rep(1) | "}" """,
       found ="1\n"
     )
     * - checkNeg(
@@ -478,7 +478,7 @@ object FailureTests extends TestSuite{
         |  { a: L = }
         |}
       """.stripMargin,
-      expected = """BacktickId | PlainId | "with" | ";" | Newline.rep(1) | "}" | `case`""",
+      expected = """BacktickId | PlainId | "with" | ";" | Newline.rep(1) | "}" """,
       found = "= }"
     )
       * - checkNeg(
@@ -841,7 +841,7 @@ object FailureTests extends TestSuite{
            |  for(i <- Nil if x: Int => bar) 1
            |}
          """.stripMargin,
-        expected = """CharsWhile(<function1>) | BacktickId | PlainId | Semis ~ `val`.? ~ TypeOrBindPattern ~/ (Generator | Assign) | Semis.? ~ Guard | "." | ")" | WL ~ "." ~/ Id | WL ~ TypeArgs | ArgList""",
+        expected = """CuttingSemis ~ (GenAssign | Guard) | Guard | CharsWhile(<function1>) | BacktickId | PlainId | "." | ")" | WL ~ "." ~/ Id | WL ~ TypeArgs | ArgList""",
         found = ": Int"
       )
       * - checkNeg(
@@ -853,6 +853,27 @@ object FailureTests extends TestSuite{
         s"""object Foo{ (i: Int => +i) }""",
         expected = """ "," | ")" """,
         found = "i)"
+      )
+      * - checkNeg(
+        """
+          |object X {
+          |  for{
+          |    a <- List(1)
+          |    ;
+          |  } yield a
+          |}""".stripMargin,
+        expected = """ GenAssign | Guard """,
+        found = "} yield a"
+      )
+      * - checkNeg(
+        """
+          |object X {
+          |  {
+          |    val x = 1
+          |    ;
+          |    """.stripMargin,
+        expected = """ ";" | Newline.rep(1) | "}" """,
+        found = ""
       )
 
   }

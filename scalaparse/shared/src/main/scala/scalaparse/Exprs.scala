@@ -39,7 +39,13 @@ trait Exprs extends Core with Types with Xml{
     val Enumerators = {
       val Generator = P( `<-` ~/ Expr ~ Guard.? )
       val Assign = P( `=` ~/ Expr )
-      val Enumerator = P( Semis ~ `val`.? ~ TypeOrBindPattern ~/ (Generator | Assign) | Semis.? ~ Guard  )
+      // CuttingSemis is a bit weird, and unlike other places within this parser
+      // which just use `Semis`. This is because unlike other semicolons, semis
+      // within a generator cannot be trailing: any set of semis *must* be followed
+      // by another generator, assignment or guard! Thus we need to make sure we
+      val CuttingSemis = P( WL ~~ ";".~/.? ~~ WL )
+      val GenAssign = P( `val`.? ~ TypeOrBindPattern ~/ (Generator | Assign) )
+      val Enumerator = P( CuttingSemis ~~ (GenAssign | Guard) | Guard  )
       P( TypeOrBindPattern ~ Generator ~~ Enumerator.repX )
     }
 
@@ -117,11 +123,13 @@ trait Exprs extends Core with Types with Xml{
     P( BlockLambda.rep ~ BlockStat.rep(sep = Semis) )
   }
 
-  val Block: P0 = {
-    val BlockEnd = P( Semis.? ~ &("}" | `case`) )
-    val Body = P( BlockChunk.repX(sep = Semis) )
+  def BaseBlock(end: P0)(implicit name: sourcecode.Name): P0 = {
+    val BlockEnd = P( Semis.? ~ &(end) )
+    val Body = P( BlockChunk.log().repX(sep = Semis) )
     P( Semis.? ~ BlockLambda.? ~ Body ~/ BlockEnd )
   }
+  val Block = BaseBlock("}")
+  val CaseBlock = BaseBlock("}" | `case`)
 
   val Patterns: P0 = P( Pattern.rep(1, sep = ",".~/) )
   val Pattern: P0 = P( (WL ~ TypeOrBindPattern).rep(1, sep = "|".~/) )
@@ -140,7 +148,7 @@ trait Exprs extends Core with Types with Xml{
   val CaseClauses: P0 = {
     // Need to lookahead for `class` and `object` because
     // the block { case object X } is not a case clause!
-    val CaseClause: P0 = P( `case` ~ !(`class` | `object`) ~/ Pattern ~ ExprCtx.Guard.? ~ `=>` ~ Block )
+    val CaseClause: P0 = P( `case` ~ !(`class` | `object`) ~/ Pattern ~ ExprCtx.Guard.? ~ `=>` ~ CaseBlock  )
     P( CaseClause.rep(1) ~ "}"  )
   }
 }
