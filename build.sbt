@@ -154,7 +154,7 @@ lazy val cssparse = crossProject
   .settings(name := "cssparse")
   .settings(shared:_*)
   .jvmSettings(
-    libraryDependencies += "net.sourceforge.cssparser" % "cssparser" % "0.9.18"
+    libraryDependencies += "net.sourceforge.cssparser" % "cssparser" % "0.9.18" % "test"
   )
 
 lazy val cssparseJVM = cssparse.jvm
