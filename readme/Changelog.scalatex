@@ -22,7 +22,7 @@
                 within a certain set.
 
             @li
-                Added @code{CharIn.raw}, @code{CharsWhile.raw}, @code{CharPred.raw}
+                Added @code{CharsWhile.raw}, @code{CharPred.raw}
                 intrinsics, which are identical to the non-@code{raw} versions except
                 these do not pre-compute a lookup table for use during parsing. This
                 could be useful if you find your parsers are taking too long to

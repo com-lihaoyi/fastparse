@@ -18,13 +18,12 @@
             You can also wrap the strings in an @hl.scala{IgnoreCase("...")} if you want the matching to be case-insensitive.
 
         @p
-            The @code{P(...)} lets you write mutually recursive parsers;
-            without it you run into circular initialization problems and
-            @code{NullPointerException}s. It also provides that parser with a
-            nice, human-readable name that is derived from the @hl.scala{{val}
-            it is being assigned to. In general, every time you assign a parser
-            to a @hl.scala{val}, you should wrap it in @code{P(...)} to allow
-            for recursion and assist your future debugging.
+            The @code{P(...)} lets you write mutually recursive parsers, without
+            running into circular initialization problems, and gives the parser a
+            nice, human-readable name (from the @hl.scala{val}
+            it is being assigned to) which appears in parse error messages.
+            In general, every time you assign a parser
+            to a @hl.scala{val}, you should wrap it in @code{P(...)}.
 
         @sect{Sequence}
 
