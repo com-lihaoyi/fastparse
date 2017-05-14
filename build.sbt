@@ -28,7 +28,7 @@ val shared = Seq(
   scalaJSStage in Global := FullOptStage,
   organization := "com.lihaoyi",
   version := _root_.fastparse.Constants.version,
-  scalaVersion := "2.11.8",
+  scalaVersion := "2.12.2",
   libraryDependencies += "com.lihaoyi" %% "acyclic" % "0.1.5" % "provided",
   addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.5"),
   autoCompilerPlugins := true,
@@ -222,7 +222,7 @@ lazy val demo = project.enablePlugins(ScalaJSPlugin)
   .settings(shared:_*)
   .settings(
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.8.2",
-    libraryDependencies += "com.lihaoyi" %%% "scalatags" % "0.5.3",
+    libraryDependencies += "com.lihaoyi" %%% "scalatags" % "0.6.5",
     emitSourceMaps := false,
     publishArtifact := false,
     publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))

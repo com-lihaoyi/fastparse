@@ -155,7 +155,7 @@ object DemoMain {
           for(track <- remaining) track.savedTicks += tillNext
           assert(remaining.exists(_.tillNext == 0))
           logs.append("Sleeping:\t" + milliSleep + "ms")
-          dom.setTimeout(() => tick(), milliSleep)
+          dom.window.setTimeout(() => tick(), milliSleep)
           false
         }else{
           // `remaining` is empty, nothing left to continue playing,
