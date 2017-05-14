@@ -5,7 +5,7 @@
             @li
                 Added documentation on @sect.ref{Improving Performance} and
                 @sect.ref{Startup Performance}, along with many micro-optimizations
-                and additional tools for improving startup performance. Using these
+                and additional tools (below) for improving startup performance. Using these
                 tools & techniques, you can expect about a 10x reduction in time
                 taken to initialize your FastParse parsers. This is particularly
                 relevant for using FastParse in interactive websites via Scala.js.
