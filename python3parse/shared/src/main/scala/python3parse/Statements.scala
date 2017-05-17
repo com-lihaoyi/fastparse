@@ -3,6 +3,7 @@ package python3parse
 import fastparse.noApi._
 import WsApi._
 import Expressions._
+import Expressions.LoadExpr._
 import acyclic.file
 import Lexical.kw
 import python3parse.Ast.stmt.{AsyncFor, AsyncWith}

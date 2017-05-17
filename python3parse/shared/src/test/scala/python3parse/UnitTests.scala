@@ -21,7 +21,7 @@ object UnitTests extends TestSuite{
     implicit def strIdent(s: Symbol) = identifier(s.name)
     implicit def symArg(s: Symbol) = arg(identifier(s.name))
     'exprs{
-      def expr(expected: Ast.expr, s: String*) = s.map(TestUtils.check(Expressions.test, expected, _)).head
+      def expr(expected: Ast.expr, s: String*) = s.map(TestUtils.check(Expressions.LoadExpr.test, expected, _)).head
 
 
       'primitives {
