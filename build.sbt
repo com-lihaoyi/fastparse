@@ -1,3 +1,4 @@
+import sbtcrossproject.{crossProject, CrossType}
 import sbt.Keys._
 
 publishArtifact := false
@@ -9,6 +10,11 @@ lazy val scala211 = "2.11.11"
 lazy val scala212 = "2.12.3"
 
 crossScalaVersions := Seq(scala210, scala211, scala212)
+
+lazy val nativeSettings = Seq(
+  scalaVersion := scala211,
+  crossScalaVersions := Seq(scala211)
+)
 
 scalaJSUseRhino in Global := false
 
@@ -27,7 +33,7 @@ val shared = Seq(
   libraryDependencies ++= macroDependencies(scalaVersion.value),
   libraryDependencies ++= Seq(
     "com.lihaoyi" %%% "utest" % "0.4.8" % "test",
-    "com.lihaoyi" %%% "sourcecode" % "0.1.3"
+    "com.lihaoyi" %%% "sourcecode" % "0.1.4"
   ),
   scalaJSStage in Global := FullOptStage,
   organization := "com.lihaoyi",
@@ -59,7 +65,7 @@ val shared = Seq(
       </developers>
 )
 
-lazy val utils = crossProject
+lazy val utils = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(shared:_*)
   .settings(
     name := "fastparse-utils",
@@ -72,11 +78,13 @@ lazy val utils = crossProject
       }
     }
   )
+  .nativeSettings(nativeSettings)
 lazy val utilsJS = utils.js
 lazy val utilsJVM= utils.jvm
+lazy val utilsNative = utils.native
 
 
-lazy val fastparse = crossProject
+lazy val fastparse = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .dependsOn(utils)
   .settings(shared:_*)
   .settings(
@@ -112,22 +120,26 @@ lazy val fastparse = crossProject
   )
   // In order to make the midi-parser-test in fastparseJVM/test:run work
   .jvmSettings(fork in (Test, run) := true)
+  .nativeSettings(nativeSettings)
 
 lazy val fastparseJS = fastparse.js
 lazy val fastparseJVM = fastparse.jvm
+lazy val fastparseNative = fastparse.native
 
-lazy val fastparseByte = crossProject
+lazy val fastparseByte = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .dependsOn(fastparse)
   .settings(shared:_*)
   .settings(
     name := "fastparse-byte",
     libraryDependencies += "org.scodec" %%% "scodec-bits" % "1.1.2"
   )
+  .nativeSettings(nativeSettings)
 
 lazy val fastparseByteJS = fastparseByte.js
 lazy val fastparseByteJVM = fastparseByte.jvm
+lazy val fastparseByteNative = fastparseByte.native
 
-lazy val scalaparse = crossProject
+lazy val scalaparse = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .dependsOn(fastparse)
   .settings(shared:_*)
   .settings(
@@ -136,46 +148,55 @@ lazy val scalaparse = crossProject
   .jvmSettings(
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"
   )
+  .nativeSettings(nativeSettings)
 
 lazy val scalaparseJS = scalaparse.js
 
 lazy val scalaparseJVM = scalaparse.jvm
 
+lazy val scalaparseNative = scalaparse.native
 
-lazy val pythonparse = crossProject
+
+lazy val pythonparse = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .dependsOn(fastparse)
   .settings(shared:_*)
   .settings(
     name := "pythonparse"
   )
+  .nativeSettings(nativeSettings)
 
 
 lazy val pythonparseJVM = pythonparse.jvm
 lazy val pythonparseJS = pythonparse.js
+lazy val pythonparseNative = pythonparse.native
 
 
-lazy val cssparse = crossProject
+lazy val cssparse = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .dependsOn(fastparse)
   .settings(name := "cssparse")
   .settings(shared:_*)
   .jvmSettings(
     libraryDependencies += "net.sourceforge.cssparser" % "cssparser" % "0.9.18" % "test"
   )
+  .nativeSettings(nativeSettings)
 
 lazy val cssparseJVM = cssparse.jvm
 lazy val cssparseJS = cssparse.js
+lazy val cssparseNative = cssparse.native
 
-lazy val classparse = crossProject
+lazy val classparse = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .dependsOn(fastparseByte)
   .settings(shared:_*)
   .settings(
     name := "classparse"
   )
+  .nativeSettings(nativeSettings)
 
 lazy val classparseJVM = classparse.jvm
 lazy val classparseJS = classparse.js
+lazy val classparseNative = classparse.native
 
-lazy val perftests = crossProject
+lazy val perftests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .dependsOn(
     fastparse % "compile->compile;compile->test",
     fastparseByte % "compile->compile;compile->test",
@@ -189,26 +210,35 @@ lazy val perftests = crossProject
     name := "perfomance-tests",
     parallelExecution := false
   )
+  .nativeSettings(nativeSettings)
 
 lazy val perftestsJVM = perftests.jvm
 lazy val perftestsJS = perftests.js
+lazy val perftestsNative = perftests.native
 
 lazy val modules = project
   .aggregate(
     fastparseJS,
     fastparseJVM,
+    fastparseNative,
     fastparseByteJS,
     fastparseByteJVM,
+    fastparseByteNative,
     pythonparseJS,
     pythonparseJVM,
+    pythonparseNative,
     cssparseJS,
     cssparseJVM,
+    cssparseNative,
     scalaparseJS,
     scalaparseJVM,
+    scalaparseNative,
     classparseJVM,
     classparseJS,
+    classparseNative,
     utilsJS,
-    utilsJVM
+    utilsJVM,
+    utilsNative
   )
   .settings(
     publishArtifact := false,
