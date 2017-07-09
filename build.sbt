@@ -126,18 +126,17 @@ lazy val fastparseJS = fastparse.js
 lazy val fastparseJVM = fastparse.jvm
 lazy val fastparseNative = fastparse.native
 
-lazy val fastparseByte = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+lazy val fastparseByte = crossProject(JSPlatform, JVMPlatform)
   .dependsOn(fastparse)
   .settings(shared:_*)
   .settings(
     name := "fastparse-byte",
     libraryDependencies += "org.scodec" %%% "scodec-bits" % "1.1.2"
   )
-  .nativeSettings(nativeSettings)
 
 lazy val fastparseByteJS = fastparseByte.js
 lazy val fastparseByteJVM = fastparseByte.jvm
-lazy val fastparseByteNative = fastparseByte.native
+// Native support waiting for release of https://github.com/scodec/scodec-bits/pull/72
 
 lazy val scalaparse = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .dependsOn(fastparse)
@@ -184,19 +183,18 @@ lazy val cssparseJVM = cssparse.jvm
 lazy val cssparseJS = cssparse.js
 lazy val cssparseNative = cssparse.native
 
-lazy val classparse = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+lazy val classparse = crossProject(JSPlatform, JVMPlatform)
   .dependsOn(fastparseByte)
   .settings(shared:_*)
   .settings(
     name := "classparse"
   )
-  .nativeSettings(nativeSettings)
 
 lazy val classparseJVM = classparse.jvm
 lazy val classparseJS = classparse.js
-lazy val classparseNative = classparse.native
+// Native support waiting for release of https://github.com/scodec/scodec-bits/pull/72
 
-lazy val perftests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+lazy val perftests = crossProject(JSPlatform, JVMPlatform)
   .dependsOn(
     fastparse % "compile->compile;compile->test",
     fastparseByte % "compile->compile;compile->test",
@@ -210,11 +208,10 @@ lazy val perftests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     name := "perfomance-tests",
     parallelExecution := false
   )
-  .nativeSettings(nativeSettings)
 
 lazy val perftestsJVM = perftests.jvm
 lazy val perftestsJS = perftests.js
-lazy val perftestsNative = perftests.native
+// Native support waiting for release of https://github.com/scodec/scodec-bits/pull/72
 
 lazy val modules = project
   .aggregate(
@@ -223,7 +220,6 @@ lazy val modules = project
     fastparseNative,
     fastparseByteJS,
     fastparseByteJVM,
-    fastparseByteNative,
     pythonparseJS,
     pythonparseJVM,
     pythonparseNative,
@@ -235,7 +231,6 @@ lazy val modules = project
     scalaparseNative,
     classparseJVM,
     classparseJS,
-    classparseNative,
     utilsJS,
     utilsJVM,
     utilsNative
