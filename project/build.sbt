@@ -18,4 +18,4 @@ addSbtPlugin("org.scala-native" % "sbt-scalajs-crossproject" % "0.2.0")
 
 // scala-native 0.3.1 causes error in fastparseNative/compile, which is fixed in
 // https://github.com/scala-native/scala-native/pull/902
-addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.3.1")
+addSbtPlugin("org.scala-native" % "sbt-scala-native" % "0.3.2")
