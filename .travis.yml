@@ -77,6 +77,15 @@ matrix:
       scala: 2.12.3
       jdk: oraclejdk8
 
+    # Scala Native only supports 2.11. The before_install takes a while so we
+    # run all tests together.
+    - env:
+      - CI_SCRIPT: '"fastparseNative/test; scalaparseNative/test; pythonparseNative/test; cssparseNative/test "'
+      before_install:
+        - curl https://raw.githubusercontent.com/scala-native/scala-native/v0.3.2/bin/travis_setup.sh | bash -x
+      scala: 2.11.11
+      jdk: oraclejdk8
+
     # For pythonparse and cssparse, just run it on one JDK/Scala version combo
     # to make sure it basically works; hopefully any cross-version incompatibilities
     # in fastparse will already be sussed out by earlier builds
