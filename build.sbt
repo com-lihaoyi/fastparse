@@ -126,7 +126,7 @@ lazy val fastparseJS = fastparse.js
 lazy val fastparseJVM = fastparse.jvm
 lazy val fastparseNative = fastparse.native
 
-lazy val fastparseByte = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+lazy val fastparseByte = crossProject(JSPlatform, JVMPlatform)
   .dependsOn(fastparse)
   .settings(shared:_*)
   .settings(
@@ -136,8 +136,7 @@ lazy val fastparseByte = crossProject(JSPlatform, JVMPlatform, NativePlatform)
 
 lazy val fastparseByteJS = fastparseByte.js
 lazy val fastparseByteJVM = fastparseByte.jvm
-lazy val fastparseByteNative = fastparseByte.native
-// Native support waiting for release of https://github.com/scodec/scodec-bits/pull/72
+// Native support blocked by https://github.com/scala-native/scala-native/issues/925
 
 lazy val scalaparse = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .dependsOn(fastparse)
@@ -184,7 +183,7 @@ lazy val cssparseJVM = cssparse.jvm
 lazy val cssparseJS = cssparse.js
 lazy val cssparseNative = cssparse.native
 
-lazy val classparse = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+lazy val classparse = crossProject(JSPlatform, JVMPlatform)
   .dependsOn(fastparseByte)
   .settings(shared:_*)
   .settings(
@@ -193,10 +192,8 @@ lazy val classparse = crossProject(JSPlatform, JVMPlatform, NativePlatform)
 
 lazy val classparseJVM = classparse.jvm
 lazy val classparseJS = classparse.js
-lazy val classparseNative = classparse.native
-// Native support waiting for release of https://github.com/scodec/scodec-bits/pull/72
 
-lazy val perftests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
+lazy val perftests = crossProject(JSPlatform, JVMPlatform)
   .dependsOn(
     fastparse % "compile->compile;compile->test",
     fastparseByte % "compile->compile;compile->test",
@@ -213,8 +210,6 @@ lazy val perftests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
 
 lazy val perftestsJVM = perftests.jvm
 lazy val perftestsJS = perftests.js
-lazy val perftestsNative = perftests.native
-// Native support waiting for release of https://github.com/scodec/scodec-bits/pull/72
 
 lazy val modules = project
   .aggregate(
