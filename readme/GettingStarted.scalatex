@@ -6,7 +6,7 @@
 @hl.ref(tests/"MathTests.scala", "import fastparse", "val tests")
 @hl.ref(tests/"MathTests.scala", Seq("'pass", ""))
 @div(id := "splashdiv")
-@script(raw("""demo.DemoMain().math(document.getElementById("splashdiv"))"""))
+@script(raw("""demo.DemoMain.math(document.getElementById("splashdiv"))"""))
 @p
     FastParse is a parser-combinator library for Scala that lets you quickly
     and easily write recursive descent @sect.ref("Writing Parsers", "text")-

@@ -8,11 +8,12 @@ import org.scalajs.dom.{Event, UIEvent, html}
 import fastparse.utils.Utils
 
 import scala.scalajs.js
-import scala.scalajs.js.annotation.JSExport
+import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
 import scala.scalajs.js.typedarray.{ArrayBuffer, Uint8Array}
 
-@JSExport
+@JSExportTopLevel("demo.DemoMain")
 object DemoMain {
+
   @JSExport
   def midiparser(container: html.Div) = {
     import scalatags.JsDom.all._

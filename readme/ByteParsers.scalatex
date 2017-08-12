@@ -470,7 +470,7 @@
                 and print out some simple metadata (width, height, etc.):
 
             @div(id := "bmpdiv")
-            @script(raw("""demo.DemoMain().bmp(document.getElementById("bmpdiv"))"""))
+            @script(raw("""demo.DemoMain.bmp(document.getElementById("bmpdiv"))"""))
             @i
                 If you haven't any bmp around, you can download classic
                 @a("lena", href:="https://raw.githubusercontent.com/lihaoyi/fastparse/master/fastparseByte/jvm/src/test/resources/lena.bmp").
@@ -538,7 +538,7 @@
 
             @div(id := "mididiv")
             @script(src:="Audio.js", `type`:="text/javascript")
-            @script(raw("""demo.DemoMain().midiparser(document.getElementById("mididiv"))"""))
+            @script(raw("""demo.DemoMain.midiparser(document.getElementById("mididiv"))"""))
 
             @p
                 If you don't have any midi files lying around, perhaps you could
@@ -625,7 +625,7 @@
                 methods define in that class:
 
             @div(id := "clssdiv")
-            @script(raw("""demo.DemoMain().clss(document.getElementById("clssdiv"))"""))
+            @script(raw("""demo.DemoMain.clss(document.getElementById("clssdiv"))"""))
 
             @p
 
