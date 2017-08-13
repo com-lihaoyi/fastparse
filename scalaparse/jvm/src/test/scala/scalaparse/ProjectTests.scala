@@ -91,7 +91,7 @@ object ProjectTests extends TestSuite{
     "scalafx/scalafx" - checkRepo()
     "scalafx/scalafx-ensemble"- checkRepo()
     "takezoe/gitbucket" - checkRepo()
-    "twitter/scalding" - checkRepo()
+    // "twitter/scalding" - checkRepo() // disabled due to https://github.com/lihaoyi/fastparse/issues/162
     "pocorall/scaloid" - checkRepo()
     "mesosphere/marathon" - checkRepo()
     "scalatra/scalatra" - checkRepo()

@@ -6,7 +6,7 @@
 @hl.ref(tests/"MathTests.scala", "import fastparse", "val tests")
 @hl.ref(tests/"MathTests.scala", Seq("'pass", ""))
 @div(id := "splashdiv")
-@script(raw("""demo.DemoMain().math(document.getElementById("splashdiv"))"""))
+@script(raw("""demo.DemoMain.math(document.getElementById("splashdiv"))"""))
 @p
     FastParse is a parser-combinator library for Scala that lets you quickly
     and easily write recursive descent @sect.ref("Writing Parsers", "text")-
@@ -42,15 +42,15 @@
      The following sections will introduce you to FastParse and how to use it. You can also watch this talk:
 @iframe(
     src:="https://player.vimeo.com/video/142341803",
-    "width".attr:="800",
-    "height".attr:="450",
+    attr("width"):="800",
+    attr("height"):="450",
     marginLeft.auto,
     marginRight.auto,
     display.block,
-    "frameborder".attr:="0",
-    "webkitallowfullscreen".attr:=1,
-    "mozallowfullscreen".attr:=1,
-    "allowfullscreen".attr:= 1
+    attr("frameborder"):="0",
+    attr("webkitallowfullscreen"):=1,
+    attr("mozallowfullscreen"):=1,
+    attr("allowfullscreen"):= 1
 )
 @p
     Which will give you a quick 1-hour tour of how to use FastParse, the motivation behind the library, and how it fits into the bigger picture of how programmers parse unstructured text.

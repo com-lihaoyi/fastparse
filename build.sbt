@@ -4,7 +4,11 @@ publishArtifact := false
 
 publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
 
-crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.0")
+lazy val scala210 = "2.10.6"
+lazy val scala211 = "2.11.11"
+lazy val scala212 = "2.12.3"
+
+crossScalaVersions := Seq(scala210, scala211, scala212)
 
 scalaJSUseRhino in Global := false
 
@@ -22,13 +26,13 @@ def macroDependencies(version: String) =
 val shared = Seq(
   libraryDependencies ++= macroDependencies(scalaVersion.value),
   libraryDependencies ++= Seq(
-    "com.lihaoyi" %%% "utest" % "0.4.4" % "test",
+    "com.lihaoyi" %%% "utest" % "0.4.8" % "test",
     "com.lihaoyi" %%% "sourcecode" % "0.1.3"
   ),
   scalaJSStage in Global := FullOptStage,
   organization := "com.lihaoyi",
   version := _root_.fastparse.Constants.version,
-  scalaVersion := "2.12.2",
+  scalaVersion := scala212,
   libraryDependencies += "com.lihaoyi" %% "acyclic" % "0.1.5" % "provided",
   addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.5"),
   autoCompilerPlugins := true,
@@ -221,7 +225,7 @@ lazy val demo = project.enablePlugins(ScalaJSPlugin)
   )
   .settings(shared:_*)
   .settings(
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.8.2",
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.2",
     libraryDependencies += "com.lihaoyi" %%% "scalatags" % "0.6.5",
     emitSourceMaps := false,
     publishArtifact := false,
