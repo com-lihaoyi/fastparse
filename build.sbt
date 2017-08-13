@@ -6,7 +6,7 @@ publishTo := Some(Resolver.file("Unused transient repository", file("target/unus
 
 lazy val scala210 = "2.10.6"
 lazy val scala211 = "2.11.11"
-lazy val scala212 = "2.12.2"
+lazy val scala212 = "2.12.3"
 
 crossScalaVersions := Seq(scala210, scala211, scala212)
 
