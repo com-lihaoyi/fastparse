@@ -2,16 +2,7 @@ val Constants = _root_.fastparse.Constants
 import sbtcrossproject.{crossProject, CrossType}
 import sbt.Keys._
 
-publishArtifact := false
-
-publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
-
-lazy val nativeSettings = Seq(
-  scalaVersion := Constants.scala211,
-  crossScalaVersions := Seq(Constants.scala211)
-)
-
-scalaJSUseRhino in Global := false
+noPublish
 
 def macroDependencies(version: String) =
   Seq(
@@ -61,6 +52,18 @@ val shared = Seq(
       </developers>
 )
 
+lazy val nativeSettings = Seq(
+  scalaVersion := Constants.scala211,
+  crossScalaVersions := Seq(Constants.scala211)
+)
+
+lazy val noPublish = Seq(
+  publishArtifact := false,
+  publish := {},
+  publishLocal := {}
+)
+
+
 lazy val utils = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(shared:_*)
   .settings(
@@ -85,7 +88,8 @@ lazy val fastparse = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(shared:_*)
   .settings(
     name := "fastparse",
-    sourceGenerators in Compile <+= sourceManaged in Compile map { dir =>
+    sourceGenerators in Compile += Def.task {
+      val dir = (sourceManaged in Compile).value 
       val file = dir/"fastparse"/"core"/"SequencerGen.scala"
       // Only go up to 21, because adding the last element makes it 22
       val tuples = (2 to 21).map{ i =>
@@ -200,6 +204,7 @@ lazy val perftests = crossProject(JSPlatform, JVMPlatform)
   )
   .settings(shared:_*)
   .settings(
+    noPublish,
     name := "perfomance-tests",
     parallelExecution := false
   )
@@ -229,10 +234,7 @@ lazy val modules = project
     utilsJVM,
     utilsNative
   )
-  .settings(
-    publishArtifact := false,
-    publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
-  )
+  .settings(noPublish)
 
 lazy val demo = project.enablePlugins(ScalaJSPlugin)
   .dependsOn(
@@ -247,8 +249,7 @@ lazy val demo = project.enablePlugins(ScalaJSPlugin)
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.2",
     libraryDependencies += "com.lihaoyi" %%% "scalatags" % "0.6.5",
     emitSourceMaps := false,
-    publishArtifact := false,
-    publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
+    noPublish
   )
 lazy val readme = scalatex.ScalatexReadme(
   projectId = "readme",
@@ -261,7 +262,7 @@ lazy val readme = scalatex.ScalatexReadme(
     (fullOptJS in (demo, Compile)).value
     (artifactPath in (demo,  Compile, fullOptJS )).value
   },
+  crossScalaVersions := List(Constants.scala212),
   (unmanagedSources in Compile) += baseDirectory.value/".."/"project"/"Constants.scala",
-  publishArtifact := false,
-  publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
+  noPublish
 )
