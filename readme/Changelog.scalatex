@@ -1,5 +1,14 @@
 @import Main._
 @sect{Change Log}
+    @sect{0.4.4}
+        @ul
+            @li
+                Scala Native support for the modules: @code{fastparse},
+                @code{scalaparse}, @code{pythonparse} and @code{cssparse}.
+                Porting to Scala Native required no diffs in the source code,
+                only build modifications. This release should be identical to
+                0.4.3.
+
     @sect{0.4.3}
         @ul
             @li
