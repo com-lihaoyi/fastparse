@@ -24,7 +24,7 @@ Common Commands
 - `sbt ~fastparseJVM/test` runs the main testsuite. If you're hacking on FastParse, this is often where you want to go
 - You can run the other suites for `fastparseJS`, `scalaparseJVM`, etc. if you wish, but I typically don't and leave that to CI unless I'm actively working on the sub-project
 - You can use `+` to run it under different Scala versions, but again I usually don't bother
-- `+modules/test` is the aggregate test-all command, and `+modules/publishSigned` is publish-all. Other things (`compile`, etc.) can also be run on `modules`
+- `very test` is the aggregate test-all command, and `very publishSigned` is publish-all. Other things (`compile`, etc.) can also be run prefixed with `very`
 - `readme/run` builds the documentation site, which can then be found at `readme/target/scalatex/index.html`
 
 Contribution Guidelines

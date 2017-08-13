@@ -63,7 +63,6 @@ lazy val noPublish = Seq(
   publishLocal := {}
 )
 
-
 lazy val utils = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(
     shared,
@@ -81,7 +80,6 @@ lazy val utils = crossProject(JSPlatform, JVMPlatform, NativePlatform)
 lazy val utilsJS = utils.js
 lazy val utilsJVM= utils.jvm
 lazy val utilsNative = utils.native
-
 
 lazy val fastparse = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .dependsOn(utils)
@@ -121,7 +119,6 @@ lazy val fastparse = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   // In order to make the midi-parser-test in fastparseJVM/test:run work
   .jvmSettings(fork in (Test, run) := true)
   .nativeSettings(nativeSettings)
-
 lazy val fastparseJS = fastparse.js
 lazy val fastparseJVM = fastparse.jvm
 lazy val fastparseNative = fastparse.native
@@ -133,7 +130,6 @@ lazy val fastparseByte = crossProject(JSPlatform, JVMPlatform)
     name := "fastparse-byte",
     libraryDependencies += "org.scodec" %%% "scodec-bits" % "1.1.5"
   )
-
 lazy val fastparseByteJS = fastparseByte.js
 lazy val fastparseByteJVM = fastparseByte.jvm
 // Native support blocked by https://github.com/scala-native/scala-native/issues/925
@@ -148,7 +144,6 @@ lazy val scalaparse = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"
   )
   .nativeSettings(nativeSettings)
-
 lazy val scalaparseJS = scalaparse.js
 lazy val scalaparseJVM = scalaparse.jvm
 lazy val scalaparseNative = scalaparse.native
@@ -161,7 +156,6 @@ lazy val pythonparse = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     name := "pythonparse"
   )
   .nativeSettings(nativeSettings)
-
 lazy val pythonparseJVM = pythonparse.jvm
 lazy val pythonparseJS = pythonparse.js
 lazy val pythonparseNative = pythonparse.native
@@ -177,7 +171,6 @@ lazy val cssparse = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     libraryDependencies += "net.sourceforge.cssparser" % "cssparser" % "0.9.18" % "test"
   )
   .nativeSettings(nativeSettings)
-
 lazy val cssparseJVM = cssparse.jvm
 lazy val cssparseJS = cssparse.js
 lazy val cssparseNative = cssparse.native
@@ -188,7 +181,6 @@ lazy val classparse = crossProject(JSPlatform, JVMPlatform)
     shared,
     name := "classparse"
   )
-
 lazy val classparseJVM = classparse.jvm
 lazy val classparseJS = classparse.js
 
@@ -207,36 +199,10 @@ lazy val perftests = crossProject(JSPlatform, JVMPlatform)
     name := "perfomance-tests",
     parallelExecution := false
   )
-
 lazy val perftestsJVM = perftests.jvm
 lazy val perftestsJS = perftests.js
 
-lazy val modules = project
-  .aggregate(
-    fastparseJS,
-    fastparseJVM,
-    fastparseNative,
-    fastparseByteJS,
-    fastparseByteJVM,
-    pythonparseJS,
-    pythonparseJVM,
-    pythonparseNative,
-    cssparseJS,
-    cssparseJVM,
-    cssparseNative,
-    scalaparseJS,
-    scalaparseJVM,
-    scalaparseNative,
-    classparseJVM,
-    classparseJS,
-    utilsJS,
-    utilsJVM,
-    utilsNative
-  )
-  .settings(
-    shared,
-    noPublish
-  )
+lazy val is212Only = List(crossScalaVersions := List(Constants.scala212))
 
 lazy val demo = project.enablePlugins(ScalaJSPlugin)
   .dependsOn(
@@ -248,11 +214,13 @@ lazy val demo = project.enablePlugins(ScalaJSPlugin)
   )
   .settings(
     shared,
+    is212Only,
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.2",
     libraryDependencies += "com.lihaoyi" %%% "scalatags" % "0.6.5",
     emitSourceMaps := false,
     noPublish
   )
+
 lazy val readme = scalatex.ScalatexReadme(
   projectId = "readme",
   wd = file(""),
@@ -264,7 +232,7 @@ lazy val readme = scalatex.ScalatexReadme(
     (fullOptJS in (demo, Compile)).value
     (artifactPath in (demo,  Compile, fullOptJS )).value
   },
-  crossScalaVersions := List(Constants.scala212),
+  is212Only,
   (unmanagedSources in Compile) += baseDirectory.value/".."/"project"/"Constants.scala",
   noPublish
 )
