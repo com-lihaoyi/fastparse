@@ -1,3 +1,4 @@
+val Constants = _root_.fastparse.Constants
 import sbtcrossproject.{crossProject, CrossType}
 import sbt.Keys._
 
@@ -5,15 +6,9 @@ publishArtifact := false
 
 publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
 
-lazy val scala210 = "2.10.6"
-lazy val scala211 = "2.11.11"
-lazy val scala212 = "2.12.3"
-
-crossScalaVersions := Seq(scala210, scala211, scala212)
-
 lazy val nativeSettings = Seq(
-  scalaVersion := scala211,
-  crossScalaVersions := Seq(scala211)
+  scalaVersion := Constants.scala211,
+  crossScalaVersions := Seq(Constants.scala211)
 )
 
 scalaJSUseRhino in Global := false
@@ -37,8 +32,9 @@ val shared = Seq(
   ),
   scalaJSStage in Global := FullOptStage,
   organization := "com.lihaoyi",
-  version := _root_.fastparse.Constants.version,
-  scalaVersion := scala212,
+  version := Constants.version,
+  scalaVersion := Constants.scala212,
+  crossScalaVersions := Seq(Constants.scala210, Constants.scala211, Constants.scala212),
   libraryDependencies += "com.lihaoyi" %% "acyclic" % "0.1.5" % "provided",
   addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.5"),
   autoCompilerPlugins := true,
