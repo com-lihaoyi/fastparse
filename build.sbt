@@ -2,6 +2,7 @@ val Constants = _root_.fastparse.Constants
 import sbtcrossproject.{crossProject, CrossType}
 import sbt.Keys._
 
+shared
 noPublish
 
 def macroDependencies(version: String) =
@@ -60,7 +61,8 @@ lazy val nativeSettings = Seq(
 lazy val noPublish = Seq(
   publishArtifact := false,
   publish := {},
-  publishLocal := {}
+  publishLocal := {},
+  PgpKeys.publishSigned := {}
 )
 
 lazy val utils = crossProject(JSPlatform, JVMPlatform, NativePlatform)
@@ -228,6 +230,7 @@ lazy val readme = scalatex.ScalatexReadme(
   source = "Readme",
   autoResources = List("demo-opt.js")
 ).settings(
+  shared,
   (resources in Compile) += {
     (fullOptJS in (demo, Compile)).value
     (artifactPath in (demo,  Compile, fullOptJS )).value
