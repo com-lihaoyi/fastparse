@@ -1,22 +1,9 @@
+val Constants = _root_.fastparse.Constants
 import sbtcrossproject.{crossProject, CrossType}
 import sbt.Keys._
 
-publishArtifact := false
-
-publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
-
-lazy val scala210 = "2.10.6"
-lazy val scala211 = "2.11.11"
-lazy val scala212 = "2.12.3"
-
-crossScalaVersions := Seq(scala210, scala211, scala212)
-
-lazy val nativeSettings = Seq(
-  scalaVersion := scala211,
-  crossScalaVersions := Seq(scala211)
-)
-
-scalaJSUseRhino in Global := false
+shared
+noPublish
 
 def macroDependencies(version: String) =
   Seq(
@@ -37,8 +24,9 @@ val shared = Seq(
   ),
   scalaJSStage in Global := FullOptStage,
   organization := "com.lihaoyi",
-  version := _root_.fastparse.Constants.version,
-  scalaVersion := scala212,
+  version := Constants.version,
+  scalaVersion := Constants.scala212,
+  crossScalaVersions := Seq(Constants.scala210, Constants.scala211, Constants.scala212),
   libraryDependencies += "com.lihaoyi" %% "acyclic" % "0.1.5" % "provided",
   addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.5"),
   autoCompilerPlugins := true,
@@ -65,9 +53,21 @@ val shared = Seq(
       </developers>
 )
 
+lazy val nativeSettings = Seq(
+  scalaVersion := Constants.scala211,
+  crossScalaVersions := Seq(Constants.scala211)
+)
+
+lazy val noPublish = Seq(
+  publishArtifact := false,
+  publish := {},
+  publishLocal := {},
+  PgpKeys.publishSigned := {}
+)
+
 lazy val utils = crossProject(JSPlatform, JVMPlatform, NativePlatform)
-  .settings(shared:_*)
   .settings(
+    shared,
     name := "fastparse-utils",
     unmanagedSourceDirectories in Compile ++= {
       CrossVersion.partialVersion(scalaVersion.value) match {
@@ -83,13 +83,13 @@ lazy val utilsJS = utils.js
 lazy val utilsJVM= utils.jvm
 lazy val utilsNative = utils.native
 
-
 lazy val fastparse = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .dependsOn(utils)
-  .settings(shared:_*)
   .settings(
+    shared,
     name := "fastparse",
-    sourceGenerators in Compile <+= sourceManaged in Compile map { dir =>
+    sourceGenerators in Compile += Def.task {
+      val dir = (sourceManaged in Compile).value 
       val file = dir/"fastparse"/"core"/"SequencerGen.scala"
       // Only go up to 21, because adding the last element makes it 22
       val tuples = (2 to 21).map{ i =>
@@ -121,38 +121,33 @@ lazy val fastparse = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   // In order to make the midi-parser-test in fastparseJVM/test:run work
   .jvmSettings(fork in (Test, run) := true)
   .nativeSettings(nativeSettings)
-
 lazy val fastparseJS = fastparse.js
 lazy val fastparseJVM = fastparse.jvm
 lazy val fastparseNative = fastparse.native
 
 lazy val fastparseByte = crossProject(JSPlatform, JVMPlatform)
   .dependsOn(fastparse)
-  .settings(shared:_*)
   .settings(
+    shared,
     name := "fastparse-byte",
     libraryDependencies += "org.scodec" %%% "scodec-bits" % "1.1.5"
   )
-
 lazy val fastparseByteJS = fastparseByte.js
 lazy val fastparseByteJVM = fastparseByte.jvm
 // Native support blocked by https://github.com/scala-native/scala-native/issues/925
 
 lazy val scalaparse = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .dependsOn(fastparse)
-  .settings(shared:_*)
   .settings(
+    shared,
     name := "scalaparse"
-    )
+  )
   .jvmSettings(
     libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value % "test"
   )
   .nativeSettings(nativeSettings)
-
 lazy val scalaparseJS = scalaparse.js
-
 lazy val scalaparseJVM = scalaparse.jvm
-
 lazy val scalaparseNative = scalaparse.native
 
 
@@ -163,8 +158,6 @@ lazy val pythonparse = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     name := "pythonparse"
   )
   .nativeSettings(nativeSettings)
-
-
 lazy val pythonparseJVM = pythonparse.jvm
 lazy val pythonparseJS = pythonparse.js
 lazy val pythonparseNative = pythonparse.native
@@ -172,24 +165,24 @@ lazy val pythonparseNative = pythonparse.native
 
 lazy val cssparse = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .dependsOn(fastparse)
-  .settings(name := "cssparse")
-  .settings(shared:_*)
+  .settings(
+    shared,
+    name := "cssparse"
+  )
   .jvmSettings(
     libraryDependencies += "net.sourceforge.cssparser" % "cssparser" % "0.9.18" % "test"
   )
   .nativeSettings(nativeSettings)
-
 lazy val cssparseJVM = cssparse.jvm
 lazy val cssparseJS = cssparse.js
 lazy val cssparseNative = cssparse.native
 
 lazy val classparse = crossProject(JSPlatform, JVMPlatform)
   .dependsOn(fastparseByte)
-  .settings(shared:_*)
   .settings(
+    shared,
     name := "classparse"
   )
-
 lazy val classparseJVM = classparse.jvm
 lazy val classparseJS = classparse.js
 
@@ -202,41 +195,16 @@ lazy val perftests = crossProject(JSPlatform, JVMPlatform)
     cssparse,
     classparse
   )
-  .settings(shared:_*)
   .settings(
+    shared,
+    noPublish,
     name := "perfomance-tests",
     parallelExecution := false
   )
-
 lazy val perftestsJVM = perftests.jvm
 lazy val perftestsJS = perftests.js
 
-lazy val modules = project
-  .aggregate(
-    fastparseJS,
-    fastparseJVM,
-    fastparseNative,
-    fastparseByteJS,
-    fastparseByteJVM,
-    pythonparseJS,
-    pythonparseJVM,
-    pythonparseNative,
-    cssparseJS,
-    cssparseJVM,
-    cssparseNative,
-    scalaparseJS,
-    scalaparseJVM,
-    scalaparseNative,
-    classparseJVM,
-    classparseJS,
-    utilsJS,
-    utilsJVM,
-    utilsNative
-  )
-  .settings(
-    publishArtifact := false,
-    publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
-  )
+lazy val is212Only = List(crossScalaVersions := List(Constants.scala212))
 
 lazy val demo = project.enablePlugins(ScalaJSPlugin)
   .dependsOn(
@@ -246,14 +214,15 @@ lazy val demo = project.enablePlugins(ScalaJSPlugin)
     cssparseJS,
     classparseJS
   )
-  .settings(shared:_*)
   .settings(
+    shared,
+    is212Only,
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.2",
     libraryDependencies += "com.lihaoyi" %%% "scalatags" % "0.6.5",
     emitSourceMaps := false,
-    publishArtifact := false,
-    publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
+    noPublish
   )
+
 lazy val readme = scalatex.ScalatexReadme(
   projectId = "readme",
   wd = file(""),
@@ -261,11 +230,12 @@ lazy val readme = scalatex.ScalatexReadme(
   source = "Readme",
   autoResources = List("demo-opt.js")
 ).settings(
+  shared,
   (resources in Compile) += {
     (fullOptJS in (demo, Compile)).value
     (artifactPath in (demo,  Compile, fullOptJS )).value
   },
+  is212Only,
   (unmanagedSources in Compile) += baseDirectory.value/".."/"project"/"Constants.scala",
-  publishArtifact := false,
-  publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo")))
+  noPublish
 )
