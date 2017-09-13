@@ -1,6 +1,6 @@
 package scalaparse
 
-import utest.asserts.assert
+import utest.assert
 import fastparse.all._
 
 
