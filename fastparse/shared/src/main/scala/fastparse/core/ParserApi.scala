@@ -63,7 +63,7 @@ abstract class ParserApi[+T, Elem, Repr]()(implicit repr: ReprOps[Elem, Repr]) {
   def ?[R](implicit ev: Optioner[T, R]): Parser[R, Elem, Repr]
 
   /**
-   * Wraps this in a [[Not]] for negative lookaheak
+   * Wraps this in a [[Not]] for negative lookahead
    */
   def unary_! : Parser[Unit, Elem, Repr]
 
