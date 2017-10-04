@@ -1,5 +1,6 @@
 package fasterparser
 
+import scala.annotation.tailrec
 import scala.collection.mutable
 
 
@@ -34,18 +35,10 @@ object Parse {
 
   implicit def strToParsed(s: String)(implicit ctx: Ctx[_]): Parsed[Unit] = {
 
-    if (ctx.input.startsWith(s, ctx.position)) {
-      ctx.position = ctx.position + s.length
-      ctx.isSuccess = true
-      val res = ctx.success.asInstanceOf[Parsed.Success[Unit]]
-      res.value = ()
-      res
+    if (ctx.input.startsWith(s, ctx.success.index)) {
+      ctx.prepareSuccess((), ctx.success.index + s.length)
     }else{
-      ctx.isSuccess = false
-      ctx.failure.index = ctx.position
-      ctx.failure.stack = Nil
-
-      ctx.failure
+      ctx.prepareFailure(ctx.success.index)
     }
   }
 
@@ -70,11 +63,7 @@ object Parse {
           val pValue = p.value
           other match{
             case f: Parsed.Failure => f
-            case p: Parsed.Success[V] =>
-              val r = p.asInstanceOf[Parsed.Success[R]]
-              val applied = s.apply(pValue, p.value)
-              r.value = applied
-              r
+            case p: Parsed.Success[V] => ctx.prepareSuccess(s.apply(pValue, p.value))
 
           }
       }
@@ -83,82 +72,92 @@ object Parse {
 
   implicit class ByNameOps[S, T](parse0: => S)(implicit conv: S => Parsed[T], ctx: Ctx[_]){
     def rep[V](implicit repeater: Implicits.Repeater[T, V]): Parsed[V] = rep(sep=null)
-    def rep[V](sep: => Parsed[_] = null)(implicit repeater: Implicits.Repeater[T, V]): Parsed[V] = {
+    def rep[V](min: Int = 0,
+               max: Int = Int.MaxValue,
+               exactly: Int = -1,
+               sep: => Parsed[_] = null)(implicit repeater: Implicits.Repeater[T, V]): Parsed[V] = {
+
       val acc = repeater.initial
-      def end() = {
-        val res = ctx.success.asInstanceOf[Parsed.Success[V]]
-        res.value = repeater.result(acc)
-        res
+      val actualMin = if(exactly == -1) min else exactly
+      val actualMax = if(exactly == -1) max else exactly
+      def end(successIndex: Int, failureIndex: Int, count: Int) = {
+        if (count < actualMin) ctx.prepareFailure(failureIndex)
+        else ctx.prepareSuccess(repeater.result(acc), successIndex)
       }
-      def rec(): Parsed[V] = {
+      @tailrec def rec(count: Int): Parsed[V] = {
         ctx.cut = false
-        conv(parse0) match{
+        val beforeRepIndex = ctx.success.index
+        if (count == 0 && actualMax == 0) ctx.prepareSuccess(repeater.result(acc), beforeRepIndex)
+        else conv(parse0) match{
           case f: Parsed.Failure =>
+
             ctx.cut = false
-            if (ctx.cut) ctx.failure
-            else end()
+            if (ctx.cut) ctx.prepareFailure(beforeRepIndex)
+            else end(beforeRepIndex, beforeRepIndex, count)
+
 
           case s: Parsed.Success[T] =>
+            val beforeSepIndex = ctx.success.index
             ctx.cut = false
             repeater.accumulate(s.value, acc)
-
-            sep match{
-              case null => rec()
+            if (count + 1 == actualMax) end(beforeSepIndex, beforeSepIndex, count + 1)
+            else sep match{
+              case null => rec(count+1)
               case sepRes => sepRes match{
-                case s: Parsed.Success[_] => rec()
+                case s: Parsed.Success[_] => rec(count+1)
                 case f: Parsed.Failure =>
-                  if (ctx.cut) ctx.failure
-                  else end()
+                  if (ctx.cut) ctx.prepareFailure(beforeSepIndex)
+                  else end(beforeSepIndex, beforeSepIndex, count+1)
               }
             }
         }
       }
-      val res = rec()
+      val res = rec(0)
       ctx.cut = false
       res
     }
 
     def log()(implicit name: sourcecode.Name): Parsed[T] = {
-      println("Starting " + name.value + " " + ctx.position)
+      println("Starting " + name.value + " " + ctx.success.index)
       val res = conv(parse0)
-      println("Ending   " + name.value + " " + ctx.position + " " + ctx.isSuccess)
+      println("Ending   " + name.value + " " + ctx.success.index + " " + ctx.isSuccess)
       res
     }
 
     def ! : Parsed[String] = {
-      val startPos = ctx.position
+      val startPos = ctx.success.index
 
       conv(parse0) match{
         case f: Parsed.Failure => f
         case s: Parsed.Success[_] =>
-          val endPos= ctx.position
-          val ret = s.asInstanceOf[Parsed.Success[String]]
-          ret.value = ctx.input.substring(startPos, endPos)
-          ret
+          ctx.prepareSuccess(ctx.input.substring(startPos, ctx.success.index))
+      }
+    }
+
+    def unary_! : Parsed[Unit] = {
+      val startPos = ctx.success.index
+      conv(parse0) match{
+        case f: Parsed.Failure => ctx.prepareSuccess((), startPos)
+        case s: Parsed.Success[_] => ctx.prepareFailure(startPos)
       }
     }
 
     def ?[V](implicit optioner: Implicits.Optioner[T, V]): Parsed[V] = {
-      val startPos = ctx.position
+      val startPos = ctx.success.index
 
-      val success = ctx.success.asInstanceOf[Parsed.Success[V]]
       conv(parse0) match{
         case f: Parsed.Failure =>
           if (ctx.cut) f
           else{
-            success.value = optioner.none
-            ctx.position = startPos
             ctx.cut = false
-            success
+            ctx.prepareSuccess(optioner.none, startPos)
           }
-        case s: Parsed.Success[T] =>
-          success.value = optioner.some(s.value)
-          success
+        case s: Parsed.Success[T] => ctx.prepareSuccess(optioner.some(s.value))
       }
     }
 
     def |[V >: T](other: => Parsed[V]): Parsed[V] = {
-      val startPos = ctx.position
+      val startPos = ctx.success.index
       val res = conv(parse0) match {
         case p: Parsed.Success[T] => p
         case f: Parsed.Failure =>
@@ -174,34 +173,62 @@ object Parse {
       res
     }
   }
+
+  def &(parse: => Parsed[_])(implicit ctx: Ctx[_]): Parsed[Unit] = {
+    val startPos = ctx.success.index
+    parse match{
+      case f: Parsed.Failure => f
+      case s: Parsed.Success[_] => ctx.prepareSuccess((), startPos)
+    }
+  }
+
   def CharsWhileIn(s: String)(implicit ctx: Ctx[_]) = CharsWhile(s.toSet)
 
   def CharIn(s: CharSequence*)(implicit ctx: Ctx[_]) = {
-    val set = s.flatMap(_.toString).toSet
-    def currentCharMatches = ctx.input.lift(ctx.position).exists(set)
-    if (!currentCharMatches)  {
-      ctx.isSuccess = false
-      ctx.failure
-    }else{
-      ctx.position += 1
-      val res = ctx.success.asInstanceOf[Parsed.Success[Unit]]
-      res.value = ()
-      res
+    CharPred{c =>
+      s.exists { cs =>
+        var success = false
+        var index = 0
+        while(!success && index < cs.length){
+          if (cs.charAt(index) == c) success = true
+          index += 1
+        }
+        success
+      }
     }
   }
+
+  def End(implicit ctx: Ctx[_]): Parsed[Unit] = {
+    if (ctx.success.index == ctx.input.length) ctx.prepareSuccess(())
+    else ctx.prepareFailure(ctx.success.index)
+  }
+
+  def Start(implicit ctx: Ctx[_]): Parsed[Unit] = {
+    if (ctx.success.index == 0) ctx.prepareSuccess(())
+    else ctx.prepareFailure(ctx.success.index)
+
+  }
+
+  def Pass(implicit ctx: Ctx[_]): Parsed[Unit] = ctx.prepareSuccess(())
+
+  def Fail(implicit ctx: Ctx[_]): Parsed[Unit] = ctx.prepareFailure(ctx.success.index)
+
+  def Index(implicit ctx: Ctx[_]): Parsed[Int] = ctx.prepareSuccess(ctx.success.index)
+
+  def AnyChar(implicit ctx: Ctx[_]): Parsed[Unit] = CharPred(_ => true)
+  def CharPred(p: Char => Boolean)(implicit ctx: Ctx[_]): Parsed[Unit] = {
+    if (!ctx.input.lift(ctx.success.index).exists(p))  ctx.prepareFailure(ctx.success.index)
+    else ctx.prepareSuccess((), ctx.success.index + 1)
+  }
   def CharsWhile(p: Char => Boolean)(implicit ctx: Ctx[_]) = {
-    def currentCharMatches = ctx.input.lift(ctx.position).exists(p)
+    def currentCharMatches = ctx.input.lift(ctx.success.index).exists(p)
     if (!currentCharMatches)  {
       ctx.isSuccess = false
       ctx.failure
     }else{
-      while(currentCharMatches) ctx.position += 1
-
-      val res = ctx.success.asInstanceOf[Parsed.Success[Unit]]
-      res.value = ()
-      res
+      while(currentCharMatches) ctx.success.index += 1
+      ctx.prepareSuccess(())
     }
-
   }
 
 
@@ -209,16 +236,28 @@ object Parse {
 }
 
 class Ctx[+_](val input: String,
-              var position: Int,
               val stack: mutable.Buffer[String],
               val success: Parsed.Success[_],
               val failure: Parsed.Failure,
               var cut: Boolean = false,
-              var isSuccess: Boolean)
+              var isSuccess: Boolean){
+  def prepareSuccess[T](value: T, index: Int = success.index): Parsed.Success[T] = {
+    val res = success.asInstanceOf[Parsed.Success[T]]
+    isSuccess = true
+    res.value = value
+    res.index = index
+    res
+  }
+  def prepareFailure[T](index: Int): Parsed.Failure = {
+    isSuccess = false
+    failure.stack = Nil
+    failure.index = index
+    failure
+  }
+}
 object Ctx{
   def apply(input: String) = new Ctx(
     input,
-    0,
     mutable.Buffer.empty,
     new Parsed.Success,
     new Parsed.Failure,
@@ -229,15 +268,44 @@ object Ctx{
 
 abstract class Parsed[+T](val isSuccess: Boolean){
   def map[V](f: T => V): Parsed[V]
+  def flatMap[V](f: T => Parsed[V]): Parsed[V]
+  def filter(f: T => Boolean): Parsed[T]
 }
 
 object Parsed{
+  object Success{
+    def unapply[T](x: Parsed[T]): Option[(T, Int)] = x match{
+      case s: Success[T] => Some((s.value, s.index))
+      case f: Failure => None
+    }
+  }
+  object Failure{
+    def unapply[T](x: Parsed[T]): Option[(Unit, Int, Unit)] = x match{
+      case s: Failure => Some(((), s.index, ()))
+      case f: Success[T] => None
+    }
+  }
   class Success[T] extends Parsed[T](true){
     var value: T = null.asInstanceOf[T]
+    var index = 0
     def map[V](f: T => V) = {
       val this2 = this.asInstanceOf[Success[V]]
       this2.value = f(value)
       this2
+    }
+    def flatMap[V](f: T => Parsed[V]): Parsed[V] = {
+      f(value) match{
+        case f: Failure => f
+        case s: Success[V] => s
+      }
+    }
+    def filter(f: T => Boolean): Parsed[T] = {
+      if (f(value)) this
+      else {
+        val f = new Failure()
+        f.index = index
+        f
+      }
     }
     override def toString() = s"Parsed.Success($value)"
   }
@@ -246,5 +314,7 @@ object Parsed{
     var stack = List.empty[String]
     override def toString() = s"Parsed.Failure($index)"
     def map[V](f: Nothing => V) = this
+    def flatMap[V](f: Nothing => Parsed[V]): Parsed[V] = this
+    def filter(f: Nothing => Boolean) = this
   }
 }

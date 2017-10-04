@@ -2,7 +2,12 @@
 
 scalaVersion := "2.12.3"
 
-libraryDependencies += "com.lihaoyi" %% "sourcecode" % "0.1.4"
+libraryDependencies ++= Seq(
+  "com.lihaoyi" %% "sourcecode" % "0.1.4",
+  "com.lihaoyi" %% "utest" % "0.5.1" % "test"
+)
+
+testFrameworks += new TestFramework("utest.runner.Framework")
 
 sourceGenerators in Compile += Def.task {
   val dir = (sourceManaged in Compile).value
