@@ -336,7 +336,7 @@ object ExampleTests extends TestSuite{
       }
       'delimitercut{
         def digits[_:Ctx] = P( CharIn('0' to '9').rep(1) )
-        def tuple[_:Ctx] = P( "(" ~ digits.!.rep(sep="," ~/ Pass) ~ ")" )
+        def tuple[_:Ctx] = P( "(" ~ digits.!.rep(sep=("," ~/ Pass)) ~ ")" )
 
         val Parsed.Success(Seq("1", "23"), _) = tuple("(1,23)")
 
@@ -365,7 +365,7 @@ object ExampleTests extends TestSuite{
         def time2[_:Ctx] = P( (("1" | "2").? ~ digit) ~ ":" ~/ digit ~ digit )
         val Parsed.Success((), _) = time1("12:30pm")
         val Parsed.Success((), _) = time2("17:45")
-        def time[_:Ctx] = P( time1 | time2 )
+        def time[_:Ctx] = P( time1 | time2 ).log
         val Parsed.Success((), _) = time("12:30pm")
         val failure = time("17:45").asInstanceOf[Parsed.Failure]
         assert(failure.index == 5)  // Expects am or pm
@@ -384,33 +384,33 @@ object ExampleTests extends TestSuite{
     'debugging{
       def check(a: Any, s: String) = assert(a.toString == s.trim)
       'original{
-        object Foo{
-          
-          def plus[_:Ctx] = P( "+" )
-          def num[_:Ctx] = P( CharIn('0' to '9').rep(1) ).!.map(_.toInt)
-          def side[_:Ctx] = P( "(" ~ expr ~ ")" | num )
-          def expr[_:Ctx]: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}
-        }
-
-
-        check(
-          Foo.expr("(1+(2+3x))+4"),
-          """Failure(("(" ~ expr ~ ")" | num):1:1 ..."(1+(2+3x))")"""
-        )
+//        object Foo{
+//
+//          def plus[_:Ctx] = P( "+" )
+//          def num[_:Ctx] = P( CharIn('0' to '9').rep(1) ).!.map(_.toInt)
+//          def side[_:Ctx] = P( "(" ~ expr ~ ")" | num )
+//          def expr[_:Ctx]: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}
+//        }
+//
+//
+//        check(
+//          Foo.expr("(1+(2+3x))+4"),
+//          """Failure(("(" ~ expr ~ ")" | num):1:1 ..."(1+(2+3x))")"""
+//        )
 
       }
       'cuts{
-        object Foo{
-          
-          def plus[_:Ctx] = P( "+" )
-          def num[_:Ctx] = P( CharIn('0' to '9').rep(1) ).!.map(_.toInt)
-          def side[_:Ctx] = P( "(" ~/ expr ~ ")" | num )
-          def expr[_:Ctx]: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}
-        }
-        check(
-          Foo.expr("(1+(2+3x))+4"),
-          """Failure(")":1:8 ..."x))+4")"""
-        )
+//        object Foo{
+//
+//          def plus[_:Ctx] = P( "+" )
+//          def num[_:Ctx] = P( CharIn('0' to '9').rep(1) ).!.map(_.toInt)
+//          def side[_:Ctx] = P( "(" ~/ expr ~ ")" | num )
+//          def expr[_:Ctx]: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}
+//        }
+//        check(
+//          Foo.expr("(1+(2+3x))+4"),
+//          """Failure(")":1:8 ..."x))+4")"""
+//        )
       }
       'log{
 //        val captured = collection.mutable.Buffer.empty[String]
@@ -419,8 +419,8 @@ object ExampleTests extends TestSuite{
 //
 //          def plus[_:Ctx] = P( "+" )
 //          def num[_:Ctx] = P( CharIn('0' to '9').rep(1) ).!.map(_.toInt)
-//          def side[_:Ctx] = P( "(" ~/ expr ~ ")" | num ).log()
-//          def expr[_:Ctx]: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}.log()
+//          def side[_:Ctx] = P( "(" ~/ expr ~ ")" | num ).log
+//          def expr[_:Ctx]: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}.log
 //        }
 //
 //
