@@ -15,12 +15,6 @@ object Parse {
     println(helloWorld("hello world"))// Parsed.Success((hello,world))
     println(helloWorld("hello   world"))// Parsed.Success((hello,world))
     println(helloWorld("hello, world"))// Parsed.Success((hello,world))
-
-    println(Json.jsonExpr("31337"))
-    println(Json.jsonExpr("31337"))
-    println(Json.jsonExpr("\"31337\""))
-    println(Json.jsonExpr("[true, 123]"))
-    println(Json.jsonExpr("""{"hello": [true, 123], "world": {"foo": {"bar": "baz"}}}"""))
   }
 
   type P[+T] = Parsed[T]
