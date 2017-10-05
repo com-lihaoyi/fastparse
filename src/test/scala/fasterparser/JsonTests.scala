@@ -35,15 +35,34 @@ case class NamedFunction[T, V](f: T => V, name: String) extends (T => V){
 }
 object Json{
   import Parse._
-  def StringChars[_:Ctx] = NamedFunction(!"\"\\".contains(_: Char), "StringChars")
+  def stringChars(c: Char) = c != '\"' && c != '\\'
+  def spaceChars(c: Char) = c == ' ' || c == '\r' || c == '\n'
 
-  def space[_:Ctx]         = P( CharsWhileIn(" \r\n").? )
-  def digits[_:Ctx]        = P( CharsWhileIn("0123456789"))
-  def exponent[_:Ctx]      = P( CharIn("eE") ~ CharIn("+-").? ~ digits )
+  def numChars(c: Char) = (
+    c == '0' ||
+    c == '1' ||
+    c == '2' ||
+    c == '3' ||
+    c == '4' ||
+    c == '5' ||
+    c == '6' ||
+    c == '7' ||
+    c == '8' ||
+    c == '9'
+  )
+  def eChars(c: Char) = c == 'e' || c == 'E'
+  def plusMinus(c: Char) = c == '-' || c == '+'
+
+  val hexChars = Set('0'to'9', 'a'to'f', 'A'to'F').flatten
+  val escChars = "\"/\\bfnrt".toSet
+
+  def space[_:Ctx]         = P( (" " | "\r" | "\n").rep )
+  def digits[_:Ctx]        = P( ("0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9").rep(1) )
+  def exponent[_:Ctx]      = P( ("e" | "E") ~ ("+" | "-").? ~ digits )
   def fractional[_:Ctx]    = P( "." ~ digits )
-  def integral[_:Ctx]      = P( "0" | CharIn('1' to '9') ~ digits.? )
+  def integral[_:Ctx]      = P( "0" | ("1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9")  ~ digits.? )
 
-  def number[_:Ctx] = P( CharIn("+-").? ~ integral ~ fractional.? ~ exponent.? ).!.map(
+  def number[_:Ctx] = P( ("+" | "-").? ~ integral ~ fractional.? ~ exponent.? ).!.map(
     x => Js.Num(x.toDouble)
   )
 
@@ -51,11 +70,11 @@ object Json{
   def `false`[_:Ctx]       = P( "false" ).map(_ => Js.False)
   def `true`[_:Ctx]        = P( "true" ).map(_ => Js.True)
 
-  def hexDigit[_:Ctx]      = P( CharIn('0'to'9', 'a'to'f', 'A'to'F') )
+  def hexDigit[_:Ctx]      = P( CharPred(hexChars) )
   def unicodeEscape[_:Ctx] = P( "u" ~ hexDigit ~ hexDigit ~ hexDigit ~ hexDigit )
-  def escape[_:Ctx]        = P( "\\" ~ (CharIn("\"/\\bfnrt") | unicodeEscape) )
+  def escape[_:Ctx]        = P( "\\" ~ (("\"" | "/" | "\\" | "b" | "f" | "n" | "r" | "t") | unicodeEscape) )
 
-  def strChars[_:Ctx] = P( CharsWhile(StringChars) )
+  def strChars[_:Ctx] = P( CharsWhile(stringChars) )
   def string[_:Ctx] =
     P( space ~ "\"" ~/ (strChars | escape).rep.! ~ "\"").map(Js.Str)
 
@@ -123,6 +142,21 @@ object JsonTests extends TestSuite{
                 ]
             }
       """)
+    }
+    'perf{
+      val input = getClass.getResourceAsStream("/fasterparser/test.json")
+
+      val buffer = new java.io.BufferedReader(new java.io.InputStreamReader(input))
+      import collection.JavaConverters._
+      val txt = buffer.lines.iterator().asScala.mkString("\n")
+      var count = 0
+      val startTime = System.currentTimeMillis()
+      while(startTime + 10000 > System.currentTimeMillis()){
+        jsonExpr(txt)
+        count += 1
+      }
+      println(txt)
+      count
     }
     'fail{
       def check(s: String, expectedError: String, expectedShortError: String) = {

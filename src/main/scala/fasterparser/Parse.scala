@@ -249,11 +249,15 @@ object Parse {
 
   def AnyChar(implicit ctx: Ctx[_]): Parsed[Unit] = CharPred(_ => true)
   def CharPred(p: Char => Boolean)(implicit ctx: Ctx[_]): Parsed[Unit] = {
-    if (!ctx.input.lift(ctx.success.index).exists(p)) ctx.freshFailure()
+    if (!(ctx.success.index < ctx.input.length && p(ctx.input(ctx.success.index)))) ctx.freshFailure()
     else ctx.freshSuccess((), ctx.success.index + 1)
   }
   def CharsWhile(p: Char => Boolean)(implicit ctx: Ctx[_]) = {
-    def currentCharMatches = ctx.input.lift(ctx.success.index).exists(p)
+    def currentCharMatches = {
+      val index = ctx.success.index
+      val input = ctx.input
+      index < input.length && p(input(index))
+    }
     if (!currentCharMatches)  {
       ctx.isSuccess = false
       ctx.failure
