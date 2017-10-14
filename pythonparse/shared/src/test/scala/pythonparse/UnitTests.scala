@@ -18,11 +18,11 @@ object UnitTests extends TestSuite{
     import Ast._
     implicit def strName(s: Symbol) = Name(identifier(s.name), Load)
     implicit def strIdent(s: Symbol) = identifier(s.name)
-    'exprs{
+    'exprs - {
       def expr(expected: Ast.expr, s: String*) = s.map(TestUtils.check(Expressions.test, expected, _)).head
 
 
-      'primitives {
+      'primitives - {
         'int - expr(Num(1.0), "1")
         'negative_int - expr(Num(-1.0), "-1")
         'float - expr(Num(1.5), "1.5")
@@ -35,7 +35,7 @@ object UnitTests extends TestSuite{
         'yield - expr(Yield(None), "(yield)")
         'string - expr(Str("Abc"), "'Abc'", "'Ab' b'c'")
       }
-      'operators {
+      'operators - {
         'math - expr(BinOp(Num(1.0), Add, Num(2.0)), "1+2", "1 +  2")
         'ident_math - expr(
           BinOp(
@@ -117,7 +117,7 @@ object UnitTests extends TestSuite{
           "(a + b) * (c - d)"
         )
       }
-      'chained{
+      'chained - {
         'attributes - expr(
           Attribute(Attribute('a, 'b, Load), 'c, Load),
           "a.b.c"
@@ -137,7 +137,7 @@ object UnitTests extends TestSuite{
           "abc[d, e:f:]"
         )
       }
-      'enclosed{
+      'enclosed - {
         'list - expr(
           List(Seq(Num(1.0), Num(2.0), Str("a")), Load),
           "[1, 2, 'a']", "[1,2, 'a']"
@@ -199,10 +199,10 @@ object UnitTests extends TestSuite{
         )
       }
     }
-    'stmts {
+    'stmts - {
       def stmt(expected: Seq[Ast.stmt], s: String*) = s.map(TestUtils.check(Statements.file_input, expected, _)).head
       // Statements which only have expressions within them
-      'simple {
+      'simple - {
 
         'empty - stmt(Nil, "")
         'pass - stmt(Seq(Pass), "pass")
@@ -268,7 +268,7 @@ object UnitTests extends TestSuite{
         )
       }
       // Statements which can have other statements within them
-      'compound{
+      'compound - {
         'while - stmt(
           Seq(While('True, Seq(Pass), Nil)),
           """while True: pass"""

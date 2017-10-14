@@ -11,8 +11,8 @@ import utest._
 object ExampleTests extends TestSuite{
 
   val tests = Tests {
-    'basic{
-      'simple {
+    'basic - {
+      'simple - {
         import fastparse.all._
         val parseA = P( "a" )
 
@@ -27,7 +27,7 @@ object ExampleTests extends TestSuite{
         )
       }
 
-      'sequence {
+      'sequence - {
         val ab = P( "a" ~ "b" )
 
         val Parsed.Success(_, 2) = ab.parse("ab")
@@ -35,7 +35,7 @@ object ExampleTests extends TestSuite{
         val Parsed.Failure(parser, 1, _) = ab.parse("aa")
         assert(parser == ("b": P0))
       }
-      'repeat{
+      'repeat - {
         val ab = P( "a".rep ~ "b" )
         val Parsed.Success(_, 8) = ab.parse("aaaaaaab")
         val Parsed.Success(_, 4) = ab.parse("aaaba")
@@ -57,14 +57,14 @@ object ExampleTests extends TestSuite{
         val Parsed.Failure(_, 7, _) = ab4c.parse("ababababac")
       }
 
-      'option{
+      'option - {
         val option = P( "c".? ~ "a".rep(sep="b").! ~ End)
 
         val Parsed.Success("aba", 3) = option.parse("aba")
         val Parsed.Success("aba", 3) = option.parse("aba")
       }
 
-      'either{
+      'either - {
         val either = P( "a".rep ~ ("b" | "c" | "d") ~ End)
 
         val Parsed.Success(_, 6) = either.parse("aaaaab")
@@ -73,7 +73,7 @@ object ExampleTests extends TestSuite{
       }
 
 
-      'end{
+      'end - {
         val noEnd = P( "a".rep ~ "b")
         val withEnd = P( "a".rep ~ "b" ~ End)
 
@@ -81,7 +81,7 @@ object ExampleTests extends TestSuite{
         val Parsed.Failure(End, 4, _) = withEnd.parse("aaaba")
 
       }
-      'start{
+      'start - {
         val ab = P( (("a" | Start) ~ "b").rep ~ End).!
 
         val Parsed.Success("abab", 4) = ab.parse("abab")
@@ -91,18 +91,18 @@ object ExampleTests extends TestSuite{
 
       }
 
-      'passfail{
+      'passfail - {
         val Parsed.Success((), 0) = Pass.parse("asdad")
         val Parsed.Failure(Fail, 0, _) = Fail.parse("asdad")
       }
 
-      'index{
+      'index - {
         val finder = P( "hay".rep ~ Index ~ "needle" ~ "hay".rep )
 
         val Parsed.Success(9, _) = finder.parse("hayhayhayneedlehay")
       }
 
-      'capturing{
+      'capturing - {
         val capture1 = P( "a".rep.! ~ "b" ~ End)
 
         val Parsed.Success("aaa", 4) = capture1.parse("aaab")
@@ -123,7 +123,7 @@ object ExampleTests extends TestSuite{
 
         val Parsed.Success(Some("b"), 4) = captureOpt.parse("aaab")
       }
-      'unapply{
+      'unapply - {
         val capture1 = P( "a".rep.! ~ "b" ~ End)
 
         val capture1("aaa") = "aaab"
@@ -144,7 +144,7 @@ object ExampleTests extends TestSuite{
 
         val captureOpt(Some("b")) = "aaab"
       }
-      'anychar{
+      'anychar - {
         val ab = P( "'" ~ AnyChar.! ~ "'" )
 
         val Parsed.Success("-", 3) = ab.parse("'-'")
@@ -154,13 +154,13 @@ object ExampleTests extends TestSuite{
       }
 
 
-      'lookahead{
+      'lookahead - {
         val keyword = P( ("hello" ~ &(" ")).!.rep )
 
         val Parsed.Success(Seq("hello"), _) = keyword.parse("hello ")
         val Parsed.Success(Seq(), __) = keyword.parse("helloX")
       }
-      'neglookahead{
+      'neglookahead - {
         val keyword = P( "hello" ~ !" " ~ AnyChar ~ "world" ).!
 
         val Parsed.Success("hello-world", _) = keyword.parse("hello-world")
@@ -169,14 +169,14 @@ object ExampleTests extends TestSuite{
         val Parsed.Failure(parser, 6, _) = keyword.parse("hello world")
         assert(parser == !(" "))
       }
-      'map{
+      'map - {
         val binary = P( ("0" | "1" ).rep.! )
         val binaryNum = P( binary.map(Integer.parseInt(_, 2)) )
 
         val Parsed.Success("1100", _) = binary.parse("1100")
         val Parsed.Success(12, _) = binaryNum.parse("1100")
       }
-      'flatMap{
+      'flatMap - {
         val leftTag = P( "<" ~ (!">" ~ AnyChar).rep(1).! ~ ">" )
         def rightTag(s: String) = P( "</" ~ s.! ~ ">" )
         val xml = P( leftTag.flatMap(rightTag) )
@@ -189,7 +189,7 @@ object ExampleTests extends TestSuite{
           failure.extra.traced.trace == """xml:1:1 / rightTag:1:8 / "abcde":1:10 ..."edcba>""""
         )
       }
-      'flatMapFor{
+      'flatMapFor - {
         val leftTag = P( "<" ~ (!">" ~ AnyChar).rep(1).! ~ ">" )
         def rightTag(s: String) = P( "</" ~ s.! ~ ">" )
         val xml = P(
@@ -207,7 +207,7 @@ object ExampleTests extends TestSuite{
           failure.extra.traced.trace == """xml:1:1 / rightTag:1:8 / "abcde":1:10 ..."edcba>""""
         )
       }
-      'filter{
+      'filter - {
         val digits = P(CharIn('0' to '9').rep(1).!).map(_.toInt)
         val even = digits.filter(_ % 2 == 0)
         val Parsed.Success(12, _) = even.parse("12")
@@ -215,7 +215,7 @@ object ExampleTests extends TestSuite{
         assert("""digits.filter\(.*\)$""".r.findPrefixOf(even.toString).isDefined)
         assert("""digits.filter\(.*\):1:1 ..."123"$""".r.findPrefixOf(failure.extra.traced.trace).isDefined)
       }
-      'opaque{
+      'opaque - {
         val digit = CharIn('0' to '9')
         val letter = CharIn('A' to 'Z')
         def twice[T](p: Parser[T]) = p ~ p
@@ -239,20 +239,20 @@ object ExampleTests extends TestSuite{
           |^""".stripMargin.trim)
       }
     }
-    'charX{
-      'charPred{
+    'charX - {
+      'charPred - {
         val cp = P( CharPred(_.isUpper).rep.! ~ "." ~ End )
 
         val Parsed.Success("ABC", _) = cp.parse("ABC.")
         val Parsed.Failure(_, 2, _) = cp.parse("ABc.")
       }
-      'charPredRaw{
+      'charPredRaw - {
         val cp = P( CharPred.raw(_.isUpper).rep.! ~ "." ~ End )
 
         val Parsed.Success("ABC", _) = cp.parse("ABC.")
         val Parsed.Failure(_, 2, _) = cp.parse("ABc.")
       }
-      'charIn{
+      'charIn - {
         val ci = P( CharIn("abc", "xyz").rep.! ~ End )
 
         val Parsed.Success("aaabbccxyz", _) = ci.parse("aaabbccxyz")
@@ -264,33 +264,33 @@ object ExampleTests extends TestSuite{
         val Parsed.Success("123", _) = digits.parse("123abcde45")
       }
 
-      'charsWhile{
+      'charsWhile - {
         val cw = P( CharsWhile(_ != ' ').! )
 
         val Parsed.Success("12345", _) = cw.parse("12345")
         val Parsed.Success("123", _) = cw.parse("123 45")
       }
-      'charsWhileIn{
+      'charsWhileIn - {
         val cw = P( CharsWhileIn("123456789").! )
 
         val Parsed.Success("12345", _) = cw.parse("12345")
         val Parsed.Success("123", _) = cw.parse("123 45")
       }
-      'charsWhileRaw{
+      'charsWhileRaw - {
         val cw = P( CharsWhile.raw(_ != ' ').! )
 
         val Parsed.Success("12345", _) = cw.parse("12345")
         val Parsed.Success("123", _) = cw.parse("123 45")
       }
-      'stringIn{
+      'stringIn - {
         val si = P( StringIn("cow", "cattle").!.rep )
 
         val Parsed.Success(Seq("cow", "cattle"), _) = si.parse("cowcattle")
         val Parsed.Success(Seq("cow"), _) = si.parse("cowmoo")
       }
     }
-    'cuts{
-      'nocut{
+    'cuts - {
+      'nocut - {
         val alpha = P( CharIn('a' to 'z') )
         val nocut = P( "val " ~ alpha.rep(1).! | "def " ~ alpha.rep(1).!)
 
@@ -303,7 +303,7 @@ object ExampleTests extends TestSuite{
           """nocut:1:1 / ("val " ~ alpha.rep(1) | "def " ~ alpha.rep(1)):1:1 ..."val 1234""""
         )
       }
-      'withcut{
+      'withcut - {
         val alpha = P( CharIn('a' to 'z') )
         val nocut = P( "val " ~/ alpha.rep(1).! | "def " ~/ alpha.rep(1).!)
 
@@ -316,7 +316,7 @@ object ExampleTests extends TestSuite{
           """nocut:1:1 / alpha:1:5 / CharIn("abcdefghijklmnopqrstuvwxyz"):1:5 ..."1234""""
         )
       }
-      'repnocut{
+      'repnocut - {
         val alpha = P( CharIn('a' to 'z') )
         val stmt = P( "val " ~ alpha.rep(1).! ~ ";" ~ " ".rep )
         val stmts = P( stmt.rep(1) ~ End )
@@ -330,7 +330,7 @@ object ExampleTests extends TestSuite{
           failure.extra.traced.trace == """stmts:1:1 / (End | " "):1:11 ..."val """"
         )
       }
-      'repcut{
+      'repcut - {
         val alpha = P( CharIn('a' to 'z') )
         val stmt = P( "val " ~/ alpha.rep(1).! ~ ";" ~ " ".rep )
         val stmts = P( stmt.rep(1) ~ End )
@@ -345,7 +345,7 @@ object ExampleTests extends TestSuite{
             """stmts:1:1 / stmt:1:11 / alpha:1:15 / CharIn("abcdefghijklmnopqrstuvwxyz"):1:15 ..."""""
         )
       }
-      'delimiternocut{
+      'delimiternocut - {
         val digits = P( CharIn('0' to '9').rep(1) )
         val tuple = P( "(" ~ digits.!.rep(sep=",") ~ ")" )
 
@@ -357,7 +357,7 @@ object ExampleTests extends TestSuite{
           failure.extra.traced.trace == """tuple:1:1 / (")" | CharIn("0123456789")):1:3 ...",)""""
         )
       }
-      'delimitercut{
+      'delimitercut - {
         val digits = P( CharIn('0' to '9').rep(1) )
         val tuple = P( "(" ~ digits.!.rep(sep="," ~/ Pass) ~ ")" )
 
@@ -369,7 +369,7 @@ object ExampleTests extends TestSuite{
           failure.extra.traced.trace == """tuple:1:1 / digits:1:4 / CharIn("0123456789"):1:4 ...")""""
         )
       }
-      'endcut{
+      'endcut - {
         val digits = P( CharIn('0' to '9').rep(1) )
         val tuple = P( "(" ~ digits.!.rep(sep=",".~/) ~ ")" )
 
@@ -382,7 +382,7 @@ object ExampleTests extends TestSuite{
           trace == """tuple:1:1 / digits:1:4 / CharIn("0123456789"):1:4 ...")""""
         )
       }
-      'composecut{
+      'composecut - {
          val digit = P( CharIn('0' to '9') )
          val time1 = P( ("1".? ~ digit) ~ ":" ~/ digit ~ digit ~ ("am" | "pm") )
          val time2 = P( (("1" | "2").? ~ digit) ~ ":" ~/ digit ~ digit )
@@ -393,7 +393,7 @@ object ExampleTests extends TestSuite{
          val failure = time.parse("17:45").asInstanceOf[Parsed.Failure]
          assert(failure.index == 5)  // Expects am or pm
       }
-      'composenocut{
+      'composenocut - {
          val digit = P( CharIn('0' to '9') )
          val time1 = P( ("1".? ~ digit) ~ ":" ~/ digit ~ digit ~ ("am" | "pm") )
          val time2 = P( (("1" | "2").? ~ digit) ~ ":" ~/ digit ~ digit )
@@ -404,9 +404,9 @@ object ExampleTests extends TestSuite{
          val Parsed.Success((), _) = time.parse("17:45")
       }
     }
-    'debugging{
+    'debugging - {
       def check(a: Any, s: String) = assert(a.toString == s.trim)
-      'original{
+      'original - {
         object Foo{
           import fastparse.all._
           val plus = P( "+" )
@@ -422,7 +422,7 @@ object ExampleTests extends TestSuite{
         )
 
       }
-      'cuts{
+      'cuts - {
         object Foo{
           import fastparse.all._
           val plus = P( "+" )
@@ -435,7 +435,7 @@ object ExampleTests extends TestSuite{
           """Failure(")":1:8 ..."x))+4")"""
         )
       }
-      'log{
+      'log - {
         val captured = collection.mutable.Buffer.empty[String]
         implicit val logger = Logger(captured.append(_))
         object Foo{
@@ -475,7 +475,7 @@ object ExampleTests extends TestSuite{
         assert(capturedString == expectedString)
       }
     }
-    'folding{
+    'folding - {
       sealed trait AndOr
       case object And extends AndOr
       case object Or extends AndOr

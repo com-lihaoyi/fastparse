@@ -5,7 +5,7 @@ import utest._
 
 object TrailingCommasTests extends TestSuite {
   def tests = TestSuite {
-    'pos {
+    'pos - {
       'ArgumentExprs1 - check("""
         |trait ArgumentExprs1 {
         |  def f(foo: Int, bar: String)(implicit ev0: Ev0, ev1: Ev1) = 1
@@ -170,7 +170,7 @@ object TrailingCommasTests extends TestSuite {
       // so they don't support an optional trailing comma
     }
 
-    'neg {
+    'neg - {
       //// Multi-line only cases: make sure trailing commas are only supported when multi-line
 
       'ArgumentExprs1 - checkNeg("""trait ArgumentExprs1 { f(23, "bar", )(Ev0, Ev1) }""", expected1, found1)

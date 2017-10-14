@@ -22,7 +22,7 @@ object MidiTests extends TestSuite{
   }
 
   val tests = Tests {
-    'canon{
+    'canon - {
       import Midi._
       val bytes = readResourceBytes("/canon.mid")
       for(parsed <- variousParses(bytes)){
@@ -48,7 +48,7 @@ object MidiTests extends TestSuite{
 
       }
     }
-    'chronoTrigger{
+    'chronoTrigger - {
       import Midi._
       val bytes = readResourceBytes("/ctend.mid")
       for(parsed <- variousParses(bytes)){
@@ -75,7 +75,7 @@ object MidiTests extends TestSuite{
 
       }
     }
-    'tonghua{
+    'tonghua - {
       val bytes = readResourceBytes("/tonghua.mid")
 
       for(parsed <- variousParses(bytes)) {

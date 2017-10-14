@@ -111,7 +111,7 @@ object BmpTests extends TestSuite {
 
   val tests = Tests {
 
-    'wiki {
+    'wiki - {
       /* These tests were taken from wiki page https://en.wikipedia.org/wiki/BMP_file_format */
       'example1 {
         val fileHeader = hex"42 4d  46 00 00 00  00 00  00 00  36 00 00 00"

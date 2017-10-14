@@ -4,7 +4,7 @@ import utest._
 
 object PrettyPrinterTests extends TestSuite {
   val tests = this {
-    'basic {
+    'basic - {
 
       val output =
         """

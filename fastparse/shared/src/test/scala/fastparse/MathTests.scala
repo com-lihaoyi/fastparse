@@ -28,14 +28,14 @@ object MathTests extends TestSuite{
   val expr: P[Int]   = P( addSub ~ End )
 
   val tests = Tests {
-    'pass {
+    'pass - {
       val Parsed.Success(2, _) = expr.parse("1+1")
       val Parsed.Success(15, _) = expr.parse("(1+1*2)+3*4")
       val Parsed.Success(21, _) = expr.parse("((1+1*2)+(3*4*5))/3")
       val Parsed.Failure(expected, failIndex, extra) = expr.parse("1+1*")
       assert(expected == (number | parens), failIndex == 4)
     }
-    'fail{
+    'fail - {
       def check(input: String, expectedTrace: String, expectedShortTrace: String) = {
         val failure = expr.parse(input).asInstanceOf[Parsed.Failure]
         val actualTrace = failure.extra.traced.trace
@@ -68,8 +68,8 @@ object MathTests extends TestSuite{
       )
     }
 
-    'instrument{
-      'simple{
+    'instrument - {
+      'simple - {
         val callCount = mutable.Map.empty[String, Int]
 
 
@@ -89,7 +89,7 @@ object MathTests extends TestSuite{
         )
         assert(callCount == expectedCallCount)
       }
-      'continuation{
+      'continuation - {
         val resultCount = mutable.Map.empty[(String, Boolean), Int]
         val instrumentFunction = (parser: Parser[_], index: Int, continuation: () => Parsed[_]) => {
           val result = continuation()

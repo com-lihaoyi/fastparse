@@ -8,7 +8,7 @@ import scala.collection.mutable.ArrayBuffer
 
 object CssTests extends TestSuite {
   val tests = this {
-    'basic {
+    'basic - {
       'test1 {
         val Parsed.Success(value1, index1) = CssRulesParser.ruleList.parse(
           """

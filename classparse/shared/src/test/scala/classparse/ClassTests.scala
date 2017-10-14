@@ -16,8 +16,8 @@ object ClassTests extends TestSuite {
 
   val tests = Tests {
 
-    'basic {
-      'book {
+    'basic - {
+      'book - {
         val classFile = hex"""
           CA FE BA BE
           00 00 00 34 00 1D 0A 00 05 00 18 09 00 04 00 19 09 00 04 00 1A 07 00
@@ -575,7 +575,7 @@ object ClassTests extends TestSuite {
         }
       }
 
-      'attributes {
+      'attributes - {
         val classFile = hex"""
           CA FE BA BE
           00 00 00 34 00 27 0A 00 08 00 1E 07 00 1F 0A 00 02 00 20 07 00 21
@@ -659,7 +659,7 @@ object ClassTests extends TestSuite {
           )
         )
       }
-      'code {
+      'code - {
         val classFile = Bytes(
           ("yv66vgAAADQA2AoACgBoCQBpAGoIAGsKAGwAbQgAbggAbwoAbA" +
           "BwCABxCAByBwBzBwB0BkAJIftURC0YCgB1AHYKAGwAdwUAAAAAAAGGoARDaoAABkBe2ZmZmZmaB" +

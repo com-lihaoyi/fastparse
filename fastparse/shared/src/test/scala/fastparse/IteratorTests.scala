@@ -28,7 +28,7 @@ object IteratorTests extends TestSuite {
 
   val tests = Tests {
 
-    'basic{
+    'basic - {
       import fastparse.all._
       val p = P( "ab" ~/ "cd".rep().! ~ "ef" | "z" )
 
@@ -39,7 +39,7 @@ object IteratorTests extends TestSuite {
       assert(res == "cdcdcd")
     }
 
-    'immediateCutDrop{
+    'immediateCutDrop - {
       import fastparse.all._
       val p = P( "ab" ~/ "cd" | "z" )
 
@@ -49,7 +49,7 @@ object IteratorTests extends TestSuite {
       // the cut has taken place, rather than at position 4 as we did earlier.
       assert(input.drops == Set(2, 4))
     }
-    'whitespaceImmediateCutDrop{
+    'whitespaceImmediateCutDrop - {
       import fastparse.noApi._
       val White = fastparse.WhitespaceApi.Wrapper{
         import fastparse.all._
@@ -64,7 +64,7 @@ object IteratorTests extends TestSuite {
       // the cut has taken place, rather than at position 4 as we did earlier.
       assert(input.drops == Set(2, 4))
     }
-    'topLevelNoCuts{
+    'topLevelNoCuts - {
       // Top-level sequences, which are not inside any `|`s or `.rep`s or `.?`s,
       // should dropBuffer immediately after every `~`, even without any cuts
       import fastparse.all._
@@ -75,8 +75,8 @@ object IteratorTests extends TestSuite {
       val Parsed.Success(res, i) = capt.parseInput(input)
       assert(input.drops == Set(1, 2, 3, 4, 5, 6, 7, 8, 9))
     }
-    'cuts {
-      'capturing {
+    'cuts - {
+      'capturing - {
         import fastparse.all._
 
         val p = P( "a" ~/ "b" ~/ "c")
@@ -90,7 +90,7 @@ object IteratorTests extends TestSuite {
         )
       }
 
-      'nocut {
+      'nocut - {
         import fastparse.all._
 
         val p = P( "a" ~/ "b" ~/ "c")
@@ -111,7 +111,7 @@ object IteratorTests extends TestSuite {
         )
       }
 
-      'either {
+      'either - {
         import fastparse.all._
 
         val p = P( "a" ~ "b" ~ "c")
@@ -139,7 +139,7 @@ object IteratorTests extends TestSuite {
         )
       }
 
-      'rep {
+      'rep - {
         import fastparse.all._
 
         val p = P( "a" ~ "b" ~ "c")
@@ -161,7 +161,7 @@ object IteratorTests extends TestSuite {
         )
       }
 
-      'all {
+      'all - {
         import fastparse.all._
 
         val p = P( "a" ~ "b" ~ "c" ~/ "d")
@@ -179,7 +179,7 @@ object IteratorTests extends TestSuite {
         )
       }
 
-      'whitespaceApi {
+      'whitespaceApi - {
         import fastparse.noApi._
         val White = fastparse.WhitespaceApi.Wrapper{
           import fastparse.all._
@@ -212,7 +212,7 @@ object IteratorTests extends TestSuite {
         assert(ab.parseInput(input3).isInstanceOf[Parsed.Failure])
       }
 
-      'zeroDrops {
+      'zeroDrops - {
         import fastparse.all._
 
         val p = P( (("big string, " ~ ("another string, " ~ ("a".? ~/ "b".?)) | "small string, ") ~ "end of input") | "some other input" )
@@ -226,7 +226,7 @@ object IteratorTests extends TestSuite {
         //TODO it's a quite unexpected behavior
       }
     }
-    'traceFailure{
+    'traceFailure - {
       import fastparse.all._
       P("[" ~ "]").parse("[ ]").asInstanceOf[Parsed.Failure].extra.traced
       val e = intercept[RuntimeException] {

@@ -13,7 +13,7 @@ object LargeBmpTests extends TestSuite {
   import BmpTests.BmpParse._
 
   val tests = Tests {
-    'lena {
+    'lena - {
       val lenaRecource = getClass.getResource("/lena.bmp")
       val Parsed.Success(lenaBmp, _) = bmp.parse(
         Bytes(Files.readAllBytes(Paths.get(lenaRecource.toURI.getPath)))
@@ -36,12 +36,12 @@ object LargeBmpTests extends TestSuite {
 
       def readImg(path: String) = ImageIO.read(getClass.getResource("/" + path))
 
-      'original {
+      'original - {
         val lenaImg = readImg("lena.bmp")
         compareBmpImg(lenaBmp, lenaImg)
       }
 
-      'mirrored {
+      'mirrored - {
         val mirroredLenaImg = readImg("mirrored_lena.bmp")
         val mirroredBmp = Bmp(
           lenaBmp.fileHeader, lenaBmp.bitmapHeader, lenaBmp.pixels.map(_.reverse)
@@ -49,7 +49,7 @@ object LargeBmpTests extends TestSuite {
         compareBmpImg(mirroredBmp, mirroredLenaImg)
       }
 
-      'inverted {
+      'inverted - {
         val invertedLenaImg = readImg("inverted_lena.bmp")
         val invertedBmp = Bmp(
           lenaBmp.fileHeader, lenaBmp.bitmapHeader,

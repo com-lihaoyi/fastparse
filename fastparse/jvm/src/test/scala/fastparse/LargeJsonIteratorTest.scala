@@ -10,13 +10,13 @@ object LargeJsonIteratorTest extends TestSuite {
   def source = io.Source.fromInputStream(getClass.getResourceAsStream("/test.json"))
 
   val tests = Tests {
-    'large {
+    'large - {
       val Parsed.Success(_, i) = jsonExpr.parseIterator(source.getLines().map(_.repr))
       val expectedIndex = source.getLines().map(_.length).sum
       assert(i == expectedIndex)
     }
 
-    'maxInnerLength {
+    'maxInnerLength - {
       val loggedInput = new IteratorParserInput(source.getLines().map(_.repr)) {
         var maxInnerLength = 0
         override def dropBuffer(index: Int) = {

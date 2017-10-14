@@ -11,14 +11,14 @@ import utest._
  */
 object CharPredTests extends TestSuite{
   val tests = Tests {
-    'hexToInt{
+    'hexToInt - {
       val hex1 = "0123456789abcdef"
       val ints = Utils.HexUtils.hex2Ints(hex1)
       val hex2 = Utils.HexUtils.ints2Hex(ints)
       assert(hex1 == hex2)
     }
 
-    'charTypes{
+    'charTypes - {
       for(c <- Char.MinValue to Char.MaxValue){
         val charPredType = CharPredicates.charTypeLookup(c)
         val jvmType = c.getType

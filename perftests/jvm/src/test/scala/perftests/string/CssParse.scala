@@ -10,7 +10,7 @@ object CssParse extends TestSuite {
   val parser = cssparse.CssRulesParser.ruleList
 
   val tests = Tests {
-    'Bootstrap {
+    'Bootstrap - {
       Utils.benchmarkAll(
         "CssParse",
         parser,

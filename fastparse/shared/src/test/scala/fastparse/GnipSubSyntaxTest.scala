@@ -44,7 +44,7 @@ object GnipSubSyntaxTest extends TestSuite {
   }
 
   val tests = Tests {
-    'fail {
+    'fail - {
       assert(GnipRuleValidator("( ab ( cd ( ef ( gh ( ij ( ( hello ( world ) bla ) lol ) hehe ) ) ) xz )").isFailure)
     }
 

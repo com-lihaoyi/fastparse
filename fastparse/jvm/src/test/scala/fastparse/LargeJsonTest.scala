@@ -9,7 +9,7 @@ import utest._
  */
 object LargeJsonTest extends TestSuite{
   val tests = Tests {
-    'large{
+    'large - {
       val Parsed.Success(value, _) = jsonExpr.parse(
         io.Source.fromInputStream(getClass.getResourceAsStream("/test.json")).mkString
       )

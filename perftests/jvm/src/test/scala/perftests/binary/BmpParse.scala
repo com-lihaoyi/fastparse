@@ -13,7 +13,7 @@ object BmpParse extends TestSuite {
   val parser = fastparse.byte.BmpTests.BmpParse.bmp
 
   val tests = Tests {
-    'Lena {
+    'Lena - {
       Utils.benchmarkAll(
         "ByteParse",
         parser,
