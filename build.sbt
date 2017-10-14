@@ -55,7 +55,8 @@ val shared = Seq(
 
 lazy val nativeSettings = Seq(
   scalaVersion := Constants.scala211,
-  crossScalaVersions := Seq(Constants.scala211)
+  crossScalaVersions := Seq(Constants.scala211),
+  nativeLinkStubs := true
 )
 
 lazy val noPublish = Seq(
@@ -125,15 +126,17 @@ lazy val fastparseJS = fastparse.js
 lazy val fastparseJVM = fastparse.jvm
 lazy val fastparseNative = fastparse.native
 
-lazy val fastparseByte = crossProject(JSPlatform, JVMPlatform)
+lazy val fastparseByte = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .dependsOn(fastparse)
   .settings(
     shared,
     name := "fastparse-byte",
     libraryDependencies += "org.scodec" %%% "scodec-bits" % "1.1.5"
   )
+  .nativeSettings(nativeSettings)
 lazy val fastparseByteJS = fastparseByte.js
 lazy val fastparseByteJVM = fastparseByte.jvm
+lazy val fastparseByteNative= fastparseByte.native
 // Native support blocked by https://github.com/scala-native/scala-native/issues/925
 
 lazy val scalaparse = crossProject(JSPlatform, JVMPlatform, NativePlatform)
@@ -177,16 +180,18 @@ lazy val cssparseJVM = cssparse.jvm
 lazy val cssparseJS = cssparse.js
 lazy val cssparseNative = cssparse.native
 
-lazy val classparse = crossProject(JSPlatform, JVMPlatform)
+lazy val classparse = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .dependsOn(fastparseByte)
   .settings(
     shared,
     name := "classparse"
   )
+  .nativeSettings(nativeSettings)
 lazy val classparseJVM = classparse.jvm
 lazy val classparseJS = classparse.js
+lazy val classparseNative = classparse.native
 
-lazy val perftests = crossProject(JSPlatform, JVMPlatform)
+lazy val perftests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .dependsOn(
     fastparse % "compile->compile;compile->test",
     fastparseByte % "compile->compile;compile->test",
