@@ -14,7 +14,7 @@ object ClassTests extends TestSuite {
   import ClassAttributes._
   import CodeParser._
 
-  val tests = TestSuite {
+  val tests = Tests {
 
     'basic {
       'book {

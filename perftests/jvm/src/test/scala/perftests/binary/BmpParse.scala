@@ -12,7 +12,7 @@ object BmpParse extends TestSuite {
   def lenaIterator(size: Int) = lenaSource.grouped(size).map(Bytes.view)
   val parser = fastparse.byte.BmpTests.BmpParse.bmp
 
-  val tests = TestSuite {
+  val tests = Tests {
     'Lena {
       Utils.benchmarkAll(
         "ByteParse",

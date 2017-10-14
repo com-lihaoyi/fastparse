@@ -12,7 +12,7 @@ object MidiParse extends TestSuite {
   def goIterator(size: Int) = goSource.grouped(size).map(Bytes.view)
   val parser = fastparse.byte.MidiParse.midiParser
 
-  val tests = TestSuite {
+  val tests = Tests {
     Utils.benchmarkAll(
       "MidiParse",
       parser,

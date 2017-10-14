@@ -68,7 +68,7 @@ object ProjectTests extends TestSuite {
     checkDir("target/repos/" + name, dirs, srcFolders, filter)
   }
 
-  val tests = TestSuite {
+  val tests = Tests {
     "junit-team/junit4" - checkRepo(filter = !_.endsWith("package-info.java"))
     "checkstyle/checkstyle" - checkRepo(filter = !_.endsWith("package-info.java"))
     "jenkinsci/jenkins" - checkRepo(dirs = Seq("/core", "/cli"), filter = !_.endsWith("package-info.java"))

@@ -9,7 +9,7 @@ object CssParse extends TestSuite {
   def bootstrapIterator(size: Int) = bootstrapSource.grouped(size)
   val parser = cssparse.CssRulesParser.ruleList
 
-  val tests = TestSuite {
+  val tests = Tests {
     'Bootstrap {
       Utils.benchmarkAll(
         "CssParse",

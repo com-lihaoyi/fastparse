@@ -12,7 +12,7 @@ object ClassParse extends TestSuite {
   def collisionIterator(size: Int) = collisionSource.grouped(size).map(Bytes.view)
   val parser = classparse.ClassParse.classFile
 
-  val tests = TestSuite {
+  val tests = Tests {
     Utils.benchmarkAll(
       "ClassParse",
       parser,

@@ -35,7 +35,7 @@ object LargeBmpIteratorTests extends TestSuite {
 
   def lenaIterator = new StreamToIteratorByte(getClass.getResource("/lena.bmp").openStream(), 100)
 
-  val tests = TestSuite {
+  val tests = Tests {
     'large {
       val Parsed.Success(_, i) = BmpTests.BmpParse.bmp.parseIterator(lenaIterator)
       val expectedIndex = lenaIterator.map(_.length).sum

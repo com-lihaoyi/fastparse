@@ -9,7 +9,7 @@ import scala.io.Source
 object LargeJsonIteratorTest extends TestSuite {
   def source = io.Source.fromInputStream(getClass.getResourceAsStream("/test.json"))
 
-  val tests = TestSuite {
+  val tests = Tests {
     'large {
       val Parsed.Success(_, i) = jsonExpr.parseIterator(source.getLines().map(_.repr))
       val expectedIndex = source.getLines().map(_.length).sum

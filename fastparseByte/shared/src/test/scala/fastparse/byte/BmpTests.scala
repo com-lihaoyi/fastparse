@@ -109,7 +109,7 @@ object BmpTests extends TestSuite {
   import BmpParse.BmpAst._
   import BmpParse._
 
-  val tests = TestSuite {
+  val tests = Tests {
 
     'wiki {
       /* These tests were taken from wiki page https://en.wikipedia.org/wiki/BMP_file_format */

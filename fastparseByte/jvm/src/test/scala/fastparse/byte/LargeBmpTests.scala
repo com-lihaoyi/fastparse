@@ -12,7 +12,7 @@ object LargeBmpTests extends TestSuite {
   import BmpTests.BmpParse.BmpAst._
   import BmpTests.BmpParse._
 
-  val tests = TestSuite {
+  val tests = Tests {
     'lena {
       val lenaRecource = getClass.getResource("/lena.bmp")
       val Parsed.Success(lenaBmp, _) = bmp.parse(

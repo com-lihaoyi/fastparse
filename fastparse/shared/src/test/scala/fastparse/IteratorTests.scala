@@ -26,7 +26,7 @@ object IteratorTests extends TestSuite {
     new LoggedDropsParserInput(string.grouped(1).map(wrapString))
   }
 
-  val tests = TestSuite {
+  val tests = Tests {
 
     'basic{
       import fastparse.all._
