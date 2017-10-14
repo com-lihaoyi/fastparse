@@ -1,5 +1,9 @@
 @import Main._
 @sect{Change Log}
+    @sect{1.0.0}
+        @ul
+           @li
+                Published @code{fastparse-byte} for Scala Native.
     @sect{0.4.4}
         @ul
             @li

@@ -68,6 +68,7 @@ lazy val noPublish = Seq(
 
 lazy val utils = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(
+    name := "fastparse-utils",
     shared,
     unmanagedSourceDirectories in Compile ++= {
       CrossVersion.partialVersion(scalaVersion.value) match {
@@ -129,6 +130,7 @@ lazy val fastparseByte = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .dependsOn(fastparse)
   .settings(
     shared,
+    name := "fastparse-byte",
     libraryDependencies += "org.scodec" %%% "scodec-bits" % "1.1.5"
   )
   .nativeSettings(nativeSettings)
