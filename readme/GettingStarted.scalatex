@@ -8,10 +8,11 @@
 @div(id := "splashdiv")
 @script(raw("""demo.DemoMain.math(document.getElementById("splashdiv"))"""))
 @p
-    FastParse is a parser-combinator library for Scala that lets you quickly
-    and easily write recursive descent @sect.ref("Writing Parsers", "text")-
-    and @sect.ref("Byte Parsers", "binary data") parsers in Scala. Features
-    include:
+    FastParse is a Scala library for parsing strings and bytes into structured
+    data. This lets you easily write a parser for any arbitrary textual data
+    formats (e.g. program source code, JSON, ...) and have the parsers run at
+    an acceptable speed, with great error debuggability and error reporting.
+    Features include:
 
 @ul
     @li
