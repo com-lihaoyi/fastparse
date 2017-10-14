@@ -80,7 +80,7 @@ matrix:
     # Scala Native only supports 2.11. The before_install takes a while so we
     # run all tests together.
     - env:
-      - CI_SCRIPT: '"fastparseNative/test; scalaparseNative/test; pythonparseNative/test; cssparseNative/test "'
+      - CI_SCRIPT: '"fastparseNative/test; fastparseByteNative/test; scalaparseNative/test; pythonparseNative/test; cssparseNative/test "'
       before_install:
         - curl https://raw.githubusercontent.com/scala-native/scala-native/v0.3.2/bin/travis_setup.sh | bash -x
       scala: 2.11.11

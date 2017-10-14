@@ -987,24 +987,32 @@ object ByteTests extends TestSuite {
                    beParser: P[T],
                    leParser: P[T],
                    put: (ByteBuffer, T) => ByteBuffer) = {
-        var count = 0
-        var firstValue: Option[T] = None
-        var lastValue : Option[T] = None
-        for (i <- range) {
-          if(firstValue == None) firstValue = Some(i)
-          lastValue = Some(i)
-          count += 1
-          val cases = Seq(
-            ByteOrder.BIG_ENDIAN -> beParser,
-            ByteOrder.LITTLE_ENDIAN -> leParser
-          )
-          for((enum, parser) <- cases){
-            val arr = Bytes.view(put(ByteBuffer.allocate(size).order(enum), i).array())
-            val fastparse.byte.all.Parsed.Success(`i`, `size`) = parser.parse(arr)
-          }
+        // These tests don't work on scala-native because of
+        //
+        // https://github.com/scala-native/scala-native/issues/925
+        //
+        // The underlying code isn't affected by that issue, so just skip the tests
 
+        if (scala.util.Properties.javaVmName != "Scala Native") {
+          var count = 0
+          var firstValue: Option[T] = None
+          var lastValue: Option[T] = None
+          for (i <- range) {
+            if (firstValue == None) firstValue = Some(i)
+            lastValue = Some(i)
+            count += 1
+            val cases = Seq(
+              ByteOrder.BIG_ENDIAN -> beParser,
+              ByteOrder.LITTLE_ENDIAN -> leParser
+            )
+            for ((enum, parser) <- cases) {
+              val arr = Bytes.view(put(ByteBuffer.allocate(size).order(enum), i).array())
+              val fastparse.byte.all.Parsed.Success(`i`, `size`) = parser.parse(arr)
+            }
+
+          }
+          s"Checked $count different values from ${firstValue.get} to ${lastValue.get}"
         }
-        s"Checked $count different values from ${firstValue.get} to ${lastValue.get}"
       }
       def iterateShorts = (Short.MinValue to Short.MaxValue).toIterator
       'short - {
