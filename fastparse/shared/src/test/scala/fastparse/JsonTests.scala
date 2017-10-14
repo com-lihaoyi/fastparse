@@ -76,7 +76,7 @@ object JsonTests extends TestSuite{
     space ~ (obj | array | string | `true` | `false` | `null` | number) ~ space
   )
 
-  val tests = TestSuite{
+  val tests = Tests {
     'pass {
       def test(p: P[_], s: String) = p.parse(s) match{
         case Parsed.Success(v, i) =>

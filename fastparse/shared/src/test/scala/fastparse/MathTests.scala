@@ -27,7 +27,7 @@ object MathTests extends TestSuite{
   val addSub: P[Int] = P( divMul ~ (CharIn("+-").! ~/ divMul).rep ).map(eval)
   val expr: P[Int]   = P( addSub ~ End )
 
-  val tests = TestSuite{
+  val tests = Tests {
     'pass {
       val Parsed.Success(2, _) = expr.parse("1+1")
       val Parsed.Success(15, _) = expr.parse("(1+1*2)+3*4")

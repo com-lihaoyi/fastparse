@@ -8,7 +8,7 @@ import utest._
  * sure we can extract meaningful values from it.
  */
 object LargeJsonTest extends TestSuite{
-  val tests = TestSuite{
+  val tests = Tests {
     'large{
       val Parsed.Success(value, _) = jsonExpr.parse(
         io.Source.fromInputStream(getClass.getResourceAsStream("/test.json")).mkString

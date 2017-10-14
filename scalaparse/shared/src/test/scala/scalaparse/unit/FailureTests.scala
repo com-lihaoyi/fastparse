@@ -4,7 +4,7 @@ import scalaparse.TestUtil
 import utest._
 import TestUtil._
 object FailureTests extends TestSuite{
-  val tests = TestSuite{
+  val tests = Tests {
 
     * - checkNeg("package package", "PkgBlock | PkgObj", "package")
 

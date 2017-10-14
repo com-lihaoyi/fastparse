@@ -10,7 +10,7 @@ import utest._
  * sure we can extract meaningful values from it.
  */
 object CharPredTests extends TestSuite{
-  val tests = TestSuite{
+  val tests = Tests {
     'hexToInt{
       val hex1 = "0123456789abcdef"
       val ints = Utils.HexUtils.hex2Ints(hex1)

@@ -10,7 +10,7 @@ import utest._
  */
 object ExampleTests extends TestSuite{
 
-  val tests = TestSuite{
+  val tests = Tests {
     'basic{
       'simple {
         import fastparse.all._

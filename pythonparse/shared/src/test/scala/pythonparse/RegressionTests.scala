@@ -12,7 +12,7 @@ object RegressionTests extends TestSuite{
   import Ast._
   implicit def strName(s: Symbol) = Name(identifier(s.name), Load)
   implicit def strIdent(s: Symbol) = identifier(s.name)
-  val tests = TestSuite{
+  val tests = Tests {
     'multiple_comments - TestUtils.check(
       Statements.file_input,
       Seq(Ast.stmt.Pass),

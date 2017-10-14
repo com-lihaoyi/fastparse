@@ -32,7 +32,7 @@ object IndentationTests extends TestSuite{
     val expr: P[Int]   = P( block ~ End )
   }
   val expr = new Parser(indent = 0).expr
-  val tests = TestSuite{
+  val tests = Tests {
     'pass {
       def check(str: String, num: Int) = {
         val Parsed.Success(value, _) = expr.parse(str)

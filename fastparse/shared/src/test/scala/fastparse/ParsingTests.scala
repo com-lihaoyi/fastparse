@@ -32,7 +32,7 @@ object ParsingTests extends TestSuite{
     }
 
   }
-  val tests = TestSuite{
+  val tests = Tests {
 
 
     'literal{

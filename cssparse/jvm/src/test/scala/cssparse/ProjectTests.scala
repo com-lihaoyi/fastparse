@@ -29,8 +29,8 @@ object ProjectTests extends TestSuite {
   val tests = this {
     Seq("mkdir", "-p", "target/files").!
 
-    "twbs/bootstrap/raw/master/dist/css/bootstrap.css" - checkCss()
-    "twbs/bootstrap/raw/master/dist/css/bootstrap.min.css" - checkCss()
-    "primer/primer/raw/master/css/primer.css" - checkCss()
+    "twbs/bootstrap/raw/a9fa21e701536e84789169fec6a1f4a0f821ee3c/dist/css/bootstrap.css" - checkCss()
+    "twbs/bootstrap/raw/a9fa21e701536e84789169fec6a1f4a0f821ee3c/dist/css/bootstrap.min.css" - checkCss()
+    "primer/primer/raw/3190c9cbae211b2ba04b15851245e79328002d60/css/primer.css" - checkCss()
   }
 }

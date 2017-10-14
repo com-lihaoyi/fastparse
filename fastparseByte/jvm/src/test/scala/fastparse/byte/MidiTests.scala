@@ -21,7 +21,7 @@ object MidiTests extends TestSuite{
     stringParse +: iteratorParses
   }
 
-  val tests = TestSuite{
+  val tests = Tests {
     'canon{
       import Midi._
       val bytes = readResourceBytes("/canon.mid")

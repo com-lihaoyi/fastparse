@@ -8,7 +8,7 @@ import utest._
  * are just to make sure that at a basic level each construct is supported.
  */
 object UnitTests extends TestSuite{
-  val tests = TestSuite{
+  val tests = Tests {
     import Ast.expr._
     import Ast.stmt._
     import Ast.expr_context._

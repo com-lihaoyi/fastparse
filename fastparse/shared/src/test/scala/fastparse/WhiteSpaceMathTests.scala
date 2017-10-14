@@ -28,7 +28,7 @@ object WhiteSpaceMathTests extends TestSuite{
   val addSub: P[Int] = P( divMul ~ (CharIn("+-").! ~/ divMul).rep ).map(eval)
   val expr: P[Int]   = P( " ".rep ~ addSub ~ " ".rep ~ End )
 
-  val tests = TestSuite{
+  val tests = Tests {
     'pass {
       def check(str: String, num: Int) = {
         val Parsed.Success(value, _) = expr.parse(str)

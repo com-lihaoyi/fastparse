@@ -10,7 +10,7 @@ import scala.util.matching.Regex
 
 object MiscTests extends TestSuite{
 
-  val tests = TestSuite{
+  val tests = Tests {
     'toString{
       def check(p: Parser[_], s: String) = {
         assert(p.toString == s.trim)

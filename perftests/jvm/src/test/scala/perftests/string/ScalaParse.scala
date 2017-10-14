@@ -11,7 +11,7 @@ object ScalaParse extends TestSuite{
   val genJsCodeSource = scala.io.Source.fromInputStream(genJsCodeStream).mkString
   def genJsCodeIterator(size: Int) = genJsCodeSource.grouped(size)
 
-  val tests = TestSuite{
+  val tests = Tests {
     'GenJSCode {
       var current = Thread.currentThread().getContextClassLoader
       val files = collection.mutable.Buffer.empty[java.io.File]
