@@ -993,7 +993,7 @@ object ByteTests extends TestSuite {
         //
         // The underlying code isn't affected by that issue, so just skip the tests
 
-        if (scala.util.Properties.javaVmName != "Scala Native") {
+        if (System.getProperty("java.vm.name") != "Scala Native") {
           var count = 0
           var firstValue: Option[T] = None
           var lastValue: Option[T] = None
