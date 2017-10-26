@@ -60,7 +60,7 @@ object ProjectTests extends TestSuite{
         println("CLONING")
 
         new java.lang.ProcessBuilder()
-          .command("git", "clone", repo, path.toString)
+          .command("git", "clone", repo, path.toString, "--depth", "1")
           .directory(new java.io.File("."))
           .start()
           .waitFor()
