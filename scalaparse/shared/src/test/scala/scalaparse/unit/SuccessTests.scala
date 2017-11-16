@@ -1169,6 +1169,70 @@ object SuccessTests extends TestSuite{
       """.stripMargin
     )
     * - check(
+      """object Node {
+        |    <foo/>
+        |    <foo></foo>
+        |    <foo/><bar/>
+        |    <foo:bar/>
+        |    <foo><bar/></foo>
+        |    <foo a="a" b="b"/>
+        |    <foo a:a="a" b:b="b"/>
+        |    <foo a="'"/>
+        |    <foo a='"'/>
+        |    <foo>&name;</foo>
+        |    <foo>&na:me;</foo>
+        |    <foo>&lt;</foo>
+        |    <foo>Hello &name;!</foo>
+        |    <foo a="&name;" />
+        |    <foo a="&na:me;" />
+        |    <foo a="&lt;" />
+        |    <foo a="Hello &name;!"/>
+        |    <foo a="1 &lt; 2"/>
+        |    <foo>&#1234;</foo>
+        |    <foo>&#x1234;</foo>
+        |    <foo>Hello&#x1234;Allan</foo>
+        |    <foo a="&#1234;" />
+        |    <foo a="&#x1234;" />
+        |    <foo a="Hello&#x1234;Allan" />
+        |    <xml:group><foo/><bar/></xml:group>
+        |    <xml:group></xml:group>
+        |}
+      """.stripMargin
+    )
+    * - check(
+      """object Splice {
+        |    <foo>{foo}</foo>
+        |    <foo>{foo }</foo>
+        |    <foo>{ foo}</foo>
+        |    <foo>{ foo }</foo>
+        |    <foo>{2}</foo>
+        |    <foo>{"bar"}</foo>
+        |    <foo>{1}</foo>
+        |    <foo>{<bar/>}</foo>
+        |    <foo>{<bar/><bat/>}</foo>
+        |    <foo a={"foo"}/>
+        |    <foo a={<bar/>}/>
+        |    <foo a={<bar/><bat/>}/>
+        |    <a>{ List(1, 2) }</a>
+        |    <a>{}</a>
+        |    <a>{1}{2}</a>
+        |    <a>{1}{2}<b/>{3}</a>
+        |    <a>{<b>{1}{2}</b>}</a>
+        |    <a>{<b>{1}</b>}</a>
+        |}
+      """.stripMargin
+    )
+    * - check(
+      """object CD {
+        |    <![CDATA[foo]]>
+        |    <![CDATA[]]>
+        |    <![CDATA[>]]>
+        |    <![CDATA[]>]]>
+        |    <![CDATA[]]]]>
+        |}
+      """.stripMargin
+    )
+    * - check(
       """object Unparsed {
         |    <xml:unparsed></xml:unparsed>
         |    <xml:unparsed foo=""></xml:unparsed>
@@ -1179,23 +1243,61 @@ object SuccessTests extends TestSuite{
       """.stripMargin
     )
     * - check(
+      """object PI {
+        |    <?foo bar?>
+        |    <?foo?>
+        |    <?foo  bar?>
+        |    <?foo<bar?>
+        |    <?foo??>
+        |    <?foo     ?>
+        |    <?xml foo?> // fails at runtime
+        |}
+      """.stripMargin
+    )
+    * - check(
       """object Comment {
         |    <!---->
         |    <!----->
         |    <!--foo-->
         |    <!--a-b-->
+        |
+        |    <!------> // fails at runtime
+        |    <!-- -- --> // fails at runtime
         |}
       """.stripMargin
     )
     * - check(
-      """object CharRef {
+      """object ScalacWeirdness {
+        |    <a b="&#;"/>
+        |    <a b="&#x;"/>
         |    <a>&#;</a>
+        |    <a>&#x;</a>
+        |    <a>]]></a>
         |}
       """.stripMargin
     )
     * - check(
-      """object CharData {
-        |    <a>]]></a>
+      """object XmlSplice {
+        |    <foo>{foo}</foo>
+        |    <foo>{foo }</foo>
+        |    <foo>{ foo}</foo>
+        |    <foo>{ foo }</foo>
+        |    <foo>{2}</foo>
+        |    <foo>{"bar"}</foo>
+        |    <foo>{1}</foo>
+        |    <foo>{<bar/>}</foo>
+        |    <foo>{<bar/><bat/>}</foo>
+        |    <foo a={"foo"}/>
+        |    <foo a={<bar/>}/>
+        |    <foo a={<bar/><bat/>}/>
+        |    <a>{ List(1, 2) }</a>
+        |    <a>{}</a>
+        |    <a>{1}{2}</a>
+        |    <a>{1}{2}<b/>{3}</a>
+        |    <a>{<b>{1}{2}</b>}</a>
+        |    e match { case <a>{_*}</a> => }
+        |    <a>{{</a>
+        |    <a>}}</a>
         |}
       """.stripMargin
     )

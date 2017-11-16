@@ -835,16 +835,6 @@ object FailureTests extends TestSuite{
         expected = """ "\"\"\"" | StringChars | Interp | NonTripleQuoteChar """,
         found = ""
       )
-      * - checkNeg(
-        """
-          |object System {
-          |  e match { case <xml:unparsed><</xml:unparsed> => }
-          |}
-          |
-        """.stripMargin,
-        expected = """"</" | CharDataP | ScalaPatterns | ElemPattern""",
-        found = "<</xml:unp"
-      )
 
       * - checkNeg(
         s"""object Foo{
@@ -885,6 +875,82 @@ object FailureTests extends TestSuite{
         expected = """ ";" | Newline.rep(1) | "}" """,
         found = ""
       )
+
+    * - checkNeg(
+      """object Xml { <a b:="Hello"/> }""",
+      expected = """ "/>" | ">" ~/ Content ~/ ETag | Name """,
+      found = """b:="Hello""""
+    )
+    * - checkNeg(
+      "object Xml { <a>&b:;</a> }",
+      expected = """ "</" | CharData | Reference | ScalaExpr | XmlContent """,
+      found = "&b:;</a> }"
+    )
+    * - checkNeg(
+      "object Xml { <a>&:b;</a> }",
+      expected = """ "</" | CharData | Reference | ScalaExpr | XmlContent """,
+      found = "&:b;</a>"
+    )
+    * - checkNeg(
+      "object Xml { <a><a:/> }",
+      expected = """ "</" | CharData | Reference | ScalaExpr | XmlContent """,
+      found = "<a:/> }"
+    )
+    * - checkNeg(
+      "object Xml { <a> }",
+      expected = """ "</" | CharData | Reference | ScalaExpr | XmlContent """,
+      found = "}"
+    )
+    * - checkNeg(
+      "object Xml { <!---> }",
+      expected = """ "-->" | AnyChar """,
+      found = ""
+    )
+    * - checkNeg(
+      "object Xml { <!-- > }",
+      expected = """ "-->" | AnyChar """,
+      found = ""
+    )
+    * - checkNeg(
+      "object Xml { <!-- -> }",
+      expected = """ "-->" | AnyChar """,
+      found = ""
+    )
+    * - checkNeg(
+      "object Xml { <![CDATA[]]>]]> }",
+      expected = """ ";" | Newline.rep(1) | "}" """,
+      found = "]]> }"
+    )
+    * - checkNeg(
+      "object Xml { <a>}</a> }",
+      expected = """ "</" | CharData | Reference | ScalaExpr | XmlContent """,
+      found = "}</a> }"
+    )
+    * - checkNeg(
+      "object Xml { <a>{</a> }",
+      expected = """ "</" | CharData | Reference | ScalaExpr | XmlContent """,
+      found = ""
+    )
+    * - checkNeg(
+      "object Xml { <a>}{</a> }",
+      expected = """ "</" | CharData | Reference | ScalaExpr | XmlContent """,
+      found = "}{</a> }"
+    )
+    * - checkNeg(
+      "object Xml { e match { case <a>{}</a> => ??? } }",
+      expected = """ "</" | CharDataP | ScalaPatterns | ElemPattern """,
+      found = "{}</a> =>"
+    )
+    * - checkNeg(
+      """
+        |object Xml {
+        |  e match { case <xml:unparsed><</xml:unparsed> => }
+        |}
+        |
+        """.stripMargin,
+      expected = """ "</" | CharDataP | ScalaPatterns | ElemPattern """,
+      found = "<</xml:unp"
+    )
 
   }
 }

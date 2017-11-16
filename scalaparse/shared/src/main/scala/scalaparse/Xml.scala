@@ -16,7 +16,7 @@ trait Xml extends Core {
     val TagHeader = P( "<" ~ Name ~/ (WL ~ Attribute).rep ~ WL.? )
     val ETag      = P( "</" ~ Name ~ WL.? ~ ">" )
 
-    val Attribute = P( Name ~ Eq ~/ AttValue )
+    val Attribute = P( Name ~/ Eq ~/ AttValue )
     val Eq        = P( WL.? ~ "=" ~ WL.? )
     val AttValue  = P(
       "\"" ~/ (CharQ | Reference).rep ~ "\"" |
@@ -32,7 +32,7 @@ trait Xml extends Core {
     val Unparsed = P( UnpStart ~/ UnpData ~ UnpEnd )
     val UnpStart = P( "<xml:unparsed" ~/ (WL ~ Attribute).rep ~ WL.? ~ ">" )
     val UnpEnd   = P( "</xml:unparsed>" )
-    val UnpData  = P( (!UnpEnd ~ AnyChar).rep )
+    val UnpData  = P( (!UnpEnd ~ Char).rep )
 
     val CDSect  = P( CDStart ~/ CData ~ CDEnd )
     val CDStart = P( "<![CDATA[" )
@@ -40,28 +40,28 @@ trait Xml extends Core {
     val CDEnd   = P( "]]>" )
 
     val Comment = P( "<!--" ~/ ComText ~ "-->" )
-    val ComText = P( (!"--" ~ Char).rep ~ ("-" ~ &("--")).? )
+    val ComText = P( (!"-->" ~ Char).rep )
 
-    val PI         = P( "<?" ~ PITarget ~ PIProcText.? ~ "?>" )
-    val PITarget   = P( !(("X" | "x") ~ ("M" | "m") ~ ("L" | "l")) ~ Name )
-    val PIProcText = P( WL ~ (!"?>" ~ Char).rep )
+    val PI         = P( "<?" ~ Name ~ WL.? ~ PIProcText.? ~ "?>" )
+    val PIProcText = P( (!"?>" ~ Char).rep )
 
     val Reference = P( EntityRef | CharRef )
     val EntityRef = P( "&" ~ Name ~/ ";" )
-    val CharRef   = P( "&#" ~ Num ~/ ";" | "&#x" ~ HexNum ~/ ";" )
+    val CharRef   = P( "&#" ~ Num ~ ";" | "&#x" ~ HexNum ~ ";" )
     val Num       = P( CharIn('0' to '9').rep )
     val HexNum    = P( CharIn('0' to '9', 'a' to 'f', 'A' to 'F').rep )
 
-    val CharData = P( (!"{" ~ Char1 | "{{").rep(1) )
+    val CharData = P( (CharB | "{{" | "}}").rep(1) )
 
     val Char   = P( AnyChar )
     val Char1  = P( !("<" | "&") ~ Char )
     val CharQ  = P( !"\"" ~ Char1 )
     val CharA  = P( !"'" ~ Char1 )
+    val CharB  = P( !("{" | "}") ~ Char1 )
 
-    val Name      = P( NameStart ~ NameChar.rep )
-    val NameStart = P( CharPred(isNameStart) ).opaque("NameStart")
-    val NameChar  = P( CharPred(isNameChar) ).opaque("NameChar")
+    val Name: P0  = P( NameStart ~ NameChar.rep ).!.filter(_.last != ':').opaque("Name").map(_ => Unit) // discard result
+    val NameStart = P( CharPred(isNameStart) )
+    val NameChar  = P( CharPred(isNameChar) )
 
     val ElemPattern: P0 = P( TagPHeader ~/ ("/>" | ">" ~/ ContentP ~/ ETag ) )
     val TagPHeader      = P( "<" ~ Name ~ WL.?  )
