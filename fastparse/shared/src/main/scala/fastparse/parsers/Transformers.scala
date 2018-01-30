@@ -54,4 +54,20 @@ object Transformers {
 
     override def toString: String = s"$p.filter($predicate)"
   }
+
+  case class Collected[T, V, Elem, Repr](p: Parser[T, Elem, Repr], pf: PartialFunction[T, V])
+                                        (implicit repr: ReprOps[Elem, Repr])
+    extends Parser[V, Elem, Repr] {
+      def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
+      p.parseRec(cfg, index) match{
+        case f: Mutable.Failure[Elem, Repr] => failMore(f, index, cfg.logDepth)
+        case s: Mutable.Success[T, Elem, Repr] =>
+          pf.lift(s.value) match {
+            case Some(v) => success(s, v, s.index, s.traceParsers, s.cut)
+            case None => fail(cfg.failure, index, s.traceParsers, cut = s.cut)
+          }
+      }
+    }
+
+  }
 }
