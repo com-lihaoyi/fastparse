@@ -123,7 +123,9 @@ lazy val fastparse = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .jvmSettings(fork in (Test, run) := true)
   .nativeSettings(nativeSettings)
 lazy val fastparseJS = fastparse.js
-lazy val fastparseJVM = fastparse.jvm
+lazy val fastparseJVM = fastparse.jvm.settings(
+  mimaPreviousArtifacts := Set("com.lihaoyi" %% "fastparse" % "1.0.0")
+)
 lazy val fastparseNative = fastparse.native
 
 lazy val fastparseByte = crossProject(JSPlatform, JVMPlatform, NativePlatform)
