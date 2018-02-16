@@ -337,7 +337,7 @@ object Combinators {
      * A ~ B ~ C ~ D
      * ((A ~ B) ~ C) ~ D
      */
-    def flatten[R, Elem, Repr](s: Sequence[Elem, Repr, R, R, R])
+    def flatten[Elem, Repr, R](s: Sequence[Elem, Repr, R, R, R])
                               (implicit repr: ReprOps[Elem, Repr]): Flat[Elem, Repr, R] = {
       def rec(s: Sequence[Elem, Repr, R, R, R]): Flat[Elem, Repr, R] = {
         val ev2 = s.ev2.asInstanceOf[Implicits.Sequencer[R, R, R]]
@@ -501,7 +501,7 @@ object Combinators {
   }
 
   object Either{
-    def flatten[T, Elem, Repr](p: Vector[Parser[Elem, Repr, T]]): Vector[Parser[Elem, Repr, T]] = p.flatMap{
+    def flatten[Elem, Repr, T](p: Vector[Parser[Elem, Repr, T]]): Vector[Parser[Elem, Repr, T]] = p.flatMap{
       case Either(ps@_*) => ps
       case p => Vector(p)
     }
@@ -510,7 +510,7 @@ object Combinators {
    * Parses using one parser or the other, if the first one fails. Returns
    * the first one that succeeds and fails if both fail
    */
-  case class Either[Elem, Repr, T](ps: Parser[T, Elem, Repr]*)
+  case class Either[Elem, Repr, T](ps: Parser[Elem, Repr, T]*)
                                   (implicit repr: ReprOps[Elem, Repr]) extends Parser[Elem, Repr, T]{
     private[this] val ps0 = ps.toArray
     private[this] val n = ps0.length
