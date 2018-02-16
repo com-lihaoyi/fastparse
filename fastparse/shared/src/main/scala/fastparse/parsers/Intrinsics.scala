@@ -96,7 +96,7 @@ object Intrinsics {
                                 (implicit repr: ReprOps[Elem, Repr],
                                  helper: ElemSetHelper[Elem],
                                  ordering: Ordering[Elem])
-      extends Parser[Unit, Elem, Repr] {
+      extends Parser[Elem, Repr, Unit] {
 
     private[this] val trie = new TrieNode[Elem](strings.map(repr.toArray(_): IndexedSeq[Elem]), ignoreCase)
 
@@ -132,7 +132,7 @@ object Intrinsics {
 
     s"$name(${repr.literalize(repr.flatten(strings.map(repr.fromSeq)))})"
   }
-  trait WhileParser[Elem, Repr] extends Parser[Unit, Elem, Repr]{
+  trait WhileParser[Elem, Repr] extends Parser[Elem, Repr, Unit]{
     def check(e: Elem): Boolean
     def min: Int
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
@@ -148,7 +148,7 @@ object Intrinsics {
   abstract class PrecomputableParser[Elem, Repr](generatorOrPred: GenOrPred[Elem])
                                                 (implicit val helper: ElemSetHelper[Elem],
                                                  val repr: ReprOps[Elem, Repr])
-    extends Parser[Unit, Elem, Repr]{
+    extends Parser[Elem, Repr, Unit]{
 
     private[this] val uberSet: Utils.BitSet[Elem] = generatorOrPred match{
       case Left(generator) => BitSet(generator)

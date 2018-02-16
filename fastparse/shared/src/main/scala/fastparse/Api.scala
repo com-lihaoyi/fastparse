@@ -40,22 +40,22 @@ abstract class Api[Elem, Repr](ct: ClassTag[Elem],
 
   type ParseCtx = core.ParseCtx[Elem, Repr]
   object Mutable{
-    type Success[T] = core.Mutable.Success[T, Elem, Repr]
+    type Success[T] = core.Mutable.Success[Elem, Repr, T]
     val Success = core.Mutable.Success
     type Failure = core.Mutable.Failure[Elem, Repr]
     val Failure = core.Mutable.Failure
   }
 
-  type Parsed[+T] = core.Parsed[T, Elem, Repr]
+  type Parsed[+T] = core.Parsed[Elem, Repr, T]
   object Parsed {
     type Failure = core.Parsed.Failure[Elem, Repr]
-    type Success[T] = core.Parsed.Success[T, Elem, Repr]
+    type Success[T] = core.Parsed.Success[Elem, Repr, T]
     val Success = core.Parsed.Success
     val Failure = core.Parsed.Failure
   }
 
   val Pass = parsers.Terminals.Pass[Elem, Repr]()
-  def PassWith[T](t: T) = parsers.Terminals.PassWith[T, Elem, Repr](t)
+  def PassWith[T](t: T) = parsers.Terminals.PassWith[Elem, Repr, T](t)
   val Fail = parsers.Terminals.Fail[Elem, Repr]()
   val Start = parsers.Terminals.Start[Elem, Repr]()
   val End = parsers.Terminals.End[Elem, Repr]()
@@ -92,7 +92,7 @@ abstract class Api[Elem, Repr](ct: ClassTag[Elem],
     parsers.Combinators.Rule(name.value, () => p)
 
   type P0 = Parser[Unit]
-  type Parser[+T] = core.Parser[T, Elem, Repr]
+  type Parser[+T] = core.Parser[Elem, Repr, T]
   type P[+T] = Parser[T]
   val ParseError = core.ParseError[Elem, Repr] _
   type ParseError = core.ParseError[Elem, Repr]
