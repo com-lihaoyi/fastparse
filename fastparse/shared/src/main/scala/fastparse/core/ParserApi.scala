@@ -6,7 +6,7 @@ import fastparse.parsers.Terminals.Pass
 import fastparse.parsers.Transformers.{Filtered, FlatMapped, Mapper}
 import fastparse.utils.ReprOps
 
-abstract class ParserApi[+T, Elem, Repr]()(implicit repr: ReprOps[Elem, Repr]) {
+abstract class ParserApi[Elem, Repr, +T]()(implicit repr: ReprOps[Elem, Repr]) {
 
   /**
    * Wraps this in a [[Logged]]. This prints out information
@@ -95,7 +95,7 @@ abstract class ParserApi[+T, Elem, Repr]()(implicit repr: ReprOps[Elem, Repr]) {
   final def withFilter(predicate: T => Boolean): Parser[Elem, Repr, T] = filter(predicate)
 }
 
-class ParserApiImpl[+T, Elem, Repr](self: Parser[Elem, Repr, T])
+class ParserApiImpl[Elem, Repr, +T](self: Parser[Elem, Repr, T])
                                        (implicit repr: ReprOps[Elem, Repr])
     extends ParserApi[Elem, Repr, T] {
 

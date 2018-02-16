@@ -24,7 +24,7 @@ object Terminals {
   /**
     * A parser that always succeeds with given result value `t`, consuming no input
     */
-  case class PassWith[T, Elem, Repr](t: T)(implicit repr: ReprOps[Elem, Repr]) extends Parser[Elem, Repr, T]{
+  case class PassWith[Elem, Repr, T](t: T)(implicit repr: ReprOps[Elem, Repr]) extends Parser[Elem, Repr, T]{
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = success(cfg.success, t, index, Set.empty, false)
   }
 

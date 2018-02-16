@@ -17,7 +17,7 @@ case class Frame(index: Int, parser: Parser[_, _, _])
 /**
  * Result of a parse, whether successful or failed.
  */
-sealed trait Parsed[+T, Elem, Repr]{
+sealed trait Parsed[Elem, Repr, +T]{
   /**
    * Where the parser ended up, whether the result was a success or failure
    */
@@ -58,7 +58,7 @@ object Parsed {
    * @param index The index where the parse completed; may be less than
    *              the length of input
    */
-  case class Success[+T, Elem, Repr](value: T, index: Int) extends Parsed[Elem, Repr, T]
+  case class Success[Elem, Repr, +T](value: T, index: Int) extends Parsed[Elem, Repr, T]
 
   /**
    * Simple information about a parse failure. Also contains the original parse
@@ -202,7 +202,7 @@ object Parsed {
  * An internal mirror of the [[Parsed]] classes, except it contains far
  * more data and is mutable to maximize performance
  */
-trait Mutable[+T, Elem, Repr]{
+trait Mutable[Elem, Repr, +T]{
   /**
    * Snapshots this mutable result and converts it into
    * an immutable [[Parsed]] object
@@ -238,7 +238,7 @@ object Mutable{
    * @param cut Whether or not this parser crossed a cut and can not longer
    *            backtrack
    */
-  case class Success[T, Elem, Repr](var value: T,
+  case class Success[Elem, Repr, T](var value: T,
                                     var index: Int,
                                     var traceParsers: Set[Parser[Elem, Repr, _]],
                                     var cut: Boolean = false) extends Mutable[Elem, Repr, T]{
@@ -323,7 +323,7 @@ case class ParseCtx[Elem, Repr](input: ParserInput[Elem, Repr],
  * [[parsers.Combinators.Sequence.Flat]]s. These optimizations together appear
  * to make things faster but any 10%, whether or not you activate tracing.
  */
-abstract class Parser[+T, Elem, Repr]()(implicit val reprOps: ReprOps[Elem, Repr])
+abstract class Parser[Elem, Repr, +T]()(implicit val reprOps: ReprOps[Elem, Repr])
   extends ParserResults[Elem, Repr, T] with Precedence{
 
   /**
@@ -420,7 +420,7 @@ abstract class Parser[+T, Elem, Repr]()(implicit val reprOps: ReprOps[Elem, Repr
 /**
  * Convenience methods to be used internally inside [[Parser]]s
  */
-trait ParserResults[+T, Elem, Repr]{ this: Parser[Elem, Repr, T] =>
+trait ParserResults[Elem, Repr, +T]{ this: Parser[Elem, Repr, T] =>
   def mergeTrace(traceIndex: Int, lhs: Set[Parser[Elem, Repr, _]],
                  rhs: Set[Parser[Elem, Repr, _]]): Set[Parser[Elem, Repr, _]] = {
     if (traceIndex != -1) lhs | rhs

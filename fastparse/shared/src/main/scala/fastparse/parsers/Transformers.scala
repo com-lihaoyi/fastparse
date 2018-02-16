@@ -12,7 +12,7 @@ object Transformers {
   /**
    * Applies a transformation [[f]] to the result of [[p]]
    */
-  case class Mapper[T, V, Elem, Repr](p: Parser[Elem, Repr, T], f: T => V)
+  case class Mapper[Elem, Repr, T, V](p: Parser[Elem, Repr, T], f: T => V)
                                      (implicit repr: ReprOps[Elem, Repr])
     extends Parser[Elem, Repr, V]{
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
@@ -24,7 +24,7 @@ object Transformers {
     override def toString = p.toString
   }
 
-  case class FlatMapped[T, V, Elem, Repr](p1: Parser[Elem, Repr, T], func: T => Parser[Elem, Repr, V])
+  case class FlatMapped[Elem, Repr, T, V](p1: Parser[Elem, Repr, T], func: T => Parser[Elem, Repr, V])
                                          (implicit repr: ReprOps[Elem, Repr])
     extends Parser[Elem, Repr, V] {
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
@@ -40,7 +40,7 @@ object Transformers {
     override def toString = p1.toString
   }
 
-  case class Filtered[T, Elem, Repr](p: Parser[Elem, Repr, T], predicate: T => Boolean)
+  case class Filtered[Elem, Repr, T](p: Parser[Elem, Repr, T], predicate: T => Boolean)
                                     (implicit repr: ReprOps[Elem, Repr])
     extends Parser[Elem, Repr, T] {
     override def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {

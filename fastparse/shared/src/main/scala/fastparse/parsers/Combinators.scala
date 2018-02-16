@@ -45,7 +45,7 @@ object Combinators {
   /**
    * Wrap a parser in this if you don't want for it to show up in a stack trace
    */
-  case class NoTrace[T, Elem, Repr](p: Parser[Elem, Repr, T])
+  case class NoTrace[Elem, Repr, T](p: Parser[Elem, Repr, T])
                                    (implicit repr: ReprOps[Elem, Repr]) extends Parser[Elem, Repr, T]{
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       p.parseRec(cfg, index) match {
@@ -67,7 +67,7 @@ object Combinators {
    *
    * @param msg The message for the wrapper
    */
-  case class Opaque[+T, Elem, Repr](p: Parser[Elem, Repr, T], msg: String)
+  case class Opaque[Elem, Repr, +T](p: Parser[Elem, Repr, T], msg: String)
                                    (implicit repr: ReprOps[Elem, Repr])
     extends Parser[Elem, Repr, T]{
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
@@ -88,7 +88,7 @@ object Combinators {
   /**
    *
    */
-  case class NoCut[T, Elem, Repr](p: Parser[Elem, Repr, T])
+  case class NoCut[Elem, Repr, T](p: Parser[Elem, Repr, T])
                                  (implicit repr: ReprOps[Elem, Repr]) extends Parser[Elem, Repr, T]{
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       val oldNoCut = cfg.isNoCut
@@ -111,7 +111,7 @@ object Combinators {
    * Wraps a parser and prints out the indices where it starts
    * and ends, together with its result
    */
-  case class Logged[+T, Elem, Repr](p: Parser[Elem, Repr, T],
+  case class Logged[Elem, Repr, +T](p: Parser[Elem, Repr, T],
                                     msg: String, output: String => Unit)
                                    (implicit repr: ReprOps[Elem, Repr]) extends Parser[Elem, Repr, T]{
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
@@ -149,7 +149,7 @@ object Combinators {
    * [[p]] only when `parse` is called to allow for circular
    * dependencies between parsers.
    */
-  case class Rule[+T, Elem, Repr](name: String, p: () => Parser[Elem, Repr, T])
+  case class Rule[Elem, Repr, +T](name: String, p: () => Parser[Elem, Repr, T])
                                  (implicit repr: ReprOps[Elem, Repr])
     extends Parser[Elem, Repr, T]{
     private[this] lazy val pCached = p()
@@ -223,7 +223,7 @@ object Combinators {
    * Wraps a parser and succeeds with `Some` if [[p]] succeeds,
    * and succeeds with `None` if [[p]] fails.
    */
-  case class Optional[+T, R, Elem, Repr](p: Parser[Elem, Repr, T])
+  case class Optional[Elem, Repr, +T, R](p: Parser[Elem, Repr, T])
                                         (implicit ev: Implicits.Optioner[T, R],
                                          repr: ReprOps[Elem, Repr]) extends Parser[Elem, Repr, R]{
 
@@ -262,10 +262,10 @@ object Combinators {
     /**
      * The contents of a [[Sequence]] node, minus the left subtree.
      */
-    case class Chain[R, Elem, Repr](p: Parser[Elem, Repr, R], cut: Boolean)
+    case class Chain[Elem, Repr, R](p: Parser[Elem, Repr, R], cut: Boolean)
                                    (val ev: Implicits.Sequencer[R, R, R])
 
-    case class Flat[R, Elem, Repr](p0: Parser[Elem, Repr, R],
+    case class Flat[Elem, Repr, R](p0: Parser[Elem, Repr, R],
                                    ps: ArrayBuffer[Chain[Elem, Repr, R]])
                                   (implicit repr: ReprOps[Elem, Repr])
       extends Parser[Elem, Repr, R] {
@@ -358,8 +358,8 @@ object Combinators {
    * Parsers two things in a row, returning a tuple of the two
    * results if both things succeed
    */
-  case class Sequence[+T1, +T2, R,
-                      Elem, Repr](p1: Parser[Elem, Repr, T1],
+  case class Sequence[Elem, Repr,
+                      +T1, +T2, R](p1: Parser[Elem, Repr, T1],
                                   p2: Parser[Elem, Repr, T2], cut: Boolean)
                                  (implicit ev: Implicits.Sequencer[T1, T2, R],
                                   repr: ReprOps[Elem, Repr]) extends Parser[Elem, Repr, R]{
@@ -403,7 +403,7 @@ object Combinators {
   }
 
 
-  case class Cut[T, Elem, Repr](p: Parser[Elem, Repr, T])
+  case class Cut[Elem, Repr, T](p: Parser[Elem, Repr, T])
                                (implicit repr: ReprOps[Elem, Repr])extends Parser[Elem, Repr, T]{
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       p.parseRec(cfg, index) match{
@@ -423,7 +423,7 @@ object Combinators {
    * The range [[min]] and [[max]] bounds are inclusive.
    * It uses the [[delimiter]] parser between parses and discards its results.
    */
-  case class Repeat[T, +R, Elem, Repr](p: Parser[Elem, Repr, T], min: Int, max: Int,
+  case class Repeat[Elem, Repr, T, +R](p: Parser[Elem, Repr, T], min: Int, max: Int,
                                        delimiter: Parser[Elem, Repr, _])
                                       (implicit ev: Implicits.Repeater[T, R],
                                        repr: ReprOps[Elem, Repr]) extends Parser[Elem, Repr, R]{
@@ -510,7 +510,7 @@ object Combinators {
    * Parses using one parser or the other, if the first one fails. Returns
    * the first one that succeeds and fails if both fail
    */
-  case class Either[T, Elem, Repr](ps: Parser[T, Elem, Repr]*)
+  case class Either[Elem, Repr, T](ps: Parser[T, Elem, Repr]*)
                                   (implicit repr: ReprOps[Elem, Repr]) extends Parser[Elem, Repr, T]{
     private[this] val ps0 = ps.toArray
     private[this] val n = ps0.length
