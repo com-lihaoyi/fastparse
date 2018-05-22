@@ -5,8 +5,7 @@ trait ElemSetHelper[Elem] {
   def toInt(a: Elem): Int
   def ordering: Ordering[Elem]
   def toLowerCase(in: Elem): Elem
-  def generateValues(f: Generator.Callback[Elem])
-
+  def generateValues(f: Generator.Callback[Elem]): Unit
 }
 object ElemSetHelper {
 

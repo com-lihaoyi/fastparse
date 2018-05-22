@@ -40,7 +40,7 @@ object Implicits {
     }
   }
   trait LowPriRepeater{
-    implicit def GenericRepeaterImplicit[T] = GenericRepeater[T]()
+    implicit def GenericRepeaterImplicit[T]: GenericRepeater[T] = GenericRepeater[T]()
     case class GenericRepeater[T]() extends Repeater[T, Seq[T]]{
       type Acc = mutable.Buffer[T]
       def initial = mutable.Buffer.empty[T]
@@ -53,7 +53,7 @@ object Implicits {
     def none: R
     def some(value: T): R
   }
-  
+
   object Optioner extends LowPriOptioner{
     implicit object UnitOptioner extends Optioner[Unit, Unit]{
       def none = ()
@@ -61,7 +61,7 @@ object Implicits {
     }
   }
   trait LowPriOptioner{
-    implicit def GenericOptionerImplicit[T] = GenericOptioner[T]()
+    implicit def GenericOptionerImplicit[T]: GenericOptioner[T] = GenericOptioner[T]()
     case class GenericOptioner[T]() extends Optioner[T, Option[T]]{
       def none = None
       def some(value: T) = Some(value)
