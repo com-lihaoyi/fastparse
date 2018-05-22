@@ -486,13 +486,13 @@ object Combinators {
       if (max == 0 ) {
         success(cfg.success, ev.result(ev.initial), index, Set.empty[Parser[_, Elem, Repr]], false)
       } else {
-        rec(index, Pass[Elem, Repr], null, ev.initial, false, 0)
+        rec(index, Pass[Elem, Repr](), null, ev.initial, false, 0)
       }
     }
     override def toString = {
       val things = Seq(
         if (min == 0) None else Some(min),
-        if (delimiter == Pass[Elem, Repr]) None else Some("sep = " + delimiter),
+        if (delimiter == Pass[Elem, Repr]()) None else Some("sep = " + delimiter),
         if (max == Int.MaxValue) None else Some("max = " + max)
       ).flatten.mkString(", ")
       if (things.isEmpty) opWrap(p) + ".rep"
@@ -567,12 +567,12 @@ object Combinators {
       if (ps.isEmpty) {
         success(cfg.success, ev.result(ev.initial), index, Set.empty[Parser[_, Elem, Repr]], false)
       } else {
-        rec(index, Pass[Elem, Repr], null, ev.initial, false, 0)
+        rec(index, Pass[Elem, Repr](), null, ev.initial, false, 0)
       }
     }
     override def toString = {
       val things =
-        if (delimiter == Pass[Elem, Repr]) "" else s"sep = $delimiter"
+        if (delimiter == Pass[Elem, Repr]()) "" else s"sep = $delimiter"
 
       ps.map(p => opWrap(p)).mkString(things)
     }

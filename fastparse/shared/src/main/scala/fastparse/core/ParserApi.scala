@@ -25,7 +25,7 @@ abstract class ParserApi[+T, Elem, Repr]()(implicit repr: ReprOps[Elem, Repr]) {
    */
   def rep[R](implicit ev: Repeater[T, R]): Parser[R, Elem, Repr]
   def rep[R](min: Int = 0,
-             sep: Parser[_, Elem, Repr] = Pass[Elem, Repr],
+             sep: Parser[_, Elem, Repr] = Pass[Elem, Repr](),
              max: Int = Int.MaxValue,
              exactly: Int = -1)
             (implicit ev: Repeater[T, R]): Parser[R, Elem, Repr]
@@ -104,8 +104,8 @@ class ParserApiImpl[+T, Elem, Repr](self: Parser[T, Elem, Repr])
   def opaque(msg: String = self.toString) = Opaque(self, msg)
 
   def rep[R](implicit ev: Repeater[T, R]): Parser[R, Elem, Repr] =
-    Repeat(self, 0, Int.MaxValue, Pass[Elem, Repr])
-  def rep[R](min: Int = 0, sep: Parser[_, Elem, Repr] = Pass[Elem, Repr],
+    Repeat(self, 0, Int.MaxValue, Pass[Elem, Repr]())
+  def rep[R](min: Int = 0, sep: Parser[_, Elem, Repr] = Pass[Elem, Repr](),
              max: Int = Int.MaxValue, exactly: Int = -1)
             (implicit ev: Repeater[T, R]): Parser[R, Elem, Repr] = {
     if (exactly < 0)
