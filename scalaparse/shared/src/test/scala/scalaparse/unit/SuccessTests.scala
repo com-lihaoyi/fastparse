@@ -1504,5 +1504,25 @@ object SuccessTests extends TestSuite{
         |  } yield a
         |}""".stripMargin
     )
+    * - check(
+        """
+        |object foo {
+        |  val bar = "baz"
+        |  val xml =
+        |    <?xml-stylesheet href="style.xslt" type="text/xsl"?>
+        |    <root>
+        |      <?foo {bar}?>
+        |    </root>
+        |}""".stripMargin
+    )
+    * - check(
+        """
+        |object foo {
+        |  val xml =
+        |    <?xaml-stylesheet href="style.xslt" type="text/xsl"?>
+        |    <root>
+        |    </root>
+        |}""".stripMargin
+    )
   }
 }

@@ -43,7 +43,7 @@ trait Xml extends Core {
     val ComText = P( (!"--" ~ Char).rep ~ ("-" ~ &("--")).? )
 
     val PI         = P( "<?" ~ PITarget ~ PIProcText.? ~ "?>" )
-    val PITarget   = P( !(("X" | "x") ~ ("M" | "m") ~ ("L" | "l")) ~ Name )
+    val PITarget   = P( !(("X" | "x") ~ ("M" | "m") ~ ("L" | "l") ~ ("?>" | Basic.WSChars | Basic.Newline)) ~ Name )
     val PIProcText = P( WL ~ (!"?>" ~ Char).rep )
 
     val Reference = P( EntityRef | CharRef )
