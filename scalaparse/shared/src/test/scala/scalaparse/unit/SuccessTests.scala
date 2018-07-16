@@ -1524,5 +1524,15 @@ object SuccessTests extends TestSuite{
         |    </root>
         |}""".stripMargin
     )
+    * - check(
+        """
+        |object foo {
+        |  val bar = "baz"
+        |  val xml =
+        |    <root>
+        |      &amp; &quot; &#x27; &#123; &lt; &gt;
+        |    </root>
+        |}""".stripMargin
+    )
   }
 }
