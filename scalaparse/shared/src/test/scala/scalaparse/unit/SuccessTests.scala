@@ -1504,5 +1504,60 @@ object SuccessTests extends TestSuite{
         |  } yield a
         |}""".stripMargin
     )
+    * - check(
+        """
+        |object foo {
+        |  val bar = "baz"
+        |  val xml =
+        |    <?xml-stylesheet href="style.xslt" type="text/xsl"?>
+        |    <root>
+        |      <?foo {bar}?>
+        |    </root>
+        |}""".stripMargin
+    )
+    * - check(
+        """
+        |object foo {
+        |  val xml =
+        |    <?xaml-stylesheet href="style.xslt" type="text/xsl"?>
+        |    <root>
+        |    </root>
+        |}""".stripMargin
+    )
+    * - check(
+        """
+        |object foo {
+        |  val bar = "baz"
+        |  val xml =
+        |    <root>
+        |      &amp; &quot; &#x27; &#123; &lt; &gt;
+        |    </root>
+        |}""".stripMargin
+    )
+    * - check(
+        """
+        |class Ping {
+        |
+        |  val pong = new Pong(this)
+        |
+        |  def name = "ping"
+        |
+        |  def loop: Unit =/*?*/ { poke() }
+        |
+        |  def poke: Unit =/*?*/ { pong./*!*/poke() }
+        |
+        |  override def toString = name
+        |  }
+        |
+        |class Pong(ping: Ping) {
+        |
+        |  val name/*?*/ = "pong"
+        |
+        |  def poke(): Unit = { ping./*!*/poke() }
+        |
+        |  override def toString = name
+        |  }
+        |""".stripMargin
+    )
   }
 }
