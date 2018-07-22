@@ -500,6 +500,84 @@ object Combinators {
     }
   }
 
+  /**
+    * Sequence the parsers. Succeeds with a `Seq` of results
+    * It uses the [[delimiter]] parser between parsers and discards its results.
+    */
+  case class SeqSequence[T, +R, Elem, Repr](ps: Seq[Parser[T, Elem, Repr]],
+                                       delimiter: Parser[_, Elem, Repr])
+                                      (implicit ev: Implicits.Repeater[T, R],
+                                       repr: ReprOps[Elem, Repr]) extends Parser[R, Elem, Repr]{
+
+
+    def parseRec(cfg: ParseCtx[Elem, Repr], index: Int): Mutable[R, Elem, Repr] = {
+      @tailrec def rec(index: Int,
+                       del: Parser[_, Elem, Repr],
+                       lastFailure: Mutable.Failure[Elem, Repr],
+                       acc: ev.Acc,
+                       cut: Boolean,
+                       count: Int): Mutable[R, Elem, Repr] = {
+        val oldFork = cfg.isFork
+        cfg.isFork = true
+        val resDel = del.parseRec(cfg, index)
+        cfg.isFork = oldFork
+
+        resDel match{
+          case f1: Mutable.Failure[Elem, Repr] =>
+            val cut1 = f1.cut
+            if (cut1) failMore(f1, index, cfg.logDepth, cut = true)
+            else passInRange(cut, f1, index, ev.result(acc), count)
+
+          case Mutable.Success(value0, index0, traceParsers0, cut0)  =>
+            cfg.isFork = true
+            val res = ps(count).parseRec(cfg, index0)
+            cfg.isFork = oldFork
+
+            res match{
+              case f2: Mutable.Failure[Elem, Repr] =>
+                val cut2 = f2.cut
+                if (cut2 | cut0) failMore(f2, index0, cfg.logDepth, cut = true)
+                else passInRange(cut | cut0, f2, index, ev.result(acc), count)
+
+              case Mutable.Success(value1, index1, traceParsers1, cut1)  =>
+                ev.accumulate(value1, acc)
+                val counted = count + 1
+                if (counted < ps.size)
+                  rec(index1, delimiter, lastFailure, acc, cut0 | cut1, counted)
+                else
+                  passInRange(cut0 | cut1, lastFailure, index1, ev.result(acc), counted)
+            }
+        }
+      }
+
+      def passInRange(cut: Boolean,
+                      lastFailure: Mutable.Failure[Elem, Repr],
+                      finalIndex: Int,
+                      acc: R,
+                      count: Int) = {
+        if (ps.size == count) {
+          val parsers =
+            if (null == lastFailure) Set.empty[Parser[_, Elem, Repr]]
+            else lastFailure.traceParsers
+          success(cfg.success, acc, finalIndex, parsers, cut)
+        } else failMore(lastFailure, index, cfg.logDepth, cut = cut)
+      }
+
+      // don't call the parseRec at all, if max is "0", as our parser corresponds to `Pass` in that case.
+      if (ps.isEmpty) {
+        success(cfg.success, ev.result(ev.initial), index, Set.empty[Parser[_, Elem, Repr]], false)
+      } else {
+        rec(index, Pass[Elem, Repr], null, ev.initial, false, 0)
+      }
+    }
+    override def toString = {
+      val things =
+        if (delimiter == Pass[Elem, Repr]) "" else s"sep = $delimiter"
+
+      ps.map(p => opWrap(p)).mkString(things)
+    }
+  }
+
   object Either{
     def flatten[T, Elem, Repr](p: Vector[Parser[T, Elem, Repr]]): Vector[Parser[T, Elem, Repr]] = p.flatMap{
       case Either(ps@_*) => ps

@@ -1,8 +1,12 @@
 package fastparse
 import acyclic.file
+import fastparse.core.Implicits.Repeater
+import fastparse.core.Parser
+import fastparse.parsers.Combinators.SeqSequence
 
 import language.experimental.macros
 import fastparse.parsers.Intrinsics
+import fastparse.parsers.Terminals.Pass
 import fastparse.utils.{ElemSetHelper, ReprOps}
 
 import scala.reflect.ClassTag
@@ -90,6 +94,10 @@ abstract class Api[Elem, Repr](ct: ClassTag[Elem],
 
   def P[T](p: => Parser[T])(implicit name: sourcecode.Name): Parser[T] =
     parsers.Combinators.Rule(name.value, () => p)
+
+  def sequence[R, V](parsers: Seq[Parser[V]], sep: Parser[_] = Pass)(implicit ev: Repeater[V, R]): Parser[R] = {
+    SeqSequence[V, R, Elem, Repr](ps = parsers, delimiter = sep)
+  }
 
   type P0 = Parser[Unit]
   type Parser[+T] = core.Parser[T, Elem, Repr]

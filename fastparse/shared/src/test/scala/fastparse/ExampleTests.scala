@@ -57,6 +57,19 @@ object ExampleTests extends TestSuite{
         val Parsed.Failure(_, 7, _) = ab4c.parse("ababababac")
       }
 
+      'seqenceSeq - {
+        val a = P("a")
+        val b = P("b")
+        val ababa = Seq(a, b, a, b, a)
+        val Parsed.Success(_, 5) = sequence(ababa).parse("ababa")
+        val Parsed.Failure(_, 2, _) = sequence(ababa).parse("abba")
+        val Parsed.Success(_, 13) = sequence(ababa, sep = P(", ")).parse("a, b, a, b, a")
+        val Parsed.Failure(_, 1, _) = sequence(ababa, sep = P(", ")).parse("ababa")
+        val Parsed.Success(_, 5) = (sequence(ababa) | P("abba")).parse("ababa")
+        val Parsed.Success(_, 4) = (sequence(ababa) | P("abba")).parse("abba")
+        val Parsed.Failure(_, 2, _) = (sequence(ababa, sep = Pass ~/ Pass) | P("abba")).parse("abba")
+      }
+
       'option - {
         val option = P( "c".? ~ "a".rep(sep="b").! ~ End)
 
