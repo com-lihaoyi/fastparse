@@ -56,7 +56,7 @@ class StringApi() extends Api[Char, String](
 }
 
 object all extends StringApi{
-  implicit def parserApi[T, V](p: T)(implicit c: T => core.Parser[V, Char, String]): ParserApi[V, Char, String] =
-    new ParserApiImpl[V, Char, String](p)
+  implicit def parserApi[T, V](p: T)(implicit c: T => core.Parser[Char, String, V]): ParserApi[Char, String, V] =
+    new ParserApiImpl[Char, String, V](p)
 }
 object noApi extends StringApi

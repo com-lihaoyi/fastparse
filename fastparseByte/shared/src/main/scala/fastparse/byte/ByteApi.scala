@@ -108,8 +108,8 @@ class ByteApi() extends Api[Byte, ByteVector](
 
 object all extends ByteApi {
   implicit def parserApi[T, V](p: T)
-                              (implicit c: T => core.Parser[V, Byte, Bytes]): ParserApi[V, Byte, Bytes] =
-    new fastparse.core.ParserApiImpl[V, Byte, Bytes](p)
+                              (implicit c: T => core.Parser[Byte, Bytes, V]): ParserApi[Byte, Bytes, V] =
+    new fastparse.core.ParserApiImpl[Byte, Bytes, V](p)
 
   /**
     * Parses the `sizeParser` to get a number `n`, and then parses `p` exactly

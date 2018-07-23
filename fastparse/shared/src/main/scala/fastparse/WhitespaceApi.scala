@@ -87,7 +87,7 @@ object WhitespaceApi {
  * provides replacement methods `repX` and `~~` if you wish to call the
  * original un-modified versions of these operators.
  */
-class WhitespaceApi[+T](p0: P[T], WL: P0) extends ParserApiImpl[T, Char, String](p0)  {
+class WhitespaceApi[+T](p0: P[T], WL: P0) extends ParserApiImpl[Char, String, T](p0)  {
 
 
   def repX[R](implicit ev: Repeater[T, R]): P[R] = Repeat(p0, 0, Int.MaxValue, Pass)

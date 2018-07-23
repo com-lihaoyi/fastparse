@@ -85,7 +85,7 @@ object ByteUtils{
 
     output.toString
   }
-  private[this] type Parser[+T] = fastparse.core.Parser[T, Byte, ByteVector]
+  private[this] type Parser[+T] = fastparse.core.Parser[Byte, ByteVector, T]
 
 
   class GenericIntegerParser[T](n: Int, creator: (IsReachable[Byte], Int) => T)

@@ -33,7 +33,7 @@ object Utils {
     })
   }
 
-  def benchmarkIteratorBufferSizes[Elem, Repr](parser: Parser[_, Elem, Repr],
+  def benchmarkIteratorBufferSizes[Elem, Repr](parser: Parser[Elem, Repr, _],
                                                    sizes: Seq[Int],
                                                    iteratorFactory: Int => Iterator[Repr])
                                                   (implicit repr: ReprOps[Elem, Repr],
@@ -85,7 +85,7 @@ object Utils {
   }
 
   def benchmarkAll[Elem, Repr](name: String,
-                                   parser: Parser[_, Elem, Repr],
+                                   parser: Parser[Elem, Repr, _],
                                    data: Repr, dataFailOpt: Option[Repr],
                                    iteratorFactory: Int => Iterator[Repr])
                                   (implicit repr: ReprOps[Elem, Repr],
