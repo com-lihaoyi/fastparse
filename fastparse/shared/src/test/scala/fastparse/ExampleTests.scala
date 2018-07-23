@@ -228,6 +228,12 @@ object ExampleTests extends TestSuite{
         assert("""digits.filter\(.*\)$""".r.findPrefixOf(even.toString).isDefined)
         assert("""digits.filter\(.*\):1:1 ..."123"$""".r.findPrefixOf(failure.extra.traced.trace).isDefined)
       }
+      'collect - {
+        val p = PassWith(Option(42))
+        val Parsed.Success(r, _) = p.collect { case Some(x) => x }.parse("")
+        assert(r == 42)
+        val Parsed.Failure(_, _, _) = p.collect { case None => 42 }.parse("")
+      }
       'opaque - {
         val digit = CharIn('0' to '9')
         val letter = CharIn('A' to 'Z')

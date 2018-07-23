@@ -3,7 +3,7 @@ import acyclic.file
 import fastparse.core.Implicits._
 import fastparse.parsers.Combinators.{Capturing, Cut, Either, Logged, Not, Opaque, Optional, Repeat, Sequence}
 import fastparse.parsers.Terminals.Pass
-import fastparse.parsers.Transformers.{Filtered, FlatMapped, Mapper}
+import fastparse.parsers.Transformers.{Collected, Filtered, FlatMapped, Mapper}
 import fastparse.utils.ReprOps
 
 abstract class ParserApi[+T, Elem, Repr]()(implicit repr: ReprOps[Elem, Repr]) {
@@ -90,6 +90,12 @@ abstract class ParserApi[+T, Elem, Repr]()(implicit repr: ReprOps[Elem, Repr]) {
   def filter(predicate: T => Boolean): Parser[T, Elem, Repr]
 
   /**
+    * Transforms the result of this Parser with the given PartialFunction
+    * if it is defined and fails the parser if it's not
+    */
+  def collect[V](pf: PartialFunction[T, V]): Parser[V, Elem, Repr]
+
+  /**
    * alias for `filter`
    */
   final def withFilter(predicate: T => Boolean): Parser[T, Elem, Repr] = filter(predicate)
@@ -135,4 +141,6 @@ class ParserApiImpl[+T, Elem, Repr](self: Parser[T, Elem, Repr])
   def flatMap[V](f: T => Parser[V, Elem, Repr]): Parser[V, Elem, Repr] = FlatMapped(self, f)
 
   def filter(predicate: T => Boolean): Parser[T, Elem, Repr] = Filtered(self,predicate)
+
+  def collect[V](pf: PartialFunction[T, V]): Parser[V, Elem, Repr] = Collected(self, pf)
 }
