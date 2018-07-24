@@ -50,7 +50,11 @@ val shared = Seq(
           <name>Li Haoyi</name>
           <url>https://github.com/lihaoyi</url>
         </developer>
-      </developers>
+      </developers>,
+  // Java 9 settings
+  packageOptions in (Compile, packageBin) += Package.ManifestAttributes(
+    "Automatic-Module-Name" -> s"com.lihaoyi.${name.value.replace('-', '.')}"
+  )
 )
 
 lazy val nativeSettings = Seq(
