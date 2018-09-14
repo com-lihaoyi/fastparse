@@ -148,7 +148,7 @@ object Terminals {
     def parseRec(cfg: ParseCtx[Elem, Repr], index: Int) = {
       val input = cfg.input
       if (!input.isReachable(index)) fail(cfg.failure, index)
-      else if (input(index) == c) success(cfg.success, c.toString, index + 1, Set.empty, false)
+      else if (input(index) == c) success(cfg.success, (), index + 1, Set.empty, false)
       else fail(cfg.failure, index)
     }
     override def toString = repr.literalize(repr.fromSingle(c)).toString

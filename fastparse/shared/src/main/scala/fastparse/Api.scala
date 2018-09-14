@@ -33,10 +33,10 @@ abstract class Api[Elem, Repr](ct: ClassTag[Elem],
                                reprOps: ReprOps[Elem, Repr],
                                ordering: Ordering[Elem]) {
 
-  implicit val implicitReprOps = reprOps
-  implicit val implicitElemSetHelper = elemSetHelper
-  protected[this] implicit val implicitClassTag = ct
-  protected[this] implicit val implicitOrdering = ordering
+  implicit val implicitReprOps: ReprOps[Elem, Repr] = reprOps
+  implicit val implicitElemSetHelper: ElemSetHelper[Elem] = elemSetHelper
+  protected[this] implicit val implicitClassTag: ClassTag[Elem] = ct
+  protected[this] implicit val implicitOrdering: Ordering[Elem] = ordering
 
   type ParserInput = fastparse.utils.ParserInput[Elem, Repr]
   type IndexedParserInput = fastparse.utils.IndexedParserInput[Elem, Repr]

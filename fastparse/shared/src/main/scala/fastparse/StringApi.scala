@@ -6,10 +6,10 @@ import language.experimental.macros
 import fastparse.parsers.Intrinsics
 import fastparse.parsers.Terminals.AnyElems
 import fastparse.utils.ElemSetHelper.CharBitSetHelper
-
+import scala.reflect.ClassTag
 
 class StringApi() extends Api[Char, String](
-  implicitly, CharBitSetHelper, StringReprOps, CharBitSetHelper.ordering
+  implicitly[ClassTag[Char]], CharBitSetHelper, StringReprOps, CharBitSetHelper.ordering
 ) {
 
   val AnyChar = parsers.Terminals.AnyElem[Char, String]("AnyChar")
