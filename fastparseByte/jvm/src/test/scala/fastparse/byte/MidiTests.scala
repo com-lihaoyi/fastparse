@@ -87,9 +87,18 @@ object MidiTests extends TestSuite{
         )
       }
     }
-    'clarity - variousParses(readResourceBytes("/clarity.mid"))
-    'go - variousParses(readResourceBytes("/go.mid"))
-    'stars - variousParses(readResourceBytes("/stars.mid"))
+    'clarity - {
+      variousParses(readResourceBytes("/clarity.mid"))
+      ()
+    }
+    'go - {
+      variousParses(readResourceBytes("/go.mid"))
+      ()
+    }
+    'stars - {
+      variousParses(readResourceBytes("/stars.mid"))
+      ()
+    }
   }
 
 }
