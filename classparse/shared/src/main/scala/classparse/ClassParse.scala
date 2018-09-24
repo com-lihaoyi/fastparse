@@ -413,7 +413,7 @@ object ClassParse {
 
   def constantPool(count: Int): P[Seq[PoolInfo]] =
     if (count == 0) {
-      Pass.map(_ => ArrayBuffer[PoolInfo]())
+      Pass.map(_ => Seq[PoolInfo]())
     } else {
         P( singleConstantPoolItem.~/.flatMap(item => constantPool(count - 1).map(_ :+ item)) |
            doubleConstantPoolItem.~/.flatMap(item => constantPool(count - 2).map(_ :+ NopInfo() :+ item )) )

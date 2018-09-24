@@ -23,7 +23,7 @@ object IteratorTests extends TestSuite {
 
       override def toString = s"LoggedDropsParserInput($drops)"
     }
-    new LoggedDropsParserInput(string.grouped(1).map(wrapString))
+    new LoggedDropsParserInput(string.grouped(1))
   }
 
   val tests = Tests {

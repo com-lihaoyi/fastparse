@@ -127,7 +127,7 @@ object Combinators {
           case s: Mutable.Success[T, Elem, Repr] =>
             s"Success(${repr.prettyIndex(cfg.input, s.index)}${if (s.cut) ", cut" else ""})"
           case f: Mutable.Failure[Elem, Repr] =>
-            val stack = Failure.filterFullStack(f.fullStack)
+            val stack = Failure.filterFullStack(f.fullStack.toSeq)
             val trace = Failure.formatStackTrace(
               stack.reverse,
               f.input,

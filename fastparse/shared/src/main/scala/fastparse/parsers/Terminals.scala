@@ -6,7 +6,6 @@ import fastparse.core.ParseCtx
 import scala.annotation.tailrec
 import fastparse.core.Parser
 
-import scala.collection.mutable.ArrayBuffer
 /**
  * Leaf parsers which do not contain any other
  * parsers, and do simple things

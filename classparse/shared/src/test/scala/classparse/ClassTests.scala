@@ -4,8 +4,6 @@ import fastparse.utils.Base64.Decoder
 import fastparse.byte.all._
 import utest._
 
-import scala.collection.mutable.ArrayBuffer
-
 
 object ClassTests extends TestSuite {
   import ClassParse.Ast._
@@ -49,7 +47,7 @@ object ClassTests extends TestSuite {
 
         val expected = ClassFile(0, 52,
           ClassFlags(false, false, true /*accSuper*/, false, false, false, false, false),
-          ArrayBuffer(
+          Seq(
             MethodRef("<init>", "()V", Class("java/lang/Object")),
             FieldRef("title", "Ljava/lang/String;", Class("Book")),
             FieldRef("pubYear", "I", Class("Book")),
@@ -81,74 +79,74 @@ object ClassTests extends TestSuite {
           ),
           Class("Book"),
           Some(Class("java/lang/Object")),
-          ArrayBuffer(),
-          ArrayBuffer(
+          Seq(),
+          Seq(
             Field("title", "Ljava/lang/String;",
               FieldFlags(false, true /*accPrivate*/, false, false, false, false, false, false, false),
-              ArrayBuffer()
+              Seq()
             ),
             Field("pubYear", "I",
               FieldFlags(false, true /*accPrivate*/, false, false, false, false, false, false, false),
-              ArrayBuffer()
+              Seq()
             )
           ),
-          ArrayBuffer(
+          Seq(
             Method("<init>", "()V",
               MethodFlags(false, false, false, false, false, false, false, false, false, false, false, false),
-              ArrayBuffer(
+              Seq(
                 CodeAttribute(1, 1,
-                  ArrayBuffer(ALoad0, InvokeSpecial(1), Return),
-                  ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 01 00 00 00 01"))
+                  Seq(ALoad0, InvokeSpecial(1), Return),
+                  Seq(),
+                  Seq(BasicAttribute("LineNumberTable", hex"00 01 00 00 00 01"))
                 )
               )
             ),
             Method("getTitle", "()Ljava/lang/String;",
               MethodFlags(true /*accPublic*/, false, false, false, false,
                 false, false, false, false, false, false, false),
-              ArrayBuffer(
+              Seq(
                 CodeAttribute(1, 1,
-                  ArrayBuffer(ALoad0, GetField(2), AReturn),
-                  ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 01 00 00 00 06"))
+                  Seq(ALoad0, GetField(2), AReturn),
+                  Seq(),
+                  Seq(BasicAttribute("LineNumberTable", hex"00 01 00 00 00 06"))
                 )
               )
             ),
             Method("getPubYear", "()I",
               MethodFlags(true /*accPublic*/, false, false, false, false, false, false,
                 false, false, false, false, false),
-              ArrayBuffer(
+              Seq(
                 CodeAttribute(1, 1,
-                  ArrayBuffer(ALoad0, GetField(3), IReturn),
-                  ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 01 00 00 00 0A"))
+                  Seq(ALoad0, GetField(3), IReturn),
+                  Seq(),
+                  Seq(BasicAttribute("LineNumberTable", hex"00 01 00 00 00 0A"))
                 )
               )
             ),
             Method("setTitle", "(Ljava/lang/String;)V",
               MethodFlags(true /*accPublic*/, false, false, false, false, false, false,
                 false, false, false, false, false),
-              ArrayBuffer(
+              Seq(
                 CodeAttribute(2, 2,
-                  ArrayBuffer(ALoad0, ALoad1, PutField(2), Return),
-                  ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 02 00 00 00 0E 00 05 00 0F"))
+                  Seq(ALoad0, ALoad1, PutField(2), Return),
+                  Seq(),
+                  Seq(BasicAttribute("LineNumberTable", hex"00 02 00 00 00 0E 00 05 00 0F"))
                 )
               )
             ),
             Method("setPubYear","(I)V",
               MethodFlags(true /*accPublic*/, false, false, false, false, false, false,
                 false, false, false, false, false),
-              ArrayBuffer(
+              Seq(
                 CodeAttribute(2, 2,
-                  ArrayBuffer(ALoad0, ILoad1, PutField(3), Return),
-                  ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 02 00 00 00 12 00 05 00 13"))
+                  Seq(ALoad0, ILoad1, PutField(3), Return),
+                  Seq(),
+                  Seq(BasicAttribute("LineNumberTable", hex"00 02 00 00 00 12 00 05 00 13"))
                 )
               )
             )
           ),
-          ArrayBuffer(SourceFileAttribute("Book.java"))
+          Seq(SourceFileAttribute("Book.java"))
         )
 
         val Parsed.Success(parsedClassInfo, _) = ClassParse.classFile.parse(classFile)
@@ -239,7 +237,7 @@ object ClassTests extends TestSuite {
 
         val expected = ClassFile(0, 52,
           ClassFlags(false, false, true, false, false, false, false, false),
-          ArrayBuffer(
+          Seq(
             MethodRef("<init>", "()V", Class("java/lang/Object")),
             FieldRef("title", "Ljava/lang/String;", Class("Book2")),
             FieldRef("pubYear", "I", Class("Book2")),
@@ -318,46 +316,46 @@ object ClassTests extends TestSuite {
             BasicElemPool(StringElem("name"))),
           Class("Book2"),
           Some(Class("java/lang/Object")),
-          ArrayBuffer(),
-          ArrayBuffer(
+          Seq(),
+          Seq(
             Field(
               "title",
               "Ljava/lang/String;",
               FieldFlags(false, true, false, false, false, false, false, false, false),
-              ArrayBuffer()
+              Seq()
             ),
             Field(
               "pubYear",
               "I",
               FieldFlags(false, true, false, false, false, false, false, false, false),
-              ArrayBuffer()
+              Seq()
             ),
             Field(
               "genre",
               "LBook2$Genre;",
               FieldFlags(false, true, false, false, false, false, false, false, false),
-              ArrayBuffer()
+              Seq()
             ),
             Field(
               "copies",
               "I",
               FieldFlags(false, true, false, false, false, false, false, false, false),
-              ArrayBuffer()
+              Seq()
             )
           ),
-          ArrayBuffer(
+          Seq(
             Method(
               "<init>",
               "()V",
               MethodFlags(false, false, false, false, false, false, false, false, false, false, false, false),
-              ArrayBuffer(
+              Seq(
                 CodeAttribute(1, 1,
-                  ArrayBuffer(
+                  Seq(
                     ALoad0,
                     InvokeSpecial(1),
                     Return),
-                  ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 01 00 00 00 01"))
+                  Seq(),
+                  Seq(BasicAttribute("LineNumberTable", hex"00 01 00 00 00 01"))
                 )
               )
             ),
@@ -365,14 +363,14 @@ object ClassTests extends TestSuite {
               "getTitle",
               "()Ljava/lang/String;",
               MethodFlags(true, false, false, false, false, false, false, false, false, false, false, false),
-              ArrayBuffer(
+              Seq(
                 CodeAttribute(1, 1,
-                  ArrayBuffer(
+                  Seq(
                     ALoad0,
                     GetField(2),
                     AReturn),
-                  ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 01 00 00 00 0a"))
+                  Seq(),
+                  Seq(BasicAttribute("LineNumberTable", hex"00 01 00 00 00 0a"))
                 )
               )
             ),
@@ -380,14 +378,14 @@ object ClassTests extends TestSuite {
               "getPubYear",
               "()I",
               MethodFlags(true, false, false, false, false, false, false, false, false, false, false, false),
-              ArrayBuffer(
+              Seq(
                 CodeAttribute(1, 1,
-                  ArrayBuffer(
+                  Seq(
                     ALoad0,
                     GetField(3),
                     IReturn),
-                  ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 01 00 00 00 0e"))
+                  Seq(),
+                  Seq(BasicAttribute("LineNumberTable", hex"00 01 00 00 00 0e"))
                 )
               )
             ),
@@ -395,14 +393,14 @@ object ClassTests extends TestSuite {
               "getGenge",
               "()LBook2$Genre;",
               MethodFlags(true, false, false, false, false, false, false, false, false, false, false, false),
-              ArrayBuffer(
+              Seq(
                 CodeAttribute(1, 1,
-                  ArrayBuffer(
+                  Seq(
                     ALoad0,
                     GetField(4),
                     AReturn),
-                  ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 01 00 00 00 12"))
+                  Seq(),
+                  Seq(BasicAttribute("LineNumberTable", hex"00 01 00 00 00 12"))
                 )
               )
             ),
@@ -410,14 +408,14 @@ object ClassTests extends TestSuite {
               "getCopies",
               "()I",
               MethodFlags(true, false, false, false, false, false, false, false, false, false, false, false),
-              ArrayBuffer(
+              Seq(
                 CodeAttribute(1, 1,
-                  ArrayBuffer(
+                  Seq(
                     ALoad0,
                     GetField(5),
                     IReturn),
-                  ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 01 00 00 00 16"))
+                  Seq(),
+                  Seq(BasicAttribute("LineNumberTable", hex"00 01 00 00 00 16"))
                 )
               )
             ),
@@ -425,15 +423,15 @@ object ClassTests extends TestSuite {
               "setTitle",
               "(Ljava/lang/String;)V",
               MethodFlags(true, false, false, false, false, false, false, false, false, false, false, false),
-              ArrayBuffer(
+              Seq(
                 CodeAttribute(2, 2,
-                  ArrayBuffer(
+                  Seq(
                     ALoad0,
                     ALoad1,
                     PutField(2),
                     Return),
-                  ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 02 00 00 00 1a 00 05 00 1b"))
+                  Seq(),
+                  Seq(BasicAttribute("LineNumberTable", hex"00 02 00 00 00 1a 00 05 00 1b"))
                 )
               )
             ),
@@ -441,15 +439,15 @@ object ClassTests extends TestSuite {
               "setPubYear",
               "(I)V",
               MethodFlags(true, false, false, false, false, false, false, false, false, false, false, false),
-              ArrayBuffer(
+              Seq(
                 CodeAttribute(2, 2,
-                  ArrayBuffer(
+                  Seq(
                     ALoad0,
                     ILoad1,
                     PutField(3),
                     Return),
-                  ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 02 00 00 00 1e 00 05 00 1f"))
+                  Seq(),
+                  Seq(BasicAttribute("LineNumberTable", hex"00 02 00 00 00 1e 00 05 00 1f"))
                 )
               )
             ),
@@ -457,15 +455,15 @@ object ClassTests extends TestSuite {
               "setGenre",
               "(LBook2$Genre;)V",
               MethodFlags(true, false, false, false, false, false, false, false, false, false, false, false),
-              ArrayBuffer(
+              Seq(
                 CodeAttribute(2, 2,
-                  ArrayBuffer(
+                  Seq(
                     ALoad0,
                     ALoad1,
                     PutField(4),
                     Return),
-                  ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 02 00 00 00 22 00 05 00 23"))
+                  Seq(),
+                  Seq(BasicAttribute("LineNumberTable", hex"00 02 00 00 00 22 00 05 00 23"))
                 )
               )
             ),
@@ -473,15 +471,15 @@ object ClassTests extends TestSuite {
               "setCopies",
               "(I)V",
               MethodFlags(true, false, false, false, false, false, false, false, false, false, false, false),
-              ArrayBuffer(
+              Seq(
                 CodeAttribute(2, 2,
-                  ArrayBuffer(
+                  Seq(
                     ALoad0,
                     ILoad1,
                     PutField(5),
                     Return),
-                  ArrayBuffer(),
-                  ArrayBuffer(BasicAttribute("LineNumberTable", hex"00 02 00 00 00 26 00 05 00 27"))
+                  Seq(),
+                  Seq(BasicAttribute("LineNumberTable", hex"00 02 00 00 00 26 00 05 00 27"))
                 )
               )
             ),
@@ -489,12 +487,12 @@ object ClassTests extends TestSuite {
               "toString",
               "()Ljava/lang/String;",
               MethodFlags(true, false, false, false, false, false, false, false, false, false, false, false),
-              ArrayBuffer(
+              Seq(
                 CodeAttribute(2, 2,
-                  ArrayBuffer(
+                  Seq(
                     ALoad0,
                     GetField(5),
-                    TableSwitch(46, 0, 2, ArrayBuffer(28, 34, 40)),
+                    TableSwitch(46, 0, 2, Seq(28, 34, 40)),
                     LDC(6),
                     AStore1,
                     Goto(18),
@@ -530,8 +528,8 @@ object ClassTests extends TestSuite {
                     InvokeVirtual(12),
                     InvokeVirtual(16),
                     AReturn),
-                  ArrayBuffer(),
-                  ArrayBuffer(
+                  Seq(),
+                  Seq(
                     BasicAttribute(
                       "LineNumberTable",
                       hex"00 06 00 00 00 2c 00 20 00 2d 00 26 00 2e 00 2c 00 2f 00 32 00 30 00 35 00 32"
@@ -545,10 +543,10 @@ object ClassTests extends TestSuite {
               )
             )
           ),
-          ArrayBuffer(
+          Seq(
             SourceFileAttribute("Book2.java"),
             InnerClassesAttribute(
-              ArrayBuffer(
+              Seq(
                 InnerClass(
                   Class("Book2$Genre"),
                   Some(Class("Book2")),
@@ -617,12 +615,12 @@ object ClassTests extends TestSuite {
         val Parsed.Success(parsedClassInfo, _) = ClassParse.classFile.parse(classFile)
         val parsedClass = ClassParse.Ast.convertToAst(parsedClassInfo)
 
-        assert(parsedClass.fields == ArrayBuffer(
+        assert(parsedClass.fields == Seq(
           Field(
             "CONST_VAL",
             "I",
             FieldFlags(true, false, false, true, true, false, false, false, false),
-            ArrayBuffer(ConstantValueAttribute(IntElem(42)))
+            Seq(ConstantValueAttribute(IntElem(42)))
           )
         ))
 
@@ -631,9 +629,9 @@ object ClassTests extends TestSuite {
             "method",
             "()Ljava/lang/Object;",
             MethodFlags(true, false, false, false, false, false, false, false, false, false, false, false),
-            ArrayBuffer(
+            Seq(
               CodeAttribute(3, 2,
-                ArrayBuffer(
+                Seq(
                   New(2),
                   Dup,
                   ALoad0,
@@ -646,12 +644,12 @@ object ClassTests extends TestSuite {
                   Dup,
                   InvokeSpecial(7),
                   AThrow),
-                ArrayBuffer(),
-                ArrayBuffer(
+                Seq(),
+                Seq(
                   BasicAttribute("LineNumberTable", hex"00 03 00 00 00 0c 00 09 00 0d 00 0f 00 0e")
                 )
               ),
-              ExceptionsAttribute(ArrayBuffer(Class("java/io/IOException"))),
+              ExceptionsAttribute(Seq(Class("java/io/IOException"))),
               DeprecatedAttribute,
               SignatureAttribute("()TT;"),
               BasicAttribute("RuntimeVisibleAnnotations", hex"00 01 00 1a 00 00")
@@ -736,7 +734,7 @@ object ClassTests extends TestSuite {
           "OAUEHAGIAAQBmAAAAAgBn").toByteArray)
         /* CodeTest.class from compiled class CodeTest.java */
 
-        val expectedPool = ArrayBuffer(
+        val expectedPool = Seq(
           MethodRef("<init>", "()V", Class("java/lang/Object")),
           FieldRef("out", "Ljava/io/PrintStream;", Class("java/lang/System")),
           BasicElemPool(StringElem("Hello World!")),
@@ -958,7 +956,7 @@ object ClassTests extends TestSuite {
           BasicElemPool(StringElem("(I)Ljava/lang/String;"))
         )
 
-        val expectedCode = ArrayBuffer(
+        val expectedCode = Seq(
           // output from the javap -c
           // it was manually run to verify the correctness of parser result
           //
@@ -1404,7 +1402,7 @@ object ClassTests extends TestSuite {
           IConst3,               // 926: iconst_3
           IStore(37),            // 927: istore        37
           ILoad(37),             // 929: iload         37
-          TableSwitch(46, 1, 3, ArrayBuffer(25, 32, 39)),   //931: tableswitch   { 1: 956 2: 963 3: 970 default: 977 }
+          TableSwitch(46, 1, 3, Seq(25, 32, 39)),   //931: tableswitch   { 1: 956 2: 963 3: 970 default: 977 }
           LDC(69),               // 956: ldc           #69                 // String January
           AStore(38),            // 958: astore        38
           Goto(21),              // 960: goto          981
@@ -1434,7 +1432,7 @@ object ClassTests extends TestSuite {
           IStore(41),            //1016: istore        41
           ALoad(40),             //1018: aload         40
           InvokeVirtual(75),     //1020: invokevirtual #75                 // Method java/lang/String.hashCode:()I
-          LookUpSwitch(78, ArrayBuffer((3521,49), (119527,33), (103672936,65))),   //1023: lookupswitch  { 3521: 1072 119527: 1056 103672936: 1088 default: 1101 }
+          LookUpSwitch(78, Seq((3521,49), (119527,33), (103672936,65))),   //1023: lookupswitch  { 3521: 1072 119527: 1056 103672936: 1088 default: 1101 }
           ALoad(40),             //1056: aload         40
           LDC(76),               //1058: ldc           #76                 // String yes
           InvokeVirtual(77),     //1060: invokevirtual #77                 // Method java/lang/String.equals:(Ljava/lang/Object;)Z
@@ -1456,7 +1454,7 @@ object ClassTests extends TestSuite {
           IConst2,               //1098: iconst_2
           IStore(41),            //1099: istore        41
           ILoad(41),             //1101: iload         41
-          TableSwitch(58, 0, 2, ArrayBuffer(25, 36, 47)),    //1103: tableswitch   { 0: 1128 1: 1139 2: 1150 default: 1161 }
+          TableSwitch(58, 0, 2, Seq(25, 36, 47)),    //1103: tableswitch   { 0: 1128 1: 1139 2: 1150 default: 1161 }
           GetStatic(2),          //1128: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
           LDC(79),               //1131: ldc           #79                 // String You answered yes.
           InvokeVirtual(4),      //1133: invokevirtual #4                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V

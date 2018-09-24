@@ -19,16 +19,16 @@ def macroDependencies(version: String) =
 val shared = Seq(
   libraryDependencies ++= macroDependencies(scalaVersion.value),
   libraryDependencies ++= Seq(
-    "com.lihaoyi" %%% "utest" % "0.5.4" % "test",
-    "com.lihaoyi" %%% "sourcecode" % "0.1.4"
+    "com.lihaoyi" %%% "utest" % "0.6.6" % "test",
+    "com.lihaoyi" %%% "sourcecode" % "0.1.5"
   ),
   scalaJSStage in Global := FullOptStage,
   organization := "com.lihaoyi",
   version := Constants.version,
   scalaVersion := Constants.scala212,
   crossScalaVersions := Seq(Constants.scala210, Constants.scala211, Constants.scala212),
-  libraryDependencies += "com.lihaoyi" %% "acyclic" % "0.1.5" % "provided",
-  addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.5"),
+  libraryDependencies += "com.lihaoyi" %% "acyclic" % "0.1.8" % "provided",
+  addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.8"),
   autoCompilerPlugins := true,
   testFrameworks += new TestFramework("utest.runner.Framework"),
   publishTo := Some("releases" at "https://oss.sonatype.org/service/local/staging/deploy/maven2"),
@@ -131,7 +131,12 @@ lazy val fastparseByte = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(
     shared,
     name := "fastparse-byte",
-    libraryDependencies += "org.scodec" %%% "scodec-bits" % "1.1.5"
+    libraryDependencies += {
+      val version =
+        if (scalaBinaryVersion.value == "2.10") "1.1.5"
+        else "1.1.6"
+      "org.scodec" %%% "scodec-bits" % version
+    }
   )
   .nativeSettings(nativeSettings)
 lazy val fastparseByteJS = fastparseByte.js

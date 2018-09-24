@@ -56,7 +56,7 @@ object Base64 {
         case 1 => sixBits(b(b.length - 2), b(b.length - 1), 0)
         case 2 => sixBits(b(b.length - 1), 0, 0)
       }
-      r.length = (r.length - pad)
+      r.setLength(r.length - pad)
       r ++= "=" * pad
       scheme.postEncode(r.toString())
     }

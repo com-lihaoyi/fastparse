@@ -128,10 +128,10 @@ object BmpTests extends TestSuite {
         val expected = Bmp(
           FileHeader(19778, 70, 54),
           BitmapInfoHeader(BitmapInfoHeaderPart(2, 2, 1, 24, 0, 16, 2835, 2835, 0, 0)),
-          ArrayBuffer(ArrayBuffer(
+          Seq(Seq(
             Pixel(Bytes(0xff, 0, 0)),
             Pixel(Bytes(0, 0xff, 0))),
-            ArrayBuffer(
+            Seq(
               Pixel(Bytes(0, 0, 0xff)),
               Pixel(Bytes(0xff, 0xff, 0xff))
             )
@@ -167,12 +167,12 @@ object BmpTests extends TestSuite {
 
         val expected = Bmp(FileHeader(19778, 154, 122),
           BitmapInfoHeader(BitmapInfoHeaderPart(4, 2, 1, 32, 3, 32, 2835, 2835, 0, 0)),
-          ArrayBuffer(ArrayBuffer(
+          Seq(Seq(
             Pixel(Bytes(0xff, 0, 0, 0xff)),
             Pixel(Bytes(0, 0xff, 0, 0xff)),
             Pixel(Bytes(0, 0, 0xff, 0xff)),
             Pixel(Bytes(0xff, 0xff, 0xff, 0xff))),
-            ArrayBuffer(
+            Seq(
               Pixel(Bytes(0xff, 0, 0, 0x7f)),
               Pixel(Bytes(0, 0xff, 0, 0x7f)),
               Pixel(Bytes(0, 0, 0xff, 0x7f)),

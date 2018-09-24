@@ -11,13 +11,13 @@ object LargeJsonIteratorTest extends TestSuite {
 
   val tests = Tests {
     'large - {
-      val Parsed.Success(_, i) = jsonExpr.parseIterator(source.getLines().map(_.repr))
+      val Parsed.Success(_, i) = jsonExpr.parseIterator(source.getLines())
       val expectedIndex = source.getLines().map(_.length).sum
       assert(i == expectedIndex)
     }
 
     'maxInnerLength - {
-      val loggedInput = new IteratorParserInput(source.getLines().map(_.repr)) {
+      val loggedInput = new IteratorParserInput(source.getLines()) {
         var maxInnerLength = 0
         override def dropBuffer(index: Int) = {
           maxInnerLength = math.max(maxInnerLength, this.innerLength)

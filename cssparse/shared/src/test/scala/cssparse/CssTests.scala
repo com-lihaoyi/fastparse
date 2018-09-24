@@ -4,8 +4,6 @@ import utest._
 import fastparse.all._
 import Ast._
 
-import scala.collection.mutable.ArrayBuffer
-
 object CssTests extends TestSuite {
   val tests = this {
     'basic - {
@@ -26,14 +24,14 @@ object CssTests extends TestSuite {
 
         assert(
           value1 ==
-            RuleList(ArrayBuffer(
+            RuleList(Seq(
               QualifiedRule(Left(
                 MultipleSelector(
                   ElementSelector("p"),
-                  ArrayBuffer((">", ElementSelector("a"))))),
-                DeclarationList(ArrayBuffer(
-                  Left(Declaration("color", ArrayBuffer(IdentToken("blue")), false)),
-                  Left(Declaration("text-decoration", ArrayBuffer(IdentToken("underline")), false))))))),
+                  Seq((">", ElementSelector("a"))))),
+                DeclarationList(Seq(
+                  Left(Declaration("color", Seq(IdentToken("blue")), false)),
+                  Left(Declaration("text-decoration", Seq(IdentToken("underline")), false))))))),
           index1 == 120
         )
       }
@@ -58,13 +56,13 @@ object CssTests extends TestSuite {
 
         assert(
           value2 ==
-            RuleList(ArrayBuffer(
+            RuleList(Seq(
               QualifiedRule(
                 Left(ElementSelector("html")),
-                DeclarationList(ArrayBuffer(
-                  Left(Declaration("font-family", ArrayBuffer(IdentToken("sans-serif")), false)),
-                  Left(Declaration("-webkit-text-size-adjust", ArrayBuffer(PercentageToken("100")), false)),
-                  Left(Declaration("-ms-text-size-adjust", ArrayBuffer(PercentageToken("100")), false))))))),
+                DeclarationList(Seq(
+                  Left(Declaration("font-family", Seq(IdentToken("sans-serif")), false)),
+                  Left(Declaration("-webkit-text-size-adjust", Seq(PercentageToken("100")), false)),
+                  Left(Declaration("-ms-text-size-adjust", Seq(PercentageToken("100")), false))))))),
           index2 == 363
         )
       }
@@ -85,15 +83,15 @@ object CssTests extends TestSuite {
 
         assert(
           value3 ==
-            RuleList(ArrayBuffer(
+            RuleList(Seq(
               QualifiedRule(
                 Left(ElementSelector("after")),
-                DeclarationList(ArrayBuffer(
-                  Left(Declaration("color", ArrayBuffer(HashWordToken("000")), true)),
-                  Left(Declaration("text-shadow", ArrayBuffer(IdentToken("none")), true)),
-                  Left(Declaration("background", ArrayBuffer(IdentToken("transparent")), true)),
-                  Left(Declaration("-webkit-box-shadow", ArrayBuffer(IdentToken("none")), true)),
-                  Left(Declaration("box-shadow", ArrayBuffer(IdentToken("none")), true))))))),
+                DeclarationList(Seq(
+                  Left(Declaration("color", Seq(HashWordToken("000")), true)),
+                  Left(Declaration("text-shadow", Seq(IdentToken("none")), true)),
+                  Left(Declaration("background", Seq(IdentToken("transparent")), true)),
+                  Left(Declaration("-webkit-box-shadow", Seq(IdentToken("none")), true)),
+                  Left(Declaration("box-shadow", Seq(IdentToken("none")), true))))))),
           index3 == 239
         )
       }
@@ -112,17 +110,17 @@ object CssTests extends TestSuite {
 
         assert(
           value4 ==
-            RuleList(ArrayBuffer(
+            RuleList(Seq(
               QualifiedRule(Left(
                 MultipleSelector(
-                  ComplexSelector(None, ArrayBuffer(
-                    ClassSelectorPart(AttributeSelector(Some("label-info"), ArrayBuffer(("href", None, None)))),
-                    PseudoSelectorPart(":hover", ArrayBuffer()))),
-                  ArrayBuffer((",", ComplexSelector(None, ArrayBuffer(
-                    ClassSelectorPart(AttributeSelector(Some("label-info"), ArrayBuffer(("href", None, None)))),
-                    PseudoSelectorPart(":focus", ArrayBuffer()))))))),
-                DeclarationList(ArrayBuffer(Left(
-                  Declaration("background-color", ArrayBuffer(HashWordToken("31b0d5")), false))))))),
+                  ComplexSelector(None, Seq(
+                    ClassSelectorPart(AttributeSelector(Some("label-info"), Seq(("href", None, None)))),
+                    PseudoSelectorPart(":hover", Seq()))),
+                  Seq((",", ComplexSelector(None, Seq(
+                    ClassSelectorPart(AttributeSelector(Some("label-info"), Seq(("href", None, None)))),
+                    PseudoSelectorPart(":focus", Seq()))))))),
+                DeclarationList(Seq(Left(
+                  Declaration("background-color", Seq(HashWordToken("31b0d5")), false))))))),
           index4 == 107
         )
       }
@@ -138,13 +136,13 @@ object CssTests extends TestSuite {
             |
           """.stripMargin)
 
-        assert(value5 == RuleList(ArrayBuffer(
+        assert(value5 == RuleList(Seq(
           QualifiedRule(
             Left(MultipleSelector(
-              AttributeSelector(None, ArrayBuffer(("hidden", None, None))),
-              ArrayBuffer((",", ElementSelector("template"))))),
-            DeclarationList(ArrayBuffer(
-              Left(Declaration("display", ArrayBuffer(IdentToken("none")), false))))))))
+              AttributeSelector(None, Seq(("hidden", None, None))),
+              Seq((",", ElementSelector("template"))))),
+            DeclarationList(Seq(
+              Left(Declaration("display", Seq(IdentToken("none")), false))))))))
       }
 
       'test6 {
@@ -159,14 +157,14 @@ object CssTests extends TestSuite {
             |
           """.stripMargin)
 
-        assert(value6 == RuleList(ArrayBuffer(
-          AtRule("media", ArrayBuffer(
-            BracketsBlock(ArrayBuffer(IdentToken("min-width"), DelimToken(":"), DimensionToken("768", "px")))),
-            Some(Right(RuleList(ArrayBuffer(
+        assert(value6 == RuleList(Seq(
+          AtRule("media", Seq(
+            BracketsBlock(Seq(IdentToken("min-width"), DelimToken(":"), DimensionToken("768", "px")))),
+            Some(Right(RuleList(Seq(
               QualifiedRule(Left(
-                ComplexSelector(None, ArrayBuffer(ClassSelectorPart(ElementSelector("lead"))))),
-                DeclarationList(ArrayBuffer(Left(
-                  Declaration("font-size", ArrayBuffer(DimensionToken("21", "px")), false)))))))))))))
+                ComplexSelector(None, Seq(ClassSelectorPart(ElementSelector("lead"))))),
+                DeclarationList(Seq(Left(
+                  Declaration("font-size", Seq(DimensionToken("21", "px")), false)))))))))))))
       }
 
       'test7 {
@@ -180,14 +178,14 @@ object CssTests extends TestSuite {
              |        unicode-range: U+0025-00FF, U+4??;
              |}
           """.stripMargin)
-        assert(value7 == RuleList(ArrayBuffer(
-          AtRule("rule", ArrayBuffer(), Some(Left(
-            DeclarationList(ArrayBuffer(
-              Left(Declaration("unicode-range", ArrayBuffer(UnicodeRangeToken("26", "26")), false)),
-              Left(Declaration("unicode-range", ArrayBuffer(UnicodeRangeToken("0", "7F")), false)),
-              Left(Declaration("unicode-range", ArrayBuffer(UnicodeRangeToken("0025", "00FF")), false)),
-              Left(Declaration("unicode-range", ArrayBuffer(UnicodeRangeToken("4??", "4??")), false)),
-              Left(Declaration("unicode-range", ArrayBuffer(
+        assert(value7 == RuleList(Seq(
+          AtRule("rule", Seq(), Some(Left(
+            DeclarationList(Seq(
+              Left(Declaration("unicode-range", Seq(UnicodeRangeToken("26", "26")), false)),
+              Left(Declaration("unicode-range", Seq(UnicodeRangeToken("0", "7F")), false)),
+              Left(Declaration("unicode-range", Seq(UnicodeRangeToken("0025", "00FF")), false)),
+              Left(Declaration("unicode-range", Seq(UnicodeRangeToken("4??", "4??")), false)),
+              Left(Declaration("unicode-range", Seq(
                 UnicodeRangeToken("0025", "00FF"), DelimToken(","), UnicodeRangeToken("4??", "4??")), false))))))))))
 
       }

@@ -49,7 +49,7 @@ object TestUtil {
         def warning(ex: CSSParseException) = println("WARNING " + ex)
       })
       val sheet = parser.parseStyleSheet(source, null, null)
-      errors
+      errors.toSeq
     }
 
     val parsedInput = PrettyPrinter.printRuleList(CssRulesParser.ruleList.parse(input).get.value)

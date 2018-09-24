@@ -2,8 +2,6 @@ package cssparse
 
 import fastparse.all._
 
-import scala.collection.mutable.ArrayBuffer
-
 // According to https://www.w3.org/TR/css-syntax-3/
 
 object CssTokensParser {
