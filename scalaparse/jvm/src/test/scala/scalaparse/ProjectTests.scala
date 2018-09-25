@@ -162,6 +162,7 @@ object ProjectTests extends TestSuite{
         "target/repos/scala/test/files/pos/t389.scala",
         "target/repos/scala/test/files/run/literals.scala",
         "target/repos/scala/test/files/run/t3835.scala",
+        "target/repos/scala/test/files/run/productElementName.scala",
         // Scalac parser seems to accept this, though it blows up later
         "target/repos/scala/test/files/neg/t8266-invalid-interp.scala",
         "target/repos/scala/test/disabled/",
