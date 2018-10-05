@@ -339,14 +339,14 @@ object ByteTests extends TestSuite {
 
         Foo.ints.parse(hex"ff 00 00 00 00")
 
-        val expected = """
+        val expected = augmentString("""
             +ints:0
               +int:0
               -int:0:Failure(int:0 / "00":0 ..."ff 00 00 00 00")
               +longInt:0
               -longInt:0:Failure(longInt:0 / AnyByte:5 ..."ff 00 00 00 00", cut)
             -ints:0:Failure(ints:0 / longInt:0 / AnyByte:5 ..."ff 00 00 00 00", cut)
-                       """.lines.filter(_.trim != "").toSeq
+                       """).lines.filter(_.trim != "").toSeq
         val minIndent = expected.map(_.takeWhile(_ == ' ').length).min
         val expectedString = expected.map(_.drop(minIndent)).mkString("\n")
         val capturedString = captured.mkString("\n")

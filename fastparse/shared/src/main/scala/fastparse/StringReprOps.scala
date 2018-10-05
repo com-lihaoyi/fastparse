@@ -19,8 +19,8 @@ object StringReprOps extends ReprOps[Char, String] {
       val first = input.slice(idx - 20, idx)
       val last = input.slice(idx, idx + 20)
       val emptyString = ""
-      val lastSnippet: String = last.lines.toSeq.headOption.getOrElse(emptyString)
-      val firstSnippet: String = first.reverse.lines.toSeq.headOption.getOrElse(emptyString).reverse
+      val lastSnippet: String = augmentString(last).lines.toSeq.headOption.getOrElse(emptyString)
+      val firstSnippet: String = augmentString(first.reverse).lines.toSeq.headOption.getOrElse(emptyString).reverse
 
       prettyPrint(firstSnippet) + prettyPrint(lastSnippet) + "\n" + (" " * firstSnippet.length) + "^"
     }
