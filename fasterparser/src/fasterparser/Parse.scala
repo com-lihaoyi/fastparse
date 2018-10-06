@@ -95,23 +95,26 @@ object Parse {
 
     val cut1 = c.Expr[Boolean](if(cut) q"true" else q"false")
     reify {
-      lhs.splice match {
-        case f: Parsed.Failure => f
-        case p: Parsed.Success[T] =>
-          val pValue = p.value
-          val pCut = p.cut
-          whitespace.splice(ctx.splice) match {
-            case f: Parsed.Failure => f
-            case _: Parsed.Success[_] =>
-              other.splice match {
-                case f: Parsed.Failure =>
-                  ctx.splice.prepareFailure(f.index, cut = f.cut | cut1.splice | pCut)
-                case p1: Parsed.Success[V] =>
-                  ctx.splice.prepareSuccess(s.splice.apply(pValue, p1.value), cut = pCut | cut1.splice | p1.cut)
+      def wrap() = {
+        lhs.splice match {
+          case f: Parsed.Failure => f
+          case p: Parsed.Success[T] =>
+            val pValue = p.value
+            val pCut = p.cut
+            whitespace.splice(ctx.splice) match {
+              case f: Parsed.Failure => f
+              case _: Parsed.Success[_] =>
+                other.splice match {
+                  case f: Parsed.Failure =>
+                    ctx.splice.prepareFailure(f.index, cut = f.cut | cut1.splice | pCut)
+                  case p1: Parsed.Success[V] =>
+                    ctx.splice.prepareSuccess(s.splice.apply(pValue, p1.value), cut = pCut | cut1.splice | p1.cut)
 
-              }
-          }
+                }
+            }
+        }
       }
+      wrap()
     }
   }
 
@@ -124,19 +127,22 @@ object Parse {
 
     val cut1 = c.Expr[Boolean](if(cut) q"true" else q"false")
     reify {
-      lhs.splice match {
-        case f: Parsed.Failure => f
-        case p: Parsed.Success[T] =>
-          val pValue = p.value
-          val pCut = p.cut
-          other.splice match {
-            case f: Parsed.Failure =>
-              ctx.splice.prepareFailure(f.index, cut = f.cut | cut1.splice | pCut)
-            case p1: Parsed.Success[V] =>
-              ctx.splice.prepareSuccess(s.splice.apply(pValue, p1.value), cut = pCut | cut1.splice | p1.cut)
+      def wrap() = {
+        lhs.splice match {
+          case f: Parsed.Failure => f
+          case p: Parsed.Success[T] =>
+            val pValue = p.value
+            val pCut = p.cut
+            other.splice match {
+              case f: Parsed.Failure =>
+                ctx.splice.prepareFailure(f.index, cut = f.cut | cut1.splice | pCut)
+              case p1: Parsed.Success[V] =>
+                ctx.splice.prepareSuccess(s.splice.apply(pValue, p1.value), cut = pCut | cut1.splice | p1.cut)
 
-          }
+            }
+        }
       }
+      wrap()
     }
   }
 
