@@ -33,7 +33,8 @@ object Parse {
   def literalStrMacro(c: Context)(s: c.Expr[String])(ctx: c.Expr[Ctx[Any]]): c.Expr[Parsed[Unit]] = {
     import c.universe._
     reify{
-      if (ctx.splice.input.startsWith(s.splice, ctx.splice.success.index)) ctx.splice.freshSuccess((), ctx.splice.success.index + s.splice.length)
+      val s1 = s.splice
+      if (ctx.splice.input.startsWith(s1, ctx.splice.success.index)) ctx.splice.freshSuccess((), ctx.splice.success.index + s1.length)
       else ctx.splice.freshFailure()
     }
   }
@@ -244,21 +245,31 @@ object Parse {
   }
 
 
-  implicit class ByNameOps[S, T](parse0: => S)(implicit conv: S => Parsed[T], ctx: Ctx[_]){
-    def |[V >: T](other: => Parsed[V]): Parsed[V] = {
-      val startPos = ctx.success.index
-      val res = conv(parse0) match {
+  def eitherMacro[S: c.WeakTypeTag, T: c.WeakTypeTag, V >: T: c.WeakTypeTag]
+                 (c: Context)
+                 (other: c.Expr[Parsed[V]]): c.Expr[Parsed[V]] = {
+    import c.universe._
+
+
+    reify {
+      val lhs = c.prefix.asInstanceOf[Expr[ByNameOps[S, T]]].splice
+      val startPos = lhs.ctx.success.index
+      val res = lhs.conv(lhs.parse00) match {
         case p: Parsed.Success[T] => p
         case f: Parsed.Failure =>
-          ctx.success.index = startPos
+          lhs.ctx.success.index = startPos
           if (f.cut) f
-          else other match{
+          else other.splice match{
             case p: Parsed.Success[V] => p
-            case f: Parsed.Failure => ctx.freshFailure(startPos)
+            case f: Parsed.Failure => lhs.ctx.freshFailure(startPos)
           }
       }
       res
     }
+  }
+  implicit class ByNameOps[S, T](parse0: => S)(implicit val conv: S => Parsed[T], val ctx: Ctx[Any]){
+    def parse00 = parse0
+    def |[V >: T](other: Parsed[V]): Parsed[V] = macro eitherMacro[S, T, V]
     def repX[V](implicit repeater: Implicits.Repeater[T, V]): Parsed[V] = repX(sep=null)
     def repX[V](min: Int = 0,
                max: Int = Int.MaxValue,
