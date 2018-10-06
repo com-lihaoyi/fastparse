@@ -22,26 +22,53 @@ object Parse {
     else ctx.freshFailure()
   }
 
-  implicit class EagerOps[S, T](parse0: S)(implicit conv: S => Parsed[T], ctx: Ctx[_]){
+  implicit class EagerOpsStr(val parse0: String) extends AnyVal {
+
+    def ~/[V, R](other: => Parsed[V])
+                   (implicit s: Implicits.Sequencer[Unit, V, R],
+                    whitespace: Ctx[_] => Parsed[Unit],
+                    ctx: Ctx[_]): Parsed[R] = EagerOps(LiteralStr(parse0)) ~/ other
+
+
+    def /[T](implicit  ctx: Ctx[_]): Parsed[Unit] = EagerOps(LiteralStr(parse0)) /
+
+    def ~[V, R](other: => Parsed[V], cut: Boolean = false)
+                  (implicit s: Implicits.Sequencer[Unit, V, R],
+                   whitespace: Ctx[_] => Parsed[Unit],
+                   ctx: Ctx[_]): Parsed[R] = EagerOps(LiteralStr(parse0)) ~ (other, cut)
+
+
+    def ~~/[V, R](other: => Parsed[V])
+                    (implicit s: Implicits.Sequencer[Unit, V, R],
+                     ctx: Ctx[_]): Parsed[R] = EagerOps(LiteralStr(parse0)) ~~/ other
+
+
+    def ~~[V, R](other: => Parsed[V], cut: Boolean = false)
+                   (implicit s: Implicits.Sequencer[Unit, V, R],
+                    ctx: Ctx[_]): Parsed[R] = EagerOps(LiteralStr(parse0)) ~~ (other, cut)
+  }
+  implicit class EagerOps[T](val parse0: Parsed[T]) extends AnyVal{
 
     def ~/[V, R](other: => Parsed[V])
                 (implicit s: Implicits.Sequencer[T, V, R],
-                 whitespace: Ctx[_] => Parsed[Unit]): Parsed[R] = {
+                 whitespace: Ctx[_] => Parsed[Unit],
+                 ctx: Ctx[_]): Parsed[R] = {
       this.~(other, cut = true)
     }
 
-    def / : Parsed[T] = {
-      conv(parse0) match{
+    def /(implicit  ctx: Ctx[_]): Parsed[T] = {
+      parse0 match{
         case f: Parsed.Failure => ctx.prepareFailure(f.index)
         case p: Parsed.Success[T] => ctx.prepareSuccess(p.value, cut = true)
       }
     }
 
     def ~[V, R](other: => Parsed[V], cut: Boolean = false)
-               (implicit s: Implicits.Sequencer[T, V, R],
-                whitespace: Ctx[_] => Parsed[Unit]): Parsed[R] = {
+                  (implicit s: Implicits.Sequencer[T, V, R],
+                   whitespace: Ctx[_] => Parsed[Unit],
+                    ctx: Ctx[_]): Parsed[R] = {
 
-      conv(parse0) match {
+      parse0 match {
         case f: Parsed.Failure => f
         case p: Parsed.Success[T] =>
           val pValue = p.value
@@ -62,13 +89,15 @@ object Parse {
     }
 
     def ~~/[V, R](other: => Parsed[V])
-                 (implicit s: Implicits.Sequencer[T, V, R]): Parsed[R] = {
+                    (implicit s: Implicits.Sequencer[T, V, R],
+                      ctx: Ctx[_]): Parsed[R] = {
       this.~~(other, cut = true)
     }
 
     def ~~[V, R](other: => Parsed[V], cut: Boolean = false)
-               (implicit s: Implicits.Sequencer[T, V, R]): Parsed[R] = {
-      conv(parse0) match {
+                   (implicit s: Implicits.Sequencer[T, V, R],
+                     ctx: Ctx[_]): Parsed[R] = {
+      parse0 match {
         case f: Parsed.Failure => f
         case p: Parsed.Success[T] =>
           val pValue = p.value
