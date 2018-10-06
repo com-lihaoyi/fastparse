@@ -27,29 +27,31 @@ object BenchMain{
       yield ammonite.ops.read(ammonite.ops.pwd / 'fasterparser / 'bench / 'resources / 'fasterparser / name)
 
     val parser = new test.fasterparser.FastParseParser()
-//    val start = System.currentTimeMillis()
-//    var count = 0
-//    while(System.currentTimeMillis() - start < 20000){
-//      count += 1
-//      bodies.foreach(parser.expr.parse(_))
-//
-//    }
-//    println(count)
     val parser2 = new FasterParserParser()
-//    val start2 = System.currentTimeMillis()
-//    var count2 = 0
-//    while(System.currentTimeMillis() - start2 < 20000){
-//      count2 += 1
-//      bodies.foreach(parser2.expr(_))
-//
-//    }
-//    println(count2)
-
     for((name, body) <- names.zip(bodies)){
       println(name)
       assert(parser2.document(body).get.value == parser.document.parse(body).get.value)
 
     }
+//
+//
+//        val start = System.currentTimeMillis()
+//        var count = 0
+//        while(System.currentTimeMillis() - start < 20000){
+//          count += 1
+//          bodies.foreach(parser.expr.parse(_))
+//
+//        }
+//        println(count)
+    val start2 = System.currentTimeMillis()
+    var count2 = 0
+    while(System.currentTimeMillis() - start2 < 2000000){
+      count2 += 1
+      bodies.foreach(parser2.expr(_))
+
+    }
+    println(count2)
+
 
 
   }

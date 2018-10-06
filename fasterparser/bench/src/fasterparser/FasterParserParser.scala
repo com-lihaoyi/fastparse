@@ -19,6 +19,7 @@ class FasterParserParser{
     Seq("&&"),
     Seq("||"),
   )
+
   val precedence = precedenceTable
     .reverse
     .zipWithIndex
@@ -66,21 +67,31 @@ class FasterParserParser{
     }
   }
 
-  def keywords[_: Ctx] = Set(
+  val keywords = Set(
     "assert", "else", "error", "false", "for", "function", "if", "import", "importstr",
     "in", "local", "null", "tailstrict", "then", "self", "super", "true"
   )
+
+  val digitChar = fastparse.utils.MacroUtils.preCompute(c =>
+    ('0' to '9').contains(c)
+  )
+  val idStartChar = fastparse.utils.MacroUtils.preCompute(c =>
+    ("_" ++ ('a' to 'z') ++ ('A' to 'Z')).contains(c)
+  )
+  val idChar = fastparse.utils.MacroUtils.preCompute(c =>
+    ("_" ++ ('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')).contains(c)
+  )
   def id[_: Ctx] = P(
-    CharIn("_" ++ ('a' to 'z') ++ ('A' to 'Z')) ~~
-      CharsWhileIn("_" ++ ('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9'), min = 0)
+    CharPred(idStartChar) ~~
+    CharsWhile(idChar, min = 0)
   ).!.filter(s => !keywords.contains(s))
 
-  def break[_: Ctx] = P(!CharIn("_" ++ ('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')))
+  def break[_: Ctx] = P(!CharPred(idChar))
   def number[_: Ctx]: P[Expr.Num] = P(
     Index ~~ (
-      CharsWhileIn('0' to '9') ~~
-        ("." ~ CharsWhileIn('0' to '9')).? ~~
-        (("e" | "E") ~ ("+" | "-").? ~~ CharsWhileIn('0' to '9')).?
+      CharsWhile(digitChar) ~~
+        ("." ~ CharsWhile(digitChar)).? ~~
+        (("e" | "E") ~ ("+" | "-").? ~~ CharsWhile(digitChar)).?
       ).!
   ).map(s => Expr.Num(s._1, s._2.toDouble))
 
@@ -96,7 +107,7 @@ class FasterParserParser{
     case "r" => "\r"
     case "t" => "\t"
   }
-  def escape1[_: Ctx] = P( "\\u" ~~ CharIn('0' to '9').repX(min=4, max=4).! ).map{
+  def escape1[_: Ctx] = P( "\\u" ~~ CharPred(digitChar).repX(min=4, max=4).! ).map{
     s => Integer.parseInt(s, 16).toChar.toString
   }
   def string[_: Ctx]: P[String] = P(
@@ -104,17 +115,17 @@ class FasterParserParser{
       "'"./ ~~ (CharsWhile(x => x != '\'' && x != '\\').! | escape).repX ~~ "'" |
       "@\""./ ~~ (CharsWhile(_ != '"').! | "\"\"".!.map(_ => "\"")).repX ~~ "\"" |
       "@'"./ ~~ (CharsWhile(_ != '\'').! | "''".!.map(_ => "'")).repX ~~ "'" |
-      "|||"./ ~~ CharsWhileIn(" \t", 0) ~~ "\n" ~~ tripleBarStringHead.flatMap { case (pre, w, head) =>
+      "|||"./ ~~ CharsWhile(c => c == ' ' || c == '\t', 0) ~~ "\n" ~~ tripleBarStringHead.flatMap { case (pre, w, head) =>
         tripleBarStringBody(w).map(pre ++ Seq(head, "\n") ++ _)
-      } ~~ "\n" ~~ CharsWhileIn(" \t", min=0) ~~ "|||"
+      } ~~ "\n" ~~ CharsWhile(c => c == ' ' || c == '\t') ~~ "|||"
   ).map(_.mkString)
 
   def tripleBarStringHead[_: Ctx] = P(
-    (CharsWhileIn(" \t", min=0) ~~ "\n".!).repX ~~
-      CharsWhileIn(" \t", min=1).! ~~
+    (CharsWhile(c => c == ' ' || c == '\t', min=0) ~~ "\n".!).repX ~~
+      CharsWhile(c => c == ' ' || c == '\t', min=1).! ~~
       CharsWhile(_ != '\n').!
   )
-  def tripleBarBlank[_: Ctx] = P( "\n" ~~ CharsWhileIn(" \t", min=0) ~~ &("\n").map(_ => "\n") )
+  def tripleBarBlank[_: Ctx] = P( "\n" ~~ CharsWhile(c => c == ' ' || c == '\t', min=0) ~~ &("\n").map(_ => "\n") )
 
   def tripleBarStringBody[_: Ctx](w: String) = P (
     (tripleBarBlank | "\n" ~~ w ~~ CharsWhile(_ != '\n').!.map(_ + "\n")).repX
@@ -280,7 +291,11 @@ class FasterParserParser{
 
   }
 
-  def binaryop[_: Ctx] = P( precedenceTable.flatten.sortBy(-_.length).map(LiteralStr).reduce(_ | _) ).!
+  def binaryop[_: Ctx] = P(
+    "<<" | ">>" | "<=" | ">=" | "in" | "==" | "!=" | "&&" | "||" |
+    "*" | "/" | "%" | "+" | "-" | "<" | ">" | "&" | "^" | "|"
+  ).!
+
   def unaryop[_: Ctx]	= P( "-" | "+" | "!" | "~").!
 
 
