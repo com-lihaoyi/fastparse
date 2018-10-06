@@ -33,19 +33,19 @@ object BenchMain{
       assert(parser2.document(body).get.value == parser.document.parse(body).get.value)
 
     }
-//
-//
-//        val start = System.currentTimeMillis()
-//        var count = 0
-//        while(System.currentTimeMillis() - start < 20000){
-//          count += 1
-//          bodies.foreach(parser.expr.parse(_))
-//
-//        }
-//        println(count)
+
+
+    val start = System.currentTimeMillis()
+    var count = 0
+    while(System.currentTimeMillis() - start < 20000){
+      count += 1
+      bodies.foreach(parser.expr.parse(_))
+
+    }
+    println(count)
     val start2 = System.currentTimeMillis()
     var count2 = 0
-    while(System.currentTimeMillis() - start2 < 2000000){
+    while(System.currentTimeMillis() - start2 < 20000){
       count2 += 1
       bodies.foreach(parser2.expr(_))
 

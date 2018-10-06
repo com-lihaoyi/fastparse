@@ -294,22 +294,6 @@ object Parse {
     }
   }
 
-  def CharsWhileIn(s: CharSequence, min: Int = 1)(implicit ctx: Ctx[_]) = CharsWhile(s.toString.toSet, min)
-
-  def CharIn(s: CharSequence*)(implicit ctx: Ctx[_]) = {
-    CharPred{c =>
-      s.exists { cs =>
-        var success = false
-        var index = 0
-        while(!success && index < cs.length){
-          if (cs.charAt(index) == c) success = true
-          index += 1
-        }
-        success
-      }
-    }
-  }
-
   def End(implicit ctx: Ctx[_]): Parsed[Unit] = {
     if (ctx.success.index == ctx.input.length) ctx.freshSuccess(())
     else ctx.freshFailure()
