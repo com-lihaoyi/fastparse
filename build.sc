@@ -2,7 +2,8 @@ import mill._, scalalib._
 object fasterparser extends ScalaModule{
   def scalaVersion = "2.12.7"
   def ivyDeps = Agg(
-    ivy"com.lihaoyi::sourcecode:0.1.4"
+    ivy"com.lihaoyi::sourcecode:0.1.4",
+    ivy"org.scala-lang:scala-reflect:${scalaVersion()}"
   )
 
   def generatedSources = T{
