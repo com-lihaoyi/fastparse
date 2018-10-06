@@ -82,7 +82,10 @@ object Parse {
           }
       }
     }
+  }
 
+
+  implicit class ByNameOps[S, T](parse0: => S)(implicit conv: S => Parsed[T], ctx: Ctx[_]){
     def |[V >: T](other: => Parsed[V]): Parsed[V] = {
       val startPos = ctx.success.index
       val res = conv(parse0) match {
@@ -97,10 +100,6 @@ object Parse {
       }
       res
     }
-  }
-
-
-  implicit class ByNameOps[S, T](parse0: => S)(implicit conv: S => Parsed[T], ctx: Ctx[_]){
     def repX[V](implicit repeater: Implicits.Repeater[T, V]): Parsed[V] = repX(sep=null)
     def repX[V](min: Int = 0,
                max: Int = Int.MaxValue,
@@ -278,15 +277,11 @@ object Parse {
 
 
     def filter(f: T => Boolean): Parsed[T] = {
-      val start = ctx.success.index
       conv(parse0) match{
         case f: Parsed.Failure => f
         case s: Parsed.Success[T] =>
           if (f(s.value)) s
-          else{
-            ctx.success.index = start
-            ctx.freshFailure()
-          }
+          else ctx.freshFailure()
       }
     }
   }
@@ -436,7 +431,7 @@ object Parsed{
     override def toString() = s"Parsed.Success($value)"
   }
   class Failure extends Parsed[Nothing](false){
-    def get = throw new Exception("Parse Error:\n" + stack.mkString("\n"))
+    def get = throw new Exception("Parse Error at " + index + ":\n" + stack.mkString("\n"))
     var stack = List.empty[String]
     override def toString() = s"Parsed.Failure($index)"
     def map[V](f: Nothing => V) = this

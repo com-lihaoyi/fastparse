@@ -105,7 +105,7 @@ class FasterParserParser{
       "@\""./ ~~ (CharsWhile(_ != '"').! | "\"\"".!.map(_ => "\"")).repX ~~ "\"" |
       "@'"./ ~~ (CharsWhile(_ != '\'').! | "''".!.map(_ => "'")).repX ~~ "'" |
       "|||"./ ~~ CharsWhileIn(" \t", 0) ~~ "\n" ~~ tripleBarStringHead.flatMap { case (pre, w, head) =>
-        tripleBarCache.getOrElseUpdate(w, tripleBarStringBody(w)).map(pre ++ Seq(head, "\n") ++ _)
+        tripleBarStringBody(w).map(pre ++ Seq(head, "\n") ++ _)
       } ~~ "\n" ~~ CharsWhileIn(" \t", min=0) ~~ "|||"
   ).map(_.mkString)
 
@@ -115,8 +115,8 @@ class FasterParserParser{
       CharsWhile(_ != '\n').!
   )
   def tripleBarBlank[_: Ctx] = P( "\n" ~~ CharsWhileIn(" \t", min=0) ~~ &("\n").map(_ => "\n") )
-  def tripleBarCache[_: Ctx] = collection.mutable.Map.empty[String, P[Seq[String]]]
-  def tripleBarStringBody[_: Ctx](w: String) = P(
+
+  def tripleBarStringBody[_: Ctx](w: String) = P (
     (tripleBarBlank | "\n" ~~ w ~~ CharsWhile(_ != '\n').!.map(_ + "\n")).repX
   )
 

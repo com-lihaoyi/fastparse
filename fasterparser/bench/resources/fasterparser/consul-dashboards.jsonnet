@@ -1,15 +1,3 @@
-local g = import 'grafana-builder/grafana.libsonnet';
-
-local row_settings = {
-  height: '100px',
-  showTitle: false,
-};
-
-local panel_settings = {
-  repeat: 'instance',
-  colorBackground: true,
-  thresholds: '0.5,0.5',
-};
 
 {
   dashboards+:: {

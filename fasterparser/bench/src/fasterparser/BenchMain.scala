@@ -45,11 +45,12 @@ object BenchMain{
 //    }
 //    println(count2)
 
-    val txt = ammonite.ops.read(ammonite.ops.pwd / 'fasterparser / 'bench / 'resources / 'fasterparser /
-      "grafana.jsonnet")
-    println(parser2.document(txt).get.value)
-    println(parser.document.parse(txt).get.value)
-    println(parser2.document(txt).get.value == parser.document.parse(txt).get.value)
+    for((name, body) <- names.zip(bodies)){
+      println(name)
+      assert(parser2.document(body).get.value == parser.document.parse(body).get.value)
+
+    }
+
 
   }
 }
