@@ -275,6 +275,20 @@ object Parse {
         case s: Parsed.Success[T] => ctx.prepareSuccess(optioner.some(s.value))
       }
     }
+
+
+    def filter(f: T => Boolean): Parsed[T] = {
+      val start = ctx.success.index
+      conv(parse0) match{
+        case f: Parsed.Failure => f
+        case s: Parsed.Success[T] =>
+          if (f(s.value)) s
+          else{
+            ctx.success.index = start
+            ctx.freshFailure()
+          }
+      }
+    }
   }
 
   def &(parse: => Parsed[_])(implicit ctx: Ctx[_]): Parsed[Unit] = {
@@ -388,7 +402,6 @@ abstract class Parsed[+T](val isSuccess: Boolean){
   var index: Int = 0
   def map[V](f: T => V): Parsed[V]
   def flatMap[V](f: T => Parsed[V]): Parsed[V]
-  def filter(f: T => Boolean): Parsed[T]
 }
 
 object Parsed{
@@ -417,15 +430,6 @@ object Parsed{
         case s: Success[V] => s
       }
     }
-    def filter(f: T => Boolean)(implicit ctx: Ctx[_]): Parsed[T] = {
-      if (f(value)) this
-      else {
-        val f = new Failure()
-        f.index = index
-
-        f
-      }
-    }
     override def toString() = s"Parsed.Success($value)"
   }
   class Failure extends Parsed[Nothing](false){
@@ -433,6 +437,5 @@ object Parsed{
     override def toString() = s"Parsed.Failure($index)"
     def map[V](f: Nothing => V) = this
     def flatMap[V](f: Nothing => Parsed[V]): Parsed[V] = this
-    def filter(f: Nothing => Boolean) = this
   }
 }

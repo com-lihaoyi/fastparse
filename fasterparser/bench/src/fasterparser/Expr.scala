@@ -30,9 +30,9 @@ object Expr{
     sealed trait Visibility
     object Visibility{
 
-      object Normal extends Visibility
-      object Hidden extends Visibility
-      object Unhide extends Visibility
+      case object Normal extends Visibility
+      case object Hidden extends Visibility
+      case object Unhide extends Visibility
     }
     case class Field(offset: Int,
                      fieldName: FieldName,
