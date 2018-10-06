@@ -36,8 +36,16 @@ object fasterparser extends ScalaModule{
   }
   object test extends Tests{
     def ivyDeps = Agg(
-      ivy"com.lihaoyi::utest:0.6.5"
+      ivy"com.lihaoyi::utest:0.6.5",
     )
     def testFrameworks = Seq("utest.runner.Framework")
+  }
+  object bench extends ScalaModule{
+    def scalaVersion = "2.12.7"
+    def moduleDeps = super.moduleDeps ++ Seq(fasterparser.test)
+    def ivyDeps = Agg(
+      ivy"com.lihaoyi::fastparse:1.0.0",
+      ivy"com.lihaoyi::ammonite-ops:1.1.2",
+    )
   }
 }
