@@ -1,7 +1,9 @@
-package fasterparser
+package test.scala.fasterparser
 
+import fasterparser.Ctx
 import utest._
-import Parse._
+import fasterparser.Parse._
+import fasterparser.Parsed
 /**
   * Demonstrates simulatneously parsing and
   * evaluating simple arithmetic expressions

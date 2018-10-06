@@ -1,10 +1,9 @@
 
-package fasterparser
+package test.scala.fasterparser
 
-import Parse._
+import fasterparser.Parse._
+import fasterparser._
 import utest._
-
-
 
 object Js {
   sealed trait Val extends Any {
@@ -34,7 +33,7 @@ case class NamedFunction[T, V](f: T => V, name: String) extends (T => V){
 
 }
 object Json{
-  import Parse._
+  import fasterparser.Parse._
   def stringChars(c: Char) = c != '\"' && c != '\\'
   def spaceChars(c: Char) = c == ' ' || c == '\r' || c == '\n'
 
