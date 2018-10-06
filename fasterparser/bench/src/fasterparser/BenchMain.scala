@@ -26,7 +26,7 @@ object BenchMain{
       for(name <- names)
       yield ammonite.ops.read(ammonite.ops.pwd / 'fasterparser / 'bench / 'resources / 'fasterparser / name)
 
-//    val parser = new test.fasterparser.FastParseParser()
+    val parser = new test.fasterparser.FastParseParser()
 //    val start = System.currentTimeMillis()
 //    var count = 0
 //    while(System.currentTimeMillis() - start < 20000){
@@ -44,10 +44,12 @@ object BenchMain{
 //
 //    }
 //    println(count2)
-    println(parser2.document(
-      ammonite.ops.read(ammonite.ops.pwd / 'fasterparser / 'bench / 'resources / 'fasterparser /
-        "grafana.jsonnet")
-    ))
+
+    val txt = ammonite.ops.read(ammonite.ops.pwd / 'fasterparser / 'bench / 'resources / 'fasterparser /
+      "grafana.jsonnet")
+    println(parser2.document(txt).get.value)
+    println(parser.document.parse(txt).get.value)
+    println(parser2.document(txt).get.value == parser.document.parse(txt).get.value)
 
   }
 }

@@ -369,7 +369,7 @@ class Ctx[+_](val input: String,
   def prepareSuccess[T](value: T, index: Int = success.index, cut: Boolean = success.cut): Parsed.Success[T] = {
     val res = success.asInstanceOf[Parsed.Success[T]]
     isSuccess = true
-    res.value = value
+    res.value0 = value
     res.index = index
     res.cut = cut
     res
@@ -402,6 +402,7 @@ abstract class Parsed[+T](val isSuccess: Boolean){
   var index: Int = 0
   def map[V](f: T => V): Parsed[V]
   def flatMap[V](f: T => Parsed[V]): Parsed[V]
+  def get: Parsed.Success[T]
 }
 
 object Parsed{
@@ -417,11 +418,13 @@ object Parsed{
       case f: Success[T] => None
     }
   }
-  class Success[T] extends Parsed[T](true){
-    var value: T = null.asInstanceOf[T]
+  class Success[+T] extends Parsed[T](true){
+    def get = this
+    var value0: Any = null
+    def value = value0.asInstanceOf[T]
     def map[V](f: T => V) = {
       val this2 = this.asInstanceOf[Success[V]]
-      this2.value = f(value)
+      this2.value0 = f(value)
       this2
     }
     def flatMap[V](f: T => Parsed[V]): Parsed[V] = {
@@ -433,6 +436,7 @@ object Parsed{
     override def toString() = s"Parsed.Success($value)"
   }
   class Failure extends Parsed[Nothing](false){
+    def get = throw new Exception("Parse Error:\n" + stack.mkString("\n"))
     var stack = List.empty[String]
     override def toString() = s"Parsed.Failure($index)"
     def map[V](f: Nothing => V) = this

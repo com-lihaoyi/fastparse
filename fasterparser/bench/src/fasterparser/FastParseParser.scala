@@ -288,4 +288,5 @@ class FastParseParser{
   val binaryop = P( precedenceTable.flatten.sortBy(-_.length).map(LiteralStr).reduce(_ | _) ).!
   val unaryop	= P("-" | "+" | "!" | "~").!
 
+  val document = P( expr ~ End )
 }
