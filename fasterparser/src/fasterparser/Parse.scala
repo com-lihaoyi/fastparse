@@ -254,7 +254,9 @@ object Parse {
     reify {
       val ctx1 = c.Expr[Ctx[Any]](ctx).splice
       val startPos = ctx1.success.index
-      val res = c.Expr[S => Parsed[T]](conv).splice(c.Expr[S](parse0).splice) match {
+      val conv1 = c.Expr[S => Parsed[T]](conv).splice
+      val parse00 = c.Expr[S](parse0).splice
+      conv1(parse00) match {
         case p: Parsed.Success[T] => p
         case f: Parsed.Failure =>
           ctx1.success.index = startPos
@@ -264,7 +266,23 @@ object Parse {
             case f: Parsed.Failure => ctx1.freshFailure(startPos)
           }
       }
-      res
+    }
+  }
+  def captureMacro[S: c.WeakTypeTag, T: c.WeakTypeTag](c: Context): c.Expr[Parsed[String]] = {
+    import c.universe._
+
+    val q"fasterparser.Parse.ByNameOps[$k, $v]($parse0)($conv, $ctx)" = c.prefix.tree
+
+    reify {
+      val ctx1 = c.Expr[Ctx[Any]](ctx).splice
+      val startPos = ctx1.success.index
+      val conv1 = c.Expr[S => Parsed[T]](conv).splice
+      val parse00: S = c.Expr[S](parse0).splice
+
+      conv1(parse00) match{
+        case f: Parsed.Failure => f
+        case s: Parsed.Success[_] => ctx1.freshSuccess(ctx1.input.substring(startPos, ctx1.success.index))
+      }
     }
   }
   implicit class ByNameOps[S, T](parse0: => S)(implicit val conv: S => Parsed[T], val ctx: Ctx[Any]){
@@ -416,14 +434,7 @@ object Parse {
       }
     }
 
-    def ! : Parsed[String] = {
-      val startPos = ctx.success.index
-
-      conv(parse0) match{
-        case f: Parsed.Failure => f
-        case s: Parsed.Success[_] => ctx.freshSuccess(ctx.input.substring(startPos, ctx.success.index))
-      }
-    }
+    def ! : Parsed[String] = macro captureMacro[S, T]
 
     def unary_! : Parsed[Unit] = {
       val startPos = ctx.success.index
