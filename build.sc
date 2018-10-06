@@ -42,10 +42,11 @@ object fasterparser extends ScalaModule{
   }
   object bench extends ScalaModule{
     def scalaVersion = "2.12.7"
-    def moduleDeps = super.moduleDeps ++ Seq(fasterparser.test)
+    def moduleDeps = super.moduleDeps ++ Seq(fasterparser)
     def ivyDeps = Agg(
       ivy"com.lihaoyi::fastparse:1.0.0",
       ivy"com.lihaoyi::ammonite-ops:1.1.2",
+      ivy"org.scala-lang:scala-reflect:${scalaVersion()}",
     )
   }
 }

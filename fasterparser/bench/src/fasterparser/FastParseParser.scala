@@ -6,15 +6,6 @@ import Expr.Member.Visibility
 
 class FastParseParser{
   val parseCache = collection.mutable.Map.empty[String, fastparse.all.Parsed[Expr]]
-  def parse(s: String) = {
-    parseCache.get(s) match{
-      case Some(res) => res
-      case None =>
-        val res = expr.parse(s)
-        parseCache(s) = res
-        res
-    }
-  }
 
   val precedenceTable = Seq(
     Seq("*", "/", "%"),
