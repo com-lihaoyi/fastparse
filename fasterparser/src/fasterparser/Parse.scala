@@ -250,18 +250,18 @@ object Parse {
                  (other: c.Expr[Parsed[V]]): c.Expr[Parsed[V]] = {
     import c.universe._
 
-
+    val q"fasterparser.Parse.ByNameOps[$k, $v]($parse0)($conv, $ctx)" = c.prefix.tree
     reify {
-      val lhs = c.prefix.asInstanceOf[Expr[ByNameOps[S, T]]].splice
-      val startPos = lhs.ctx.success.index
-      val res = lhs.conv(lhs.parse00) match {
+      val ctx1 = c.Expr[Ctx[Any]](ctx).splice
+      val startPos = ctx1.success.index
+      val res = c.Expr[S => Parsed[T]](conv).splice(c.Expr[S](parse0).splice) match {
         case p: Parsed.Success[T] => p
         case f: Parsed.Failure =>
-          lhs.ctx.success.index = startPos
+          ctx1.success.index = startPos
           if (f.cut) f
           else other.splice match{
             case p: Parsed.Success[V] => p
-            case f: Parsed.Failure => lhs.ctx.freshFailure(startPos)
+            case f: Parsed.Failure => ctx1.freshFailure(startPos)
           }
       }
       res

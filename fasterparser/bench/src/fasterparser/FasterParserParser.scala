@@ -153,7 +153,7 @@ class FasterParserParser{
   }
   def assertExpr[_: Ctx]: P[Expr] = P( Index ~~ assertStmt ~/ ";" ~ expr ).map(Expr.AssertExpr.tupled)
   def function[_: Ctx]: P[Expr] = P( Index ~~ "function" ~ "(" ~/ params ~ ")" ~ expr ).map(Expr.Function.tupled)
-  def ifElse[_: Ctx]: P[Expr] = P( Index ~~ expr ~ "then" ~~ break ~ expr ~ ("else" ~~ break ~ expr).? ).map(Expr.IfElse.tupled)
+  def ifElse[_: Ctx]: P[Expr] = P( "if" ~~ break ~/ Index ~~ expr ~ "then" ~~ break ~ expr ~ ("else" ~~ break ~ expr).? ).map(Expr.IfElse.tupled)
   def localExpr[_: Ctx]: P[Expr] = P( Index ~~ bind.rep(min=1, sep = ","./) ~ ";" ~ expr ).map(Expr.LocalExpr.tupled)
 
   def expr[_: Ctx]: P[Expr] = P("" ~ expr1 ~ (Index ~~ binaryop ~/ expr1).rep ~ "").map{ case (pre, fs) =>
@@ -215,20 +215,15 @@ class FasterParserParser{
       (Index ~~ "{" ~/ objinside ~ `}`).map(x => Expr.ObjExtend(x._1, _: Expr, x._2))
   )
 
-  // Any `expr` that isn't naively left-recursive
-  def expr2[_: Ctx] = P(
-    `null` | `true` | `false` | `self` | $ | number |
-      (Index ~~ string).map(Expr.Str.tupled) | obj | arr | `super`
-      | (Index ~~ id).map(Expr.Id.tupled)
-      | ("local" ~~ break  ~/ localExpr)
-      | ("(" ~/ (Index ~~ expr).map(Expr.Parened.tupled) ~ ")")
-      | ("if" ~~ break ~/ ifElse)
-      | function
-      | (Index ~~ "importstr" ~/ string).map(Expr.ImportStr.tupled)
-      | (Index ~~ "import" ~/ string).map(Expr.Import.tupled)
-      | (Index ~~ "error" ~~ break ~/ expr).map(Expr.Error.tupled)
-      | assertExpr
-      | (Index ~~ unaryop ~/ expr1).map{ case (i, k, e) =>
+  def local[_: Ctx] = P( "local" ~~ break  ~/ localExpr )
+  def parened[_: Ctx] = P( "(" ~/ (Index ~~ expr).map(Expr.Parened.tupled) ~ ")" )
+  def importStr[_: Ctx] = P( (Index ~~ "importstr" ~/ string).map(Expr.ImportStr.tupled) )
+  def `import`[_: Ctx] = P( (Index ~~ "import" ~/ string).map(Expr.Import.tupled) )
+  def error[_: Ctx] = P((Index ~~ "error" ~~ break ~/ expr).map(Expr.Error.tupled) )
+  def strExpr[_: Ctx] = P((Index ~~ string).map(Expr.Str.tupled))
+  def idExpr[_: Ctx] = P( (Index ~~ id).map(Expr.Id.tupled) )
+  def unaryOpExpr[_: Ctx] = P(
+    (Index ~~ unaryop ~/ expr1).map{ case (i, k, e) =>
       def k2 = k match{
         case "+" => Expr.UnaryOp.`+`
         case "-" => Expr.UnaryOp.`-`
@@ -237,6 +232,11 @@ class FasterParserParser{
       }
       Expr.UnaryOp(i, k2, e)
     }
+  )
+  // Any `expr` that isn't naively left-recursive
+  def expr2[_: Ctx] = P(
+    `null` | `true` | `false` | `self` | $ | number | strExpr | obj | arr | `super` | idExpr |
+    local | parened | ifElse | function | importStr | `import` | error | assertExpr | unaryOpExpr
   )
 
   def objinside[_: Ctx]: P[Expr.ObjBody] = P(
