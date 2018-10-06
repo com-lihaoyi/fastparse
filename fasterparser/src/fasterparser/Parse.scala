@@ -262,16 +262,19 @@ object Parse {
       val startPos = ctx1.success.index
       val conv1 = c.Expr[S => Parsed[T]](conv).splice
       val parse00 = c.Expr[S](parse0).splice
-      conv1(parse00) match {
-        case p: Parsed.Success[T] => p
-        case f: Parsed.Failure =>
-          ctx1.success.index = startPos
-          if (f.cut) f
-          else other.splice match{
-            case p: Parsed.Success[V] => p
-            case f: Parsed.Failure => ctx1.freshFailure(startPos)
-          }
+      def wrap() = {
+        conv1(parse00) match {
+          case p: Parsed.Success[T] => p
+          case f: Parsed.Failure =>
+            ctx1.success.index = startPos
+            if (f.cut) f
+            else other.splice match {
+              case p: Parsed.Success[V] => p
+              case f: Parsed.Failure => ctx1.freshFailure(startPos)
+            }
+        }
       }
+      wrap()
     }
   }
   def captureMacro[S: c.WeakTypeTag, T: c.WeakTypeTag](c: Context): c.Expr[Parsed[String]] = {
