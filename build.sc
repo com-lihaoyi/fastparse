@@ -56,3 +56,13 @@ object fasterparser extends ScalaModule{
     )
   }
 }
+
+object scalaparse extends ScalaModule{
+  def scalaVersion = "2.12.7"
+  //
+  //    override def scalacOptions = Seq("-Ydebug")
+  def moduleDeps = Seq(fasterparser)
+  def ivyDeps = Agg(
+    ivy"org.scala-lang:scala-reflect:${scalaVersion()}",
+  )
+}
