@@ -34,6 +34,7 @@ case class NamedFunction[T, V](f: T => V, name: String) extends (T => V){
 }
 object Json{
   import fasterparser.Parsing._
+  implicit def whitespace(cfg: Parse[_]): Parse[Unit] = Pass(cfg)
   def stringChars(c: Char) = c != '\"' && c != '\\'
   def spaceChars(c: Char) = c == ' ' || c == '\r' || c == '\n'
 
@@ -78,12 +79,12 @@ object Json{
     P( space ~ "\"" ~/ (strChars | escape).rep.! ~ "\"").map(Js.Str)
 
   def array[_: P] =
-    P( "[" ~/ jsonExpr.rep(sep=",".~/) ~ space ~ "]").map(Js.Arr(_:_*))
+    P( "[" ~/ jsonExpr.rep(sep=","./) ~ space ~ "]").map(Js.Arr(_:_*))
 
   def pair[_: P] = P( string.map(_.value) ~/ ":" ~/ jsonExpr )
 
   def obj[_: P] =
-    P( "{" ~/ pair.rep(sep=",".~/) ~ space ~ "}").map(Js.Obj(_:_*))
+    P( "{" ~/ pair.rep(sep=","./) ~ space ~ "}").map(Js.Obj(_:_*))
 
   def jsonExpr[_: P]: P[Js.Val] = P(
     space ~ (obj | array | string | `true` | `false` | `null` | number) ~ space
@@ -99,11 +100,11 @@ object JsonTests extends TestSuite{
   import Json._
   val tests = Tests{
     'pass {
-      def test(p: Ctx[_] => P[_], s: String) = p(s) match{
-        case Parse.Success(v, i) =>
+      def test(p: P[_] => P[_], s: String) = p(Parse(s)).result match{
+        case Result.Success(v, i) =>
           val expectedIndex = s.length
           assert(i == expectedIndex)
-        case f: Parse.Failure => throw new Exception(f.index.toString)
+        case f: Result.Failure => throw new Exception(f.index.toString)
       }
 
       'parts {
@@ -113,9 +114,9 @@ object JsonTests extends TestSuite{
         * - test(obj(_), """{"omg": "123", "wtf": 456, "bbq": "789"}""")
       }
       'jsonExpr - {
-        val Parse.Success(value, _) = jsonExpr(
-          """{"omg": "123", "wtf": 12.4123}"""
-        )
+        val Result.Success(value, _) = jsonExpr(
+          Parse("""{"omg": "123", "wtf": 12.4123}""")
+        ).result
         assert(value == Js.Obj("omg" -> Js.Str("123"), "wtf" -> Js.Num(12.4123)))
       }
       'bigJsonExpr - test(jsonExpr(_), """
@@ -150,18 +151,18 @@ object JsonTests extends TestSuite{
       val txt = buffer.lines.iterator().asScala.mkString("\n")
       var count = 0
       val startTime = System.currentTimeMillis()
-      while(startTime + 10000 > System.currentTimeMillis()){
-        jsonExpr(txt)
+      while(startTime + 100 > System.currentTimeMillis()){
+        jsonExpr(Parse(txt)).result
         count += 1
       }
-      println(txt)
+//      println(txt)
       count
     }
     'fail{
       def check(s: String, expectedError: String, expectedShortError: String) = {
-        jsonExpr(s) match{
-          case s: Parse.Success[_] => throw new Exception("Parsing should have failed:")
-          case f: Parse.Failure =>
+        jsonExpr(Parse(s)).result match{
+          case s: Result.Success[_] => throw new Exception("Parsing should have failed:")
+          case f: Result.Failure =>
 //            val error = f.extra.traced.trace
 //            val expected = expectedError.trim
 //            assert(error == expected)

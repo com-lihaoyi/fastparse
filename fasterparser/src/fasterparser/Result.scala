@@ -6,18 +6,18 @@ abstract class Result[+T](val isSuccess: Boolean){
 }
 
 object Result{
-  object Success{
-    def unapply[T](x: Result[T]): Option[(T, Int)] = x match{
-      case s: Success[T] => Some((s.value, s.index))
-      case f: Failure => None
-    }
-  }
-  object Failure{
-    def unapply[T](x: Result[T]): Option[(Unit, Int, Unit)] = x match{
-      case s: Failure => Some(((), s.index, ()))
-      case f: Success[T] => None
-    }
-  }
+//  object Success{
+//    def unapply[T](x: Result[T]): Option[(T, Int)] = x match{
+//      case s: Success[T] => Some((s.value, s.index))
+//      case f: Failure => None
+//    }
+//  }
+//  object Failure{
+//    def unapply[T](x: Result[T]): Option[(Unit, Int, Unit)] = x match{
+//      case s: Failure => Some(((), s.index, ()))
+//      case f: Success[T] => None
+//    }
+//  }
   case class Success[+T](value: T, index: Int) extends Result[T](true){
     def get = this
 

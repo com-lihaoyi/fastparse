@@ -1,24 +1,23 @@
 package test.scala.fasterparser
 
-import fasterparser.Ctx
+import fasterparser._
 import utest._
 import fasterparser.Parsing._
-import fasterparser.Parse
 /**
   * Demonstrates simulatneously parsing and
   * evaluating simple arithmetic expressions
   */
 object ExampleTests extends TestSuite{
-
+  implicit def whitespace(cfg: Parse[_]): Parse[Unit] = Pass(cfg)
   val tests = Tests{
     'basic{
       'simple {
-        def parseA[_:Ctx] = P( "a" )
+        def parseA[_: P] = P( "a" )
 
-        val Parse.Success(value, successIndex) = parseA("a")
+        val Result.Success(value, successIndex) = parseA(Parse("a")).result
         assert(value == (), successIndex == 1)
 
-        val failure = parseA("b").asInstanceOf[Parse.Failure]
+        val failure = parseA(Parse("b")).result.asInstanceOf[Result.Failure]
         assert(
 //          failure.lastParser == ("a": P0),
           failure.index == 0
@@ -27,170 +26,170 @@ object ExampleTests extends TestSuite{
       }
 
       'sequence {
-        def ab[_:Ctx] = P( "a" ~ "b" )
+        def ab[_: P] = P( EagerOpsStr("a").~[Unit, Unit](LiteralStr("b")(implicitly)) )
 
-        val Parse.Success(_, 2) = ab("ab")
+        val Result.Success(_, 2) = ab(Parse("ab")).result
 
-        val Parse.Failure(parser, 1, _) = ab("aa")
-//        assert(parser == ("b": P0))
+        val Result.Failure(1, _) = ab(Parse("aa")).result
       }
       'repeat{
-        def ab[_:Ctx] = P( "a".rep ~ "b" )
-        val Parse.Success(_, 8) = ab("aaaaaaab")
-        val Parse.Success(_, 4) = ab("aaaba")
+        def ab[_: P] = P( "a".rep ~ "b" )
+        val Result.Success(_, 8) = ab(Parse("aaaaaaab")).result
+        val Result.Success(_, 4) = ab(Parse("aaaba")).result
 
-        def abc[_:Ctx] = P( "a".rep(sep="b") ~ "c")
-        val Parse.Success(_, 8) = abc("abababac")
-        val Parse.Failure(parser, 3, _) = abc("abaabac")
+        def abc[_: P] = P( "a".rep(sep="b") ~ "c")
+        val Result.Success(_, 8) = abc(Parse("abababac")).result
+        val Result.Failure(3, _) = abc(Parse("abaabac")).result
 
-        def ab4[_:Ctx] = P( "a".rep(min=2, max=4, sep="b") )
-        val Parse.Success(_, 7) = ab4("ababababababa")
+        def ab4[_: P] = P( "a".rep(min=2, max=4, sep="b") )
+        val Result.Success(_, 7) = ab4(Parse("ababababababa")).result
 
-        def ab2exactly[_:Ctx] = P( "ab".rep(exactly=2) )
-        val Parse.Success(_, 4) = ab2exactly("abab")
+        def ab2exactly[_: P] = P( "ab".rep(exactly=2) )
+        val Result.Success(_, 4) = ab2exactly(Parse("abab")).result
 
-        def ab4c[_:Ctx] = P ( "a".rep(min=2, max=4, sep="b") ~ "c" )
-        val Parse.Failure(_, 1, _) = ab4c("ac")
-        val Parse.Success(_, 4) = ab4c("abac")
-        val Parse.Success(_, 8) = ab4c("abababac")
-        val Parse.Failure(_, 7, _) = ab4c("ababababac")
+        def ab4c[_: P] = P ( "a".rep(min=2, max=4, sep="b") ~ "c" )
+        val Result.Failure(1, _) = ab4c(Parse("ac")).result
+        val Result.Success(_, 4) = ab4c(Parse("abac")).result
+        val Result.Success(_, 8) = ab4c(Parse("abababac")).result
+        val Result.Failure(7, _) = ab4c(Parse("ababababac")).result
       }
 
       'option{
-        def option[_:Ctx] = P( "c".? ~ "a".rep(sep="b").! ~ End)
+        def option[_: P] = P( "c".? ~ "a".rep(sep="b").! ~ End)
 
-        val Parse.Success("aba", 3) = option("aba")
-        val Parse.Success("aba", 3) = option("aba")
+        val Result.Success("aba", 3) = option(Parse("aba")).result
+        val Result.Success("aba", 3) = option(Parse("aba")).result
       }
 
       'either{
-        def either[_:Ctx] = P( "a".rep ~ ("b" | "c" | "d") ~ End)
+        def either[_: P] = P( "a".rep ~ ("b" | "c" | "d") ~ End)
 
-        val Parse.Success(_, 6) = either("aaaaab")
-        val Parse.Failure(parser, 5, _) = either("aaaaae")
+        val Result.Success(_, 6) = either(Parse("aaaaab")).result
+        val Result.Failure(5, _) = either(Parse("aaaaae")).result
 //        assert(parser == ("b" | "c" | "d"))
       }
 
 
       'end{
-        def noEnd[_:Ctx] = P( "a".rep ~ "b")
-        def withEnd[_:Ctx] = P( "a".rep ~ "b" ~ End)
+        def noEnd[_: P] = P( "a".rep ~ "b")
+        def withEnd[_: P] = P( "a".rep ~ "b" ~ End)
 
-        val Parse.Success(_, 4) = noEnd("aaaba")
-        val Parse.Failure(/*End*/ _, 4, _) = withEnd("aaaba")
+        val Result.Success(_, 4) = noEnd(Parse("aaaba")).result
+        val Result.Failure(4, _) = withEnd(Parse("aaaba")).result
 
       }
       'start{
-        def ab[_:Ctx] = P( (("a" | Start) ~ "b").rep ~ End).!
+        def ab[_: P] = P( (("a" | Start) ~ "b").rep ~ End).!
 
-        val Parse.Success("abab", 4) = ab("abab")
-        val Parse.Success("babab", 5) = ab("babab")
+        val Result.Success("abab", 4) = ab(Parse("abab")).result
+        val Result.Success("babab", 5) = ab(Parse("babab")).result
 
-        val Parse.Failure(parser, 2, _) = ab("abb")
+        val Result.Failure(2, _) = ab(Parse("abb")).result
 
       }
 
       'passfail{
-        val Parse.Success((), 0) = Pass("asdad")
-        val Parse.Failure(/*Fail*/ _, 0, _) = Fail("asdad")
+        val Result.Success((), 0) = Pass(Parse("asdad")).result
+        val Result.Failure(0, _) = Fail(Parse("asdad")).result
       }
 
       'index{
-        def finder[_:Ctx] = P( "hay".rep ~ Index ~ "needle" ~ "hay".rep )
+        def finder[_: P] = P( "hay".rep ~ Index ~ "needle" ~ "hay".rep )
 
-        val Parse.Success(9, _) = finder("hayhayhayneedlehay")
+        val Result.Success(9, _) = finder(Parse("hayhayhayneedlehay")).result
       }
 
       'capturing{
-        def capture1[_:Ctx] = P( "a".rep.! ~ "b" ~ End)
+        def capture1[_: P] = P( "a".rep.! ~ "b" ~ End)
 
-        val Parse.Success("aaa", 4) = capture1("aaab")
+        val Result.Success("aaa", 4) = capture1(Parse("aaab")).result
 
-        def capture2[_:Ctx] = P( "a".rep.! ~ "b".! ~ End)
+        def capture2[_: P] = P( "a".rep.! ~ "b".! ~ End)
 
-        val Parse.Success(("aaa", "b"), 4) = capture2("aaab")
+        val Result.Success(("aaa", "b"), 4) = capture2(Parse("aaab")).result
 
-        def capture3[_:Ctx] = P( "a".rep.! ~ "b".! ~ "c".! ~ End)
+        def capture3[_: P] = P( "a".rep.! ~ "b".! ~ "c".! ~ End)
 
-        val Parse.Success(("aaa", "b", "c"), 5) = capture3("aaabc")
+        val Result.Success(("aaa", "b", "c"), 5) = capture3(Parse("aaabc")).result
 
-        def captureRep[_:Ctx] = P( "a".!.rep ~ "b" ~ End)
+        def captureRep[_: P] = P( "a".!.rep ~ "b" ~ End)
 
-        val Parse.Success(Seq("a", "a", "a"), 4) = captureRep("aaab")
+        val Result.Success(Seq("a", "a", "a"), 4) = captureRep(Parse("aaab")).result
 
-        def captureOpt[_:Ctx] = P( "a".rep ~ "b".!.? ~ End)
+        def captureOpt[_: P] = P( "a".rep ~ "b".!.? ~ End)
 
-        val Parse.Success(Some("b"), 4) = captureOpt("aaab")
+        val Result.Success(Some("b"), 4) = captureOpt(Parse("aaab")).result
       }
 
       'anychar{
-        def ab[_:Ctx] = P( "'" ~ AnyChar.! ~ "'" )
+        def ab[_: P] = P( "'" ~ AnyChar.! ~ "'" )
 
-        val Parse.Success("-", 3) = ab("'-'")
+        val Result.Success("-", 3) = ab(Parse("'-'")).result
 
-        val Parse.Failure(parser, 2, _) = ab("'-='")
+        val Result.Failure(2, _) = ab(Parse("'-='")).result
 //        assert(parser == ("'": P0))
       }
 
 
       'lookahead{
-        def keyword[_:Ctx] = P( ("hello" ~ &(" ")).!.rep )
+        def keyword[_: P] = P( ("hello" ~ &(" ")).!.rep )
 
-        val Parse.Success(Seq("hello"), _) = keyword("hello ")
-        val Parse.Success(Seq(), __) = keyword("helloX")
+        val Result.Success(Seq("hello"), _) = keyword(Parse("hello ")).result
+        val Result.Success(Seq(), __) = keyword(Parse("helloX")).result
       }
       'neglookahead{
-        def keyword[_:Ctx] = P( "hello" ~ !" " ~ AnyChar ~ "world" ).!
+        def keyword[_: P] = P( "hello" ~ !" " ~ AnyChar ~ "world" ).!
 
-        val Parse.Success("hello-world", _) = keyword("hello-world")
-        val Parse.Success("hello_world", _) = keyword("hello_world")
+        val Result.Success("hello-world", _) = keyword(Parse("hello-world")).result
+        val Result.Success("hello_world", _) = keyword(Parse("hello_world")).result
 
-        val Parse.Failure(parser, 5, _) = keyword("hello world")
+        val Result.Failure(5, _) = keyword(Parse("hello world")).result
 //        assert(parser == !(" "))
       }
       'map{
-        def binary[_:Ctx] = P( ("0" | "1" ).rep.! )
-        def binaryNum[_:Ctx] = P( binary.map(Integer.parseInt(_, 2)) )
+        def binary[_: P] = P( ("0" | "1" ).rep.! )
+        def binaryNum[_: P] = P( binary.map(Integer.parseInt(_, 2)) )
 
-        val Parse.Success("1100", _) = binary("1100")
-        val Parse.Success(12, _) = binaryNum("1100")
+        val Result.Success("1100", _) = binary(Parse("1100")).result
+        val Result.Success(12, _) = binaryNum(Parse("1100")).result
       }
       'flatMap{
-        def leftTag[_:Ctx] = P( "<" ~ (!">" ~ AnyChar).rep(1).! ~ ">")
-        def rightTag[_:Ctx](s: String) = P( "</" ~ s.! ~ ">" )
-        def xml[_:Ctx] = P( leftTag.flatMap(rightTag) )
+        def leftTag[_: P] = P( "<" ~ (!">" ~ AnyChar).rep(1).! ~ ">")
+        def rightTag[_: P](s: String) = P( "</" ~ s.! ~ ">" )
+        def xml[_: P] = P( leftTag.flatMap(rightTag) )
 
-        val Parse.Success("a", _) = xml("<a></a>")
-        val Parse.Success("abcde", _) = xml("<abcde></abcde>")
+        val Result.Success("a", _) = xml(Parse("<a></a>")).result
+        val Result.Success("abcde", _) = xml(Parse("<abcde></abcde>")).result
 
-        val failure = xml("<abcde></edcba>").asInstanceOf[Parse.Failure]
+        val failure = xml(Parse("<abcde></edcba>")).result.asInstanceOf[Result.Failure]
 //        assert(
 //          failure.extra.traced.trace == """xml:1:1 / rightTag:1:8 / "abcde":1:10 ..."edcba>""""
 //        )
       }
       'flatMapFor{
-        def leftTag[_:Ctx] = P( "<" ~ (!">" ~ AnyChar).rep(1).! ~ ">" )
-        def rightTag[_:Ctx](s: String) = P( "</" ~ s.! ~ ">" )
-        def xml[_:Ctx] = P(
+        def leftTag[_: P] = P( "<" ~ (!">" ~ AnyChar).rep(1).! ~ ">" )
+        def rightTag[_: P](s: String) = P( "</" ~ s.! ~ ">" )
+        def xml[_: P] = P(
           for{
             s <- leftTag
             right <- rightTag(s)
           } yield right
         )
 
-        val Parse.Success("a", _) = xml("<a></a>")
-        val Parse.Success("abcde", _) = xml("<abcde></abcde>")
+        val Result.Success("a", _) = xml(Parse("<a></a>")).result
+        val Result.Success("abcde", _) = xml(Parse("<abcde></abcde>")).result
 
-        val failure = xml("<abcde></edcba>").asInstanceOf[Parse.Failure]
+        val failure = xml(Parse("<abcde></edcba>")).result.asInstanceOf[Result.Failure]
 //        assert(
 //          failure.extra.traced.trace == """xml:1:1 / rightTag:1:8 / "abcde":1:10 ..."edcba>""""
 //        )
       }
       'filter{
-        def digits[_:Ctx] = P(CharIn('0' to '9').rep(1).!).map(_.toInt)
-        def even[_:Ctx] = P( digits.filter(_ % 2 == 0) )
-        val Parse.Success(12, _) = even("12")
-        val failure = even("123").asInstanceOf[Parse.Failure]
+
+        def digits[_: P] = P(CharPred(c => '0' <= c && c <= '9').rep(1).!).map(_.toInt)
+        def even[_: P] = P( digits.filter(_ % 2 == 0) )
+        val Result.Success(12, _) = even(Parse("12")).result
+        val failure = even(Parse("123")).result.asInstanceOf[Result.Failure]
 //        assert("""digits.filter\(.*\)$""".r.findPrefixOf(even.toString).isDefined)
 //        assert("""digits.filter\(.*\):1:1 ..."123"$""".r.findPrefixOf(failure.extra.traced.trace).isDefined)
       }
@@ -202,7 +201,7 @@ object ExampleTests extends TestSuite{
 //          ParseError(p(str).asInstanceOf[Parsed.Failure]).getMessage
 //
 //        // Portuguese number plate format since 2006
-//        def numberPlate[_:Ctx] = P(twice(digit) ~ "-" ~ twice(letter) ~ "-" ~ twice(digit))
+//        def numberPlate[_: P] = P(twice(digit) ~ "-" ~ twice(letter) ~ "-" ~ twice(digit))
 //
 //        assert(errorMessage(numberPlate, "11-A1-22") == """
 //                                                          |found "1-22", expected CharIn("ABCDEFGHIJKLMNOPQRSTUVWXYZ") at index 4
@@ -220,49 +219,52 @@ object ExampleTests extends TestSuite{
     }
     'charX{
       'charPred{
-        def cp[_:Ctx] = P( CharPred(_.isUpper).rep.! ~ "." ~ End )
+        def cp[_: P] = P( CharPred(_.isUpper).rep.! ~ "." ~ End )
 
-        val Parse.Success("ABC", _) = cp("ABC.")
-        val Parse.Failure(_, 2, _) = cp("ABc.")
+        val Result.Success("ABC", _) = cp(Parse("ABC.")).result
+        val Result.Failure(2, _) = cp(Parse("ABc.")).result
       }
 //      'charPredRaw{
-//        def cp[_:Ctx] = P( CharPred.raw(_.isUpper).rep.! ~ "." ~ End )
+//        def cp[_: P] = P( CharPred.raw(_.isUpper).rep.! ~ "." ~ End )
 //
 //        val Parsed.Success("ABC", _) = cp("ABC.")
 //        val Parsed.Failure(_, 2, _) = cp("ABc.")
 //      }
       'charIn{
-        def ci[_:Ctx] = P( CharIn("abc", "xyz").rep.! ~ End )
+        val chars = "abcxyz".toSet
+        def ci[_: P] = P( CharPred(chars).rep.! ~ End )
 
-        val Parse.Success("aaabbccxyz", _) = ci("aaabbccxyz")
-        val Parse.Failure(_, 7, _) = ci("aaabbccdxyz.")
+        val Result.Success("aaabbccxyz", _) = ci(Parse("aaabbccxyz")).result
+        val Result.Failure(7, _) = ci(Parse("aaabbccdxyz.")).result
 
-        def digits[_:Ctx] = P( CharIn('0' to '9').rep.! )
+        val digitChars = ('0' to '9').toSet
+        def digits[_: P] = P( CharPred(digitChars).rep.! )
 
-        val Parse.Success("12345", _) = digits("12345abcde")
-        val Parse.Success("123", _) = digits("123abcde45")
+        val Result.Success("12345", _) = digits(Parse("12345abcde")).result
+        val Result.Success("123", _) = digits(Parse("123abcde45")).result
       }
 
       'charsWhile{
-        def cw[_:Ctx] = P( CharsWhile(_ != ' ').! )
+        def cw[_: P] = P( CharsWhile(_ != ' ').! )
 
-        val Parse.Success("12345", _) = cw("12345")
-        val Parse.Success("123", _) = cw("123 45")
+        val Result.Success("12345", _) = cw(Parse("12345")).result
+        val Result.Success("123", _) = cw(Parse("123 45")).result
       }
       'charsWhileIn{
-        def cw[_:Ctx] = P( CharsWhileIn("123456789").! )
+        val digits = "123456789".toSet
+        def cw[_: P] = P( CharsWhile(digits).! )
 
-        val Parse.Success("12345", _) = cw("12345")
-        val Parse.Success("123", _) = cw("123 45")
+        val Result.Success("12345", _) = cw(Parse("12345")).result
+        val Result.Success("123", _) = cw(Parse("123 45")).result
       }
 //      'charsWhileRaw{
-//        def cw[_:Ctx] = P( CharsWhile.raw(_ != ' ').! )
+//        def cw[_: P] = P( CharsWhile.raw(_ != ' ').! )
 //
 //        val Parsed.Success("12345", _) = cw("12345")
 //        val Parsed.Success("123", _) = cw("123 45")
 //      }
       'stringIn{
-//        def si[_:Ctx] = P( StringIn("cow", "cattle").!.rep )
+//        def si[_: P] = P( StringIn("cow", "cattle").!.rep )
 //
 //        val Parsed.Success(Seq("cow", "cattle"), _) = si("cowcattle")
 //        val Parsed.Success(Seq("cow"), _) = si("cowmoo")
@@ -270,12 +272,12 @@ object ExampleTests extends TestSuite{
     }
     'cuts{
       'nocut{
-        def alpha[_:Ctx] = P( CharIn('a' to 'z') )
-        def nocut[_:Ctx] = P( "val " ~ alpha.rep(1).! | "def " ~ alpha.rep(1).!)
+        def alpha[_: P] = P( CharPred(c => 'a' <= c && c <= 'z') )
+        def nocut[_: P] = P( "val " ~ alpha.rep(1).! | "def " ~ alpha.rep(1).!)
 
-        val Parse.Success("abcd", _) = nocut("val abcd")
+        val Result.Success("abcd", _) = nocut(Parse("val abcd")).result
 
-        val failure = nocut("val 1234").asInstanceOf[Parse.Failure]
+        val failure = nocut(Parse("val 1234")).result.asInstanceOf[Result.Failure]
         assert(
           failure.index == 0//,
 //          failure.extra.traced.trace ==
@@ -283,12 +285,12 @@ object ExampleTests extends TestSuite{
         )
       }
       'withcut{
-        def alpha[_:Ctx] = P( CharIn('a' to 'z') )
-        def nocut[_:Ctx] = P( "val " ~/ alpha.rep(1).! | "def " ~/ alpha.rep(1).!)
+        def alpha[_: P] = P( CharPred(c => 'a' <= c && c <= 'z') )
+        def nocut[_: P] = P( "val " ~/ alpha.rep(1).! | "def " ~/ alpha.rep(1).!)
 
-        val Parse.Success("abcd", _) = nocut("val abcd")
+        val Result.Success("abcd", _) = nocut(Parse("val abcd")).result
 
-        val failure = nocut("val 1234").asInstanceOf[Parse.Failure]
+        val failure = nocut(Parse("val 1234")).result.asInstanceOf[Result.Failure]
         assert(
           failure.index == 4//,
 //          failure.extra.traced.trace ==
@@ -296,28 +298,28 @@ object ExampleTests extends TestSuite{
         )
       }
       'repnocut{
-        def alpha[_:Ctx] = P( CharIn('a' to 'z') )
-        def stmt[_:Ctx] = P( "val " ~ alpha.rep(1).! ~ ";" ~ " ".rep )
-        def stmts[_:Ctx] = P( stmt.rep(1) ~ End )
+        def alpha[_: P] = P( CharPred(c => 'a' <= c && c <= 'z') )
+        def stmt[_: P] = P( "val " ~ alpha.rep(1).! ~ ";" ~ " ".rep )
+        def stmts[_: P] = P( stmt.rep(1) ~ End )
 
-        val Parse.Success(Seq("abcd"), _) = stmts("val abcd;")
-        val Parse.Success(Seq("abcd", "efg"), _) = stmts("val abcd; val efg;")
+        val Result.Success(Seq("abcd"), _) = stmts(Parse("val abcd;")).result
+        val Result.Success(Seq("abcd", "efg"), _) = stmts(Parse("val abcd; val efg;")).result
 
-        val failure = stmts("val abcd; val ").asInstanceOf[Parse.Failure]
+        val failure = stmts(Parse("val abcd; val ")).result.asInstanceOf[Result.Failure]
         assert(
           failure.index == 10//,
 //          failure.extra.traced.trace == """stmts:1:1 / (End | " "):1:11 ..."val """"
         )
       }
       'repcut{
-        def alpha[_:Ctx] = P( CharIn('a' to 'z') )
-        def stmt[_:Ctx] = P( "val " ~/ alpha.rep(1).! ~ ";" ~ " ".rep )
-        def stmts[_:Ctx] = P( stmt.rep(1) ~ End )
+        def alpha[_: P] = P( CharPred(c => 'a' <= c && c <= 'z') )
+        def stmt[_: P] = P( "val " ~/ alpha.rep(1).! ~ ";" ~ " ".rep )
+        def stmts[_: P] = P( stmt.rep(1) ~ End )
 
-        val Parse.Success(Seq("abcd"), _) = stmts("val abcd;")
-        val Parse.Success(Seq("abcd", "efg"), _) = stmts("val abcd; val efg;")
+        val Result.Success(Seq("abcd"), _) = stmts(Parse("val abcd;")).result
+        val Result.Success(Seq("abcd", "efg"), _) = stmts(Parse("val abcd; val efg;")).result
 
-        val failure = stmts("val abcd; val ").asInstanceOf[Parse.Failure]
+        val failure = stmts(Parse("val abcd; val ")).result.asInstanceOf[Result.Failure]
         assert(
           failure.index == 14//,
 //          failure.extra.traced.trace ==
@@ -325,36 +327,36 @@ object ExampleTests extends TestSuite{
         )
       }
       'delimiternocut{
-        def digits[_:Ctx] = P( CharIn('0' to '9').rep(1) )
-        def tuple[_:Ctx] = P( "(" ~ digits.!.rep(sep=",") ~ ")" )
+        def digits[_: P] = P( CharPred(c => '0' <= c && c <= '9').rep(1) )
+        def tuple[_: P] = P( "(" ~ digits.!.rep(sep=",") ~ ")" )
 
-        val Parse.Success(Seq("1", "23"), _) = tuple("(1,23)")
+        val Result.Success(Seq("1", "23"), _) = tuple(Parse("(1,23)")).result
 
-        val failure = tuple("(1,)").asInstanceOf[Parse.Failure]
+        val failure = tuple(Parse("(1,)")).result.asInstanceOf[Result.Failure]
         assert(
           failure.index == 2//,
 //          failure.extra.traced.trace == """tuple:1:1 / (")" | CharIn("0123456789")):1:3 ...",)""""
         )
       }
       'delimitercut{
-        def digits[_:Ctx] = P( CharIn('0' to '9').rep(1) )
-        def tuple[_:Ctx] = P( "(" ~ digits.!.rep(sep=("," ~/ Pass)) ~ ")" )
+        def digits[_: P] = P( CharPred(c => '0' <= c && c <= '9').rep(1) )
+        def tuple[_: P] = P( "(" ~ digits.!.rep(sep=("," ~/ Pass)) ~ ")" )
 
-        val Parse.Success(Seq("1", "23"), _) = tuple("(1,23)")
+        val Result.Success(Seq("1", "23"), _) = tuple(Parse("(1,23)")).result
 
-        val failure = tuple("(1,)").asInstanceOf[Parse.Failure]
+        val failure = tuple(Parse("(1,)")).result.asInstanceOf[Result.Failure]
         assert(
           failure.index == 3//,
 //          failure.extra.traced.trace == """tuple:1:1 / digits:1:4 / CharIn("0123456789"):1:4 ...")""""
         )
       }
       'endcut{
-        def digits[_:Ctx] = P( CharIn('0' to '9').rep(1) )
-        def tuple[_:Ctx] = P( "(" ~ digits.!.rep(sep=",".~/) ~ ")" )
+        def digits[_: P] = P( CharPred(c => '0' <= c && c <= '9').rep(1) )
+        def tuple[_: P] = P( "(" ~ digits.!.rep(sep=","./) ~ ")" )
 
-        val Parse.Success(Seq("1", "23"), _) = tuple("(1,23)")
+        val Result.Success(Seq("1", "23"), _) = tuple(Parse("(1,23)")).result
 
-        val failure = tuple("(1,)").asInstanceOf[Parse.Failure]
+        val failure = tuple(Parse("(1,)")).result.asInstanceOf[Result.Failure]
 //        val trace = failure.extra.traced.trace
         assert(
           failure.index == 3//,
@@ -362,23 +364,23 @@ object ExampleTests extends TestSuite{
         )
       }
       'composecut{
-        def digit[_:Ctx] = P( CharIn('0' to '9') )
-        def time1[_:Ctx] = P( ("1".? ~ digit) ~ ":" ~/ digit ~ digit ~ ("am" | "pm") )
-        def time2[_:Ctx] = P( (("1" | "2").? ~ digit) ~ ":" ~/ digit ~ digit )
-        val Parse.Success((), _) = time1("12:30pm")
-        val Parse.Success((), _) = time2("17:45")
-        def time[_:Ctx] = P( time1 | time2 ).log
-        val Parse.Success((), _) = time("12:30pm")
-        val failure = time("17:45").asInstanceOf[Parse.Failure]
+        def digit[_: P] = P( CharPred(c => '0' <= c && c <= '9') )
+        def time1[_: P] = P( ("1".? ~ digit) ~ ":" ~/ digit ~ digit ~ ("am" | "pm") )
+        def time2[_: P] = P( (("1" | "2").? ~ digit) ~ ":" ~/ digit ~ digit )
+        val Result.Success((), _) = time1(Parse("12:30pm")).result
+        val Result.Success((), _) = time2(Parse("17:45")).result
+        def time[_: P] = P( time1 | time2 ).log
+        val Result.Success((), _) = time(Parse("12:30pm")).result
+        val failure = time(Parse("17:45")).result.asInstanceOf[Result.Failure]
         assert(failure.index == 5)  // Expects am or pm
       }
       'composenocut{
-//        def digit[_:Ctx] = P( CharIn('0' to '9') )
-//        def time1[_:Ctx] = P( ("1".? ~ digit) ~ ":" ~/ digit ~ digit ~ ("am" | "pm") )
-//        def time2[_:Ctx] = P( (("1" | "2").? ~ digit) ~ ":" ~/ digit ~ digit )
+//        def digit[_: P] = P( CharIn('0' to '9') )
+//        def time1[_: P] = P( ("1".? ~ digit) ~ ":" ~/ digit ~ digit ~ ("am" | "pm") )
+//        def time2[_: P] = P( (("1" | "2").? ~ digit) ~ ":" ~/ digit ~ digit )
 //        val Parsed.Success((), _) = time1("12:30pm")
 //        val Parsed.Success((), _) = time2("17:45")
-//        def time[_:Ctx] = P( NoCut(time1) | time2 )
+//        def time[_: P] = P( NoCut(time1) | time2 )
 //        val Parsed.Success((), _) = time("12:30pm")
 //        val Parsed.Success((), _) = time("17:45")
       }
@@ -388,10 +390,10 @@ object ExampleTests extends TestSuite{
       'original{
 //        object Foo{
 //
-//          def plus[_:Ctx] = P( "+" )
-//          def num[_:Ctx] = P( CharIn('0' to '9').rep(1) ).!.map(_.toInt)
-//          def side[_:Ctx] = P( "(" ~ expr ~ ")" | num )
-//          def expr[_:Ctx]: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}
+//          def plus[_: P] = P( "+" )
+//          def num[_: P] = P( CharIn('0' to '9').rep(1) ).!.map(_.toInt)
+//          def side[_: P] = P( "(" ~ expr ~ ")" | num )
+//          def expr[_: P]: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}
 //        }
 //
 //
@@ -404,10 +406,10 @@ object ExampleTests extends TestSuite{
       'cuts{
 //        object Foo{
 //
-//          def plus[_:Ctx] = P( "+" )
-//          def num[_:Ctx] = P( CharIn('0' to '9').rep(1) ).!.map(_.toInt)
-//          def side[_:Ctx] = P( "(" ~/ expr ~ ")" | num )
-//          def expr[_:Ctx]: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}
+//          def plus[_: P] = P( "+" )
+//          def num[_: P] = P( CharIn('0' to '9').rep(1) ).!.map(_.toInt)
+//          def side[_: P] = P( "(" ~/ expr ~ ")" | num )
+//          def expr[_: P]: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}
 //        }
 //        check(
 //          Foo.expr("(1+(2+3x))+4"),
@@ -419,10 +421,10 @@ object ExampleTests extends TestSuite{
 //        implicit val logger = Logger(captured.append(_))
 //        object Foo{
 //
-//          def plus[_:Ctx] = P( "+" )
-//          def num[_:Ctx] = P( CharIn('0' to '9').rep(1) ).!.map(_.toInt)
-//          def side[_:Ctx] = P( "(" ~/ expr ~ ")" | num ).log
-//          def expr[_:Ctx]: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}.log
+//          def plus[_: P] = P( "+" )
+//          def num[_: P] = P( CharIn('0' to '9').rep(1) ).!.map(_.toInt)
+//          def side[_: P] = P( "(" ~/ expr ~ ")" | num ).log
+//          def expr[_: P]: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}.log
 //        }
 //
 //
@@ -458,9 +460,9 @@ object ExampleTests extends TestSuite{
 //      sealed trait AndOr
 //      case object And extends AndOr
 //      case object Or extends AndOr
-//      def and[_:Ctx] = P(IgnoreCase("And")).map(_ => And)
-//      def or[_:Ctx] = P(IgnoreCase("Or")).map(_ => Or)
-//      def andOr[_:Ctx] = P(and | or)
+//      def and[_: P] = P(IgnoreCase("And")).map(_ => And)
+//      def or[_: P] = P(IgnoreCase("Or")).map(_ => Or)
+//      def andOr[_: P] = P(and | or)
 //
 //      def check(input: String, expectedOutput: String) =
 //        assert(andOr(input).fold((_, _, _) => s"Cannot parse $input as an AndOr", (v, _) => s"Parsed: $v") == expectedOutput)

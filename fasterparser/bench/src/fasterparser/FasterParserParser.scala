@@ -7,8 +7,6 @@ import scala.annotation.{switch, tailrec}
 
 
 class FasterParserParser{
-  val parseCache = collection.mutable.Map.empty[String, fastparse.all.Parsed[Expr]]
-
   val precedenceTable = Seq(
     Seq("*", "/", "%"),
     Seq("+", "-"),
