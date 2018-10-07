@@ -95,7 +95,7 @@ object Parse {
 
     val cut1 = c.Expr[Boolean](if(cut) q"true" else q"false")
     reify {
-      def wrap() = {
+      def wrap1() = {
         lhs.splice match{
           case ctx3 =>
             if (!ctx3.isSuccess) ctx3
@@ -119,7 +119,7 @@ object Parse {
 
         }
       }
-      wrap().asInstanceOf[Parsed[R]]
+      wrap1().asInstanceOf[Parsed[R]]
     }
   }
 
@@ -131,7 +131,7 @@ object Parse {
 
     val cut1 = c.Expr[Boolean](if (cut) q"true" else q"false")
     reify {
-      def wrap() = {
+      def wrap2() = {
         lhs.splice match{
           case ctx4 =>
             if (!ctx4.isSuccess) ctx4
@@ -151,7 +151,7 @@ object Parse {
         }
       }
 
-      wrap().asInstanceOf[Parsed[R]]
+      wrap2().asInstanceOf[Parsed[R]]
     }
   }
 
@@ -275,7 +275,7 @@ object Parse {
       val startPos = ctx5.index
       val conv1 = c.Expr[S => Parsed[T]](conv).splice
       val parse00 = c.Expr[S](parse0).splice
-      def wrap() = {
+      def wrap3() = {
 
         conv1(parse00)
         if (ctx5.isSuccess) ctx5
@@ -290,7 +290,7 @@ object Parse {
           }
         }
       }
-      wrap().asInstanceOf[Parsed[V]]
+      wrap3().asInstanceOf[Parsed[V]]
     }
   }
   def captureMacro[S: c.WeakTypeTag, T: c.WeakTypeTag](c: Context): c.Expr[Parsed[String]] = {

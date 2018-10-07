@@ -3,7 +3,7 @@ import fasterparser.Parse._
 import fasterparser._
 import test.fasterparser.Expr.Member.Visibility
 
-import scala.annotation.tailrec
+import scala.annotation.{switch, tailrec}
 
 
 class FasterParserParser{
@@ -34,35 +34,26 @@ class FasterParserParser{
     P{
       @tailrec def rec(current: Int, state: Int): Parsed[Unit] = {
         if (current >= inputLength) cfg.prepareSuccess((), current, false)
-        else state match{
-          case 0 =>
-            input(current) match{
-              case ' ' | '\t' | '\n' | '\r' => rec(current + 1, state)
-              case '#' => rec(current + 1, state = 1)
-              case '/' => rec(current + 1, state = 2)
-              case _ => cfg.prepareSuccess((), current, false)
-            }
-          case 1 =>
-            input(current) match{
-              case '\n' => rec(current + 1, state = 0)
-              case _ => rec(current + 1, state)
-            }
-          case 2 =>
-            input(current) match{
-              case '/' => rec(current + 1, state = 1)
-              case '*' => rec(current + 1, state = 3)
-              case _ => cfg.prepareSuccess((), current - 1, false)
-            }
-          case 3 =>
-            input(current) match{
-              case '*' => rec(current + 1, state = 4)
-              case _ => rec(current + 1, state)
-            }
-          case 4 =>
-            input(current) match{
-              case '/' => rec(current + 1, state = 0)
-              case _ => rec(current + 1, state = 3)
-            }
+        else {
+          val currentChar = input(current)
+          (state: @switch) match{
+            case 0 =>
+              (currentChar: @switch) match{
+                case ' ' | '\t' | '\n' | '\r' => rec(current + 1, state)
+                case '#' => rec(current + 1, state = 1)
+                case '/' => rec(current + 1, state = 2)
+                case _ => cfg.prepareSuccess((), current, false)
+              }
+            case 1 => rec(current + 1, state = if (currentChar == '\n') 0 else state)
+            case 2 =>
+              (currentChar: @switch) match{
+                case '/' => rec(current + 1, state = 1)
+                case '*' => rec(current + 1, state = 3)
+                case _ => cfg.prepareSuccess((), current - 1, false)
+              }
+            case 3 => rec(current + 1, state = if (currentChar == '*') 4 else state)
+            case 4 => rec(current + 1, state = if (currentChar == '/') 0 else 3)
+          }
         }
       }
       rec(current = cfg.index, state = 0)
