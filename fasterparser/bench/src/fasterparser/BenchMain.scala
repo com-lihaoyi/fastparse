@@ -30,7 +30,7 @@ object BenchMain{
     val parser2 = new FasterParserParser()
     for((name, body) <- names.zip(bodies)){
       println(name)
-      assert(parser2.document(body).get.value == parser.document.parse(body).get.value)
+      assert(parser2.document(parseInputCtx(body)).result.get.value == parser.document.parse(body).get.value)
 
     }
 
@@ -47,7 +47,7 @@ object BenchMain{
     var count2 = 0
     while(System.currentTimeMillis() - start2 < 20000){
       count2 += 1
-      bodies.foreach(parser2.expr(_))
+      bodies.foreach(b => parser2.expr(parseInputCtx(b)))
 
     }
     println(count2)
