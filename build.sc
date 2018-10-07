@@ -16,9 +16,12 @@ object fasterparser extends ScalaModule{
         s"t._$n"
       }
       val tsD = (ts :+ "D").mkString(",")
+      val anys = ts.map(_ => "Any").mkString(", ")
       s"""
-          implicit def Sequencer$i[$tsD]: Sequencer[(${ts.mkString(", ")}), D, ($tsD)] =
+          val BaseSequencer$i: Sequencer[($anys), Any, ($anys, Any)] =
             Sequencer0((t, d) => (${chunks.mkString(", ")}, d))
+          implicit def Sequencer$i[$tsD]: Sequencer[(${ts.mkString(", ")}), D, ($tsD)] =
+            BaseSequencer$i.asInstanceOf[Sequencer[(${ts.mkString(", ")}), D, ($tsD)]]
           """
     }
     val output = s"""

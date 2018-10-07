@@ -137,24 +137,47 @@ object Parsing {
     def ~~[V, R](other: Parse[V])
                 (implicit s: Implicits.Sequencer[T, V, R]): Parse[R] = macro parsedSequence1[T, V, R]
 
-    def map[V](f: T => V): Parse[V] = {
-      if (!parse0.isSuccess) parse0.asInstanceOf[Parse[V]]
-      else {
-        val this2 = parse0.asInstanceOf[Parse[V]]
-        this2.successValue = f(this2.successValue.asInstanceOf[T])
-        this2
-      }
-    }
-    def flatMap[V](f: T => Parse[V]): Parse[V] = {
-      if (!parse0.isSuccess) parse0.asInstanceOf[Parse[V]]
-      else f(parse0.successValue.asInstanceOf[T])
-    }
+    def map[V](f: T => V): Parse[V] = macro mapMacro[T, V]
+
+    def flatMap[V](f: T => Parse[V]): Parse[V] = macro flatMapMacro[T, V]
 
     def |[V >: T](other: Parse[V])(implicit ctx: Parse[Any]): Parse[V] = macro eitherMacro[T, V]
 
     def !(implicit ctx: Parse[Any]): Parse[String] = macro captureMacro
   }
 
+
+  def mapMacro[T: c.WeakTypeTag, V: c.WeakTypeTag]
+              (c: Context)
+              (f: c.Expr[T => V]): c.Expr[Parse[V]] = {
+    import c.universe._
+
+    val lhs0 = c.prefix.asInstanceOf[c.Expr[EagerOps[T]]]
+    reify {
+      lhs0.splice.parse0 match{ case lhs =>
+        if (!lhs.isSuccess) lhs.asInstanceOf[Parse[V]]
+        else {
+        val this2 = lhs.asInstanceOf[Parse[V]]
+        this2.successValue = f.splice(this2.successValue.asInstanceOf[T])
+        this2
+        }
+      }
+    }
+  }
+
+
+  def flatMapMacro[T: c.WeakTypeTag, V: c.WeakTypeTag]
+                  (c: Context)
+                  (f: c.Expr[T => Parse[V]]): c.Expr[Parse[V]] = {
+    import c.universe._
+
+    val lhs0 = c.prefix.asInstanceOf[c.Expr[EagerOps[T]]]
+    reify {
+      val lhs = lhs0.splice.parse0
+      if (!lhs.isSuccess) lhs.asInstanceOf[Parse[V]]
+      else f.splice(lhs.successValue.asInstanceOf[T])
+    }
+  }
 
   def eitherMacro[T: c.WeakTypeTag, V >: T: c.WeakTypeTag]
                  (c: Context)
@@ -384,7 +407,14 @@ object Parsing {
 
   def Index(implicit ctx: Parse[_]): Parse[Int] = ctx.freshSuccess(ctx.index)
 
-  def AnyChar(implicit ctx: Parse[_]): Parse[Unit] = CharPred(_ => true)
+  def AnyChar(implicit ctx: Parse[_]): Parse[Unit] = {
+    if (!(ctx.index < ctx.input.length)) ctx.freshFailure().asInstanceOf[Parse[Unit]]
+    else ctx.freshSuccess((), ctx.index + 1)
+  }
+  def SingleChar(implicit ctx: Parse[_]): Parse[Char] = {
+    if (!(ctx.index < ctx.input.length)) ctx.freshFailure().asInstanceOf[Parse[Char]]
+    else ctx.freshSuccess(ctx.input(ctx.index), ctx.index + 1)
+  }
   def CharPred(p: Char => Boolean)(implicit ctx: Parse[_]): Parse[Unit] = {
     if (!(ctx.index < ctx.input.length && p(ctx.input(ctx.index)))) ctx.freshFailure().asInstanceOf[Parse[Unit]]
     else ctx.freshSuccess((), ctx.index + 1)

@@ -234,10 +234,10 @@ class FastParseParser{
   )
 
   val objinside: P[Expr.ObjBody] = P(
-    Index ~ member.rep(sep = ",") ~ ",".? ~ (forspec ~ compspec).?
+    member.rep(sep = ",") ~ ",".? ~ (forspec ~ compspec).?
   ).map{
-    case (offset, exprs, None) => Expr.ObjBody.MemberList(exprs)
-    case (offset, exprs, Some(comps)) =>
+    case (exprs, None) => Expr.ObjBody.MemberList(exprs)
+    case (exprs, Some(comps)) =>
       val preLocals = exprs.takeWhile(_.isInstanceOf[Expr.Member.BindStmt]).map(_.asInstanceOf[Expr.Member.BindStmt])
       val Expr.Member.Field(offset, Expr.FieldName.Dyn(lhs), false, None, Visibility.Normal, rhs) =
         exprs(preLocals.length)

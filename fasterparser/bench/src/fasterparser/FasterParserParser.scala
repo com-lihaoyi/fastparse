@@ -104,13 +104,13 @@ class FasterParserParser{
     s => Integer.parseInt(s, 16).toChar.toString
   }
   def doubleString[_: P]: P[Seq[String]] =
-    P( "\""./ ~~ (CharsWhile(x => x != '"' && x != '\\').! | escape).repX ~~ "\"" )
+    P( (CharsWhile(x => x != '"' && x != '\\').! | escape).repX ~~ "\"" )
   def singleString[_: P]: P[Seq[String]] =
-    P( "'"./ ~~ (CharsWhile(x => x != '\'' && x != '\\').! | escape).repX ~~ "'" )
+    P( (CharsWhile(x => x != '\'' && x != '\\').! | escape).repX ~~ "'" )
   def literalDoubleString[_: P]: P[Seq[String]] =
-    P( "@\""./ ~~ (CharsWhile(_ != '"').! | "\"\"".!.map(_ => "\"")).repX ~~ "\""  )
+    P( (CharsWhile(_ != '"').! | "\"\"".!.map(_ => "\"")).repX ~~ "\""  )
   def literalSingleString[_: P]: P[Seq[String]] =
-    P( "@'"./ ~~ (CharsWhile(_ != '\'').! | "''".!.map(_ => "'")).repX ~~ "'" )
+    P( (CharsWhile(_ != '\'').! | "''".!.map(_ => "'")).repX ~~ "'" )
 
   def tripleBarStringLines[_: P]: P[Seq[String]] = P(
     tripleBarStringHead.flatMap { case (pre, w, head) =>
@@ -118,10 +118,20 @@ class FasterParserParser{
     }
   )
   def tripleBarString[_: P]: P[Seq[String]] = P(
-    "|||"./ ~~ CharsWhile(c => c == ' ' || c == '\t', 0) ~~ "\n" ~~ tripleBarStringLines ~~ "\n" ~~ CharsWhile(c => c == ' ' || c == '\t') ~~ "|||"
+    "||"./ ~~ CharsWhile(c => c == ' ' || c == '\t', 0) ~~ "\n" ~~ tripleBarStringLines ~~ "\n" ~~ CharsWhile(c => c == ' ' || c == '\t') ~~ "|||"
   )
   def string[_: P]: P[String] = P(
-     doubleString | singleString | literalDoubleString | literalSingleString | tripleBarString
+    SingleChar./.flatMap{
+      case '\"' => doubleString
+      case '\'' => singleString
+      case '@' => SingleChar./.flatMap{
+        case '\"' => literalDoubleString
+        case '\'' => literalSingleString
+        case _ => Fail
+      }
+      case '|' => tripleBarString
+      case _ => Fail
+    }
   ).map(_.mkString)
 
   def tripleBarStringHead[_: P] = P(
@@ -145,11 +155,8 @@ class FasterParserParser{
   def $[_: P] = P(Index ~~ "$").map(Expr.$)
   def `super`[_: P] = P(Index ~~ "super" ~~ break).map(Expr.Super)
 
-  def `}`[_: P] = P( "}" )
-  def obj[_: P]: P[Expr] = P( "{" ~/ (Index ~~ objinside).map(Expr.Obj.tupled) ~ `}` )
-  def arr[_: P]: P[Expr] = P(
-    "[" ~/ ((Index ~~ "]").map(Expr.Arr(_, Nil)) | arrBody ~ "]")
-  )
+  def obj[_: P]: P[Expr] = P( (Index ~~ objinside).map(Expr.Obj.tupled) )
+  def arr[_: P]: P[Expr] = P( (Index ~~ &("]")).map(Expr.Arr(_, Nil)) | arrBody )
   def compSuffix[_: P] = P( forspec ~ compspec ).map(Left(_))
   def arrBody[_: P]: P[Expr] = P(
     Index ~~ expr ~ (compSuffix | "," ~/ (compSuffix | (expr.rep(0, sep = ",") ~ ",".?).map(Right(_)))).?
@@ -158,9 +165,9 @@ class FasterParserParser{
     case (offset, first, Some(Left(comp))) => Expr.Comp(offset, first, comp._1, comp._2)
     case (offset, first, Some(Right(rest))) => Expr.Arr(offset, Seq(first) ++ rest)
   }
-  def assertExpr[_: P]: P[Expr] = P( Index ~~ assertStmt ~/ ";" ~ expr ).map(Expr.AssertExpr.tupled)
-  def function[_: P]: P[Expr] = P( Index ~~ "function" ~ "(" ~/ params ~ ")" ~ expr ).map(Expr.Function.tupled)
-  def ifElse[_: P]: P[Expr] = P( "if" ~~ break ~/ Index ~~ expr ~ "then" ~~ break ~ expr ~ ("else" ~~ break ~ expr).? ).map(Expr.IfElse.tupled)
+  def assertExpr[_: P](index: Int): P[Expr] = P( assertStmt ~ ";" ~ expr ).map(t => Expr.AssertExpr(index, t._1, t._2))
+  def function[_: P](index: Int): P[Expr] = P( "(" ~/ params ~ ")" ~ expr ).map(t => Expr.Function(index, t._1, t._2))
+  def ifElse[_: P](index: Int): P[Expr] = P( Index ~~ expr ~ "then" ~~ break ~ expr ~ ("else" ~~ break ~ expr).? ).map(Expr.IfElse.tupled)
   def localExpr[_: P]: P[Expr] = P( Index ~~ bind.rep(min=1, sep = ","./) ~ ";" ~ expr ).map(Expr.LocalExpr.tupled)
 
   def expr[_: P]: P[Expr] = P("" ~ expr1 ~ (Index ~~ binaryop ~/ expr1).rep ~ "").map{ case (pre, fs) =>
@@ -213,44 +220,84 @@ class FasterParserParser{
   }
 
   def exprSuffix2[_: P]: P[Expr => Expr] = P(
-    (Index ~~ "." ~/ id).map(x => Expr.Select(x._1, _: Expr, x._2)) |
-      (Index ~~ "[" ~/ expr.? ~ (":" ~ expr.?).rep ~ "]").map{
-        case (offset, Some(tree), Seq()) => Expr.Lookup(offset, _: Expr, tree)
-        case (offset, start, ins) => Expr.Slice(offset, _: Expr, start, ins.lift(0).flatten, ins.lift(1).flatten)
-      } |
-      (Index ~~ "(" ~/ args ~ ")").map(x => Expr.Apply(x._1, _: Expr, x._2)) |
-      (Index ~~ "{" ~/ objinside ~ `}`).map(x => Expr.ObjExtend(x._1, _: Expr, x._2))
-  )
-
-  def local[_: P] = P( "local" ~~ break  ~/ localExpr )
-  def parened[_: P] = P( "(" ~/ (Index ~~ expr).map(Expr.Parened.tupled) ~ ")" )
-  def importStr[_: P] = P( (Index ~~ "importstr" ~/ string).map(Expr.ImportStr.tupled) )
-  def `import`[_: P] = P( (Index ~~ "import" ~/ string).map(Expr.Import.tupled) )
-  def error[_: P] = P((Index ~~ "error" ~~ break ~/ expr).map(Expr.Error.tupled) )
-  def strExpr[_: P] = P((Index ~~ string).map(Expr.Str.tupled))
-  def idExpr[_: P] = P( (Index ~~ id).map(Expr.Id.tupled) )
-  def unaryOpExpr[_: P] = P(
-    (Index ~~ unaryop ~/ expr1).map{ case (i, k, e) =>
-      def k2 = k match{
-        case "+" => Expr.UnaryOp.`+`
-        case "-" => Expr.UnaryOp.`-`
-        case "~" => Expr.UnaryOp.`~`
-        case "!" => Expr.UnaryOp.`!`
+    (Index ~~ SingleChar./).flatMap{
+      case (i, '.') => id.map(x => Expr.Select(i, _: Expr, x))
+      case (i, '[') => (expr.? ~ (":" ~ expr.?).rep ~ "]").map{
+        case (Some(tree), Seq()) => Expr.Lookup(i, _: Expr, tree)
+        case (start, ins) => Expr.Slice(i, _: Expr, start, ins.lift(0).flatten, ins.lift(1).flatten)
       }
-      Expr.UnaryOp(i, k2, e)
+      case (i, '(') => (args ~ ")").map(x => Expr.Apply(i, _: Expr, x))
+      case (i, '{') => (objinside ~ "}").map(x => Expr.ObjExtend(i, _: Expr, x))
+      case _ => Fail
     }
   )
+
+  def local[_: P] = P( localExpr )
+  def parened[_: P] = P( (Index ~~ expr).map(Expr.Parened.tupled) )
+  def importStr[_: P](index: Int) = P( string.map(Expr.ImportStr(index, _)) )
+  def `import`[_: P](index: Int) = P( string.map(Expr.Import(index, _)) )
+  def error[_: P](index: Int) = P(expr.map(Expr.Error(index, _)) )
+  def strExpr[_: P] = P((Index ~~ string).map(Expr.Str.tupled))
+  def idExpr[_: P] = P( (Index ~~ id).map(Expr.Id.tupled) )
+  def unaryOpExpr[_: P](index: Int, op: Char) = P(
+    expr1.map{ e =>
+      def k2 = op match{
+        case '+' => Expr.UnaryOp.`+`
+        case '-' => Expr.UnaryOp.`-`
+        case '~' => Expr.UnaryOp.`~`
+        case '!' => Expr.UnaryOp.`!`
+      }
+      Expr.UnaryOp(index, k2, e)
+    }
+  )
+
+  def constructString(index: Int, lines: Seq[String]) = Expr.Str(index, lines.mkString)
   // Any `expr` that isn't naively left-recursive
-  def expr2[_: P] = P(
-    `null` | `true` | `false` | `self` | $ | number | strExpr | obj | arr | `super` | idExpr |
-    local | parened | ifElse | function | importStr | `import` | error | assertExpr | unaryOpExpr
+  def expr2[_: P]: P[Expr] = P(
+    (Index ~~ SingleChar./).flatMap{ case (index, c) =>
+      (c: @switch) match {
+        case '{' => Pass ~ obj ~ "}"
+        case '+' | '-' | '~' | '!' => Pass ~ unaryOpExpr(index, c)
+        case '[' => Pass ~ arr ~ "]"
+        case '(' => Pass ~ parened ~ ")"
+        case '\"' => doubleString.map(constructString(index, _))
+        case '\'' => singleString.map(constructString(index, _))
+        case '@' => SingleChar./.flatMap{
+          case '\"' => literalDoubleString.map(constructString(index, _))
+          case '\'' => literalSingleString.map(constructString(index, _))
+          case _ => Fail
+        }
+        case '|' => tripleBarString.map(constructString(index, _))
+        case '$' => Pass(Expr.$(index))
+        case '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' =>
+          Parse().index = index; number
+        case x if idStartChar(x) => CharsWhile(idChar, min = 0).!.flatMap { y =>
+          x + y match {
+            case "null"      => Pass(Expr.Null(index))
+            case "true"      => Pass(Expr.True(index))
+            case "false"     => Pass(Expr.False(index))
+            case "self"      => Pass(Expr.Self(index))
+            case "super"     => Pass(Expr.Super(index))
+            case "if"        => Pass ~ ifElse(index)
+            case "function"  => Pass ~ function(index)
+            case "importStr" => Pass ~ importStr(index)
+            case "import"    => Pass ~ `import`(index)
+            case "error"     => Pass ~ error(index)
+            case "assert"    => Pass ~ assertExpr(index)
+            case "local"     => Pass ~ local
+            case x           => Pass(Expr.Id(index, x))
+          }
+        }
+        case _ => Fail
+      }
+    }
   )
 
   def objinside[_: P]: P[Expr.ObjBody] = P(
-    Index ~~ member.rep(sep = ",") ~ ",".? ~ (forspec ~ compspec).?
+    member.rep(sep = ",") ~ ",".? ~ (forspec ~ compspec).?
   ).map{
-    case (offset, exprs, None) => Expr.ObjBody.MemberList(exprs)
-    case (offset, exprs, Some(comps)) =>
+    case (exprs, None) => Expr.ObjBody.MemberList(exprs)
+    case (exprs, Some(comps)) =>
       val preLocals = exprs.takeWhile(_.isInstanceOf[Expr.Member.BindStmt]).map(_.asInstanceOf[Expr.Member.BindStmt])
       val Expr.Member.Field(offset, Expr.FieldName.Dyn(lhs), false, None, Visibility.Normal, rhs) =
         exprs(preLocals.length)
