@@ -186,62 +186,68 @@ object Parsing {
       if (!parse0.isSuccess) parse0.asInstanceOf[Parse[V]]
       else  f(parse0.successValue.asInstanceOf[T])
     }
+
+    def |[V >: T](other: Parse[V])(implicit ctx: Parse[Any]): Parse[V] = macro eitherMacro[T, V]
+
+    def !(implicit ctx: Parse[Any]): Parse[String] = macro captureMacro[T]
   }
 
 
-  def eitherMacro[S: c.WeakTypeTag, T: c.WeakTypeTag, V >: T: c.WeakTypeTag]
+  def eitherMacro[T: c.WeakTypeTag, V >: T: c.WeakTypeTag]
                  (c: Context)
-                 (other: c.Expr[Parse[V]]): c.Expr[Parse[V]] = {
+                 (other: c.Expr[Parse[V]])
+                 (ctx: c.Expr[Parse[Any]]): c.Expr[Parse[V]] = {
     import c.universe._
 
-    val q"fasterparser.Parsing.ByNameOps[$k, $v]($parse0)($conv, $ctx)" = c.prefix.tree
+    val lhs0 = c.prefix.asInstanceOf[c.Expr[EagerOps[T]]]
     reify {
-      val ctx5: Parse[Any] = c.Expr[Parse[Any]](ctx).splice
+      val ctx5: Parse[Any] = ctx.splice
       val startPos = ctx5.index
-      val conv1 = c.Expr[S => Parse[T]](conv).splice
-      val parse00 = c.Expr[S](parse0).splice
-      def eitherWrap() = {
+      lhs0.splice match{ case lhs =>
+        def eitherWrap() = {
+          if (ctx5.isSuccess) ctx5
+          else{
+            ctx5.index = startPos
+            if (ctx5.failureCut) ctx5
+            else {
+              other.splice
+              if (ctx5.isSuccess) ctx5
+              else ctx5.freshFailure(startPos)
 
-        conv1(parse00)
-        if (ctx5.isSuccess) ctx5
-        else{
-          ctx5.index = startPos
-          if (ctx5.failureCut) ctx5
-          else {
-            other.splice
-            if (ctx5.isSuccess) ctx5
-            else ctx5.freshFailure(startPos)
-
+            }
           }
         }
+        eitherWrap().asInstanceOf[Parse[V]]
       }
-      eitherWrap().asInstanceOf[Parse[V]]
     }
   }
-  def captureMacro[S: c.WeakTypeTag, T: c.WeakTypeTag](c: Context): c.Expr[Parse[String]] = {
+  def captureMacro[T: c.WeakTypeTag](c: Context)
+                                    (ctx: c.Expr[Parse[Any]]): c.Expr[Parse[String]] = {
     import c.universe._
 
-    val q"fasterparser.Parsing.ByNameOps[$k, $v]($parse0)($conv, $ctx)" = c.prefix.tree
+    val lhs0 = c.prefix.asInstanceOf[c.Expr[EagerOps[T]]]
 
     reify {
-      val ctx6 = c.Expr[Parse[Any]](ctx).splice
+      val ctx6 = ctx.splice
       val startPos = ctx6.index
-      val conv1 = c.Expr[S => Parse[T]](conv).splice
-      val parse00: S = c.Expr[S](parse0).splice
+      lhs0.splice match{ case lhs =>
 
-      conv1(parse00)
-      if (!ctx6.isSuccess) ctx6.asInstanceOf[Parse[String]]
-      else ctx6.freshSuccess(ctx6.input.substring(startPos, ctx6.index)).asInstanceOf[Parse[String]]
+        if (!ctx6.isSuccess) ctx6.asInstanceOf[Parse[String]]
+        else ctx6.freshSuccess(ctx6.input.substring(startPos, ctx6.index)).asInstanceOf[Parse[String]]
+      }
     }
   }
-  implicit class ByNameOps[S, T](parse0: => S)(implicit val conv: S => Parse[T], val ctx: Parse[Any]){
-    def parse00 = parse0
-    def |[V >: T](other: Parse[V]): Parse[V] = macro eitherMacro[S, T, V]
+
+  implicit def ByNameOpsStr[T](parse0: => String)(implicit ctx: Parse[Any]) =
+    ByNameOps(LiteralStr(parse0)(ctx))(ctx)
+
+  implicit class ByNameOps[T](parse0: => Parse[T])(implicit val ctx: Parse[Any]){
+
     def repX[V](implicit repeater: Implicits.Repeater[T, V]): Parse[V] = repX(sep=null)
     def repX[V](min: Int = 0,
-               max: Int = Int.MaxValue,
-               exactly: Int = -1,
-               sep: => Parse[_] = null)(implicit repeater: Implicits.Repeater[T, V]): Parse[V] = {
+                max: Int = Int.MaxValue,
+                exactly: Int = -1,
+                sep: => Parse[_] = null)(implicit repeater: Implicits.Repeater[T, V]): Parse[V] = {
 
       val acc = repeater.initial
       val actualMin = if(exactly == -1) min else exactly
@@ -253,7 +259,7 @@ object Parsing {
       @tailrec def rec(startIndex: Int, count: Int, precut: Boolean): Parse[V] = {
         if (count == 0 && actualMax == 0) ctx.prepareSuccess(repeater.result(acc), startIndex)
         else {
-          conv(parse0)
+          parse0
           if (!ctx.isSuccess) {
             if (ctx.failureCut | precut) ctx.asInstanceOf[Parse[V]]
             else end(startIndex, startIndex, count)
@@ -298,7 +304,7 @@ object Parsing {
         else{
           if (count == 0 && actualMax == 0) ctx.prepareSuccess(repeater.result(acc), startIndex)
           else {
-            conv(parse0)
+            parse0
             if (!ctx.isSuccess){
               if (ctx.failureCut | precut) ctx.asInstanceOf[Parse[V]]
               else end(startIndex, startIndex, count)
@@ -346,7 +352,7 @@ object Parsing {
     }
 
     def log(implicit name: sourcecode.Name): Parse[T] = {
-      if (ctx.logDepth == -1) conv(parse0)
+      if (ctx.logDepth == -1) parse0
       else{
         val msg = name.value
         val output = println(_: String)
@@ -355,7 +361,7 @@ object Parsing {
         output(s"$indent+$msg:${ctx.index}")
         val depth = ctx.logDepth
         ctx.logDepth += 1
-        conv(parse0)
+        parse0
         ctx.logDepth = depth
         val (index, strRes) = if (ctx.isSuccess){
           ctx.index -> s"Success(${literalize(ctx.input.slice(ctx.index, ctx.index + 20))}${if (ctx.successCut) ", cut" else ""})"
@@ -369,18 +375,18 @@ object Parsing {
       }
     }
 
-    def ! : Parse[String] = macro captureMacro[S, T]
+
 
     def unary_! : Parse[Unit] = {
       val startPos = ctx.index
-      conv(parse0)
+      parse0
       if (!ctx.isSuccess) ctx.freshSuccess((), startPos)
       else ctx.prepareFailure(startPos)
     }
 
     def ?[V](implicit optioner: Implicits.Optioner[T, V]): Parse[V] = {
       val startPos = ctx.index
-      conv(parse0)
+      parse0
       if (ctx.isSuccess) ctx.prepareSuccess(optioner.some(ctx.successValue.asInstanceOf[T]))
       else if (ctx.failureCut) ctx.asInstanceOf[Parse[V]]
       else ctx.freshSuccess(optioner.none, startPos)
@@ -388,7 +394,7 @@ object Parsing {
 
 
     def filter(f: T => Boolean): Parse[T] = {
-      conv(parse0)
+      parse0
       if (!ctx.isSuccess) ctx.asInstanceOf[Parse[T]]
       else if (f(ctx.successValue.asInstanceOf[T])) ctx.asInstanceOf[Parse[T]]
       else ctx.freshFailure().asInstanceOf[Parse[T]]

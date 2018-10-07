@@ -84,7 +84,7 @@ class FasterParserParser{
     Index ~~ (
       CharsWhile(digitChar) ~~
         ("." ~ CharsWhile(digitChar)).? ~~
-        ((ByNameOps("e") | "E") ~ ("+" | "-").? ~~ CharsWhile(digitChar)).?
+        (("e" | "E") ~ ("+" | "-").? ~~ CharsWhile(digitChar)).?
       ).!
   ).map(s => Expr.Num(s._1, s._2.toDouble))
 
