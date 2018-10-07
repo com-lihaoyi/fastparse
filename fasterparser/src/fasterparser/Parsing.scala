@@ -52,21 +52,27 @@ object Parsing {
 
   def parsedSequence0[T: c.WeakTypeTag, V: c.WeakTypeTag, R: c.WeakTypeTag]
                      (c: Context)
-                     (lhs: c.Expr[Parse[T]], other: c.Expr[Parse[V]], cut: Boolean)
+                     (other: c.Expr[Parse[V]], cut: Boolean)
                      (s: c.Expr[Implicits.Sequencer[T, V, R]],
-                      whitespace: c.Expr[Parse[Any] => Parse[Unit]]): c.Expr[Parse[R]] = {
+                      whitespace: Option[c.Expr[Parse[Any] => Parse[Unit]]]): c.Expr[Parse[R]] = {
     import c.universe._
 
+    val lhs = c.prefix.asInstanceOf[Expr[EagerOps[T]]]
     val cut1 = c.Expr[Boolean](if(cut) q"true" else q"false")
+    val consumeWhitespace = whitespace match{
+      case None => reify{(c: Parse[Any]) => true}
+      case Some(ws) => reify{(c: Parse[Any]) => ws.splice(c); c.isSuccess}
+    }
+
     reify {
       def sequenceWrap() = {
-        lhs.splice match{ case ctx3 =>
+        lhs.splice.parse0 match{ case ctx3 =>
           if (!ctx3.isSuccess) ctx3
           else {
             val pValue = ctx3.successValue
             val pCut = ctx3.successCut
-            whitespace.splice(ctx3)
-            if (!ctx3.isSuccess) ctx3
+
+            if (!consumeWhitespace.splice(ctx3)) ctx3
             else {
               other.splice
               if (!ctx3.isSuccess){
@@ -86,71 +92,36 @@ object Parsing {
     }
   }
 
-  def parsedSequence00[T: c.WeakTypeTag, V: c.WeakTypeTag, R: c.WeakTypeTag]
-                     (c: Context)
-                     (lhs: c.Expr[Parse[T]], other: c.Expr[Parse[V]], cut: Boolean)
-                     (s: c.Expr[Implicits.Sequencer[T, V, R]]): c.Expr[Parse[R]] = {
-    import c.universe._
-
-    val cut1 = c.Expr[Boolean](if (cut) q"true" else q"false")
-    reify {
-      def rawSequenceWrap() = {
-        lhs.splice match{
-          case ctx4 =>
-            if (!ctx4.isSuccess) ctx4
-            else {
-              val pValue = ctx4.successValue
-              val pCut = ctx4.successCut
-              other.splice
-              if (!ctx4.isSuccess) {
-                ctx4.prepareFailure(ctx4.index, cut = ctx4.failureCut | cut1.splice | pCut)
-              } else {
-                ctx4.prepareSuccess(
-                  s.splice.apply(pValue.asInstanceOf[T], ctx4.successValue.asInstanceOf[V]),
-                  cut = pCut | cut1.splice | ctx4.successCut
-                )
-              }
-            }
-        }
-      }
-
-      rawSequenceWrap().asInstanceOf[Parse[R]]
-    }
-  }
-
   def parsedSequence[T: c.WeakTypeTag, V: c.WeakTypeTag, R: c.WeakTypeTag]
                     (c: Context)
                     (other: c.Expr[Parse[V]])
                     (s: c.Expr[Implicits.Sequencer[T, V, R]],
                      whitespace: c.Expr[Parse[Any] => Parse[Unit]]): c.Expr[Parse[R]] = {
     import c.universe._
-    val lhs = reify{c.prefix.asInstanceOf[Expr[EagerOps[T]]].splice.parse0}
-    parsedSequence0[T, V, R](c)(lhs, other, false)(s, whitespace)
+    parsedSequence0[T, V, R](c)(other, false)(s, Some(whitespace))
   }
+
   def parsedSequenceCut[T: c.WeakTypeTag, V: c.WeakTypeTag, R: c.WeakTypeTag]
                     (c: Context)
                     (other: c.Expr[Parse[V]])
                     (s: c.Expr[Implicits.Sequencer[T, V, R]],
                      whitespace: c.Expr[Parse[Any] => Parse[Unit]]): c.Expr[Parse[R]] = {
     import c.universe._
-    val lhs = reify{c.prefix.asInstanceOf[Expr[EagerOps[T]]].splice.parse0}
-    parsedSequence0[T, V, R](c)(lhs, other, true)(s, whitespace)
+    parsedSequence0[T, V, R](c)(other, true)(s, Some(whitespace))
   }
   def parsedSequence1[T: c.WeakTypeTag, V: c.WeakTypeTag, R: c.WeakTypeTag]
                     (c: Context)
                     (other: c.Expr[Parse[V]])
                     (s: c.Expr[Implicits.Sequencer[T, V, R]]): c.Expr[Parse[R]] = {
     import c.universe._
-    val lhs = reify{c.prefix.asInstanceOf[Expr[EagerOps[T]]].splice.parse0}
-    parsedSequence00[T, V, R](c)(lhs, other, false)(s)
+    parsedSequence0[T, V, R](c)(other, false)(s, None)
   }
   def parsedSequenceCut1[T: c.WeakTypeTag, V: c.WeakTypeTag, R: c.WeakTypeTag]
                     (c: Context)
                     (other: c.Expr[Parse[V]])
                     (s: c.Expr[Implicits.Sequencer[T, V, R]]): c.Expr[Parse[R]] = {
     import c.universe._
-    val lhs = reify{c.prefix.asInstanceOf[Expr[EagerOps[T]]].splice.parse0}
-    parsedSequence00[T, V, R](c)(lhs, other, true)(s)
+    parsedSequence0[T, V, R](c)(other, true)(s, None)
   }
 
 
