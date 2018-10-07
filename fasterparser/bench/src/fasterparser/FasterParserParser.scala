@@ -312,5 +312,5 @@ class FasterParserParser{
   def unaryop[_: Parsed]	= P( "-" | "+" | "!" | "~").!
 
 
-  def document[_: Parsed] = P( expr ~ End )
+  def document[_: Parsed]: P[Expr] = P( expr.log("LHS") ~ End.log("END") ).log
 }

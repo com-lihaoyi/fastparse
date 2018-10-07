@@ -30,7 +30,9 @@ object BenchMain{
     val parser2 = new FasterParserParser()
     for((name, body) <- names.zip(bodies)){
       println(name)
-      assert(parser2.document(parseInputCtx(body)).result.get.value == parser.document.parse(body).get.value)
+      val oldResult = parser.document.parse(body).get.value
+      val newResult = parser2.document(parseInputCtx(body)).result.get.value
+      assert(oldResult == newResult, oldResult + " != " + newResult)
 
     }
 

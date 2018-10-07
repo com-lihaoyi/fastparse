@@ -8,19 +8,21 @@ import reflect.macros.blackbox.Context
 object Parse {
 
   type P[+T] = Parsed[T]
-  def P[T](t: Parsed[T])(implicit ctx: Parsed[Any], name: sourcecode.Name): Parsed[T] = macro pMacro[T]
+
+    def P[T](t: Parsed[T])(implicit name: sourcecode.Name): Parsed[T] = macro pMacro[T]
 
   def pMacro[T: c.WeakTypeTag](c: Context)
                               (t: c.Expr[Parsed[T]])
-                              (ctx: c.Expr[Parsed[Any]], name: c.Expr[sourcecode.Name]): c.Expr[Parsed[T]] = {
+                              (name: c.Expr[sourcecode.Name]): c.Expr[Parsed[T]] = {
 
     import c.universe._
     reify[Parsed[T]]{
-      val ctx1 = ctx.splice
-      if (!ctx1.isSuccess){
-        ctx1.failureStack = name.splice.value :: ctx1.failureStack
+      val ctx0 = t.splice
+
+      if (!ctx0.isSuccess){
+        ctx0.failureStack = name.splice.value :: ctx0.failureStack
       }
-      ctx1.asInstanceOf[Parsed[T]]
+      ctx0.asInstanceOf[Parsed[T]]
     }
   }
 
@@ -49,9 +51,9 @@ object Parse {
   def cutStrMacro(c: Context)(ctx: c.Expr[Parsed[Any]]): c.Expr[Parsed[Unit]] = {
     import c.universe._
     reify{
-      val ctx1 = ctx.splice
-      if (ctx1.isSuccess) ctx1.prepareFailure(ctx1.failureIndex)
-      else ctx1.prepareSuccess(ctx1.successValue, cut = true)
+      val ctx2 = ctx.splice
+      if (ctx2.isSuccess) ctx2.prepareFailure(ctx2.failureIndex)
+      else ctx2.prepareSuccess(ctx2.successValue, cut = true)
     }
   }
 
@@ -92,21 +94,21 @@ object Parse {
     val cut1 = c.Expr[Boolean](if(cut) q"true" else q"false")
     reify {
       def wrap() = {
-        val ctx1 = ctx.splice
-        if (!ctx1.isSuccess) ctx1
+        val ctx3 = ctx.splice
+        if (!ctx3.isSuccess) ctx3
         else {
-          val pValue = ctx1.successValue
-          val pCut = ctx1.successCut
-          whitespace.splice(ctx1)
-          if (!ctx1.isSuccess) ctx1
+          val pValue = ctx3.successValue
+          val pCut = ctx3.successCut
+          whitespace.splice(ctx3)
+          if (!ctx3.isSuccess) ctx3
           else {
             other.splice
-            if (!ctx1.isSuccess){
-              ctx1.prepareFailure(ctx1.failureIndex, cut = ctx1.failureCut | cut1.splice | pCut)
+            if (!ctx3.isSuccess){
+              ctx3.prepareFailure(ctx3.failureIndex, cut = ctx3.failureCut | cut1.splice | pCut)
             }else {
-              ctx1.prepareSuccess(
-                s.splice.apply(pValue.asInstanceOf[T], ctx1.successValue.asInstanceOf[V]),
-                cut = pCut | cut1.splice | ctx1.successCut
+              ctx3.prepareSuccess(
+                s.splice.apply(pValue.asInstanceOf[T], ctx3.successValue.asInstanceOf[V]),
+                cut = pCut | cut1.splice | ctx3.successCut
               )
             }
           }
@@ -126,18 +128,18 @@ object Parse {
     val cut1 = c.Expr[Boolean](if (cut) q"true" else q"false")
     reify {
       def wrap() = {
-        val ctx1 = ctx.splice
-        if (!ctx1.isSuccess) ctx1
+        val ctx4 = ctx.splice
+        if (!ctx4.isSuccess) ctx4
         else {
-          val pValue = ctx1.successValue
-          val pCut = ctx1.successCut
+          val pValue = ctx4.successValue
+          val pCut = ctx4.successCut
           other.splice
-          if (!ctx1.isSuccess) {
-            ctx1.prepareFailure(ctx1.failureIndex, cut = ctx1.failureCut | cut1.splice | pCut)
+          if (!ctx4.isSuccess) {
+            ctx4.prepareFailure(ctx4.failureIndex, cut = ctx4.failureCut | cut1.splice | pCut)
           } else {
-            ctx1.prepareSuccess(
-              s.splice.apply(pValue.asInstanceOf[T], ctx1.successValue.asInstanceOf[V]),
-              cut = pCut | cut1.splice | ctx1.successCut
+            ctx4.prepareSuccess(
+              s.splice.apply(pValue.asInstanceOf[T], ctx4.successValue.asInstanceOf[V]),
+              cut = pCut | cut1.splice | ctx4.successCut
             )
           }
         }
@@ -268,21 +270,21 @@ object Parse {
 
     val q"fasterparser.Parse.ByNameOps[$k, $v]($parse0)($conv, $ctx)" = c.prefix.tree
     reify {
-      val ctx1: Parsed[Any] = c.Expr[Parsed[Any]](ctx).splice
-      val startPos = ctx1.successIndex
+      val ctx5: Parsed[Any] = c.Expr[Parsed[Any]](ctx).splice
+      val startPos = ctx5.successIndex
       val conv1 = c.Expr[S => Parsed[T]](conv).splice
       val parse00 = c.Expr[S](parse0).splice
       def wrap() = {
 
         conv1(parse00)
-        if (ctx1.isSuccess) ctx1
+        if (ctx5.isSuccess) ctx5
         else{
-          ctx1.successIndex = startPos
-          if (ctx1.failureCut) ctx1
+          ctx5.successIndex = startPos
+          if (ctx5.failureCut) ctx5
           else {
             other.splice
-            if (ctx1.isSuccess) ctx1
-            else ctx1.freshFailure(startPos)
+            if (ctx5.isSuccess) ctx5
+            else ctx5.freshFailure(startPos)
 
           }
         }
@@ -296,19 +298,37 @@ object Parse {
     val q"fasterparser.Parse.ByNameOps[$k, $v]($parse0)($conv, $ctx)" = c.prefix.tree
 
     reify {
-      val ctx1 = c.Expr[Parsed[Any]](ctx).splice
-      val startPos = ctx1.successIndex
+      val ctx6 = c.Expr[Parsed[Any]](ctx).splice
+      val startPos = ctx6.successIndex
       val conv1 = c.Expr[S => Parsed[T]](conv).splice
       val parse00: S = c.Expr[S](parse0).splice
 
       conv1(parse00)
-      if (!ctx1.isSuccess) ctx1.asInstanceOf[Parsed[String]]
-      else ctx1.freshSuccess(ctx1.input.substring(startPos, ctx1.successIndex)).asInstanceOf[Parsed[String]]
+      if (!ctx6.isSuccess) ctx6.asInstanceOf[Parsed[String]]
+      else ctx6.freshSuccess(ctx6.input.substring(startPos, ctx6.successIndex)).asInstanceOf[Parsed[String]]
     }
   }
   implicit class ByNameOps[S, T](parse0: => S)(implicit val conv: S => Parsed[T], val ctx: Parsed[Any]){
     def parse00 = parse0
-    def |[V >: T](other: Parsed[V]): Parsed[V] = macro eitherMacro[S, T, V]
+    def |[V >: T](other: Parsed[V]): Parsed[V] = {
+      val startPos = ctx.successIndex
+      def wrap() = {
+
+        conv(parse0)
+        if (ctx.isSuccess) ctx
+        else{
+          ctx.successIndex = startPos
+          if (ctx.failureCut) ctx
+          else {
+            other
+            if (ctx.isSuccess) ctx
+            else ctx.freshFailure(startPos)
+
+          }
+        }
+      }
+      wrap().asInstanceOf[Parsed[V]]
+    }
     def repX[V](implicit repeater: Implicits.Repeater[T, V]): Parsed[V] = repX(sep=null)
     def repX[V](min: Int = 0,
                max: Int = Int.MaxValue,
@@ -442,7 +462,13 @@ object Parse {
       }
     }
 
-    def ! : Parsed[String] = macro captureMacro[S, T]
+    def ! : Parsed[String] = {
+      val startPos = ctx.successIndex
+
+      conv(parse00)
+      if (!ctx.isSuccess) ctx.asInstanceOf[Parsed[String]]
+      else ctx.freshSuccess(ctx.input.substring(startPos, ctx.successIndex)).asInstanceOf[Parsed[String]]
+    }
 
     def unary_! : Parsed[Unit] = {
       val startPos = ctx.successIndex
