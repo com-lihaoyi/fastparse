@@ -36,23 +36,23 @@ object BenchMain{
 
     }
 
-
-    val start = System.currentTimeMillis()
-    var count = 0
-    while(System.currentTimeMillis() - start < 20000){
-      count += 1
-      bodies.foreach(parser.expr.parse(_))
-
-    }
-    println(count)
-    val start2 = System.currentTimeMillis()
-    var count2 = 0
-    while(System.currentTimeMillis() - start2 < 20000){
-      count2 += 1
-      bodies.foreach(b => parser2.document(parseInputCtx(b)))
-
-    }
-    println(count2)
+//
+//    val start = System.currentTimeMillis()
+//    var count = 0
+//    while(System.currentTimeMillis() - start < 20000){
+//      count += 1
+//      bodies.foreach(parser.expr.parse(_))
+//
+//    }
+//    println(count)
+//    val start2 = System.currentTimeMillis()
+//    var count2 = 0
+//    while(System.currentTimeMillis() - start2 < 20000){
+//      count2 += 1
+//      bodies.foreach(b => parser2.document(parseInputCtx(b)))
+//
+//    }
+//    println(count2)
 
 
 

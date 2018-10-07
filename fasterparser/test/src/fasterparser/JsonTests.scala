@@ -55,37 +55,37 @@ object Json{
   val hexChars = Set('0'to'9', 'a'to'f', 'A'to'F').flatten
   val escChars = "\"/\\bfnrt".toSet
 
-  def space[_:Ctx]         = P( (" " | "\r" | "\n").rep )
-  def digits[_:Ctx]        = P( ("0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9").rep(1) )
-  def exponent[_:Ctx]      = P( ("e" | "E") ~ ("+" | "-").? ~ digits )
-  def fractional[_:Ctx]    = P( "." ~ digits )
-  def integral[_:Ctx]      = P( "0" | ("1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9")  ~ digits.? )
+  def space[_: P]         = P( (" " | "\r" | "\n").rep )
+  def digits[_: P]        = P( ("0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9").rep(1) )
+  def exponent[_: P]      = P( ("e" | "E") ~ ("+" | "-").? ~ digits )
+  def fractional[_: P]    = P( "." ~ digits )
+  def integral[_: P]      = P( "0" | ("1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9")  ~ digits.? )
 
-  def number[_:Ctx] = P( ("+" | "-").? ~ integral ~ fractional.? ~ exponent.? ).!.map(
+  def number[_: P] = P( ("+" | "-").? ~ integral ~ fractional.? ~ exponent.? ).!.map(
     x => Js.Num(x.toDouble)
   )
 
-  def `null`[_:Ctx]        = P( "null" ).map(_ => Js.Null)
-  def `false`[_:Ctx]       = P( "false" ).map(_ => Js.False)
-  def `true`[_:Ctx]        = P( "true" ).map(_ => Js.True)
+  def `null`[_: P]        = P( "null" ).map(_ => Js.Null)
+  def `false`[_: P]       = P( "false" ).map(_ => Js.False)
+  def `true`[_: P]        = P( "true" ).map(_ => Js.True)
 
-  def hexDigit[_:Ctx]      = P( CharPred(hexChars) )
-  def unicodeEscape[_:Ctx] = P( "u" ~ hexDigit ~ hexDigit ~ hexDigit ~ hexDigit )
-  def escape[_:Ctx]        = P( "\\" ~ (("\"" | "/" | "\\" | "b" | "f" | "n" | "r" | "t") | unicodeEscape) )
+  def hexDigit[_: P]      = P( CharPred(hexChars) )
+  def unicodeEscape[_: P] = P( "u" ~ hexDigit ~ hexDigit ~ hexDigit ~ hexDigit )
+  def escape[_: P]        = P( "\\" ~ (("\"" | "/" | "\\" | "b" | "f" | "n" | "r" | "t") | unicodeEscape) )
 
-  def strChars[_:Ctx] = P( CharsWhile(stringChars) )
-  def string[_:Ctx] =
+  def strChars[_: P] = P( CharsWhile(stringChars) )
+  def string[_: P] =
     P( space ~ "\"" ~/ (strChars | escape).rep.! ~ "\"").map(Js.Str)
 
-  def array[_:Ctx] =
+  def array[_: P] =
     P( "[" ~/ jsonExpr.rep(sep=",".~/) ~ space ~ "]").map(Js.Arr(_:_*))
 
-  def pair[_:Ctx] = P( string.map(_.value) ~/ ":" ~/ jsonExpr )
+  def pair[_: P] = P( string.map(_.value) ~/ ":" ~/ jsonExpr )
 
-  def obj[_:Ctx] =
+  def obj[_: P] =
     P( "{" ~/ pair.rep(sep=",".~/) ~ space ~ "}").map(Js.Obj(_:_*))
 
-  def jsonExpr[_:Ctx]: P[Js.Val] = P(
+  def jsonExpr[_: P]: P[Js.Val] = P(
     space ~ (obj | array | string | `true` | `false` | `null` | number) ~ space
   )
 }
