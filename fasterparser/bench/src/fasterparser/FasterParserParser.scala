@@ -148,12 +148,6 @@ class FasterParserParser{
     (tripleBarBlank | "\n" ~~ w ~~ CharsWhile(_ != '\n').!.map(_ + "\n")).repX
   )
 
-  def `null`[_: P] = P(Index ~~ "null" ~~ break).map(Expr.Null)
-  def `true`[_: P] = P(Index ~~ "true" ~~ break).map(Expr.True)
-  def `false`[_: P] = P(Index ~~ "false" ~~ break).map(Expr.False)
-  def `self`[_: P] = P(Index ~~ "self" ~~ break).map(Expr.Self)
-  def $[_: P] = P(Index ~~ "$").map(Expr.$)
-  def `super`[_: P] = P(Index ~~ "super" ~~ break).map(Expr.Super)
 
   def obj[_: P]: P[Expr] = P( (Index ~~ objinside).map(Expr.Obj.tupled) )
   def arr[_: P]: P[Expr] = P( (Index ~~ &("]")).map(Expr.Arr(_, Nil)) | arrBody )
@@ -220,16 +214,20 @@ class FasterParserParser{
   }
 
   def exprSuffix2[_: P]: P[Expr => Expr] = P(
-    (Index ~~ SingleChar./).flatMap{
-      case (i, '.') => id.map(x => Expr.Select(i, _: Expr, x))
-      case (i, '[') => (expr.? ~ (":" ~ expr.?).rep ~ "]").map{
-        case (Some(tree), Seq()) => Expr.Lookup(i, _: Expr, tree)
-        case (start, ins) => Expr.Slice(i, _: Expr, start, ins.lift(0).flatten, ins.lift(1).flatten)
+    for{
+      i <- Index
+      c <- SingleChar./
+      r <- (c: @switch) match{
+        case '.' => id.map(x => Expr.Select(i, _: Expr, x))
+        case '[' => (expr.? ~ (":" ~ expr.?).rep ~ "]").map{
+          case (Some(tree), Seq()) => Expr.Lookup(i, _: Expr, tree)
+          case (start, ins) => Expr.Slice(i, _: Expr, start, ins.lift(0).flatten, ins.lift(1).flatten)
+        }
+        case '(' => (args ~ ")").map(x => Expr.Apply(i, _: Expr, x))
+        case '{' => (objinside ~ "}").map(x => Expr.ObjExtend(i, _: Expr, x))
+        case _ => Fail
       }
-      case (i, '(') => (args ~ ")").map(x => Expr.Apply(i, _: Expr, x))
-      case (i, '{') => (objinside ~ "}").map(x => Expr.ObjExtend(i, _: Expr, x))
-      case _ => Fail
-    }
+    } yield r
   )
 
   def local[_: P] = P( localExpr )
@@ -254,8 +252,10 @@ class FasterParserParser{
   def constructString(index: Int, lines: Seq[String]) = Expr.Str(index, lines.mkString)
   // Any `expr` that isn't naively left-recursive
   def expr2[_: P]: P[Expr] = P(
-    (Index ~~ SingleChar./).flatMap{ case (index, c) =>
-      (c: @switch) match {
+    for{
+      index <- Index
+      c <- SingleChar./
+      r <- (c: @switch) match {
         case '{' => Pass ~ obj ~ "}"
         case '+' | '-' | '~' | '!' => Pass ~ unaryOpExpr(index, c)
         case '[' => Pass ~ arr ~ "]"
@@ -290,7 +290,7 @@ class FasterParserParser{
         }
         case _ => Fail
       }
-    }
+    } yield r
   )
 
   def objinside[_: P]: P[Expr.ObjBody] = P(
