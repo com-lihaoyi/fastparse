@@ -8,7 +8,7 @@ object Parsing {
 
   type P[+T] = Parse[T]
 
-    def P[T](t: Parse[T])(implicit name: sourcecode.Name): Parse[T] = macro pMacro[T]
+  def P[T](t: Parse[T])(implicit name: sourcecode.Name): Parse[T] = macro pMacro[T]
 
   def pMacro[T: c.WeakTypeTag](c: Context)
                               (t: c.Expr[Parse[T]])
@@ -16,31 +16,24 @@ object Parsing {
 
     import c.universe._
     reify[Parse[T]]{
-      t.splice match{case ctx0 =>
-        if (!ctx0.isSuccess) ctx0.failureStack = name.splice.value :: ctx0.failureStack
-        ctx0.asInstanceOf[Parse[T]]
-      }
+      t.splice// match{case ctx0 =>
+//        if (!ctx0.isSuccess) ctx0.failureStack = name.splice.value :: ctx0.failureStack
+//        ctx0
+//      }
     }
   }
 
-  implicit def LiteralStr(s: String)(implicit ctx: Parse[_]): Parse[Unit] = {
+  implicit def LiteralStr(s: String)(implicit ctx: Parse[Any]): Parse[Unit] = {
 
     if (ctx.input.startsWith(s, ctx.index)) ctx.freshSuccess((), ctx.index + s.length)
     else ctx.freshFailure().asInstanceOf[Parse[Unit]]
   }
-  def literalStrMacro(c: Context)(s: c.Expr[String])(ctx: c.Expr[Parse[Any]]): c.Expr[Parse[Unit]] = {
-    import c.universe._
-    reify{
-      val s1 = s.splice
-      if (ctx.splice.input.startsWith(s1, ctx.splice.index)) ctx.splice.freshSuccess((), ctx.splice.index + s1.length)
-      else ctx.splice.freshFailure().asInstanceOf[Parse[Unit]]
-    }
-  }
 
   def cutMacro[T: c.WeakTypeTag](c: Context): c.Expr[Parse[T]] = {
     import c.universe._
+    val lhs = c.prefix.asInstanceOf[c.Expr[EagerOps[_]]]
     reify{
-      val ctx1 = c.prefix.splice.asInstanceOf[EagerOps[_]].parse0
+      val ctx1 = lhs.splice.parse0
       if (ctx1.isSuccess) ctx1.prepareSuccess(ctx1.successValue, cut = true).asInstanceOf[Parse[T]]
       else ctx1.prepareFailure(ctx1.index)
     }
@@ -65,7 +58,7 @@ object Parsing {
     }
 
     reify {
-      def sequenceWrap() = {
+      {
         lhs.splice.parse0 match{ case ctx3 =>
           if (!ctx3.isSuccess) ctx3
           else {
@@ -76,7 +69,7 @@ object Parsing {
             else {
               other.splice
               if (!ctx3.isSuccess){
-                ctx3.prepareFailure(ctx3.index, cut = ctx3.failureCut | cut1.splice | pCut)
+                ctx3.prepareFailure(ctx3.index, cut = cut1.splice | ctx3.failureCut | pCut)
               }else {
                 ctx3.prepareSuccess(
                   s.splice.apply(pValue.asInstanceOf[T], ctx3.successValue.asInstanceOf[V]),
@@ -87,8 +80,7 @@ object Parsing {
           }
 
         }
-      }
-      sequenceWrap().asInstanceOf[Parse[R]]
+      }.asInstanceOf[Parse[R]]
     }
   }
 
@@ -155,12 +147,12 @@ object Parsing {
     }
     def flatMap[V](f: T => Parse[V]): Parse[V] = {
       if (!parse0.isSuccess) parse0.asInstanceOf[Parse[V]]
-      else  f(parse0.successValue.asInstanceOf[T])
+      else f(parse0.successValue.asInstanceOf[T])
     }
 
     def |[V >: T](other: Parse[V])(implicit ctx: Parse[Any]): Parse[V] = macro eitherMacro[T, V]
 
-    def !(implicit ctx: Parse[Any]): Parse[String] = macro captureMacro[T]
+    def !(implicit ctx: Parse[Any]): Parse[String] = macro captureMacro
   }
 
 
@@ -172,40 +164,33 @@ object Parsing {
 
     val lhs0 = c.prefix.asInstanceOf[c.Expr[EagerOps[T]]]
     reify {
-      val ctx5: Parse[Any] = ctx.splice
+      val ctx5 = ctx.splice.asInstanceOf[Parse[V]]
       val startPos = ctx5.index
-      lhs0.splice match{ case lhs =>
-        def eitherWrap() = {
-          if (ctx5.isSuccess) ctx5
-          else{
-            ctx5.index = startPos
-            if (ctx5.failureCut) ctx5
-            else {
-              other.splice
-              if (ctx5.isSuccess) ctx5
-              else ctx5.freshFailure(startPos)
-
-            }
-          }
-        }
-        eitherWrap().asInstanceOf[Parse[V]]
+      lhs0.splice
+      if (ctx5.isSuccess | ctx5.failureCut) ctx5
+      else {
+        ctx5.index = startPos
+        other.splice
+        if (ctx5.isSuccess) ctx5
+        else if (ctx5.failureCut) ctx5
+        else ctx5.prepareFailure(startPos)
       }
+
     }
   }
-  def captureMacro[T: c.WeakTypeTag](c: Context)
-                                    (ctx: c.Expr[Parse[Any]]): c.Expr[Parse[String]] = {
+
+  def captureMacro(c: Context)
+                  (ctx: c.Expr[Parse[Any]]): c.Expr[Parse[String]] = {
     import c.universe._
 
-    val lhs0 = c.prefix.asInstanceOf[c.Expr[EagerOps[T]]]
+    val lhs0 = c.prefix.asInstanceOf[c.Expr[EagerOps[_]]]
 
     reify {
       val ctx6 = ctx.splice
       val startPos = ctx6.index
-      lhs0.splice match{ case lhs =>
-
-        if (!ctx6.isSuccess) ctx6.asInstanceOf[Parse[String]]
-        else ctx6.freshSuccess(ctx6.input.substring(startPos, ctx6.index)).asInstanceOf[Parse[String]]
-      }
+      lhs0.splice
+      if (!ctx6.isSuccess) ctx6.asInstanceOf[Parse[String]]
+      else ctx6.freshSuccess(ctx6.input.substring(startPos, ctx6.index))
     }
   }
 
@@ -393,6 +378,7 @@ object Parsing {
   }
 
   def Pass(implicit ctx: Parse[_]): Parse[Unit] = ctx.freshSuccess(())
+  def Pass[T](v: T)(implicit ctx: Parse[_]): Parse[T] = ctx.freshSuccess(v)
 
   def Fail(implicit ctx: Parse[_]): Parse[Nothing] = ctx.freshFailure().asInstanceOf[Parse[Nothing]]
 
@@ -421,77 +407,3 @@ object Parsing {
   def parseInputCtx(s: String): Parse[_] = Parse(s)
 }
 
-class Parse[+T](val input: String,
-                var failureStack: List[String],
-                var isSuccess: Boolean,
-                var logDepth: Int,
-                var index: Int,
-                var successCut: Boolean,
-                var failureCut: Boolean,
-                var successValue: Any){
-
-  def freshSuccess[V](value: V, index: Int = index) = prepareSuccess(value, index, cut = false)
-  def prepareSuccess[V](value: V, index: Int = index, cut: Boolean = successCut): Parse[V] = {
-
-    isSuccess = true
-    successValue = value
-    this.index = index
-    successCut = cut
-    this.asInstanceOf[Parse[V]]
-  }
-  def freshFailure(startPos: Int = index): Parse[Nothing] = {
-    prepareFailure(startPos, cut = false)
-  }
-
-  def prepareFailure(index: Int, cut: Boolean = failureCut): Parse[Nothing] = {
-    isSuccess = false
-    failureStack = Nil
-    this.index = index
-    failureCut = cut
-    this.asInstanceOf[Parse[Nothing]]
-  }
-
-  def result: Result[T] = {
-    if (isSuccess) Result.Success(successValue.asInstanceOf[T], index)
-    else Result.Failure(index, failureStack)
-  }
-}
-object Parse{
-  def apply(input: String) = new Parse(
-    input = input,
-    failureStack = List.empty,
-    isSuccess = true,
-    logDepth = 0,
-    0, false, false, ()
-  )
-}
-
-abstract class Result[+T](val isSuccess: Boolean){
-
-  def get: Result.Success[T]
-}
-
-object Result{
-  object Success{
-    def unapply[T](x: Result[T]): Option[(T, Int)] = x match{
-      case s: Success[T] => Some((s.value, s.index))
-      case f: Failure => None
-    }
-  }
-  object Failure{
-    def unapply[T](x: Result[T]): Option[(Unit, Int, Unit)] = x match{
-      case s: Failure => Some(((), s.index, ()))
-      case f: Success[T] => None
-    }
-  }
-  case class Success[+T](value: T, index: Int) extends Result[T](true){
-    def get = this
-
-    override def toString() = s"Result.Success($value)"
-  }
-  case class Failure(index: Int, stack: List[String]) extends Result[Nothing](false){
-    def get = throw new Exception("Parse Error at " + index + ":\n" + stack.mkString("\n"))
-
-    override def toString() = s"Result.Failure($index)"
-  }
-}
