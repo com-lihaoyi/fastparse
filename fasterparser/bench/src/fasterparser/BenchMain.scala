@@ -1,7 +1,7 @@
 package test.scala.fasterparser
 
 import test.fasterparser.FasterParserParser
-import fasterparser.Parse._
+import fasterparser.Parsing._
 object BenchMain{
 
   // Parsing example jsonnet files taken from https://github.com/grafana/jsonnet-libs

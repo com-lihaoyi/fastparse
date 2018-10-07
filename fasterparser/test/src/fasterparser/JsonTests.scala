@@ -1,7 +1,7 @@
 
 package test.scala.fasterparser
 
-import fasterparser.Parse._
+import fasterparser.Parsing._
 import fasterparser._
 import utest._
 
@@ -33,7 +33,7 @@ case class NamedFunction[T, V](f: T => V, name: String) extends (T => V){
 
 }
 object Json{
-  import fasterparser.Parse._
+  import fasterparser.Parsing._
   def stringChars(c: Char) = c != '\"' && c != '\\'
   def spaceChars(c: Char) = c == ' ' || c == '\r' || c == '\n'
 
@@ -100,10 +100,10 @@ object JsonTests extends TestSuite{
   val tests = Tests{
     'pass {
       def test(p: Ctx[_] => P[_], s: String) = p(s) match{
-        case Parsed.Success(v, i) =>
+        case Parse.Success(v, i) =>
           val expectedIndex = s.length
           assert(i == expectedIndex)
-        case f: Parsed.Failure => throw new Exception(f.index.toString)
+        case f: Parse.Failure => throw new Exception(f.index.toString)
       }
 
       'parts {
@@ -113,7 +113,7 @@ object JsonTests extends TestSuite{
         * - test(obj(_), """{"omg": "123", "wtf": 456, "bbq": "789"}""")
       }
       'jsonExpr - {
-        val Parsed.Success(value, _) = jsonExpr(
+        val Parse.Success(value, _) = jsonExpr(
           """{"omg": "123", "wtf": 12.4123}"""
         )
         assert(value == Js.Obj("omg" -> Js.Str("123"), "wtf" -> Js.Num(12.4123)))
@@ -160,8 +160,8 @@ object JsonTests extends TestSuite{
     'fail{
       def check(s: String, expectedError: String, expectedShortError: String) = {
         jsonExpr(s) match{
-          case s: Parsed.Success[_] => throw new Exception("Parsing should have failed:")
-          case f: Parsed.Failure =>
+          case s: Parse.Success[_] => throw new Exception("Parsing should have failed:")
+          case f: Parse.Failure =>
 //            val error = f.extra.traced.trace
 //            val expected = expectedError.trim
 //            assert(error == expected)
