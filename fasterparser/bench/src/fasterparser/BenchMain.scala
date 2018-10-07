@@ -49,7 +49,7 @@ object BenchMain{
     var count2 = 0
     while(System.currentTimeMillis() - start2 < 20000){
       count2 += 1
-      bodies.foreach(b => parser2.expr(parseInputCtx(b)))
+      bodies.foreach(b => parser2.document(parseInputCtx(b)))
 
     }
     println(count2)
