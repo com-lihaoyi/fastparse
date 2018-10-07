@@ -62,7 +62,7 @@ class FasterParserParser{
             }
         }
       }
-      rec(current = cfg.successIndex, state = 0)
+      rec(current = cfg.index, state = 0)
     }
   }
 
