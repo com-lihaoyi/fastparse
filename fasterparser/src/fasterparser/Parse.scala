@@ -229,8 +229,7 @@ object Parse {
   }
 
 
-  implicit def EagerOps[T](parse0: Parsed[T]) = new EagerOps(parse0)
-  class EagerOps[T](val parse0: Parsed[T]) {
+  implicit class EagerOps[T](val parse0: Parsed[T]) extends AnyVal{
 
     def ~/[V, R](other: Parsed[V])
                 (implicit s: Implicits.Sequencer[T, V, R],
@@ -503,19 +502,17 @@ object Parse {
     else ctx.freshSuccess((), ctx.index + 1)
   }
   def CharsWhile(p: Char => Boolean, min: Int = 1)(implicit ctx: Parsed[_]): Parsed[Unit] = {
-    def currentCharMatches = {
-      val index = ctx.index
-      val input = ctx.input
-      index < input.length && p(input(index))
-    }
+    var index = ctx.index
+    val input = ctx.input
+    val inputLength = input.length
 
-    if (!currentCharMatches)  {
+
+    val start = index
+    while(index < inputLength && p(input(index))) index += 1
+    if (index - start >= min) ctx.freshSuccess((), index = index)
+    else {
       ctx.isSuccess = false
-      if (min == 0) ctx.freshSuccess(()) else ctx.asInstanceOf[Parsed[Unit]]
-    }else{
-      val start = ctx.index
-      while(currentCharMatches) ctx.index += 1
-      if (ctx.index - start >= min) ctx.freshSuccess(()) else ctx.asInstanceOf[Parsed[Unit]]
+      ctx.asInstanceOf[Parsed[Unit]]
     }
   }
 

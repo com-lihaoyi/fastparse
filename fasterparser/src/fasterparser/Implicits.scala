@@ -14,16 +14,22 @@ object Implicits {
     def apply(t: T, v: V): R
   }
   object Sequencer extends LowPriSequencer{
-    def apply[T, V, R](f: (T, V) => R) = new Sequencer[T, V, R]{
+    class NarySequencer[T, V, R](f: (T, V) => R) extends Sequencer[T, V, R]{
       def apply(t: T, v: V): R = f(t, v)
     }
-    implicit def SingleSequencer[T]: Sequencer[Unit, T, T] = Sequencer( (_, t) => t )
+    implicit def SingleSequencer[T]: Sequencer[Unit, T, T] = SingleSequencer0.asInstanceOf[Sequencer[Unit, T, T]]
+    object SingleSequencer0 extends Sequencer[Unit, Any, Any]{
+      def apply(t: Unit, v: Any): Any = v
+    }
   }
   trait LowPriSequencer extends LowerPriSequencer{
-    implicit def UnitSequencer[T]: Sequencer[T, Unit, T] = Sequencer( (t, _) => t )
+    object UnitSequencer0 extends Sequencer[Any, Unit, Any]{
+      def apply(t: Any, v: Unit): Any = t
+    }
+    implicit def UnitSequencer[T]: Sequencer[T, Unit, T] = UnitSequencer0.asInstanceOf[Sequencer[T, Unit, T]]
   }
   trait LowerPriSequencer extends SequencerGen[Sequencer]{
-    protected[this] def Sequencer0[A, B, C](f: (A, B) => C) = Sequencer(f)
+    protected[this] def Sequencer0[A, B, C](f: (A, B) => C) = new Sequencer.NarySequencer(f)
   }
   trait Repeater[-T, R]{
     type Acc
@@ -40,12 +46,12 @@ object Implicits {
     }
   }
   trait LowPriRepeater{
-    implicit def GenericRepeaterImplicit[T] = GenericRepeater[T]()
-    case class GenericRepeater[T]() extends Repeater[T, Seq[T]]{
-      type Acc = mutable.Buffer[T]
-      def initial = mutable.Buffer.empty[T]
-      def accumulate(t: T, acc: mutable.Buffer[T]) = acc += t
-      def result(acc: mutable.Buffer[T]) = acc
+    implicit def GenericRepeaterImplicit[T] = GenericRepeatedImplicit0.asInstanceOf[Repeater[T, Seq[T]]]
+    object GenericRepeatedImplicit0 extends Repeater[Any, Seq[Any]]{
+      type Acc = mutable.Buffer[Any]
+      def initial = mutable.Buffer.empty[Any]
+      def accumulate(t: Any, acc: mutable.Buffer[Any]) = acc += t
+      def result(acc: mutable.Buffer[Any]) = acc
     }
   }
 
@@ -61,10 +67,10 @@ object Implicits {
     }
   }
   trait LowPriOptioner{
-    implicit def GenericOptionerImplicit[T] = GenericOptioner[T]()
-    case class GenericOptioner[T]() extends Optioner[T, Option[T]]{
+    implicit def GenericOptionerImplicit[T] = GenericOptionerImplicit0.asInstanceOf[Optioner[T, Option[T]]]
+    object GenericOptionerImplicit0 extends Optioner[Any, Option[Any]]{
       def none = None
-      def some(value: T) = Some(value)
+      def some(value: Any) = Some(value)
     }
   }
 }
