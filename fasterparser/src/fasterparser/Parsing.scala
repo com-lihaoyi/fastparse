@@ -15,11 +15,14 @@ object Parsing {
                               (name: c.Expr[sourcecode.Name]): c.Expr[Parse[T]] = {
 
     import c.universe._
+    val ctx = c.Expr[Parse[_]](q"implicitly[fasterparser.Parse[_]]")
     reify[Parse[T]]{
-      t.splice// match{case ctx0 =>
-//        if (!ctx0.isSuccess) ctx0.failureStack = name.splice.value :: ctx0.failureStack
-//        ctx0
-//      }
+      val startIndex = ctx.splice.index
+      t.splice match{case ctx0 =>
+
+        if (ctx0.traceIndex != -1 && !ctx0.isSuccess) ctx0.failureStack = (name.splice.value -> startIndex) :: ctx0.failureStack
+        ctx0
+      }
     }
   }
 

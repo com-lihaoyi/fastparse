@@ -19,9 +19,9 @@ object ExampleTests extends TestSuite{
 
         val failure = Parse("b").read(parseA(_)).asInstanceOf[Result.Failure]
         assert(
-//          failure.lastParser == ("a": P0),
-          failure.index == 0,
-//          failure.extra.traced.trace == """parseA:1:1 / "a":1:1 ..."b""""
+          failure.stack == List(("\"a\"", 0)),
+          failure.toString == """Result.Failure(Expected "a":1:1, found "b")""",
+          failure.traced.trace == """Expected parseA:1:1 / "a":1:1, found "b""""
         )
       }
 

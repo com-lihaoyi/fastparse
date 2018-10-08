@@ -61,17 +61,21 @@ class Parse[+T](val input: String,
 
   def result: Result[T] = {
     if (isSuccess) Result.Success(successValue.asInstanceOf[T], index)
-    else Result.Failure(index, (failureMsg -> index) :: failureStack, Result.Extra(input, startIndex))
+    else Result.Failure(
+      index,
+      (failureMsg -> index) :: failureStack,
+      Result.Extra(input, startIndex, index, originalParser)
+    )
   }
 }
 object Parse{
   def apply()(implicit i: Parse[Any]): Parse[Any] = i
-  def apply(input: String, traceIndex: Int = -1) = new Parse(
+  def apply(input: String, startIndex: Int = 0, traceIndex: Int = -1) = new Parse(
     input = input,
     failureStack = List.empty,
     failureMsg = null,
     isSuccess = true,
     logDepth = 0,
-    0, 0, false, false, (), false, traceIndex, null
+    startIndex, startIndex, false, false, (), false, traceIndex, null
   )
 }
