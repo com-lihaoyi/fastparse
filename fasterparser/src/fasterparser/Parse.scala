@@ -27,8 +27,20 @@ class Parse[+T](val input: String,
   // generate huge methods, so anything we can do to reduce the size of the
   // generated code helps avoid bytecode size blowup
 
-  def freshSuccess[V](value: V, index: Int) = prepareSuccess(value, index, cut = false)
-  def freshSuccess[V](value: V) = prepareSuccess(value, index, cut = false)
+  def freshSuccess[V](value: V, msg: => String, index: Int) = {
+    if (traceIndex != -1 && traceIndex == this.index){
+      if (failureMsg == null && msg != "") this.failureMsg = msg
+      else if (msg != "" && msg != "") this.failureMsg = this.failureMsg  + " | " + msg
+    }
+    prepareSuccess(value, index, cut = false)
+  }
+  def freshSuccess[V](value: V, msg: => String) = {
+    if (traceIndex != -1 && traceIndex == this.index){
+      if (failureMsg == null && msg != "") this.failureMsg = msg
+      else if (msg != "") this.failureMsg = this.failureMsg  + " | " + msg
+    }
+    prepareSuccess(value, index, cut = false)
+  }
   def prepareSuccess[V](value: V): Parse[V] = prepareSuccess(value, index, successCut)
   def prepareSuccess[V](value: V, index: Int): Parse[V] = prepareSuccess(value, index, successCut)
   def prepareSuccess[V](value: V, cut: Boolean): Parse[V] = prepareSuccess(value, index, cut)
@@ -40,13 +52,23 @@ class Parse[+T](val input: String,
     this.asInstanceOf[Parse[V]]
   }
   def freshFailure(msg: String): Parse[Nothing] = {
+    failureStack = Nil
     val res = prepareFailure(index, cut = false)
-    if (traceIndex == -1 || failureMsg == null) this.failureMsg = msg
+    if (traceIndex == -1) this.failureMsg = msg
+    else if (traceIndex == index){
+      if (failureMsg == null && msg != "") this.failureMsg = msg
+      else if (msg != "") this.failureMsg = this.failureMsg  + " | " + msg
+    }
     res
   }
   def freshFailure(msg: String, startPos: Int): Parse[Nothing] = {
+    failureStack = Nil
     val res = prepareFailure(startPos, cut = false)
-    if (traceIndex == -1 || failureMsg == null) this.failureMsg = msg
+    if (traceIndex == -1) this.failureMsg = msg
+    else if (traceIndex == index){
+      if (failureMsg == null && msg != "") this.failureMsg = msg
+      else if (msg != "") this.failureMsg = this.failureMsg  + " | " + msg
+    }
     res
   }
 

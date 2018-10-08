@@ -21,7 +21,6 @@ object Parsing {
       t.splice match{case ctx0 =>
         if (ctx0.traceIndex != -1 && !ctx0.isSuccess) {
           ctx0.failureStack = (name.splice.value -> startIndex) :: ctx0.failureStack
-          println(ctx0.failureStack)
         }
         ctx0
       }
@@ -29,10 +28,7 @@ object Parsing {
   }
 
   implicit def LiteralStr(s: String)(implicit ctx: Parse[Any]): Parse[Unit] = {
-    if (ctx.traceIndex != -1 && ctx.traceIndex == ctx.index){
-      ctx.failureMsg = Util.literalize(s)
-    }
-    if (ctx.input.startsWith(s, ctx.index)) ctx.freshSuccess((), ctx.index + s.length)
+    if (ctx.input.startsWith(s, ctx.index)) ctx.freshSuccess((), Util.literalize(s), ctx.index + s.length)
     else ctx.freshFailure(Util.literalize(s)).asInstanceOf[Parse[Unit]]
   }
 
@@ -50,7 +46,7 @@ object Parsing {
   }
   def IgnoreCase(s: String)(implicit ctx: Parse[Any]): Parse[Unit] = {
 
-    if (startsWithIgnoreCase(ctx.input, s, ctx.index)) ctx.freshSuccess((), ctx.index + s.length)
+    if (startsWithIgnoreCase(ctx.input, s, ctx.index)) ctx.freshSuccess((), Util.literalize(s), ctx.index + s.length)
     else ctx.freshFailure(Util.literalize(s)).asInstanceOf[Parse[Unit]]
   }
 
@@ -215,7 +211,6 @@ object Parsing {
       val ctx5 = ctx.splice.asInstanceOf[Parse[V]]
       val startPos = ctx5.index
       lhs0.splice
-      val leftMsg = ctx5.failureMsg
       if (ctx5.isSuccess | ctx5.failureCut) ctx5
       else {
         ctx5.index = startPos
@@ -225,8 +220,7 @@ object Parsing {
         else {
           val res = ctx5.prepareFailure(startPos)
           ctx5.failureStack = Nil
-          if (ctx5.traceIndex != -1) ctx5.failureMsg = leftMsg + " | " + ctx5.failureMsg
-          else ctx5.failureMsg = "???"
+          if (ctx5.traceIndex == -1) ctx5.failureMsg = "???"
           res
         }
       }
@@ -245,7 +239,7 @@ object Parsing {
       val startPos = ctx6.index
       lhs0.splice
       if (!ctx6.isSuccess) ctx6.asInstanceOf[Parse[String]]
-      else ctx6.freshSuccess(ctx6.input.substring(startPos, ctx6.index))
+      else ctx6.prepareSuccess(ctx6.input.substring(startPos, ctx6.index))
     }
   }
 
@@ -367,7 +361,7 @@ object Parsing {
     def unary_! : Parse[Unit] = {
       val startPos = ctx.index
       parse0
-      if (!ctx.isSuccess) ctx.freshSuccess((), startPos)
+      if (!ctx.isSuccess) ctx.freshSuccess((), "", startPos)
       else ctx.prepareFailure(startPos)
     }
 
@@ -376,7 +370,7 @@ object Parsing {
       parse0
       if (ctx.isSuccess) ctx.prepareSuccess(optioner.some(ctx.successValue.asInstanceOf[T]))
       else if (ctx.failureCut) ctx.asInstanceOf[Parse[V]]
-      else ctx.freshSuccess(optioner.none, startPos)
+      else ctx.freshSuccess(optioner.none, "", startPos)
     }
 
 
@@ -398,34 +392,35 @@ object Parsing {
   }
 
   def End(implicit ctx: Parse[_]): Parse[Unit] = {
-    if (ctx.index == ctx.input.length) ctx.freshSuccess(())
+    if (ctx.index == ctx.input.length) ctx.freshSuccess((), "end-of-input")
     else ctx.freshFailure("end-of-input").asInstanceOf[Parse[Unit]]
+
   }
 
   def Start(implicit ctx: Parse[_]): Parse[Unit] = {
-    if (ctx.index == 0) ctx.freshSuccess(())
+    if (ctx.index == 0) ctx.freshSuccess((), "start-of-input")
     else ctx.freshFailure("start-of-input").asInstanceOf[Parse[Unit]]
 
   }
 
-  def Pass(implicit ctx: Parse[_]): Parse[Unit] = ctx.freshSuccess(())
-  def Pass[T](v: T)(implicit ctx: Parse[_]): Parse[T] = ctx.freshSuccess(v)
+  def Pass(implicit ctx: Parse[_]): Parse[Unit] = ctx.freshSuccess((), "")
+  def Pass[T](v: T)(implicit ctx: Parse[_]): Parse[T] = ctx.freshSuccess(v, "")
 
   def Fail(implicit ctx: Parse[_]): Parse[Nothing] = ctx.freshFailure("failure").asInstanceOf[Parse[Nothing]]
 
-  def Index(implicit ctx: Parse[_]): Parse[Int] = ctx.freshSuccess(ctx.index)
+  def Index(implicit ctx: Parse[_]): Parse[Int] = ctx.freshSuccess(ctx.index, "")
 
   def AnyChar(implicit ctx: Parse[_]): Parse[Unit] = {
     if (!(ctx.index < ctx.input.length)) ctx.freshFailure("any-character").asInstanceOf[Parse[Unit]]
-    else ctx.freshSuccess((), ctx.index + 1)
+    else ctx.freshSuccess((), "any-character", ctx.index + 1)
   }
   def SingleChar(implicit ctx: Parse[_]): Parse[Char] = {
     if (!(ctx.index < ctx.input.length)) ctx.freshFailure("any-character").asInstanceOf[Parse[Char]]
-    else ctx.freshSuccess(ctx.input(ctx.index), ctx.index + 1)
+    else ctx.freshSuccess(ctx.input(ctx.index), "any-character", ctx.index + 1)
   }
   def CharPred(p: Char => Boolean)(implicit ctx: Parse[_]): Parse[Unit] = {
     if (!(ctx.index < ctx.input.length && p(ctx.input(ctx.index)))) ctx.freshFailure("character-predicate").asInstanceOf[Parse[Unit]]
-    else ctx.freshSuccess((), ctx.index + 1)
+    else ctx.freshSuccess((), "character-predicate", ctx.index + 1)
   }
   def CharIn(s: String*)(implicit ctx: Parse[_]): Parse[Unit] = macro charInMacro
   def parseCharCls(c: Context)(char: c.Expr[Char], ss: Seq[String]) = {
@@ -473,16 +468,14 @@ object Parsing {
 
     val parsed = parseCharCls(c)(reify(ctx.splice.input(ctx.splice.index)), literals)
     val bracketed = c.Expr[String](Literal(Constant(literals.map("[" + _ + "]").mkString)))
-    val res = reify {
+    reify {
       if (!(ctx.splice.index < ctx.splice.input.length)) {
         ctx.splice.freshFailure(bracketed.splice).asInstanceOf[Parse[Unit]]
       } else parsed.splice match {
-        case true => ctx.splice.freshSuccess((), ctx.splice.index + 1)
+        case true => ctx.splice.freshSuccess((), bracketed.splice, ctx.splice.index + 1)
         case false => ctx.splice.freshFailure(bracketed.splice).asInstanceOf[Parse[Unit]]
       }
     }
-
-    res
   }
   def CharsWhileIn(s: String)
                  (implicit ctx: Parse[_]): Parse[Unit] = macro charsWhileInMacro1
@@ -524,7 +517,7 @@ object Parsing {
         $index < $inputLength &&
         ${parseCharCls(c)(c.Expr[Char](q"$input($index)"), Seq(literal))}
       ) $index += 1
-      if ($index - $start >= $min) $ctx1.freshSuccess((), index = $index)
+      if ($index - $start >= $min) $ctx1.freshSuccess((), "chars-while-in(" + $bracketed+ ", " + $min + ")", index = $index)
       else {
         $ctx1.failureMsg = $bracketed
         $ctx1.isSuccess = false
@@ -541,9 +534,10 @@ object Parsing {
 
     val start = index
     while(index < inputLength && p(input(index))) index += 1
-    if (index - start >= min) ctx.freshSuccess((), index = index)
+    if (index - start >= min) ctx.freshSuccess((), s"chars-while($min)", index = index)
     else {
       ctx.isSuccess = false
+      ctx.failureMsg = s"chars-while($min)"
       ctx.asInstanceOf[Parse[Unit]]
     }
   }
@@ -619,7 +613,7 @@ object Parsing {
 
       var $output: Int = -1
       ${rec(0, trie)}
-      if ($output != -1) $ctx1.freshSuccess((), index = $output)
+      if ($output != -1) $ctx1.freshSuccess((), $bracketed, index = $output)
       else {
         $ctx1.failureMsg = $bracketed
         $ctx1.isSuccess = false

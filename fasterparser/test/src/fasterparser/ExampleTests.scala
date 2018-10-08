@@ -18,10 +18,11 @@ object ExampleTests extends TestSuite{
         assert(value == (), successIndex == 1)
 
         val failure = Parse("b").read(parseA(_)).asInstanceOf[Result.Failure]
+        val trace = failure.traced.trace
         assert(
           failure.stack == List(("\"a\"", 0)),
           failure.toString == """Result.Failure(Expected "a":1:1, found "b")""",
-          failure.traced.trace == """Expected parseA:1:1 / "a":1:1, found "b""""
+          trace == """Expected parseA:1:1 / "a":1:1, found "b""""
         )
       }
 
@@ -66,9 +67,10 @@ object ExampleTests extends TestSuite{
 
         val Result.Success(_, 6) = Parse("aaaaab").read(either(_))
         val f @ Result.Failure(5, _, _) = Parse("aaaaae").read(either(_))
+        val trace = f.traced.trace
         assert(
           f.toString == """Result.Failure(Expected ???:1:6, found "e")""",
-          f.traced.trace == """Expected either:1:1 / "b" | "c" | "d":1:6, found "e""""
+          trace == """Expected either:1:1 / "a" | "b" | "c" | "d":1:6, found "e""""
         )
       }
 
@@ -292,8 +294,6 @@ object ExampleTests extends TestSuite{
           failure.index == 4,
           failure.extra.traced.trace =="""Expected nocut:1:1 / alpha:1:5 / [a-z]:1:5, found "1234""""
         )
-        println("TRACE")
-        failure.extra.traced.trace
       }
       'repnocut{
         def alpha[_: P] = P( CharIn("a-z") )
@@ -305,10 +305,9 @@ object ExampleTests extends TestSuite{
 
         val failure = Parse("val abcd; val ").read(stmts(_)).asInstanceOf[Result.Failure]
         assert(
-          failure.index == 10//,
-//          failure.extra.traced.trace == """stmts:1:1 / (End | " "):1:11 ..."val """"
+          failure.index == 10,
+          failure.extra.traced.trace == """Expected stmts:1:1 / " " | "val " | end-of-input:1:11, found "val """"
         )
-        failure.extra.traced.trace
       }
       'repcut{
         def alpha[_: P] = P( CharIn("a-z") )
@@ -320,9 +319,9 @@ object ExampleTests extends TestSuite{
 
         val failure = Parse("val abcd; val ").read(stmts(_)).asInstanceOf[Result.Failure]
         assert(
-          failure.index == 14//,
-//          failure.extra.traced.trace ==
-//            """stmts:1:1 / stmt:1:11 / alpha:1:15 / CharIn("abcdefghijklmnopqrstuvwxyz"):1:15 ..."""""
+          failure.index == 14,
+          failure.extra.traced.trace ==
+            """Expected stmts:1:1 / stmt:1:11 / alpha:1:15 / [a-z]:1:15, found """""
         )
       }
       'delimiternocut{
@@ -333,8 +332,8 @@ object ExampleTests extends TestSuite{
 
         val failure = Parse("(1,)").read(tuple(_)).asInstanceOf[Result.Failure]
         assert(
-          failure.index == 2//,
-//          failure.extra.traced.trace == """tuple:1:1 / (")" | CharIn("0123456789")):1:3 ...",)""""
+          failure.index == 2,
+          failure.extra.traced.trace == """Expected tuple:1:1 / [0-9] | "," | ")":1:3, found ",)""""
         )
       }
       'delimitercut{
@@ -345,8 +344,8 @@ object ExampleTests extends TestSuite{
 
         val failure = Parse("(1,)").read(tuple(_)).asInstanceOf[Result.Failure]
         assert(
-          failure.index == 3//,
-//          failure.extra.traced.trace == """tuple:1:1 / digits:1:4 / CharIn("0123456789"):1:4 ...")""""
+          failure.index == 3,
+          failure.extra.traced.trace == """Expected tuple:1:1 / digits:1:4 / [0-9]:1:4, found ")""""
         )
       }
       'endcut{
@@ -356,11 +355,11 @@ object ExampleTests extends TestSuite{
         val Result.Success(Seq("1", "23"), _) = Parse("(1,23)").read(tuple(_))
 
         val failure = Parse("(1,)").read(tuple(_)).asInstanceOf[Result.Failure]
-//        val trace = failure.extra.traced.trace
         assert(
-          failure.index == 3//,
-//          trace == """tuple:1:1 / digits:1:4 / CharIn("0123456789"):1:4 ...")""""
+          failure.index == 3,
+          failure.extra.traced.trace == """Expected tuple:1:1 / digits:1:4 / [0-9]:1:4, found ")""""
         )
+
       }
       'composecut{
         def digit[_: P] = P( CharIn("0-9") )
@@ -396,25 +395,23 @@ object ExampleTests extends TestSuite{
         }
 
 
-//        check(
-//          Foo.Parse("(1+(2+3x))+4").read(expr(_)),
-//          """Failure(("(" ~ expr ~ ")" | num):1:1 ..."(1+(2+3x))")"""
-//        )
-
-        Parse("(1+(2+3x))+4").read(Foo.expr(_))
+        check(
+          Parse("(1+(2+3x))+4").read(Foo.expr(_)),
+          """Result.Failure(Expected ???:1:1, found "(1+(2+3x))+4")"""
+        )
       }
       'cuts{
-//        object Foo{
-//
-//          def plus[_: P] = P( "+" )
-//          def num[_: P] = P( CharIn('0' to '9').rep(1) ).!.map(_.toInt)
-//          def side[_: P] = P( "(" ~/ expr ~ ")" | num )
-//          def expr[_: P]: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}
-//        }
-//        check(
-//          Foo.expr("(1+(2+3x))+4"),
-//          """Failure(")":1:8 ..."x))+4")"""
-//        )
+        object Foo{
+
+          def plus[_: P] = P( "+" )
+          def num[_: P] = P( CharIn("0-9").rep(1) ).!.map(_.toInt)
+          def side[_: P] = P( "(" ~/ expr ~ ")" | num )
+          def expr[_: P]: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}
+        }
+        check(
+          Parse("(1+(2+3x))+4").read(Foo.expr(_)),
+          """Result.Failure(Expected ")":1:8, found "x))+4")"""
+        )
       }
       'log{
 //        val captured = collection.mutable.Buffer.empty[String]
