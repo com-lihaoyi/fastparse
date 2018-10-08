@@ -8,7 +8,8 @@ class Parse[+T](val input: String,
                 var index: Int,
                 var successCut: Boolean,
                 var failureCut: Boolean,
-                var successValue: Any){
+                var successValue: Any,
+                var noCut: Boolean){
 
   // Use telescoping methods rather than default arguments to try and minimize
   // the amount of bytecode generated at the callsite.
@@ -57,6 +58,6 @@ object Parse{
     failureStack = List.empty,
     isSuccess = true,
     logDepth = 0,
-    0, false, false, ()
+    0, false, false, (), false
   )
 }

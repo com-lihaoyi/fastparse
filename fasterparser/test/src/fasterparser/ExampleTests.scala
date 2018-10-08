@@ -375,14 +375,14 @@ object ExampleTests extends TestSuite{
         assert(failure.index == 5)  // Expects am or pm
       }
       'composenocut{
-//        def digit[_: P] = P( CharIn('0' to '9') )
-//        def time1[_: P] = P( ("1".? ~ digit) ~ ":" ~/ digit ~ digit ~ ("am" | "pm") )
-//        def time2[_: P] = P( (("1" | "2").? ~ digit) ~ ":" ~/ digit ~ digit )
-//        val Parsed.Success((), _) = time1("12:30pm")
-//        val Parsed.Success((), _) = time2("17:45")
-//        def time[_: P] = P( NoCut(time1) | time2 )
-//        val Parsed.Success((), _) = time("12:30pm")
-//        val Parsed.Success((), _) = time("17:45")
+        def digit[_: P] = P( CharPred(c => '0' <= c && c <= '9') )
+        def time1[_: P] = P( ("1".? ~ digit) ~ ":" ~/ digit ~ digit ~ ("am" | "pm") )
+        def time2[_: P] = P( (("1" | "2").? ~ digit) ~ ":" ~/ digit ~ digit )
+        val Result.Success((), _) = time1(Parse("12:30pm")).result
+        val Result.Success((), _) = time2(Parse("17:45")).result
+        def time[_: P] = P( NoCut(time1) | time2 )
+        val Result.Success((), _) = time(Parse("12:30pm")).result
+        val Result.Success((), _) = time(Parse("17:45")).result
       }
     }
     'debugging{

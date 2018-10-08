@@ -434,6 +434,16 @@ object Parsing {
     }
   }
 
+  def NoCut[T](parse: => Parse[T])(implicit ctx: Parse[_]): Parse[T] = {
+
+    val oldNoCut = ctx.noCut
+    val res = parse
+    ctx.noCut = oldNoCut
+    if (res.isSuccess) res.successCut = false
+    else res.failureCut = false
+    res
+  }
+
   def parseInputCtx(s: String): Parse[_] = Parse(s)
 }
 
