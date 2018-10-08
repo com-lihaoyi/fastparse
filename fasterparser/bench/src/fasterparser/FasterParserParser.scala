@@ -66,15 +66,13 @@ class FasterParserParser{
   val idStartChar = fastparse.utils.MacroUtils.preCompute(c =>
     ("_" ++ ('a' to 'z') ++ ('A' to 'Z')).contains(c)
   )
-  val idChar = fastparse.utils.MacroUtils.preCompute(c =>
-    ("_" ++ ('a' to 'z') ++ ('A' to 'Z') ++ ('0' to '9')).contains(c)
-  )
+
   def id[_: P] = P(
-    CharPred(idStartChar) ~~
-    CharsWhile(idChar, min = 0)
+    CharIn("_a-zA-Z0-9") ~~
+    CharsWhileIn("_a-zA-Z0-9", 0)
   ).!.filter(s => !keywords.contains(s))
 
-  def break[_: P] = P(!CharPred(idChar))
+  def break[_: P] = P(!CharIn("_a-zA-Z0-9"))
   def number[_: P]: P[Expr.Num] = P(
     Index ~~ (
       CharsWhileIn("0-9") ~~
@@ -266,7 +264,7 @@ class FasterParserParser{
         case '$' => Pass(Expr.$(index))
         case '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' =>
           Parse().index = index; number
-        case x if idStartChar(x) => CharsWhile(idChar, min = 0).!.flatMap { y =>
+        case x if idStartChar(x) => CharsWhileIn("_a-zA-Z0-9", 0).!.flatMap { y =>
           x + y match {
             case "null"      => Pass(Expr.Null(index))
             case "true"      => Pass(Expr.True(index))

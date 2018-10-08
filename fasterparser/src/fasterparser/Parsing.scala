@@ -430,11 +430,11 @@ object Parsing {
             i += 1
             val Left(last) = output.remove(output.length - 1)
             output.append(Right((last, s(i))))
-          case c =>
-            output.append(Left(c))
+          case c => output.append(Left(c))
         }
         i += 1
       }
+
       (
         output.collect{case Left(char) => cq"$char => true"},
         output.collect{case Right((l, h)) => q"$l <= charIn && charIn <= $h"}
@@ -444,7 +444,7 @@ object Parsing {
     val (literals, ranges) = snippets.unzip
     c.Expr[Boolean](q"""$char match{
       case ..${literals.flatten}
-      case charIn => ${ranges.flatten.reduceOption{ (l, r) => q"$l && $r"}.getOrElse(q"false")}
+      case charIn => ${ranges.flatten.reduceOption{ (l, r) => q"$l || $r"}.getOrElse(q"false")}
     }""")
   }
 
