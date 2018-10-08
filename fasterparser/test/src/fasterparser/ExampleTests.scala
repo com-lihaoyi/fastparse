@@ -397,7 +397,7 @@ object ExampleTests extends TestSuite{
 
         check(
           Parse("(1+(2+3x))+4").read(Foo.expr(_)),
-          """Result.Failure(Expected ???:1:1, found "(1+(2+3x))+4")"""
+          """Result.Failure(Expected ???:1:1, found "(1+(2+3x))")"""
         )
       }
       'cuts{
@@ -414,43 +414,43 @@ object ExampleTests extends TestSuite{
         )
       }
       'log{
-//        val captured = collection.mutable.Buffer.empty[String]
-//        implicit val logger = Logger(captured.append(_))
-//        object Foo{
-//
-//          def plus[_: P] = P( "+" )
-//          def num[_: P] = P( CharIn('0' to '9').rep(1) ).!.map(_.toInt)
-//          def side[_: P] = P( "(" ~/ expr ~ ")" | num ).log
-//          def expr[_: P]: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}.log
-//        }
-//
-//
-//        Foo.expr("(1+(2+3x))+4")
-//
-//
-//
-//        val expected = """
-//          +expr:1:1
-//            +side:1:1
-//              +expr:1:2
-//                +side:1:2
-//                -side:1:2:Success(1:3)
-//                +side:1:4
-//                  +expr:1:5
-//                    +side:1:5
-//                    -side:1:5:Success(1:6)
-//                    +side:1:7
-//                    -side:1:7:Success(1:8)
-//                  -expr:1:5:Success(1:8)
-//                -side:1:4:Failure(side:1:4 / ")":1:8 ..."(2+3x))+4", cut)
-//              -expr:1:2:Failure(expr:1:2 / side:1:4 / ")":1:8 ..."1+(2+3x))+", cut)
-//            -side:1:1:Failure(side:1:1 / expr:1:2 / side:1:4 / ")":1:8 ..."(1+(2+3x))", cut)
-//          -expr:1:1:Failure(expr:1:1 / side:1:1 / expr:1:2 / side:1:4 / ")":1:8 ..."(1+(2+3x))", cut)
-//        """.lines.filter(_.trim != "").toSeq
-//        val minIndent = expected.map(_.takeWhile(_ == ' ').length).min
-//        val expectedString = expected.map(_.drop(minIndent)).mkString("\n")
-//        val capturedString = captured.mkString("\n")
-//        assert(capturedString == expectedString)
+        val captured = collection.mutable.Buffer.empty[String]
+        implicit val logger = Logger(captured.append(_))
+        object Foo{
+
+          def plus[_: P] = P( "+" )
+          def num[_: P] = P( CharIn("0-9").rep(1) ).!.map(_.toInt)
+          def side[_: P] = P( "(" ~/ expr ~ ")" | num ).log
+          def expr[_: P]: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}.log
+        }
+
+
+        Parse("(1+(2+3x))+4").read(Foo.expr(_))
+
+
+
+        val expected = """
+          +expr:1:1
+            +side:1:1
+              +expr:1:2
+                +side:1:2
+                -side:1:2:Success(1:3)
+                +side:1:4
+                  +expr:1:5
+                    +side:1:5
+                    -side:1:5:Success(1:6)
+                    +side:1:7
+                    -side:1:7:Success(1:8)
+                  -expr:1:5:Success(1:8)
+                -side:1:4:Failure(side:1:4 / ")":1:8 ..."(2+3x))+4", cut)
+              -expr:1:2:Failure(expr:1:2 / side:1:4 / ")":1:8 ..."1+(2+3x))+", cut)
+            -side:1:1:Failure(side:1:1 / expr:1:2 / side:1:4 / ")":1:8 ..."(1+(2+3x))", cut)
+          -expr:1:1:Failure(expr:1:1 / side:1:1 / expr:1:2 / side:1:4 / ")":1:8 ..."(1+(2+3x))", cut)
+        """.lines.filter(_.trim != "").toSeq
+        val minIndent = expected.map(_.takeWhile(_ == ' ').length).min
+        val expectedString = expected.map(_.drop(minIndent)).mkString("\n")
+        val capturedString = captured.mkString("\n")
+        assert(capturedString == expectedString)
       }
     }
     'folding{

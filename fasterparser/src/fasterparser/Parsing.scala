@@ -3,7 +3,10 @@ package fasterparser
 import scala.annotation.{switch, tailrec}
 import language.experimental.macros
 import reflect.macros.blackbox.Context
-
+case class Logger(f: String => Unit)
+object Logger {
+  implicit val stdout = Logger(println)
+}
 object Parsing {
 
   type P[+T] = Parse[T]
@@ -19,7 +22,7 @@ object Parsing {
     reify[Parse[T]]{
       val startIndex = ctx.splice.index
       t.splice match{case ctx0 =>
-        if (ctx0.traceIndex != -1 && !ctx0.isSuccess) {
+        if ((ctx0.traceIndex != -1 | ctx0.logDepth != 0) && !ctx0.isSuccess) {
           ctx0.failureStack = (name.splice.value -> startIndex) :: ctx0.failureStack
         }
         ctx0
@@ -332,28 +335,32 @@ object Parsing {
     }
 
 
-    def log(implicit name: sourcecode.Name): Parse[T] = {
-      if (ctx.logDepth == -1) parse0
-      else{
-        val msg = name.value
-        val output = println(_: String)
-        val indent = "  " * ctx.logDepth
+    def log(implicit name: sourcecode.Name, logger: Logger = Logger.stdout): Parse[T] = {
 
-        output(s"$indent+$msg:${ctx.index}")
-        val depth = ctx.logDepth
-        ctx.logDepth += 1
-        parse0
-        ctx.logDepth = depth
-        val (index, strRes) = if (ctx.isSuccess){
-          ctx.index -> s"Success(${Util.literalize(ctx.input.slice(ctx.index, ctx.index + 20))}${if (ctx.successCut) ", cut" else ""})"
-        } else{
-          val trace = ""
-          ctx.index -> s"Failure($trace${if (ctx.failureCut) ", cut" else ""})"
-        }
-        output(s"$indent-$msg:$index:$strRes")
-//        output(s"$indent-$msg:${repr.prettyIndex(cfg.input, index)}:$strRes")
-        ctx.asInstanceOf[Parse[T]]
+      val msg = name.value
+      val output = logger.f
+      val indent = "  " * ctx.logDepth
+
+      output(s"$indent+$msg:${Util.prettyIndex(ctx.input, ctx.index)}")
+      val depth = ctx.logDepth
+      ctx.logDepth += 1
+      val startIndex = ctx.index
+      parse0
+      ctx.logDepth = depth
+      val strRes = if (ctx.isSuccess){
+        val prettyIndex = Util.prettyIndex(ctx.input, ctx.index)
+        s"Success($prettyIndex${if (ctx.successCut) ", cut" else ""})"
+      } else{
+        val trace = Result.Failure.formatStack(
+          ctx.input,
+          (ctx.failureMsg -> ctx.index) :: ctx.failureStack.reverse
+        )
+        val trailing = Result.Failure.formatTrailing(ctx.input, startIndex)
+        s"Failure($trace ...$trailing${if (ctx.failureCut) ", cut" else ""})"
       }
+      output(s"$indent-$msg:${Util.prettyIndex(ctx.input, startIndex)}:$strRes")
+//        output(s"$indent-$msg:${repr.prettyIndex(cfg.input, index)}:$strRes")
+      ctx.asInstanceOf[Parse[T]]
     }
 
 

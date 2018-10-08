@@ -17,16 +17,19 @@ object Result{
                      extra: Extra) extends Result[Nothing](false){
     def get = throw new Exception("Parse Error at " + index + ":\n" + stack.mkString("\n"))
     def fold[V](onFailure: (Int, List[(String, Int)]) => V, onSuccess: (Nothing, Int) => V) = onFailure(index, stack)
-    override def toString() = s"Result.Failure(${trace})"
-    def trace = Failure.formatStack(extra.input, stack)
+    override def toString() = s"Result.Failure($trace)"
+    def trace =
+      "Expected " +Failure.formatStack(extra.input, stack) +
+      ", found " + Failure.formatTrailing(extra.input, stack.head._2)
     def traced = extra.traced
 
   }
   object Failure{
     def formatStack(input: String, stack: List[(String, Int)]) = {
-      "Expected " +
-      stack.reverse.map{case (s, i) => s"$s:${Util.prettyIndex(input, i)}"}.mkString(" / ") +
-      ", found " + Util.literalize(input.slice(stack.head._2, stack.head._2 + 20))
+      stack.reverse.map{case (s, i) => s"$s:${Util.prettyIndex(input, i)}"}.mkString(" / ")
+    }
+    def formatTrailing(input: String, index: Int) = {
+      Util.literalize(input.slice(index, index + 10))
     }
   }
   case class Extra(input: String,
