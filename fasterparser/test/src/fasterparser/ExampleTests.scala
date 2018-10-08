@@ -165,9 +165,9 @@ object ExampleTests extends TestSuite{
         val Result.Success("abcde", _) = Parse("<abcde></abcde>").read(xml(_))
 
         val failure = Parse("<abcde></edcba>").read(xml(_)).asInstanceOf[Result.Failure]
-//        assert(
-//          failure.extra.traced.trace == """xml:1:1 / rightTag:1:8 / "abcde":1:10 ..."edcba>""""
-//        )
+        assert(
+          failure.traced.trace == """Expected xml:1:1 / rightTag:1:8 / "abcde":1:10, found "edcba>""""
+        )
       }
       'flatMapFor{
         def leftTag[_: P] = P( "<" ~ (!">" ~ AnyChar).rep(1).! ~ ">" )
@@ -183,9 +183,9 @@ object ExampleTests extends TestSuite{
         val Result.Success("abcde", _) = Parse("<abcde></abcde>").read(xml(_))
 
         val failure = Parse("<abcde></edcba>").read(xml(_)).asInstanceOf[Result.Failure]
-//        assert(
-//          failure.extra.traced.trace == """xml:1:1 / rightTag:1:8 / "abcde":1:10 ..."edcba>""""
-//        )
+        assert(
+          failure.extra.traced.trace == """Expected xml:1:1 / rightTag:1:8 / "abcde":1:10, found "edcba>""""
+        )
       }
       'filter{
 
@@ -193,8 +193,6 @@ object ExampleTests extends TestSuite{
         def even[_: P] = P( digits.filter(_ % 2 == 0) )
         val Result.Success(12, _) = Parse("12").read(even(_))
         val failure = Parse("123").read(even(_)).asInstanceOf[Result.Failure]
-//        assert("""digits.filter\(.*\)$""".r.findPrefixOf(even.toString).isDefined)
-//        assert("""digits.filter\(.*\):1:1 ..."123"$""".r.findPrefixOf(failure.extra.traced.trace).isDefined)
       }
       'opaque{
 //        val digit = CharIn('0' to '9')
@@ -271,33 +269,34 @@ object ExampleTests extends TestSuite{
     }
     'cuts{
       'nocut{
-        def alpha[_: P] = P( CharPred(c => 'a' <= c && c <= 'z') )
+        def alpha[_: P] = P( CharIn("a-z") )
         def nocut[_: P] = P( "val " ~ alpha.rep(1).! | "def " ~ alpha.rep(1).!)
 
         val Result.Success("abcd", _) = Parse("val abcd").read(nocut(_))
 
         val failure = Parse("val 1234").read(nocut(_)).asInstanceOf[Result.Failure]
         assert(
-          failure.index == 0//,
-//          failure.extra.traced.trace ==
-//            """nocut:1:1 / ("val " ~ alpha.rep(1) | "def " ~ alpha.rep(1)):1:1 ..."val 1234""""
+          failure.index == 0,
+          failure.extra.traced.trace ==
+            """Expected nocut:1:1 / "val " | "def ":1:1, found "val 1234""""
         )
       }
       'withcut{
-        def alpha[_: P] = P( CharPred(c => 'a' <= c && c <= 'z') )
+        def alpha[_: P] = P( CharIn("a-z") )
         def nocut[_: P] = P( "val " ~/ alpha.rep(1).! | "def " ~/ alpha.rep(1).!)
 
         val Result.Success("abcd", _) = Parse("val abcd").read(nocut(_))
 
         val failure = Parse("val 1234").read(nocut(_)).asInstanceOf[Result.Failure]
         assert(
-          failure.index == 4//,
-//          failure.extra.traced.trace ==
-//            """nocut:1:1 / alpha:1:5 / CharIn("abcdefghijklmnopqrstuvwxyz"):1:5 ..."1234""""
+          failure.index == 4,
+          failure.extra.traced.trace =="""Expected nocut:1:1 / alpha:1:5 / [a-z]:1:5, found "1234""""
         )
+        println("TRACE")
+        failure.extra.traced.trace
       }
       'repnocut{
-        def alpha[_: P] = P( CharPred(c => 'a' <= c && c <= 'z') )
+        def alpha[_: P] = P( CharIn("a-z") )
         def stmt[_: P] = P( "val " ~ alpha.rep(1).! ~ ";" ~ " ".rep )
         def stmts[_: P] = P( stmt.rep(1) ~ End )
 
@@ -309,9 +308,10 @@ object ExampleTests extends TestSuite{
           failure.index == 10//,
 //          failure.extra.traced.trace == """stmts:1:1 / (End | " "):1:11 ..."val """"
         )
+        failure.extra.traced.trace
       }
       'repcut{
-        def alpha[_: P] = P( CharPred(c => 'a' <= c && c <= 'z') )
+        def alpha[_: P] = P( CharIn("a-z") )
         def stmt[_: P] = P( "val " ~/ alpha.rep(1).! ~ ";" ~ " ".rep )
         def stmts[_: P] = P( stmt.rep(1) ~ End )
 
@@ -326,7 +326,7 @@ object ExampleTests extends TestSuite{
         )
       }
       'delimiternocut{
-        def digits[_: P] = P( CharPred(c => '0' <= c && c <= '9').rep(1) )
+        def digits[_: P] = P( CharIn("0-9").rep(1) )
         def tuple[_: P] = P( "(" ~ digits.!.rep(sep=",") ~ ")" )
 
         val Result.Success(Seq("1", "23"), _) = Parse("(1,23)").read(tuple(_))
@@ -338,7 +338,7 @@ object ExampleTests extends TestSuite{
         )
       }
       'delimitercut{
-        def digits[_: P] = P( CharPred(c => '0' <= c && c <= '9').rep(1) )
+        def digits[_: P] = P( CharIn("0-9").rep(1) )
         def tuple[_: P] = P( "(" ~ digits.!.rep(sep=("," ~/ Pass)) ~ ")" )
 
         val Result.Success(Seq("1", "23"), _) = Parse("(1,23)").read(tuple(_))
@@ -350,7 +350,7 @@ object ExampleTests extends TestSuite{
         )
       }
       'endcut{
-        def digits[_: P] = P( CharPred(c => '0' <= c && c <= '9').rep(1) )
+        def digits[_: P] = P( CharIn("0-9").rep(1) )
         def tuple[_: P] = P( "(" ~ digits.!.rep(sep=","./) ~ ")" )
 
         val Result.Success(Seq("1", "23"), _) = Parse("(1,23)").read(tuple(_))
@@ -363,7 +363,7 @@ object ExampleTests extends TestSuite{
         )
       }
       'composecut{
-        def digit[_: P] = P( CharPred(c => '0' <= c && c <= '9') )
+        def digit[_: P] = P( CharIn("0-9") )
         def time1[_: P] = P( ("1".? ~ digit) ~ ":" ~/ digit ~ digit ~ ("am" | "pm") )
         def time2[_: P] = P( (("1" | "2").? ~ digit) ~ ":" ~/ digit ~ digit )
         val Result.Success((), _) = Parse("12:30pm").read(time1(_))
@@ -374,7 +374,7 @@ object ExampleTests extends TestSuite{
         assert(failure.index == 5)  // Expects am or pm
       }
       'composenocut{
-        def digit[_: P] = P( CharPred(c => '0' <= c && c <= '9') )
+        def digit[_: P] = P( CharIn("0-9") )
         def time1[_: P] = P( ("1".? ~ digit) ~ ":" ~/ digit ~ digit ~ ("am" | "pm") )
         def time2[_: P] = P( (("1" | "2").? ~ digit) ~ ":" ~/ digit ~ digit )
         val Result.Success((), _) = Parse("12:30pm").read(time1(_))
@@ -390,7 +390,7 @@ object ExampleTests extends TestSuite{
         object Foo{
 
           def plus[_: P] = P( "+" )
-          def num[_: P] = P( CharPred(c => '0' <= c && c <= '9').rep(1) ).!.map(_.toInt)
+          def num[_: P] = P( CharIn("0-9").rep(1) ).!.map(_.toInt)
           def side[_: P] = P( "(" ~ expr ~ ")" | num )
           def expr[_: P]: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}
         }

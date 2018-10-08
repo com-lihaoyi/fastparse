@@ -53,7 +53,6 @@ class Parse[+T](val input: String,
   def prepareFailure(index: Int): Parse[Nothing] = prepareFailure(index, failureCut)
   def prepareFailure(index: Int, cut: Boolean): Parse[Nothing] = {
     isSuccess = false
-    failureStack = Nil
     this.index = index
     failureCut = cut
     this.asInstanceOf[Parse[Nothing]]
@@ -63,7 +62,7 @@ class Parse[+T](val input: String,
     if (isSuccess) Result.Success(successValue.asInstanceOf[T], index)
     else Result.Failure(
       index,
-      (failureMsg -> index) :: failureStack,
+      (failureMsg -> index) :: failureStack.reverse,
       Result.Extra(input, startIndex, index, originalParser)
     )
   }

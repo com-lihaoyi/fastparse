@@ -19,11 +19,8 @@ object Result{
     def fold[V](onFailure: (Int, List[(String, Int)]) => V, onSuccess: (Nothing, Int) => V) = onFailure(index, stack)
     override def toString() = s"Result.Failure(${trace})"
     def trace = Failure.formatStack(extra.input, stack)
+    def traced = extra.traced
 
-    def traced: Failure = {
-      Parse(extra.input, startIndex = extra.startIndex, traceIndex = index)
-        .read[Any](extra.originalParser).asInstanceOf[Failure]
-    }
   }
   object Failure{
     def formatStack(input: String, stack: List[(String, Int)]) = {
@@ -35,5 +32,10 @@ object Result{
   case class Extra(input: String,
                    startIndex: Int,
                    index: Int,
-                   originalParser: Parse[_] => Parse[_])
+                   originalParser: Parse[_] => Parse[_]) {
+    def traced: Failure = {
+      Parse(input, startIndex = startIndex, traceIndex = index)
+        .read[Any](originalParser).asInstanceOf[Failure]
+    }
+  }
 }

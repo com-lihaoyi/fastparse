@@ -19,15 +19,17 @@ object Parsing {
     reify[Parse[T]]{
       val startIndex = ctx.splice.index
       t.splice match{case ctx0 =>
-
-        if (ctx0.traceIndex != -1 && !ctx0.isSuccess) ctx0.failureStack = (name.splice.value -> startIndex) :: ctx0.failureStack
+        if (ctx0.traceIndex != -1 && !ctx0.isSuccess) {
+          ctx0.failureStack = (name.splice.value -> startIndex) :: ctx0.failureStack
+          println(ctx0.failureStack)
+        }
         ctx0
       }
     }
   }
 
   implicit def LiteralStr(s: String)(implicit ctx: Parse[Any]): Parse[Unit] = {
-    if (ctx.traceIndex != -1){
+    if (ctx.traceIndex != -1 && ctx.traceIndex == ctx.index){
       ctx.failureMsg = Util.literalize(s)
     }
     if (ctx.input.startsWith(s, ctx.index)) ctx.freshSuccess((), ctx.index + s.length)
@@ -219,12 +221,7 @@ object Parsing {
         ctx5.index = startPos
         other.splice
         if (ctx5.isSuccess) ctx5
-        else if (ctx5.failureCut) {
-          ctx5.failureStack = Nil
-          if (ctx5.traceIndex != -1) ctx5.failureMsg = leftMsg + " | " + ctx5.failureMsg
-          else ctx5.failureMsg = "???"
-          ctx5
-        }
+        else if (ctx5.failureCut) ctx5
         else {
           val res = ctx5.prepareFailure(startPos)
           ctx5.failureStack = Nil
