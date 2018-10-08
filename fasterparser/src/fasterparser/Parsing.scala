@@ -363,6 +363,25 @@ object Parsing {
       ctx.asInstanceOf[Parse[T]]
     }
 
+    def opaque(msg: String) = {
+      val oldFailureMsg = ctx.failureMsg
+      val oldIndex = ctx.index
+      val res = parse0
+      if (ctx.traceIndex != -1){
+        ctx.failureMsg = oldFailureMsg
+        if (ctx.traceIndex == oldIndex){
+          if (ctx.failureMsg == null) ctx.failureMsg = msg
+          else ctx.failureMsg = ctx.failureMsg + " | " + msg
+
+        }
+      }
+      if (!res.isSuccess){
+        ctx.failureStack = Nil
+        ctx.failureMsg = msg
+        ctx.index = oldIndex
+      }
+      res
+    }
 
 
     def unary_! : Parse[Unit] = {

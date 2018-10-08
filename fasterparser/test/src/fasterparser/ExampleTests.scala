@@ -197,27 +197,23 @@ object ExampleTests extends TestSuite{
         val failure = Parse("123").read(even(_)).asInstanceOf[Result.Failure]
       }
       'opaque{
-//        val digit = CharIn('0' to '9')
-//        val letter = CharIn('A' to 'Z')
-//        def twice[T](p: Parser[T]) = p ~ p
-//        def errorMessage[T](p: Parser[T], str: String) =
-//          ParseError(p(str).asInstanceOf[Parsed.Failure]).getMessage
-//
-//        // Portuguese number plate format since 2006
-//        def numberPlate[_: P] = P(twice(digit) ~ "-" ~ twice(letter) ~ "-" ~ twice(digit))
-//
-//        assert(errorMessage(numberPlate, "11-A1-22") == """
-//                                                          |found "1-22", expected CharIn("ABCDEFGHIJKLMNOPQRSTUVWXYZ") at index 4
-//                                                          |11-A1-22
-//                                                          |    ^""".stripMargin.trim)
-//
-//        // Suppress implementation details from the error message
-//        val opaqueNumberPlate = numberPlate.opaque("<number-plate>")
-//
-//        assert(errorMessage(opaqueNumberPlate, "11-A1-22") == """
-//                                                                |found "11-A1-22", expected <number-plate> at index 0
-//                                                                |11-A1-22
-//                                                                |^""".stripMargin.trim)
+        def digit[_: P] = CharIn("0-9")
+        def letter[_: P] = CharIn("A-Z")
+        def twice[T](p: => P[T]) = p ~ p
+        def errorMessage[T](p: P[_] => P[T], str: String) =
+          Parse(str).read(p).asInstanceOf[Result.Failure].trace
+
+        // Portuguese number plate format since 2006
+        def numberPlate[_: P] = P(twice(digit) ~ "-" ~ twice(letter) ~ "-" ~ twice(digit))
+
+        val err1 = errorMessage(numberPlate(_), "11-A1-22")
+        assert(err1 == """Expected [A-Z]:1:5, found "1-22"""")
+
+        // Suppress implementation details from the error message
+        def opaqueNumberPlate[_: P] = numberPlate.opaque("<number-plate>")
+
+        val err2 = errorMessage(opaqueNumberPlate(_), "11-A1-22")
+        assert(err2 == """Expected <number-plate>:1:1, found "11-A1-22"""")
       }
     }
     'charX{
