@@ -457,19 +457,24 @@ object ExampleTests extends TestSuite{
       }
     }
     'folding{
-//      sealed trait AndOr
-//      case object And extends AndOr
-//      case object Or extends AndOr
-//      def and[_: P] = P(IgnoreCase("And")).map(_ => And)
-//      def or[_: P] = P(IgnoreCase("Or")).map(_ => Or)
-//      def andOr[_: P] = P(and | or)
-//
-//      def check(input: String, expectedOutput: String) =
-//        assert(andOr(input).fold((_, _, _) => s"Cannot parse $input as an AndOr", (v, _) => s"Parsed: $v") == expectedOutput)
-//
-//      check("AnD", "Parsed: And")
-//      check("oR", "Parsed: Or")
-//      check("IllegalBooleanOperation", "Cannot parse IllegalBooleanOperation as an AndOr")
+      sealed trait AndOr
+      case object And extends AndOr
+      case object Or extends AndOr
+      def and[_: P] = P(IgnoreCase("And")).map(_ => And)
+      def or[_: P] = P(IgnoreCase("Or")).map(_ => Or)
+      def andOr[_: P] = P(and | or)
+
+      def check(input: String, expectedOutput: String) = {
+        val folded = andOr(Parse(input)).result.fold(
+          (_, _) => s"Cannot parse $input as an AndOr",
+          (v, _) => s"Parsed: $v"
+        )
+        assert(folded == expectedOutput)
+      }
+
+      check("AnD", "Parsed: And")
+      check("oR", "Parsed: Or")
+      check("IllegalBooleanOperation", "Cannot parse IllegalBooleanOperation as an AndOr")
     }
 
   }

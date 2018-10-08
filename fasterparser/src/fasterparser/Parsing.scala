@@ -29,6 +29,25 @@ object Parsing {
     else ctx.freshFailure().asInstanceOf[Parse[Unit]]
   }
 
+  def startsWithIgnoreCase(src: String, prefix: IndexedSeq[Char], offset: Int) = {
+    @tailrec def rec(i: Int): Boolean = {
+      if (i >= prefix.length) true
+//      else if (!src.isReachable(i + offset)) false
+      else {
+        val c1: Char = src(i + offset)
+        val c2: Char = prefix(i)
+        if (c1 != c2 && c1.toLower != c2.toLower) false
+        else rec(i + 1)
+      }
+    }
+    rec(0)
+  }
+  def IgnoreCase(s: String)(implicit ctx: Parse[Any]): Parse[Unit] = {
+
+    if (startsWithIgnoreCase(ctx.input, s, ctx.index)) ctx.freshSuccess((), ctx.index + s.length)
+    else ctx.freshFailure().asInstanceOf[Parse[Unit]]
+  }
+
   def cutMacro[T: c.WeakTypeTag](c: Context): c.Expr[Parse[T]] = {
     import c.universe._
     val lhs = c.prefix.asInstanceOf[c.Expr[EagerOps[_]]]
