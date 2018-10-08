@@ -430,6 +430,12 @@ object Parsing {
   }
 
   def Pass(implicit ctx: Parse[_]): Parse[Unit] = ctx.freshSuccess((), "")
+  def NoTrace[T](p: => Parse[T])(implicit ctx: Parse[_]): Parse[T] = {
+    val preMsg = ctx.failureMsg
+    val res = p
+    if (ctx.traceIndex != -1) ctx.failureMsg = preMsg
+    res
+  }
   def Pass[T](v: T)(implicit ctx: Parse[_]): Parse[T] = ctx.freshSuccess(v, "")
 
   def Fail(implicit ctx: Parse[_]): Parse[Nothing] = ctx.freshFailure("failure").asInstanceOf[Parse[Nothing]]
