@@ -226,7 +226,7 @@ object ExampleTests extends TestSuite{
       }
 
       'charIn{
-        def ci[_: P] = P( CharIn("abcxyz").rep.! ~ End )
+        def ci[_: P] = P( CharIn("abc", "xyz").rep.! ~ End )
 
         val Result.Success("aaabbccxyz", _) = ci(Parse("aaabbccxyz")).result
         val Result.Failure(7, _, _) = ci(Parse("aaabbccdxyz.")).result

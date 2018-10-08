@@ -414,44 +414,52 @@ object Parsing {
     if (!(ctx.index < ctx.input.length && p(ctx.input(ctx.index)))) ctx.freshFailure("character-predicate").asInstanceOf[Parse[Unit]]
     else ctx.freshSuccess((), ctx.index + 1)
   }
-  def CharIn(s: String)(implicit ctx: Parse[_]): Parse[Unit] = macro charInMacro
-  def parseCharCls(c: Context)(char: c.Expr[Char], s: String) = {
+  def CharIn(s: String*)(implicit ctx: Parse[_]): Parse[Unit] = macro charInMacro
+  def parseCharCls(c: Context)(char: c.Expr[Char], ss: Seq[String]) = {
     import c.universe._
-    var i = 0
-    val output = collection.mutable.Buffer.empty[Either[Char, (Char, Char)]]
-    while(i < s.length){
-      s(i) match{
-        case '\\' =>
-          i += 1
-          output.append(Left(s(i)))
-        case '-' =>
-          i += 1
-          val Left(last) = output.remove(output.length - 1)
-          output.append(Right((last, s(i))))
-        case c =>
-          output.append(Left(c))
+
+    val snippets = for(s <- ss) yield{
+      val output = collection.mutable.Buffer.empty[Either[Char, (Char, Char)]]
+      var i = 0
+      while(i < s.length){
+        s(i) match{
+          case '\\' =>
+            i += 1
+            output.append(Left(s(i)))
+          case '-' =>
+            i += 1
+            val Left(last) = output.remove(output.length - 1)
+            output.append(Right((last, s(i))))
+          case c =>
+            output.append(Left(c))
+        }
+        i += 1
       }
-      i += 1
+      (
+        output.collect{case Left(char) => cq"$char => true"},
+        output.collect{case Right((l, h)) => q"$l <= charIn && charIn <= $h"}
+      )
     }
-    val literals = output.collect{case Left(c) => cq"$c => true"}
-    val ranges = output.collect{case Right((l, h)) => q"$l <= c && c <= $h"}
+
+    val (literals, ranges) = snippets.unzip
     c.Expr[Boolean](q"""$char match{
-      case ..$literals
-      case c => ${ranges.reduceOption{ (l, r) => q"$l && $r"}.getOrElse(q"false")}
+      case ..${literals.flatten}
+      case charIn => ${ranges.flatten.reduceOption{ (l, r) => q"$l && $r"}.getOrElse(q"false")}
     }""")
   }
+
   def charInMacro(c: Context)
-                 (s: c.Expr[String])
+                 (s: c.Expr[String]*)
                  (ctx: c.Expr[Parse[Any]]): c.Expr[Parse[Unit]] = {
     import c.universe._
 
-    val literal = s.actualType match{
+    val literals = s.map(_.actualType match{
       case ConstantType(Constant(x: String)) => x
       case _ => c.abort(c.enclosingPosition, "Function can only accept constant singleton type")
-    }
+    })
 
-    val parsed = parseCharCls(c)(reify(ctx.splice.input(ctx.splice.index)), literal)
-    val bracketed = c.Expr[String](Literal(Constant("[" + literal + "]")))
+    val parsed = parseCharCls(c)(reify(ctx.splice.input(ctx.splice.index)), literals)
+    val bracketed = c.Expr[String](Literal(Constant(literals.map("[" + _ + "]").mkString)))
     val res = reify {
       if (!(ctx.splice.index < ctx.splice.input.length)) {
         ctx.splice.freshFailure(bracketed.splice).asInstanceOf[Parse[Unit]]
@@ -460,7 +468,7 @@ object Parsing {
         case false => ctx.splice.freshFailure(bracketed.splice).asInstanceOf[Parse[Unit]]
       }
     }
-    println(res)
+
     res
   }
   def CharsWhileIn(s: String)
@@ -501,7 +509,7 @@ object Parsing {
       val $start = $index
       while(
         $index < $inputLength &&
-        ${parseCharCls(c)(c.Expr[Char](q"$input($index)"), literal)}
+        ${parseCharCls(c)(c.Expr[Char](q"$input($index)"), Seq(literal))}
       ) $index += 1
       if ($index - $start >= $min) $ctx1.freshSuccess((), index = $index)
       else {
