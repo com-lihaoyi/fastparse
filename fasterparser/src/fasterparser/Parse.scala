@@ -2,14 +2,17 @@ package fasterparser
 
 
 class Parse[+T](val input: String,
-                var failureStack: List[String],
+                var failureStack: List[(String, Int)],
+                var failureMsg: String,
                 var isSuccess: Boolean,
                 var logDepth: Int,
                 var index: Int,
+                val startIndex: Int,
                 var successCut: Boolean,
                 var failureCut: Boolean,
                 var successValue: Any,
-                var noCut: Boolean){
+                var noCut: Boolean,
+                val traceIndex: Int){
 
   // Use telescoping methods rather than default arguments to try and minimize
   // the amount of bytecode generated at the callsite.
@@ -30,11 +33,15 @@ class Parse[+T](val input: String,
     successCut = cut
     this.asInstanceOf[Parse[V]]
   }
-  def freshFailure(): Parse[Nothing] = {
-    prepareFailure(index, cut = false)
+  def freshFailure(msg: String): Parse[Nothing] = {
+    val res = prepareFailure(index, cut = false)
+    this.failureMsg = msg
+    res
   }
-  def freshFailure(startPos: Int): Parse[Nothing] = {
-    prepareFailure(startPos, cut = false)
+  def freshFailure(msg: String, startPos: Int): Parse[Nothing] = {
+    val res = prepareFailure(startPos, cut = false)
+    this.failureMsg = msg
+    res
   }
 
   def prepareFailure(index: Int): Parse[Nothing] = prepareFailure(index, failureCut)
@@ -48,16 +55,17 @@ class Parse[+T](val input: String,
 
   def result: Result[T] = {
     if (isSuccess) Result.Success(successValue.asInstanceOf[T], index)
-    else Result.Failure(index, failureStack)
+    else Result.Failure(index, (failureMsg -> index) :: failureStack, Result.Extra(input, startIndex))
   }
 }
 object Parse{
   def apply()(implicit i: Parse[Any]): Parse[Any] = i
-  def apply(input: String) = new Parse(
+  def apply(input: String, traceIndex: Int = -1) = new Parse(
     input = input,
     failureStack = List.empty,
+    failureMsg = null,
     isSuccess = true,
     logDepth = 0,
-    0, false, false, (), false
+    0, 0, false, false, (), false, traceIndex
   )
 }

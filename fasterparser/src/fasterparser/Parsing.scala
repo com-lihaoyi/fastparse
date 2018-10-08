@@ -26,7 +26,7 @@ object Parsing {
   implicit def LiteralStr(s: String)(implicit ctx: Parse[Any]): Parse[Unit] = {
 
     if (ctx.input.startsWith(s, ctx.index)) ctx.freshSuccess((), ctx.index + s.length)
-    else ctx.freshFailure().asInstanceOf[Parse[Unit]]
+    else ctx.freshFailure(Util.literalize(s)).asInstanceOf[Parse[Unit]]
   }
 
   def startsWithIgnoreCase(src: String, prefix: IndexedSeq[Char], offset: Int) = {
@@ -45,7 +45,7 @@ object Parsing {
   def IgnoreCase(s: String)(implicit ctx: Parse[Any]): Parse[Unit] = {
 
     if (startsWithIgnoreCase(ctx.input, s, ctx.index)) ctx.freshSuccess((), ctx.index + s.length)
-    else ctx.freshFailure().asInstanceOf[Parse[Unit]]
+    else ctx.freshFailure(Util.literalize(s)).asInstanceOf[Parse[Unit]]
   }
 
   def cutMacro[T: c.WeakTypeTag](c: Context): c.Expr[Parse[T]] = {
@@ -324,30 +324,6 @@ object Parsing {
       rec(ctx.index, 0, false)
     }
 
-    def literalize(s: IndexedSeq[Char], unicode: Boolean = true) = {
-      val sb = new StringBuilder
-      sb.append('"')
-      var i = 0
-      val len = s.length
-      while (i < len) {
-        (s(i): @switch) match {
-          case '"' => sb.append("\\\"")
-          case '\\' => sb.append("\\\\")
-          case '\b' => sb.append("\\b")
-          case '\f' => sb.append("\\f")
-          case '\n' => sb.append("\\n")
-          case '\r' => sb.append("\\r")
-          case '\t' => sb.append("\\t")
-          case c =>
-            if (c < ' ' || (c > '~' && unicode)) sb.append("\\u%04x" format c.toInt)
-            else sb.append(c)
-        }
-        i += 1
-      }
-      sb.append('"')
-
-      sb.result()
-    }
 
     def log(implicit name: sourcecode.Name): Parse[T] = {
       if (ctx.logDepth == -1) parse0
@@ -362,7 +338,7 @@ object Parsing {
         parse0
         ctx.logDepth = depth
         val (index, strRes) = if (ctx.isSuccess){
-          ctx.index -> s"Success(${literalize(ctx.input.slice(ctx.index, ctx.index + 20))}${if (ctx.successCut) ", cut" else ""})"
+          ctx.index -> s"Success(${Util.literalize(ctx.input.slice(ctx.index, ctx.index + 20))}${if (ctx.successCut) ", cut" else ""})"
         } else{
           val trace = ""
           ctx.index -> s"Failure($trace${if (ctx.failureCut) ", cut" else ""})"
@@ -395,7 +371,7 @@ object Parsing {
       parse0
       if (!ctx.isSuccess) ctx.asInstanceOf[Parse[T]]
       else if (f(ctx.successValue.asInstanceOf[T])) ctx.asInstanceOf[Parse[T]]
-      else ctx.freshFailure().asInstanceOf[Parse[T]]
+      else ctx.freshFailure("filter").asInstanceOf[Parse[T]]
     }
   }
 
@@ -410,33 +386,131 @@ object Parsing {
 
   def End(implicit ctx: Parse[_]): Parse[Unit] = {
     if (ctx.index == ctx.input.length) ctx.freshSuccess(())
-    else ctx.freshFailure().asInstanceOf[Parse[Unit]]
+    else ctx.freshFailure("end-of-input").asInstanceOf[Parse[Unit]]
   }
 
   def Start(implicit ctx: Parse[_]): Parse[Unit] = {
     if (ctx.index == 0) ctx.freshSuccess(())
-    else ctx.freshFailure().asInstanceOf[Parse[Unit]]
+    else ctx.freshFailure("start-of-input").asInstanceOf[Parse[Unit]]
 
   }
 
   def Pass(implicit ctx: Parse[_]): Parse[Unit] = ctx.freshSuccess(())
   def Pass[T](v: T)(implicit ctx: Parse[_]): Parse[T] = ctx.freshSuccess(v)
 
-  def Fail(implicit ctx: Parse[_]): Parse[Nothing] = ctx.freshFailure().asInstanceOf[Parse[Nothing]]
+  def Fail(implicit ctx: Parse[_]): Parse[Nothing] = ctx.freshFailure("failure").asInstanceOf[Parse[Nothing]]
 
   def Index(implicit ctx: Parse[_]): Parse[Int] = ctx.freshSuccess(ctx.index)
 
   def AnyChar(implicit ctx: Parse[_]): Parse[Unit] = {
-    if (!(ctx.index < ctx.input.length)) ctx.freshFailure().asInstanceOf[Parse[Unit]]
+    if (!(ctx.index < ctx.input.length)) ctx.freshFailure("any-character").asInstanceOf[Parse[Unit]]
     else ctx.freshSuccess((), ctx.index + 1)
   }
   def SingleChar(implicit ctx: Parse[_]): Parse[Char] = {
-    if (!(ctx.index < ctx.input.length)) ctx.freshFailure().asInstanceOf[Parse[Char]]
+    if (!(ctx.index < ctx.input.length)) ctx.freshFailure("any-character").asInstanceOf[Parse[Char]]
     else ctx.freshSuccess(ctx.input(ctx.index), ctx.index + 1)
   }
   def CharPred(p: Char => Boolean)(implicit ctx: Parse[_]): Parse[Unit] = {
-    if (!(ctx.index < ctx.input.length && p(ctx.input(ctx.index)))) ctx.freshFailure().asInstanceOf[Parse[Unit]]
+    if (!(ctx.index < ctx.input.length && p(ctx.input(ctx.index)))) ctx.freshFailure("character-predicate").asInstanceOf[Parse[Unit]]
     else ctx.freshSuccess((), ctx.index + 1)
+  }
+  def CharIn(s: String)(implicit ctx: Parse[_]): Parse[Unit] = macro charInMacro
+  def parseCharCls(c: Context)(char: c.Expr[Char], s: String) = {
+    import c.universe._
+    var i = 0
+    val output = collection.mutable.Buffer.empty[Either[Char, (Char, Char)]]
+    while(i < s.length){
+      s(i) match{
+        case '\\' =>
+          i += 1
+          output.append(Left(s(i)))
+        case '-' =>
+          i += 1
+          val Left(last) = output.remove(output.length - 1)
+          output.append(Right((last, s(i))))
+        case c =>
+          output.append(Left(c))
+      }
+      i += 1
+    }
+    val literals = output.collect{case Left(c) => cq"$c => true"}
+    val ranges = output.collect{case Right((l, h)) => q"$l <= c && c <= $h"}
+    c.Expr[Boolean](q"""$char match{
+      case ..$literals
+      case c => ${ranges.reduceOption{ (l, r) => q"$l && $r"}.getOrElse(q"false")}
+    }""")
+  }
+  def charInMacro(c: Context)
+                 (s: c.Expr[String])
+                 (ctx: c.Expr[Parse[Any]]): c.Expr[Parse[Unit]] = {
+    import c.universe._
+
+    val literal = s.actualType match{
+      case ConstantType(Constant(x: String)) => x
+      case _ => c.abort(c.enclosingPosition, "Function can only accept constant singleton type")
+    }
+
+    val parsed = parseCharCls(c)(reify(ctx.splice.input(ctx.splice.index)), literal)
+    val bracketed = c.Expr[String](Literal(Constant("[" + literal + "]")))
+    val res = reify {
+      if (!(ctx.splice.index < ctx.splice.input.length)) {
+        ctx.splice.freshFailure(bracketed.splice).asInstanceOf[Parse[Unit]]
+      } else parsed.splice match {
+        case true => ctx.splice.freshSuccess((), ctx.splice.index + 1)
+        case false => ctx.splice.freshFailure(bracketed.splice).asInstanceOf[Parse[Unit]]
+      }
+    }
+    println(res)
+    res
+  }
+  def CharsWhileIn(s: String)
+                 (implicit ctx: Parse[_]): Parse[Unit] = macro charsWhileInMacro1
+  def CharsWhileIn(s: String, min: Int)
+                 (implicit ctx: Parse[_]): Parse[Unit] = macro charsWhileInMacro
+
+  def charsWhileInMacro1(c: Context)
+                        (s: c.Expr[String])
+                        (ctx: c.Expr[Parse[Any]]): c.Expr[Parse[Unit]] = {
+    import c.universe._
+    charsWhileInMacro(c)(s, reify(1))(ctx)
+  }
+  def charsWhileInMacro(c: Context)
+                        (s: c.Expr[String], min: c.Expr[Int])
+                        (ctx: c.Expr[Parse[Any]]): c.Expr[Parse[Unit]] = {
+    import c.universe._
+
+    val literal = s.actualType match{
+      case ConstantType(Constant(x: String)) => x
+      case _ => c.abort(c.enclosingPosition, "Function can only accept constant singleton type")
+    }
+
+    val bracketed = c.Expr[String](Literal(Constant("[" + literal + "]")))
+
+    val ctx1 = TermName(c.freshName("ctx"))
+    val index = TermName(c.freshName("index"))
+    val input = TermName(c.freshName("input"))
+    val inputLength = TermName(c.freshName("inputLength"))
+    val start = TermName(c.freshName("start"))
+    val res = q"""
+      val $ctx1 = $ctx
+      var $index = $ctx1.index
+      val $input = $ctx1.input
+      val $inputLength = $input.length
+
+
+      val $start = $index
+      while(
+        $index < $inputLength &&
+        ${parseCharCls(c)(c.Expr[Char](q"$input($index)"), literal)}
+      ) $index += 1
+      if ($index - $start >= $min) $ctx1.freshSuccess((), index = $index)
+      else {
+        $ctx1.failureMsg = $bracketed
+        $ctx1.isSuccess = false
+        $ctx1.asInstanceOf[Parse[Unit]]
+      }
+    """
+    c.Expr[Parse[Unit]](res)
   }
   def CharsWhile(p: Char => Boolean, min: Int = 1)(implicit ctx: Parse[_]): Parse[Unit] = {
     var index = ctx.index

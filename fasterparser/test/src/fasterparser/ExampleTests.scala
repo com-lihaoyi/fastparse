@@ -30,7 +30,7 @@ object ExampleTests extends TestSuite{
 
         val Result.Success(_, 2) = ab(Parse("ab")).result
 
-        val Result.Failure(1, _) = ab(Parse("aa")).result
+        val Result.Failure(1, _, _) = ab(Parse("aa")).result
       }
       'repeat{
         def ab[_: P] = P( "a".rep ~ "b" )
@@ -39,7 +39,7 @@ object ExampleTests extends TestSuite{
 
         def abc[_: P] = P( "a".rep(sep="b") ~ "c")
         val Result.Success(_, 8) = abc(Parse("abababac")).result
-        val Result.Failure(3, _) = abc(Parse("abaabac")).result
+        val Result.Failure(3, _, _) = abc(Parse("abaabac")).result
 
         def ab4[_: P] = P( "a".rep(min=2, max=4, sep="b") )
         val Result.Success(_, 7) = ab4(Parse("ababababababa")).result
@@ -48,10 +48,10 @@ object ExampleTests extends TestSuite{
         val Result.Success(_, 4) = ab2exactly(Parse("abab")).result
 
         def ab4c[_: P] = P ( "a".rep(min=2, max=4, sep="b") ~ "c" )
-        val Result.Failure(1, _) = ab4c(Parse("ac")).result
+        val Result.Failure(1, _, _) = ab4c(Parse("ac")).result
         val Result.Success(_, 4) = ab4c(Parse("abac")).result
         val Result.Success(_, 8) = ab4c(Parse("abababac")).result
-        val Result.Failure(7, _) = ab4c(Parse("ababababac")).result
+        val Result.Failure(7, _, _) = ab4c(Parse("ababababac")).result
       }
 
       'option{
@@ -65,7 +65,7 @@ object ExampleTests extends TestSuite{
         def either[_: P] = P( "a".rep ~ ("b" | "c" | "d") ~ End)
 
         val Result.Success(_, 6) = either(Parse("aaaaab")).result
-        val Result.Failure(5, _) = either(Parse("aaaaae")).result
+        val Result.Failure(5, _, _) = either(Parse("aaaaae")).result
 //        assert(parser == ("b" | "c" | "d"))
       }
 
@@ -75,7 +75,7 @@ object ExampleTests extends TestSuite{
         def withEnd[_: P] = P( "a".rep ~ "b" ~ End)
 
         val Result.Success(_, 4) = noEnd(Parse("aaaba")).result
-        val Result.Failure(4, _) = withEnd(Parse("aaaba")).result
+        val Result.Failure(4, _, _) = withEnd(Parse("aaaba")).result
 
       }
       'start{
@@ -84,13 +84,13 @@ object ExampleTests extends TestSuite{
         val Result.Success("abab", 4) = ab(Parse("abab")).result
         val Result.Success("babab", 5) = ab(Parse("babab")).result
 
-        val Result.Failure(2, _) = ab(Parse("abb")).result
+        val Result.Failure(2, _, _) = ab(Parse("abb")).result
 
       }
 
       'passfail{
         val Result.Success((), 0) = Pass(Parse("asdad")).result
-        val Result.Failure(0, _) = Fail(Parse("asdad")).result
+        val Result.Failure(0, _, _) = Fail(Parse("asdad")).result
       }
 
       'index{
@@ -126,7 +126,7 @@ object ExampleTests extends TestSuite{
 
         val Result.Success("-", 3) = ab(Parse("'-'")).result
 
-        val Result.Failure(2, _) = ab(Parse("'-='")).result
+        val Result.Failure(2, _, _) = ab(Parse("'-='")).result
 //        assert(parser == ("'": P0))
       }
 
@@ -143,7 +143,7 @@ object ExampleTests extends TestSuite{
         val Result.Success("hello-world", _) = keyword(Parse("hello-world")).result
         val Result.Success("hello_world", _) = keyword(Parse("hello_world")).result
 
-        val Result.Failure(5, _) = keyword(Parse("hello world")).result
+        val Result.Failure(5, _, _) = keyword(Parse("hello world")).result
 //        assert(parser == !(" "))
       }
       'map{
@@ -222,23 +222,17 @@ object ExampleTests extends TestSuite{
         def cp[_: P] = P( CharPred(_.isUpper).rep.! ~ "." ~ End )
 
         val Result.Success("ABC", _) = cp(Parse("ABC.")).result
-        val Result.Failure(2, _) = cp(Parse("ABc.")).result
+        val Result.Failure(2, _, _) = cp(Parse("ABc.")).result
       }
-//      'charPredRaw{
-//        def cp[_: P] = P( CharPred.raw(_.isUpper).rep.! ~ "." ~ End )
-//
-//        val Parsed.Success("ABC", _) = cp("ABC.")
-//        val Parsed.Failure(_, 2, _) = cp("ABc.")
-//      }
+
       'charIn{
-        val chars = "abcxyz".toSet
-        def ci[_: P] = P( CharPred(chars).rep.! ~ End )
+        def ci[_: P] = P( CharIn("abcxyz").rep.! ~ End )
 
         val Result.Success("aaabbccxyz", _) = ci(Parse("aaabbccxyz")).result
-        val Result.Failure(7, _) = ci(Parse("aaabbccdxyz.")).result
+        val Result.Failure(7, _, _) = ci(Parse("aaabbccdxyz.")).result
 
-        val digitChars = ('0' to '9').toSet
-        def digits[_: P] = P( CharPred(digitChars).rep.! )
+
+        def digits[_: P] = P( CharIn("0-9").rep.! )
 
         val Result.Success("12345", _) = digits(Parse("12345abcde")).result
         val Result.Success("123", _) = digits(Parse("123abcde45")).result
@@ -251,18 +245,13 @@ object ExampleTests extends TestSuite{
         val Result.Success("123", _) = cw(Parse("123 45")).result
       }
       'charsWhileIn{
-        val digits = "123456789".toSet
-        def cw[_: P] = P( CharsWhile(digits).! )
+
+        def cw[_: P] = P( CharsWhileIn("123456789").! )
 
         val Result.Success("12345", _) = cw(Parse("12345")).result
         val Result.Success("123", _) = cw(Parse("123 45")).result
       }
-//      'charsWhileRaw{
-//        def cw[_: P] = P( CharsWhile.raw(_ != ' ').! )
-//
-//        val Parsed.Success("12345", _) = cw("12345")
-//        val Parsed.Success("123", _) = cw("123 45")
-//      }
+
       'stringIn{
 //        def si[_: P] = P( StringIn("cow", "cattle").!.rep )
 //
@@ -388,20 +377,21 @@ object ExampleTests extends TestSuite{
     'debugging{
       def check(a: Any, s: String) = assert(a.toString == s.trim)
       'original{
-//        object Foo{
-//
-//          def plus[_: P] = P( "+" )
-//          def num[_: P] = P( CharIn('0' to '9').rep(1) ).!.map(_.toInt)
-//          def side[_: P] = P( "(" ~ expr ~ ")" | num )
-//          def expr[_: P]: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}
-//        }
-//
-//
+        object Foo{
+
+          def plus[_: P] = P( "+" )
+          def num[_: P] = P( CharPred(c => '0' <= c && c <= '9').rep(1) ).!.map(_.toInt)
+          def side[_: P] = P( "(" ~ expr ~ ")" | num )
+          def expr[_: P]: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}
+        }
+
+
 //        check(
-//          Foo.expr("(1+(2+3x))+4"),
+//          Foo.expr(Parse("(1+(2+3x))+4")).result,
 //          """Failure(("(" ~ expr ~ ")" | num):1:1 ..."(1+(2+3x))")"""
 //        )
 
+        Foo.expr(Parse("(1+(2+3x))+4")).result
       }
       'cuts{
 //        object Foo{
@@ -476,6 +466,5 @@ object ExampleTests extends TestSuite{
       check("oR", "Parsed: Or")
       check("IllegalBooleanOperation", "Cannot parse IllegalBooleanOperation as an AndOr")
     }
-
   }
 }
