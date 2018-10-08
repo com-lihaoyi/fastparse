@@ -63,9 +63,6 @@ class FasterParserParser{
     "in", "local", "null", "tailstrict", "then", "self", "super", "true"
   )
 
-  val digitChar = fastparse.utils.MacroUtils.preCompute(c =>
-    ('0' to '9').contains(c)
-  )
   val idStartChar = fastparse.utils.MacroUtils.preCompute(c =>
     ("_" ++ ('a' to 'z') ++ ('A' to 'Z')).contains(c)
   )
@@ -80,9 +77,9 @@ class FasterParserParser{
   def break[_: P] = P(!CharPred(idChar))
   def number[_: P]: P[Expr.Num] = P(
     Index ~~ (
-      CharsWhile(digitChar) ~~
-        ("." ~ CharsWhile(digitChar)).? ~~
-        (("e" | "E") ~ ("+" | "-").? ~~ CharsWhile(digitChar)).?
+      CharsWhileIn("0-9") ~~
+        ("." ~ CharsWhileIn("0-9")).? ~~
+        (CharIn("eE") ~ CharIn("+\\-").? ~~ CharsWhileIn("0-9")).?
       ).!
   ).map(s => Expr.Num(s._1, s._2.toDouble))
 
@@ -98,7 +95,7 @@ class FasterParserParser{
     case "r" => "\r"
     case "t" => "\t"
   }
-  def escape1[_: P] = P( "\\u" ~~ CharPred(digitChar).repX(min=4, max=4).! ).map{
+  def escape1[_: P] = P( "\\u" ~~ CharIn("0-9").repX(min=4, max=4).! ).map{
     s => Integer.parseInt(s, 16).toChar.toString
   }
   def doubleString[_: P]: P[Seq[String]] =
@@ -116,7 +113,7 @@ class FasterParserParser{
     }
   )
   def tripleBarString[_: P]: P[Seq[String]] = P(
-    "||"./ ~~ CharsWhile(c => c == ' ' || c == '\t', 0) ~~ "\n" ~~ tripleBarStringLines ~~ "\n" ~~ CharsWhile(c => c == ' ' || c == '\t') ~~ "|||"
+    "||"./ ~~ CharsWhileIn(" \t", 0) ~~ "\n" ~~ tripleBarStringLines ~~ "\n" ~~ CharsWhileIn(" \t") ~~ "|||"
   )
   def string[_: P]: P[String] = P(
     SingleChar./.flatMap{
@@ -133,12 +130,12 @@ class FasterParserParser{
   ).map(_.mkString)
 
   def tripleBarStringHead[_: P] = P(
-    (CharsWhile(c => c == ' ' || c == '\t', min=0) ~~ "\n".!).repX ~~
-      CharsWhile(c => c == ' ' || c == '\t', min=1).! ~~
+    (CharsWhileIn(" \t", 0) ~~ "\n".!).repX ~~
+      CharsWhileIn(" \t", 1).! ~~
       CharsWhile(_ != '\n').!
   )
   def tripleBarBlankHead[_: P]: P[String] =
-    P( CharsWhile(c => c == ' ' || c == '\t', min=0) ~~ &("\n").map(_ => "\n") )
+    P( CharsWhileIn(" \t", 0) ~~ &("\n").map(_ => "\n") )
 
   def tripleBarBlank[_: P]: P[String] = P( "\n" ~~ tripleBarBlankHead )
 
@@ -311,7 +308,7 @@ class FasterParserParser{
         Expr.Member.Field(offset, name, plus.nonEmpty, p, h2, e)
     }
   )
-  def fieldKeySep[_: P] = P( ":::" | "::" | ":" ).!.map{
+  def fieldKeySep[_: P] = P( StringIn(":::", "::", ":") ).!.map{
     case ":" => Visibility.Normal
     case "::" => Visibility.Hidden
     case ":::" => Visibility.Unhide
@@ -344,12 +341,14 @@ class FasterParserParser{
   }
 
   def binaryop[_: P] = P(
-    "<<" | ">>" | "<=" | ">=" | "in" | "==" | "!=" | "&&" | "||" |
-    "*" | "/" | "%" | "+" | "-" | "<" | ">" | "&" | "^" | "|"
+    StringIn(
+      "<<", ">>", "<=", ">=", "in", "==", "!=", "&&", "||",
+      "*", "/", "%", "+", "-", "<", ">", "&", "^", "|"
+    )
+
   ).!
 
-  def unaryop[_: P]	= P( "-" | "+" | "!" | "~").!
-
+  def unaryop[_: P]	= P( CharIn("\\-+!~") ).!
 
   def document[_: P]: P[Expr] = P( expr ~ End )
 }

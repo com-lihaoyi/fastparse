@@ -42,7 +42,7 @@ object fasterparser extends ScalaModule{
     def ivyDeps = Agg(
       ivy"com.lihaoyi::utest:0.6.5",
     )
-    override def scalacOptions = Seq("-opt:l:method")
+
     def testFrameworks = Seq("utest.runner.Framework")
   }
   object bench extends ScalaModule{
