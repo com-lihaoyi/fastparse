@@ -27,7 +27,9 @@ object Parsing {
   }
 
   implicit def LiteralStr(s: String)(implicit ctx: Parse[Any]): Parse[Unit] = {
-
+    if (ctx.traceIndex != -1){
+      ctx.failureMsg = Util.literalize(s)
+    }
     if (ctx.input.startsWith(s, ctx.index)) ctx.freshSuccess((), ctx.index + s.length)
     else ctx.freshFailure(Util.literalize(s)).asInstanceOf[Parse[Unit]]
   }
@@ -35,7 +37,6 @@ object Parsing {
   def startsWithIgnoreCase(src: String, prefix: IndexedSeq[Char], offset: Int) = {
     @tailrec def rec(i: Int): Boolean = {
       if (i >= prefix.length) true
-//      else if (!src.isReachable(i + offset)) false
       else {
         val c1: Char = src(i + offset)
         val c2: Char = prefix(i)
@@ -212,13 +213,25 @@ object Parsing {
       val ctx5 = ctx.splice.asInstanceOf[Parse[V]]
       val startPos = ctx5.index
       lhs0.splice
+      val leftMsg = ctx5.failureMsg
       if (ctx5.isSuccess | ctx5.failureCut) ctx5
       else {
         ctx5.index = startPos
         other.splice
         if (ctx5.isSuccess) ctx5
-        else if (ctx5.failureCut) ctx5
-        else ctx5.prepareFailure(startPos)
+        else if (ctx5.failureCut) {
+          ctx5.failureStack = Nil
+          if (ctx5.traceIndex != -1) ctx5.failureMsg = leftMsg + " | " + ctx5.failureMsg
+          else ctx5.failureMsg = "???"
+          ctx5
+        }
+        else {
+          val res = ctx5.prepareFailure(startPos)
+          ctx5.failureStack = Nil
+          if (ctx5.traceIndex != -1) ctx5.failureMsg = leftMsg + " | " + ctx5.failureMsg
+          else ctx5.failureMsg = "???"
+          res
+        }
       }
 
     }

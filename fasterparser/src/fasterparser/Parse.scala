@@ -41,12 +41,12 @@ class Parse[+T](val input: String,
   }
   def freshFailure(msg: String): Parse[Nothing] = {
     val res = prepareFailure(index, cut = false)
-    this.failureMsg = msg
+    if (traceIndex == -1 || failureMsg == null) this.failureMsg = msg
     res
   }
   def freshFailure(msg: String, startPos: Int): Parse[Nothing] = {
     val res = prepareFailure(startPos, cut = false)
-    this.failureMsg = msg
+    if (traceIndex == -1 || failureMsg == null) this.failureMsg = msg
     res
   }
 

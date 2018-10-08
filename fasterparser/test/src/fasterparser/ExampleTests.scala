@@ -65,8 +65,11 @@ object ExampleTests extends TestSuite{
         def either[_: P] = P( "a".rep ~ ("b" | "c" | "d") ~ End)
 
         val Result.Success(_, 6) = Parse("aaaaab").read(either(_))
-        val Result.Failure(5, _, _) = Parse("aaaaae").read(either(_))
-//        assert(parser == ("b" | "c" | "d"))
+        val f @ Result.Failure(5, _, _) = Parse("aaaaae").read(either(_))
+        assert(
+          f.toString == """Result.Failure(Expected ???:1:6, found "e")""",
+          f.traced.trace == """Expected either:1:1 / "b" | "c" | "d":1:6, found "e""""
+        )
       }
 
 
@@ -126,8 +129,8 @@ object ExampleTests extends TestSuite{
 
         val Result.Success("-", 3) = Parse("'-'").read(ab(_))
 
-        val Result.Failure(2, _, _) = Parse("'-='").read(ab(_))
-//        assert(parser == ("'": P0))
+        val f @ Result.Failure(2, _, _) = Parse("'-='").read(ab(_))
+        assert(f.stack.head._1 == "\"'\"")
       }
 
 
