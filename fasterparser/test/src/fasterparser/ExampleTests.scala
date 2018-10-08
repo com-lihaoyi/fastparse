@@ -253,10 +253,17 @@ object ExampleTests extends TestSuite{
       }
 
       'stringIn{
-//        def si[_: P] = P( StringIn("cow", "cattle").!.rep )
-//
-//        val Parsed.Success(Seq("cow", "cattle"), _) = si("cowcattle")
-//        val Parsed.Success(Seq("cow"), _) = si("cowmoo")
+        def si[_: P] = P( StringIn("cow", "cattle").!.rep )
+
+        val Result.Success(Seq("cow", "cattle"), _) = si(Parse("cowcattle")).result
+        val Result.Success(Seq("cow"), _) = si(Parse("cowmoo")).result
+
+        def si2[_: P] = P( StringIn("abstract", "case", "catch", "class", "def", "do", "else",
+          "extends", "false", "finally", "final", "finally", "forSome",
+          "for", "if", "implicit", "import", "lazy", "match", "new",
+          "null", "object", "override", "package", "private", "protected",
+          "return", "sealed", "super", "this", "throw", "trait", "try",
+          "true", "type", "val", "var", "while", "with", "yield", "_", "macro").!.rep )
       }
     }
     'cuts{
