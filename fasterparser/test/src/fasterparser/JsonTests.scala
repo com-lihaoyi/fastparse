@@ -114,9 +114,9 @@ object JsonTests extends TestSuite{
         * - test(obj(_), """{"omg": "123", "wtf": 456, "bbq": "789"}""")
       }
       'jsonExpr - {
-        val Result.Success(value, _) = jsonExpr(
-          Parse("""{"omg": "123", "wtf": 12.4123}""")
-        ).result
+        val Result.Success(value, _) =
+          Parse("""{"omg": "123", "wtf": 12.4123}""").read(jsonExpr(_))
+
         assert(value == Js.Obj("omg" -> Js.Str("123"), "wtf" -> Js.Num(12.4123)))
       }
       'bigJsonExpr - test(jsonExpr(_), """
@@ -152,7 +152,7 @@ object JsonTests extends TestSuite{
       var count = 0
       val startTime = System.currentTimeMillis()
       while(startTime + 100 > System.currentTimeMillis()){
-        jsonExpr(Parse(txt)).result
+        Parse(txt).read(jsonExpr(_))
         count += 1
       }
 //      println(txt)
@@ -160,7 +160,7 @@ object JsonTests extends TestSuite{
     }
     'fail{
       def check(s: String, expectedError: String, expectedShortError: String) = {
-        jsonExpr(Parse(s)).result match{
+        Parse(s).read(jsonExpr(_)) match{
           case s: Result.Success[_] => throw new Exception("Parsing should have failed:")
           case f: Result.Failure =>
 //            val error = f.extra.traced.trace

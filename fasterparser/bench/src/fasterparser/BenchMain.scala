@@ -1,5 +1,6 @@
 package test.scala.fasterparser
 
+import fasterparser.Parse
 import test.fasterparser.FasterParserParser
 import fasterparser.Parsing._
 object BenchMain{
@@ -31,7 +32,7 @@ object BenchMain{
     for((name, body) <- names.zip(bodies)){
       println(name)
       val oldResult = parser.document.parse(body).get.value
-      val newResult = parser2.document(parseInputCtx(body)).result.get.value
+      val newResult = Parse(body).read(parser2.document(_)).get.value
       assert(oldResult == newResult, oldResult + " != " + newResult)
 
     }
@@ -49,7 +50,7 @@ object BenchMain{
     var count2 = 0
     while(System.currentTimeMillis() - start2 < 20000){
       count2 += 1
-      bodies.foreach(b => parser2.document(parseInputCtx(b)))
+      bodies.foreach(b => Parse(b).read(parser2.document(_))
 
     }
     println(count2)

@@ -545,8 +545,6 @@ object Parsing {
     res
   }
 
-  def parseInputCtx(s: String): Parse[_] = Parse(s)
-
 
   def StringIn(s: String*)(implicit ctx: Parse[_]): Parse[Unit] = macro stringInMacro
 

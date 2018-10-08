@@ -1,5 +1,7 @@
 package fasterparser
 
+import scala.annotation.unchecked.uncheckedVariance
+
 
 class Parse[+T](val input: String,
                 var failureStack: List[(String, Int)],
@@ -12,8 +14,12 @@ class Parse[+T](val input: String,
                 var failureCut: Boolean,
                 var successValue: Any,
                 var noCut: Boolean,
-                val traceIndex: Int){
-
+                val traceIndex: Int,
+                var originalParser: Parse[_] => Parse[_]){
+  def read[T](p: Parse[_] => Parse[T] @uncheckedVariance): Result[T] = {
+    if (originalParser == null) originalParser = p
+    p(this).result
+  }
   // Use telescoping methods rather than default arguments to try and minimize
   // the amount of bytecode generated at the callsite.
   //
@@ -66,6 +72,6 @@ object Parse{
     failureMsg = null,
     isSuccess = true,
     logDepth = 0,
-    0, 0, false, false, (), false, traceIndex
+    0, 0, false, false, (), false, traceIndex, null
   )
 }

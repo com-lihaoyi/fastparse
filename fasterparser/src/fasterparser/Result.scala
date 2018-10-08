@@ -25,5 +25,6 @@ object Result{
     }
   }
   case class Extra(input: String,
-                   startIndex: Int)
+                   startIndex: Int){
+  }
 }
