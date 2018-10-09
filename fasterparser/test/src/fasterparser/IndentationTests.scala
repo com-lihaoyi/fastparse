@@ -1,4 +1,4 @@
-package test.scala.fasterparser
+package test.fasterparser
 
 import utest._
 import fasterparser._, Parsing._

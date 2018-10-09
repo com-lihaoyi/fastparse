@@ -1,5 +1,5 @@
 
-package test.scala.fasterparser
+package test.fasterparser
 
 import fasterparser.Parsing._
 import fasterparser._
