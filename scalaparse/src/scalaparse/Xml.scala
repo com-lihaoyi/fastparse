@@ -7,7 +7,7 @@ import fasterparser._
 import scala.language.implicitConversions
 
 trait Xml extends Core {
-  def Patterns: P[Unit]
+  def Patterns[_: P]: P[Unit]
   def XmlExpr[_: P] = P( WL ~ Xml.XmlContent.rep(min = 1, sep = WL.?) )
   def XmlPattern[_: P] = P( WL ~ Xml.ElemPattern )
 
@@ -24,7 +24,7 @@ trait Xml extends Core {
         ScalaExpr
     )
 
-    def Content        = P( (CharData | Reference | ScalaExpr | XmlContent).rep )
+    def Content[_: P]        = P( (CharData | Reference | ScalaExpr | XmlContent).rep )
     def XmlContent[_: P]: P[Unit] = P( Unparsed | CDSect | PI | Comment | Element )
 
     def ScalaExpr[_: P] = P( "{" ~ WS ~ Block ~ WL ~ "}" )
@@ -49,13 +49,13 @@ trait Xml extends Core {
     def Reference[_: P] = P( EntityRef | CharRef )
     def EntityRef[_: P] = P( "&" ~ Name ~/ ";" )
     def CharRef[_: P] = P( "&#" ~ Num ~/ ";" | "&#x" ~ HexNum ~/ ";" )
-    def Num[_: P] = P( CharIn('0' to '9').rep )
-    def HexNum[_: P] = P( CharIn('0' to '9', 'a' to 'f', 'A' to 'F').rep )
+    def Num[_: P] = P( CharIn("0-9").rep )
+    def HexNum[_: P] = P( CharIn("0-9a-fA-F").rep )
 
     def CharData[_: P] = P( (!"{" ~ Char1 | "{{").rep(1) )
 
     def Char[_: P] = P( AnyChar )
-    val Char1  = P( !("<" | "&") ~ Char )
+    def Char1[_: P] = P( !("<" | "&") ~ Char )
     def CharQ[_: P] = P( !"\"" ~ Char1 )
     def CharA[_: P] = P( !"'" ~ Char1 )
 

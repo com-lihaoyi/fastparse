@@ -5,8 +5,8 @@ import scalaparse.syntax.Identifiers
 import fasterparser.Parsing._
 import fasterparser._
 trait Exprs extends Core with Types with Xml{
-  def AnonTmpl: P[Unit]
-  def BlockDef: P[Unit]
+  def AnonTmpl[_: P]: P[Unit]
+  def BlockDef[_: P]: P[Unit]
 
   def Import[_: P]: P[Unit] = {
     def Selector: P[Unit] = P( (Id | `_`) ~ (`=>` ~/ (Id | `_`)).? )
@@ -48,7 +48,7 @@ trait Exprs extends Core with Types with Xml{
     }
 
     def Expr[_: P]: P[Unit] = {
-      val If = {
+      def If = {
         def Else = P( Semi.? ~ `else` ~/ Expr )
         P( `if` ~/ "(" ~ ExprCtx.Expr ~ ")" ~ Expr ~ Else.? )
       }
@@ -66,7 +66,7 @@ trait Exprs extends Core with Types with Xml{
       }
       def Throw = P( `throw` ~/ Expr )
       def Return = P( `return` ~/ Expr.? )
-      val LambdaRhs = if (semiInference) P( BlockChunk ) else P( Expr )
+      def LambdaRhs = if (semiInference) P( BlockChunk ) else P( Expr )
 
 
       def ImplicitLambda = P( `implicit` ~ (Id | `_`) ~ (`:` ~ InfixType).? ~ `=>` ~ LambdaRhs.? )
@@ -82,7 +82,7 @@ trait Exprs extends Core with Types with Xml{
     def AscriptionType[_: P]  = if (arrowTypeAscriptions) P( Type ) else P( InfixType )
     def Ascription[_: P] = P( `:` ~/ (`_*` |  AscriptionType | Annot.rep(1)) )
     def MatchAscriptionSuffix[_: P] = P(`match` ~/ "{" ~ CaseClauses | Ascription)
-    def ExprPrefix[_: P] = P( WL ~ CharIn("-+!~") ~~ !syntax.Basic.OpChar ~ WS)
+    def ExprPrefix[_: P] = P( WL ~ CharIn("\\-+!~") ~~ !syntax.Basic.OpChar ~ WS)
     def ExprSuffix[_: P] = P( (WL ~ "." ~/ Id | WL ~ TypeArgs | NoSemis ~ ArgList).repX ~~ (NoSemis  ~ `_`).? )
     def PrefixExpr[_: P] = P( ExprPrefix.? ~ SimpleExpr )
 
@@ -97,7 +97,7 @@ trait Exprs extends Core with Types with Xml{
 
     def Parened[_: P] = P ( "(" ~/ TypeExpr.rep/*TC*/(sep = ",") ~ ")" )
     def SimpleExpr[_: P]: P[Unit] = {
-      def New[_: P] = P( `new` ~/ AnonTmpl )
+      def New = P( `new` ~/ AnonTmpl )
 
       P( XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | Parened )
     }
@@ -121,7 +121,7 @@ trait Exprs extends Core with Types with Xml{
     P( BlockLambda.rep ~ BlockStat.rep(sep = Semis) )
   }
 
-  def BaseBlock[_: P] (end: P[Unit])(implicit name: sourcecode.Name): P[Unit] = {
+  def BaseBlock[_: P](end: => P[Unit])(implicit name: sourcecode.Name): P[Unit] = {
     def BlockEnd = P( Semis.? ~ &(end) )
     def Body = P( BlockChunk.repX(sep = Semis) )
     P( Semis.? ~ BlockLambda.? ~ Body ~/ BlockEnd )

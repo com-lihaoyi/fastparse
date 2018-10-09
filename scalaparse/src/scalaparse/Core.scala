@@ -11,6 +11,7 @@ import scala.annotation.{switch, tailrec}
 trait Core extends syntax.Literals{
 
   implicit def whitespace(cfg: Parse[_]): Parse[Unit] = {
+    implicit def cfg0 = cfg
     val input = cfg.input
     val inputLength = input.length
     P{

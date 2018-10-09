@@ -3,9 +3,9 @@ package scalaparse
 import fasterparser.Parsing._
 import fasterparser._
 trait Types extends Core{
-  def TypeExpr: P[Unit]
-  def ValVarDef: P[Unit]
-  def FunDef: P[Unit]
+  def TypeExpr[_: P]: P[Unit]
+  def ValVarDef[_: P]: P[Unit]
+  def FunDef[_: P]: P[Unit]
 
   def LocalMod[_: P]: P[Unit] = P( `abstract` | `final` | `sealed` | `implicit` | `lazy` )
   def AccessMod[_: P]: P[Unit] = {
@@ -65,7 +65,7 @@ trait Types extends Core{
   def Annot[_: P]: P[Unit] = P( `@` ~/ SimpleType ~  ("(" ~/ (Exprs ~ (`:` ~/ `_*`).?).? ~ TrailingComma ~ ")").rep )
 
   def TypeArgList[_: P]: P[Unit] = {
-    def Variant: P[Unit] = P( Annot.rep ~ CharIn("+-").? ~ TypeArg )
+    def Variant: P[Unit] = P( Annot.rep ~ CharIn("+\\-").? ~ TypeArg )
     P( "[" ~/ Variant.rep/*TC*/(1, sep = ",") ~ "]" )
   }
   def Exprs[_: P]: P[Unit] = P( TypeExpr.rep(1, ",") )

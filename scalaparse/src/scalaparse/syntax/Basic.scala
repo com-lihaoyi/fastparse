@@ -3,13 +3,13 @@ package scalaparse.syntax
 
 import fasterparser.Parsing._
 import fasterparser._
-
+import fasterparser.NoWhitespace._
+import CharPredicates._
 object Basic {
 
   def UnicodeEscape[_: P] = P( "u" ~ HexDigit ~ HexDigit ~ HexDigit ~ HexDigit )
 
   //Numbers and digits
-  import fasterparser.NoWhitespace._
   val digits = "0123456789".toSet
   def Digit[_: P] = P( CharPred(digits) )
   val hexDigits = digits ++ "abcdefABCDEF"
@@ -30,7 +30,7 @@ object Basic {
     case _ => isOtherSymbol(c) || isMathSymbol(c)
   }
   def Letter[_: P] = P( CharPred(c => isLetter(c) | isDigit(c) | c == '$' | c == '_' ) )
-  val LetterDigitDollarUnderscore =  P(
+  def LetterDigitDollarUnderscore[_: P] =  P(
     CharPred(c => isLetter(c) | isDigit(c) | c == '$' | c == '_' )
   )
   def Lower[_: P] = P( CharPred(c => isLower(c) || c == '$' | c == '_') )
@@ -43,7 +43,6 @@ object Basic {
  * (W) and key-operators (O) which have different non-match criteria.
  */
 object Key {
-  import fasterparser.NoWhitespace._
   def W[_: P](s: String) = P( s ~ !Basic.LetterDigitDollarUnderscore )(sourcecode.Name(s"`$s`"))
   // If the operator is followed by a comment, stop early so we can parse the comment
   def O[_: P](s: String) = P( s ~ (!Basic.OpChar | &("/*" | "//")) )(sourcecode.Name(s"`$s`"))

@@ -1,7 +1,7 @@
 package scalaparse.unit
 
 import scalaparse.{TestUtil, Scala}
-import fastparse._
+import fasterparser._, Parsing._
 import utest._
 import TestUtil._
 object SuccessTests extends TestSuite{
@@ -20,11 +20,7 @@ object SuccessTests extends TestSuite{
     )
     * - check(
       """
-        |trait ColumnarTableCompanion {
-        |    class IndexedSource()
-        |
-        |    (1)
-        |}
+        |object ColumnarTableCompanion{}
         |
       """.stripMargin
     )

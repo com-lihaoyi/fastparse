@@ -3,11 +3,11 @@ package scalaparse.syntax
 import fasterparser._
 import fasterparser.Parsing._
 
-
+import NoWhitespace._
 import Identifiers._
 
 trait Literals { l =>
-  def Block: P[Unit]
+  def Block[_: P]: P[Unit]
 
   /**
    * Parses all whitespace, excluding newlines. This is only
@@ -29,11 +29,11 @@ trait Literals { l =>
 
   def NotNewline[_: P]: P[Unit] = P( &( WS ~ !Basic.Newline ) )
   def OneNLMax[_: P]: P[Unit] = {
-    def ConsumeComments[_: P] = P( (Basic.WSChars.? ~ Literals.Comment ~ Basic.WSChars.? ~ Basic.Newline).rep )
+    def ConsumeComments = P( (Basic.WSChars.? ~ Literals.Comment ~ Basic.WSChars.? ~ Basic.Newline).rep )
     P( NoCut( WS ~ Basic.Newline.? ~ ConsumeComments ~ NotNewline) )
   }
   def TrailingComma[_: P]: P[Unit] = P( ("," ~ WS ~ Basic.Newline).? )
-  def Pattern: P[Unit]
+  def Pattern[_: P]: P[Unit]
   object Literals{
     import Basic._
     def Float[_: P] = {
@@ -55,7 +55,7 @@ trait Literals { l =>
     def LineComment[_: P] = P( "//" ~ SameLineCharChunks.rep ~ &(Basic.Newline | End) )
     def Comment[_: P]: P[Unit] = P( MultilineComment | LineComment )
 
-    val Null = Key.W("null")
+    def Null[_: P] = Key.W("null")
 
     def OctalEscape[_: P] = P( Digit ~ Digit.? ~ Digit.? )
     def Escape[_: P] = P( "\\" ~/ (CharIn("""btnfr'\"]""") | OctalEscape | UnicodeEscape ) )
@@ -63,16 +63,16 @@ trait Literals { l =>
     // Note that symbols can take on the same values as keywords!
     def Symbol[_: P] = P( Identifiers.PlainId | Identifiers.Keywords )
 
-    val Char = {
+    def Char[_: P] = {
       // scalac 2.10 crashes if PrintableChar below is substituted by its body
       def PrintableChar = CharPred(CharPredicates.isPrintableChar)
 
       P( (Escape | PrintableChar) ~ "'" )
     }
 
-    class InterpCtx(interp: Option[P[Unit]]){
+    class InterpCtx(interp: => Option[P[Unit]]) {
       def Literal[_: P] = P( ("-".? ~ (Float | Int)) | Bool | String | "'" ~/ (Char | Symbol) | Null )
-      val Interp = interp match{
+      def Interp[_: P] = interp match{
         case None => P ( Fail )
         case Some(p) => P( "$" ~ Identifiers.PlainIdNoDollar | ("${" ~ p ~ WL ~ "}") | "$$" )
       }
@@ -89,12 +89,12 @@ trait Literals { l =>
       def NonTripleQuoteChar[_: P] = P( "\"" ~ "\"".? ~ !"\"" | CharIn("\\$\n") )
       def TripleChars[_: P] = P( (StringChars | Interp | NonTripleQuoteChar).rep )
       def TripleTail[_: P] = P( TQ ~ "\"".rep )
-      def SingleChars(allowSlash: Boolean) = {
-        def LiteralSlash[_: P] = P( if(allowSlash) "\\" else Fail )
-        def NonStringEnd[_: P] = P( !CharIn("\n\"") ~ AnyChar )
+      def SingleChars[_: P](allowSlash: Boolean) = {
+        def LiteralSlash = P( if(allowSlash) "\\" else Fail )
+        def NonStringEnd = P( !CharIn("\n\"") ~ AnyChar )
         P( (StringChars | Interp | LiteralSlash | Escape | NonStringEnd ).rep )
       }
-      val String = {
+      def String[_: P] = {
         P {
           (Id ~ TQ ~/ TripleChars ~ TripleTail) |
           (Id ~ "\"" ~/ SingleChars(true)  ~ "\"") |
@@ -104,9 +104,9 @@ trait Literals { l =>
       }
 
     }
-    object NoInterp extends InterpCtx(None)
-    object Pat extends InterpCtx(Some(l.Pattern))
-    object Expr extends InterpCtx(Some(Block))
+    def NoInterp[_: P] = new InterpCtx(None)
+    def Pat[_: P] = new InterpCtx(Some(l.Pattern))
+    def Expr[_: P] = new InterpCtx(Some(Block))
 
 
   }

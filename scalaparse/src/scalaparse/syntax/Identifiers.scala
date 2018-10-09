@@ -1,8 +1,9 @@
 package scalaparse.syntax
 import fasterparser.Parsing._
 import fasterparser._
-
+import NoWhitespace._
 import Basic._
+import CharPredicates._
 object Identifiers{
 
   case class NamedFunction(f: Char => Boolean)
@@ -26,37 +27,28 @@ object Identifiers{
   def BacktickId[_: P] = P( "`" ~ CharsWhile(NotBackTick) ~ "`" )
   def Id[_: P]: P[Unit] = P( BacktickId | PlainId )
 
-  def IdRest(allowDollar: Boolean) = {
+  def IdRest[_: P](allowDollar: Boolean) = {
 
     val IdCharacter =
       if(allowDollar) NamedFunction(c => c == '$' || isLetter(c) || isDigit(c))
       else NamedFunction(c => isLetter(c) || isDigit(c))
 
-    def IdUnderscoreChunk[_: P] = P( CharsWhileIn("_", min = 0) ~ CharsWhile(IdCharacter) )
-    P( IdUnderscoreChunk.rep ~ (CharsWhileIn("_") ~ CharsWhile(isOpChar, min = 0)).? )
+    def IdUnderscoreChunk = P( CharsWhileIn("_", 0) ~ CharsWhile(IdCharacter) )
+    P( IdUnderscoreChunk.rep ~ (CharsWhileIn("_") ~ CharsWhile(isOpChar, 0)).? )
   }
-
-  val alphaKeywords = Seq(
-    "abstract", "case", "catch", "class", "def", "do", "else",
-    "extends", "false", "finally", "final", "finally", "forSome",
-    "for", "if", "implicit", "import", "lazy", "match", "new",
-    "null", "object", "override", "package", "private", "protected",
-    "return", "sealed", "super", "this", "throw", "trait", "try",
-    "true", "type", "val", "var", "while", "with", "yield", "_", "macro"
-  )
 
   def AlphabetKeywords[_: P] = P {
-    StringIn(alphaKeywords:_*) ~ !Letter
+    StringIn("abstract", "case", "catch", "class", "def", "do", "else",
+      "extends", "false", "finally", "final", "finally", "forSome",
+      "for", "if", "implicit", "import", "lazy", "match", "new",
+      "null", "object", "override", "package", "private", "protected",
+      "return", "sealed", "super", "this", "throw", "trait", "try",
+      "true", "type", "val", "var", "while", "with", "yield", "_", "macro") ~ !Letter
   }
-  val symbolKeywords = Seq(
-    ":", ";", "=>", "=", "<-", "<:", "<%", ">:", "#", "@", "\u21d2", "\u2190"
-  )
 
   def SymbolicKeywords[_: P] = P{
-    StringIn(symbolKeywords:_*) ~ !OpChar
+    StringIn(":", ";", "=>", "=", "<-", "<:", "<%", ">:", "#", "@", "\u21d2", "\u2190") ~ !OpChar
   }
-
-  val keywords = alphaKeywords ++ symbolKeywords
 
   def Keywords[_: P] = P( AlphabetKeywords | SymbolicKeywords )
 }
