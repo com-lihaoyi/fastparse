@@ -285,31 +285,7 @@ object ExampleTests extends TestSuite{
           trace == """Expected nocut:1:1 / alpha:1:5 / [a-z]:1:5, found "1234""""
         )
       }
-      'nestedcut{
-        def parse[_: P] = P( "hello" | "world" ~ "x" ~/ ("i" | "am" ~ "a")  ~ "cow" | "moo" )
 
-        // Failing before the cut backtracks all the way out
-        val Result.Failure(0, _, _) = Parse("worldlols").read(parse(_))
-        // Failing after the cut prevents backtracking
-        val Result.Failure(6, _, _) = Parse("worldxlols").read(parse(_))
-        // Failing inside another nested `|` block allows backtracking,
-        // but only up to the position of the cut
-        val Result.Failure(6, _, _) = Parse("worldxam").read(parse(_))
-        // Failing *after* the nested `|` block again prevents backtracking
-        val Result.Failure(9, _, _) = Parse("worldxama").read(parse(_))
-
-        def parse2[_: P] = P( "hello" | "world" ~ "x" ~ ("i" | "am" ~/ "a" ~ "b")  ~ "a" ~ "cow" | "moo" )
-
-        // Failing before the cut backtracks all the way out
-        val Result.Failure(0, _, _) = Parse("worldlols").read(parse2(_))
-        val Result.Failure(0, _, _) = Parse("worldxlols").read(parse2(_))
-        // Failing inside the nested either's cut prevents backtracking
-        val Result.Failure(8, _, _) = Parse("worldxam").read(parse2(_))
-        val Result.Failure(9, _, _) = Parse("worldxama").read(parse2(_))
-        // Failing after the nested either with the cut inside backtracks
-        // all the way, because cuts only apply to enclosing eithers, not siblings
-        val Result.Failure(0, _, _) = Parse("worldxamaba").read(parse2(_))
-      }
       'repnocut{
         def alpha[_: P] = P( CharIn("a-z") )
         def stmt[_: P] = P( "val " ~ alpha.rep(1).! ~ ";" ~ " ".rep )

@@ -41,6 +41,7 @@ object Parsing {
   def startsWithIgnoreCase(src: String, prefix: IndexedSeq[Char], offset: Int) = {
     @tailrec def rec(i: Int): Boolean = {
       if (i >= prefix.length) true
+      else if(i + offset >= src.length) false
       else {
         val c1: Char = src(i + offset)
         val c2: Char = prefix(i)
