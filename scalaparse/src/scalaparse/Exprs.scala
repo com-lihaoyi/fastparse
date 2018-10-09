@@ -116,14 +116,14 @@ trait Exprs extends Core with Types with Xml{
   def BlockLambda[_: P] = P( BlockLambdaHead  ~ (`=>` | `:` ~ InfixType ~ `=>`.?) )
 
   def BlockChunk[_: P]  = {
-    def Prelude = P( Annot.rep ~ `implicit`.? ~ `lazy`.? ~ LocalMod.rep ).log
-    def BlockStat = P( Import | Prelude ~ BlockDef | StatCtx.Expr ).log
-    P( BlockLambda.rep ~ BlockStat.rep(sep = Semis.log("SEMIS")) ).log
+    def Prelude = P( Annot.rep ~ `implicit`.? ~ `lazy`.? ~ LocalMod.rep )
+    def BlockStat = P( Import | Prelude ~ BlockDef | StatCtx.Expr )
+    P( BlockLambda.rep ~ BlockStat.rep(sep = Semis) )
   }
 
   def BaseBlock[_: P](end: => P[Unit])(implicit name: sourcecode.Name): P[Unit] = {
-    def BlockEnd = P( Semis.? ~ &(end) ).log
-    def Body = P( BlockChunk.repX(sep = Semis) ).log
+    def BlockEnd = P( Semis.? ~ &(end) )
+    def Body = P( BlockChunk.repX(sep = Semis) )
     P( Semis.? ~ BlockLambda.? ~ Body ~/ BlockEnd )
   }
   def Block[_: P]  = BaseBlock("}")

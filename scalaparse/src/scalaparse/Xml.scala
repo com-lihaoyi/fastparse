@@ -5,14 +5,18 @@ import fasterparser.Parsing._
 import fasterparser._
 
 import scala.language.implicitConversions
+import NoWhitespace._
 
-trait Xml extends Core {
+trait Xml {
+  def WL[_: P]: P0
+  def WS[_: P]: P0
+  def Block[_: P]: P0
   def Patterns[_: P]: P[Unit]
   def XmlExpr[_: P] = P( WL ~ Xml.XmlContent.rep(min = 1, sep = WL.?) )
   def XmlPattern[_: P] = P( WL ~ Xml.ElemPattern )
 
   private[this] object Xml {
-    def Element[_: P] = P( TagHeader ~/ ("/>" | ">" ~/ Content ~/ ETag ) ) // FIXME tag must be balanced
+    def Element[_: P] = P( TagHeader ~/ ("/>" | ">" ~/ Content ~/ ETag ) )
     def TagHeader[_: P] = P( "<" ~ Name ~/ (WL ~ Attribute).rep ~ WL.? )
     def ETag[_: P] = P( "</" ~ Name ~ WL.? ~ ">" )
 

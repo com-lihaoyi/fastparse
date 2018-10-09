@@ -23,7 +23,7 @@ object Scala extends Core with Types with Exprs with Xml{
     P( FunSig ~ (`:` ~/ Type).? ~~ Body.? )
   }
 
-  def BlockDef[_: P]: P[Unit] = P( Dcl | TraitDef  | ClsDef | ObjDef ).log
+  def BlockDef[_: P]: P[Unit] = P( Dcl | TraitDef  | ClsDef | ObjDef )
 
   def ClsDef[_: P] = {
     def ClsAnnot = P( `@` ~ SimpleType ~ ArgList.? )

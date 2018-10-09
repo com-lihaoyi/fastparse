@@ -16,13 +16,13 @@ object Identifiers{
   val NotBackTick = NamedFunction(_ != '`')
 
   def Operator[_: P] = P(
-    !Keywords ~ (!("/*" | "//") ~ (CharsWhile(OpCharNotSlash) | "/")).rep(1)
+    !Keywords ~ (!StringIn("/*", "//") ~ (CharsWhile(OpCharNotSlash) | "/")).rep(1)
   )
 
   def VarId[_: P] = VarId0(true)
 
   def VarId0[_: P](dollar: Boolean) = P( !Keywords ~ Lower ~ IdRest(dollar) )
-  def PlainId[_: P] = P( !Keywords ~ Upper ~ IdRest(true) | VarId | Operator ~ (!OpChar | &("/*" | "//")) )
+  def PlainId[_: P] = P( !Keywords ~ Upper ~ IdRest(true) | VarId | Operator ~ (!OpChar | &(StringIn("/*", "//"))) )
   def PlainIdNoDollar[_: P] = P( !Keywords ~ Upper ~ IdRest(false) | VarId0(false) | Operator )
   def BacktickId[_: P] = P( "`" ~ CharsWhile(NotBackTick) ~ "`" )
   def Id[_: P]: P[Unit] = P( BacktickId | PlainId )
