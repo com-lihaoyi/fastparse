@@ -273,10 +273,10 @@ object ExampleTests extends TestSuite{
         val Result.Success("abcd", _) = Parse("val abcd").read(nocut(_))
 
         val failure = Parse("val 1234").read(nocut(_)).asInstanceOf[Result.Failure]
+        val trace = failure.extra.traced.trace
         assert(
           failure.index == 0,
-          failure.extra.traced.trace ==
-            """Expected nocut:1:1 / "val " | "def ":1:1, found "val 1234""""
+          trace == """Expected nocut:1:1 / "val " | "def ":1:1, found "val 1234""""
         )
       }
       'withcut{
@@ -286,9 +286,10 @@ object ExampleTests extends TestSuite{
         val Result.Success("abcd", _) = Parse("val abcd").read(nocut(_))
 
         val failure = Parse("val 1234").read(nocut(_)).asInstanceOf[Result.Failure]
+        val trace = failure.extra.traced.trace
         assert(
           failure.index == 4,
-          failure.extra.traced.trace =="""Expected nocut:1:1 / alpha:1:5 / [a-z]:1:5, found "1234""""
+          trace == """Expected nocut:1:1 / alpha:1:5 / [a-z]:1:5, found "1234""""
         )
       }
       'repnocut{
@@ -300,9 +301,10 @@ object ExampleTests extends TestSuite{
         val Result.Success(Seq("abcd", "efg"), _) = Parse("val abcd; val efg;").read(stmts(_))
 
         val failure = Parse("val abcd; val ").read(stmts(_)).asInstanceOf[Result.Failure]
+        val trace = failure.extra.traced.trace
         assert(
           failure.index == 10,
-          failure.extra.traced.trace == """Expected stmts:1:1 / " " | "val " | end-of-input:1:11, found "val """"
+          trace == """Expected stmts:1:1 / " " | "val " | end-of-input:1:11, found "val """"
         )
       }
       'repcut{
@@ -314,10 +316,10 @@ object ExampleTests extends TestSuite{
         val Result.Success(Seq("abcd", "efg"), _) = Parse("val abcd; val efg;").read(stmts(_))
 
         val failure = Parse("val abcd; val ").read(stmts(_)).asInstanceOf[Result.Failure]
+        val trace = failure.extra.traced.trace
         assert(
           failure.index == 14,
-          failure.extra.traced.trace ==
-            """Expected stmts:1:1 / stmt:1:11 / alpha:1:15 / [a-z]:1:15, found """""
+          trace == """Expected stmts:1:1 / stmt:1:11 / alpha:1:15 / [a-z]:1:15, found """""
         )
       }
       'delimiternocut{
@@ -327,9 +329,10 @@ object ExampleTests extends TestSuite{
         val Result.Success(Seq("1", "23"), _) = Parse("(1,23)").read(tuple(_))
 
         val failure = Parse("(1,)").read(tuple(_)).asInstanceOf[Result.Failure]
+        val trace = failure.extra.traced.trace
         assert(
           failure.index == 2,
-          failure.extra.traced.trace == """Expected tuple:1:1 / [0-9] | "," | ")":1:3, found ",)""""
+          trace == """Expected tuple:1:1 / [0-9] | "," | ")":1:3, found ",)""""
         )
       }
       'delimitercut{
@@ -340,9 +343,10 @@ object ExampleTests extends TestSuite{
 
         val failure = Parse("(1,)").read(tuple(_)).asInstanceOf[Result.Failure]
         val index = failure.index
+        val trace = failure.extra.traced.trace
         assert(
           index == 3,
-          failure.extra.traced.trace == """Expected tuple:1:1 / digits:1:4 / [0-9]:1:4, found ")""""
+          trace == """Expected tuple:1:1 / digits:1:4 / [0-9]:1:4, found ")""""
         )
       }
       'endcut{
@@ -352,9 +356,10 @@ object ExampleTests extends TestSuite{
         val Result.Success(Seq("1", "23"), _) = Parse("(1,23)").read(tuple(_))
 
         val failure = Parse("(1,)").read(tuple(_)).asInstanceOf[Result.Failure]
+        val trace = failure.extra.traced.trace
         assert(
           failure.index == 3,
-          failure.extra.traced.trace == """Expected tuple:1:1 / digits:1:4 / [0-9]:1:4, found ")""""
+          trace == """Expected tuple:1:1 / digits:1:4 / [0-9]:1:4, found ")""""
         )
 
       }

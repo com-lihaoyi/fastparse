@@ -666,9 +666,14 @@ object Parsing {
       ${rec(0, trie)}
       if ($output != -1) $ctx1.freshSuccess((), $bracketed, index = $output)
       else {
-        $ctx1.failureMsg = () => $bracketed
         $ctx1.isSuccess = false
+        if ($ctx1.traceIndex == -1){
+          $ctx1.failureMsg = () => $bracketed
+        }else if ($ctx1.traceIndex == $index){
+          $ctx1.aggregateFailure($bracketed)
+        }
         $ctx1.asInstanceOf[Parse[Unit]]
+
       }
     """
 
