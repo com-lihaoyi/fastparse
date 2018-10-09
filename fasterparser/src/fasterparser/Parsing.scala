@@ -630,17 +630,28 @@ object Parsing {
 
 
   def StringIn(s: String*)(implicit ctx: Parse[_]): Parse[Unit] = macro stringInMacro
+  def StringInIgnoreCase(s: String*)(implicit ctx: Parse[_]): Parse[Unit] = macro stringInIgnoreCaseMacro
 
   def stringInMacro(c: Context)
                  (s: c.Expr[String]*)
                  (ctx: c.Expr[Parse[Any]]): c.Expr[Parse[Unit]] = {
+    stringInMacro0(c)(false, s:_*)(ctx)
+  }
+  def stringInIgnoreCaseMacro(c: Context)
+                 (s: c.Expr[String]*)
+                 (ctx: c.Expr[Parse[Any]]): c.Expr[Parse[Unit]] = {
+    stringInMacro0(c)(true, s:_*)(ctx)
+  }
+    def stringInMacro0(c: Context)
+                      (ignoreCase: Boolean, s: c.Expr[String]*)
+                      (ctx: c.Expr[Parse[Any]]): c.Expr[Parse[Unit]] = {
     import c.universe._
 
     val literals = s.map(_.actualType match{
       case ConstantType(Constant(x: String)) => x
       case _ => c.abort(c.enclosingPosition, "Function can only accept constant singleton type")
     })
-    val trie = new TrieNode(literals)
+    val trie = new TrieNode(if (ignoreCase) literals.map(_.toLowerCase) else literals)
     val ctx1 = TermName(c.freshName("ctx"))
     val output = TermName(c.freshName("output"))
     val index = TermName(c.freshName("index"))
@@ -648,17 +659,18 @@ object Parsing {
     val inputLength = TermName(c.freshName("inputLength"))
     val n = TermName(c.freshName("n"))
     def rec(depth: Int, t: TrieNode): c.Expr[Unit] = {
+      val charAt = if (ignoreCase) q"$input.charAt($n).toLower" else q"$input.charAt($n)"
       val children = if (t.children.size == 0) q"()"
       else if (t.children.size > 1){
         q"""
-        $input.charAt($n) match {
+        $charAt match {
           case ..${t.children.map { case (k, v) => cq"$k => ${rec(depth + 1, v)}" }}
           case _ =>
         }
         """
       }else{
         q"""
-        if($input.charAt($n) == ${t.children.keys.head}) ${rec(depth + 1, t.children.values.head)}
+        if($charAt == ${t.children.keys.head}) ${rec(depth + 1, t.children.values.head)}
         """
       }
       val run = q"""
