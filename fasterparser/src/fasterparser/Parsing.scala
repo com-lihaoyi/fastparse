@@ -429,10 +429,19 @@ object Parsing {
 
     def ?[V](implicit optioner: Implicits.Optioner[T, V]): Parse[V] = {
       val startPos = ctx.index
+      val startCut = ctx.cut
       parse0
-      if (ctx.isSuccess) ctx.prepareSuccess(optioner.some(ctx.successValue.asInstanceOf[T]))
+      if (ctx.isSuccess) {
+        val res = ctx.prepareSuccess(optioner.some(ctx.successValue.asInstanceOf[T]))
+        res.cut = startCut
+        res
+      }
       else if (ctx.cut) ctx.asInstanceOf[Parse[V]]
-      else ctx.freshSuccess(optioner.none, null, startPos)
+      else {
+        val res = ctx.freshSuccess(optioner.none, null, startPos)
+        res.cut = startCut
+        res
+      }
     }
 
 
