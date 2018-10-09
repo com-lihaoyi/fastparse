@@ -10,7 +10,7 @@ object Result{
   case class Success[+T](value: T, index: Int) extends Result[T](true){
     def get = this
     def fold[V](onFailure: (Int, List[(String, Int)]) => V, onSuccess: (T, Int) => V) = onSuccess(value, index)
-    override def toString() = s"Result.Success($value)"
+    override def toString() = s"Result.Success($value, $index)"
   }
   case class Failure(index: Int,
                      stack: List[(String, Int)],

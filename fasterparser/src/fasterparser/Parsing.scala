@@ -104,7 +104,7 @@ object Parsing {
               other.splice
               val postOtherIndex = ctx3.index
               val nextIndex =
-                if (postOtherIndex <= preOtherIndex && postOtherIndex < ctx3.input.length) preWsIndex
+                if (preOtherIndex >= postOtherIndex && postOtherIndex < ctx3.input.length) preWsIndex
                 else ctx3.index
               if (!ctx3.isSuccess){
                 ctx3.prepareFailure(ctx3.index, cut = cut1.splice | ctx3.failureCut | pCut)
@@ -268,7 +268,7 @@ object Parsing {
 
     def repX[V](implicit repeater: Implicits.Repeater[T, V]): Parse[V] = repX(sep=null)
     def repX[V](min: Int = 0,
-               sep: => Parse[_] = null,
+                sep: => Parse[_] = null,
                 max: Int = Int.MaxValue,
                 exactly: Int = -1)(implicit repeater: Implicits.Repeater[T, V]): Parse[V] = {
 
@@ -299,10 +299,8 @@ object Parsing {
           }
         }
       }
-
-      val res = rec(ctx.index, 0, false)
-
-      res
+      ctx.isSuccess = true
+      rec(ctx.index, 0, false)
     }
     def rep[V](implicit repeater: Implicits.Repeater[T, V],
                whitespace: Parse[_] => Parse[Unit]): Parse[V] = rep(sep=null)
@@ -322,26 +320,28 @@ object Parsing {
         else ctx.prepareSuccess(repeater.result(acc), successIndex)
       }
       @tailrec def rec(startIndex: Int, count: Int, precut: Boolean): Parse[V] = {
-        whitespace(ctx)
-        if (!ctx.isSuccess) ctx.asInstanceOf[Parse[V]]
-        else{
-          if (count == 0 && actualMax == 0) ctx.prepareSuccess(repeater.result(acc), startIndex)
-          else {
-            parse0
-            if (!ctx.isSuccess){
-              if (ctx.failureCut | precut) ctx.asInstanceOf[Parse[V]]
-              else end(startIndex, startIndex, count)
-            }else{
-              val beforeSepIndex = ctx.index
-              repeater.accumulate(ctx.successValue.asInstanceOf[T], acc)
-              if (count + 1 == actualMax) end(beforeSepIndex, beforeSepIndex, count + 1)
-              else if (sep == null) rec(beforeSepIndex, count+1, false)
-              else {
-                if (ctx.isSuccess) rec(beforeSepIndex, count+1, ctx.successCut)
-                else if (ctx.failureCut) ctx.prepareFailure(beforeSepIndex)
-                else end(beforeSepIndex, beforeSepIndex, count+1)
-              }
+        if (count == 0 && actualMax == 0) ctx.prepareSuccess(repeater.result(acc), startIndex)
+        else {
+          parse0
+          if (!ctx.isSuccess){
+            if (ctx.failureCut | precut) ctx.asInstanceOf[Parse[V]]
+            else end(startIndex, startIndex, count)
+          }else{
+            val beforeSepIndex = ctx.index
+            repeater.accumulate(ctx.successValue.asInstanceOf[T], acc)
+            if (count + 1 == actualMax) end(beforeSepIndex, beforeSepIndex, count + 1)
+            else {
+              val preSepCut = ctx.successCut
+              if (whitespace != null) whitespace(ctx)
 
+              if (sep == null) rec(beforeSepIndex, count+1, false)
+              else if (ctx.isSuccess) {
+                val sepCut = ctx.successCut | preSepCut
+                if (whitespace != null) whitespace(ctx)
+                rec(beforeSepIndex, count+1, sepCut)
+              }
+              else if (ctx.failureCut) ctx.prepareFailure(beforeSepIndex)
+              else end(beforeSepIndex, beforeSepIndex, count+1)
             }
           }
         }

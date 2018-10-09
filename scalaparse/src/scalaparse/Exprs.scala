@@ -130,9 +130,9 @@ trait Exprs extends Core with Types with Xml{
   def CaseBlock[_: P]  = BaseBlock("}" | `case`)
 
   def Patterns[_: P]: P[Unit] = P( Pattern.rep(1, sep = ","./) )
-  def Pattern[_: P]: P[Unit] = P( (WL ~ TypeOrBindPattern).rep(1, sep = "|"./) )
-  def TypePattern[_: P] = P( (`_` | BacktickId | VarId) ~ `:` ~ TypePat )
-  def TypeOrBindPattern[_: P]: P[Unit] = P( TypePattern | BindPattern )
+  def Pattern[_: P]: P[Unit] = P( (WL.log("WL") ~ TypeOrBindPattern).rep(1, sep = "|".log("|")./.log("PatternSep")) ).log
+  def TypePattern[_: P] = P( (`_` | BacktickId | VarId) ~ `:` ~ TypePat ).log
+  def TypeOrBindPattern[_: P]: P[Unit] = P( TypePattern | BindPattern ).log
   def BindPattern[_: P]: P[Unit] = {
     def InfixPattern = P( SimplePattern ~ (Id ~/ SimplePattern).rep | `_*` )
     def Binding = P( (Id | `_`) ~ `@` )

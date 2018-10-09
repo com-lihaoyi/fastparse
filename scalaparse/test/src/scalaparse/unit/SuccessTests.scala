@@ -542,7 +542,7 @@ object SuccessTests extends TestSuite{
     )
     * - check(
       """object O{
-        |  { case _: Int | () => 1 }
+        |  { case _: Int | 1 => }
         |}
       """.stripMargin
     )

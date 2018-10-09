@@ -334,7 +334,7 @@ object ExampleTests extends TestSuite{
       }
       'delimitercut{
         def digits[_: P] = P( CharIn("0-9").rep(1) )
-        def tuple[_: P] = P( "(" ~ digits.!.rep(sep=("," ~/ Pass)) ~ ")" )
+        def tuple[_: P] = P( "(" ~ digits.!.rep(sep=","./) ~ ")" )
 
         val Result.Success(Seq("1", "23"), _) = Parse("(1,23)").read(tuple(_))
 
