@@ -115,7 +115,7 @@ class FasterParserParser{
     "||"./ ~~ CharsWhileIn(" \t", 0) ~~ "\n" ~~ tripleBarStringLines ~~ "\n" ~~ CharsWhileIn(" \t") ~~ "|||"
   )
   def string[_: P]: P[String] = P(
-    SingleChar./.flatMap{
+    SingleChar.flatMap{
       case '\"' => doubleString
       case '\'' => singleString
       case '@' => SingleChar./.flatMap{
@@ -147,7 +147,7 @@ class FasterParserParser{
   def arr[_: P]: P[Expr] = P( (Index ~~ &("]")).map(Expr.Arr(_, Nil)) | arrBody )
   def compSuffix[_: P] = P( forspec ~ compspec ).map(Left(_))
   def arrBody[_: P]: P[Expr] = P(
-    Index ~~ expr ~ (compSuffix | "," ~/ (compSuffix | (expr.rep(0, sep = ",") ~ ",".?).map(Right(_)))).?
+    Index ~~ expr ~ (compSuffix | "," ~ (compSuffix | (expr.rep(0, sep = ",") ~ ",".?).map(Right(_)))).?
   ).map{
     case (offset, first, None) => Expr.Arr(offset, Seq(first))
     case (offset, first, Some(Left(comp))) => Expr.Comp(offset, first, comp._1, comp._2)
@@ -210,15 +210,15 @@ class FasterParserParser{
   def exprSuffix2[_: P]: P[Expr => Expr] = P(
     for{
       i <- Index
-      c <- SingleChar./
+      c <- CharIn(".[({").!.map(_(0))
       r <- (c: @switch) match{
-        case '.' => id.map(x => Expr.Select(i, _: Expr, x))
-        case '[' => (expr.? ~ (":" ~ expr.?).rep ~ "]").map{
+        case '.' => Pass ~ id.map(x => Expr.Select(i, _: Expr, x))
+        case '[' => Pass ~ (expr.? ~ (":" ~ expr.?).rep ~ "]").map{
           case (Some(tree), Seq()) => Expr.Lookup(i, _: Expr, tree)
           case (start, ins) => Expr.Slice(i, _: Expr, start, ins.lift(0).flatten, ins.lift(1).flatten)
         }
-        case '(' => (args ~ ")").map(x => Expr.Apply(i, _: Expr, x))
-        case '{' => (objinside ~ "}").map(x => Expr.ObjExtend(i, _: Expr, x))
+        case '(' => Pass ~ (args ~ ")").map(x => Expr.Apply(i, _: Expr, x))
+        case '{' => Pass ~ (objinside ~ "}").map(x => Expr.ObjExtend(i, _: Expr, x))
         case _ => Fail
       }
     } yield r
@@ -248,7 +248,7 @@ class FasterParserParser{
   def expr2[_: P]: P[Expr] = P(
     for{
       index <- Index
-      c <- SingleChar./
+      c <- SingleChar
       r <- (c: @switch) match {
         case '{' => Pass ~ obj ~ "}"
         case '+' | '-' | '~' | '!' => Pass ~ unaryOpExpr(index, c)
@@ -323,8 +323,6 @@ class FasterParserParser{
     if (x.sliding(2).exists{case Seq(l, r) => l._1.isDefined && r._1.isEmpty case _ => false}) {
       Fail
     } else Pass.map(_ => Expr.Args(x))
-
-
   }
 
   def params[_: P]: P[Expr.Params] = P( (id ~ ("=" ~ expr).?).rep(sep = ",") ~ ",".? ).flatMap{ x =>
