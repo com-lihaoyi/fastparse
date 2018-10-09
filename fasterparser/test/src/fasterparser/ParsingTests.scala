@@ -131,7 +131,7 @@ object ParsingTests extends TestSuite{
         checkFlatmap()
       }
       'filter - {
-        checkFail(implicit c => ("Hello" ~/ "Boo").filter(_ => false) | "", ("HelloBoo", 0), 0)
+        checkFail(implicit c => ("Hello" ~/ "Boo").filter(_ => false) | "", ("HelloBoo", 0), 8)
       }
       'lookaheadNot - {
         // ! disables cuts: since the whole point of it is to backtrack there

@@ -214,7 +214,12 @@ object Parsing {
     reify {
       val lhs = lhs0.splice.parse0
       if (!lhs.isSuccess) lhs.asInstanceOf[Parse[V]]
-      else f.splice(lhs.successValue.asInstanceOf[T])
+      else {
+        val sCut = lhs.cut
+        val res = f.splice(lhs.successValue.asInstanceOf[T])
+        res.cut |= sCut
+        res
+      }
     }
   }
 
@@ -406,16 +411,20 @@ object Parsing {
 
     def unary_! : Parse[Unit] = {
       val startPos = ctx.index
+      val startCut = ctx.cut
       val startFailures = ctx.failureAggregate
       parse0
-      if (!ctx.isSuccess) ctx.freshSuccess((), null, startPos)
-      else {
-        val res = ctx.prepareFailure(startPos)
-        // Do not aggregate failures inside the !(...) expression,
-        // since those failures are desired to make the parse succeed!
-        ctx.failureAggregate = startFailures
-        res
-      }
+      val res =
+        if (!ctx.isSuccess) ctx.freshSuccess((), null, startPos)
+        else {
+          val res = ctx.prepareFailure(startPos)
+          // Do not aggregate failures inside the !(...) expression,
+          // since those failures are desired to make the parse succeed!
+          ctx.failureAggregate = startFailures
+          res
+        }
+      res.cut = startCut
+      res
     }
 
     def ?[V](implicit optioner: Implicits.Optioner[T, V]): Parse[V] = {
@@ -431,16 +440,25 @@ object Parsing {
       parse0
       if (!ctx.isSuccess) ctx.asInstanceOf[Parse[T]]
       else if (f(ctx.successValue.asInstanceOf[T])) ctx.asInstanceOf[Parse[T]]
-      else ctx.freshFailure("filter").asInstanceOf[Parse[T]]
+      else {
+        val prevCut = ctx.cut
+        val res = ctx.freshFailure("filter").asInstanceOf[Parse[T]]
+        res.cut = prevCut
+        res
+      }
     }
   }
 
   def &(parse: => Parse[_])(implicit ctx: Parse[_]): Parse[Unit] = {
 
     val startPos = ctx.index
+    val startCut = ctx.cut
     parse
-    if (ctx.isSuccess) ctx.prepareSuccess((), startPos)
-    else ctx.asInstanceOf[Parse[Unit]]
+    val res =
+      if (ctx.isSuccess) ctx.prepareSuccess((), startPos)
+      else ctx.asInstanceOf[Parse[Unit]]
+    res.cut = startCut
+    res
 
   }
 
