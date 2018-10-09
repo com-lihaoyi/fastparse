@@ -8,7 +8,7 @@ import fasterparser.Parsing._
   * evaluating simple arithmetic expressions
   */
 object ExampleTests extends TestSuite{
-  implicit def whitespace(cfg: Parse[_]): Parse[Unit] = Pass(cfg)
+  import fasterparser.NoWhitespace._
   val tests = Tests{
     'basic{
       'simple {

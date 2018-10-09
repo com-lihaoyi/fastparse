@@ -6,7 +6,7 @@ import fasterparser._, Parsing._
   * Same as MathTests, but demonstrating the use of whitespace
   */
 object IndentationTests extends TestSuite{
-  implicit def whitespace(cfg: Parse[_]): Parse[Unit] = Pass(cfg)
+  import fasterparser.NoWhitespace._
   def eval(tree: (String, Seq[Int])) = tree match{
     case ("+", nums) => nums.reduceLeft(_+_)
     case ("-", nums) => nums.reduceLeft(_-_)

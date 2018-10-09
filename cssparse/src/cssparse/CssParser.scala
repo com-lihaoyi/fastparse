@@ -2,12 +2,12 @@ package cssparse
 
 import fasterparser._, Parsing._
 
-import scala.collection.mutable.ArrayBuffer
-
 // According to https://www.w3.org/TR/css-syntax-3/
 
+import fasterparser.NoWhitespace._
+
 object CssTokensParser {
-  implicit def whitespace0(cfg: Parse[_]): Parse[Unit] = Pass(cfg)
+
   def comment[_: P] = P( "/*" ~/ (!"*/" ~ AnyChar).rep ~/ "*/")
 
   def newline[_: P] = P( "\n" | "\r\n" | "\r" | "\f")

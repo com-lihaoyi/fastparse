@@ -34,7 +34,7 @@ case class NamedFunction[T, V](f: T => V, name: String) extends (T => V){
 }
 object Json{
   import fasterparser.Parsing._
-  implicit def whitespace(cfg: Parse[_]): Parse[Unit] = Pass(cfg)
+  import fasterparser.NoWhitespace._
   def stringChars(c: Char) = c != '\"' && c != '\\'
   def spaceChars(c: Char) = c == ' ' || c == '\r' || c == '\n'
 

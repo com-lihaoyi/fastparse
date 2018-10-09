@@ -10,7 +10,7 @@ import scala.collection.mutable
   * evaluating simple arithmetic expressions
   */
 object MathTests extends TestSuite{
-  implicit def whitespace(cfg: Parse[_]): Parse[Unit] = Pass(cfg)
+  import fasterparser.NoWhitespace._
   def eval(tree: (Int, Seq[(String, Int)])) = {
     val (base, ops) = tree
     ops.foldLeft(base){ case (left, (op, right)) => op match{

@@ -81,7 +81,12 @@ object Parsing {
     val cut1 = c.Expr[Boolean](if(cut) q"true" else q"false")
     val consumeWhitespace = whitespace match{
       case None => reify{(c: Parse[Any]) => true}
-      case Some(ws) => reify{(c: Parse[Any]) => ws.splice(c); c.isSuccess}
+      case Some(ws) =>
+        if (ws.tree.tpe =:= typeOf[fasterparser.NoWhitespace.noWhitespaceImplicit.type]){
+          reify{(c: Parse[Any]) => true}
+        }else{
+          reify{(c: Parse[Any]) => ws.splice(c); c.isSuccess}
+        }
     }
 
     reify {

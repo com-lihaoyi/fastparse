@@ -9,7 +9,7 @@ object Basic {
   def UnicodeEscape[_: P] = P( "u" ~ HexDigit ~ HexDigit ~ HexDigit ~ HexDigit )
 
   //Numbers and digits
-  implicit def whitespace(cfg: Parse[_]): Parse[Unit] = Pass(cfg)
+  import fasterparser.NoWhitespace._
   val digits = "0123456789".toSet
   def Digit[_: P] = P( CharPred(digits) )
   val hexDigits = digits ++ "abcdefABCDEF"
@@ -43,7 +43,7 @@ object Basic {
  * (W) and key-operators (O) which have different non-match criteria.
  */
 object Key {
-  implicit def whitespace(cfg: Parse[_]): Parse[Unit] = Pass(cfg)
+  import fasterparser.NoWhitespace._
   def W[_: P](s: String) = P( s ~ !Basic.LetterDigitDollarUnderscore )(sourcecode.Name(s"`$s`"))
   // If the operator is followed by a comment, stop early so we can parse the comment
   def O[_: P](s: String) = P( s ~ (!Basic.OpChar | &("/*" | "//")) )(sourcecode.Name(s"`$s`"))

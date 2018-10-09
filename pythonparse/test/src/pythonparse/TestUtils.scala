@@ -8,7 +8,7 @@ import utest._
 object TestUtils {
   import fasterparser._, Parsing._
   def check[T](rule: P[_] => Parse[T], expected: T, s: String) = {
-    implicit def whitespace(cfg: Parse[_]): Parse[Unit] = Pass(cfg)
+    import fasterparser.NoWhitespace._
     def parseIt[_: P] = rule(Parse()) ~ End
     val parsed = Parse(s).read(parseIt(_))
     val stringResult = parsed match {
