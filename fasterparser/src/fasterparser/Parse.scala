@@ -27,18 +27,18 @@ class Parse[+T](val input: String,
   // generate huge methods, so anything we can do to reduce the size of the
   // generated code helps avoid bytecode size blowup
 
-  def freshSuccess[V](value: V, msg: => String, index: Int) = {
-    if (traceIndex != -1 && traceIndex == this.index){
-      if (failureMsg == null && msg != "") this.failureMsg = msg
-      else if (msg != "" && msg != "") this.failureMsg = this.failureMsg  + " | " + msg
+  def aggregateFailure(msg: String) = {
+    if (msg != null) {
+      if (failureMsg == null) this.failureMsg = msg
+      else this.failureMsg = this.failureMsg  + " | " + msg
     }
+  }
+  def freshSuccess[V](value: V, msg: => String, index: Int) = {
+    if (traceIndex != -1 && traceIndex == this.index) aggregateFailure(msg)
     prepareSuccess(value, index, cut = false)
   }
   def freshSuccess[V](value: V, msg: => String) = {
-    if (traceIndex != -1 && traceIndex == this.index){
-      if (failureMsg == null && msg != "") this.failureMsg = msg
-      else if (msg != "") this.failureMsg = this.failureMsg  + " | " + msg
-    }
+    if (traceIndex != -1 && traceIndex == this.index) aggregateFailure(msg)
     prepareSuccess(value, index, cut = false)
   }
   def prepareSuccess[V](value: V): Parse[V] = prepareSuccess(value, index, successCut)
@@ -55,20 +55,14 @@ class Parse[+T](val input: String,
     failureStack = Nil
     val res = prepareFailure(index, cut = false)
     if (traceIndex == -1) this.failureMsg = msg
-    else if (traceIndex == index){
-      if (failureMsg == null && msg != "") this.failureMsg = msg
-      else if (msg != "") this.failureMsg = this.failureMsg  + " | " + msg
-    }
+    else if (traceIndex == index) aggregateFailure(msg)
     res
   }
   def freshFailure(msg: String, startPos: Int): Parse[Nothing] = {
     failureStack = Nil
     val res = prepareFailure(startPos, cut = false)
     if (traceIndex == -1) this.failureMsg = msg
-    else if (traceIndex == index){
-      if (failureMsg == null && msg != "") this.failureMsg = msg
-      else if (msg != "") this.failureMsg = this.failureMsg  + " | " + msg
-    }
+    else if (traceIndex == index) aggregateFailure(msg)
     res
   }
 

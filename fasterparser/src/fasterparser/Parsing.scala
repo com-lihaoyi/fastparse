@@ -369,11 +369,7 @@ object Parsing {
       val res = parse0
       if (ctx.traceIndex != -1){
         ctx.failureMsg = oldFailureMsg
-        if (ctx.traceIndex == oldIndex){
-          if (ctx.failureMsg == null) ctx.failureMsg = msg
-          else ctx.failureMsg = ctx.failureMsg + " | " + msg
-
-        }
+        if (ctx.traceIndex == oldIndex) ctx.aggregateFailure(msg)
       }
       if (!res.isSuccess){
         ctx.failureStack = Nil
@@ -387,7 +383,7 @@ object Parsing {
     def unary_! : Parse[Unit] = {
       val startPos = ctx.index
       parse0
-      if (!ctx.isSuccess) ctx.freshSuccess((), "", startPos)
+      if (!ctx.isSuccess) ctx.freshSuccess((), null, startPos)
       else ctx.prepareFailure(startPos)
     }
 
@@ -396,7 +392,7 @@ object Parsing {
       parse0
       if (ctx.isSuccess) ctx.prepareSuccess(optioner.some(ctx.successValue.asInstanceOf[T]))
       else if (ctx.failureCut) ctx.asInstanceOf[Parse[V]]
-      else ctx.freshSuccess(optioner.none, "", startPos)
+      else ctx.freshSuccess(optioner.none, null, startPos)
     }
 
 
@@ -429,18 +425,18 @@ object Parsing {
 
   }
 
-  def Pass(implicit ctx: Parse[_]): Parse[Unit] = ctx.freshSuccess((), "")
+  def Pass(implicit ctx: Parse[_]): Parse[Unit] = ctx.freshSuccess((), null)
   def NoTrace[T](p: => Parse[T])(implicit ctx: Parse[_]): Parse[T] = {
     val preMsg = ctx.failureMsg
     val res = p
     if (ctx.traceIndex != -1) ctx.failureMsg = preMsg
     res
   }
-  def Pass[T](v: T)(implicit ctx: Parse[_]): Parse[T] = ctx.freshSuccess(v, "")
+  def Pass[T](v: T)(implicit ctx: Parse[_]): Parse[T] = ctx.freshSuccess(v, null)
 
   def Fail(implicit ctx: Parse[_]): Parse[Nothing] = ctx.freshFailure("failure").asInstanceOf[Parse[Nothing]]
 
-  def Index(implicit ctx: Parse[_]): Parse[Int] = ctx.freshSuccess(ctx.index, "")
+  def Index(implicit ctx: Parse[_]): Parse[Int] = ctx.freshSuccess(ctx.index, null)
 
   def AnyChar(implicit ctx: Parse[_]): Parse[Unit] = {
     if (!(ctx.index < ctx.input.length)) ctx.freshFailure("any-character").asInstanceOf[Parse[Unit]]
