@@ -31,7 +31,6 @@ import scala.annotation.unchecked.uncheckedVariance
   * @param successCut Has the current parse been prevented from backtracking?
   * @param failureCut Is the current failure blocking backtracking?
   * @param successValue The currently returned success value
-  * @param noCut
   * @param traceIndex The index we wish to trace if tracing is enabled, else
   *                   -1. Used to find failure messages to aggregate into
   *                   `failureAggregate`
@@ -50,7 +49,6 @@ class Parse[+T](val input: String,
                 var successCut: Boolean,
                 var failureCut: Boolean,
                 var successValue: Any,
-                var noCut: Boolean,
                 val traceIndex: Int,
                 var originalParser: Parse[_] => Parse[_]){
   def read[T](p: Parse[_] => Parse[T] @uncheckedVariance): Result[T] = {
@@ -135,6 +133,6 @@ object Parse{
     failureAggregate = List.empty,
     isSuccess = true,
     logDepth = 0,
-    startIndex, startIndex, false, false, (), false, traceIndex, null
+    startIndex, startIndex, false, false, (), traceIndex, null
   )
 }
