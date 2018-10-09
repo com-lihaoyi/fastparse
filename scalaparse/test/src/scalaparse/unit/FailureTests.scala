@@ -27,7 +27,7 @@ object FailureTests extends TestSuite{
         |  } yield x
         |}
       """.stripMargin,
-      expected = """BacktickId | PlainId | Generator | Assign""",
+      expected = """(Id | "<-" | "←" | "=")""",
       found = "} yield x"
     )
     * - checkNeg(

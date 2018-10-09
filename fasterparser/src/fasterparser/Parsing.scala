@@ -380,16 +380,14 @@ object Parsing {
     }
 
     def opaque(msg: String) = {
-      val oldFailureMsg = ctx.failureMsg
       val oldFailures = ctx.failureAggregate
       val oldIndex = ctx.index
       val res = parse0
       if (ctx.traceIndex != -1){
+        ctx.failureAggregate = oldFailures
         if (ctx.traceIndex == oldIndex && !res.isSuccess) {
           ctx.failureStack = Nil
           ctx.aggregateFailure(msg)
-        }else{
-          ctx.failureAggregate = oldFailures
         }
       } else if (!res.isSuccess){
         ctx.failureStack = Nil

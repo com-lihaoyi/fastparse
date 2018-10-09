@@ -28,7 +28,7 @@ object Identifiers{
 
   def PlainIdNoDollar[_: P] = P( UppercaseId(false) | VarId0(false) | Operator )
 
-  def BacktickId[_: P] = P( "`" ~ CharsWhile(NotBackTick) ~ "`" ).log
+  def BacktickId[_: P] = P( "`" ~ CharsWhile(NotBackTick) ~ "`" )
   def Id[_: P]: P[Unit] = P( BacktickId | PlainId ).opaque("Id")
 
   def IdRest[_: P](allowDollar: Boolean) = {

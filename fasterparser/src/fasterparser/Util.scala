@@ -19,7 +19,7 @@ object Util {
     s"$line:$col"
   }
 
-  def literalize(s: IndexedSeq[Char], unicode: Boolean = true) = {
+  def literalize(s: IndexedSeq[Char], unicode: Boolean = false) = {
     val sb = new StringBuilder
     sb.append('"')
     var i = 0
