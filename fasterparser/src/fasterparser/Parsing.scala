@@ -223,7 +223,7 @@ object Parsing {
         else {
           val res = ctx5.prepareFailure(startPos)
           ctx5.failureStack = Nil
-          if (ctx5.traceIndex == -1) ctx5.failureMsg = "???"
+          if (ctx5.traceIndex == -1) ctx5.failureMsg = () => "???"
           res
         }
       }
@@ -353,7 +353,7 @@ object Parsing {
       } else{
         val trace = Result.Failure.formatStack(
           ctx.input,
-          (ctx.failureMsg -> ctx.index) :: ctx.failureStack.reverse
+          (ctx.failureMsg() -> ctx.index) :: ctx.failureStack.reverse
         )
         val trailing = Result.Failure.formatTrailing(ctx.input, startIndex)
         s"Failure($trace ...$trailing${if (ctx.failureCut) ", cut" else ""})"
@@ -373,7 +373,7 @@ object Parsing {
       }
       if (!res.isSuccess){
         ctx.failureStack = Nil
-        ctx.failureMsg = msg
+        ctx.failureMsg = () => msg
         ctx.index = oldIndex
       }
       res
@@ -547,7 +547,7 @@ object Parsing {
       ) $index += 1
       if ($index - $start >= $min) $ctx1.freshSuccess((), "chars-while-in(" + $bracketed+ ", " + $min + ")", index = $index)
       else {
-        $ctx1.failureMsg = $bracketed
+        $ctx1.failureMsg = () => $bracketed
         $ctx1.isSuccess = false
         $ctx1.asInstanceOf[Parse[Unit]]
       }
@@ -565,7 +565,7 @@ object Parsing {
     if (index - start >= min) ctx.freshSuccess((), s"chars-while($min)", index = index)
     else {
       ctx.isSuccess = false
-      ctx.failureMsg = s"chars-while($min)"
+      ctx.failureMsg = () => s"chars-while($min)"
       ctx.asInstanceOf[Parse[Unit]]
     }
   }
@@ -643,7 +643,7 @@ object Parsing {
       ${rec(0, trie)}
       if ($output != -1) $ctx1.freshSuccess((), $bracketed, index = $output)
       else {
-        $ctx1.failureMsg = $bracketed
+        $ctx1.failureMsg = () => $bracketed
         $ctx1.isSuccess = false
         $ctx1.asInstanceOf[Parse[Unit]]
       }

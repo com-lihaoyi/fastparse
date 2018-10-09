@@ -50,7 +50,7 @@ object BenchMain{
     var count2 = 0
     while(System.currentTimeMillis() - start2 < 20000){
       count2 += 1
-      bodies.foreach(b => Parse(b).read(parser2.document(_))
+      bodies.foreach(b => Parse(b).read(parser2.document(_)))
 
     }
     println(count2)

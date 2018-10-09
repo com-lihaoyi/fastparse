@@ -5,7 +5,7 @@ import scala.annotation.unchecked.uncheckedVariance
 
 class Parse[+T](val input: String,
                 var failureStack: List[(String, Int)],
-                var failureMsg: String,
+                var failureMsg: () => String,
                 var isSuccess: Boolean,
                 var logDepth: Int,
                 var index: Int,
@@ -29,8 +29,8 @@ class Parse[+T](val input: String,
 
   def aggregateFailure(msg: String) = {
     if (msg != null) {
-      if (failureMsg == null) this.failureMsg = msg
-      else this.failureMsg = this.failureMsg  + " | " + msg
+      if (failureMsg == null) this.failureMsg = () => msg
+      else this.failureMsg = () => this.failureMsg () + " | " + msg
     }
   }
   def freshSuccess[V](value: V, msg: => String, index: Int) = {
@@ -51,17 +51,17 @@ class Parse[+T](val input: String,
     successCut = cut
     this.asInstanceOf[Parse[V]]
   }
-  def freshFailure(msg: String): Parse[Nothing] = {
+  def freshFailure(msg: => String): Parse[Nothing] = {
     failureStack = Nil
     val res = prepareFailure(index, cut = false)
-    if (traceIndex == -1) this.failureMsg = msg
+    if (traceIndex == -1) this.failureMsg = () => msg
     else if (traceIndex == index) aggregateFailure(msg)
     res
   }
-  def freshFailure(msg: String, startPos: Int): Parse[Nothing] = {
+  def freshFailure(msg: => String, startPos: Int): Parse[Nothing] = {
     failureStack = Nil
     val res = prepareFailure(startPos, cut = false)
-    if (traceIndex == -1) this.failureMsg = msg
+    if (traceIndex == -1) this.failureMsg = () => msg
     else if (traceIndex == index) aggregateFailure(msg)
     res
   }
@@ -78,7 +78,7 @@ class Parse[+T](val input: String,
     if (isSuccess) Result.Success(successValue.asInstanceOf[T], index)
     else Result.Failure(
       index,
-      (failureMsg -> index) :: failureStack.reverse,
+      (failureMsg() -> index) :: failureStack.reverse,
       Result.Extra(input, startIndex, index, originalParser)
     )
   }

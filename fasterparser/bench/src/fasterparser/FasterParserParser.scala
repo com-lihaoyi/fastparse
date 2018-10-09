@@ -27,6 +27,7 @@ class FasterParserParser{
     .toMap
 
   implicit def whitespace(cfg: Parse[_]): Parse[Unit] = {
+    implicit def cfg0 = cfg
     val input = cfg.input
     val inputLength = input.length
     P{
