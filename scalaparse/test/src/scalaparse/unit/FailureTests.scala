@@ -35,7 +35,7 @@ object FailureTests extends TestSuite{
         |  type T = (A B)
         |}
       """.stripMargin,
-      expected = """ "," | ")" """,
+      expected = """("." | "[" | "#" | "@" | "with" | "{" | Newline | "=>" | "⇒" | "forSome" | ">:" | "<:" | "*" | "," | ")")""",
       found = "B)"
     )
     * - checkNeg(
