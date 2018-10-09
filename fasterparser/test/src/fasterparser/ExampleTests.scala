@@ -285,6 +285,20 @@ object ExampleTests extends TestSuite{
           trace == """Expected nocut:1:1 / alpha:1:5 / [a-z]:1:5, found "1234""""
         )
       }
+      'nestedcut{
+        def parse[_: P] = P( "hello" | "world" ~ "x" ~/ ("i" | "am" ~ "a")  ~ "cow" | "moo" )
+
+
+        // Failing before the cut backtracks all the way out
+        val Result.Failure(0, _, _) = Parse("worldlols").read(parse(_))
+        // Failing after the cut prevents backtracking
+        val Result.Failure(6, _, _) = Parse("worldxlols").read(parse(_))
+        // Failing inside another nested `|` block allows backtracking,
+        // but only up to the position of the cut
+        val Result.Failure(6, _, _) = Parse("worldxam").read(parse(_))
+        // Failing *after* the nested `|` block again prevents backtracking
+        val Result.Failure(9, _, _) = Parse("worldxama").read(parse(_))
+      }
       'repnocut{
         def alpha[_: P] = P( CharIn("a-z") )
         def stmt[_: P] = P( "val " ~ alpha.rep(1).! ~ ";" ~ " ".rep )
