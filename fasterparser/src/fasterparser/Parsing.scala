@@ -32,8 +32,10 @@ object Parsing {
   }
 
   implicit def LiteralStr(s: String)(implicit ctx: Parse[Any]): Parse[Unit] = {
-    if (ctx.input.startsWith(s, ctx.index)) ctx.freshSuccess((), Util.literalize(s), ctx.index + s.length)
-    else ctx.freshFailure(Util.literalize(s)).asInstanceOf[Parse[Unit]]
+    if (ctx.input.startsWith(s, ctx.index)) {
+      ctx.freshSuccess((), Util.literalize(s), ctx.index + s.length)
+    }else ctx.freshFailure(Util.literalize(s)).asInstanceOf[Parse[Unit]]
+
   }
 
   def startsWithIgnoreCase(src: String, prefix: IndexedSeq[Char], offset: Int) = {
@@ -100,7 +102,7 @@ object Parsing {
                 if (postOtherIndex <= preOtherIndex && postOtherIndex < ctx3.input.length) preWsIndex
                 else ctx3.index
               if (!ctx3.isSuccess){
-                ctx3.prepareFailure(nextIndex, cut = cut1.splice | ctx3.failureCut | pCut)
+                ctx3.prepareFailure(ctx3.index, cut = cut1.splice | ctx3.failureCut | pCut)
               }else {
                 ctx3.prepareSuccess(
                   s.splice.apply(pValue.asInstanceOf[T], ctx3.successValue.asInstanceOf[V]),
@@ -361,7 +363,7 @@ object Parsing {
       } else{
         val trace = Result.Failure.formatStack(
           ctx.input,
-          (ctx.failureMsg() -> ctx.index) :: ctx.failureStack.reverse
+          (Option(ctx.failureMsg).fold("")(_()) -> ctx.index) :: ctx.failureStack.reverse
         )
         val trailing = Result.Failure.formatTrailing(ctx.input, startIndex)
         s"Failure($trace ...$trailing${if (ctx.failureCut) ", cut" else ""})"

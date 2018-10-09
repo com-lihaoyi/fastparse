@@ -30,7 +30,10 @@ class Parse[+T](val input: String,
   def aggregateFailure(msg: String) = {
     if (msg != null) {
       if (failureMsg == null) this.failureMsg = () => msg
-      else this.failureMsg = () => this.failureMsg () + " | " + msg
+      else {
+        val prev = this.failureMsg
+        this.failureMsg = () => prev() + " | " + msg
+      }
     }
   }
   def freshSuccess[V](value: V, msg: => String, index: Int) = {
@@ -78,7 +81,7 @@ class Parse[+T](val input: String,
     if (isSuccess) Result.Success(successValue.asInstanceOf[T], index)
     else Result.Failure(
       index,
-      (failureMsg() -> index) :: failureStack.reverse,
+      (Option(failureMsg).fold("")(_()) -> index) :: failureStack.reverse,
       Result.Extra(input, startIndex, index, originalParser)
     )
   }
