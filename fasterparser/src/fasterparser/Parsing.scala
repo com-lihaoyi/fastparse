@@ -333,12 +333,11 @@ object Parsing {
             repeater.accumulate(ctx.successValue.asInstanceOf[T], acc)
             if (count + 1 == actualMax) end(beforeSepIndex, beforeSepIndex, count + 1)
             else {
-              val preSepCut = ctx.successCut
               if (whitespace ne NoWhitespace.noWhitespaceImplicit) whitespace(ctx)
 
               if (sep == null) rec(beforeSepIndex, count+1, false)
               else if (ctx.isSuccess) {
-                val sepCut = ctx.successCut | preSepCut
+                val sepCut = ctx.successCut
                 if (whitespace ne NoWhitespace.noWhitespaceImplicit) whitespace(ctx)
                 rec(beforeSepIndex, count+1, sepCut)
               }

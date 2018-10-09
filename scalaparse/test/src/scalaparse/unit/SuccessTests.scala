@@ -970,8 +970,7 @@ object SuccessTests extends TestSuite{
     )
     * - check(
       """class C {
-        |  def this(x: Int) = {
-        |    this();
+        |  {
         |    class D;
         |  }
         |}
