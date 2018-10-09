@@ -18,13 +18,14 @@ object TestUtil {
         println("TRACING")
         val traced = f.extra.traced
         val index = f.index
-        val parsedExpected = traced.stack.last._1
+        val parsedExpected = traced.stack.head._1
         val parsedFound = input.slice(f.index, f.index + 10)
         val stack = traced.trace
         assert(
         { implicitly(input)
           implicitly(stack)
           implicitly(index)
+          implicitly(parsedFound)
           expected.trim == parsedExpected.trim && parsedFound.startsWith(found)
         }
         )

@@ -6,14 +6,14 @@ import TestUtil._
 object FailureTests extends TestSuite{
   val tests = Tests {
 
-    * - checkNeg("package package", "PkgBlock | PkgObj", "package")
+    * - checkNeg("package package", """("`" | Id | "case" | "object")""", "package")
 
     * - checkNeg(
       """package torimatomeru
         |import a
         |import import
       """.stripMargin,
-      expected = """ThisPath | IdPath""",
+      expected = """("this" | "super" | "`" | Id)""",
       found = "import"
     )
 
