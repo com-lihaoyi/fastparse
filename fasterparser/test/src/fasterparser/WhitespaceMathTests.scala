@@ -50,11 +50,11 @@ object WhitespaceMathTests extends TestSuite{
       }
       * - check(
         "(  +  )",
-        """ Expected expr:1:1 / addSub:1:1 / divMul:1:1 / factor:1:1 / parens:1:1 / addSub:1:4 / divMul:1:4 / factor:1:4 / [0-9] | "(":1:4, found "+  )" """
+        """ Expected expr:1:1 / addSub:1:1 / divMul:1:1 / factor:1:1 / parens:1:1 / addSub:1:4 / divMul:1:4 / factor:1:4 / ([0-9] | "("):1:4, found "+  )" """
       )
       * - check(
         "1  +  - ",
-        """ Expected expr:1:1 / addSub:1:1 / divMul:1:7 / factor:1:7 / [0-9] | "(":1:7, found "- " """
+        """ Expected expr:1:1 / addSub:1:1 / divMul:1:7 / factor:1:7 / ([0-9] | "("):1:7, found "- " """
       )
     }
   }

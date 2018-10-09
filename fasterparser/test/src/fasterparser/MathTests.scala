@@ -37,7 +37,7 @@ object MathTests extends TestSuite{
       val Result.Failure(failIndex, expected, extra) = Parse("1+1*").read(expr(_))
       assert(
         failIndex == 4,
-        extra.traced.trace == """Expected expr:1:1 / addSub:1:1 / divMul:1:3 / factor:1:5 / [0-9] | "(":1:5, found """"")
+        extra.traced.trace == """Expected expr:1:1 / addSub:1:1 / divMul:1:3 / factor:1:5 / ([0-9] | "("):1:5, found """"")
     }
     'fail - {
       def check(input: String, expectedTrace: String) = {
@@ -55,15 +55,15 @@ object MathTests extends TestSuite{
       }
       check(
         "(+)",
-        """Expected expr:1:1 / addSub:1:1 / divMul:1:1 / factor:1:1 / parens:1:1 / addSub:1:2 / divMul:1:2 / factor:1:2 / [0-9] | "(":1:2, found "+)""""
+        """Expected expr:1:1 / addSub:1:1 / divMul:1:1 / factor:1:1 / parens:1:1 / addSub:1:2 / divMul:1:2 / factor:1:2 / ([0-9] | "("):1:2, found "+)""""
       )
       check(
         "1+-",
-        """Expected expr:1:1 / addSub:1:1 / divMul:1:3 / factor:1:3 / [0-9] | "(":1:3, found "-"""",
+        """Expected expr:1:1 / addSub:1:1 / divMul:1:3 / factor:1:3 / ([0-9] | "("):1:3, found "-""""
       )
       check(
         "(1+(2+3x))+4",
-        """Expected expr:1:1 / addSub:1:1 / divMul:1:1 / factor:1:1 / parens:1:1 / addSub:1:2 / divMul:1:4 / factor:1:4 / parens:1:4 / [0-9] | [*/] | [+\-] | ")":1:8, found "x))+4"""",
+        """Expected expr:1:1 / addSub:1:1 / divMul:1:1 / factor:1:1 / parens:1:1 / addSub:1:2 / divMul:1:4 / factor:1:4 / parens:1:4 / ([0-9] | [*/] | [+\-] | ")"):1:8, found "x))+4""""
       )
     }
   }

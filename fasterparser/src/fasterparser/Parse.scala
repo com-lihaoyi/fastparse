@@ -6,6 +6,7 @@ import scala.annotation.unchecked.uncheckedVariance
 class Parse[+T](val input: String,
                 var failureStack: List[(String, Int)],
                 var failureMsg: () => String,
+                var failureAggregate: List[String],
                 var isSuccess: Boolean,
                 var logDepth: Int,
                 var index: Int,
@@ -28,13 +29,7 @@ class Parse[+T](val input: String,
   // generated code helps avoid bytecode size blowup
 
   def aggregateFailure(msg: String) = {
-    if (msg != null) {
-      if (failureMsg == null) this.failureMsg = () => msg
-      else {
-        val prev = this.failureMsg
-        this.failureMsg = () => prev() + " | " + msg
-      }
-    }
+    if (msg != null) failureAggregate = msg :: failureAggregate
   }
   def freshSuccess[V](value: V, msg: => String, index: Int) = {
     if (traceIndex != -1 && traceIndex == this.index) aggregateFailure(msg)
@@ -79,11 +74,20 @@ class Parse[+T](val input: String,
 
   def result: Result[T] = {
     if (isSuccess) Result.Success(successValue.asInstanceOf[T], index)
-    else Result.Failure(
-      index,
-      (Option(failureMsg).fold("")(_()) -> index) :: failureStack.reverse,
-      Result.Extra(input, startIndex, index, originalParser)
-    )
+    else {
+      val msg =
+        if (failureAggregate.isEmpty) Option(failureMsg).fold("")(_())
+        else {
+          val tokens = failureAggregate.distinct.reverse
+          if (tokens.length == 1) tokens.mkString(" | ")
+          else tokens.mkString("(", " | ", ")")
+        }
+      Result.Failure(
+        index,
+        (msg -> index) :: failureStack.reverse,
+        Result.Extra(input, startIndex, index, originalParser)
+      )
+    }
   }
 }
 object Parse{
@@ -92,6 +96,7 @@ object Parse{
     input = input,
     failureStack = List.empty,
     failureMsg = null,
+    failureAggregate = List.empty,
     isSuccess = true,
     logDepth = 0,
     startIndex, startIndex, false, false, (), false, traceIndex, null

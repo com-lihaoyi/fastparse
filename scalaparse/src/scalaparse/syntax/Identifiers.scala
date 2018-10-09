@@ -21,14 +21,14 @@ object Identifiers{
 
   def VarId[_: P] = VarId0(true)
 
-  def VarId0[_: P](dollar: Boolean) = P( !Keywords ~ Lower ~ IdRest(dollar) )
+  def VarId0[_: P](dollar: Boolean) = P( !Keywords ~ Lower.log("LOWER") ~ IdRest(dollar) )
 
-  def PlainId[_: P] = P( (!Keywords) ~ Upper ~ IdRest(true) | VarId | Operator ~ (!OpChar | &(StringIn("/*", "//"))) )
+  def PlainId[_: P] = P( (!Keywords) ~ Upper.log("UPPER") ~ IdRest(true) | VarId.log("VARID") | Operator ~ (!OpChar | &(StringIn("/*", "//"))) ).log
 
   def PlainIdNoDollar[_: P] = P( !Keywords ~ Upper ~ IdRest(false) | VarId0(false) | Operator )
 
-  def BacktickId[_: P] = P( "`" ~ CharsWhile(NotBackTick) ~ "`" )
-  def Id[_: P]: P[Unit] = P( BacktickId | PlainId )
+  def BacktickId[_: P] = P( "`" ~ CharsWhile(NotBackTick) ~ "`" ).log
+  def Id[_: P]: P[Unit] = P( BacktickId | PlainId ).log
 
   def IdRest[_: P](allowDollar: Boolean) = {
 

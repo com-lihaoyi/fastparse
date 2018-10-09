@@ -134,14 +134,14 @@ object IndentationTests extends TestSuite{
           |  1
           |1
         """.stripMargin.trim,
-        """ Expected expr:1:1 / [0-9] | "\n  " | end-of-input:2:4, found "\n1" """
+        """ Expected expr:1:1 / ([0-9] | "\n  " | end-of-input):2:4, found "\n1" """
       )
       * - check(
         """+
           |  1
           |   1
         """.stripMargin.trim,
-        """ Expected expr:1:1 / block:1:1 / factor:3:3 / [0-9] | [+\-*/]:3:3, found " 1" """
+        """ Expected expr:1:1 / block:1:1 / factor:3:3 / ([0-9] | [+\-*/]):3:3, found " 1" """
       )
     }
   }

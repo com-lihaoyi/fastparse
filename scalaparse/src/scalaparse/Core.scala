@@ -106,13 +106,13 @@ trait Core extends syntax.Literals{
    * helper printing function
    */
 
-  def Id[_: P] = P( WL ~ Identifiers.Id )
+  def Id[_: P] = P( WL ~ Identifiers.Id ).log
   def VarId[_: P] = P( WL ~ Identifiers.VarId )
   def BacktickId[_: P] = P( WL ~ Identifiers.BacktickId )
   def ExprLiteral[_: P] = P( WL ~ Literals.Expr.Literal )
   def PatLiteral[_: P] = P( WL ~ Literals.Pat.Literal )
 
-  def QualId[_: P] = P( WL ~ Id.rep(1, sep = ".") )
+  def QualId[_: P] = P( WL ~ Id.rep(1, sep = ".") ).log
   def Ids[_: P] = P( Id.rep(1, sep = ",") )
 
   /**

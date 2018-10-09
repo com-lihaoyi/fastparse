@@ -398,14 +398,14 @@ object Parsing {
 
     def unary_! : Parse[Unit] = {
       val startPos = ctx.index
-      val startFailures = ctx.failureMsg
+      val startFailures = ctx.failureAggregate
       parse0
       if (!ctx.isSuccess) ctx.freshSuccess((), null, startPos)
       else {
         val res = ctx.prepareFailure(startPos)
         // Do not aggregate failures inside the !(...) expression,
         // since those failures are desired to make the parse succeed!
-        ctx.failureMsg = startFailures
+        ctx.failureAggregate = startFailures
         res
       }
     }
@@ -450,9 +450,9 @@ object Parsing {
 
   def Pass(implicit ctx: Parse[_]): Parse[Unit] = ctx.freshSuccess((), null)
   def NoTrace[T](p: => Parse[T])(implicit ctx: Parse[_]): Parse[T] = {
-    val preMsg = ctx.failureMsg
+    val preMsg = ctx.failureAggregate
     val res = p
-    if (ctx.traceIndex != -1) ctx.failureMsg = preMsg
+    if (ctx.traceIndex != -1) ctx.failureAggregate = preMsg
     res
   }
   def Pass[T](v: T)(implicit ctx: Parse[_]): Parse[T] = ctx.freshSuccess(v, null)
@@ -570,6 +570,7 @@ object Parsing {
       ) $index += 1
       if ($index - $start >= $min) $ctx1.freshSuccess((), "chars-while-in(" + $bracketed+ ", " + $min + ")", index = $index)
       else {
+        if ($ctx.index == $ctx1.traceIndex) $ctx1.aggregateFailure($bracketed)
         $ctx1.failureMsg = () => $bracketed
         $ctx1.isSuccess = false
         $ctx1.asInstanceOf[Parse[Unit]]
@@ -587,6 +588,7 @@ object Parsing {
     while(index < inputLength && p(input(index))) index += 1
     if (index - start >= min) ctx.freshSuccess((), s"chars-while($min)", index = index)
     else {
+      if (ctx.index == ctx.traceIndex) ctx.aggregateFailure(s"chars-while($min)")
       ctx.isSuccess = false
       ctx.failureMsg = () => s"chars-while($min)"
       ctx.asInstanceOf[Parse[Unit]]

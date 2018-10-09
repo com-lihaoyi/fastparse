@@ -70,7 +70,7 @@ object ExampleTests extends TestSuite{
         val trace = f.traced.trace
         assert(
           f.toString == """Result.Failure(Expected ???:1:6, found "e")""",
-          trace == """Expected either:1:1 / "a" | "b" | "c" | "d":1:6, found "e""""
+          trace == """Expected either:1:1 / ("a" | "b" | "c" | "d"):1:6, found "e""""
         )
       }
 
@@ -276,7 +276,7 @@ object ExampleTests extends TestSuite{
         val trace = failure.extra.traced.trace
         assert(
           failure.index == 0,
-          trace == """Expected nocut:1:1 / "val " | "def ":1:1, found "val 1234""""
+          trace == """Expected nocut:1:1 / ("val " | "def "):1:1, found "val 1234""""
         )
       }
       'withcut{
@@ -304,7 +304,7 @@ object ExampleTests extends TestSuite{
         val trace = failure.extra.traced.trace
         assert(
           failure.index == 10,
-          trace == """Expected stmts:1:1 / " " | "val " | end-of-input:1:11, found "val """"
+          trace == """Expected stmts:1:1 / (" " | "val " | end-of-input):1:11, found "val """"
         )
       }
       'repcut{
@@ -332,7 +332,7 @@ object ExampleTests extends TestSuite{
         val trace = failure.extra.traced.trace
         assert(
           failure.index == 2,
-          trace == """Expected tuple:1:1 / [0-9] | "," | ")":1:3, found ",)""""
+          trace == """Expected tuple:1:1 / ([0-9] | "," | ")"):1:3, found ",)""""
         )
       }
       'delimitercut{
