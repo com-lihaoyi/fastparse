@@ -15,15 +15,19 @@ object TestUtil {
     Parse(input).read(Scala.CompilationUnit(_)) match{
       case f: Result.Failure =>
 
-//        val parsedExpected = f.extra.traced.expected
-//        val parsedFound = input.slice(f.index, f.index + 10)
-//        val stack = f.extra.traced.trace
-//        assert(
-//        { implicitly(input)
-//          implicitly(stack)
-//          expected.trim == parsedExpected.trim && parsedFound.startsWith(found)
-//        }
-//        )
+        println("TRACING")
+        val traced = f.extra.traced
+        val index = f.index
+        val parsedExpected = traced.stack.last._1
+        val parsedFound = input.slice(f.index, f.index + 10)
+        val stack = traced.trace
+        assert(
+        { implicitly(input)
+          implicitly(stack)
+          implicitly(index)
+          expected.trim == parsedExpected.trim && parsedFound.startsWith(found)
+        }
+        )
       case _: Result.Success[_] => assert({implicitly(input); false})
     }
 //    for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){

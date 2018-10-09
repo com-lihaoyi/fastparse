@@ -19,13 +19,16 @@ object Identifiers{
     !Keywords ~ (!StringIn("/*", "//") ~ (CharsWhile(OpCharNotSlash) | "/")).rep(1)
   )
 
-  def VarId[_: P] = VarId0(true)
+  def VarId[_: P] = VarId0(true).log
 
   def VarId0[_: P](dollar: Boolean) = P( !Keywords ~ Lower ~ IdRest(dollar) )
-  def PlainId[_: P] = P( !Keywords ~ Upper ~ IdRest(true) | VarId | Operator ~ (!OpChar | &(StringIn("/*", "//"))) )
-  def PlainIdNoDollar[_: P] = P( !Keywords ~ Upper ~ IdRest(false) | VarId0(false) | Operator )
+
+  def PlainId[_: P] = P( (!Keywords) ~ Upper ~ IdRest(true) | VarId | Operator ~ (!OpChar | &(StringIn("/*", "//"))) ).log
+
+  def PlainIdNoDollar[_: P] = P( !Keywords ~ Upper ~ IdRest(false) | VarId0(false) | Operator ).log
+
   def BacktickId[_: P] = P( "`" ~ CharsWhile(NotBackTick) ~ "`" )
-  def Id[_: P]: P[Unit] = P( BacktickId | PlainId )
+  def Id[_: P]: P[Unit] = P( BacktickId | PlainId ).log
 
   def IdRest[_: P](allowDollar: Boolean) = {
 
@@ -44,11 +47,11 @@ object Identifiers{
       "null", "object", "override", "package", "private", "protected",
       "return", "sealed", "super", "this", "throw", "trait", "try",
       "true", "type", "val", "var", "while", "with", "yield", "_", "macro") ~ !Letter
-  }
+  }.opaque("AlphabetKeywords").log
 
   def SymbolicKeywords[_: P] = P{
     StringIn(":", ";", "=>", "=", "<-", "<:", "<%", ">:", "#", "@", "\u21d2", "\u2190") ~ !OpChar
-  }
+  }.opaque("SymbolicKeywords").log
 
-  def Keywords[_: P] = P( AlphabetKeywords | SymbolicKeywords )
+  def Keywords[_: P] = P( AlphabetKeywords | SymbolicKeywords ).log
 }

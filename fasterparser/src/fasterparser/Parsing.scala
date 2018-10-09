@@ -398,9 +398,16 @@ object Parsing {
 
     def unary_! : Parse[Unit] = {
       val startPos = ctx.index
+      val startFailures = ctx.failureMsg
       parse0
       if (!ctx.isSuccess) ctx.freshSuccess((), null, startPos)
-      else ctx.prepareFailure(startPos)
+      else {
+        val res = ctx.prepareFailure(startPos)
+        // Do not aggregate failures inside the !(...) expression,
+        // since those failures are desired to make the parse succeed!
+        ctx.failureMsg = startFailures
+        res
+      }
     }
 
     def ?[V](implicit optioner: Implicits.Optioner[T, V]): Parse[V] = {

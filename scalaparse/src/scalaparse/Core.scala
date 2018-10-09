@@ -124,7 +124,5 @@ trait Core extends syntax.Literals{
   def ThisSuper[_: P] = P( `this` | `super` ~ ClassQualifier.? )
   def ThisPath[_: P]: P[Unit] = P( ThisSuper ~ ("." ~ PostDotCheck ~/ Id).rep )
   def IdPath[_: P]: P[Unit] = P( Id ~ ("." ~ PostDotCheck ~/ (`this` | Id)).rep ~ ("." ~ ThisPath).? )
-  def StableId[_: P]: P[Unit] = {
-    P( ThisPath | IdPath )
-  }
+  def StableId[_: P]: P[Unit] = P( ThisPath | IdPath )
 }
