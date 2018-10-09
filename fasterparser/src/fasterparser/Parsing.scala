@@ -94,7 +94,6 @@ object Parsing {
         lhs.splice.parse0 match{ case ctx3 =>
           if (!ctx3.isSuccess) ctx3
           else {
-
             val pValue = ctx3.successValue
             val pCut = ctx3.cut
             val preWsIndex = ctx3.index
@@ -106,13 +105,13 @@ object Parsing {
               val nextIndex =
                 if (preOtherIndex >= postOtherIndex && postOtherIndex < ctx3.input.length) preWsIndex
                 else ctx3.index
-              if (!ctx3.isSuccess){
-                ctx3.prepareFailure(ctx3.index, cut = cut1.splice | ctx3.cut | pCut)
-              }else {
+              val rhsNewCut = cut1.splice | ctx3.cut | pCut
+              if (!ctx3.isSuccess) ctx3.prepareFailure(ctx3.index, cut = rhsNewCut)
+              else {
                 ctx3.prepareSuccess(
                   s.splice.apply(pValue.asInstanceOf[T], ctx3.successValue.asInstanceOf[V]),
                   nextIndex,
-                  cut = pCut | cut1.splice | ctx3.cut
+                  cut = rhsNewCut
                 )
               }
             }
@@ -227,16 +226,22 @@ object Parsing {
     val lhs0 = c.prefix.asInstanceOf[c.Expr[EagerOps[T]]]
     reify {
       val ctx5 = ctx.splice.asInstanceOf[Parse[V]]
+      val oldCut = ctx5.cut
+      ctx5.cut = false
       val startPos = ctx5.index
       lhs0.splice
       if (ctx5.isSuccess | ctx5.cut) ctx5
       else {
+        ctx5.cut = false
         ctx5.index = startPos
         other.splice
-        if (ctx5.isSuccess) ctx5
-        else if (ctx5.cut) ctx5
+        if (ctx5.isSuccess) {
+          ctx5.cut = oldCut
+          ctx5
+        }else if (ctx5.cut) ctx5
         else {
           val res = ctx5.prepareFailure(startPos)
+          ctx5.cut = ctx5.cut | oldCut
           ctx5.failureStack = Nil
           if (ctx5.traceIndex == -1) ctx5.shortFailureMsg = () => "???"
           res
@@ -357,7 +362,7 @@ object Parsing {
       val output = logger.f
       val indent = "  " * ctx.logDepth
 
-      output(s"$indent+$msg:${Util.prettyIndex(ctx.input, ctx.index)}")
+      output(s"$indent+$msg:${Util.prettyIndex(ctx.input, ctx.index)}${if (ctx.cut) ", cut" else ""}")
       val depth = ctx.logDepth
       ctx.logDepth += 1
       val startIndex = ctx.index
