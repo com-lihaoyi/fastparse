@@ -96,7 +96,7 @@ object Parsing {
           else {
 
             val pValue = ctx3.successValue
-            val pCut = ctx3.successCut
+            val pCut = ctx3.cut
             val preWsIndex = ctx3.index
             if (!consumeWhitespace.splice(ctx3)) ctx3
             else {
@@ -107,12 +107,12 @@ object Parsing {
                 if (preOtherIndex >= postOtherIndex && postOtherIndex < ctx3.input.length) preWsIndex
                 else ctx3.index
               if (!ctx3.isSuccess){
-                ctx3.prepareFailure(ctx3.index, cut = cut1.splice | ctx3.failureCut | pCut)
+                ctx3.prepareFailure(ctx3.index, cut = cut1.splice | ctx3.cut | pCut)
               }else {
                 ctx3.prepareSuccess(
                   s.splice.apply(pValue.asInstanceOf[T], ctx3.successValue.asInstanceOf[V]),
                   nextIndex,
-                  cut = pCut | cut1.splice | ctx3.successCut
+                  cut = pCut | cut1.splice | ctx3.cut
                 )
               }
             }
@@ -229,12 +229,12 @@ object Parsing {
       val ctx5 = ctx.splice.asInstanceOf[Parse[V]]
       val startPos = ctx5.index
       lhs0.splice
-      if (ctx5.isSuccess | ctx5.failureCut) ctx5
+      if (ctx5.isSuccess | ctx5.cut) ctx5
       else {
         ctx5.index = startPos
         other.splice
         if (ctx5.isSuccess) ctx5
-        else if (ctx5.failureCut) ctx5
+        else if (ctx5.cut) ctx5
         else {
           val res = ctx5.prepareFailure(startPos)
           ctx5.failureStack = Nil
@@ -280,12 +280,12 @@ object Parsing {
         else ctx.prepareSuccess(repeater.result(acc), successIndex)
       }
       @tailrec def rec(startIndex: Int, count: Int, precut: Boolean): Parse[V] = {
-        ctx.successCut = precut
+        ctx.cut = precut
         if (count == 0 && actualMax == 0) ctx.prepareSuccess(repeater.result(acc), startIndex)
         else {
           parse0
           if (!ctx.isSuccess) {
-            if (ctx.failureCut | precut) ctx.asInstanceOf[Parse[V]]
+            if (ctx.cut | precut) ctx.asInstanceOf[Parse[V]]
             else end(startIndex, startIndex, count)
           }else {
             val beforeSepIndex = ctx.index
@@ -293,8 +293,8 @@ object Parsing {
             if (count + 1 == actualMax) end(beforeSepIndex, beforeSepIndex, count + 1)
             else if (sep == null) rec(beforeSepIndex, count+1, false)
             else {
-              if (ctx.isSuccess) rec(beforeSepIndex, count+1, ctx.successCut)
-              else if (ctx.failureCut) ctx.prepareFailure(beforeSepIndex)
+              if (ctx.isSuccess) rec(beforeSepIndex, count+1, ctx.cut)
+              else if (ctx.cut) ctx.prepareFailure(beforeSepIndex)
               else end(beforeSepIndex, beforeSepIndex, count+1)
             }
           }
@@ -321,12 +321,12 @@ object Parsing {
         else ctx.prepareSuccess(repeater.result(acc), successIndex)
       }
       @tailrec def rec(startIndex: Int, count: Int, precut: Boolean): Parse[V] = {
-        ctx.successCut = precut
+        ctx.cut = precut
         if (count == 0 && actualMax == 0) ctx.prepareSuccess(repeater.result(acc), startIndex)
         else {
           parse0
           if (!ctx.isSuccess){
-            if (ctx.failureCut | precut) ctx.asInstanceOf[Parse[V]]
+            if (ctx.cut | precut) ctx.asInstanceOf[Parse[V]]
             else end(startIndex, startIndex, count)
           }else{
             val beforeSepIndex = ctx.index
@@ -337,11 +337,11 @@ object Parsing {
 
               if (sep == null) rec(beforeSepIndex, count+1, false)
               else if (ctx.isSuccess) {
-                val sepCut = ctx.successCut
+                val sepCut = ctx.cut
                 if (whitespace ne NoWhitespace.noWhitespaceImplicit) whitespace(ctx)
                 rec(beforeSepIndex, count+1, sepCut)
               }
-              else if (ctx.failureCut) ctx.prepareFailure(beforeSepIndex)
+              else if (ctx.cut) ctx.prepareFailure(beforeSepIndex)
               else end(beforeSepIndex, beforeSepIndex, count+1)
             }
           }
@@ -365,14 +365,14 @@ object Parsing {
       ctx.logDepth = depth
       val strRes = if (ctx.isSuccess){
         val prettyIndex = Util.prettyIndex(ctx.input, ctx.index)
-        s"Success($prettyIndex${if (ctx.successCut) ", cut" else ""})"
+        s"Success($prettyIndex${if (ctx.cut) ", cut" else ""})"
       } else{
         val trace = Result.Failure.formatStack(
           ctx.input,
           (Option(ctx.shortFailureMsg).fold("")(_()) -> ctx.index) :: ctx.failureStack.reverse
         )
         val trailing = Result.Failure.formatTrailing(ctx.input, startIndex)
-        s"Failure($trace ...$trailing${if (ctx.failureCut) ", cut" else ""})"
+        s"Failure($trace ...$trailing${if (ctx.cut) ", cut" else ""})"
       }
       output(s"$indent-$msg:${Util.prettyIndex(ctx.input, startIndex)}:$strRes")
 //        output(s"$indent-$msg:${repr.prettyIndex(cfg.input, index)}:$strRes")
@@ -416,7 +416,7 @@ object Parsing {
       val startPos = ctx.index
       parse0
       if (ctx.isSuccess) ctx.prepareSuccess(optioner.some(ctx.successValue.asInstanceOf[T]))
-      else if (ctx.failureCut) ctx.asInstanceOf[Parse[V]]
+      else if (ctx.cut) ctx.asInstanceOf[Parse[V]]
       else ctx.freshSuccess(optioner.none, null, startPos)
     }
 
@@ -599,8 +599,8 @@ object Parsing {
 
   def NoCut[T](parse: => Parse[T])(implicit ctx: Parse[_]): Parse[T] = {
     val res = parse
-    if (res.isSuccess) res.successCut = false
-    else res.failureCut = false
+    if (res.isSuccess) res.cut = false
+    else res.cut = false
     res
   }
 

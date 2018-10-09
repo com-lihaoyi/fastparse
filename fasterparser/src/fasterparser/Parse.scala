@@ -28,8 +28,7 @@ import scala.annotation.unchecked.uncheckedVariance
   * @param index The current index of the parse
   * @param startIndex Where the parse initially started, so as to allow
   *                   `.result.traced`  to re-create it with tracing enabled.
-  * @param successCut Has the current parse been prevented from backtracking?
-  * @param failureCut Is the current failure blocking backtracking?
+  * @param cut Has the current parse been prevented from backtracking?
   * @param successValue The currently returned success value
   * @param traceIndex The index we wish to trace if tracing is enabled, else
   *                   -1. Used to find failure messages to aggregate into
@@ -46,8 +45,7 @@ class Parse[+T](val input: String,
                 var logDepth: Int,
                 var index: Int,
                 val startIndex: Int,
-                var successCut: Boolean,
-                var failureCut: Boolean,
+                var cut: Boolean,
                 var successValue: Any,
                 val traceIndex: Int,
                 var originalParser: Parse[_] => Parse[_]){
@@ -73,14 +71,14 @@ class Parse[+T](val input: String,
     if (traceIndex != -1 && traceIndex == this.index) aggregateFailure(msg)
     prepareSuccess(value, index, cut = false)
   }
-  def prepareSuccess[V](value: V): Parse[V] = prepareSuccess(value, index, successCut)
-  def prepareSuccess[V](value: V, index: Int): Parse[V] = prepareSuccess(value, index, successCut)
+  def prepareSuccess[V](value: V): Parse[V] = prepareSuccess(value, index, cut)
+  def prepareSuccess[V](value: V, index: Int): Parse[V] = prepareSuccess(value, index, cut)
   def prepareSuccess[V](value: V, cut: Boolean): Parse[V] = prepareSuccess(value, index, cut)
   def prepareSuccess[V](value: V, index: Int, cut: Boolean): Parse[V] = {
     isSuccess = true
     successValue = value
     this.index = index
-    successCut = cut
+    this.cut = cut
     this.asInstanceOf[Parse[V]]
   }
   def freshFailure(msg: => String): Parse[Nothing] = {
@@ -98,11 +96,11 @@ class Parse[+T](val input: String,
     res
   }
 
-  def prepareFailure(index: Int): Parse[Nothing] = prepareFailure(index, failureCut)
+  def prepareFailure(index: Int): Parse[Nothing] = prepareFailure(index, cut)
   def prepareFailure(index: Int, cut: Boolean): Parse[Nothing] = {
     isSuccess = false
     this.index = index
-    failureCut = cut
+    this.cut = cut
     this.asInstanceOf[Parse[Nothing]]
   }
 
@@ -133,6 +131,6 @@ object Parse{
     failureAggregate = List.empty,
     isSuccess = true,
     logDepth = 0,
-    startIndex, startIndex, false, false, (), traceIndex, null
+    startIndex, startIndex, false, (), traceIndex, null
   )
 }
