@@ -76,7 +76,7 @@ trait Exprs extends Core with Types with Xml{
       P(
         If | While | Try | DoWhile | For | Throw | Return |
         ImplicitLambda | SmallerExprOrLambda
-      )
+      ).opaque("expression")
     }
     def SuperPostfixSuffix[_: P] = P( (`=` ~/ Expr).? ~ MatchAscriptionSuffix.? )
     def AscriptionType[_: P]  = if (arrowTypeAscriptions) P( Type ) else P( InfixType )

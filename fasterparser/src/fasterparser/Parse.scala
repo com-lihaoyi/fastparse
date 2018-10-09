@@ -3,9 +3,45 @@ package fasterparser
 import scala.annotation.unchecked.uncheckedVariance
 
 
+/**
+  * Models an in-progress parsing run; contains all the mutable state that may
+  * be necessary during the parse, in order to avoid the individual parsers
+  * needing to perform their own allocations and instantiations.
+  *
+  * @param input The input to the parsing run, as a String.
+  * @param failureStack
+  * @param shortFailureMsg The failure message that gets returned when tracing
+  *                        is disabled (`traceIndex` == -1). Usually a single
+  *                        string or token which is cheap to compute, even if
+  *                        it isn't as helpful for debugging as the full traced
+  *                        failure message
+  * @param failureAggregate The list of failures that get returned when tracing
+  *                         is enabled. This contains every failure message
+  *                         that occurred at the exact position of `traceIndex`,
+  *                         which is then formatted and presented to the user
+  *                         as a better error message for what they could
+  *                         possibly do to make their parse succeed
+  * @param isSuccess Whether or not the parse is currently successful
+  * @param logDepth How many nested `.log` calls are currently surrounding us.
+  *                 Used to nicely indent the log output so you can see which
+  *                 parsers are nested within which other parsers
+  * @param index The current index of the parse
+  * @param startIndex Where the parse initially started, so as to allow
+  *                   `.result.traced`  to re-create it with tracing enabled.
+  * @param successCut Has the current parse been prevented from backtracking?
+  * @param failureCut Is the current failure blocking backtracking?
+  * @param successValue The currently returned success value
+  * @param noCut
+  * @param traceIndex The index we wish to trace if tracing is enabled, else
+  *                   -1. Used to find failure messages to aggregate into
+  *                   `failureAggregate`
+  * @param originalParser The original parsing function we used to start this
+  *                       run, so as to allow `.result.traced` to re-create
+  *                       it with tracing enabled.
+  */
 class Parse[+T](val input: String,
                 var failureStack: List[(String, Int)],
-                var failureMsg: () => String,
+                var shortFailureMsg: () => String,
                 var failureAggregate: List[String],
                 var isSuccess: Boolean,
                 var logDepth: Int,
@@ -52,14 +88,14 @@ class Parse[+T](val input: String,
   def freshFailure(msg: => String): Parse[Nothing] = {
     failureStack = Nil
     val res = prepareFailure(index, cut = false)
-    if (traceIndex == -1) this.failureMsg = () => msg
+    if (traceIndex == -1) this.shortFailureMsg = () => msg
     else if (traceIndex == index) aggregateFailure(msg)
     res
   }
   def freshFailure(msg: => String, startPos: Int): Parse[Nothing] = {
     failureStack = Nil
     val res = prepareFailure(startPos, cut = false)
-    if (traceIndex == -1) this.failureMsg = () => msg
+    if (traceIndex == -1) this.shortFailureMsg = () => msg
     else if (traceIndex == index) aggregateFailure(msg)
     res
   }
@@ -76,7 +112,7 @@ class Parse[+T](val input: String,
     if (isSuccess) Result.Success(successValue.asInstanceOf[T], index)
     else {
       val msg =
-        if (failureAggregate.isEmpty) Option(failureMsg).fold("")(_())
+        if (failureAggregate.isEmpty) Option(shortFailureMsg).fold("")(_())
         else {
           val tokens = failureAggregate.distinct.reverse
           if (tokens.length == 1) tokens.mkString(" | ")
@@ -95,7 +131,7 @@ object Parse{
   def apply(input: String, startIndex: Int = 0, traceIndex: Int = -1) = new Parse(
     input = input,
     failureStack = List.empty,
-    failureMsg = null,
+    shortFailureMsg = null,
     failureAggregate = List.empty,
     isSuccess = true,
     logDepth = 0,

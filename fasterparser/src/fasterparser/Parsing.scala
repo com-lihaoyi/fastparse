@@ -238,7 +238,7 @@ object Parsing {
         else {
           val res = ctx5.prepareFailure(startPos)
           ctx5.failureStack = Nil
-          if (ctx5.traceIndex == -1) ctx5.failureMsg = () => "???"
+          if (ctx5.traceIndex == -1) ctx5.shortFailureMsg = () => "???"
           res
         }
       }
@@ -369,7 +369,7 @@ object Parsing {
       } else{
         val trace = Result.Failure.formatStack(
           ctx.input,
-          (Option(ctx.failureMsg).fold("")(_()) -> ctx.index) :: ctx.failureStack.reverse
+          (Option(ctx.shortFailureMsg).fold("")(_()) -> ctx.index) :: ctx.failureStack.reverse
         )
         val trailing = Result.Failure.formatTrailing(ctx.input, startIndex)
         s"Failure($trace ...$trailing${if (ctx.failureCut) ", cut" else ""})"
@@ -391,7 +391,7 @@ object Parsing {
         }
       } else if (!res.isSuccess){
         ctx.failureStack = Nil
-        ctx.failureMsg = () => msg
+        ctx.shortFailureMsg = () => msg
         ctx.index = oldIndex
       }
       res
@@ -573,7 +573,7 @@ object Parsing {
       if ($index - $start >= $min) $ctx1.freshSuccess((), "chars-while-in(" + $bracketed+ ", " + $min + ")", index = $index)
       else {
         if ($ctx.index == $ctx1.traceIndex) $ctx1.aggregateFailure($bracketed)
-        $ctx1.failureMsg = () => $bracketed
+        $ctx1.shortFailureMsg = () => $bracketed
         $ctx1.isSuccess = false
         $ctx1.asInstanceOf[Parse[Unit]]
       }
@@ -592,7 +592,7 @@ object Parsing {
     else {
       if (ctx.index == ctx.traceIndex) ctx.aggregateFailure(s"chars-while($min)")
       ctx.isSuccess = false
-      ctx.failureMsg = () => s"chars-while($min)"
+      ctx.shortFailureMsg = () => s"chars-while($min)"
       ctx.asInstanceOf[Parse[Unit]]
     }
   }
@@ -672,7 +672,7 @@ object Parsing {
       else {
         $ctx1.isSuccess = false
         if ($ctx1.traceIndex == -1){
-          $ctx1.failureMsg = () => $bracketed
+          $ctx1.shortFailureMsg = () => $bracketed
         }else if ($ctx1.traceIndex == $index){
           $ctx1.aggregateFailure($bracketed)
         }
