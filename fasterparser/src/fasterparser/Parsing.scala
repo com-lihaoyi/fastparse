@@ -10,6 +10,7 @@ object Logger {
 object Parsing {
 
   type P[+T] = Parse[T]
+  type P0 = Parse[Unit]
 
   def P[T](t: Parse[T])(implicit name: sourcecode.Name): Parse[T] = macro pMacro[T]
 
@@ -86,17 +87,24 @@ object Parsing {
         lhs.splice.parse0 match{ case ctx3 =>
           if (!ctx3.isSuccess) ctx3
           else {
+
             val pValue = ctx3.successValue
             val pCut = ctx3.successCut
-
+            val preWsIndex = ctx3.index
             if (!consumeWhitespace.splice(ctx3)) ctx3
             else {
+              val preOtherIndex = ctx3.index
               other.splice
+              val postOtherIndex = ctx3.index
+              val nextIndex =
+                if (postOtherIndex <= preOtherIndex && postOtherIndex < ctx3.input.length) preWsIndex
+                else ctx3.index
               if (!ctx3.isSuccess){
-                ctx3.prepareFailure(ctx3.index, cut = cut1.splice | ctx3.failureCut | pCut)
+                ctx3.prepareFailure(nextIndex, cut = cut1.splice | ctx3.failureCut | pCut)
               }else {
                 ctx3.prepareSuccess(
                   s.splice.apply(pValue.asInstanceOf[T], ctx3.successValue.asInstanceOf[V]),
+                  nextIndex,
                   cut = pCut | cut1.splice | ctx3.successCut
                 )
               }
@@ -253,9 +261,9 @@ object Parsing {
 
     def repX[V](implicit repeater: Implicits.Repeater[T, V]): Parse[V] = repX(sep=null)
     def repX[V](min: Int = 0,
+               sep: => Parse[_] = null,
                 max: Int = Int.MaxValue,
-                exactly: Int = -1,
-                sep: => Parse[_] = null)(implicit repeater: Implicits.Repeater[T, V]): Parse[V] = {
+                exactly: Int = -1)(implicit repeater: Implicits.Repeater[T, V]): Parse[V] = {
 
       val acc = repeater.initial
       val actualMin = if(exactly == -1) min else exactly
@@ -292,9 +300,9 @@ object Parsing {
     def rep[V](implicit repeater: Implicits.Repeater[T, V],
                whitespace: Parse[_] => Parse[Unit]): Parse[V] = rep(sep=null)
     def rep[V](min: Int = 0,
+               sep: => Parse[_] = null,
                max: Int = Int.MaxValue,
-               exactly: Int = -1,
-               sep: => Parse[_] = null)
+               exactly: Int = -1)
               (implicit repeater: Implicits.Repeater[T, V],
                whitespace: Parse[_] => Parse[Unit]): Parse[V] = {
 

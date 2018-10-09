@@ -92,3 +92,19 @@ object cssparse extends ScalaModule{
     def testFrameworks = Seq("utest.runner.Framework")
   }
 }
+object pythonparse extends ScalaModule{
+  def scalaVersion = "2.12.7"
+  //
+  //    override def scalacOptions = Seq("-Ydebug")
+  def moduleDeps = Seq(fasterparser)
+  def ivyDeps = Agg(
+    ivy"org.scala-lang:scala-reflect:${scalaVersion()}",
+  )
+  object test extends Tests{
+    def ivyDeps = Agg(
+      ivy"com.lihaoyi::utest:0.6.5",
+    )
+
+    def testFrameworks = Seq("utest.runner.Framework")
+  }
+}
