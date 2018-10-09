@@ -70,6 +70,7 @@ object TestUtil {
         case f: Result.Failure =>
           //        println(f.formatExpectedAsString)
           //        println(f.formatTraces)
+          println("TRACING")
           throw new Exception(tag + "\n" + input + "\n" + f.extra.traced.trace)
         case s: Result.Success[_] =>
           //        println(parsed)

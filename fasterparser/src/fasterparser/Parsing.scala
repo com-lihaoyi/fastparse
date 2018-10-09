@@ -302,11 +302,14 @@ object Parsing {
             val beforeSepIndex = ctx.index
             repeater.accumulate(ctx.successValue.asInstanceOf[T], acc)
             if (count + 1 == actualMax) end(beforeSepIndex, beforeSepIndex, count + 1)
-            else if (sep == null) rec(beforeSepIndex, count+1, false)
             else {
-              if (ctx.isSuccess) rec(beforeSepIndex, count+1, ctx.cut)
-              else if (ctx.cut) ctx.prepareFailure(beforeSepIndex)
-              else end(beforeSepIndex, beforeSepIndex, count+1)
+              ctx.cut = false
+              if (sep == null) rec(beforeSepIndex, count+1, false)
+              else {
+                if (ctx.isSuccess) rec(beforeSepIndex, count+1, ctx.cut)
+                else if (ctx.cut) ctx.prepareFailure(beforeSepIndex)
+                else end(beforeSepIndex, beforeSepIndex, count+1)
+              }
             }
           }
         }
@@ -345,7 +348,7 @@ object Parsing {
             if (count + 1 == actualMax) end(beforeSepIndex, beforeSepIndex, count + 1)
             else {
               if (whitespace ne NoWhitespace.noWhitespaceImplicit) whitespace(ctx)
-
+              ctx.cut = false
               if (sep == null) rec(beforeSepIndex, count+1, false)
               else if (ctx.isSuccess) {
                 val sepCut = ctx.cut
@@ -430,6 +433,7 @@ object Parsing {
     def ?[V](implicit optioner: Implicits.Optioner[T, V]): Parse[V] = {
       val startPos = ctx.index
       val startCut = ctx.cut
+      ctx.cut = false
       parse0
       if (ctx.isSuccess) {
         val res = ctx.prepareSuccess(optioner.some(ctx.successValue.asInstanceOf[T]))
@@ -631,9 +635,9 @@ object Parsing {
   }
 
   def NoCut[T](parse: => Parse[T])(implicit ctx: Parse[_]): Parse[T] = {
+    val cut = ctx.cut
     val res = parse
-    if (res.isSuccess) res.cut = false
-    else res.cut = false
+    res.cut = cut
     res
   }
 
