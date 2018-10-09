@@ -39,7 +39,7 @@ trait Core extends syntax.Literals{
         }
       }
       rec(current = cfg.index, state = 0)
-    }.log
+    }
   }
 
   // Aliases for common things. These things are used in almost every parser

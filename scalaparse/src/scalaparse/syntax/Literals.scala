@@ -58,7 +58,7 @@ trait Literals { l =>
     def Null[_: P] = Key.W("null")
 
     def OctalEscape[_: P] = P( Digit ~ Digit.? ~ Digit.? )
-    def Escape[_: P] = P( "\\" ~/ (CharIn("""btnfr'\"]""") | OctalEscape | UnicodeEscape ) )
+    def Escape[_: P] = P( "\\" ~/ (CharIn("""btnfr'\\"]""") | OctalEscape | UnicodeEscape ) )
 
     // Note that symbols can take on the same values as keywords!
     def Symbol[_: P] = P( Identifiers.PlainId | Identifiers.Keywords )
@@ -70,11 +70,11 @@ trait Literals { l =>
       P( (Escape | PrintableChar) ~ "'" )
     }
 
-    class InterpCtx(interp: => Option[P[Unit]]) {
+    class InterpCtx(interp: Option[() => P[Unit]]) {
       def Literal[_: P] = P( ("-".? ~ (Float | Int)) | Bool | String | "'" ~/ (Char | Symbol) | Null )
       def Interp[_: P] = interp match{
         case None => P ( Fail )
-        case Some(p) => P( "$" ~ Identifiers.PlainIdNoDollar | ("${" ~ p ~ WL ~ "}") | "$$" )
+        case Some(p) => P( "$" ~ Identifiers.PlainIdNoDollar | ("${" ~ p() ~ WL ~ "}") | "$$" )
       }
 
 
@@ -86,7 +86,7 @@ trait Literals { l =>
        * to be a dud and we go back into a CharsChunk next rep
        */
       def StringChars[_: P] = P( CharsWhile(c => c != '\n' && c != '"' && c != '\\' && c != '$') )
-      def NonTripleQuoteChar[_: P] = P( "\"" ~ "\"".? ~ !"\"" | CharIn("\\$\n") )
+      def NonTripleQuoteChar[_: P] = P( "\"" ~ "\"".? ~ !"\"" | CharIn("\\\\$\n") )
       def TripleChars[_: P] = P( (StringChars | Interp | NonTripleQuoteChar).rep )
       def TripleTail[_: P] = P( TQ ~ "\"".rep )
       def SingleChars[_: P](allowSlash: Boolean) = {
@@ -105,8 +105,8 @@ trait Literals { l =>
 
     }
     def NoInterp[_: P] = new InterpCtx(None)
-    def Pat[_: P] = new InterpCtx(Some(l.Pattern))
-    def Expr[_: P] = new InterpCtx(Some(Block))
+    def Pat[_: P] = new InterpCtx(Some(() => l.Pattern))
+    def Expr[_: P] = new InterpCtx(Some(() => Block))
 
 
   }
