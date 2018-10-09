@@ -280,6 +280,7 @@ object Parsing {
         else ctx.prepareSuccess(repeater.result(acc), successIndex)
       }
       @tailrec def rec(startIndex: Int, count: Int, precut: Boolean): Parse[V] = {
+        ctx.successCut = precut
         if (count == 0 && actualMax == 0) ctx.prepareSuccess(repeater.result(acc), startIndex)
         else {
           parse0
@@ -320,6 +321,7 @@ object Parsing {
         else ctx.prepareSuccess(repeater.result(acc), successIndex)
       }
       @tailrec def rec(startIndex: Int, count: Int, precut: Boolean): Parse[V] = {
+        ctx.successCut = precut
         if (count == 0 && actualMax == 0) ctx.prepareSuccess(repeater.result(acc), startIndex)
         else {
           parse0
@@ -332,12 +334,12 @@ object Parsing {
             if (count + 1 == actualMax) end(beforeSepIndex, beforeSepIndex, count + 1)
             else {
               val preSepCut = ctx.successCut
-              if (whitespace != null) whitespace(ctx)
+              if (whitespace ne NoWhitespace.noWhitespaceImplicit) whitespace(ctx)
 
               if (sep == null) rec(beforeSepIndex, count+1, false)
               else if (ctx.isSuccess) {
                 val sepCut = ctx.successCut | preSepCut
-                if (whitespace != null) whitespace(ctx)
+                if (whitespace ne NoWhitespace.noWhitespaceImplicit) whitespace(ctx)
                 rec(beforeSepIndex, count+1, sepCut)
               }
               else if (ctx.failureCut) ctx.prepareFailure(beforeSepIndex)

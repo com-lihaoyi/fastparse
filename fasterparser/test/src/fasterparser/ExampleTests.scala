@@ -339,8 +339,9 @@ object ExampleTests extends TestSuite{
         val Result.Success(Seq("1", "23"), _) = Parse("(1,23)").read(tuple(_))
 
         val failure = Parse("(1,)").read(tuple(_)).asInstanceOf[Result.Failure]
+        val index = failure.index
         assert(
-          failure.index == 3,
+          index == 3,
           failure.extra.traced.trace == """Expected tuple:1:1 / digits:1:4 / [0-9]:1:4, found ")""""
         )
       }
