@@ -99,7 +99,7 @@ trait Exprs extends Core with Types with Xml{
     def SimpleExpr[_: P]: P[Unit] = {
       def New = P( `new` ~/ AnonTmpl )
 
-      P( XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | Parened ).log
+      P( XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | Parened )
     }
     def Guard[_: P] : P[Unit] = P( `if` ~/ PostfixExpr )
   }

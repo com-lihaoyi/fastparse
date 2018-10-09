@@ -11,10 +11,10 @@ object Scala extends Core with Types with Exprs with Xml{
 
   def TmplBody[_: P]: P[Unit] = {
     def Prelude = P( (Annot ~ OneNLMax).rep ~ (Mod ~/ Pass).rep )
-    def TmplStat = P( Import | Prelude ~ BlockDef | StatCtx.Expr ).log
+    def TmplStat = P( Import | Prelude ~ BlockDef | StatCtx.Expr )
 
     P( "{" ~/ BlockLambda.? ~ Semis.? ~ TmplStat.repX(sep = Semis) ~ Semis.? ~ `}` )
-  }.log
+  }
 
   def ValVarDef[_: P] = P( BindPattern.rep(1, ","./) ~ (`:` ~/ Type).? ~ (`=` ~/ FreeCtx.Expr).? )
 

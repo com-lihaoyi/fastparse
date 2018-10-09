@@ -1167,6 +1167,10 @@ object SuccessTests extends TestSuite{
     * - check(
       """object Unparsed {
         |    <xml:unparsed></xml:unparsed>
+        |    <xml:unparsed foo=""></xml:unparsed>
+        |    <xml:unparsed><</xml:unparsed>
+        |    <xml:unparsed>{foo}</xml:unparsed>
+        |    <xml:unparsed></xml:unparse></xml:unparsed>
         |}
       """.stripMargin
     )
