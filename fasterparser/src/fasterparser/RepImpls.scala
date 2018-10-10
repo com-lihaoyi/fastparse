@@ -36,8 +36,10 @@ object RepImpls{
         """
       case Some(min1) =>
         q"""
-           if ($count < $min1) $ctx1.prepareFailure($startIndex)
-           else $ctx1.prepareSuccess($repeater1.result($acc), $startIndex)
+           if ($count < $min1) {
+             println("rep prepareFailure " + $startIndex)
+             $ctx1.prepareFailure($startIndex)
+           }else $ctx1.prepareSuccess($repeater1.result($acc), $startIndex)
         """
     }
 
@@ -59,7 +61,11 @@ object RepImpls{
                  $count: _root_.scala.Int,
                  $precut: _root_.scala.Boolean): _root_.fasterparser.Parse[${c.weakTypeOf[V]}] = {
           $ctx1.cut = $precut
+
+          val oldIsFork = ctx.isFork
+          $ctx1.isFork = true
           ${c.prefix}.parse0()
+          $ctx1.isFork = oldIsFork
           if (!$ctx1.isSuccess) {
             if ($ctx1.cut | $precut) $ctx1.asInstanceOf[Parse[${c.weakTypeOf[V]}]]
             else $endSnippet
@@ -129,7 +135,10 @@ class RepImpls[T](val parse0: () => Parse[T]) extends AnyVal{
       ctx.cut = precut
       if (count == 0 && actualMax == 0) ctx.prepareSuccess(repeater.result(acc), startIndex)
       else {
+        val oldIsFork = ctx.isFork
+        ctx.isFork = true
         parse0()
+        ctx.isFork = oldIsFork
         if (!ctx.isSuccess) {
           if (ctx.cut | precut) ctx.asInstanceOf[Parse[V]]
           else end(startIndex, startIndex, count)
@@ -140,7 +149,11 @@ class RepImpls[T](val parse0: () => Parse[T]) extends AnyVal{
           if (nextCount == actualMax) end(beforeSepIndex, beforeSepIndex, nextCount)
           else {
             ctx.cut = false
-            if (sep == null) rec(beforeSepIndex, nextCount, false)
+
+            ctx.isFork = true
+            val sep1 = sep
+            ctx.isFork = oldIsFork
+            if (sep1 == null) rec(beforeSepIndex, nextCount, false)
             else {
               if (ctx.isSuccess) rec(beforeSepIndex, nextCount, ctx.cut)
               else if (ctx.cut) ctx.prepareFailure(beforeSepIndex)
@@ -165,7 +178,10 @@ class RepImpls[T](val parse0: () => Parse[T]) extends AnyVal{
     }
     @tailrec def rec(startIndex: Int, count: Int, precut: Boolean): Parse[V] = {
       ctx.cut = precut
+      val oldIsFork = ctx.isFork
+      ctx.isFork = true
       parse0()
+      ctx.isFork = oldIsFork
       if (!ctx.isSuccess) {
         if (ctx.cut | precut) ctx.asInstanceOf[Parse[V]]
         else end(startIndex, startIndex, count)
@@ -174,7 +190,10 @@ class RepImpls[T](val parse0: () => Parse[T]) extends AnyVal{
         repeater.accumulate(ctx.successValue.asInstanceOf[T], acc)
         val nextCount = count + 1
         ctx.cut = false
-        if (sep == null) rec(beforeSepIndex, nextCount, false)
+        ctx.isFork = true
+        val sep1 = sep
+        ctx.isFork = oldIsFork
+        if (sep1 == null) rec(beforeSepIndex, nextCount, false)
         else {
           if (ctx.isSuccess) rec(beforeSepIndex, nextCount, ctx.cut)
           else if (ctx.cut) ctx.prepareFailure(beforeSepIndex)
@@ -205,7 +224,10 @@ class RepImpls[T](val parse0: () => Parse[T]) extends AnyVal{
       ctx.cut = precut
       if (count == 0 && actualMax == 0) ctx.prepareSuccess(repeater.result(acc), startIndex)
       else {
+        val oldIsFork = ctx.isFork
+        ctx.isFork = true
         parse0()
+        ctx.isFork = oldIsFork
         if (!ctx.isSuccess){
           if (ctx.cut | precut) ctx.asInstanceOf[Parse[V]]
           else end(startIndex, startIndex, count)
@@ -217,7 +239,10 @@ class RepImpls[T](val parse0: () => Parse[T]) extends AnyVal{
           else {
             if (whitespace ne NoWhitespace.noWhitespaceImplicit) whitespace(ctx)
             ctx.cut = false
-            if (sep == null) rec(beforeSepIndex, nextCount, false)
+            ctx.isFork = true
+            val sep1 = sep
+            ctx.isFork = oldIsFork
+            if (sep1 == null) rec(beforeSepIndex, nextCount, false)
             else if (ctx.isSuccess) {
               val sepCut = ctx.cut
               if (whitespace ne NoWhitespace.noWhitespaceImplicit) whitespace(ctx)
@@ -245,7 +270,10 @@ class RepImpls[T](val parse0: () => Parse[T]) extends AnyVal{
     }
     @tailrec def rec(startIndex: Int, count: Int, precut: Boolean): Parse[V] = {
       ctx.cut = precut
+      val oldIsFork = ctx.isFork
+      ctx.isFork = true
       parse0()
+      ctx.isFork = oldIsFork
       if (!ctx.isSuccess){
         if (ctx.cut | precut) ctx.asInstanceOf[Parse[V]]
         else end(startIndex, startIndex, count)
@@ -255,7 +283,10 @@ class RepImpls[T](val parse0: () => Parse[T]) extends AnyVal{
         val nextCount = count + 1
         if (whitespace ne NoWhitespace.noWhitespaceImplicit) whitespace(ctx)
         ctx.cut = false
-        if (sep == null) rec(beforeSepIndex, nextCount, false)
+        ctx.isFork = true
+        val sep1 = sep
+        ctx.isFork = oldIsFork
+        if (sep1 == null) rec(beforeSepIndex, nextCount, false)
         else if (ctx.isSuccess) {
           val sepCut = ctx.cut
           if (whitespace ne NoWhitespace.noWhitespaceImplicit) whitespace(ctx)

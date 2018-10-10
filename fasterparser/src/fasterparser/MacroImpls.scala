@@ -2,6 +2,7 @@ package fasterparser
 
 import fasterparser.Parsing.EagerOps
 
+import scala.annotation.tailrec
 import scala.reflect.macros.blackbox.Context
 
 object MacroImpls {
@@ -22,6 +23,20 @@ object MacroImpls {
       }
     }
   }
+  /**
+    * Workaround https://github.com/scala-js/scala-js/issues/1603
+    * by implementing startsWith myself
+    */
+  def startsWith[Elem, Repr](src: ParserInput[Elem, Repr], prefix: Repr, offset: Int)
+                            (implicit repr: ReprOps[Elem, Repr])= {
+    @tailrec def rec(i: Int): Boolean = {
+      if (i >= repr.length(prefix)) true
+      else if (!src.isReachable(i + offset)) false
+      else if (src(i + offset) != repr.apply(prefix, i)) false
+      else rec(i + 1)
+    }
+    rec(0)
+  }
   def literalStrMacro(c: Context)(s: c.Expr[String])(ctx: c.Expr[Parse[Any]]): c.Expr[Parse[Unit]] = {
     import c.universe._
     s.actualType match{
@@ -32,7 +47,7 @@ object MacroImpls {
           val charLiteral = c.Expr[Char](Literal(Constant(x.charAt(0))))
           reify {
             ctx.splice match{ case ctx1 =>
-              if (ctx1.index < ctx1.input.length && ctx1.input(ctx1.index) == charLiteral.splice){
+              if (ctx1.input.isReachable(ctx1.index) && ctx1.input(ctx1.index) == charLiteral.splice){
                 ctx1.freshSuccess((), literalized.splice, ctx1.index + 1)
               }else{
                 ctx1.freshFailure(literalized.splice).asInstanceOf[Parse[Unit]]
@@ -41,21 +56,23 @@ object MacroImpls {
           }
         }else{
           val xLength = c.Expr[Int](Literal(Constant(x.length)))
-          val checker = c.Expr[(String, Int) => Boolean]{
+          val checker = c.Expr[(ParserInput[Char, String], Int) => Boolean]{
             val stringSym = TermName(c.freshName("string"))
             val offsetSym = TermName(c.freshName("offset"))
             val checks = x
               .zipWithIndex
-              .map { case (char, i) => q"""$stringSym.charAt($offsetSym + $i) == $char""" }
+              .map { case (char, i) => q"""$stringSym.apply($offsetSym + $i) == $char""" }
               .reduce[Tree]{case (l, r) => q"$l && $r"}
 
-            q"($stringSym: java.lang.String, $offsetSym: scala.Int) => $checks"
+            q"($stringSym: fasterparser.ParserInput[Char, String], $offsetSym: scala.Int) => $checks"
           }
           reify {
             ctx.splice match{ case ctx1 =>
-              if (ctx1.index + xLength.splice <= ctx1.input.length &&
+              val end = ctx1.index + xLength.splice
+              println("LiteralStr n>1 " + end + " " +ctx1.input.isReachable(end - 1))
+              if (ctx1.input.isReachable(end - 1)  &&
                 checker.splice(ctx1.input, ctx1.index)){
-                ctx1.freshSuccess((), literalized.splice, ctx1.index + xLength.splice)
+                ctx1.freshSuccess((), literalized.splice, end)
               }else{
                 ctx1.freshFailure(literalized.splice).asInstanceOf[Parse[Unit]]
               }
@@ -66,7 +83,7 @@ object MacroImpls {
         reify{
           val s1 = s.splice
           ctx.splice match{ case ctx1 =>
-            if (ctx1.input.startsWith(s1, ctx1.index)) ctx1.freshSuccess((), Util.literalize(s1), ctx1.index + s1.length)
+            if (startsWith(ctx1.input, s1, ctx1.index)) ctx1.freshSuccess((), Util.literalize(s1), ctx1.index + s1.length)
             else ctx1.freshFailure(Util.literalize(s1)).asInstanceOf[Parse[Unit]]
           }
         }
@@ -123,12 +140,18 @@ object MacroImpls {
       val oldCut = ctx5.cut
       ctx5.cut = false
       val startPos = ctx5.index
+      val oldFork = ctx5.isFork
+      ctx5.isFork = true
       lhs0.splice
+      ctx5.isFork = oldFork
       if (ctx5.isSuccess | ctx5.cut) ctx5
       else {
         ctx5.cut = false
         ctx5.index = startPos
+        val oldFork = ctx5.isFork
+        ctx5.isFork = true
         other.splice
+        ctx5.isFork = oldFork
         if (ctx5.isSuccess) {
           ctx5.cut = oldCut
           ctx5
@@ -154,9 +177,12 @@ object MacroImpls {
     reify {
       val ctx6 = ctx.splice
       val startPos = ctx6.index
+      val oldCapturing = ctx6.isCapturing
+      ctx6.isCapturing = true
       lhs0.splice
+      ctx6.isCapturing = oldCapturing
       if (!ctx6.isSuccess) ctx6.asInstanceOf[Parse[String]]
-      else ctx6.prepareSuccess(ctx6.input.substring(startPos, ctx6.index))
+      else ctx6.prepareSuccess(ctx6.input.slice(startPos, ctx6.index))
     }
   }
 
@@ -197,7 +223,7 @@ object MacroImpls {
     val inputLength = TermName(c.freshName("inputLength"))
     val n = TermName(c.freshName("n"))
     def rec(depth: Int, t: TrieNode): c.Expr[Unit] = {
-      val charAt = if (ignoreCase) q"$input.charAt($n).toLower" else q"$input.charAt($n)"
+      val charAt = if (ignoreCase) q"$input.apply($n).toLower" else q"$input.apply($n)"
       val children = if (t.children.size == 0) q"()"
       else if (t.children.size > 1){
         q"""
@@ -319,16 +345,18 @@ object MacroImpls {
         ctx.splice.freshFailure(bracketed.splice).asInstanceOf[Parse[Unit]]
       } else parsed.splice match {
         case true => ctx.splice.freshSuccess((), bracketed.splice, ctx.splice.index + 1)
-        case false => ctx.splice.freshFailure(bracketed.splice).asInstanceOf[Parse[Unit]]
+        case false =>
+          println("charInMacro " + ctx.splice.index)
+          ctx.splice.freshFailure(bracketed.splice).asInstanceOf[Parse[Unit]]
       }
     }
   }
 
   def parsedSequence0[T: c.WeakTypeTag, V: c.WeakTypeTag, R: c.WeakTypeTag]
-  (c: Context)
-  (other: c.Expr[Parse[V]], cut: Boolean)
-  (s: c.Expr[Implicits.Sequencer[T, V, R]],
-   whitespace: Option[c.Expr[Parse[Any] => Parse[Unit]]]): c.Expr[Parse[R]] = {
+                     (c: Context)
+                     (other: c.Expr[Parse[V]], cut: Boolean)
+                     (s: c.Expr[Implicits.Sequencer[T, V, R]],
+                      whitespace: Option[c.Expr[Parse[Any] => Parse[Unit]]]): c.Expr[Parse[R]] = {
     import c.universe._
 
     val lhs = c.prefix.asInstanceOf[Expr[EagerOps[T]]]
@@ -348,6 +376,8 @@ object MacroImpls {
         lhs.splice.parse0 match{ case ctx3 =>
           if (!ctx3.isSuccess) ctx3
           else {
+            println("L")
+            if (ctx3.checkForDrop(ctx3.cut | cut1.splice)) ctx3.input.dropBuffer(ctx3.index)
             val pValue = ctx3.successValue
             val pCut = ctx3.cut
             val preWsIndex = ctx3.index
@@ -362,6 +392,8 @@ object MacroImpls {
               val rhsNewCut = cut1.splice | ctx3.cut | pCut
               if (!ctx3.isSuccess) ctx3.prepareFailure(ctx3.index, cut = rhsNewCut)
               else {
+                println("R")
+                if (ctx3.checkForDrop(ctx3.cut | cut1.splice)) ctx3.input.dropBuffer(ctx3.index)
                 ctx3.prepareSuccess(
                   s.splice.apply(pValue.asInstanceOf[T], ctx3.successValue.asInstanceOf[V]),
                   nextIndex,
@@ -440,6 +472,14 @@ object MacroImpls {
     import c.universe._
     val literal = MacroImpls.literalStrMacro(c)(parse0)(ctx)
     reify{ new fasterparser.Parsing.ByNameOps[Unit](() => literal.splice)}
+  }
+
+  def logOpsStrMacro(c: Context)
+                       (parse0: c.Expr[String])
+                       (ctx: c.Expr[Parse[Any]]): c.Expr[fasterparser.Parsing.LogByNameOps[Unit]] = {
+    import c.universe._
+    val literal = MacroImpls.literalStrMacro(c)(parse0)(ctx)
+    reify{ new fasterparser.Parsing.LogByNameOps[Unit](literal.splice)(ctx.splice)}
   }
 
 

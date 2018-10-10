@@ -37,7 +37,7 @@ import scala.annotation.unchecked.uncheckedVariance
   *                       run, so as to allow `.result.traced` to re-create
   *                       it with tracing enabled.
   */
-final class Parse[+T](val input: String,
+final class Parse[+T](val input: ParserInput[Char, String],
                       var failureStack: List[(String, Int)],
                       var shortFailureMsg: () => String,
                       var failureAggregate: List[String],
@@ -48,7 +48,10 @@ final class Parse[+T](val input: String,
                       var cut: Boolean,
                       var successValue: Any,
                       val traceIndex: Int,
-                      var originalParser: Parse[_] => Parse[_]){
+                      var originalParser: Parse[_] => Parse[_],
+                      var isCapturing: Boolean,
+                      var isNoCut: Boolean,
+                      var isFork: Boolean){
   def read[T](p: Parse[_] => Parse[T] @uncheckedVariance): Result[T] = {
     if (originalParser == null) originalParser = p
     p(this).result
@@ -104,6 +107,15 @@ final class Parse[+T](val input: String,
     this.asInstanceOf[Parse[Nothing]]
   }
 
+  def checkForDrop(outerCut: Boolean) = {
+    println("==== CHECK FOR DROP " + index + " ====")
+    println("isCapturing " + isCapturing)
+    println("outerCut " + outerCut)
+    println("isNoCut " + isNoCut)
+    println("isFork " + isFork)
+    !isCapturing && ((outerCut && !isNoCut) || !isFork)
+  }
+
   def result: Result[T] = {
     if (isSuccess) Result.Success(successValue.asInstanceOf[T], index)
     else {
@@ -124,13 +136,28 @@ final class Parse[+T](val input: String,
 }
 object Parse{
   def apply()(implicit i: Parse[Any]): Parse[Any] = i
-  def apply(input: String, startIndex: Int = 0, traceIndex: Int = -1) = new Parse(
+  def input(input: ParserInput[Char, String], startIndex: Int = 0, traceIndex: Int = -1): Parse[_] = Parse(
+    input = input,
+    startIndex = startIndex,
+    traceIndex = traceIndex
+  )
+  def iter(input: Iterator[String], startIndex: Int = 0, traceIndex: Int = -1): Parse[_] = Parse(
+    input = IteratorParserInput[Char, String](input),
+    startIndex = startIndex,
+    traceIndex = traceIndex
+  )
+  def apply(input: String, startIndex: Int = 0, traceIndex: Int = -1): Parse[_] = Parse(
+    input = IndexedParserInput[Char, String](input),
+    startIndex = startIndex,
+    traceIndex = traceIndex
+  )
+  def apply(input: ParserInput[Char, String], startIndex: Int, traceIndex: Int): Parse[_] = new Parse(
     input = input,
     failureStack = List.empty,
     shortFailureMsg = null,
     failureAggregate = List.empty,
     isSuccess = true,
     logDepth = 0,
-    startIndex, startIndex, false, (), traceIndex, null
+    startIndex, startIndex, false, (), traceIndex, null, false, false, false
   )
 }

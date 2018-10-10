@@ -34,14 +34,14 @@ object Result{
 
   }
   object Failure{
-    def formatStack(input: String, stack: List[(String, Int)]) = {
-      stack.reverse.map{case (s, i) => s"$s:${Util.prettyIndex(input, i)}"}.mkString(" / ")
+    def formatStack(input: ParserInput[Char, String], stack: List[(String, Int)]) = {
+      stack.reverse.map{case (s, i) => s"$s:${StringReprOps.prettyIndex(input, i)}"}.mkString(" / ")
     }
-    def formatTrailing(input: String, index: Int) = {
+    def formatTrailing(input: ParserInput[Char, String], index: Int) = {
       Util.literalize(input.slice(index, index + 10))
     }
   }
-  case class Extra(input: String,
+  case class Extra(input: ParserInput[Char, String],
                    startIndex: Int,
                    index: Int,
                    originalParser: Parse[_] => Parse[_]) {

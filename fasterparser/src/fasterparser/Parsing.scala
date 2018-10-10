@@ -23,7 +23,7 @@ object Parsing {
   implicit def LiteralStr(s: String)(implicit ctx: Parse[Any]): Parse[Unit] = macro MacroImpls.literalStrMacro
 
 
-  def startsWithIgnoreCase(src: String, prefix: IndexedSeq[Char], offset: Int) = {
+  def startsWithIgnoreCase(src: ParserInput[Char, String], prefix: IndexedSeq[Char], offset: Int) = {
     @tailrec def rec(i: Int): Boolean = {
       if (i >= prefix.length) true
       else if(i + offset >= src.length) false
@@ -197,10 +197,13 @@ object Parsing {
     }
 
     def ?[V](implicit optioner: Implicits.Optioner[T, V], ctx: Parse[Any]): Parse[V] = {
+      val oldFork = ctx.isFork
+      ctx.isFork = true
       val startPos = ctx.index
       val startCut = ctx.cut
       ctx.cut = false
       parse0()
+      ctx.isFork = oldFork
       if (ctx.isSuccess) {
         val res = ctx.prepareSuccess(optioner.some(ctx.successValue.asInstanceOf[T]))
         res.cut = startCut
@@ -227,6 +230,8 @@ object Parsing {
     }
   }
 
+  implicit def LogOpsStr(parse0: String)(implicit ctx: Parse[Any]): fasterparser.Parsing.LogByNameOps[Unit] =
+    macro MacroImpls.logOpsStrMacro
   /**
     * Separated out from [[ByNameOps]] because `.log` isn't easy to make an
     * [[AnyVal]] extension method, but it doesn't matter since `.log` calls
@@ -240,14 +245,14 @@ object Parsing {
       val output = logger.f
       val indent = "  " * ctx.logDepth
 
-      output(s"$indent+$msg:${Util.prettyIndex(ctx.input, ctx.index)}${if (ctx.cut) ", cut" else ""}")
+      output(s"$indent+$msg:${ReprOps.StringReprOps.prettyIndex(ctx.input, ctx.index)}${if (ctx.cut) ", cut" else ""}")
       val depth = ctx.logDepth
       ctx.logDepth += 1
       val startIndex = ctx.index
       parse0
       ctx.logDepth = depth
       val strRes = if (ctx.isSuccess){
-        val prettyIndex = Util.prettyIndex(ctx.input, ctx.index)
+        val prettyIndex = ReprOps.StringReprOps.prettyIndex(ctx.input, ctx.index)
         s"Success($prettyIndex${if (ctx.cut) ", cut" else ""})"
       } else{
         val trace = Result.Failure.formatStack(
@@ -257,7 +262,7 @@ object Parsing {
         val trailing = Result.Failure.formatTrailing(ctx.input, startIndex)
         s"Failure($trace ...$trailing${if (ctx.cut) ", cut" else ""})"
       }
-      output(s"$indent-$msg:${Util.prettyIndex(ctx.input, startIndex)}:$strRes")
+      output(s"$indent-$msg:${ReprOps.StringReprOps.prettyIndex(ctx.input, startIndex)}:$strRes")
       //        output(s"$indent-$msg:${repr.prettyIndex(cfg.input, index)}:$strRes")
       ctx.asInstanceOf[Parse[T]]
     }
@@ -340,7 +345,11 @@ object Parsing {
 
   def NoCut[T](parse: => Parse[T])(implicit ctx: Parse[_]): Parse[T] = {
     val cut = ctx.cut
+    val oldNoCut = ctx.isNoCut
+    ctx.isNoCut = true
     val res = parse
+    ctx.isNoCut = oldNoCut
+
     res.cut = cut
     res
   }
