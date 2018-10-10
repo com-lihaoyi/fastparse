@@ -67,14 +67,13 @@ object MacroImpls {
             q"($stringSym: fasterparser.ParserInput[Char, String], $offsetSym: scala.Int) => $checks"
           }
           reify {
+
             ctx.splice match{ case ctx1 =>
               val end = ctx1.index + xLength.splice
-              if (ctx1.input.isReachable(end - 1)  &&
-                checker.splice(ctx1.input, ctx1.index)){
+              if (ctx1.input.isReachable(end - 1)  && checker.splice(ctx1.input, ctx1.index) ) {
                 ctx1.freshSuccess((), literalized.splice, end)
-              }else{
-                ctx1.freshFailure(literalized.splice).asInstanceOf[Parse[Unit]]
-              }
+              }else ctx1.freshFailure(literalized.splice).asInstanceOf[Parse[Unit]]
+
             }
           }
         }

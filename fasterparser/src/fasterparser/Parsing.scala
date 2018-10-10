@@ -181,7 +181,10 @@ object Parsing {
       val startPos = ctx.index
       val startCut = ctx.cut
       val startFailures = ctx.failureAggregate
+      val oldNoCut = ctx.isNoCut
+      ctx.isNoCut = true
       parse0()
+      ctx.isNoCut = oldNoCut
       val res =
         if (!ctx.isSuccess) ctx.freshSuccess((), null, startPos)
         else {
@@ -272,7 +275,10 @@ object Parsing {
 
     val startPos = ctx.index
     val startCut = ctx.cut
+    val oldNoCut = ctx.isNoCut
+    ctx.isNoCut = true
     parse
+    ctx.isNoCut = oldNoCut
     val res =
       if (ctx.isSuccess) ctx.prepareSuccess((), startPos)
       else ctx.asInstanceOf[Parse[Unit]]

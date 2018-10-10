@@ -10,10 +10,10 @@ object ParsingTests extends TestSuite{
   def check[T](parser: P[_] => P[T], input: (String, Int), rhs: Result[T]) = {
     val (str, index) = input
     // Test normal parsing
-    val parsed = Parse(str, index).read(parser(_))
-    assert(parsed == rhs)
+//    val parsed = Parse(str, index).read(parser(_))
+//    assert(parsed == rhs)
     // Test iterator parsing
-    for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
+    for(chunkSize <- Seq(1)){
       val parsed = Parse.iter(str.grouped(chunkSize), index).read(parser(_))
       assert(parsed == rhs)
     }
@@ -171,7 +171,8 @@ object ParsingTests extends TestSuite{
         // &() disables cuts: whether it succeeds or fails, the whole point
         // of &() is to backtrack and re-parse things
         check(implicit c => &("Hello" ~/ "Bye") ~ "lol" | "", ("HelloBoo", 0), Success((), 0))
-        check(implicit c => &("Hello" ~/ "Boo") ~ "lol" | "", ("HelloBoo", 0), Success((), 0))
+        def p[_: P] = P(  &("Hello" ~/ "Boo") ~ "lol" | "".log("<empty>") )
+        check(implicit c => p, ("HelloBoo", 0), Success((), 0))
       }
     }
     'stringInIgnoreCase - {
