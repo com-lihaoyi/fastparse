@@ -46,6 +46,7 @@ object BenchMain{
 
     }
     println(count)
+
     val start2 = System.currentTimeMillis()
     var count2 = 0
     while(System.currentTimeMillis() - start2 < 20000){

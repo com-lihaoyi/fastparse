@@ -32,7 +32,6 @@ object IteratorTests extends TestSuite {
       assert(res == "cdcdcd")
     }
 
-
     'immediateCutDrop - {
       import NoWhitespace._
       def p[_: P] = P( "ab" ~/ "cd" | "z" ).log
@@ -43,6 +42,7 @@ object IteratorTests extends TestSuite {
       // the cut has taken place, rather than at position 4 as we did earlier.
       assert(input.drops == Set(2, 4))
     }
+
     'whitespaceImmediateCutDrop - {
       import NoWhitespace._
       implicit def whitespace(ctx: Parse[_]) = {
@@ -58,6 +58,7 @@ object IteratorTests extends TestSuite {
       // the cut has taken place, rather than at position 4 as we did earlier.
       assert(input.drops == Set(2, 4))
     }
+
     'topLevelNoCuts - {
       import NoWhitespace._
       // Top-level sequences, which are not inside any `|`s or `.rep`s or `.?`s,
@@ -67,8 +68,10 @@ object IteratorTests extends TestSuite {
       def capt[_ : P] = P( p ~ p ~ p)
       val input = toInput("abcabcabc")
       val Result.Success(res, i) = Parse.input(input).read(capt(_))
+      println(i)
       assert(input.drops == Set(1, 2, 3, 4, 5, 6, 7, 8, 9))
     }
+
     'cuts - {
       'capturing - {
         import NoWhitespace._

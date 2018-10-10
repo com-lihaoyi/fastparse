@@ -48,7 +48,7 @@ object fasterparser extends ScalaModule{
   object bench extends ScalaModule{
     def scalaVersion = "2.12.7"
     //
-//    override def scalacOptions = Seq("-opt:l:method")
+    override def scalacOptions = Seq("-opt:l:method")
 //    override def scalacOptions = Seq("-Ydebug")
     def moduleDeps = super.moduleDeps ++ Seq(fasterparser)
     def ivyDeps = Agg(

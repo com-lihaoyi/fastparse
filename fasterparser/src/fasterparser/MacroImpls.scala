@@ -6,7 +6,24 @@ import scala.annotation.tailrec
 import scala.reflect.macros.blackbox.Context
 
 object MacroImpls {
-
+  def filterMacro[T: c.WeakTypeTag](c: Context)
+                                   (f: c.Expr[T => Boolean])
+                                   (ctx: c.Expr[Parse[_]]) = {
+    import c.universe._
+    val lhs = c.prefix.asInstanceOf[c.Expr[EagerOps[T]]]
+    reify{
+      val ctx1 = ctx.splice
+      lhs.splice
+      if (!ctx1.isSuccess) ctx1.asInstanceOf[Parse[T]]
+      else if (f.splice(ctx1.successValue.asInstanceOf[T])) ctx1.asInstanceOf[Parse[T]]
+      else {
+        val prevCut = ctx1.cut
+        val res = ctx1.freshFailure("filter").asInstanceOf[Parse[T]]
+        res.cut = prevCut
+        res
+      }
+    }
+  }
   def pMacro[T: c.WeakTypeTag](c: Context)
                               (t: c.Expr[Parse[T]])
                               (name: c.Expr[sourcecode.Name],
@@ -137,14 +154,13 @@ object MacroImpls {
       val oldCut = ctx5.cut
       ctx5.cut = false
       val startPos = ctx5.index
-      val oldFork = ctx5.isFork
-      ctx5.isFork = true
+
       lhs0.splice
-      ctx5.isFork = oldFork
-      if (ctx5.isSuccess | ctx5.cut) ctx5
+      if (ctx5.isSuccess) ctx5
+      else if(ctx5.cut) ctx5
       else {
-        ctx5.cut = false
         ctx5.index = startPos
+        ctx5.cut = oldCut
         other.splice
         if (ctx5.isSuccess) {
           ctx5.cut = oldCut

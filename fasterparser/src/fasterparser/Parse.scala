@@ -36,6 +36,12 @@ import scala.annotation.unchecked.uncheckedVariance
   * @param originalParser The original parsing function we used to start this
   *                       run, so as to allow `.result.traced` to re-create
   *                       it with tracing enabled.
+  * @param isCapturing Flag that prevents the parser from dropping earlier
+  *                    input, but does not affect backtracking
+  * @param isNoCut Flag that prevents the parser from either dropping earlier
+  *                input or backtracking
+  * @param isFork Flag that indicates that backtracking is now possible
+  *
   */
 final class Parse[+T](val input: ParserInput,
                       var failureStack: List[(String, Int)],
@@ -50,8 +56,7 @@ final class Parse[+T](val input: ParserInput,
                       val traceIndex: Int,
                       var originalParser: Parse[_] => Parse[_],
                       var isCapturing: Boolean,
-                      var isNoCut: Boolean,
-                      var isFork: Boolean){
+                      var isNoCut: Boolean){
   def read[T](p: Parse[_] => Parse[T] @uncheckedVariance): Result[T] = {
     if (originalParser == null) originalParser = p
     p(this).result
@@ -68,11 +73,11 @@ final class Parse[+T](val input: ParserInput,
   }
   def freshSuccess[V](value: V, msg: => String, index: Int) = {
     if (traceIndex != -1 && traceIndex == this.index) aggregateFailure(msg)
-    prepareSuccess(value, index, cut = false)
+    prepareSuccess(value, index, cut = cut)
   }
   def freshSuccess[V](value: V, msg: => String) = {
     if (traceIndex != -1 && traceIndex == this.index) aggregateFailure(msg)
-    prepareSuccess(value, index, cut = false)
+    prepareSuccess(value, index, cut = cut)
   }
   def prepareSuccess[V](value: V): Parse[V] = prepareSuccess(value, index, cut)
   def prepareSuccess[V](value: V, index: Int): Parse[V] = prepareSuccess(value, index, cut)
@@ -113,7 +118,7 @@ final class Parse[+T](val input: ParserInput,
 //    println("outerCut " + outerCut)
 //    println("isNoCut " + isNoCut)
 //    println("isFork " + isFork)
-    val res = !isCapturing && ((outerCut && !isNoCut) || !isFork)
+    val res = !isCapturing && (outerCut && !isNoCut)
 //    println("res " + res)
     res
   }
@@ -165,6 +170,6 @@ object Parse{
     failureAggregate = List.empty,
     isSuccess = true,
     logDepth = 0,
-    startIndex, startIndex, false, (), traceIndex, null, false, false, false
+    startIndex, startIndex, true, (), traceIndex, null, false, false
   )
 }

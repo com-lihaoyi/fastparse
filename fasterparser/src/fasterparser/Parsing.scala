@@ -107,6 +107,8 @@ object Parsing {
 
     def map[V](f: T => V): Parse[V] = macro MacroImpls.mapMacro[T, V]
 
+    def filter(f: T => Boolean)(implicit ctx: Parse[Any]): Parse[T] = macro MacroImpls.filterMacro[T]
+
     def flatMap[V](f: T => Parse[V]): Parse[V] = macro MacroImpls.flatMapMacro[T, V]
 
     def |[V >: T](other: Parse[V])(implicit ctx: Parse[Any]): Parse[V] = macro MacroImpls.eitherMacro[T, V]
@@ -207,13 +209,10 @@ object Parsing {
     }
 
     def ?[V](implicit optioner: Implicits.Optioner[T, V], ctx: Parse[Any]): Parse[V] = {
-      val oldFork = ctx.isFork
-      ctx.isFork = true
       val startPos = ctx.index
       val startCut = ctx.cut
       ctx.cut = false
       parse0()
-      ctx.isFork = oldFork
       if (ctx.isSuccess) {
         val res = ctx.prepareSuccess(optioner.some(ctx.successValue.asInstanceOf[T]))
         res.cut = startCut
@@ -223,18 +222,6 @@ object Parsing {
       else {
         val res = ctx.freshSuccess(optioner.none, null, startPos)
         res.cut = startCut
-        res
-      }
-    }
-
-    def filter(f: T => Boolean)(implicit ctx: Parse[Any]): Parse[T] = {
-      parse0()
-      if (!ctx.isSuccess) ctx.asInstanceOf[Parse[T]]
-      else if (f(ctx.successValue.asInstanceOf[T])) ctx.asInstanceOf[Parse[T]]
-      else {
-        val prevCut = ctx.cut
-        val res = ctx.freshFailure("filter").asInstanceOf[Parse[T]]
-        res.cut = prevCut
         res
       }
     }
