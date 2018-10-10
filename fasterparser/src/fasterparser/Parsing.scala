@@ -261,8 +261,7 @@ object Parsing {
           ctx.input,
           (Option(ctx.shortFailureMsg).fold("")(_()) -> ctx.index) :: ctx.failureStack.reverse
         )
-        val trailing = Result.Failure.formatTrailing(ctx.input, startIndex)
-        s"Failure($trace ...$trailing${if (ctx.cut) ", cut" else ""})"
+        s"Failure($trace${if (ctx.cut) ", cut" else ""})"
       }
       output(s"$indent-$msg:${ReprOps.StringReprOps.prettyIndex(ctx.input, startIndex)}:$strRes")
       //        output(s"$indent-$msg:${repr.prettyIndex(cfg.input, index)}:$strRes")
@@ -313,15 +312,15 @@ object Parsing {
   def Index(implicit ctx: Parse[_]): Parse[Int] = ctx.freshSuccess(ctx.index, null)
 
   def AnyChar(implicit ctx: Parse[_]): Parse[Unit] = {
-    if (!(ctx.index < ctx.input.length)) ctx.freshFailure("any-character").asInstanceOf[Parse[Unit]]
+    if (!ctx.input.isReachable(ctx.index)) ctx.freshFailure("any-character").asInstanceOf[Parse[Unit]]
     else ctx.freshSuccess((), "any-character", ctx.index + 1)
   }
   def SingleChar(implicit ctx: Parse[_]): Parse[Char] = {
-    if (!(ctx.index < ctx.input.length)) ctx.freshFailure("any-character").asInstanceOf[Parse[Char]]
+    if (!ctx.input.isReachable(ctx.index)) ctx.freshFailure("any-character").asInstanceOf[Parse[Char]]
     else ctx.freshSuccess(ctx.input(ctx.index), "any-character", ctx.index + 1)
   }
   def CharPred(p: Char => Boolean)(implicit ctx: Parse[_]): Parse[Unit] = {
-    if (!(ctx.index < ctx.input.length && p(ctx.input(ctx.index)))) ctx.freshFailure("character-predicate").asInstanceOf[Parse[Unit]]
+    if (!(ctx.input.isReachable(ctx.index) && p(ctx.input(ctx.index)))) ctx.freshFailure("character-predicate").asInstanceOf[Parse[Unit]]
     else ctx.freshSuccess((), "character-predicate", ctx.index + 1)
   }
   def CharIn(s: String*)(implicit ctx: Parse[_]): Parse[Unit] = macro MacroImpls.charInMacro
@@ -334,11 +333,10 @@ object Parsing {
   def CharsWhile(p: Char => Boolean, min: Int = 1)(implicit ctx: Parse[_]): Parse[Unit] = {
     var index = ctx.index
     val input = ctx.input
-    val inputLength = input.length
 
 
     val start = index
-    while(index < inputLength && p(input(index))) index += 1
+    while(input.isReachable(index) && p(input(index))) index += 1
     if (index - start >= min) ctx.freshSuccess((), s"chars-while($min)", index = index)
     else {
       if (ctx.index == ctx.traceIndex) ctx.aggregateFailure(s"chars-while($min)")

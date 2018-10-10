@@ -13,10 +13,10 @@ trait Core extends syntax.Literals{
   implicit def whitespace(cfg: Parse[_]): Parse[Unit] = {
     implicit def cfg0 = cfg
     val input = cfg.input
-    val inputLength = input.length
+
     P{
       @tailrec def rec(current: Int, state: Int): Parse[Unit] = {
-        if (current >= inputLength) cfg.prepareSuccess((), current, false)
+        if (!input.isReachable(current)) cfg.prepareSuccess((), current, false)
         else {
           val currentChar = input(current)
           (state: @switch) match{

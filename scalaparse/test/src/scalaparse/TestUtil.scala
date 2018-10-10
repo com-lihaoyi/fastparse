@@ -58,12 +58,11 @@ object TestUtil {
 //    println("Checking...\n" )
 //    println(input)
     val normalRes = Parse(input).read(Scala.CompilationUnit(_))
-    val iteratorRes = Nil
-//    val iteratorRes =
-//      if (skipIterator) Nil
-//      else
-//        for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024))
-//        yield Scala.CompilationUnit.parseIterator(input.grouped(chunkSize))
+    val iteratorRes =
+      if (skipIterator) Nil
+      else
+        for(chunkSize <- Seq(1))
+        yield Parse.iter(input.grouped(chunkSize)).read(Scala.CompilationUnit(_))
 
     for(res <- normalRes +: iteratorRes){
       res match{
@@ -71,7 +70,7 @@ object TestUtil {
           //        println(f.formatExpectedAsString)
           //        println(f.formatTraces)
           println("TRACING")
-          throw new Exception(tag + "\n" + input + "\n" + f.extra.traced.trace)
+          throw new Exception(tag + "\n" + input + "\n" + f.trace)
         case s: Result.Success[_] =>
           //        println(parsed)
           val inputLength = input.length
