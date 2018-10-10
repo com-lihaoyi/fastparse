@@ -398,7 +398,6 @@ object MacroImpls {
             if (ctx3.index > startIndex && ctx3.checkForDrop()) ctx3.input.dropBuffer(ctx3.index)
 
             val pValue = ctx3.successValue
-            val pCut = ctx3.cut
             val preWsIndex = ctx3.index
             if (!consumeWhitespace.splice(ctx3)) ctx3
             else {
@@ -406,7 +405,7 @@ object MacroImpls {
               other.splice
               val postOtherIndex = ctx3.index
 
-              val rhsNewCut = cut1.splice | ctx3.cut | pCut
+              val rhsNewCut = cut1.splice | ctx3.cut
               if (!ctx3.isSuccess) ctx3.prepareFailure(ctx3.index, cut = rhsNewCut)
               else {
                 val rhsMadeProgress = postOtherIndex > preOtherIndex

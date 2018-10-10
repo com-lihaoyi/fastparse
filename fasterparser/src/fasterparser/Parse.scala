@@ -104,14 +104,14 @@ final class Parse[+T](val input: ParserInput,
   }
   def freshFailure(msg: => String): Parse[Nothing] = {
     failureStack = Nil
-    val res = prepareFailure(index, cut = false)
+    val res = prepareFailure(index, cut = this.cut)
     if (traceIndex == -1) this.shortFailureMsg = () => msg
     else if (traceIndex == index) aggregateFailure(msg)
     res
   }
   def freshFailure(msg: => String, startPos: Int): Parse[Nothing] = {
     failureStack = Nil
-    val res = prepareFailure(startPos, cut = false)
+    val res = prepareFailure(startPos, cut = this.cut)
     if (traceIndex == -1) this.shortFailureMsg = () => msg
     else if (traceIndex == index) aggregateFailure(msg)
     res
