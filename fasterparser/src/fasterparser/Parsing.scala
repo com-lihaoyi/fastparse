@@ -12,24 +12,8 @@ object Parsing {
   type P[+T] = Parse[T]
   type P0 = Parse[Unit]
 
-  def P[T](t: Parse[T])(implicit name: sourcecode.Name): Parse[T] = macro pMacro[T]
+  def P[T](t: Parse[T])(implicit name: sourcecode.Name): Parse[T] = macro MacroImpls.pMacro[T]
 
-  def pMacro[T: c.WeakTypeTag](c: Context)
-                              (t: c.Expr[Parse[T]])
-                              (name: c.Expr[sourcecode.Name]): c.Expr[Parse[T]] = {
-
-    import c.universe._
-    val ctx = c.Expr[Parse[_]](q"implicitly[fasterparser.Parse[_]]")
-    reify[Parse[T]]{
-      val startIndex = ctx.splice.index
-      t.splice match{case ctx0 =>
-        if ((ctx0.traceIndex != -1 | ctx0.logDepth != 0) && !ctx0.isSuccess) {
-          ctx0.failureStack = (name.splice.value -> startIndex) :: ctx0.failureStack
-        }
-        ctx0
-      }
-    }
-  }
 
   implicit def LiteralStr(s: String)(implicit ctx: Parse[Any]): Parse[Unit] = macro MacroImpls.literalStrMacro
 
