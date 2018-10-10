@@ -9,42 +9,57 @@ import scala.annotation.unchecked.uncheckedVariance
   * needing to perform their own allocations and instantiations.
   *
   * @param input The input to the parsing run, as a String.
-  * @param failureStack
+
   * @param shortFailureMsg The failure message that gets returned when tracing
   *                        is disabled (`traceIndex` == -1). Usually a single
   *                        string or token which is cheap to compute, even if
   *                        it isn't as helpful for debugging as the full traced
   *                        failure message
+  *
+  * @param failureStack The stack of named P(...) parsers in effect when the
+  *                     failure occured; only constructed when tracing is
+  *                     enabled via `traceIndex != -1`
+  *
   * @param failureAggregate The list of failures that get returned when tracing
   *                         is enabled. This contains every failure message
   *                         that occurred at the exact position of `traceIndex`,
   *                         which is then formatted and presented to the user
   *                         as a better error message for what they could
   *                         possibly do to make their parse succeed
+  *
   * @param isSuccess Whether or not the parse is currently successful
+  *
   * @param logDepth How many nested `.log` calls are currently surrounding us.
   *                 Used to nicely indent the log output so you can see which
   *                 parsers are nested within which other parsers
   * @param index The current index of the parse
+  *
   * @param startIndex Where the parse initially started, so as to allow
   *                   `.result.traced`  to re-create it with tracing enabled.
+  *
   * @param cut Has the current parse been prevented from backtracking?
+  *
   * @param successValue The currently returned success value
+  *
   * @param traceIndex The index we wish to trace if tracing is enabled, else
   *                   -1. Used to find failure messages to aggregate into
   *                   `failureAggregate`
+  *
   * @param originalParser The original parsing function we used to start this
   *                       run, so as to allow `.result.traced` to re-create
   *                       it with tracing enabled.
-  * @param isCapturing Flag that prevents the parser from dropping earlier
-  *                    input, but does not affect backtracking
-  * @param isNoCut Flag that prevents the parser from either dropping earlier
-  *                input or backtracking
   *
+  * @param noDropBuffer Flag that prevents the parser from dropping earlier
+  *                     input. Used for the `.!` capture operator that needs
+  *                     the input around to return as a string, the `NoCut`
+  *                     operator that forces backtracking (regardless of
+  *                     internal cuts), or whitespace consumption which
+  *                     implicitly backtracks if the parser on the RHS of the
+  *                     whitespace fails or consumes 0 characters.
   */
 final class Parse[+T](val input: ParserInput,
-                      var failureStack: List[(String, Int)],
                       var shortFailureMsg: () => String,
+                      var failureStack: List[(String, Int)],
                       var failureAggregate: List[String],
                       var isSuccess: Boolean,
                       var logDepth: Int,
@@ -54,8 +69,7 @@ final class Parse[+T](val input: ParserInput,
                       var successValue: Any,
                       val traceIndex: Int,
                       var originalParser: Parse[_] => Parse[_],
-                      var isCapturing: Boolean,
-                      var isNoCut: Boolean){
+                      var noDropBuffer: Boolean){
   def read[T](p: Parse[_] => Parse[T] @uncheckedVariance): Result[T] = {
     if (originalParser == null) originalParser = p
     p(this).result
@@ -111,16 +125,7 @@ final class Parse[+T](val input: ParserInput,
     this.asInstanceOf[Parse[Nothing]]
   }
 
-  def checkForDrop() = {
-//    println("==== CHECK FOR DROP " + index + " ====")
-//    println("isCapturing " + isCapturing)
-//    println("outerCut " + outerCut)
-//    println("isNoCut " + isNoCut)
-//    println("isFork " + isFork)
-    !isCapturing && cut && !isNoCut
-//    println("res " + res)
-//    res
-  }
+  def checkForDrop() = !noDropBuffer && cut
 
   def result: Result[T] = {
     if (isSuccess) Result.Success(successValue.asInstanceOf[T], index)
@@ -164,11 +169,11 @@ object Parse{
   )
   def apply(input: ParserInput, startIndex: Int, traceIndex: Int): Parse[_] = new Parse(
     input = input,
-    failureStack = List.empty,
     shortFailureMsg = null,
+    failureStack = List.empty,
     failureAggregate = List.empty,
     isSuccess = true,
     logDepth = 0,
-    startIndex, startIndex, true, (), traceIndex, null, false, false
+    startIndex, startIndex, true, (), traceIndex, null, false
   )
 }

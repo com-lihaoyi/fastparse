@@ -190,10 +190,10 @@ object MacroImpls {
     reify {
       val ctx6 = ctx.splice
       val startPos = ctx6.index
-      val oldCapturing = ctx6.isCapturing
-      ctx6.isCapturing = true
+      val oldCapturing = ctx6.noDropBuffer
+      ctx6.noDropBuffer = true
       lhs0.splice
-      ctx6.isCapturing = oldCapturing
+      ctx6.noDropBuffer = oldCapturing
       if (!ctx6.isSuccess) ctx6.asInstanceOf[Parse[String]]
       else ctx6.prepareSuccess(ctx6.input.slice(startPos, ctx6.index))
     }
@@ -379,10 +379,10 @@ object MacroImpls {
           reify{(c: Parse[Any]) => true}
         }else{
           reify{(c: Parse[Any]) =>
-            val oldCapturing = c.isCapturing // completely disallow dropBuffer
-            c.isCapturing = true
+            val oldCapturing = c.noDropBuffer // completely disallow dropBuffer
+            c.noDropBuffer = true
             ws.splice(c)
-            c.isCapturing = oldCapturing
+            c.noDropBuffer = oldCapturing
             c.isSuccess
           }
         }
@@ -438,8 +438,7 @@ object MacroImpls {
       val startIndex = ctx.splice.index
       val ctx1 = lhs.splice.parse0
       if (ctx1.isSuccess) {
-        if (ctx1.index > startIndex && !ctx1.isCapturing && !ctx1.isNoCut)
-          ctx1.input.dropBuffer(ctx1.index)
+        if (ctx1.index > startIndex && ctx1.checkForDrop()) ctx1.input.dropBuffer(ctx1.index)
         ctx1.prepareSuccess(ctx1.successValue, cut = true).asInstanceOf[Parse[T]]
       }
       else ctx1.prepareFailure(ctx1.index)

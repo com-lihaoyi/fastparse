@@ -47,10 +47,10 @@ object RepImpls{
       case Some(ws) =>
         q"""
         if ($ws ne fasterparser.NoWhitespace.noWhitespaceImplicit) {
-          val oldCapturing = $ctx1.isCapturing // completely disallow dropBuffer
-          $ctx1.isCapturing = true
+          val oldNoDropBuffer = $ctx1.noDropBuffer // completely disallow dropBuffer
+          $ctx1.noDropBuffer = true
           $ws($ctx1)
-          $ctx1.isCapturing = oldCapturing
+          $ctx1.noDropBuffer = oldNoDropBuffer
         }
         $ctx1.cut = false
         """
@@ -266,10 +266,10 @@ class RepImpls[T](val parse0: () => Parse[T]) extends AnyVal{
         repeater.accumulate(ctx.successValue.asInstanceOf[T], acc)
         val nextCount = count + 1
         if (whitespace ne NoWhitespace.noWhitespaceImplicit) {
-          val oldCapturing = ctx.isCapturing // completely disallow dropBuffer
-          ctx.isCapturing = true
+          val oldCapturing = ctx.noDropBuffer // completely disallow dropBuffer
+          ctx.noDropBuffer = true
           whitespace(ctx)
-          ctx.isCapturing = oldCapturing
+          ctx.noDropBuffer = oldCapturing
         }
         ctx.cut = false
         val sep1 = sep
@@ -277,10 +277,10 @@ class RepImpls[T](val parse0: () => Parse[T]) extends AnyVal{
         else if (ctx.isSuccess) {
           val sepCut = ctx.cut
           if (whitespace ne NoWhitespace.noWhitespaceImplicit) {
-            val oldCapturing = ctx.isCapturing // completely disallow dropBuffer
-            ctx.isCapturing = true
+            val oldCapturing = ctx.noDropBuffer // completely disallow dropBuffer
+            ctx.noDropBuffer = true
             whitespace(ctx)
-            ctx.isCapturing = oldCapturing
+            ctx.noDropBuffer = oldCapturing
           }
           rec(beforeSepIndex, nextCount, sepCut)
         }
