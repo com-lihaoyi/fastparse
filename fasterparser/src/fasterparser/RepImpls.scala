@@ -37,7 +37,6 @@ object RepImpls{
       case Some(min1) =>
         q"""
            if ($count < $min1) {
-             println("rep prepareFailure " + $startIndex)
              $ctx1.prepareFailure($startIndex)
            }else $ctx1.prepareSuccess($repeater1.result($acc), $startIndex)
         """
@@ -47,7 +46,12 @@ object RepImpls{
       case None => q"()"
       case Some(ws) =>
         q"""
-        if ($ws ne fasterparser.NoWhitespace.noWhitespaceImplicit) $ws($ctx1)
+        if ($ws ne fasterparser.NoWhitespace.noWhitespaceImplicit) {
+          val oldCapturing = $ctx1.isCapturing // completely disallow dropBuffer
+          $ctx1.isCapturing = true
+          $ws($ctx1)
+          $ctx1.isCapturing = oldCapturing
+        }
         $ctx1.cut = false
         """
     }
@@ -62,7 +66,7 @@ object RepImpls{
                  $precut: _root_.scala.Boolean): _root_.fasterparser.Parse[${c.weakTypeOf[V]}] = {
           $ctx1.cut = $precut
 
-          val oldIsFork = ctx.isFork
+          val oldIsFork = $ctx.isFork
           $ctx1.isFork = true
           ${c.prefix}.parse0()
           $ctx1.isFork = oldIsFork
@@ -281,7 +285,12 @@ class RepImpls[T](val parse0: () => Parse[T]) extends AnyVal{
         val beforeSepIndex = ctx.index
         repeater.accumulate(ctx.successValue.asInstanceOf[T], acc)
         val nextCount = count + 1
-        if (whitespace ne NoWhitespace.noWhitespaceImplicit) whitespace(ctx)
+        if (whitespace ne NoWhitespace.noWhitespaceImplicit) {
+          val oldCapturing = ctx.isCapturing // completely disallow dropBuffer
+          ctx.isCapturing = true
+          whitespace(ctx)
+          ctx.isCapturing = oldCapturing
+        }
         ctx.cut = false
         ctx.isFork = true
         val sep1 = sep
@@ -289,7 +298,12 @@ class RepImpls[T](val parse0: () => Parse[T]) extends AnyVal{
         if (sep1 == null) rec(beforeSepIndex, nextCount, false)
         else if (ctx.isSuccess) {
           val sepCut = ctx.cut
-          if (whitespace ne NoWhitespace.noWhitespaceImplicit) whitespace(ctx)
+          if (whitespace ne NoWhitespace.noWhitespaceImplicit) {
+            val oldCapturing = ctx.isCapturing // completely disallow dropBuffer
+            ctx.isCapturing = true
+            whitespace(ctx)
+            ctx.isCapturing = oldCapturing
+          }
           rec(beforeSepIndex, nextCount, sepCut)
         }
         else if (ctx.cut) ctx.prepareFailure(beforeSepIndex)

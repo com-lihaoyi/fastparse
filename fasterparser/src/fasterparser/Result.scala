@@ -35,7 +35,7 @@ object Result{
   }
   object Failure{
     def formatStack(input: ParserInput[Char, String], stack: List[(String, Int)]) = {
-      stack.reverse.map{case (s, i) => s"$s:${StringReprOps.prettyIndex(input, i)}"}.mkString(" / ")
+      stack.reverse.map{case (s, i) => s"$s:${ReprOps.StringReprOps.prettyIndex(input, i)}"}.mkString(" / ")
     }
     def formatTrailing(input: ParserInput[Char, String], index: Int) = {
       Util.literalize(input.slice(index, index + 10))

@@ -283,7 +283,7 @@ object Parsing {
   }
 
   def End(implicit ctx: Parse[_]): Parse[Unit] = {
-    if (ctx.index == ctx.input.length) ctx.freshSuccess((), "end-of-input")
+    if (!ctx.input.isReachable(ctx.index)) ctx.freshSuccess((), "end-of-input")
     else ctx.freshFailure("end-of-input").asInstanceOf[Parse[Unit]]
 
   }

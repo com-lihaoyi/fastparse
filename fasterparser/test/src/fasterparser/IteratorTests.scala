@@ -4,7 +4,7 @@ import utest._
 
 import scala.collection.mutable
 import scala.reflect.ClassTag
-import NoWhitespace._
+//import NoWhitespace._
 object IteratorTests extends TestSuite {
 
   def toInput(string: String) = {
@@ -25,84 +25,90 @@ object IteratorTests extends TestSuite {
   }
 
   val tests = Tests {
-//    'basic - {
-//      def p[_: P] = P( "ab".log("ab") ~/ "cd".log("cd").rep().! ~ "ef".log("ef") | "z" )
-//
-//      val Result.Success(res, i) = Parse.iter(Iterator("ab", "cd", "cd", "cd", "ef")).read(p(_))
-//
-//      assert(res == "cdcdcd")
-//    }
-//
-//
-//    'immediateCutDrop - {
-//      def p[_: P] = P( "ab".log("ab") ~/ "cd".log("cd") | "z" ).log
-//
-//      val input = toInput("abcdef")
-//      val Result.Success(res, i) = Parse.input(input).read(p(_))
-//      // Make sure that we drop immediately at position 2, since that is where
-//      // the cut has taken place, rather than at position 4 as we did earlier.
-//      assert(input.drops == Set(2, 4))
-//    }
-//    'whitespaceImmediateCutDrop - {
-//      implicit def whitespace(ctx: Parse[_]) = {
-//        implicit def ctx1 = ctx
-//        NoTrace(" ".? ~ " ".rep)
-//      }
-//
-//      def p[_: P] = P( "ab" ~/ "cd" | "z" )
-//
-//      val input = toInput("abcdef")
-//      val Result.Success(res, i) = Parse.input(input).read(p(_))
-//      // Make sure that we drop immediately at position 2, since that is where
-//      // the cut has taken place, rather than at position 4 as we did earlier.
-//      assert(input.drops == Set(2, 4))
-//    }
-//    'topLevelNoCuts - {
-//      // Top-level sequences, which are not inside any `|`s or `.rep`s or `.?`s,
-//      // should dropBuffer immediately after every `~`, even without any cuts
-//
-//      def p[_: P] = P( "a" ~ "b" ~ "c")
-//      def capt[_ : P] = P( p ~ p ~ p)
-//      val input = toInput("abcabcabc")
-//      val Result.Success(res, i) = Parse.input(input).read(capt(_))
-//      assert(input.drops == Set(1, 2, 3, 4, 5, 6, 7, 8, 9))
-//    }
+    'basic - {
+      import NoWhitespace._
+      def p[_: P] = P( "ab" ~/ "cd".rep().! ~ "ef" | "z" )
+
+      val Result.Success(res, i) = Parse.iter(Iterator("ab", "cd", "cd", "cd", "ef")).read(p(_))
+
+      assert(res == "cdcdcd")
+    }
+
+
+    'immediateCutDrop - {
+      import NoWhitespace._
+      def p[_: P] = P( "ab" ~/ "cd" | "z" ).log
+
+      val input = toInput("abcdef")
+      val Result.Success(res, i) = Parse.input(input).read(p(_))
+      // Make sure that we drop immediately at position 2, since that is where
+      // the cut has taken place, rather than at position 4 as we did earlier.
+      assert(input.drops == Set(2, 4))
+    }
+    'whitespaceImmediateCutDrop - {
+      import NoWhitespace._
+      implicit def whitespace(ctx: Parse[_]) = {
+        implicit def ctx1 = ctx
+        NoTrace(" ".? ~ " ".rep)
+      }
+
+      def p[_: P] = P( "ab" ~/ "cd" | "z" )
+
+      val input = toInput("abcdef")
+      val Result.Success(res, i) = Parse.input(input).read(p(_))
+      // Make sure that we drop immediately at position 2, since that is where
+      // the cut has taken place, rather than at position 4 as we did earlier.
+      assert(input.drops == Set(2, 4))
+    }
+    'topLevelNoCuts - {
+      import NoWhitespace._
+      // Top-level sequences, which are not inside any `|`s or `.rep`s or `.?`s,
+      // should dropBuffer immediately after every `~`, even without any cuts
+
+      def p[_: P] = P( "a" ~ "b" ~ "c")
+      def capt[_ : P] = P( p ~ p ~ p)
+      val input = toInput("abcabcabc")
+      val Result.Success(res, i) = Parse.input(input).read(capt(_))
+      assert(input.drops == Set(1, 2, 3, 4, 5, 6, 7, 8, 9))
+    }
 //    'cuts - {
-//      'capturing - {
-//
-//        def p[_: P] = P( "a" ~/ "b" ~/ "c")
-//        def capt[_: P] = P( p.! ~ p.! ~ p.!)
-//        val input = toInput("abcabcabc")
-//        val Result.Success(res, i) = Parse.input(input).read(capt(_))
-//        assert(
-//          i == 9,
-//          res == ("abc", "abc", "abc"),
-//          Set(3, 6, 9) == input.drops  // drops sequence elements
-//        )
-//      }
+      'capturing - {
+        import NoWhitespace._
 
-//      'nocut - {
-//
-//        def p[_: P] = P( "a" ~/ "b" ~/ "c")
-//        def nocut[_: P] = P((NoCut(p) ~ NoCut(p) ~/ NoCut(p)) | "abcd")
-//
-//        val input1 = toInput("abcabcabc")
-//        val Result.Success(_, i1) = Parse.input(input1).read(nocut(_))
-//        assert(
-//          i1 == 9,
-//          Set(6, 9) == input1.drops // drop non-droppable NoCut block after cut
-//        )
-//
-//        val input2 = toInput("abcd")
-//        val Result.Success(_, i2) = Parse.input(input2).read(nocut(_))
-//        assert(
-//          i2 == 4,
-//          input2.drops.isEmpty // no drops during simple parsers, for instance literal
-//        )
-//      }
-//
+        def p[_: P] = P( "a" ~/ "b" ~/ "c")
+        def capt[_: P] = P( p.! ~ p.! ~ p.!)
+        val input = toInput("abcabcabc")
+        val Result.Success(res, i) = Parse.input(input).read(capt(_))
+        assert(
+          i == 9,
+          res == ("abc", "abc", "abc"),
+          Set(3, 6, 9) == input.drops  // drops sequence elements
+        )
+      }
+
+      'nocut - {
+        import NoWhitespace._
+
+        def p[_: P] = P( "a" ~/ "b" ~/ "c")
+        def nocut[_: P] = P((NoCut(p) ~ NoCut(p) ~/ NoCut(p)) | "abcd")
+
+        val input1 = toInput("abcabcabc")
+        val Result.Success(_, i1) = Parse.input(input1).read(nocut(_))
+        assert(
+          i1 == 9,
+          Set(6, 9) == input1.drops // drop non-droppable NoCut block after cut
+        )
+
+        val input2 = toInput("abcd")
+        val Result.Success(_, i2) = Parse.input(input2).read(nocut(_))
+        assert(
+          i2 == 4,
+          input2.drops.isEmpty // no drops during simple parsers, for instance literal
+        )
+      }
+
       'either - {
-
+        import NoWhitespace._
         def p[_: P] = P( "a" ~ "b" ~ "c")
         def either[_: P] = P( (p ~ End) | ("abc" ~ p ~ End) | ("abcabc" ~ p ~ End))
 
@@ -127,79 +133,76 @@ object IteratorTests extends TestSuite {
           input3.drops.isEmpty // no drops at the end
         )
       }
-//
-//      'rep - {
-//        import fastparse.all._
-//
-//        val p = P( "a" ~ "b" ~ "c")
-//        val rep = P( (p.rep ~ "d") | (p.rep ~ "e") )
-//
-//        val input1 = toInput("abcabcabcd")
-//        val Parsed.Success(_, i1) = rep.parseInput(input1)
-//        assert(
-//          i1 == 10,
-//          input1.drops.isEmpty // no drops at the end of first branch
-//        )
-//
-//        val input2 = toInput("abcabcabce")
-//        val Parsed.Success(_, i2) = rep.parseInput(input2)
-//
-//        assert(
-//          i1 == 10,
-//          Set(9, 10) == input2.drops // drops in the last branch
-//        )
-//      }
-//
-//      'all - {
-//        import fastparse.all._
-//
-//        val p = P( "a" ~ "b" ~ "c" ~/ "d")
-//        val np = NoCut(p)
-//        val pp = P( "a" ~ "b" ~ "c" ~ End)
-//
-//        val all = P( pp | (np ~/ np) | p ~ "e" | "abded".! )
-//
-//        val input = toInput("abded")
-//
-//        val Parsed.Success(res, _) = all.parseInput(input)
-//        assert(
-//          res == "abded",
-//          input.drops.isEmpty // no drops in literal
-//        )
-//      }
-//
-//      'whitespaceApi - {
-//        import fastparse.noApi._
-//        val White = fastparse.WhitespaceApi.Wrapper{
-//          import fastparse.all._
-//          NoTrace(" ".? ~/ " ".rep) // note that the whitespace delimiter has cut
-//        }
-//        import White._
-//
-//        val a = P( "aaa" )
-//        val b = P( "bbb" )
-//        val ab = P( a ~ b.? ~~ " " ~~ "ccc" )
-//
-//        val input1 = toInput("aaa   bbb ccc")
-//        val Parsed.Success(_, i1) = ab.parseInput(input1)
-//        assert(
-//          i1 == 13,
-//          Set(3, 9, 10, 13) == input1.drops // drops after a, b and at the end
-//          // no drops within the whitespaces, in spite of cut
-//        )
-//
-//        val input2 = toInput("aaa ccc")
-//        val Parsed.Success(_, i2) = ab.parseInput(input2)
-//        assert(
-//          i2 == 7,
-//          Set(3, 4, 7) == input2.drops // drops after a, whitespace and ccc
-//        )
-//
-//        val input3 = toInput("aaa  ccc")
-//        // this shows behavior of whitespaceApi which requires quite tricky dropBuffer calls
-//        // it totally ignores first ~ and produces error in the second ~~
-//        assert(ab.parseInput(input3).isInstanceOf[Parsed.Failure])
-//      }
+
+      'rep - {
+        import NoWhitespace._
+        def p[_: P] = P( "a" ~ "b" ~ "c")
+        def rep[_: P] = P( (p.rep ~ "d") | (p.rep ~ "e") )
+
+        val input1 = toInput("abcabcabcd")
+        val Result.Success(_, i1) = Parse.input(input1).read(rep(_))
+        assert(
+          i1 == 10,
+          input1.drops.isEmpty // no drops at the end of first branch
+        )
+
+        val input2 = toInput("abcabcabce")
+        val Result.Success(_, i2) = Parse.input(input2).read(rep(_))
+
+        assert(
+          i1 == 10,
+          Set(9, 10) == input2.drops // drops in the last branch
+        )
+      }
+
+      'all - {
+        import NoWhitespace._
+        def p[_: P] = P( "a" ~ "b" ~ "c" ~/ "d")
+        def np[_: P] = NoCut(p)
+        def pp[_: P] = P( "a" ~ "b" ~ "c" ~ End)
+        def all[_: P] = P( pp | (np ~/ np) | p ~ "e" | "abded".! )
+
+        val input = toInput("abded")
+
+        val Result.Success(res, _) = Parse.input(input).read(all(_))
+        assert(
+          res == "abded",
+          input.drops.isEmpty // no drops in literal
+        )
+      }
+
+      'whitespaceApi - {
+
+        implicit def whitespace(ctx: Parse[_]): Parse[Unit] = {
+          implicit def ctx1 = ctx
+          NoTrace(" ".? ~~/ " ".repX).log // note that the whitespace delimiter has cut
+        }
+
+        def a[_: P] = P( "aaa" ).log
+        def b[_: P] = P( "bbb" ).log
+        def ab[_: P] = P( a ~ b.? ~~ " " ~~ "ccc" ).log
+
+        val input1 = toInput("aaa   bbb ccc")
+        val Result.Success(_, i1) = Parse.input(input1).read(ab(_))
+        val drops = input1.drops
+        assert(
+          i1 == 13,
+          Set(3, 9, 10, 13) == drops// drops after a, b and at the end
+          // no drops within the whitespaces, in spite of cut
+        )
+
+        val input2 = toInput("aaa ccc")
+        val Result.Success(_, i2) = Parse.input(input2).read(ab(_))
+        assert(
+          i2 == 7,
+          Set(3, 4, 7) == input2.drops // drops after a, whitespace and ccc
+        )
+
+        val input3 = toInput("aaa  ccc")
+        // this shows behavior of whitespaceApi which requires quite tricky dropBuffer calls
+        // it totally ignores first ~ and produces error in the second ~~
+        assert(Parse.input(input3).read(ab(_)).isInstanceOf[Result.Failure])
+      }
 //
 //      'zeroDrops - {
 //        import fastparse.all._
