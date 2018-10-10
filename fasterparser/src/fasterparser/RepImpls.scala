@@ -161,7 +161,6 @@ class RepImpls[T](val parse0: () => Parse[T]) extends AnyVal{
         }
       }
     }
-    ctx.isSuccess = true
     rec(ctx.index, 0, false)
   }
   def repX[V](min: Int,
@@ -193,7 +192,6 @@ class RepImpls[T](val parse0: () => Parse[T]) extends AnyVal{
         }
       }
     }
-    ctx.isSuccess = true
     rec(ctx.index, 0, false)
   }
   def rep[V](min: Int = 0,
