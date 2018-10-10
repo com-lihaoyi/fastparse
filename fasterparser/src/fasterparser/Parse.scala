@@ -37,18 +37,18 @@ import scala.annotation.unchecked.uncheckedVariance
   *                       run, so as to allow `.result.traced` to re-create
   *                       it with tracing enabled.
   */
-class Parse[+T](val input: String,
-                var failureStack: List[(String, Int)],
-                var shortFailureMsg: () => String,
-                var failureAggregate: List[String],
-                var isSuccess: Boolean,
-                var logDepth: Int,
-                var index: Int,
-                val startIndex: Int,
-                var cut: Boolean,
-                var successValue: Any,
-                val traceIndex: Int,
-                var originalParser: Parse[_] => Parse[_]){
+final class Parse[+T](val input: String,
+                      var failureStack: List[(String, Int)],
+                      var shortFailureMsg: () => String,
+                      var failureAggregate: List[String],
+                      var isSuccess: Boolean,
+                      var logDepth: Int,
+                      var index: Int,
+                      val startIndex: Int,
+                      var cut: Boolean,
+                      var successValue: Any,
+                      val traceIndex: Int,
+                      var originalParser: Parse[_] => Parse[_]){
   def read[T](p: Parse[_] => Parse[T] @uncheckedVariance): Result[T] = {
     if (originalParser == null) originalParser = p
     p(this).result
