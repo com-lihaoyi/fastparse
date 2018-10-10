@@ -61,7 +61,7 @@ object TestUtil {
     val iteratorRes =
       if (skipIterator) Nil
       else
-        for(chunkSize <- Seq(1))
+        for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024))
         yield Parse.iter(input.grouped(chunkSize)).read(Scala.CompilationUnit(_))
 
     for(res <- normalRes +: iteratorRes){
