@@ -340,7 +340,7 @@ object Parsing {
   class ByNameOps[T](val parse0: () => Parse[T]) extends AnyVal{
 
     def repX[V](implicit repeater: Implicits.Repeater[T, V], ctx: Parse[Any]): Parse[V] =
-      new RepImpls[T](parse0).repX[V]
+      macro RepImpls.repXMacro1[T, V]
     def repX[V](min: Int = 0,
                 sep: => Parse[_] = null,
                 max: Int = Int.MaxValue,
@@ -356,12 +356,12 @@ object Parsing {
     def repX[V](min: Int)
                (implicit repeater: Implicits.Repeater[T, V],
                 ctx: Parse[Any]): Parse[V] =
-      new RepImpls[T](parse0).repX[V](min)
+    macro RepImpls.repXMacro2[T, V]
 
     def rep[V](implicit repeater: Implicits.Repeater[T, V],
                whitespace: Parse[_] => Parse[Unit],
                ctx: Parse[Any]): Parse[V] =
-      new RepImpls[T](parse0).rep[V]
+      macro RepImpls.repXMacro1ws[T, V]
     def rep[V](min: Int = 0,
                sep: => Parse[_] = null,
                max: Int = Int.MaxValue,
@@ -381,7 +381,7 @@ object Parsing {
             (implicit repeater: Implicits.Repeater[T, V],
              whitespace: Parse[_] => Parse[Unit],
              ctx: Parse[Any]): Parse[V] =
-      new RepImpls[T](parse0).rep[V](min)
+    macro RepImpls.repXMacro2ws[T, V]
 
     def opaque(msg: String)(implicit ctx: Parse[Any]) = {
       val oldFailures = ctx.failureAggregate
