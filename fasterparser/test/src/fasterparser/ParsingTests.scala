@@ -38,7 +38,10 @@ object ParsingTests extends TestSuite{
     'literal - {
       checkFail(implicit c => "Hello WOrld!", ("Hello", 0), 0)
       check(implicit c => "Hello", ("Hello WOrld!", 0), Success((), 5))
+      check(implicit c => "H", ("Hello WOrld!", 0), Success((), 1))
       check(implicit c => "Hello".!, ("Hello WOrld!", 0), Success("Hello", 5))
+      val variable = "Hello"
+      check(implicit c => variable.!, ("Hello WOrld!", 0), Success("Hello", 5))
       checkFail(implicit c => "Hello", ("Hello WOrld!", 5), 5)
       check(implicit c => " WO".!, ("Hello WOrld!", 5), Success(" WO", 8))
     }

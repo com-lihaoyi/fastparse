@@ -31,10 +31,57 @@ object Parsing {
     }
   }
 
-  implicit def LiteralStr(s: String)(implicit ctx: Parse[Any]): Parse[Unit] = {
-    if (ctx.input.startsWith(s, ctx.index)) {
-      ctx.freshSuccess((), Util.literalize(s), ctx.index + s.length)
-    }else ctx.freshFailure(Util.literalize(s)).asInstanceOf[Parse[Unit]]
+  implicit def LiteralStr(s: String)(implicit ctx: Parse[Any]): Parse[Unit] = macro literalStrMacro
+
+  def literalStrMacro(c: Context)(s: c.Expr[String])(ctx: c.Expr[Parse[Any]]): c.Expr[Parse[Unit]] = {
+    import c.universe._
+    s.actualType match{
+      case ConstantType(Constant(x: String)) =>
+        val literalized = c.Expr[String](Literal(Constant(Util.literalize(x))))
+        if (x.length == 0) reify{ ctx.splice.freshSuccess((), "") }
+        else if (x.length == 1){
+          val charLiteral = c.Expr[Char](Literal(Constant(x.charAt(0))))
+          reify {
+            ctx.splice match{ case ctx1 =>
+              if (ctx1.index < ctx1.input.length && ctx1.input(ctx1.index) == charLiteral.splice){
+                ctx1.freshSuccess((), literalized.splice, ctx1.index + 1)
+              }else{
+                ctx1.freshFailure(literalized.splice).asInstanceOf[Parse[Unit]]
+              }
+            }
+          }
+        }else{
+          val xLength = c.Expr[Int](Literal(Constant(x.length)))
+          val checker = c.Expr[(String, Int) => Boolean]{
+            val stringSym = TermName(c.freshName("string"))
+            val offsetSym = TermName(c.freshName("offset"))
+            val checks = x
+              .zipWithIndex
+              .map { case (char, i) => q"""$stringSym.charAt($offsetSym + $i) == $char""" }
+              .reduce[Tree]{case (l, r) => q"$l && $r"}
+
+            q"($stringSym: java.lang.String, $offsetSym: scala.Int) => $checks"
+          }
+          reify {
+            ctx.splice match{ case ctx1 =>
+              if (ctx1.index + xLength.splice <= ctx1.input.length &&
+                checker.splice(ctx1.input, ctx1.index)){
+                ctx1.freshSuccess((), literalized.splice, ctx1.index + xLength.splice)
+              }else{
+                ctx1.freshFailure(literalized.splice).asInstanceOf[Parse[Unit]]
+              }
+            }
+          }
+        }
+      case _ =>
+        reify{
+          val s1 = s.splice
+          ctx.splice match{ case ctx1 =>
+            if (ctx1.input.startsWith(s1, ctx1.index)) ctx1.freshSuccess((), Util.literalize(s1), ctx1.index + s1.length)
+            else ctx1.freshFailure(Util.literalize(s1)).asInstanceOf[Parse[Unit]]
+          }
+        }
+    }
 
   }
 
@@ -67,8 +114,14 @@ object Parsing {
     }
   }
 
-  implicit def EagerOpsStr(parse0: String)(implicit ctx: Parse[Any]): EagerOps[Unit] = {
-    EagerOps(LiteralStr(parse0)(ctx))
+  implicit def EagerOpsStr(parse0: String)(implicit ctx: Parse[Any]): fasterparser.Parsing.EagerOps[Unit] = macro eagerOpsStrMacro
+
+  def eagerOpsStrMacro(c: Context)
+                       (parse0: c.Expr[String])
+                       (ctx: c.Expr[Parse[Any]]): c.Expr[fasterparser.Parsing.EagerOps[Unit]] = {
+    import c.universe._
+    val literal = literalStrMacro(c)(parse0)(ctx)
+    reify{ fasterparser.Parsing.EagerOps[Unit](literal.splice)}
   }
 
   def parsedSequence0[T: c.WeakTypeTag, V: c.WeakTypeTag, R: c.WeakTypeTag]
@@ -272,9 +325,15 @@ object Parsing {
     }
   }
 
-  implicit def ByNameOpsStr[T](parse0: => String)(implicit ctx: Parse[Any]) =
-    ByNameOps(LiteralStr(parse0)(ctx))(ctx)
+  implicit def ByNameOpsStr(parse0: String)(implicit ctx: Parse[Any]): fasterparser.Parsing.ByNameOps[Unit] = macro byNameOpsStrMacro
 
+  def byNameOpsStrMacro(c: Context)
+                       (parse0: c.Expr[String])
+                       (ctx: c.Expr[Parse[Any]]): c.Expr[fasterparser.Parsing.ByNameOps[Unit]] = {
+    import c.universe._
+    val literal = literalStrMacro(c)(parse0)(ctx)
+    reify{ fasterparser.Parsing.ByNameOps[Unit](literal.splice)(ctx.splice)}
+  }
   implicit class ByNameOps[T](parse0: => Parse[T])(implicit val ctx: Parse[Any]){
 
     def repX[V](implicit repeater: Implicits.Repeater[T, V]): Parse[V] = repX(sep=null)
