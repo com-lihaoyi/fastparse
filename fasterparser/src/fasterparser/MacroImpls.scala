@@ -9,10 +9,10 @@ object MacroImpls {
 
   def pMacro[T: c.WeakTypeTag](c: Context)
                               (t: c.Expr[Parse[T]])
-                              (name: c.Expr[sourcecode.Name]): c.Expr[Parse[T]] = {
+                              (name: c.Expr[sourcecode.Name],
+                               ctx: c.Expr[Parse[_]]): c.Expr[Parse[T]] = {
 
     import c.universe._
-    val ctx = c.Expr[Parse[_]](q"implicitly[fasterparser.Parse[_]]")
     reify[Parse[T]]{
       val startIndex = ctx.splice.index
       t.splice match{case ctx0 =>
@@ -348,7 +348,8 @@ object MacroImpls {
                      (c: Context)
                      (other: c.Expr[Parse[V]], cut: Boolean)
                      (s: c.Expr[Implicits.Sequencer[T, V, R]],
-                      whitespace: Option[c.Expr[Parse[Any] => Parse[Unit]]]): c.Expr[Parse[R]] = {
+                      whitespace: Option[c.Expr[Parse[Any] => Parse[Unit]]],
+                      ctx: c.Expr[Parse[_]]): c.Expr[Parse[R]] = {
     import c.universe._
 
     val lhs = c.prefix.asInstanceOf[Expr[EagerOps[T]]]
@@ -371,7 +372,7 @@ object MacroImpls {
 
     reify {
       {
-        val startIndex = c.Expr[Parse[_]](q"implicitly[fasterparser.Parse[_]]").splice.index
+        val startIndex = ctx.splice.index
         lhs.splice.parse0 match{ case ctx3 =>
           if (!ctx3.isSuccess) ctx3
           else {
@@ -408,12 +409,12 @@ object MacroImpls {
     }
   }
 
-  def cutMacro[T: c.WeakTypeTag](c: Context): c.Expr[Parse[T]] = {
+  def cutMacro[T: c.WeakTypeTag](c: Context)(ctx: c.Expr[Parse[_]]): c.Expr[Parse[T]] = {
     import c.universe._
     val lhs = c.prefix.asInstanceOf[c.Expr[EagerOps[_]]]
     reify{
 
-      val startIndex = c.Expr[Parse[_]](q"implicitly[fasterparser.Parse[_]]").splice.index
+      val startIndex = ctx.splice.index
       val ctx1 = lhs.splice.parse0
       if (ctx1.isSuccess) {
         if (ctx1.index > startIndex && !ctx1.isCapturing && !ctx1.isNoCut)

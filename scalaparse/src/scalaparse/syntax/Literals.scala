@@ -20,7 +20,7 @@ trait Literals { l =>
    * Parses whitespace, including newlines.
    * This is the default for most things
    */
-  def WL0[_: P]: P[Unit] = P( NoTrace((Basic.WSChars | Literals.Comment | Basic.Newline).rep) )(sourcecode.Name("WL"))
+  def WL0[_: P]: P[Unit] = P( NoTrace((Basic.WSChars | Literals.Comment | Basic.Newline).rep) )("WL", implicitly)
   def WL[_: P]: P[Unit] = P( NoCut(WL0) )
 
   def Semi[_: P]: P[Unit] = P( WS ~ Basic.Semi )

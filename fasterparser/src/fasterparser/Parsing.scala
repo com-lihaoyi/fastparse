@@ -17,7 +17,7 @@ object Parsing {
     * messages and stack traces, and by default is taken from the name of the
     * enclosing method.
     */
-  def P[T](t: Parse[T])(implicit name: sourcecode.Name): Parse[T] = macro MacroImpls.pMacro[T]
+  def P[T](t: Parse[T])(implicit name: sourcecode.Name, ctx: Parse[_]): Parse[T] = macro MacroImpls.pMacro[T]
 
 
   implicit def LiteralStr(s: String)(implicit ctx: Parse[Any]): Parse[Unit] = macro MacroImpls.literalStrMacro
@@ -48,32 +48,36 @@ object Parsing {
                     (c: Context)
                     (other: c.Expr[Parse[V]])
                     (s: c.Expr[Implicits.Sequencer[T, V, R]],
-                     whitespace: c.Expr[Parse[Any] => Parse[Unit]]): c.Expr[Parse[R]] = {
+                     whitespace: c.Expr[Parse[Any] => Parse[Unit]],
+                     ctx: c.Expr[Parse[_]]): c.Expr[Parse[R]] = {
     import c.universe._
-    MacroImpls.parsedSequence0[T, V, R](c)(other, false)(s, Some(whitespace))
+    MacroImpls.parsedSequence0[T, V, R](c)(other, false)(s, Some(whitespace), ctx)
   }
 
   def parsedSequenceCut[T: c.WeakTypeTag, V: c.WeakTypeTag, R: c.WeakTypeTag]
                     (c: Context)
                     (other: c.Expr[Parse[V]])
                     (s: c.Expr[Implicits.Sequencer[T, V, R]],
-                     whitespace: c.Expr[Parse[Any] => Parse[Unit]]): c.Expr[Parse[R]] = {
+                     whitespace: c.Expr[Parse[Any] => Parse[Unit]],
+                     ctx: c.Expr[Parse[_]]): c.Expr[Parse[R]] = {
     import c.universe._
-    MacroImpls.parsedSequence0[T, V, R](c)(other, true)(s, Some(whitespace))
+    MacroImpls.parsedSequence0[T, V, R](c)(other, true)(s, Some(whitespace), ctx)
   }
   def parsedSequence1[T: c.WeakTypeTag, V: c.WeakTypeTag, R: c.WeakTypeTag]
                     (c: Context)
                     (other: c.Expr[Parse[V]])
-                    (s: c.Expr[Implicits.Sequencer[T, V, R]]): c.Expr[Parse[R]] = {
+                    (s: c.Expr[Implicits.Sequencer[T, V, R]],
+                     ctx: c.Expr[Parse[_]]): c.Expr[Parse[R]] = {
     import c.universe._
-    MacroImpls.parsedSequence0[T, V, R](c)(other, false)(s, None)
+    MacroImpls.parsedSequence0[T, V, R](c)(other, false)(s, None, ctx)
   }
   def parsedSequenceCut1[T: c.WeakTypeTag, V: c.WeakTypeTag, R: c.WeakTypeTag]
                     (c: Context)
                     (other: c.Expr[Parse[V]])
-                    (s: c.Expr[Implicits.Sequencer[T, V, R]]): c.Expr[Parse[R]] = {
+                    (s: c.Expr[Implicits.Sequencer[T, V, R]],
+                     ctx: c.Expr[Parse[_]]): c.Expr[Parse[R]] = {
     import c.universe._
-    MacroImpls.parsedSequence0[T, V, R](c)(other, true)(s, None)
+    MacroImpls.parsedSequence0[T, V, R](c)(other, true)(s, None, ctx)
   }
 
 
@@ -81,21 +85,25 @@ object Parsing {
 
     def ~/[V, R](other: Parse[V])
                 (implicit s: Implicits.Sequencer[T, V, R],
-                 whitespace: Parse[Any] => Parse[Unit]): Parse[R] = macro parsedSequenceCut[T, V, R]
+                 whitespace: Parse[Any] => Parse[Unit],
+                 ctx: Parse[_]): Parse[R] = macro parsedSequenceCut[T, V, R]
 
-    def / : Parse[T] = macro MacroImpls.cutMacro[T]
+    def /(implicit ctx: Parse[_]): Parse[T] = macro MacroImpls.cutMacro[T]
 
     def ~[V, R](other:  Parse[V])
                (implicit s: Implicits.Sequencer[T, V, R],
-                whitespace: Parse[Any] => Parse[Unit]): Parse[R] = macro parsedSequence[T, V, R]
+                whitespace: Parse[Any] => Parse[Unit],
+                ctx: Parse[_]): Parse[R] = macro parsedSequence[T, V, R]
 
 
     def ~~/[V, R](other: Parse[V])
-                  (implicit s: Implicits.Sequencer[T, V, R]): Parse[R] = macro parsedSequenceCut1[T, V, R]
+                  (implicit s: Implicits.Sequencer[T, V, R],
+                   ctx: Parse[_]): Parse[R] = macro parsedSequenceCut1[T, V, R]
 
 
     def ~~[V, R](other: Parse[V])
-                (implicit s: Implicits.Sequencer[T, V, R]): Parse[R] = macro parsedSequence1[T, V, R]
+                (implicit s: Implicits.Sequencer[T, V, R],
+                 ctx: Parse[_]): Parse[R] = macro parsedSequence1[T, V, R]
 
     def map[V](f: T => V): Parse[V] = macro MacroImpls.mapMacro[T, V]
 
