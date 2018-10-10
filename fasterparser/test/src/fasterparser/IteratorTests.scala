@@ -207,13 +207,15 @@ object IteratorTests extends TestSuite {
 
       'zeroDrops - {
         import NoWhitespace._
-        def p[_: P] = P( (("big string, " ~ ("another string, " ~ ("a".? ~/ "b".?)) | "small string, ") ~ "end of input") | "some other input" )
+        def p[_: P] = P(
+          (("big, " ~ ("another, " ~ ("X".? ~/ "Y".?)) | "small, ") ~ "end") | "other"
+        )
 
-        val input = toInput("big string, another string, end of input")
+        val input = toInput("big, another, end")
         val Result.Success(_, i) = Parse.input(input).read(p(_))
         val drops = input.drops
         assert(
-          i == 40,
+          i == 17,
           Set(28) == drops
           // drops after "another string" because of the nested cut ~/, but not
           // after `"end of input" because cuts only apply to the `|` blocks
