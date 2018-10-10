@@ -3,8 +3,6 @@ import fasterparser._, Parsing._
 import utest._
 
 import scala.collection.mutable
-import scala.reflect.ClassTag
-//import NoWhitespace._
 object IteratorTests extends TestSuite {
 
   def toInput(string: String) = {
@@ -71,7 +69,7 @@ object IteratorTests extends TestSuite {
       val Result.Success(res, i) = Parse.input(input).read(capt(_))
       assert(input.drops == Set(1, 2, 3, 4, 5, 6, 7, 8, 9))
     }
-//    'cuts - {
+    'cuts - {
       'capturing - {
         import NoWhitespace._
 
@@ -175,12 +173,12 @@ object IteratorTests extends TestSuite {
 
         implicit def whitespace(ctx: Parse[_]): Parse[Unit] = {
           implicit def ctx1 = ctx
-          NoTrace(" ".? ~~/ " ".repX).log // note that the whitespace delimiter has cut
+          NoTrace(" ".? ~~/ " ".repX) // note that the whitespace delimiter has cut
         }
 
-        def a[_: P] = P( "aaa" ).log
-        def b[_: P] = P( "bbb" ).log
-        def ab[_: P] = P( a ~ b.? ~~ " " ~~ "ccc" ).log
+        def a[_: P] = P( "aaa" )
+        def b[_: P] = P( "bbb" )
+        def ab[_: P] = P( a ~ b.? ~~ " " ~~ "ccc" )
 
         val input1 = toInput("aaa   bbb ccc")
         val Result.Success(_, i1) = Parse.input(input1).read(ab(_))
@@ -203,28 +201,33 @@ object IteratorTests extends TestSuite {
         // it totally ignores first ~ and produces error in the second ~~
         assert(Parse.input(input3).read(ab(_)).isInstanceOf[Result.Failure])
       }
-//
-//      'zeroDrops - {
-//        import fastparse.all._
-//
-//        val p = P( (("big string, " ~ ("another string, " ~ ("a".? ~/ "b".?)) | "small string, ") ~ "end of input") | "some other input" )
-//
-//        val input = toInput("big string, another string, end of input")
-//        val Parsed.Success(_, i) = p.parseInput(input)
-//        assert(
-//          i == 40,
-//          Set(28, 40) == input.drops // drops after "another string" and "end of input"
-//        )
-//        //TODO it's a quite unexpected behavior
-//      }
-//    }
-//    'traceFailure - {
-//      import fastparse.all._
-//      P("[" ~ "]").parse("[ ]").asInstanceOf[Parsed.Failure].extra.traced
-//      val e = intercept[RuntimeException] {
-//        P("[" ~ "]").parseIterator(Iterator("[", " ", "]")).asInstanceOf[Parsed.Failure].extra.traced
-//      }
-//      assert(e.getMessage.contains("Cannot perform `.traced` on an `IteratorParserInput`"))
-//    }
+
+      'zeroDrops - {
+        import NoWhitespace._
+        def p[_: P] = P( (("big string, " ~ ("another string, " ~ ("a".? ~/ "b".?)) | "small string, ") ~ "end of input") | "some other input" )
+
+        val input = toInput("big string, another string, end of input")
+        val Result.Success(_, i) = Parse.input(input).read(p(_))
+        val drops = input.drops
+        assert(
+          i == 40,
+          Set(28) == drops
+          // drops after "another string" because of the nested cut ~/, but not
+          // after `"end of input" because cuts only apply to the `|` blocks
+          // they are nested within
+        )
+
+      }
+    }
+    'traceFailure - {
+      import NoWhitespace._
+      def p[_: P] = P("[" ~ "]")
+
+      Parse("[ ]").read(p(_)).asInstanceOf[Result.Failure].extra.traced
+      val e = intercept[RuntimeException] {
+        Parse.iter(Iterator("[", " ", "]")).read(p(_)).asInstanceOf[Result.Failure].extra.traced
+      }
+      assert(e.getMessage.contains("Cannot perform `.traced` on an `IteratorParserInput`"))
+    }
   }
 }

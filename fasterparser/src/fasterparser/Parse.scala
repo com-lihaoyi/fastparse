@@ -113,7 +113,9 @@ final class Parse[+T](val input: ParserInput[Char, String],
 //    println("outerCut " + outerCut)
 //    println("isNoCut " + isNoCut)
 //    println("isFork " + isFork)
-    !isCapturing && ((outerCut && !isNoCut) || !isFork)
+    val res = !isCapturing && ((outerCut && !isNoCut) || !isFork)
+//    println("res " + res)
+    res
   }
 
   def result: Result[T] = {

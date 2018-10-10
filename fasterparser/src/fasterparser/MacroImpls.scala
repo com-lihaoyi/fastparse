@@ -377,6 +377,7 @@ object MacroImpls {
           if (!ctx3.isSuccess) ctx3
           else {
             if (ctx3.checkForDrop(ctx3.cut | cut1.splice)) ctx3.input.dropBuffer(ctx3.index)
+
             val pValue = ctx3.successValue
             val pCut = ctx3.cut
             val preWsIndex = ctx3.index
@@ -391,7 +392,9 @@ object MacroImpls {
               val rhsNewCut = cut1.splice | ctx3.cut | pCut
               if (!ctx3.isSuccess) ctx3.prepareFailure(ctx3.index, cut = rhsNewCut)
               else {
-                if (ctx3.checkForDrop(ctx3.cut | cut1.splice)) ctx3.input.dropBuffer(ctx3.index)
+                if (preWsIndex != nextIndex && ctx3.checkForDrop(ctx3.cut | cut1.splice)) {
+                  ctx3.input.dropBuffer(ctx3.index)
+                }
                 ctx3.prepareSuccess(
                   s.splice.apply(pValue.asInstanceOf[T], ctx3.successValue.asInstanceOf[V]),
                   nextIndex,
@@ -410,8 +413,14 @@ object MacroImpls {
     import c.universe._
     val lhs = c.prefix.asInstanceOf[c.Expr[EagerOps[_]]]
     reify{
+
+      val startIndex = c.Expr[Parse[_]](q"implicitly[fasterparser.Parse[_]]").splice.index
       val ctx1 = lhs.splice.parse0
-      if (ctx1.isSuccess) ctx1.prepareSuccess(ctx1.successValue, cut = true).asInstanceOf[Parse[T]]
+      if (ctx1.isSuccess) {
+        if (ctx1.index > startIndex && !ctx1.isCapturing && !ctx1.isNoCut)
+          ctx1.input.dropBuffer(ctx1.index)
+        ctx1.prepareSuccess(ctx1.successValue, cut = true).asInstanceOf[Parse[T]]
+      }
       else ctx1.prepareFailure(ctx1.index)
     }
   }

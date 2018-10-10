@@ -46,6 +46,7 @@ object Result{
                    index: Int,
                    originalParser: Parse[_] => Parse[_]) {
     def traced: Failure = {
+      input.checkTraceable()
       Parse(input, startIndex = startIndex, traceIndex = index)
         .read[Any](originalParser).asInstanceOf[Failure]
     }
