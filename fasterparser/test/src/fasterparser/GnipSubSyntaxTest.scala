@@ -26,8 +26,8 @@ object GnipSubSyntaxTest extends TestSuite {
     def keywordGroup[_: P] = P(orClause | keywordGroupWithoutOrClause)
 
     def keywordsInParentheses[_: P] = P("(" ~ gnipKeywordPhrase ~ ")")
-    def orClause[_: P] = P(!(("-" ~~ keywordGroupWithoutOrClause.rep(min = 1)) ~ "OR") ~ keywordGroupWithoutOrClause ~ ("OR"!) ~ gnipKeywordPhrase)
-    def gnipKeywordPhrase[_: P]: P[String] = P(keywordGroup.rep(min = 1))!
+    def orClause[_: P] = P(!(("-" ~~ keywordGroupWithoutOrClause.rep(1)) ~ "OR") ~ keywordGroupWithoutOrClause ~ ("OR"!) ~ gnipKeywordPhrase)
+    def gnipKeywordPhrase[_: P]: P[String] = P(keywordGroup.rep(1))!
 
     def parse[_: P] = P(Start ~ gnipKeywordPhrase ~ End)
   }

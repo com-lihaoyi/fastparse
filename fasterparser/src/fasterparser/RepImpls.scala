@@ -25,7 +25,6 @@ object RepImpls{
     val ctx1 = TermName(c.freshName("repeater"))
     val acc = TermName(c.freshName("acc"))
     val startIndex = TermName(c.freshName("startIndex"))
-    val index = TermName(c.freshName("index"))
     val count = TermName(c.freshName("count"))
     val precut = TermName(c.freshName("precut"))
     val beforeSepIndex = TermName(c.freshName("beforeSepIndex"))
@@ -37,7 +36,7 @@ object RepImpls{
         """
       case Some(min1) =>
         q"""
-           if (count < $min1) $ctx1.prepareFailure($index)
+           if ($count < $min1) $ctx1.prepareFailure($startIndex)
            else $ctx1.prepareSuccess($repeater1.result($acc), $startIndex)
         """
     }
