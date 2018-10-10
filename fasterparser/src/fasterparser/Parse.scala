@@ -40,7 +40,6 @@ import scala.annotation.unchecked.uncheckedVariance
   *                    input, but does not affect backtracking
   * @param isNoCut Flag that prevents the parser from either dropping earlier
   *                input or backtracking
-  * @param isFork Flag that indicates that backtracking is now possible
   *
   */
 final class Parse[+T](val input: ParserInput,
@@ -118,9 +117,9 @@ final class Parse[+T](val input: ParserInput,
 //    println("outerCut " + outerCut)
 //    println("isNoCut " + isNoCut)
 //    println("isFork " + isFork)
-    val res = !isCapturing && (outerCut && !isNoCut)
+    !isCapturing && outerCut && !isNoCut
 //    println("res " + res)
-    res
+//    res
   }
 
   def result: Result[T] = {

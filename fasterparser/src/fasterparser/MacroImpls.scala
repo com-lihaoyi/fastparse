@@ -156,7 +156,10 @@ object MacroImpls {
       val startPos = ctx5.index
 
       lhs0.splice
-      if (ctx5.isSuccess) ctx5
+      if (ctx5.isSuccess) {
+        ctx5.cut = oldCut
+        ctx5
+      }
       else if(ctx5.cut) ctx5
       else {
         ctx5.index = startPos

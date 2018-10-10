@@ -210,15 +210,14 @@ object IteratorTests extends TestSuite {
         def p[_: P] = P(
           (("big, " ~ ("another, " ~ ("X".? ~/ "Y".?)) | "small, ") ~ "end") | "other"
         )
-
         val input = toInput("big, another, end")
         val Result.Success(_, i) = Parse.input(input).read(p(_))
         val drops = input.drops
         assert(
           i == 17,
-          Set(28) == drops
-          // drops after "another string" because of the nested cut ~/, but not
-          // after `"end of input" because cuts only apply to the `|` blocks
+          Set(14) == drops
+          // drops after "another, " because of the nested cut ~/, but not
+          // after `"end" because cuts only apply to the `|` blocks
           // they are nested within
         )
 
