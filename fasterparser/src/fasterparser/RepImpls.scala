@@ -51,28 +51,29 @@ object RepImpls{
     }
 
     q"""
-      val $repeater1 = $repeater
-      val $ctx1 = $ctx
-      val $acc = $repeater1.initial
-      @_root_.scala.annotation.tailrec
-      def $rec($startIndex: _root_.scala.Int,
-               $count: _root_.scala.Int,
-               $precut: _root_.scala.Boolean): _root_.fasterparser.Parse[${c.weakTypeOf[V]}] = {
-        $ctx1.cut = $precut
-        ${c.prefix}.parse0()
-        if (!$ctx1.isSuccess) {
-          if ($ctx1.cut | $precut) $ctx1.asInstanceOf[Parse[${c.weakTypeOf[V]}]]
-          else $endSnippet
-        }else {
-          val $beforeSepIndex = $ctx1.index
-          $repeater1.accumulate($ctx1.successValue.asInstanceOf[${c.weakTypeOf[T]}], $acc)
-          $ctx1.cut = false
-          $wsSnippet
-          $rec($beforeSepIndex, $count + 1, false)
+      $ctx match{ case $ctx1 =>
+        val $repeater1 = $repeater
+        val $acc = $repeater1.initial
+        @_root_.scala.annotation.tailrec
+        def $rec($startIndex: _root_.scala.Int,
+                 $count: _root_.scala.Int,
+                 $precut: _root_.scala.Boolean): _root_.fasterparser.Parse[${c.weakTypeOf[V]}] = {
+          $ctx1.cut = $precut
+          ${c.prefix}.parse0()
+          if (!$ctx1.isSuccess) {
+            if ($ctx1.cut | $precut) $ctx1.asInstanceOf[Parse[${c.weakTypeOf[V]}]]
+            else $endSnippet
+          }else {
+            val $beforeSepIndex = $ctx1.index
+            $repeater1.accumulate($ctx1.successValue.asInstanceOf[${c.weakTypeOf[T]}], $acc)
+            $ctx1.cut = false
+            $wsSnippet
+            $rec($beforeSepIndex, $count + 1, false)
+          }
         }
+        $ctx1.isSuccess = true
+        $rec($ctx1.index, 0, false)
       }
-      $ctx1.isSuccess = true
-      $rec($ctx1.index, 0, false)
     """
   }
 
@@ -82,6 +83,7 @@ object RepImpls{
     import c.universe._
     RepImpls.repXMacro0[T, V](c)(None, None)(repeater, ctx)
   }
+
   def repXMacro2[T: c.WeakTypeTag, V: c.WeakTypeTag](c: Context)
                                                     (min: c.Tree)
                                                     (repeater: c.Tree,
@@ -89,6 +91,7 @@ object RepImpls{
     import c.universe._
     RepImpls.repXMacro0[T, V](c)(None, Some(min))(repeater, ctx)
   }
+
   def repXMacro1ws[T: c.WeakTypeTag, V: c.WeakTypeTag](c: Context)
                                                       (repeater: c.Tree,
                                                        whitespace: c.Tree,
@@ -96,6 +99,7 @@ object RepImpls{
     import c.universe._
     RepImpls.repXMacro0[T, V](c)(Some(whitespace), None)(repeater, ctx)
   }
+
   def repXMacro2ws[T: c.WeakTypeTag, V: c.WeakTypeTag](c: Context)
                                                       (min: c.Tree)
                                                       (repeater: c.Tree,
@@ -105,6 +109,7 @@ object RepImpls{
     RepImpls.repXMacro0[T, V](c)(Some(whitespace), Some(min))(repeater, ctx)
   }
 }
+
 class RepImpls[T](val parse0: () => Parse[T]) extends AnyVal{
   def repX[V](min: Int = 0,
               sep: => Parse[_] = null,
