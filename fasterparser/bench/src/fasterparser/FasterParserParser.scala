@@ -31,7 +31,7 @@ class FasterParserParser{
     val input = cfg.input
     P{
       @tailrec def rec(current: Int, state: Int): Parse[Unit] = {
-        if (input.isReachable(current)) cfg.prepareSuccess((), current, false)
+        if (!input.isReachable(current)) cfg.prepareSuccess((), current, false)
         else {
           val currentChar = input(current)
           (state: @switch) match{
