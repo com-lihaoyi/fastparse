@@ -37,7 +37,7 @@ object RepImpls{
         """
       case Some(min1) =>
         q"""
-           if ($count < $min1) $ctx1.prepareFailure($startIndex)
+           if ($count < $min1) $ctx1.prepareFailure($startIndex, $originalCut)
            else $ctx1.prepareSuccess($repeater1.result($acc), $startIndex, $originalCut)
         """
     }
@@ -69,7 +69,7 @@ object RepImpls{
 
           ${c.prefix}.parse0()
           if (!$ctx1.isSuccess) {
-            if ($ctx1.cut | $precut) $ctx1.asInstanceOf[Parse[${c.weakTypeOf[V]}]]
+            if ($ctx1.cut) $ctx1.asInstanceOf[Parse[${c.weakTypeOf[V]}]]
             else $endSnippet
           }else {
             val $beforeSepIndex = $ctx1.index
@@ -131,7 +131,7 @@ class RepImpls[T](val parse0: () => Parse[T]) extends AnyVal{
     val actualMax = if(exactly == -1) max else exactly
     val originalCut = ctx.cut
     def end(successIndex: Int, index: Int, count: Int) = {
-      if (count < actualMin) ctx.prepareFailure(index)
+      if (count < actualMin) ctx.prepareFailure(index, originalCut)
       else ctx.prepareSuccess(repeater.result(acc), successIndex, originalCut)
     }
     @tailrec def rec(startIndex: Int, count: Int, precut: Boolean): Parse[V] = {
@@ -140,7 +140,7 @@ class RepImpls[T](val parse0: () => Parse[T]) extends AnyVal{
       else {
         parse0()
         if (!ctx.isSuccess) {
-          if (ctx.cut | precut) ctx.asInstanceOf[Parse[V]]
+          if (ctx.cut) ctx.asInstanceOf[Parse[V]]
           else end(startIndex, startIndex, count)
         }else {
           val beforeSepIndex = ctx.index
@@ -154,7 +154,7 @@ class RepImpls[T](val parse0: () => Parse[T]) extends AnyVal{
             if (sep1 == null) rec(beforeSepIndex, nextCount, false)
             else {
               if (ctx.isSuccess) rec(beforeSepIndex, nextCount, ctx.cut)
-              else if (ctx.cut) ctx.prepareFailure(beforeSepIndex)
+              else if (ctx.cut) ctx.prepareFailure(beforeSepIndex, originalCut)
               else end(beforeSepIndex, beforeSepIndex, nextCount)
             }
           }
@@ -171,14 +171,14 @@ class RepImpls[T](val parse0: () => Parse[T]) extends AnyVal{
     val originalCut = ctx.cut
     val acc = repeater.initial
     def end(successIndex: Int, index: Int, count: Int) = {
-      if (count < min) ctx.prepareFailure(index)
+      if (count < min) ctx.prepareFailure(index, originalCut)
       else ctx.prepareSuccess(repeater.result(acc), successIndex, originalCut)
     }
     @tailrec def rec(startIndex: Int, count: Int, precut: Boolean): Parse[V] = {
       ctx.cut = precut
       parse0()
       if (!ctx.isSuccess) {
-        if (ctx.cut | precut) ctx.asInstanceOf[Parse[V]]
+        if (ctx.cut) ctx.asInstanceOf[Parse[V]]
         else end(startIndex, startIndex, count)
       }else {
         val beforeSepIndex = ctx.index
@@ -188,7 +188,7 @@ class RepImpls[T](val parse0: () => Parse[T]) extends AnyVal{
         if (sep1 == null) rec(beforeSepIndex, nextCount, false)
         else {
           if (ctx.isSuccess) rec(beforeSepIndex, nextCount, ctx.cut)
-          else if (ctx.cut) ctx.prepareFailure(beforeSepIndex)
+          else if (ctx.cut) ctx.prepareFailure(beforeSepIndex, originalCut)
           else end(beforeSepIndex, beforeSepIndex, nextCount)
         }
       }
@@ -209,7 +209,7 @@ class RepImpls[T](val parse0: () => Parse[T]) extends AnyVal{
     val actualMin = if(exactly == -1) min else exactly
     val actualMax = if(exactly == -1) max else exactly
     def end(successIndex: Int, index: Int, count: Int) = {
-      if (count < actualMin) ctx.prepareFailure(index)
+      if (count < actualMin) ctx.prepareFailure(index, originalCut)
       else ctx.prepareSuccess(repeater.result(acc), successIndex, originalCut)
     }
     @tailrec def rec(startIndex: Int, count: Int, precut: Boolean): Parse[V] = {
@@ -218,7 +218,7 @@ class RepImpls[T](val parse0: () => Parse[T]) extends AnyVal{
       else {
         parse0()
         if (!ctx.isSuccess){
-          if (ctx.cut | precut) ctx.asInstanceOf[Parse[V]]
+          if (ctx.cut) ctx.asInstanceOf[Parse[V]]
           else end(startIndex, startIndex, count)
         }else{
           val beforeSepIndex = ctx.index
@@ -235,7 +235,7 @@ class RepImpls[T](val parse0: () => Parse[T]) extends AnyVal{
               if (whitespace ne NoWhitespace.noWhitespaceImplicit) whitespace(ctx)
               rec(beforeSepIndex, nextCount, sepCut)
             }
-            else if (ctx.cut) ctx.prepareFailure(beforeSepIndex)
+            else if (ctx.cut) ctx.prepareFailure(beforeSepIndex, originalCut)
             else end(beforeSepIndex, beforeSepIndex, nextCount)
           }
         }
@@ -252,14 +252,14 @@ class RepImpls[T](val parse0: () => Parse[T]) extends AnyVal{
     val originalCut = ctx.cut
     val acc = repeater.initial
     def end(successIndex: Int, index: Int, count: Int) = {
-      if (count < min) ctx.prepareFailure(index)
+      if (count < min) ctx.prepareFailure(index, originalCut)
       else ctx.prepareSuccess(repeater.result(acc), successIndex, originalCut)
     }
     @tailrec def rec(startIndex: Int, count: Int, precut: Boolean): Parse[V] = {
       ctx.cut = precut
       parse0()
       if (!ctx.isSuccess){
-        if (ctx.cut | precut) ctx.asInstanceOf[Parse[V]]
+        if (ctx.cut) ctx.asInstanceOf[Parse[V]]
         else end(startIndex, startIndex, count)
       }else{
         val beforeSepIndex = ctx.index
@@ -284,7 +284,7 @@ class RepImpls[T](val parse0: () => Parse[T]) extends AnyVal{
           }
           rec(beforeSepIndex, nextCount, sepCut)
         }
-        else if (ctx.cut) ctx.prepareFailure(beforeSepIndex)
+        else if (ctx.cut) ctx.prepareFailure(beforeSepIndex, originalCut)
         else end(beforeSepIndex, beforeSepIndex, nextCount)
       }
     }

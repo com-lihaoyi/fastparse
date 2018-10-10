@@ -140,6 +140,31 @@ object ParsingTests extends TestSuite{
           // all the way, because cuts only apply to enclosing eithers, not siblings
           val Result.Success((), 0) = Parse("worldxamaba").read(parse2(_))
         }
+        'rep{
+          def parse[_: P] = P("world" ~ "x" ~/ ("am" ~ "a").rep ~ "cow").rep
+
+          // Failing before the cut backtracks all the way out
+          val Result.Success((), 0) = Parse("worldlols").read(parse(_))
+          // Failing after the cut prevents backtracking
+          val Result.Failure(6, _, _) = Parse("worldxlols").read(parse(_))
+          // Failing inside another nested `|` block allows backtracking,
+          // but only up to the position of the cut
+          val Result.Failure(6, _, _) = Parse("worldxam").read(parse(_))
+          // Failing *after* the nested `|` block again prevents backtracking
+          val Result.Failure(9, _, _) = Parse("worldxama").read(parse(_))
+
+          def parse2[_: P] = P("world" ~ "x" ~ ("am" ~/ "a" ~ "b").rep ~ "a" ~ "cow").rep
+
+          // Failing before the cut backtracks all the way out
+          val Result.Success((), 0) = Parse("worldlols").read(parse2(_))
+          val Result.Success((), 0) = Parse("worldxlols").read(parse2(_))
+          // Failing inside the nested either's cut prevents backtracking
+          val Result.Failure(8, _, _) = Parse("worldxam").read(parse2(_))
+          val Result.Failure(9, _, _) = Parse("worldxama").read(parse2(_))
+          // Failing after the nested either with the cut inside backtracks
+          // all the way, because cuts only apply to enclosing eithers, not siblings
+          val Result.Success((), 0) = Parse("worldxamaba").read(parse2(_))
+        }
       }
       'sequence - {
         check(implicit c => "Hello" ~ ("wtf" ~ "omg" | "wtfom"), ("Hellowtfom", 0), Success((), 10))
