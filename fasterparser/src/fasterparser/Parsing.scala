@@ -269,7 +269,11 @@ object Parsing {
           ctx.input,
           (Option(ctx.shortFailureMsg).fold("")(_()) -> ctx.index) :: ctx.failureStack.reverse
         )
-        s"Failure($trace${if (ctx.cut) ", cut" else ""})"
+        val trailing = ctx.input match{
+          case c: IndexedParserInput[_, _] => Result.Failure.formatTrailing(ctx.input, startIndex)
+          case _ => ""
+        }
+        s"Failure($trace ...$trailing${if (ctx.cut) ", cut" else ""})"
       }
       output(s"$indent-$msg:${ReprOps.StringReprOps.prettyIndex(ctx.input, startIndex)}:$strRes")
       //        output(s"$indent-$msg:${repr.prettyIndex(cfg.input, index)}:$strRes")

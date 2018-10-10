@@ -199,7 +199,7 @@ object ExampleTests extends TestSuite{
       'opaque{
         def digit[_: P] = CharIn("0-9")
         def letter[_: P] = CharIn("A-Z")
-        def twice[T](p: => P[T]) = p ~ p
+        def twice[T, _: P](p: => P[T]) = p ~ p
         def errorMessage[T](p: P[_] => P[T], str: String) =
           Parse(str).read(p).asInstanceOf[Result.Failure].trace
 
