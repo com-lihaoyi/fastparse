@@ -1,11 +1,22 @@
-import mill._, scalalib._
-object fasterparser extends ScalaModule{
-  def scalaVersion = "2.12.7"
+import mill._, scalalib._, scalajslib._
+
+val crossVersions = Seq("2.11.12", "2.12.7")
+object fasterparser extends Module{
+  object jvm extends Cross[FasterParserJvmModule](crossVersions:_*)
+  class FasterParserJvmModule(val crossScalaVersion: String) extends FasterParserModule
+
+  object js extends Cross[FasterParserJsModule](crossVersions:_*)
+  class FasterParserJsModule(val crossScalaVersion: String) extends FasterParserModule with ScalaJSModule {
+    def scalaJSVersion = "0.6.25"
+  }
+}
+trait FasterParserModule extends CrossScalaModule{
   def ivyDeps = Agg(
     ivy"com.lihaoyi::sourcecode:0.1.4",
+  )
+  def compileIvyDeps = Agg(
     ivy"org.scala-lang:scala-reflect:${scalaVersion()}"
   )
-
   def generatedSources = T{
     val dir = T.ctx().dest
     val file = dir/"fasterparser"/"SequencerGen.scala"
@@ -46,11 +57,11 @@ object fasterparser extends ScalaModule{
     def testFrameworks = Seq("utest.runner.Framework")
   }
   object bench extends ScalaModule{
-    def scalaVersion = "2.12.7"
-    //
+    def scalaVersion = crossScalaVersion
+
     override def scalacOptions = Seq("-opt:l:method")
-//    override def scalacOptions = Seq("-Ydebug")
-    def moduleDeps = super.moduleDeps ++ Seq(fasterparser)
+
+    def moduleDeps = super.moduleDeps ++ Seq(FasterParserModule.this)
     def ivyDeps = Agg(
       ivy"com.lihaoyi::fastparse:1.0.0",
       ivy"com.lihaoyi::ammonite-ops:1.1.2",
@@ -59,14 +70,31 @@ object fasterparser extends ScalaModule{
   }
 }
 
-object scalaparse extends ScalaModule{
-  def scalaVersion = "2.12.7"
-  //
-  //    override def scalacOptions = Seq("-Ydebug")
-  def moduleDeps = Seq(fasterparser)
-  def ivyDeps = Agg(
-    ivy"org.scala-lang:scala-reflect:${scalaVersion()}",
-  )
+object scalaparse extends Module{
+  object js extends Cross[ScalaParseJsModule](crossVersions:_*)
+  class ScalaParseJsModule(val crossScalaVersion: String) extends ExampleParseJsModule
+
+  object jvm extends Cross[ScalaParseJvmModule](crossVersions:_*)
+  class ScalaParseJvmModule(val crossScalaVersion: String) extends ExampleParseJvmModule
+}
+
+
+object cssparse extends Module{
+  object js extends Cross[CssParseJsModule](crossVersions:_*)
+  class CssParseJsModule(val crossScalaVersion: String) extends ExampleParseJsModule
+
+  object jvm extends Cross[CssParseJvmModule](crossVersions:_*)
+  class CssParseJvmModule(val crossScalaVersion: String) extends ExampleParseJvmModule
+}
+object pythonparse extends Module{
+  object js extends Cross[PythonParseJsModule](crossVersions:_*)
+  class PythonParseJsModule(val crossScalaVersion: String) extends ExampleParseJsModule
+
+  object jvm extends Cross[PythonParseJvmModule](crossVersions:_*)
+  class PythonParseJvmModule(val crossScalaVersion: String) extends ExampleParseJvmModule
+}
+
+trait ExampleParseModule extends CrossScalaModule{
   object test extends Tests{
     def ivyDeps = Agg(
       ivy"com.lihaoyi::utest:0.6.5",
@@ -76,35 +104,13 @@ object scalaparse extends ScalaModule{
   }
 }
 
-object cssparse extends ScalaModule{
-  def scalaVersion = "2.12.7"
-  //
-  //    override def scalacOptions = Seq("-Ydebug")
-  def moduleDeps = Seq(fasterparser)
-  def ivyDeps = Agg(
-    ivy"org.scala-lang:scala-reflect:${scalaVersion()}",
-  )
-  object test extends Tests{
-    def ivyDeps = Agg(
-      ivy"com.lihaoyi::utest:0.6.5",
-    )
+trait ExampleParseJsModule extends ExampleParseModule{
+  def moduleDeps = Seq(fasterparser.js())
+  def scalaJSVersion = "0.6.25"
 
-    def testFrameworks = Seq("utest.runner.Framework")
-  }
 }
-object pythonparse extends ScalaModule{
-  def scalaVersion = "2.12.7"
-  //
-  //    override def scalacOptions = Seq("-Ydebug")
-  def moduleDeps = Seq(fasterparser)
-  def ivyDeps = Agg(
-    ivy"org.scala-lang:scala-reflect:${scalaVersion()}",
-  )
-  object test extends Tests{
-    def ivyDeps = Agg(
-      ivy"com.lihaoyi::utest:0.6.5",
-    )
 
-    def testFrameworks = Seq("utest.runner.Framework")
-  }
+
+trait ExampleParseJvmModule extends ExampleParseModule{
+  def moduleDeps = Seq(fasterparser.jvm())
 }
