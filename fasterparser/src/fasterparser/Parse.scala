@@ -37,7 +37,7 @@ import scala.annotation.unchecked.uncheckedVariance
   *                       run, so as to allow `.result.traced` to re-create
   *                       it with tracing enabled.
   */
-final class Parse[+T](val input: ParserInput[Char, String],
+final class Parse[+T](val input: ParserInput,
                       var failureStack: List[(String, Int)],
                       var shortFailureMsg: () => String,
                       var failureAggregate: List[String],
@@ -143,22 +143,22 @@ final class Parse[+T](val input: ParserInput[Char, String],
 }
 object Parse{
   def apply()(implicit i: Parse[Any]): Parse[Any] = i
-  def input(input: ParserInput[Char, String], startIndex: Int = 0, traceIndex: Int = -1): Parse[_] = Parse(
+  def input(input: ParserInput, startIndex: Int = 0, traceIndex: Int = -1): Parse[_] = Parse(
     input = input,
     startIndex = startIndex,
     traceIndex = traceIndex
   )
   def iter(input: Iterator[String], startIndex: Int = 0, traceIndex: Int = -1): Parse[_] = Parse(
-    input = IteratorParserInput[Char, String](input),
+    input = IteratorParserInput(input),
     startIndex = startIndex,
     traceIndex = traceIndex
   )
   def apply(input: String, startIndex: Int = 0, traceIndex: Int = -1): Parse[_] = Parse(
-    input = IndexedParserInput[Char, String](input),
+    input = IndexedParserInput(input),
     startIndex = startIndex,
     traceIndex = traceIndex
   )
-  def apply(input: ParserInput[Char, String], startIndex: Int, traceIndex: Int): Parse[_] = new Parse(
+  def apply(input: ParserInput, startIndex: Int, traceIndex: Int): Parse[_] = new Parse(
     input = input,
     failureStack = List.empty,
     shortFailureMsg = null,

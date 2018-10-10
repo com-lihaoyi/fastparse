@@ -1,11 +1,12 @@
 package fasterparser
 import scala.reflect.ClassTag
 
+
 /**
   * A very fast circular, growable read-write byte buffer.
   */
-class UberBuffer[T: ClassTag](initSize: Int = 32){ self =>
-  private[this] var data = new Array[T](initSize)
+class UberBuffer(initSize: Int = 32){ self =>
+  private[this] var data = new Array[Char](initSize)
   private[this] var readPos = 0
   private[this] var writePos = 0
 
@@ -50,7 +51,7 @@ class UberBuffer[T: ClassTag](initSize: Int = 32){ self =>
   }
 
   private[this] def expand() = {
-    val newData= new Array[T](data.length * 2)
+    val newData = new Array[Char](data.length * 2)
 
     if (readPos <= writePos){
       System.arraycopy(data, readPos, newData, 0, writePos - readPos)
@@ -65,7 +66,7 @@ class UberBuffer[T: ClassTag](initSize: Int = 32){ self =>
     data = newData
   }
 
-  def write(in: Array[T], offset: Int = 0, length0: Int = -1) = {
+  def write(in: Array[Char], offset: Int = 0, length0: Int = -1) = {
     while (writeAvailable < in.length) expand()
 
     val (left, right) = in.splitAt(data.length - writePos)
@@ -83,7 +84,7 @@ class UberBuffer[T: ClassTag](initSize: Int = 32){ self =>
     val endClamped = math.min(length, end)
     val actualStart = (readPos + startClamped) % data.length
     val actualEnd = (readPos + endClamped) % data.length
-    val output = new Array[T](endClamped - startClamped)
+    val output = new Array[Char](endClamped - startClamped)
     if (actualEnd >= actualStart){
       System.arraycopy(data, actualStart, output, 0, actualEnd - actualStart)
     }else{

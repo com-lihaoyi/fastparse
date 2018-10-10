@@ -8,37 +8,14 @@ import scala.reflect.ClassTag
   * Currently the only use of it is to avoid the cyclic dependencies between Utils and ParserInput
   */
 
-trait IsReachable[Elem] {
-  def apply(index: Int): Elem
+trait IsReachable {
+  def apply(index: Int): Char
   def isReachable(index: Int): Boolean
-}
-
-/**
-  * Encapsulates all the common operations on each [[Elem]] and [[Repr]] that
-  * FastParse needs to perform it's core functionality. This is provided
-  * separately, in order to avoid converting every possible input into a
-  * lowest-common-denominator type (e.g. `IndexedSeq[Elem]`) to avoid
-  * unnecessarily paying conversion-costs and copying the input.
-  */
-abstract class ReprOps[Elem, Repr] {
-  def prettyPrint(input: Repr): String
-  def literalize(input: Repr): String
-  def errorMessage(input: ParserInput[Elem, Repr], expected: String, idx: Int): String
-  def prettyIndex(input: ParserInput[Elem, Repr], index: Int): String
-
-  def slice(value: Repr, start: Int, end: Int): Repr
-  def apply(value: Repr, i: Int): Elem
-  def length(value: Repr): Int
-  def fromArray(input: Array[Elem]): Repr
-  def fromSeq(input: Seq[Elem]): Repr
-  def fromSingle(input: Elem): Repr
-  def toArray(input: Repr): Array[Elem]
-  def flatten(input: Seq[Repr]): Repr
 }
 
 object ReprOps{
   implicit
-  object StringReprOps extends ReprOps[Char, String] {
+  object StringReprOps{
     def apply(input: String, i: Int) = input.charAt(i)
     def slice(input: String, start: Int, end: Int) = input.slice(start, end)
     def length(input: String) = input.length
@@ -50,7 +27,7 @@ object ReprOps{
     def flatten(input: Seq[String]): String = input.mkString
     def prettyPrint(input: String): String = input
     def literalize(input: String): String = Util.literalize(input)
-    def errorMessage(input: ParserInput[Char, String], expected: String, idx: Int): String = {
+    def errorMessage(input: ParserInput, expected: String, idx: Int): String = {
       val locationCode = {
         val first = input.slice(idx - 20, idx)
         val last = input.slice(idx, idx + 20)
@@ -66,7 +43,7 @@ object ReprOps{
       //TODO but it reduces the abstraction
     }
 
-    def prettyIndex(input: ParserInput[Char, String], index: Int): String = {
+    def prettyIndex(input: ParserInput, index: Int): String = {
       input match {
         case IndexedParserInput(data) =>
           var line = 1
@@ -96,8 +73,8 @@ object ReprOps{
   * It can be regular `IndexedSeq` that behaves as simple array or
   * `Iterator` of `IndexedSeq` batches which is optimized by `dropBuffer` method.
   */
-abstract class ParserInput[Elem, Repr] extends IsReachable[Elem] {
-  def apply(index: Int): Elem
+abstract class ParserInput extends IsReachable {
+  def apply(index: Int): Char
 
   /**
     * Special method for `Iterator` mode. It drops the prefix of the internal buffer
@@ -112,7 +89,7 @@ abstract class ParserInput[Elem, Repr] extends IsReachable[Elem] {
     *         Same for `Iterator` mode, but it requests batches while the index of last retrieved element is less than `until`
     *         and if `until` is farther away than any element, it ignores this too.
     */
-  def slice(from: Int, until: Int): Repr
+  def slice(from: Int, until: Int): String
 
   def length: Int
   def innerLength: Int
@@ -122,27 +99,25 @@ abstract class ParserInput[Elem, Repr] extends IsReachable[Elem] {
     */
   def isReachable(index: Int): Boolean
 
-  val repr: ReprOps[Elem, Repr]
-
   def checkTraceable(): Unit
 }
 
-case class IndexedParserInput[Elem, Repr](data: Repr)
-                                         (implicit val repr: ReprOps[Elem, Repr])
-  extends ParserInput[Elem, Repr] {
-  override def apply(index: Int) = repr.apply(data, index)
+case class IndexedParserInput(data: String)
+
+  extends ParserInput {
+  override def apply(index: Int) = data.charAt(index)
 
   /**
     * As for `IndexedSeq` mode `dropBuffer` does nothing.
     */
   override def dropBuffer(index: Int) = {}
 
-  override def slice(from: Int, until: Int) = repr.slice(data, from, until)
+  override def slice(from: Int, until: Int) = data.slice(from, until)
 
   /**
     * @return Length of internal immutable data. It works equally as `innerLength`.
     */
-  override def length: Int = repr.length(data)
+  override def length: Int = data.length
   /**
     * @return Length of internal immutable data. It works equally as `length`.
     */
@@ -167,18 +142,15 @@ case class IndexedParserInput[Elem, Repr](data: Repr)
   * either the new batches are requested to extend the buffer, either it's inaccessible at all,
   * so calling of `dropBuffer` should guarantee that there won't be any attempts to access to the elements in dropped part of input.
   */
-case class IteratorParserInput[Elem, Repr](data: Iterator[Repr])
-                                          (implicit val repr: ReprOps[Elem, Repr],
-                                           converter: ReprOps[Elem, Repr],
-                                           ct: ClassTag[Elem])
-  extends ParserInput[Elem, Repr] {
-  private val buffer: UberBuffer[Elem] = new UberBuffer[Elem](16)
+case class IteratorParserInput(data: Iterator[String])
+  extends ParserInput{
+  private val buffer: UberBuffer = new UberBuffer(16)
   private var firstIdx: Int = 0 // index in the data corresponding to the 0th element in the buffer
 
   private def requestUntil(until: Int): Boolean = {
     while (this.length <= until && data.hasNext) {
       val chunk = data.next()
-      buffer.write(converter.toArray(chunk))
+      buffer.write(chunk.toCharArray)
     }
     this.length > until
   }
@@ -186,7 +158,7 @@ case class IteratorParserInput[Elem, Repr](data: Iterator[Repr])
   /**
     * Requests batches until given `index` and in case of success returns needed element.
     */
-  override def apply(index: Int): Elem = {
+  override def apply(index: Int): Char = {
     requestUntil(index)
     buffer(index - firstIdx)
   }
@@ -206,10 +178,10 @@ case class IteratorParserInput[Elem, Repr](data: Iterator[Repr])
     * If the current buffer is too small to provide some part of data after `from` bound,
     * lower bound of slice is cut to the minimum of `from` and first index of accessible element in the buffer.
     */
-  override def slice(from: Int, until: Int): Repr = {
+  override def slice(from: Int, until: Int): String = {
     requestUntil(until - 1)
     val lo = math.max(from, firstIdx)
-    converter.fromArray(buffer.slice(lo - firstIdx, until - firstIdx))
+    new String(buffer.slice(lo - firstIdx, until - firstIdx))
   }
 
   /**

@@ -27,12 +27,11 @@ object MacroImpls {
     * Workaround https://github.com/scala-js/scala-js/issues/1603
     * by implementing startsWith myself
     */
-  def startsWith[Elem, Repr](src: ParserInput[Elem, Repr], prefix: Repr, offset: Int)
-                            (implicit repr: ReprOps[Elem, Repr])= {
+  def startsWith(src: ParserInput, prefix: String, offset: Int) = {
     @tailrec def rec(i: Int): Boolean = {
-      if (i >= repr.length(prefix)) true
+      if (i >= prefix.length) true
       else if (!src.isReachable(i + offset)) false
-      else if (src(i + offset) != repr.apply(prefix, i)) false
+      else if (src(i + offset) != prefix.charAt(i)) false
       else rec(i + 1)
     }
     rec(0)
@@ -56,7 +55,7 @@ object MacroImpls {
           }
         }else{
           val xLength = c.Expr[Int](Literal(Constant(x.length)))
-          val checker = c.Expr[(ParserInput[Char, String], Int) => Boolean]{
+          val checker = c.Expr[(ParserInput, Int) => Boolean]{
             val stringSym = TermName(c.freshName("string"))
             val offsetSym = TermName(c.freshName("offset"))
             val checks = x
@@ -64,7 +63,7 @@ object MacroImpls {
               .map { case (char, i) => q"""$stringSym.apply($offsetSym + $i) == $char""" }
               .reduce[Tree]{case (l, r) => q"$l && $r"}
 
-            q"($stringSym: fasterparser.ParserInput[Char, String], $offsetSym: scala.Int) => $checks"
+            q"($stringSym: fasterparser.ParserInput, $offsetSym: scala.Int) => $checks"
           }
           reify {
 

@@ -23,7 +23,7 @@ object Parsing {
   implicit def LiteralStr(s: String)(implicit ctx: Parse[Any]): Parse[Unit] = macro MacroImpls.literalStrMacro
 
 
-  def startsWithIgnoreCase(src: ParserInput[Char, String], prefix: IndexedSeq[Char], offset: Int) = {
+  def startsWithIgnoreCase(src: ParserInput, prefix: IndexedSeq[Char], offset: Int) = {
     @tailrec def rec(i: Int): Boolean = {
       if (i >= prefix.length) true
       else if(!src.isReachable(i + offset)) false
@@ -270,7 +270,7 @@ object Parsing {
           (Option(ctx.shortFailureMsg).fold("")(_()) -> ctx.index) :: ctx.failureStack.reverse
         )
         val trailing = ctx.input match{
-          case c: IndexedParserInput[_, _] => Result.Failure.formatTrailing(ctx.input, startIndex)
+          case c: IndexedParserInput => Result.Failure.formatTrailing(ctx.input, startIndex)
           case _ => ""
         }
         s"Failure($trace ...$trailing${if (ctx.cut) ", cut" else ""})"
