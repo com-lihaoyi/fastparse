@@ -79,7 +79,6 @@ object RepImpls{
             $rec($beforeSepIndex, $count + 1, false)
           }
         }
-        $ctx1.isSuccess = true
         $rec($ctx1.index, 0, false)
       }
     """
