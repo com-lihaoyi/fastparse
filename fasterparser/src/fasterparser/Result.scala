@@ -1,18 +1,27 @@
 package fasterparser
 
-abstract class Result[+T](val isSuccess: Boolean){
+/**
+  * The outcome of a [[Parse]] run, either a success (with value and index) or
+  * failure (with associated debugging metadata to help figure out what went
+  * wrong).
+  *
+  * Doesn't contain any information not already present in [[Parse]], but
+  * packages it up nicely in an immutable case class that's easy for external
+  * code to make use of.
+  */
+sealed abstract class Result[+T](val isSuccess: Boolean){
   def fold[V](onFailure: (Int, List[(String, Int)]) => V, onSuccess: (T, Int) => V): V
   def get: Result.Success[T]
 }
 
 object Result{
 
-  case class Success[+T](value: T, index: Int) extends Result[T](true){
+  final case class Success[+T](value: T, index: Int) extends Result[T](true){
     def get = this
     def fold[V](onFailure: (Int, List[(String, Int)]) => V, onSuccess: (T, Int) => V) = onSuccess(value, index)
     override def toString() = s"Result.Success($value, $index)"
   }
-  case class Failure(index: Int,
+  final case class Failure(index: Int,
                      stack: List[(String, Int)],
                      extra: Extra) extends Result[Nothing](false){
     def get = throw new Exception("Parse Error at " + index + ":\n" + stack.mkString("\n"))

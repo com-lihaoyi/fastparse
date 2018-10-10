@@ -12,6 +12,11 @@ object Parsing {
   type P[+T] = Parse[T]
   type P0 = Parse[Unit]
 
+  /**
+    * Delimits a named parser. This name will appear in the parser failure
+    * messages and stack traces, and by default is taken from the name of the
+    * enclosing method.
+    */
   def P[T](t: Parse[T])(implicit name: sourcecode.Name): Parse[T] = macro MacroImpls.pMacro[T]
 
 
@@ -221,11 +226,14 @@ object Parsing {
       }
     }
   }
-  implicit def LogByNameOps[T](parse0: => Parse[T])(implicit ctx: Parse[_]) = {
-    new LogByNameOps(() => parse0)(ctx)
-  }
 
-  class LogByNameOps[T](parse0: () => Parse[T])(ctx: Parse[_]) {
+  /**
+    * Separated out from [[ByNameOps]] because `.log` isn't easy to make an
+    * [[AnyVal]] extension method, but it doesn't matter since `.log` calls
+    * are only for use in development while the other [[ByNameOps]] operators
+    * are more performance-sensitive
+    */
+  implicit class  LogByNameOps[T](parse0: => Parse[T])(implicit ctx: Parse[_]) {
     def log(implicit name: sourcecode.Name, logger: Logger = Logger.stdout): Parse[T] = {
 
       val msg = name.value
@@ -236,7 +244,7 @@ object Parsing {
       val depth = ctx.logDepth
       ctx.logDepth += 1
       val startIndex = ctx.index
-      parse0()
+      parse0
       ctx.logDepth = depth
       val strRes = if (ctx.isSuccess){
         val prettyIndex = Util.prettyIndex(ctx.input, ctx.index)

@@ -4,6 +4,17 @@ import scala.annotation.tailrec
 import scala.reflect.macros.blackbox.Context
 import language.experimental.macros
 
+/**
+  * Implementations of the various `.rep`/`.repX` overloads. The most common
+  * and simple overloads are implemented as macros for performance, while the
+  * more complex/general cases are left as normal methods to avoid code bloat
+  * and allow the use of default/named arguments (which don't work in macros
+  * due to https://github.com/scala/bug/issues/5920).
+  *
+  * Even the normal method overloads are manually-specialized to some extent
+  * for various sorts of inputs as a best-effort attempt ot minimize branching
+  * in the hot paths.
+  */
 object RepImpls{
   def repXMacro0[T: c.WeakTypeTag, V: c.WeakTypeTag](c: Context)
                                                     (whitespace: Option[c.Tree], min: Option[c.Tree])
