@@ -111,13 +111,13 @@ final class Parse[+T](val input: ParserInput,
     this.asInstanceOf[Parse[Nothing]]
   }
 
-  def checkForDrop(outerCut: Boolean) = {
+  def checkForDrop() = {
 //    println("==== CHECK FOR DROP " + index + " ====")
 //    println("isCapturing " + isCapturing)
 //    println("outerCut " + outerCut)
 //    println("isNoCut " + isNoCut)
 //    println("isFork " + isFork)
-    !isCapturing && outerCut && !isNoCut
+    !isCapturing && cut && !isNoCut
 //    println("res " + res)
 //    res
   }

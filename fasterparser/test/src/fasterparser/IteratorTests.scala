@@ -112,25 +112,38 @@ object IteratorTests extends TestSuite {
         import NoWhitespace._
         def p[_: P] = P( "a" ~ "b" ~ "c")
         def either[_: P] = P( (p ~ End) | ("abc" ~ p ~ End) | ("abcabc" ~ p ~ End))
+        def eitherCutted[_: P] = P( (p ~ End) | ("abc" ~ p ~ End) | ("abcabc" ~/ p ~ End))
 
         val input1 = toInput("abcabcabc")
         val Result.Success(_, i1) = Parse.input(input1).read(either(_))
         assert(
           i1 == 9,
-          Set(6, 7, 8, 9) == input1.drops // drops in the last branch of Either
+          // We do not expect any drops in the last branch of the Either,
+          // without explicit cuts. This is because need to backtrack the index
+          // of the parser back to the Either's starting position anyway, and
+          // if we drop input it might cause problems e.g. with rendering
+          // the error message when the data around the failure index has
+          // already been dropped
+          Set() == input1.drops
+        )
+        val Result.Success(_, i2) = Parse.input(input1).read(eitherCutted(_))
+        assert(
+          i2 == 9,
+          // With explicit cuts, we can accept drops
+          Set(6, 7, 8, 9) == input1.drops
         )
 
         val input2 = toInput("abcabc")
-        val Result.Success(_, i2) = Parse.input(input2).read(either(_))
+        val Result.Success(_, i3) = Parse.input(input2).read(either(_))
         assert(
-          i2 == 6,
+          i3 == 6,
           input2.drops.isEmpty // no drops at the end
         )
 
         val input3 = toInput("abc")
-        val Result.Success(_, i3) = Parse.input(input3).read(either(_))
+        val Result.Success(_, i4) = Parse.input(input3).read(either(_))
         assert(
-          i3 == 3,
+          i4 == 3,
           input3.drops.isEmpty // no drops at the end
         )
       }
@@ -139,12 +152,13 @@ object IteratorTests extends TestSuite {
         import NoWhitespace._
         def p[_: P] = P( "a" ~ "b" ~ "c")
         def rep[_: P] = P( (p.rep ~ "d") | (p.rep ~ "e") )
+        def repCutted[_: P] = P( (p.rep ~ "d") | (p.rep ~/ "e") )
 
         val input1 = toInput("abcabcabcd")
         val Result.Success(_, i1) = Parse.input(input1).read(rep(_))
         assert(
           i1 == 10,
-          input1.drops.isEmpty // no drops at the end of first branch
+          Set() == input1.drops // no drops at the end of first branch
         )
 
         val input2 = toInput("abcabcabce")
@@ -152,7 +166,15 @@ object IteratorTests extends TestSuite {
 
         assert(
           i1 == 10,
-          Set(9, 10) == input2.drops // drops in the last branch
+          Set() == input1.drops // no drops in the last branch, without cuts
+        )
+
+        val input3 = toInput("abcabcabce")
+        val Result.Success(_, i3) = Parse.input(input3).read(repCutted(_))
+
+        assert(
+          i1 == 10,
+          Set(9, 10) == input3.drops // drops in the last branch, when cuts are present
         )
       }
 
@@ -223,6 +245,7 @@ object IteratorTests extends TestSuite {
 
       }
     }
+
     'traceFailure - {
       import NoWhitespace._
       def p[_: P] = P("[" ~ "]")

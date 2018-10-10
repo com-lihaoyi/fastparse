@@ -424,20 +424,19 @@ object ExampleTests extends TestSuite{
         Parse("(1+(2+3x))+4").read(Foo.expr(_))
 
 
-
         val expected = """
-          +expr:1:1
-            +side:1:1
-              +expr:1:2
-                +side:1:2
-                -side:1:2:Success(1:3)
-                +side:1:4
-                  +expr:1:5
-                    +side:1:5
-                    -side:1:5:Success(1:6)
-                    +side:1:7
-                    -side:1:7:Success(1:8)
-                  -expr:1:5:Success(1:8)
+          +expr:1:1, cut
+            +side:1:1, cut
+              +expr:1:2, cut
+                +side:1:2, cut
+                -side:1:2:Success(1:3, cut)
+                +side:1:4, cut
+                  +expr:1:5, cut
+                    +side:1:5, cut
+                    -side:1:5:Success(1:6, cut)
+                    +side:1:7, cut
+                    -side:1:7:Success(1:8, cut)
+                  -expr:1:5:Success(1:8, cut)
                 -side:1:4:Failure(side:1:4 / ")":1:8 ..."(2+3x))+4", cut)
               -expr:1:2:Failure(expr:1:2 / side:1:4 / ")":1:8 ..."1+(2+3x))+", cut)
             -side:1:1:Failure(side:1:1 / expr:1:2 / side:1:4 / ")":1:8 ..."(1+(2+3x))", cut)

@@ -163,7 +163,7 @@ object MacroImpls {
       else if(ctx5.cut) ctx5
       else {
         ctx5.index = startPos
-        ctx5.cut = oldCut
+        ctx5.cut = false
         other.splice
         if (ctx5.isSuccess) {
           ctx5.cut = oldCut
@@ -394,7 +394,8 @@ object MacroImpls {
         lhs.splice.parse0 match{ case ctx3 =>
           if (!ctx3.isSuccess) ctx3
           else {
-            if (ctx3.index > startIndex && ctx3.checkForDrop(ctx3.cut | cut1.splice)) ctx3.input.dropBuffer(ctx3.index)
+            ctx3.cut |= cut1.splice
+            if (ctx3.index > startIndex && ctx3.checkForDrop()) ctx3.input.dropBuffer(ctx3.index)
 
             val pValue = ctx3.successValue
             val pCut = ctx3.cut
@@ -404,15 +405,17 @@ object MacroImpls {
               val preOtherIndex = ctx3.index
               other.splice
               val postOtherIndex = ctx3.index
-              val nextIndex =
-                if (preOtherIndex >= postOtherIndex && ctx3.input.isReachable(postOtherIndex)) preWsIndex
-                else ctx3.index
+
               val rhsNewCut = cut1.splice | ctx3.cut | pCut
               if (!ctx3.isSuccess) ctx3.prepareFailure(ctx3.index, cut = rhsNewCut)
               else {
-                if (postOtherIndex > preOtherIndex && ctx3.checkForDrop(ctx3.cut | cut1.splice)) {
-                  ctx3.input.dropBuffer(ctx3.index)
-                }
+                val rhsMadeProgress = postOtherIndex > preOtherIndex
+                val nextIndex =
+                  if (!rhsMadeProgress && ctx3.input.isReachable(postOtherIndex)) preWsIndex
+                  else ctx3.index
+
+                if (rhsMadeProgress && ctx3.checkForDrop()) ctx3.input.dropBuffer(ctx3.index)
+
                 ctx3.prepareSuccess(
                   s.splice.apply(pValue.asInstanceOf[T], ctx3.successValue.asInstanceOf[V]),
                   nextIndex,
