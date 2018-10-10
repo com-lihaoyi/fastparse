@@ -39,32 +39,33 @@ object MathTests extends TestSuite{
     }
     'fail - {
       def check(input: String, expectedTrace: String, expectedShortTrace: String) = {
-//        val failure = Parse(input).read(expr(_)).asInstanceOf[Result.Failure]
-//        val actualTrace = failure.extra.traced.trace
-//        assert(expectedTrace.trim == actualTrace.trim)
+        val failure = Parse(input).read(expr(_)).asInstanceOf[Result.Failure]
+        val actualTrace = failure.extra.traced.trace
+        assert(expectedTrace.trim == actualTrace.trim)
 
         // Check iterator parsing results in a failure in the right place. Note
         // that we aren't checking the `.traced.trace` because that requires a
         // second parse which doesn't work with iterators (which get exhausted)
-//        val failure = Parse(input).read(expr(_)).asInstanceOf[Result.Failure]
-        val failure = Parse.iter(input.grouped(1)).read(expr(_)).asInstanceOf[Result.Failure]
-        val trace = failure.trace
-        assert(trace == expectedShortTrace.trim)
+        for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)) {
+          val failure2 = Parse.iter(input.grouped(chunkSize)).read(expr(_)).asInstanceOf[Result.Failure]
+          val trace = failure2.trace
+          assert(trace == expectedShortTrace.trim)
+        }
       }
       check(
         "(+)",
         """Expected expr:1:1 / addSub:1:1 / divMul:1:1 / factor:1:1 / parens:1:1 / addSub:1:2 / divMul:1:2 / factor:1:2 / ([0-9] | "("):1:2, found "+)"""",
-        ""
+        """Position 1, found "+)""""
       )
       check(
         "1+-",
         """Expected expr:1:1 / addSub:1:1 / divMul:1:3 / factor:1:3 / ([0-9] | "("):1:3, found "-"""",
-        ""
+        """Position 2, found "-""""
       )
       check(
         "(1+(2+3x))+4",
         """Expected expr:1:1 / addSub:1:1 / divMul:1:1 / factor:1:1 / parens:1:1 / addSub:1:2 / divMul:1:4 / factor:1:4 / parens:1:4 / ([0-9] | [*/] | [+\-] | ")"):1:8, found "x))+4"""",
-        ""
+        """Expected ")":7, found "x))+4""""
       )
     }
   }

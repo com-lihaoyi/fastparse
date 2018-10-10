@@ -69,7 +69,7 @@ object ExampleTests extends TestSuite{
         val f @ Result.Failure(5, _, _) = Parse("aaaaae").read(either(_))
         val trace = f.traced.trace
         assert(
-          f.toString == """Result.Failure(Expected ???:1:6, found "e")""",
+          f.toString == """Result.Failure(Position 1:6, found "e")""",
           trace == """Expected either:1:1 / ("a" | "b" | "c" | "d"):1:6, found "e""""
         )
       }
@@ -393,7 +393,7 @@ object ExampleTests extends TestSuite{
 
         check(
           Parse("(1+(2+3x))+4").read(Foo.expr(_)),
-          """Result.Failure(Expected ???:1:1, found "(1+(2+3x))")"""
+          """Result.Failure(Position 1:1, found "(1+(2+3x))")"""
         )
       }
       'cuts{

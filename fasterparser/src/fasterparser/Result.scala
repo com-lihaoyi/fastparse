@@ -27,9 +27,17 @@ object Result{
     def get = throw new Exception("Parse Error at " + index + ":\n" + stack.mkString("\n"))
     def fold[V](onFailure: (Int, List[(String, Int)]) => V, onSuccess: (Nothing, Int) => V) = onFailure(index, stack)
     override def toString() = s"Result.Failure($trace)"
-    def trace =
-      "Expected " +Failure.formatStack(extra.input, stack) +
-      ", found " + Failure.formatTrailing(extra.input, stack.head._2)
+    def trace = {
+      stack match{
+        case List(("", index)) =>
+          "Position " + ReprOps.StringReprOps.prettyIndex(extra.input, index) +
+            ", found " + Failure.formatTrailing(extra.input, stack.head._2)
+        case s =>
+          "Expected " + Failure.formatStack(extra.input, stack) +
+            ", found " + Failure.formatTrailing(extra.input, stack.head._2)
+      }
+
+    }
     def traced = extra.traced
 
   }

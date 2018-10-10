@@ -122,15 +122,20 @@ final class Parse[+T](val input: ParserInput[Char, String],
     if (isSuccess) Result.Success(successValue.asInstanceOf[T], index)
     else {
       val msg =
-        if (failureAggregate.isEmpty) Option(shortFailureMsg).fold("")(_())
-        else {
+        if (failureAggregate.isEmpty) {
+          if (shortFailureMsg == null) List("" -> index)
+          else List(shortFailureMsg() -> index)
+        }else{
+
           val tokens = failureAggregate.distinct.reverse
-          if (tokens.length == 1) tokens.mkString(" | ")
-          else tokens.mkString("(", " | ", ")")
+          val combined =
+            if (tokens.length == 1) tokens.mkString(" | ")
+            else tokens.mkString("(", " | ", ")")
+            (combined -> index) :: failureStack.reverse
         }
       Result.Failure(
         index,
-        (msg -> index) :: failureStack.reverse,
+        msg,
         Result.Extra(input, startIndex, index, originalParser)
       )
     }

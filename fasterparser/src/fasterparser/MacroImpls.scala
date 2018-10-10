@@ -156,7 +156,7 @@ object MacroImpls {
           val res = ctx5.prepareFailure(startPos)
           ctx5.cut = ctx5.cut | oldCut
           ctx5.failureStack = Nil
-          if (ctx5.traceIndex == -1) ctx5.shortFailureMsg = () => "???"
+          if (ctx5.traceIndex == -1) ctx5.shortFailureMsg = () => ""
           res
         }
       }
@@ -216,7 +216,6 @@ object MacroImpls {
     val output = TermName(c.freshName("output"))
     val index = TermName(c.freshName("index"))
     val input = TermName(c.freshName("input"))
-    val inputLength = TermName(c.freshName("inputLength"))
     val n = TermName(c.freshName("n"))
     def rec(depth: Int, t: TrieNode): c.Expr[Unit] = {
       val charAt = if (ignoreCase) q"$input.apply($n).toLower" else q"$input.apply($n)"
@@ -236,7 +235,7 @@ object MacroImpls {
       val run = q"""
          val $n = $index + $depth
          ..${if (t.word) Seq(q"$output = $n") else Nil}
-         if ($n < $inputLength) $children
+         if ($input.isReachable($n)) $children
       """
       val wrap = TermName(c.freshName("wrap"))
       c.Expr[Unit](
@@ -257,7 +256,6 @@ object MacroImpls {
       val $ctx1 = $ctx
       val $index = $ctx1.index
       val $input = $ctx1.input
-      val $inputLength = $input.length
 
       var $output: Int = -1
       ${rec(0, trie)}
@@ -337,7 +335,8 @@ object MacroImpls {
     val parsed = parseCharCls(c)(reify(ctx.splice.input(ctx.splice.index)), literals)
     val bracketed = c.Expr[String](Literal(Constant(literals.map("[" + _ + "]").mkString)))
     reify {
-      if (!(ctx.splice.index < ctx.splice.input.length)) {
+
+      if (!ctx.splice.input.isReachable(ctx.splice.index)) {
         ctx.splice.freshFailure(bracketed.splice).asInstanceOf[Parse[Unit]]
       } else parsed.splice match {
         case true => ctx.splice.freshSuccess((), bracketed.splice, ctx.splice.index + 1)
@@ -387,7 +386,7 @@ object MacroImpls {
               other.splice
               val postOtherIndex = ctx3.index
               val nextIndex =
-                if (preOtherIndex >= postOtherIndex && postOtherIndex < ctx3.input.length) preWsIndex
+                if (preOtherIndex >= postOtherIndex && ctx3.input.isReachable(postOtherIndex)) preWsIndex
                 else ctx3.index
               val rhsNewCut = cut1.splice | ctx3.cut | pCut
               if (!ctx3.isSuccess) ctx3.prepareFailure(ctx3.index, cut = rhsNewCut)
@@ -447,18 +446,15 @@ object MacroImpls {
     val ctx1 = TermName(c.freshName("ctx"))
     val index = TermName(c.freshName("index"))
     val input = TermName(c.freshName("input"))
-    val inputLength = TermName(c.freshName("inputLength"))
     val start = TermName(c.freshName("start"))
     val res = q"""
       val $ctx1 = $ctx
       var $index = $ctx1.index
       val $input = $ctx1.input
-      val $inputLength = $input.length
-
 
       val $start = $index
       while(
-        $index < $inputLength &&
+        $ctx1.input.isReachable($index) &&
         ${parseCharCls(c)(c.Expr[Char](q"$input($index)"), Seq(literal))}
       ) $index += 1
       if ($index - $start >= $min) $ctx1.freshSuccess((), "chars-while-in(" + $bracketed+ ", " + $min + ")", index = $index)

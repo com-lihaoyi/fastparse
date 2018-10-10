@@ -26,7 +26,7 @@ object Parsing {
   def startsWithIgnoreCase(src: ParserInput[Char, String], prefix: IndexedSeq[Char], offset: Int) = {
     @tailrec def rec(i: Int): Boolean = {
       if (i >= prefix.length) true
-      else if(i + offset >= src.length) false
+      else if(!src.isReachable(i + offset)) false
       else {
         val c1: Char = src(i + offset)
         val c2: Char = prefix(i)
@@ -37,7 +37,6 @@ object Parsing {
     rec(0)
   }
   def IgnoreCase(s: String)(implicit ctx: Parse[Any]): Parse[Unit] = {
-
     if (startsWithIgnoreCase(ctx.input, s, ctx.index)) ctx.freshSuccess((), Util.literalize(s), ctx.index + s.length)
     else ctx.freshFailure(Util.literalize(s)).asInstanceOf[Parse[Unit]]
   }
