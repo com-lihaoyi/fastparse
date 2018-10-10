@@ -143,21 +143,21 @@ object JsonTests extends TestSuite{
             }
       """)
     }
-    'perf{
-      val input = getClass.getResourceAsStream("/fasterparser/test.json")
-
-      val buffer = new java.io.BufferedReader(new java.io.InputStreamReader(input))
-      import collection.JavaConverters._
-      val txt = buffer.lines.iterator().asScala.mkString("\n")
-      var count = 0
-      val startTime = System.currentTimeMillis()
-      while(startTime + 100 > System.currentTimeMillis()){
-        Parse(txt).read(jsonExpr(_))
-        count += 1
-      }
+//    'perf{
+//      val input = getClass.getResourceAsStream("/fasterparser/test.json")
+//
+//      val buffer = new java.io.BufferedReader(new java.io.InputStreamReader(input))
+//      import collection.JavaConverters._
+//      val txt = buffer.lines.iterator().asScala.mkString("\n")
+//      var count = 0
+//      val startTime = System.currentTimeMillis()
+//      while(startTime + 100 > System.currentTimeMillis()){
+//        Parse(txt).read(jsonExpr(_))
+//        count += 1
+//      }
 //      println(txt)
-      count
-    }
+//      count
+//    }
     'fail{
       def check(s: String, expectedError: String, expectedShortError: String) = {
         Parse(s).read(jsonExpr(_)) match{

@@ -3,16 +3,34 @@ import mill._, scalalib._, scalajslib._
 val crossVersions = Seq("2.11.12", "2.12.7")
 object fasterparser extends Module{
   object jvm extends Cross[FasterParserJvmModule](crossVersions:_*)
-  class FasterParserJvmModule(val crossScalaVersion: String) extends FasterParserModule
+  class FasterParserJvmModule(val crossScalaVersion: String) extends FasterParserModule{
+    def platformSegment = "jvm"
+    object test extends Tests with CommonTestModule
+    object bench extends ScalaModule{
+      def scalaVersion = crossScalaVersion
+
+      override def scalacOptions = Seq("-opt:l:method")
+
+      def moduleDeps = super.moduleDeps ++ Seq(FasterParserJvmModule.this)
+      def ivyDeps = Agg(
+        ivy"com.lihaoyi::fastparse:1.0.0",
+        ivy"com.lihaoyi::ammonite-ops:1.1.2",
+        ivy"org.scala-lang:scala-reflect:${scalaVersion()}",
+      )
+    }
+
+  }
 
   object js extends Cross[FasterParserJsModule](crossVersions:_*)
   class FasterParserJsModule(val crossScalaVersion: String) extends FasterParserModule with ScalaJSModule {
+    def platformSegment = "js"
     def scalaJSVersion = "0.6.25"
+    object test extends Tests with CommonTestModule
   }
 }
-trait FasterParserModule extends CrossScalaModule{
+trait FasterParserModule extends CommonCrossModule{
   def ivyDeps = Agg(
-    ivy"com.lihaoyi::sourcecode:0.1.4",
+    ivy"com.lihaoyi::sourcecode::0.1.4",
   )
   def compileIvyDeps = Agg(
     ivy"org.scala-lang:scala-reflect:${scalaVersion()}"
@@ -49,25 +67,6 @@ trait FasterParserModule extends CrossScalaModule{
     ammonite.ops.write(file, output)
     Seq(PathRef(file))
   }
-  object test extends Tests{
-    def ivyDeps = Agg(
-      ivy"com.lihaoyi::utest:0.6.5",
-    )
-
-    def testFrameworks = Seq("utest.runner.Framework")
-  }
-  object bench extends ScalaModule{
-    def scalaVersion = crossScalaVersion
-
-    override def scalacOptions = Seq("-opt:l:method")
-
-    def moduleDeps = super.moduleDeps ++ Seq(FasterParserModule.this)
-    def ivyDeps = Agg(
-      ivy"com.lihaoyi::fastparse:1.0.0",
-      ivy"com.lihaoyi::ammonite-ops:1.1.2",
-      ivy"org.scala-lang:scala-reflect:${scalaVersion()}",
-    )
-  }
 }
 
 object scalaparse extends Module{
@@ -94,23 +93,36 @@ object pythonparse extends Module{
   class PythonParseJvmModule(val crossScalaVersion: String) extends ExampleParseJvmModule
 }
 
-trait ExampleParseModule extends CrossScalaModule{
-  object test extends Tests{
-    def ivyDeps = Agg(
-      ivy"com.lihaoyi::utest:0.6.5",
-    )
 
-    def testFrameworks = Seq("utest.runner.Framework")
-  }
-}
 
-trait ExampleParseJsModule extends ExampleParseModule{
+trait ExampleParseJsModule extends CommonCrossModule with ScalaJSModule{
   def moduleDeps = Seq(fasterparser.js())
   def scalaJSVersion = "0.6.25"
-
+  def platformSegment = "js"
+  object test extends Tests with CommonTestModule
 }
 
 
-trait ExampleParseJvmModule extends ExampleParseModule{
+trait ExampleParseJvmModule extends CommonCrossModule{
   def moduleDeps = Seq(fasterparser.jvm())
+  def platformSegment = "jvm"
+  object test extends Tests with CommonTestModule
+}
+
+trait CommonCrossModule extends CrossScalaModule{
+  def platformSegment: String
+  def millSourcePath = super.millSourcePath / ammonite.ops.up
+  def sources = T.sources(
+    millSourcePath / "src",
+    millSourcePath / s"src-$platformSegment"
+  )
+
+
+}
+trait CommonTestModule extends ScalaModule with TestModule{
+  def ivyDeps = Agg(
+    ivy"com.lihaoyi::utest::0.6.5",
+  )
+
+  def testFrameworks = Seq("utest.runner.Framework")
 }
