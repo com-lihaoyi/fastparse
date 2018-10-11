@@ -9,24 +9,24 @@ package fasterparser
   * packages it up nicely in an immutable case class that's easy for external
   * code to make use of.
   */
-sealed abstract class Result[+T](val isSuccess: Boolean){
+sealed abstract class Parsed[+T](val isSuccess: Boolean){
   def fold[V](onFailure: (Int, List[(String, Int)]) => V, onSuccess: (T, Int) => V): V
-  def get: Result.Success[T]
+  def get: Parsed.Success[T]
 }
 
-object Result{
+object Parsed{
 
-  final case class Success[+T](value: T, index: Int) extends Result[T](true){
+  final case class Success[+T](value: T, index: Int) extends Parsed[T](true){
     def get = this
     def fold[V](onFailure: (Int, List[(String, Int)]) => V, onSuccess: (T, Int) => V) = onSuccess(value, index)
-    override def toString() = s"Result.Success($value, $index)"
+    override def toString() = s"Parsed.Success($value, $index)"
   }
   final case class Failure(index: Int,
                      stack: List[(String, Int)],
-                     extra: Extra) extends Result[Nothing](false){
+                     extra: Extra) extends Parsed[Nothing](false){
     def get = throw new Exception("Parse Error at " + index + ":\n" + stack.mkString("\n"))
     def fold[V](onFailure: (Int, List[(String, Int)]) => V, onSuccess: (Nothing, Int) => V) = onFailure(index, stack)
-    override def toString() = s"Result.Failure($trace)"
+    override def toString() = s"Parsed.Failure($trace)"
     def trace = {
       stack match{
         case List(("", index)) =>

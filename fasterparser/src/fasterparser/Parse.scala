@@ -70,7 +70,7 @@ final class Parse[+T](val input: ParserInput,
                       val traceIndex: Int,
                       var originalParser: Parse[_] => Parse[_],
                       var noDropBuffer: Boolean){
-  def read[T](p: Parse[_] => Parse[T] @uncheckedVariance): Result[T] = {
+  def read[T](p: Parse[_] => Parse[T] @uncheckedVariance): Parsed[T] = {
     if (originalParser == null) originalParser = p
     p(this).result
   }
@@ -127,8 +127,8 @@ final class Parse[+T](val input: ParserInput,
 
   def checkForDrop() = !noDropBuffer && cut
 
-  def result: Result[T] = {
-    if (isSuccess) Result.Success(successValue.asInstanceOf[T], index)
+  def result: Parsed[T] = {
+    if (isSuccess) Parsed.Success(successValue.asInstanceOf[T], index)
     else {
       val msg =
         if (failureAggregate.isEmpty) {
@@ -142,10 +142,10 @@ final class Parse[+T](val input: ParserInput,
             else tokens.mkString("(", " | ", ")")
             (combined -> index) :: failureStack.reverse
         }
-      Result.Failure(
+      Parsed.Failure(
         index,
         msg,
-        Result.Extra(input, startIndex, index, originalParser)
+        Parsed.Extra(input, startIndex, index, originalParser)
       )
     }
   }

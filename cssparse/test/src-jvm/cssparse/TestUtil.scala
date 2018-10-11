@@ -6,11 +6,11 @@ object TestUtil {
 
   def checkParsing(input: String, tag: String = "") = {
 
-    def checkParsed(input: String, res: Result[Ast.RuleList]) = {
+    def checkParsed(input: String, res: Parsed[Ast.RuleList]) = {
       res match {
-        case f: Result.Failure =>
+        case f: Parsed.Failure =>
           throw new Exception(tag + "\n" + input + "\n" + f.extra.traced.trace)
-        case s: Result.Success[Ast.RuleList] =>
+        case s: Parsed.Success[Ast.RuleList] =>
           val inputLength = input.length
           val index = s.index
           utest.assert(index == inputLength)

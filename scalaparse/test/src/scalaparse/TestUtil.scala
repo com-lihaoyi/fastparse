@@ -13,7 +13,7 @@ object TestUtil {
 //    println("Checking Neg...\n" )
 //    println(input)
     Parse(input).read(Scala.CompilationUnit(_)) match{
-      case f: Result.Failure =>
+      case f: Parsed.Failure =>
 
         println("TRACING")
         val traced = f.extra.traced
@@ -29,7 +29,7 @@ object TestUtil {
           expected.trim == parsedExpected.trim && parsedFound.startsWith(found)
         }
         )
-      case _: Result.Success[_] => assert({implicitly(input); false})
+      case _: Parsed.Success[_] => assert({implicitly(input); false})
     }
 //    for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
 //      val res = Scala.CompilationUnit.parseIterator(input.grouped(chunkSize))
@@ -66,12 +66,12 @@ object TestUtil {
 
     for(res <- iteratorRes){
       res match{
-        case f: Result.Failure =>
+        case f: Parsed.Failure =>
           //        println(f.formatExpectedAsString)
           //        println(f.formatTraces)
           println("TRACING")
           throw new Exception(tag + "\n" + input + "\n" + f.trace)
-        case s: Result.Success[_] =>
+        case s: Parsed.Success[_] =>
           //        println(parsed)
           val inputLength = input.length
           assert(s.index == inputLength)

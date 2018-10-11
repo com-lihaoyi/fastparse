@@ -101,10 +101,10 @@ object JsonTests extends TestSuite{
   val tests = Tests{
     'pass {
       def test(p: P[_] => P[_], s: String) = p(Parse(s)).result match{
-        case Result.Success(v, i) =>
+        case Parsed.Success(v, i) =>
           val expectedIndex = s.length
           assert(i == expectedIndex)
-        case f: Result.Failure => throw new Exception(f.index.toString)
+        case f: Parsed.Failure => throw new Exception(f.index.toString)
       }
 
       'parts {
@@ -114,7 +114,7 @@ object JsonTests extends TestSuite{
         * - test(obj(_), """{"omg": "123", "wtf": 456, "bbq": "789"}""")
       }
       'jsonExpr - {
-        val Result.Success(value, _) =
+        val Parsed.Success(value, _) =
           Parse("""{"omg": "123", "wtf": 12.4123}""").read(jsonExpr(_))
 
         assert(value == Js.Obj("omg" -> Js.Str("123"), "wtf" -> Js.Num(12.4123)))
@@ -161,8 +161,8 @@ object JsonTests extends TestSuite{
     'fail{
       def check(s: String, expectedError: String, expectedShortError: String) = {
         Parse(s).read(jsonExpr(_)) match{
-          case s: Result.Success[_] => throw new Exception("Parsing should have failed:")
-          case f: Result.Failure =>
+          case s: Parsed.Success[_] => throw new Exception("Parsing should have failed:")
+          case f: Parsed.Failure =>
 //            val error = f.extra.traced.trace
 //            val expected = expectedError.trim
 //            assert(error == expected)

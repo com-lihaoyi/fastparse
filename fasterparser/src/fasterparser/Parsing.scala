@@ -252,12 +252,12 @@ object Parsing {
         val prettyIndex = ReprOps.StringReprOps.prettyIndex(ctx.input, ctx.index)
         s"Success($prettyIndex${if (ctx.cut) ", cut" else ""})"
       } else{
-        val trace = Result.Failure.formatStack(
+        val trace = Parsed.Failure.formatStack(
           ctx.input,
           (Option(ctx.shortFailureMsg).fold("")(_()) -> ctx.index) :: ctx.failureStack.reverse
         )
         val trailing = ctx.input match{
-          case c: IndexedParserInput => Result.Failure.formatTrailing(ctx.input, startIndex)
+          case c: IndexedParserInput => Parsed.Failure.formatTrailing(ctx.input, startIndex)
           case _ => ""
         }
         s"Failure($trace ...$trailing${if (ctx.cut) ", cut" else ""})"

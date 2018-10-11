@@ -12,8 +12,8 @@ object TestUtils {
     def parseIt[_: P] = rule(Parse()) ~ End
     val parsed = Parse(s).read(parseIt(_))
     val stringResult = parsed match {
-      case f: Result.Failure => throw new Exception(f.extra.traced.trace)
-      case s: Result.Success[T] =>
+      case f: Parsed.Failure => throw new Exception(f.extra.traced.trace)
+      case s: Parsed.Success[T] =>
         val result = s.value
         assert(result == expected)
         result
