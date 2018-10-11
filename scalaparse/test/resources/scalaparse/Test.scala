@@ -1,1 +1,1 @@
-object Build {/*/* */}*/}
+object  GenJSCode {/* / * for it.*/}

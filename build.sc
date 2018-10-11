@@ -1,4 +1,7 @@
-import mill._, scalalib._, scalajslib._
+import mill._
+import perftests.bench2.scalaVersion
+import scalalib._
+import scalajslib._
 
 val crossVersions = Seq("2.11.12", "2.12.7")
 object fasterparser extends Module{
@@ -140,4 +143,36 @@ trait CommonTestModule extends ScalaModule with TestModule{
     millSourcePath / s"src-$platformSegment"
   )
   def testFrameworks = Seq("utest.runner.Framework")
+}
+
+object perftests extends Module{
+  object bench1 extends PerfTestModule {
+    def ivyDeps = super.ivyDeps() ++ Agg(
+      ivy"com.lihaoyi::scalaparse:1.0.0",
+      ivy"com.lihaoyi::pythonparse:1.0.0",
+      ivy"com.lihaoyi::cssparse:1.0.0",
+    )
+  }
+
+  object bench2 extends PerfTestModule {
+    def moduleDeps = Seq(
+      scalaparse.jvm("2.12.7").test,
+      pythonparse.jvm("2.12.7").test,
+      cssparse.jvm("2.12.7").test,
+      fasterparser.jvm("2.12.7").test,
+    )
+  }
+
+  trait PerfTestModule extends ScalaModule with TestModule{
+    def scalaVersion = "2.12.7"
+    def resources = T.sources{
+      Seq(PathRef(perftests.millSourcePath / "resources")) ++
+        fasterparser.jvm("2.12.7").test.resources()
+    }
+    def testFrameworks = Seq("utest.runner.Framework")
+    def ivyDeps = Agg(
+      ivy"com.lihaoyi::utest::0.6.5",
+      ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
+    )
+  }
 }

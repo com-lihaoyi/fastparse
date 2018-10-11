@@ -57,11 +57,11 @@ object TestUtil {
   def check[T](input: String, tag: String = "", skipIterator: Boolean = false) = {
     println("Checking...\n" )
 //    println(input)
-    val normalRes = parse(input).read(Scala.CompilationUnit(_))
+//    val normalRes = parse(input).read(Scala.CompilationUnit(_))
     val iteratorRes =
       if (skipIterator) Nil
       else
-        for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024))
+        for(chunkSize <- Seq(1))
         yield parseIter(input.grouped(chunkSize)).read(Scala.CompilationUnit(_))
 
     for(res <- iteratorRes){

@@ -1,8 +1,7 @@
-package test.fasterparser
+package perftests
 
-import fastparse.core.Parsed
 import fastparse.{WhitespaceApi, core}
-import Expr.Member.Visibility
+import perftests.Expr.Member.Visibility
 
 class FastParseParser{
   val parseCache = collection.mutable.Map.empty[String, fastparse.all.Parsed[Expr]]
@@ -69,8 +68,8 @@ class FastParseParser{
       }
     }
   }
-  import fastparse.noApi._
   import White._
+  import fastparse.noApi._
 
   val keywords = Set(
     "assert", "else", "error", "false", "for", "function", "if", "import", "importstr",

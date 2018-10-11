@@ -1,11 +1,11 @@
-package test.fasterparser
+package perftests
+
+import fasterparser.JsonnetWhitespace._
 import fasterparser._
-import fasterparser._, JsonnetWhitespace._
-import test.fasterparser.Expr.Member.Visibility
+import Expr.Member.Visibility
+import scala.annotation.switch
 
-import scala.annotation.{switch, tailrec}
-
-class FasterParserParser{
+object FasterParserParser{
   val precedenceTable = Seq(
     Seq("*", "/", "%"),
     Seq("+", "-"),
@@ -30,9 +30,7 @@ class FasterParserParser{
     "in", "local", "null", "tailstrict", "then", "self", "super", "true"
   )
 
-  val idStartChar = fastparse.utils.MacroUtils.preCompute(c =>
-    ("_" ++ ('a' to 'z') ++ ('A' to 'Z')).contains(c)
-  )
+  def idStartChar(c: Char) = c == '_' || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z')
 
   def id[_: P] = P(
     CharIn("_a-zA-Z0-9") ~~

@@ -611,6 +611,9 @@ object SuccessTests extends TestSuite{
       """object Build {/*/* */}*/}""".stripMargin
     )
     * - check(
+      """object  GenJSCode {/* / * for it.*/}""".stripMargin
+    )
+    * - check(
       """object Build {/*/* */*/}""".stripMargin
     )
     * - check(

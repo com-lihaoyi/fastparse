@@ -149,7 +149,6 @@ object JsonnetWhitespace{
 object ScalaWhitespace {
   implicit val whitespace = {implicit ctx: ParsingRun[_] =>
     val input = ctx.input
-
     @tailrec def rec(current: Int, state: Int, nesting: Int): ParsingRun[Unit] = {
       if (!input.isReachable(current)) ctx.prepareSuccess((), current)
       else {
@@ -166,7 +165,9 @@ object ScalaWhitespace {
             (currentChar: @switch) match{
               case '/' => rec(current + 1, state = 1, 0)
               case '*' => rec(current + 1, state = 3, nesting + 1)
-              case _ => ctx.prepareSuccess((), current - 1)
+              case _ =>
+                if (nesting == 0) ctx.prepareSuccess((), current - 1)
+                else rec(current + 1, state = 3, nesting)
             }
           case 3 =>
             (currentChar: @switch) match{

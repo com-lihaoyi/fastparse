@@ -1,4 +1,4 @@
-package test.fasterparser
+package perftests
 
 sealed trait Offsetted{
   def offset: Int

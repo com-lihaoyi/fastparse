@@ -36,7 +36,7 @@ object Expressions {
     case Seq(x) => x
     case xs => Ast.expr.BoolOp(Ast.boolop.And, xs)
   }
-  def not_test[_: P]: P[Ast.expr] = P( ("not" ~ not_test).map(Ast.expr.UnaryOp(Ast.unaryop.Not, _)) | comparison )
+  def not_test[_: P]: P[Ast.expr] = P( (kw("not") ~ not_test).map(Ast.expr.UnaryOp(Ast.unaryop.Not, _)) | comparison )
   def comparison[_: P]: P[Ast.expr] = P( expr ~ (comp_op ~ expr).rep ).map{
     case (lhs, Nil) => lhs
     case (lhs, chunks) =>
@@ -55,10 +55,10 @@ object Expressions {
   def GtE[_: P] = op(">=", Ast.cmpop.GtE)
   def LtE[_: P] = op("<=", Ast.cmpop.LtE)
   def NotEq[_: P] = op("<>" | "!=", Ast.cmpop.NotEq)
-  def In[_: P] = op("in", Ast.cmpop.In)
-  def NotIn[_: P] = op("not" ~ "in", Ast.cmpop.NotIn)
-  def Is[_: P] = op("is", Ast.cmpop.Is)
-  def IsNot[_: P] = op("is" ~ "not", Ast.cmpop.IsNot)
+  def In[_: P] = op(kw("in"), Ast.cmpop.In)
+  def NotIn[_: P] = op(kw("not") ~ kw("in"), Ast.cmpop.NotIn)
+  def Is[_: P] = op(kw("is"), Ast.cmpop.Is)
+  def IsNot[_: P] = op(kw("is") ~ kw("not"), Ast.cmpop.IsNot)
   def comp_op[_: P] = P( LtE|GtE|Eq|Gt|Lt|NotEq|In|NotIn|IsNot|Is )
   def Add[_: P] = op("+", Ast.operator.Add)
   def Sub[_: P] = op("-", Ast.operator.Sub)
@@ -184,10 +184,10 @@ object Expressions {
   }
   def named_argument[_: P] = P( NAME ~ "=" ~ test  ).map(Ast.keyword.tupled)
 
-  def comp_for[_: P]: P[Ast.comprehension] = P( "for" ~ exprlist ~ "in" ~ or_test ~ comp_if.rep ).map{
+  def comp_for[_: P]: P[Ast.comprehension] = P( kw("for") ~ exprlist ~ kw("in") ~ or_test ~ comp_if.rep ).map{
     case (targets, test, ifs) => Ast.comprehension(tuplize(targets), test, ifs)
   }
-  def comp_if[_: P]: P[Ast.expr] = P( "if" ~ test )
+  def comp_if[_: P]: P[Ast.expr] = P( kw("if") ~ test )
 
   def testlist1[_: P]: P[Seq[Ast.expr]] = P( test.rep(1, sep = ",") )
 
