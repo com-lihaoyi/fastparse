@@ -168,13 +168,13 @@
             To begin using ScalaParse, add
 
             @hl.scala
-                "com.lihaoyi" %% "scalaparse" % "@fastparse.Constants.version"
+                "com.lihaoyi" %% "scalaparse" % ""2.0.0""
 
             @p
                 To your SBT configuration. To use with Scala.js, you'll need
 
             @hl.scala
-                "com.lihaoyi" %%% "scalaparse" % "@fastparse.Constants.version"
+                "com.lihaoyi" %%% "scalaparse" % ""2.0.0""
 
     @sect{PythonParse}
         @p
@@ -184,7 +184,7 @@
             PythonParse is currently compatible enough to parse all the python sources in Zulip, Ansible, Changes, Django, and Flask. It isn't published yet on maven central, but feel free to look at it if you want an idea of how to write a complex, real parser.
 
         @hl.scala
-            "com.lihaoyi" %%% "pythonparse" % "@fastparse.Constants.version"
+            "com.lihaoyi" %%% "pythonparse" % ""2.0.0""
 
     @sect{CssParse}
         @p
@@ -222,4 +222,4 @@
             This is available on Maven Central as
 
         @hl.scala
-            "com.lihaoyi" %%% "cssparse" % "@fastparse.Constants.version"
+            "com.lihaoyi" %%% "cssparse" % ""2.0.0""

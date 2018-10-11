@@ -5,10 +5,6 @@ lazy val readme = scalatex.ScalatexReadme(
   source = "Readme",
   autoResources = List("demo-opt.js")
 ).settings(
-  (resources in Compile) += {
-    (fullOptJS in (demo, Compile)).value
-    (artifactPath in (demo,  Compile, fullOptJS )).value
-  },
-  (unmanagedSources in Compile) += baseDirectory.value/".."/"project"/"Constants.scala"
+  (resources in Compile) += baseDirectory.value/"out"/"demo"/"fullOpt"/"dest"/"out.js"
 )
 

@@ -409,6 +409,30 @@ object ExampleTests extends TestSuite{
           """Parsed.Failure(Expected ")":1:8, found "x))+4")"""
         )
       }
+      'logSimple - {
+        val logged = collection.mutable.Buffer.empty[String]
+        implicit val logger = Logger(logged.append(_))
+
+        def DeepFailure[_: P] = P( "C" )
+        def Foo[_: P] = P( (DeepFailure.log() | "A".log()) ~ "B".!.log() ).log()
+
+        parse("AB").read(Foo(_))
+
+        val allLogged = logged.mkString("\n")
+
+        val expected =
+          """+Foo:1:1
+            |  +DeepFailure:1:1
+            |  -DeepFailure:1:1:Failure(DeepFailure:1:1 / "C":1:1 ..."AB")
+            |  +"A":1:1
+            |  -"A":1:1:Success(1:2)
+            |  +"B":1:2
+            |  -"B":1:2:Success(1:3)
+            |-Foo:1:1:Success(1:3)
+            |
+        """.stripMargin.trim
+        assert(allLogged == expected)
+      }
       'log{
         val captured = collection.mutable.Buffer.empty[String]
         implicit val logger = Logger(captured.append(_))

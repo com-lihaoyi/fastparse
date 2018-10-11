@@ -61,10 +61,10 @@
         To begin using FastParse, add
 
     @hl.scala
-        "com.lihaoyi" %% "fastparse" % "@fastparse.Constants.version"
+        "com.lihaoyi" %% "fastparse" % ""2.0.0""
 
     @p
         To your SBT configuration. To use with Scala.js, you'll need
     @hl.scala
-        "com.lihaoyi" %%% "fastparse" % "@fastparse.Constants.version"
+        "com.lihaoyi" %%% "fastparse" % ""2.0.0""
 

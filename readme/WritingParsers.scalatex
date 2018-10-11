@@ -98,8 +98,6 @@
                 In general, if you have a parser of type @hl.scala{TupleN}, capturing one more section turns it into a @hl.scala{TupleN+1}. Furthermore, if you capture within a @hl.scala{.rep} or @hl.scala{.?} optional parser, it becomes a @hl.scala{Parser[Seq[T]]} or @hl.scala{Parser[Option[T]]} respectively
 
         @sect{AnyChar}
-            @i
-                See also @hl.scala{AnyElem} in @sect.ref{Abstraction}
             @hl.ref(tests/"ExampleTests.scala", Seq("'anychar", ""))
 
             @p
@@ -166,10 +164,16 @@
                 @hl.scala{.opaque} wraps the target parser in an @hl.scala{Opaque} combinator, which only succeeds or fails as a single entity and leaves no traces of underlying parsers on the stack.
 
         @sect{Log}
-            @hl.ref(tests/"MiscTests.scala", Seq("'logging", ""))
+            @hl.ref(tests/"ExampleTests.scala", Seq("'logSimple", ""))
 
             @p
-                @sect.ref{Debugging Parsers} is often done with the @hl.scala{.log()} method, which logs output whenever the parser is tried, and when it succeeds or fails, together with the location and other data when these things happen (traces on failures, results on successes, the presence of @sect.ref{Cuts}, ...). You can define custom loggers as we've done here, or you can just leave it to by default print to stdout.
+                @sect.ref{Debugging Parsers} is often done with the
+                @hl.scala{.log()} method, which logs output whenever the
+                parser is tried, and when it succeeds or fails, together with
+                the location and other data when these things happen (traces
+                on failures, results on successes, the presence of
+                @sect.ref{Cuts}, ...). You can define custom loggers as we've
+                done here, or you can just leave it to by default print to stdout.
 
             @p
                 Generally, if a parser is doing something wrong, the workflow is:
@@ -178,9 +182,11 @@
                 @li
                     Add a @hl.scala{.log()} to the parser which is misbehaving
                 @li
-                    See where it's being tried, and what it's result (success/failure) is, and confirm that it is misbehaving.
+                    See where it's being tried, and what it's result
+                    (success/failure) is, and confirm that it is misbehaving.
                 @li
-                    Look at the parsers it's made of; which one of them is misbehaving and causing the larger parser to misbehave?
+                    Look at the parsers it's made of; which one of them is
+                    misbehaving and causing the larger parser to misbehave?
                 @li
                     Add @hl.scala{.log()}s to all of them
                 @li
@@ -188,90 +194,77 @@
                 @li
                     Repeat
             @p
-                It's a non-trivial process, but it is generally not hard to figure out what's happening this way.
+                It's a non-trivial process, but it is generally not hard to
+                figure out what's happening this way.
 
-    @sect{Intrinsics}
+    @sect{Utilities}
         @p
-            In theory, all possible parsers can be put together using the above tools. In practice, a few more tools are provided for convenience or performance:
+            Fastparse provides tools for many common use cases, so you do not
+            need to implement them yourself. These utilities are optimized and
+            likely faster than whatever you would come up with on the spot, so
+            you should use them whenever possible
 
         @sect{CharPred}
-            @i
-                See also @hl.scala{ElemPred} in @sect.ref{Abstraction}
             @hl.ref(tests/"ExampleTests.scala", Seq("'charPred", ""))
             @p
-                @hl.scala{CharPred} takes a @hl.scala{Char => Boolean} predicate and creates a parser that parses any single character that satisfies that predicate. e.g. you can use any of the helpful methods on @hl.scala{scala.Char} to check if a @hl.scala{Char} @hl.scala{isUpper}, @hl.scala{isDigit}, @hl.scala{isControl}, etc. etc.
-
-            @p
-                Note that this builds a high-performance bit-packed lookup table, the size of the range of valid characters, up to 65k. That means that creating a parser like this has a one-time cost in terms of memory (up to 8k bytes) and time. This should not matter as FastParse parsers are long-lived and re-usable, though you may want to consciously avoid creating too many of these repeatedly.
-
-            @p
-                You can use @code{CharPred.raw} if you want to avoid pre-computing the lookup table, in which case the predicate is re-run repeatedly during parsing.
-
-            @hl.ref(tests/"ExampleTests.scala", Seq("'charPredRaw", ""))
-
-            @p
-                This could be useful if you find your parsers are taking too long to
-                initialize and don't mind sacrificing a bit of steady-state
-                performance.
+                @hl.scala{CharPred} takes a @hl.scala{Char => Boolean}
+                predicate and creates a parser that parses any single character
+                that satisfies that predicate. e.g. you can use any of the
+                helpful methods on @hl.scala{scala.Char} to check if a
+                @hl.scala{Char} @hl.scala{isUpper}, @hl.scala{isDigit},
+                @hl.scala{isControl}, etc. etc.
 
         @sect{CharIn}
-            @i
-                See also @hl.scala{ElemIn} in @sect.ref{Abstraction}
 
             @hl.ref(tests/"ExampleTests.scala", Seq("'charIn", ""))
 
             @p
-                Similar to @sect.ref{CharPred}, except you pass in sequences of valid characters rather than a predicate.
-
-            @p
-                @code{CharIn} also builds a lookup table which it uses during parsing. As a result, it's much faster to execute than if you had used @hl.scala{"a" | "b" | "c" | "d" | ...} to combine a bunch of single-character parsers together. The same warning as @sect.ref{CharPred} about the one time cost-of-construction applies.
-
+                Similar to @sect.ref{CharPred}, except you pass in literal
+                strings containing regex-style character ranges. This could
+                be things like @hl.scala{"abcd"} to accept the first four
+                alphabets, or @hl.scala{"a-zA-Z"} to accept all alphabets
+                both lower and uppercase. Since the @hl.scala{"-"} character
+                is used to express character ranges, it needs to be escaped
+                if you want to match it directly e.g. @hl.scala{"+\\-"}
+                to match either @hl.scala{"+"} or @hl.scala{"-"}. The
+                backslash character also needs to be similarly escaped
+                e.g. @hl.scala{"\\\\"} to match a single backslash
 
         @sect{CharsWhile}
-            @i
-                See also @hl.scala{ElemsWhile} in @sect.ref{Abstraction}
 
             @hl.ref(tests/"ExampleTests.scala", Seq("'charsWhile", ""))
 
             @p
-                A repeated version of @sect.ref{CharPred}: this parser continually chomps away at characters as long as they continue passes the given predicate.
+                A repeated version of @sect.ref{CharPred}: this parser
+                continually chomps away at characters as long as they continue
+                passes the given predicate.
 
             @p
-                This is a very fast parser, ideal for quickly consuming large numbers of characters. The same warning as @sect.ref{CharPred} about the one time cost-of-construction applies.
-            @p
-                You can use @code{CharsWhile.raw} if you want to avoid pre-computing the lookup table, in which case the predicate is re-run repeatedly during parsing.
-
-            @hl.ref(tests/"ExampleTests.scala", Seq("'charsWhileRaw", ""))
-
-            @p
-                This could be useful if you find your parsers are taking too long to
-                initialize and don't mind sacrificing a bit of steady-state
-                performance.
+                This is a very fast parser, ideal for quickly consuming large
+                numbers of characters.
 
         @sect{CharsWhileIn}
-            @i
-                See also @hl.scala{ElemsWhileIn} in @sect.ref{Abstraction}
 
             @hl.ref(tests/"ExampleTests.scala", Seq("'charsWhileIn", ""))
 
             @p
                 A combination of @sect.ref{CharsWhile} and @sect.ref{CharIn}, this
                 parser continues consuming characters as long as they are within
-                the set you characters you passed to it.
-            @p
-                If you find yourself using @sect.ref{CharsWhile} with @code{contains}
-                e.g. @hl.scala{CharsWhile("abc".contains)}, you probably could
-                use @code{CharsWhileIn} instead.
+                the set you characters you passed to it. Like @sect.ref{CharIn},
+                this parser takes in literal strings representing regex-style
+                character ranges that it accepts
+
         @sect{StringIn}
-            @i
-                See also @hl.scala{SeqIn} in @sect.ref{Abstraction}
             @hl.ref(tests/"ExampleTests.scala", Seq("'stringIn", ""))
 
             @p
-                Quickly parses one of any number of strings that you give it. Behind the scenes, it converts the list of strings into a Trie so it can attempt to parse all of them in a single pass.
+                Quickly parses one of any number of strings that you give it.
+                Behind the scenes, it converts the list of strings into a Trie
+                so it can attempt to parse all of them in a single pass.
 
             @p
-                As a result, this is much faster to execute than if you had combined the individual strings with @hl.scala{"cow" | "cattle" | ...}.
+                As a result, this is much faster to execute than if you had
+                combined the individual strings with @hl.scala{"cow" | "cattle" | ...}.
 
             @p
                 There is also a @code{StringInIgnoreCase} parser you can use
@@ -359,17 +352,3 @@
                 To explicitly isolate a cut to one branch of a parser, place that branch within @hl.scala{NoCut}.  Cuts within that branch will prevent backtracking inside that branch, but if that branch fails alternate branches will be tried as normal.
 
             @hl.ref(tests/"ExampleTests.scala", Seq("'composenocut", ""))
-    @sect{Unapply}
-        @p
-            @hl.scala{Parser} class has a convenient method @hl.scala{unapply}
-            which allows to do pattern matching using parsers (like regular
-            expressions) in your code.
-
-            @hl.ref(tests/"ExampleTests.scala", "val capture1", "val captureOpt")
-        @p
-            If the parser succeeds, the return value of the parser is bound
-            to the name in the pattern match. If the parser fails, the
-            pattern match fails. Note you do not have access to the failure
-            details when pattern-matching-syntax/unapply with a parser: if
-            you need that, call @code{.parse} and pattern match on the
-            @sect.ref{Parsing Results} yourself

@@ -2,8 +2,22 @@
 @sect{Change Log}
     @sect{2.0.0}
         @ul
-           @li
-                Total rewrite
+            @li
+                Major rewrite of @sect.ref{Internals}
+            @li
+                3-5x performance improvements on most benchmarks
+            @li
+                Parsers are no longer immutable objects, but just methods taking
+                and returning @code{fastparse.ParsingRun} instances
+            @li
+                Parsers now need to be defined as
+                @hl.scala{def myParser[_: P] = P(...)}, rather than
+                @hl.scala{val myParser = P(...)}
+            @li
+                @sect.ref{Whitespace} management has been overhauled; you now
+                import or define a whitespace implicit (e.g.
+                @hl.scala{import NoWhitespace._}) rather than defining a
+                @code{WhitespaceApi} instance to import extension methods from.
     @sect{1.0.0}
         @ul
            @li

@@ -1,7 +1,10 @@
 @import Main._
 @sect{Performance}
     @p
-        FastParse will never be able to compete with hand-written recursive descent parsers for speed. However, it's no slouch either; here's a comparison of FastParse with alternatives, using Parboiled2's JSON parsing benchmark, which parses a ~21,500 line JSON file:
+        FastParse will never be able to compete with hand-written recursive
+        descent parsers for speed, but for most use cases it is plenty fast
+        enough. Here's a comparison of FastParse with alternatives, using
+        Parboiled2's JSON parsing benchmark, which parses a ~21,500 line JSON file:
 
     @table(width := "100%", cls := "pure-table")
         @thead
@@ -26,13 +29,25 @@
 
 
     @p
-        These numbers are the number of iterations/second of parsing a sample @code{test.json} file, averaged over 200 runs. As you can see, the FastParse based parser comes within a factor of 4 of the fastest hand written parser (Jackson), is just as fast as the Parboiled2 based parser (slightly faster/slower depending if full tracing is enabled), and is almost 100x faster than the scala-parser-combinators library.
+        These numbers are the number of iterations/second of parsing a sample
+        @code{test.json} file, averaged over 200 runs. As you can see, the
+        FastParse based parser comes within a factor of 4 of the fastest hand
+        written parser (Jackson), is just as fast as the Parboiled2 based
+        parser (slightly faster/slower depending if full tracing is enabled),
+        and is almost 100x faster than the scala-parser-combinators library.
 
     @p
-        In exchange for the perf hit compared to hand-rolled solutions, you get the @sect.ref("Json", "short, super-simple parser definition"), and excellent error free error reporting. While for super-high-performance use cases you may still want a hand-rolled parser, for many ad-hoc situations a FastParse parser would do just fine. Remember, even at "only" 89 iterations per second that is still parsing 1,900,000 lines of JSON every second!
+        In exchange for the perf hit compared to hand-rolled solutions, you get
+        the @sect.ref("Json", "short, super-simple parser definition"), and
+        excellent error free error reporting. While for super-high-performance
+        use cases you may still want a hand-rolled parser, for many ad-hoc
+        situations a FastParse parser would do just fine. Remember, even at
+        "only" 89 iterations per second that is still parsing 1,900,000 lines
+        of JSON every second!
 
     @p
-        A similar speed ratio can be seen in parsing a @a("sample Scala file", href:="https://github.com/scala-js/scala-js/blob/master/compiler/src/main/scala/org/scalajs/core/compiler/GenJSCode.scala") using FastParse, Parboiled2 and Scalac's inbuilt hand-written Scala-language parser:
+        A similar speed ratio can be seen in parsing a
+        @a("sample Scala file", href:="https://github.com/scala-js/scala-js/blob/master/compiler/src/main/scala/org/scalajs/core/compiler/GenJSCode.scala") using FastParse, Parboiled2 and Scalac's inbuilt hand-written Scala-language parser:
 
     @table(width := "100%", cls := "pure-table")
         @thead
