@@ -6,4 +6,6 @@ scala:
 
 script:
 - curl -L -o ~/bin/mill https://github.com/lihaoyi/mill/releases/download/0.2.7/0.2.7 && chmod +x ~/bin/mill
+- mill resolve __.test
+- mill resolve __[$TRAVIS_SCALA_VERSION].test
 - mill __[$TRAVIS_SCALA_VERSION].test
