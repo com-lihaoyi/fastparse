@@ -58,12 +58,12 @@
     @sect{Using Log}
         @p
             We can add @sect.ref{Log} calls to make FastParse tell us a lot more about what a parser is doing. For example, if we want to know whenever a @hl.scala{side} or @hl.scala{expr} is being attempted, we can add @hl.scala{.log()} to those to parsers to find out:
-        @hl.ref(tests/"ExampleTests.scala", Seq("'debugging", "log", "object Foo"), "Foo.expr.parse")
+        @hl.ref(tests/"ExampleTests.scala", Seq("'debugging", "log", "object Foo"), "Foo.expr(_)")
 
         @p
             Then when you run it on an invalid input:
 
-        @hl.ref(tests/"ExampleTests.scala", Seq("'debugging", "log", "object Foo", "Foo.expr.parse"), "")
+        @hl.ref(tests/"ExampleTests.scala", Seq("'debugging", "log", "object Foo", "Foo.expr(_)"), "")
 
         @p
             You get a dump of everything the logged parsers are trying to do
@@ -142,97 +142,46 @@
               Frame(3,side), Frame(3,"(" ~/ expr ~ ")" | num), Frame(7,"(" ~/ expr ~ ")")
             )
 
-    @sect{Instrumenting Parsers}
-        @p
-            FastParse provides an @code{instrument} argument, which you can
-            use to inject a callback that lets you run code before or after
-            every named parse (defined inside a @code{P}) is called. This can
-            be used for a wide variety of things. For example, you could use it
-            to count how many times each parser in the example @sect.ref{Math}
-            parser gets called when you parse a simple arithmetic expression:
-
-        @hl.ref(tests/"MathTests.scala", Seq("'instrument", "simple", ""))
-
-        @p
-            This is useful as FastParse isn't really profile-able by "normal"
-            profilers: they tend to tell you what @i{kind} of parsers are getting
-            called a lot and taking up all your time (e.g. @code{Sequence},
-            @code{Either}, ...) but not @i{which} of your parsers (e.g.
-            @code{expr}, @code{numbers}) are getting called and taking up time.
-            By using @code{instrument}, you can perform these counts yourself,
-            even keeping track of @code{System.nanoTime}s if you want to count
-            the actual time being taken.
-
-        @p
-            The above example runs code @i{before} each named @code{P(...)}
-            parser is run. The instrument callback also provides a
-            @code{continuation} callback as its third argument, which you can
-            use to run the current parser and run code @i{after} the parser is
-            run:
-
-        @hl.ref(tests/"MathTests.scala", Seq("'instrument", "'continuation", ""), "// Good Parse")
-
-        @p
-            In this case, we are using it to count not just how many times each
-            named @code{P(...)} parser is run, but also how many times it
-            succeeds and fails. We can parse a "good" input and see that
-            most of the attempts by named parser succeed:
-
-        @hl.ref(tests/"MathTests.scala", Seq("'instrument", "'continuation", "", "// Good Parse"), "// Bad Parse")
-
-        @p
-            And we can parse invalid input, and see that it results in many of
-            the named parsers failing repeatedly in the course of the parse:
-
-        @hl.ref(tests/"MathTests.scala", Seq("'instrument", "'continuation", "", "// Bad Parse"))
-
-        @p
-            Which is what you would expect, since the parse overall failed!
-            This measurement of pass/fail rates for each parser is a useful
-            tool for understanding how the overall parser behaves at runtime:
-            which individual parsers are being used over and over and are worth
-            optimizing, and which are called only a handful of times and not
-            bothering with. If an individual parser is being called over and
-            over, you could optimize its internals to make it faster, or you
-            could try to refactor the rest of the overall parser so this
-            individual parser gets called fewer times.
-
-        @p
-            In this case we only run code after the parser has completed,
-            but we could easily run code both before and after if we wanted
-            to e.g. measure the time each parser took to complete. You could
-            also put @code{println}s inside your @code{instrument} callback
-            to build your own custom logging functionality, if for some reason
-            the @sect.ref("Using Log", "default logging") was not to your liking.
-
-        @p
-            Instrumenting parsers typically isn't something you want to
-            use on a "production" parser. Apart from slowing the parser down,
-            it also is relatively unsafe: every @code{instrument} call is
-            given untyped @code{Parser[_]} and @code{Parsed[_]} values, which
-            you would need to cast to make any use of. It is generally both
-            safer and more performant to build your parser result using
-            @sect.ref{Capture}, @sect.ref{Map} and @sect.ref{FlatMap}.
-        @p
-            Nevertheless, @code{instrument} it is still a useful tool to
-            have available in your toolbox if you are unsure of what a
-            parser is doing, and can be used to give you insight into
-            the runtime behavior of your parsers which is hard to get
-            otherwise.
-
-
     @sect{Use Cases}
         @p
-            What's the purpose of all this detailed error reporting? The goal is three-fold:
+            What's the purpose of all this detailed error reporting? The goal
+            is three-fold:
         @ul
             @li
-                You will want to know why parsers as misbehaving while you're writing them so you can fix bugs. Often @hl.scala{.traced.trace} is enough, but you can dig in more deeply if you wish to.
+                You will want to know why parsers as misbehaving while you're
+                writing them so you can fix bugs. Often @hl.scala{.traced.trace}
+                is enough, but you can dig in more deeply if you wish to.
             @li
-                You can use the detailed error traces to your users when they enter invalid input. For example, instead of just @i{"Syntax error at column @hl.scala{7}"} You can say @i{"Syntax error at column @hl.scala{7}, expected @hl.scala{(")" | CharIn("0123456789")}, while trying to parse a @hl.scala{side} at column @hl.scala{3}, while trying to parse an @hl.scala{expr} at column @hl.scala{1}, ..."}. Naturally, you do not need to overwhelm the user with debug information, but now you have the power to reveal as much or as little as you want.
+                You can use the detailed error traces to your users when they
+                enter invalid input. For example, instead of just
+                @i{"Syntax error at column @hl.scala{7}"} You can say
+                @i{"Syntax error at column @hl.scala{7}, expected
+                @hl.scala{(")" | CharIn("0123456789")}, while trying to parse a
+                @hl.scala{side} at column @hl.scala{3}, while trying to parse an
+                @hl.scala{expr} at column @hl.scala{1}, ..."}. Naturally, you do
+                not need to overwhelm the user with debug information, but now
+                you have the power to reveal as much or as little as you want.
 
             @li
-                You can customize the experience of your users when they enter invalid input! For example, if I know that the rule @hl.scala{side} failing @i{usually} means the user made some common mistake, I can easily check for that via @hl.scala{fail.traced.stack.contains(_.parser == Foo.side)} and display a more helpful error @i{"Maybe try X?"} if it's found. No need to embed your error-reporting deep in the parser, just inspect the @hl.scala{stack} and find out after the fact.
+                You can customize the experience of your users when they enter
+                invalid input! For example, if I know that the rule
+                @hl.scala{side} failing @i{usually} means the user made some
+                common mistake, I can easily check for that via
+                @hl.scala{fail.traced.stack.contains(_.parser == Foo.side)} and
+                display a more helpful error @i{"Maybe try X?"} if it's found.
+                No need to embed your error-reporting deep in the parser, just
+                inspect the @hl.scala{stack} and find out after the fact.
         @p
-            In general, FastParse's error reporting is detailed and structured. As a @i{developer}, most of your time spent interacting with your parser is when it is incorrect and throwing errors at you. As a @i{user}, most of your time spent interacting with the parser is when your input is incorrect and it is throwing errors at you. This is almost self-evident, since once your parser is correct or your input is correct you're done and go do other things
+            In general, FastParse's error reporting is detailed and structured.
+            As a @i{developer}, most of your time spent interacting with your
+            parser is when it is incorrect and throwing errors at you. As a
+            @i{user}, most of your time spent interacting with the parser is
+            when your input is incorrect and it is throwing errors at you. This
+            is almost self-evident, since once your parser is correct or your
+            input is correct you're done and go do other things
         @p
-            Thus, FastParse makes an effort to make the error reporting both detailed and structured. This means as a developer you can quickly diagnose problems, and (if you wish to) put in effort to use the structured errors to help @i{your users} diagnose problems. That makes life better for everybody.
+            Thus, FastParse makes an effort to make the error reporting both
+            detailed and structured. This means as a developer you can quickly
+            diagnose problems, and (if you wish to) put in effort to use the
+            structured errors to help @i{your users} diagnose problems. That
+            makes life better for everybody.

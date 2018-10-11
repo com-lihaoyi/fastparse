@@ -1,5 +1,5 @@
 package test.fastparse
-import fastparse._
+
 import utest._
 
 import scala.collection.mutable
@@ -9,7 +9,7 @@ import scala.collection.mutable
   * evaluating simple arithmetic expressions
   */
 object MathTests extends TestSuite{
-  import fastparse.NoWhitespace._
+
   def eval(tree: (Int, Seq[(String, Int)])) = {
     val (base, ops) = tree
     ops.foldLeft(base){ case (left, (op, right)) => op match{
@@ -17,7 +17,7 @@ object MathTests extends TestSuite{
       case "*" => left * right case "/" => left / right
     }}
   }
-
+  import fastparse._, NoWhitespace._
   def number[_: P]: P[Int] = P( CharIn("0-9").rep(1).!.map(_.toInt) )
   def parens[_: P]: P[Int] = P( "(" ~/ addSub ~ ")" )
   def factor[_: P]: P[Int] = P( number | parens )

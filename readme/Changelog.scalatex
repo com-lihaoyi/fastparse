@@ -3,7 +3,9 @@
     @sect{2.0.0}
         @ul
             @li
-                Major rewrite of @sect.ref{Internals}
+                Major rewrite of @sect.ref{Internals} with some changes to
+                user-facing interface; binary and source incompatible with
+                @sect.ref{1.0.0}
             @li
                 3-5x performance improvements on most benchmarks
             @li

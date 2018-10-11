@@ -11,19 +11,28 @@
 
 
         @p
-            This is a small arithmetic expression parser, the same one shown at the top of this page. It parses only whole integers, parentheses, @hl.scala{+-*/}, and no whitespace.
+            This is a small arithmetic expression parser, the same one shown at
+            the top of this page. It parses only whole integers, parentheses,
+            @hl.scala{+-*/}, and no whitespace.
         @p
             Things to note:
 
         @ul
             @li
-                The various sub-parsers are all of type @hl.scala{Parser[Int]}, indicating that they result in an @hl.scala{Int} if successful. Many of the type annotations could be removed due to type-inference, but they're shown here for clarity
+                The various sub-parsers are all of type @hl.scala{Parser[Int]},
+                indicating that they result in an @hl.scala{Int} if successful.
+                Many of the type annotations could be removed due to
+                type-inference, but they're shown here for clarity
             @li
-                @hl.scala{divMul} and @hl.scala{addSub} are separated out, in order to properly account for precedence
+                @hl.scala{divMul} and @hl.scala{addSub} are separated out, in
+                order to properly account for precedence
             @li
-                We evaluate the expression as the parse progresses, meaning we never actually build an tree structure from the input string
+                We evaluate the expression as the parse progresses, meaning we
+                never actually build an tree structure from the input string
             @li
-                In order to convert the parsed strings to integers, we @hl.scala{map} on the @hl.scala{eval} function, which itself is defined earlier:
+                In order to convert the parsed strings to integers, we
+                @hl.scala{map} on the @hl.scala{eval} function, which
+                itself is defined earlier:
 
         @hl.ref(tests/"MathTests.scala", "def eval", "import fastparse")
 
@@ -37,22 +46,37 @@
 
         @div(id := "mathdiv")
         @script(raw("""demo.DemoMain.math(document.getElementById("mathdiv"))"""))
+
     @sect{Whitespace Handling}
-        @hl.ref(tests/"WhiteSpaceMathTests.scala", "val White", "val tests")
+        @hl.ref(tests/"WhitespaceMathTests.scala", "import SingleLineWhitespace._", "val tests")
 
         @p
-            To handle whitespace and other non-significant characters with FastParse, use the @hl.scala{WhitespaceApi} as a substitue for the normal API that is provided for parsers. This modifies the @hl.scala{~} and @hl.scala{.rep} operators to consume all non-trailing whitespace and ignoring it.
+            To handle whitespace and other non-significant characters with
+            FastParse, we can replace the normal @hl.scala{import NoWhitespace._}
+            with a whitespace consumer that picks up the whitespace we want,
+            e.g. @code{SingleLineWhitespace} for skipping spaces, tabs,
+            @code{MultiLineWhitespace} for also skipping newlines, and
+            @code{ScriptWhitespace}/@code{JavaWhitespace}/@code{ScalaWhitespace}
+            for also skipping various sorts of comments (@code{#}-delimited,
+            @code{//} and @code{/* */} delimited, and allowing nested @code{/* */}s
+            respectively)
 
         @p
-            Note how you can pass in whatever definition of whitespace you want: here we're passing in a simple @hl.scala{" ".rep}, but in a more sophisticated parser you may wish to include tabs, newlines, comments or even nested comments. The whitespace parser can be arbitrarily complex.
-
-        @p
-            Note also how we're importing from @hl.scala{fastparse.noApi} instead of @hl.scala{fastparse.all}, and then substituting it with our one whitespace-consuming parser API. Other than that, the parser is identical except for added whitespace parsers at the start and end of the @hl.scala{expr} rule.
+            The whitespace consumer affects the @hl.scala{~} and @hl.scala{.rep}
+            operators to consume all non-trailing whitespace and ignoring it.
 
         @p
             Here it is in action:
 
-        @hl.ref(tests/"WhiteSpaceMathTests.scala", "def check")
+        @hl.ref(tests/"WhitespaceMathTests.scala", "def check")
+
+        @p
+            You can also define your own custom whitespace consumer, if none of
+            bundled ones fit your needs:
+
+        @hl.ref(tests/"CustomWhitespaceMathTests.scala", "implicit val whitespace", "val tests")
+
+
 
         @p
             Or try it yourself:
@@ -93,7 +117,7 @@
         @script(raw("""demo.DemoMain.indentation(document.getElementById("indentdiv"))"""))
 
     @sect{Json}
-        @hl.ref(tests/"JsonTests.scala", "Here is the parser", "val tests")
+        @hl.ref(tests/"JsonTests.scala", Seq("object Js {", ""))
 
         @p
             This is a somewhat larger example than the math parser shown above. In it, we parse a JSON expression from a string, including all the proper handling for whitespace and error-handling built in.
@@ -112,7 +136,7 @@
                 We use @hl.scala{.map} to convert the various things we parse into instances of our own @hl.scala{Js.Val} JSON AST:
 
 
-        @hl.ref(tests/"JsonTests.scala", "object Js {", "Here is the parser")
+        @hl.ref(tests/"JsonTests.scala", Seq("object Js {", ")"))
 
         @p
             We can verify that this parser builds the JSON tree that we expect:
