@@ -21,9 +21,9 @@ object Parsed{
     def fold[V](onFailure: (Int, List[(String, Int)]) => V, onSuccess: (T, Int) => V) = onSuccess(value, index)
     override def toString() = s"Parsed.Success($value, $index)"
   }
-  final case class Failure(index: Int,
-                     stack: List[(String, Int)],
-                     extra: Extra) extends Parsed[Nothing](false){
+  final case class Failure(stack: List[(String, Int)],
+                           index: Int,
+                           extra: Extra) extends Parsed[Nothing](false){
     def get = throw new Exception("Parse Error at " + index + ":\n" + stack.mkString("\n"))
     def fold[V](onFailure: (Int, List[(String, Int)]) => V, onSuccess: (Nothing, Int) => V) = onFailure(index, stack)
     override def toString() = s"Parsed.Failure($trace)"

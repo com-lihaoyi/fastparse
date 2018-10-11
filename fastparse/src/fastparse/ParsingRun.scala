@@ -148,7 +148,7 @@ final class ParsingRun[+T](val input: ParserInput,
   def result: Parsed[T] = {
     if (isSuccess) Parsed.Success(successValue.asInstanceOf[T], index)
     else {
-      val msg =
+      val stack =
         if (failureAggregate.isEmpty) {
           if (shortFailureMsg == null) List("" -> index)
           else List(shortFailureMsg() -> index)
@@ -161,8 +161,8 @@ final class ParsingRun[+T](val input: ParserInput,
             (combined -> index) :: failureStack.reverse
         }
       Parsed.Failure(
+        stack,
         index,
-        msg,
         Parsed.Extra(input, startIndex, index, originalParser)
       )
     }

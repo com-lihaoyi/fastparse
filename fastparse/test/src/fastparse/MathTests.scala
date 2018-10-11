@@ -31,7 +31,7 @@ object MathTests extends TestSuite{
       val Parsed.Success(2, _) = parse("1+1").read(expr(_))
       val Parsed.Success(15, _) = parse("(1+1*2)+3*4").read(expr(_))
       val Parsed.Success(21, _) = parse("((1+1*2)+(3*4*5))/3").read(expr(_))
-      val Parsed.Failure(failIndex, expected, extra) = parse("1+1*").read(expr(_))
+      val Parsed.Failure(expected, failIndex, extra) = parse("1+1*").read(expr(_))
       assert(
         failIndex == 4,
         extra.traced.trace == """Expected expr:1:1 / addSub:1:1 / divMul:1:3 / factor:1:5 / ([0-9] | "("):1:5, found """"")
