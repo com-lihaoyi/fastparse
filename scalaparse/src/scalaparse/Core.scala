@@ -5,49 +5,12 @@ import syntax.{Basic, Key}
 import scala.language.implicitConversions
 import syntax.Identifiers
 import fasterparser.Parsing._
-import fasterparser._
+import fasterparser._, ScalaWhitespace._
 
 import scala.annotation.{switch, tailrec}
 trait Core extends syntax.Literals{
 
-  implicit def whitespace(cfg: Parse[_]): Parse[Unit] = {
-    implicit def cfg0 = cfg
-    val input = cfg.input
 
-    P{
-      @tailrec def rec(current: Int, state: Int, nesting: Int): Parse[Unit] = {
-        if (!input.isReachable(current)) cfg.prepareSuccess((), current)
-        else {
-          val currentChar = input(current)
-          (state: @switch) match{
-            case 0 =>
-              (currentChar: @switch) match{
-                case ' ' | '\t' | '\n' | '\r' => rec(current + 1, state, 0)
-                case '/' => rec(current + 1, state = 2, 0)
-                case _ => cfg.prepareSuccess((), current)
-              }
-            case 1 => rec(current + 1, state = if (currentChar == '\n') 0 else state, 0)
-            case 2 =>
-              (currentChar: @switch) match{
-                case '/' => rec(current + 1, state = 1, 0)
-                case '*' => rec(current + 1, state = 3, nesting + 1)
-                case _ => cfg.prepareSuccess((), current - 1)
-              }
-            case 3 =>
-              (currentChar: @switch) match{
-                case '/' => rec(current + 1, state = 2, nesting)
-                case '*' => rec(current + 1, state = 4 , nesting)
-                case _ => rec(current + 1, state = state, nesting)
-              }
-            case 4 =>
-              if (currentChar == '/') rec(current + 1, state = if (nesting == 1) 0 else 3 , nesting - 1)
-              else rec(current + 1, state = 3, nesting)
-          }
-        }
-      }
-      rec(current = cfg.index, state = 0, nesting = 0)
-    }
-  }
 
   // Aliases for common things. These things are used in almost every parser
   // in the file, so it makes sense to keep them short.

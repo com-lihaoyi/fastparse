@@ -3,7 +3,7 @@ package scalaparse
 
 import scalaparse.syntax.Identifiers
 import fasterparser.Parsing._
-import fasterparser._
+import fasterparser._, ScalaWhitespace._
 trait Exprs extends Core with Types with Xml{
   def AnonTmpl[_: P]: P[Unit]
   def BlockDef[_: P]: P[Unit]

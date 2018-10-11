@@ -1,10 +1,9 @@
 package test.fasterparser
 import fasterparser.Parsing._
-import fasterparser._
+import fasterparser._, JsonnetWhitespace._
 import test.fasterparser.Expr.Member.Visibility
 
 import scala.annotation.{switch, tailrec}
-
 
 class FasterParserParser{
   val precedenceTable = Seq(
@@ -25,38 +24,6 @@ class FasterParserParser{
     .zipWithIndex
     .flatMap{case (ops, idx) => ops.map(_ -> idx)}
     .toMap
-
-  implicit def whitespace(cfg: Parse[_]): Parse[Unit] = {
-    implicit def cfg0 = cfg
-    val input = cfg.input
-    P{
-      @tailrec def rec(current: Int, state: Int): Parse[Unit] = {
-        if (!input.isReachable(current)) cfg.prepareSuccess((), current)
-        else {
-          val currentChar = input(current)
-          (state: @switch) match{
-            case 0 =>
-              (currentChar: @switch) match{
-                case ' ' | '\t' | '\n' | '\r' => rec(current + 1, state)
-                case '#' => rec(current + 1, state = 1)
-                case '/' => rec(current + 1, state = 2)
-                case _ => cfg.prepareSuccess((), current)
-              }
-            case 1 => rec(current + 1, state = if (currentChar == '\n') 0 else state)
-            case 2 =>
-              (currentChar: @switch) match{
-                case '/' => rec(current + 1, state = 1)
-                case '*' => rec(current + 1, state = 3)
-                case _ => cfg.prepareSuccess((), current - 1)
-              }
-            case 3 => rec(current + 1, state = if (currentChar == '*') 4 else state)
-            case 4 => rec(current + 1, state = if (currentChar == '/') 0 else 3)
-          }
-        }
-      }
-      rec(current = cfg.index, state = 0)
-    }
-  }
 
   val keywords = Set(
     "assert", "else", "error", "false", "for", "function", "if", "import", "importstr",

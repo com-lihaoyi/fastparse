@@ -1,7 +1,7 @@
 package scalaparse
 
 import fasterparser.Parsing._
-import fasterparser._
+import fasterparser._, ScalaWhitespace._
 trait Types extends Core{
   def TypeExpr[_: P]: P[Unit]
   def ValVarDef[_: P]: P[Unit]
