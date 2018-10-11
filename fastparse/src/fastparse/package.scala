@@ -360,7 +360,7 @@ package object fastparse {
     startIndex = startIndex,
     traceIndex = traceIndex
   )
-  def parseIter(input: Iterator[String], startIndex: Int = 0, traceIndex: Int = -1): ParsingRun[_] = parse(
+  def parseIterator(input: Iterator[String], startIndex: Int = 0, traceIndex: Int = -1): ParsingRun[_] = parse(
     input = IteratorParserInput(input),
     startIndex = startIndex,
     traceIndex = traceIndex

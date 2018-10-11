@@ -76,7 +76,7 @@
         @ul
             @li
                 @b{Understand your Parser's behavior}: using @sect.ref{Log}, or
-                by @sect.ref{Instrumenting Parsers}. Often poor performance is due
+                by @code{Instrumenting Parsers}. Often poor performance is due
                 to parsers doing the wrong thing: attempting more alternatives
                 than they need to, or backtracking and repeating the same
                 parse many times. Understanding the flow of how your parser works
@@ -88,7 +88,7 @@
                 inconvenient when you want things to be fast. If you have a parser
                 with lots of backtracking, see if you can factor out parts of it
                 so they only get parsed once, e.g. turning @code{a ~ b | a ~ c} into
-                @code{a ~ (b | c}
+                @code{a ~ (b | c)}
 
             @li
                 @b{Use @sect.ref{Cuts}}: although you can remove backtracking manually,
@@ -97,52 +97,22 @@
                 prevent that, ensuring that your parser never backtracks past certain
                 points no matter what.
 
-
             @li
-                @b{Use @sect.ref{Intrinsics}}: things like @sect.ref{CharPred},
+                @b{Use @sect.ref{Utilities}}: things like @sect.ref{CharPred},
                 @sect.ref{CharIn}, @sect.ref{CharsWhile}, @sect.ref{StringIn},
                 @sect.ref{CharsWhileIn} are orders of magnitude faster than
                 implementing their behavior yourself with @code{|} and @code{.rep}.
                 Use them where-ever possible
 
-            @li
-                @b{Re-use your Parsers}: FastParse parsers are slightly expensive
-                to create, but immutable and thread-safe and fast to run
-                after they've been created. Take advantage of this by creating
-                your parsers in top-level @hl.scala{object}s where-ever possible,
-                so you only pay the creation cost once.
+    @sect{Profiling}
+        @p
+            Since FastParse Parsers are just methods, you can use standard
+            profiling techniques to show where in the parser time is being
+            spent. For example, here is the @lnk("JProfiler", "https://www.ej-technologies.com/products/jprofiler/overview.html")
+            profile of the @sect.ref{ScalaParse} Scala syntax parser:
 
-
-    @sect{Startup Performance}
+        @img(width := "100%", src := "JProfiler.png")
 
         @p
-            FastParse performs a lot of it's optimizations on-startup; this usually
-            does not matter, e.g. if you're building a server or other long-running
-            process, but sometimes it does. Particularly if you are using Scala.js,
-            which has a combination of lower performance and higher expectations
-            (Users hate waiting!)
-
-        @p
-            To improve startup times, here are a few tips:
-
-        @ul
-            @li
-                @b{Simplify the contents of your @sect.ref{CharPred}s and @sect.ref{CharsWhile}
-                operators}: these tend to be pre-computed, so steady-state it doesn't matter
-                at all how complex the predicate you feed into them is. However, that means
-                during initialization, any slowness in the predicates are magnified.
-
-            @li
-                @b{Replace @sect.ref{CharPred} with @sect.ref{CharIn} and
-                @sect.ref{CharsWhile} with @sect.ref{CharsWhileIn}}: you cannot
-                always perform this replacement, but in the cases where you can,
-                @sect.ref{CharIn} and @sect.ref{CharsWhileIn} are much faster to
-                initialize than their predicate-based counterparts.
-            @li
-                @b{Use @hl.scala{fastparse.CharPredicates}}: these are versions of
-                the various @code{.isDigit}/@code{.isUpper}/etc.
-                methods that are pre-computed for characters from 0 to 65535. This
-                especially makes a difference when using FastParse in Scala.js,
-                where the @code{.isXXX} methods tend to be much slower than on the JVM.
-                Use the @hl.scala{fastparse.CharPredicates.isXXX(c)} methods within
-                your @sect.ref{CharPred}s or @sect.ref{CharsWhile}s wherever possible
+            Using standard tools, you can easily dig into what parts of your
+            parser are slow and why

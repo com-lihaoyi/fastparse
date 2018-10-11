@@ -27,7 +27,7 @@ object IteratorTests extends TestSuite {
       import NoWhitespace._
       def p[_: P] = P( "ab" ~/ "cd".rep().! ~ "ef" | "z" )
 
-      val Parsed.Success(res, i) = parseIter(Iterator("ab", "cd", "cd", "cd", "ef")).read(p(_))
+      val Parsed.Success(res, i) = parseIterator(Iterator("ab", "cd", "cd", "cd", "ef")).read(p(_))
 
       assert(res == "cdcdcd")
     }
@@ -252,7 +252,7 @@ object IteratorTests extends TestSuite {
 
       parse("[ ]").read(p(_)).asInstanceOf[Parsed.Failure].extra.traced
       val e = intercept[RuntimeException] {
-        parseIter(Iterator("[", " ", "]")).read(p(_)).asInstanceOf[Parsed.Failure].extra.traced
+        parseIterator(Iterator("[", " ", "]")).read(p(_)).asInstanceOf[Parsed.Failure].extra.traced
       }
       assert(e.getMessage.contains("Cannot perform `.traced` on an `IteratorParserInput`"))
     }

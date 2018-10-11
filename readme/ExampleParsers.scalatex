@@ -19,7 +19,7 @@
 
         @ul
             @li
-                The various sub-parsers are all of type @hl.scala{Parser[Int]},
+                The various sub-parsers are all of type @hl.scala{P[Int]},
                 indicating that they result in an @hl.scala{Int} if successful.
                 Many of the type annotations could be removed due to
                 type-inference, but they're shown here for clarity
@@ -192,15 +192,17 @@
             To begin using ScalaParse, add
 
             @hl.scala
-                "com.lihaoyi" %% "scalaparse" % ""2.0.0""
+                "com.lihaoyi" %% "scalaparse" % "2.0.0"
 
             @p
                 To your SBT configuration. To use with Scala.js, you'll need
 
             @hl.scala
-                "com.lihaoyi" %%% "scalaparse" % ""2.0.0""
+                "com.lihaoyi" %%% "scalaparse" % "2.0.0"
 
     @sect{PythonParse}
+        @div(id := "pythondiv")
+        @script(raw("""demo.DemoMain.python(document.getElementById("pythondiv"))"""))
         @p
             There is now an @a("example Python parser", href:="https://github.com/lihaoyi/fastparse/tree/master/pythonparse/shared/src/main/scala/pythonparse") available under a subproject in the repo. This is a good example of a real-world parser: parsing knotty syntax (including indentation-delimited blocks!), building an AST, and with heavy unit tests.
 
@@ -208,7 +210,7 @@
             PythonParse is currently compatible enough to parse all the python sources in Zulip, Ansible, Changes, Django, and Flask. It isn't published yet on maven central, but feel free to look at it if you want an idea of how to write a complex, real parser.
 
         @hl.scala
-            "com.lihaoyi" %%% "pythonparse" % ""2.0.0""
+            "com.lihaoyi" %%% "pythonparse" % "2.0.0"
 
     @sect{CssParse}
         @p
@@ -246,4 +248,4 @@
             This is available on Maven Central as
 
         @hl.scala
-            "com.lihaoyi" %%% "cssparse" % ""2.0.0""
+            "com.lihaoyi" %%% "cssparse" % "2.0.0"

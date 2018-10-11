@@ -1,6 +1,5 @@
 package test.fastparse
 
-import fastparse._
 import utest._
 import fastparse._
 /**
@@ -12,6 +11,7 @@ object ExampleTests extends TestSuite{
   val tests = Tests{
     'basic{
       'simple {
+        import fastparse._, NoWhitespace._
         def parseA[_: P] = P( "a" )
 
         val Parsed.Success(value, successIndex) = parse("a").read(parseA(_))
@@ -190,7 +190,6 @@ object ExampleTests extends TestSuite{
         )
       }
       'filter{
-
         def digits[_: P] = P(CharPred(c => '0' <= c && c <= '9').rep(1).!).map(_.toInt)
         def even[_: P] = P( digits.filter(_ % 2 == 0) )
         val Parsed.Success(12, _) = parse("12").read(even(_))
@@ -244,7 +243,6 @@ object ExampleTests extends TestSuite{
         val Parsed.Success("123", _) = parse("123 45").read(cw(_))
       }
       'charsWhileIn{
-
         def cw[_: P] = P( CharsWhileIn("123456789").! )
 
         val Parsed.Success("12345", _) = parse("12345").read(cw(_))

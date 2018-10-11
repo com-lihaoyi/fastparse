@@ -95,6 +95,13 @@ object DemoMain {
      |  font-size: 2em
      |}""".stripMargin)
   }
+  @JSExport
+  def python(container: html.Div) = {
+   helper(container, pythonparse.Statements.file_input(_),
+   """def foo(x, y):
+     |  return x - y
+     |""".stripMargin)
+  }
 
   def helper(container: html.Div, parser: P[_] => P[Any], default: String) = {
     import scalatags.JsDom.all._
@@ -118,7 +125,7 @@ object DemoMain {
             tr(td("value:"), td(pre(s.value.toString)))
           )
 
-        case fastparse.Parsed.Failure(index, stack, extra) =>
+        case fastparse.Parsed.Failure(stack, index, extra) =>
           val pretty = Util.literalize( extra.input.slice( index, index + 15)).toString
           table(
             width := "100%",

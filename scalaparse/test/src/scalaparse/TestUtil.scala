@@ -62,7 +62,7 @@ object TestUtil {
       if (skipIterator) Nil
       else
         for(chunkSize <- Seq(1))
-        yield parseIter(input.grouped(chunkSize)).read(Scala.CompilationUnit(_))
+        yield parseIterator(input.grouped(chunkSize)).read(Scala.CompilationUnit(_))
 
     for(res <- iteratorRes){
       res match{

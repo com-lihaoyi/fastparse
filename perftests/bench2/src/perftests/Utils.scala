@@ -100,7 +100,7 @@ object Utils {
     Utils.benchmarkIteratorBufferSizes(parser, sizes, iteratorFactory)
 
     val iteratorResults = Utils.benchmark(s"$name Iterator Benchmark",
-      sizes.map(s => () => parseIter(iteratorFactory(s)).read(parser(_)).asInstanceOf[Parsed.Success[_]])
+      sizes.map(s => () => parseIterator(iteratorFactory(s)).read(parser(_)).asInstanceOf[Parsed.Success[_]])
     )
 
     println(iteratorResults.map(_.mkString(" ")).mkString("\n"))

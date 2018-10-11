@@ -183,6 +183,7 @@ object demo extends ScalaJSModule{
   def moduleDeps = Seq(
     scalaparse.js("2.12.7"),
     cssparse.js("2.12.7"),
+    pythonparse.js("2.12.7"),
     fastparse.js("2.12.7").test,
   )
   def ivyDeps = Agg(

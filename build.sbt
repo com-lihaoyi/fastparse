@@ -3,8 +3,8 @@ lazy val readme = scalatex.ScalatexReadme(
   wd = file(""),
   url = "https://github.com/lihaoyi/fastparse/tree/master",
   source = "Readme",
-  autoResources = List("demo-opt.js")
+  autoResources = List("out.js", "JProfiler.png")
 ).settings(
-  (resources in Compile) += baseDirectory.value/"out"/"demo"/"fullOpt"/"dest"/"out.js"
+  (resources in Compile) += baseDirectory.value/".."/"out"/"demo"/"fullOpt"/"dest"/"out.js"
 )
 

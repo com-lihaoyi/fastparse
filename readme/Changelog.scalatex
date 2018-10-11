@@ -12,14 +12,19 @@
                 Parsers are no longer immutable objects, but just methods taking
                 and returning @code{fastparse.ParsingRun} instances
             @li
+                Much better support for @sect.ref{Profiling} your parsers
+            @li
                 Parsers now need to be defined as
                 @hl.scala{def myParser[_: P] = P(...)}, rather than
                 @hl.scala{val myParser = P(...)}
             @li
-                @sect.ref{Whitespace} management has been overhauled; you now
+                @sect.ref{Whitespace Handling} management has been overhauled; you now
                 import or define a whitespace implicit (e.g.
                 @hl.scala{import NoWhitespace._}) rather than defining a
                 @code{WhitespaceApi} instance to import extension methods from.
+            @li
+                Dropped support for Byte Parsers (due to low uptake), Scala 2.10,
+                Scala-Native (until 0.4.0 is out)
     @sect{1.0.0}
         @ul
            @li
@@ -37,7 +42,7 @@
         @ul
             @li
                 Added documentation on @sect.ref{Improving Performance} and
-                @sect.ref{Startup Performance}, along with many micro-optimizations
+                @code{Startup Performance}, along with many micro-optimizations
                 and additional tools (below) for improving startup performance. Using these
                 tools & techniques, you can expect about a 10x reduction in time
                 taken to initialize your FastParse parsers. This is particularly
@@ -99,21 +104,21 @@
                 written using FastParse.
 
             @li
-                FastParse now supports @sect.ref{Byte Parsers}! You can parse
+                FastParse now supports @code{Byte Parsers}! You can parse
                 binary data using FastParse, using all the same operators and
                 combinators you may already be familiar with
 
             @li
-                New @sect.ref{MidiParse}, @sect.ref{BmpParser} and
-                @sect.ref{ClassParser} example parsers, as working examples of
-                how Fastparse's new @sect.ref{Byte Parsers} are written.
+                New @code{MidiParse}, @code{BmpParser} and
+                @code{ClassParser} example parsers, as working examples of
+                how Fastparse's new @code{Byte Parsers} are written.
 
             @li
                 Support for @sect.ref{Streaming Parsing}
 
             @li
                 Many internal refactors in order to support the new
-                @sect.ref{Byte Parsers} and @sect.ref{Streaming Parsing}.
+                @code{Byte Parsers} and @sect.ref{Streaming Parsing}.
                 @code{Parser} and @code{ParserApi} are now
                 @hl.scala{abstract class}es instead of @hl.scala{trait}s, and
                 take implicits that are necessary for them to operate.
@@ -135,7 +140,7 @@
                 sense anyway
 
             @li
-                @sect.ref{Unapply} method to allow pattern matching on parsers,
+                code{Unapply} method to allow pattern matching on parsers,
                 thanks to @a("volth", href:="https://github.com/volth").
 
             @li

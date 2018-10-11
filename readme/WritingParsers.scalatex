@@ -85,17 +85,21 @@
                 Note the types of each parser:
             @ul
                 @li
-                    @hl.scala{capture1} is a @hl.scala{Parser[String]}
+                    @hl.scala{capture1} is a @hl.scala{P[String]}
                 @li
-                    @hl.scala{capture2} is a @hl.scala{Parser[(String, String)]}
+                    @hl.scala{capture2} is a @hl.scala{P[(String, String)]}
                 @li
-                    @hl.scala{capture3} is a @hl.scala{Parser[(String, String, String)]}
+                    @hl.scala{capture3} is a @hl.scala{P[(String, String, String)]}
                 @li
-                    @hl.scala{captureRep} is a @hl.scala{Parser[Seq[String]]}
+                    @hl.scala{captureRep} is a @hl.scala{P[Seq[String]]}
                 @li
-                    @hl.scala{captureOpt} is a @hl.scala{Parser[Option[String]]}
+                    @hl.scala{captureOpt} is a @hl.scala{P[Option[String]]}
             @p
-                In general, if you have a parser of type @hl.scala{TupleN}, capturing one more section turns it into a @hl.scala{TupleN+1}. Furthermore, if you capture within a @hl.scala{.rep} or @hl.scala{.?} optional parser, it becomes a @hl.scala{Parser[Seq[T]]} or @hl.scala{Parser[Option[T]]} respectively
+                In general, if you have a parser of type @hl.scala{TupleN},
+                capturing one more section turns it into a @hl.scala{TupleN+1}.
+                Furthermore, if you capture within a @hl.scala{.rep} or
+                @hl.scala{.?} optional parser, it becomes a @hl.scala{P[Seq[T]]}
+                or @hl.scala{P[Option[T]]} respectively
 
         @sect{AnyChar}
             @hl.ref(tests/"ExampleTests.scala", Seq("'anychar", ""))
@@ -125,16 +129,20 @@
                 Up till now, we've only dealt with
             @ul
                 @li
-                    @hl.scala{Parser[Unit]}: the default case
+                    @hl.scala{P[Unit]}: the default case
                 @li
-                    @hl.scala{Parser[String]}: after capturing something with @hl.scala{.!}
+                    @hl.scala{P[String]}: after capturing something with @hl.scala{.!}
                 @li
-                    @hl.scala{Parser[TupleN[String]]}: capturing multiple things in series
+                    @hl.scala{P[TupleN[String]]}: capturing multiple things in series
                 @li
-                    @hl.scala{Parser[Seq[String]]}, @hl.scala{Parser[Option[String]]}: capturing things in @hl.scala{.rep} and @hl.scala{.?}
+                    @hl.scala{P[Seq[String]]}, @hl.scala{P[Option[String]]}: capturing
+                    things in @hl.scala{.rep} and @hl.scala{.?}
 
             @p
-                @hl.scala{.map} lets you convert an arbitrary @hl.scala{Parser[T]} into a @hl.scala{Parser[V]} by providing a @hl.scala{T => V} function. This is useful for converting the strings and tuples/seqs/options of strings into more useful data-structures.
+                @hl.scala{.map} lets you convert an arbitrary @hl.scala{P[T]} into a
+                @hl.scala{P[V]} by providing a @hl.scala{T => V} function. This is
+                useful for converting the strings and tuples/seqs/options of strings
+                into more useful data-structures.
         @sect{FlatMap}
             @hl.ref(tests/"ExampleTests.scala", Seq("'flatMap", ""))
 
@@ -155,13 +163,26 @@
             @hl.ref(tests/"ExampleTests.scala", Seq("'filter", ""))
 
             @p
-                @hl.scala{.filter} allows you to supply a predicate @hl.scala{T => Boolean} which is applied to the successful result of the current parser. If the predicate is true the filtered parser succeeds otherwise it fails. The example above uses @hl.scala{.filter} on digits to parse only even numbers successfully while odd numbers will fail. If the current parser fails then that failure is simply passed along.
+                @hl.scala{.filter} allows you to supply a predicate
+                @hl.scala{T => Boolean} which is applied to the successful
+                result of the current parser. If the predicate is true the
+                filtered parser succeeds otherwise it fails. The example
+                above uses @hl.scala{.filter} on digits to parse only even
+                numbers successfully while odd numbers will fail. If the
+                current parser fails then that failure is simply passed along.
+
         @sect{Opaque}
             @p
-                Sometimes it's useful to hide parser's implementation details and provide a higher-level error message. @hl.scala{.opaque} achieves exactly that.
+                Sometimes it's useful to hide parser's implementation details
+                and provide a higher-level error message. @hl.scala{.opaque}
+                achieves exactly that.
+
             @hl.ref(tests/"ExampleTests.scala", Seq("'opaque", ""))
+
             @p
-                @hl.scala{.opaque} wraps the target parser in an @hl.scala{Opaque} combinator, which only succeeds or fails as a single entity and leaves no traces of underlying parsers on the stack.
+                Parsers marked as @code{.opaque} only succeed or fail as a
+                single entity and leaves no traces of underlying parsers on
+                the stack.
 
         @sect{Log}
             @hl.ref(tests/"ExampleTests.scala", Seq("'logSimple", ""))
@@ -271,9 +292,9 @@
                 if you want to match things case-insensitively.
     @sect{Cuts}
         @p
-            A "cut" (@code{~/} in Fastparse) is a marker in a recursive-descent
-            parser that states "you cannot backtrack past this point". In
-            FastParse, this serves two purposes:
+            A "cut" (@code{a ~/ b} or @code{a./} in Fastparse) is a marker in a
+            recursive-descent parser that states "you cannot backtrack past this
+            point". In FastParse, this serves two purposes:
 
         @ul
             @li
@@ -335,7 +356,7 @@
             @hl.ref(tests/"ExampleTests.scala", Seq("'delimitercut", ""))
 
             @p
-                The @hl.scala{~/} operator can be used without following parser as a shortcut for @hl.scala{~/ Pass}. Compare the previous example with the following one:
+                The @hl.scala{./} operator can be used without a following parser as a shortcut for @hl.scala{~/ Pass}. Compare the previous example with the following one:
 
             @hl.ref(tests/"ExampleTests.scala", Seq("'endcut", ""))
 
