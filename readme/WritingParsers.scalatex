@@ -1,0 +1,375 @@
+@import Main._
+@val tests = wd/'fastparse/'shared/'src/'test/'scala/'fastparse
+@val main = wd/'fastparse/'shared/'src/'main/'scala/'fastparse
+
+@sect{Writing Parsers}
+    @sect{Basic}
+        @p
+            The simplest parser matches a single string:
+
+        @hl.ref(tests/"ExampleTests.scala", Seq("'simple", ""))
+
+        @p
+            Such a parser returns a @hl.scala{Parsed.Success} if the input matches the string, and otherwise returns a @hl.scala{Parsed.Failure}.
+        @p
+            As you can see, by default the @hl.scala{Parsed.Success} contains a @hl.scala{(): Unit}, unless you use @sect.ref{Capture} or @sect.ref{Map} described below. Also, apart from the structured data of the failure, @hl.scala{Parsed.Failure} also contains a nice human-readable trace of the parse showing the stack of parsers which were in progress when the parse failed. The trace can be obtained via @hl.scala{Parsed.Failure.Extra.trace}.
+
+        @p
+            You can also wrap the strings in an @hl.scala{IgnoreCase("...")} if you want the matching to be case-insensitive.
+
+        @p
+            The @code{P(...)} lets you write mutually recursive parsers, without
+            running into circular initialization problems, and gives the parser a
+            nice, human-readable name (from the @hl.scala{val}
+            it is being assigned to) which appears in parse error messages.
+            In general, every time you assign a parser
+            to a @hl.scala{val}, you should wrap it in @code{P(...)}.
+
+        @sect{Sequence}
+
+            @hl.ref(tests/"ExampleTests.scala", Seq("'sequence", ""))
+
+            @p
+                You can combine two parsers with the @hl.scala{~} operator. This creates a new parser that only succeeds if both left and right parsers succeed one after another.
+
+        @sect{Repeat}
+            @hl.ref(tests/"ExampleTests.scala", Seq("'repeat", ""))
+
+            @p
+                The @hl.scala{.rep} method creates a new parser that attempts to parse the given parser zero or more times.
+                If you want to parse something a given number of times, you can use @hl.scala{.rep(min = 2, max = 4)} o
+                r the shorter @hl.scala{.rep(1)} for one or more times,
+                in addition there is @hl.scala{exactly} parameter that if it's defined behaves
+                like @hl.scala{min} and @hl.scala{max} equals to it.
+                You can optionally provide an argument which acts as a separator between the usages of the original parser,
+                such as a comma in @hl.scala{.rep(sep = ",")}.
+
+        @sect{Optional}
+            @hl.ref(tests/"ExampleTests.scala", Seq("'option", ""))
+
+            @p
+                Similar to @hl.scala{.rep} is @hl.scala{.?}, which creates a new parser that attempts to parse the given parser zero or 1 times.
+
+        @sect{Either}
+            @hl.ref(tests/"ExampleTests.scala", Seq("'either", ""))
+            @p
+                The @hl.scala{|} operator tries the parser on the left, and if that fails, tries the one on the right, failing only if both parsers fail.
+
+        @sect{End, Start}
+            @hl.ref(tests/"ExampleTests.scala", Seq("'end", ""))
+
+            @p
+                The @hl.scala{End} parser only succeeds if at the end of the input string. By default, a @hl.scala{Parser} does not need to consume the whole input, and can succeed early consuming a portion of it (exactly how much input was consumed is stored in the @hl.scala{Success#index} attribute). By using @hl.scala{End}, we can make the parse fail if it doesn't consume everything
+
+            @p
+                There is also a similar @hl.scala{Start} parser, which only succeeds at the start of the input
+            @hl.ref(tests/"ExampleTests.scala", Seq("'start", ""))
+
+        @sect{Pass, Fail}
+            @hl.ref(tests/"ExampleTests.scala", Seq("'passfail", ""))
+
+            @p
+                These two parsers always succeed, or always fail, respectively. Neither consumes any input.
+
+        @sect{Index}
+            @hl.ref(tests/"ExampleTests.scala", Seq("'index", ""))
+
+            @p
+                Always succeeds, and provides the current index of the parse into the input string. e.g. useful for providing source locations for AST nodes. Consumes no input.
+
+        @sect{Capture}
+            @hl.ref(tests/"ExampleTests.scala", Seq("'capturing", ""))
+            @p
+                So far, all the parsers go over the input text but do not return any useful value: the @hl.scala{Success#value} attribute was always @hl.scala{()}. In order to make them do so, you use the @hl.scala{.!} operation to capture the section of the input string the parser parsed.
+            @p
+                Note the types of each parser:
+            @ul
+                @li
+                    @hl.scala{capture1} is a @hl.scala{Parser[String]}
+                @li
+                    @hl.scala{capture2} is a @hl.scala{Parser[(String, String)]}
+                @li
+                    @hl.scala{capture3} is a @hl.scala{Parser[(String, String, String)]}
+                @li
+                    @hl.scala{captureRep} is a @hl.scala{Parser[Seq[String]]}
+                @li
+                    @hl.scala{captureOpt} is a @hl.scala{Parser[Option[String]]}
+            @p
+                In general, if you have a parser of type @hl.scala{TupleN}, capturing one more section turns it into a @hl.scala{TupleN+1}. Furthermore, if you capture within a @hl.scala{.rep} or @hl.scala{.?} optional parser, it becomes a @hl.scala{Parser[Seq[T]]} or @hl.scala{Parser[Option[T]]} respectively
+
+        @sect{AnyChar}
+            @i
+                See also @hl.scala{AnyElem} in @sect.ref{Abstraction}
+            @hl.ref(tests/"ExampleTests.scala", Seq("'anychar", ""))
+
+            @p
+                This parser parses any single character successfully. It almost
+                always succeeds, except if there simply aren't any characters left
+                to parse.
+
+            @p
+                There is also a plural @hl.scala{AnyChars(count: Int)} version that
+                parses exactly @code{count} characters in a row, regardless of
+                what they are.
+
+        @sect{Positive Lookahead}
+            @hl.ref(tests/"ExampleTests.scala", Seq("'lookahead", ""))
+            @p
+                The @hl.scala{&(...)} operator wraps a parser, only succeeds if it succeeds, but consumes no input. Useful for doing checks like "these characters must be followed by a whitespace, but don't consume the whitespace"
+
+        @sect{Negative Lookahead}
+            @hl.ref(tests/"ExampleTests.scala", Seq("'neglookahead", ""))
+            @p
+                The @hl.scala{!...} operator wraps a parser and only succeeds if it fails, also consuming no input. Useful to combine with other parsers like @sect.ref{AnyChar} to restrict the things that they can parse.
+        @sect{Map}
+            @hl.ref(tests/"ExampleTests.scala", Seq("'map", ""))
+            @p
+                Up till now, we've only dealt with
+            @ul
+                @li
+                    @hl.scala{Parser[Unit]}: the default case
+                @li
+                    @hl.scala{Parser[String]}: after capturing something with @hl.scala{.!}
+                @li
+                    @hl.scala{Parser[TupleN[String]]}: capturing multiple things in series
+                @li
+                    @hl.scala{Parser[Seq[String]]}, @hl.scala{Parser[Option[String]]}: capturing things in @hl.scala{.rep} and @hl.scala{.?}
+
+            @p
+                @hl.scala{.map} lets you convert an arbitrary @hl.scala{Parser[T]} into a @hl.scala{Parser[V]} by providing a @hl.scala{T => V} function. This is useful for converting the strings and tuples/seqs/options of strings into more useful data-structures.
+        @sect{FlatMap}
+            @hl.ref(tests/"ExampleTests.scala", Seq("'flatMap", ""))
+
+            @p
+                @hl.scala{.flatMap} allows you to dynamically choose a parser to continue with, given the result of the current parser. The example above uses it to parse balanced XML tags. @hl.scala{.flatMap} can be used to parse indentation-based grammars, and is used to do so in @a("Scalatex", href:="http://lihaoyi.github.io/Scalatex/").
+
+            @p
+                Note that the function given to @hl.scala{.flatMap} is evaluated every time this parser is tried. You should be conscious of the cost of re-creating the resultant parser every time, since FastParse parsers are somewhat expensive to initialize despite being fast per-run. If possible, store the parsers somewhere before-hand or memo-ize/cache them to avoid initializing them wastefully.
+            @p
+                As is normal in Scala, you can replace a @hl.scala{.flatMap} call with a @hl.scala{for}-comprehension, as below:
+
+            @hl.ref(tests/"ExampleTests.scala", Seq("'flatMapFor", ""))
+
+            @p
+                Which is equivalent and behaves exactly the same.
+
+        @sect{Filter}
+            @hl.ref(tests/"ExampleTests.scala", Seq("'filter", ""))
+
+            @p
+                @hl.scala{.filter} allows you to supply a predicate @hl.scala{T => Boolean} which is applied to the successful result of the current parser. If the predicate is true the filtered parser succeeds otherwise it fails. The example above uses @hl.scala{.filter} on digits to parse only even numbers successfully while odd numbers will fail. If the current parser fails then that failure is simply passed along.
+        @sect{Opaque}
+            @p
+                Sometimes it's useful to hide parser's implementation details and provide a higher-level error message. @hl.scala{.opaque} achieves exactly that.
+            @hl.ref(tests/"ExampleTests.scala", Seq("'opaque", ""))
+            @p
+                @hl.scala{.opaque} wraps the target parser in an @hl.scala{Opaque} combinator, which only succeeds or fails as a single entity and leaves no traces of underlying parsers on the stack.
+
+        @sect{Log}
+            @hl.ref(tests/"MiscTests.scala", Seq("'logging", ""))
+
+            @p
+                @sect.ref{Debugging Parsers} is often done with the @hl.scala{.log()} method, which logs output whenever the parser is tried, and when it succeeds or fails, together with the location and other data when these things happen (traces on failures, results on successes, the presence of @sect.ref{Cuts}, ...). You can define custom loggers as we've done here, or you can just leave it to by default print to stdout.
+
+            @p
+                Generally, if a parser is doing something wrong, the workflow is:
+
+            @ul
+                @li
+                    Add a @hl.scala{.log()} to the parser which is misbehaving
+                @li
+                    See where it's being tried, and what it's result (success/failure) is, and confirm that it is misbehaving.
+                @li
+                    Look at the parsers it's made of; which one of them is misbehaving and causing the larger parser to misbehave?
+                @li
+                    Add @hl.scala{.log()}s to all of them
+                @li
+                    Identify which of the sub-parsers is misbehaving
+                @li
+                    Repeat
+            @p
+                It's a non-trivial process, but it is generally not hard to figure out what's happening this way.
+
+    @sect{Intrinsics}
+        @p
+            In theory, all possible parsers can be put together using the above tools. In practice, a few more tools are provided for convenience or performance:
+
+        @sect{CharPred}
+            @i
+                See also @hl.scala{ElemPred} in @sect.ref{Abstraction}
+            @hl.ref(tests/"ExampleTests.scala", Seq("'charPred", ""))
+            @p
+                @hl.scala{CharPred} takes a @hl.scala{Char => Boolean} predicate and creates a parser that parses any single character that satisfies that predicate. e.g. you can use any of the helpful methods on @hl.scala{scala.Char} to check if a @hl.scala{Char} @hl.scala{isUpper}, @hl.scala{isDigit}, @hl.scala{isControl}, etc. etc.
+
+            @p
+                Note that this builds a high-performance bit-packed lookup table, the size of the range of valid characters, up to 65k. That means that creating a parser like this has a one-time cost in terms of memory (up to 8k bytes) and time. This should not matter as FastParse parsers are long-lived and re-usable, though you may want to consciously avoid creating too many of these repeatedly.
+
+            @p
+                You can use @code{CharPred.raw} if you want to avoid pre-computing the lookup table, in which case the predicate is re-run repeatedly during parsing.
+
+            @hl.ref(tests/"ExampleTests.scala", Seq("'charPredRaw", ""))
+
+            @p
+                This could be useful if you find your parsers are taking too long to
+                initialize and don't mind sacrificing a bit of steady-state
+                performance.
+
+        @sect{CharIn}
+            @i
+                See also @hl.scala{ElemIn} in @sect.ref{Abstraction}
+
+            @hl.ref(tests/"ExampleTests.scala", Seq("'charIn", ""))
+
+            @p
+                Similar to @sect.ref{CharPred}, except you pass in sequences of valid characters rather than a predicate.
+
+            @p
+                @code{CharIn} also builds a lookup table which it uses during parsing. As a result, it's much faster to execute than if you had used @hl.scala{"a" | "b" | "c" | "d" | ...} to combine a bunch of single-character parsers together. The same warning as @sect.ref{CharPred} about the one time cost-of-construction applies.
+
+
+        @sect{CharsWhile}
+            @i
+                See also @hl.scala{ElemsWhile} in @sect.ref{Abstraction}
+
+            @hl.ref(tests/"ExampleTests.scala", Seq("'charsWhile", ""))
+
+            @p
+                A repeated version of @sect.ref{CharPred}: this parser continually chomps away at characters as long as they continue passes the given predicate.
+
+            @p
+                This is a very fast parser, ideal for quickly consuming large numbers of characters. The same warning as @sect.ref{CharPred} about the one time cost-of-construction applies.
+            @p
+                You can use @code{CharsWhile.raw} if you want to avoid pre-computing the lookup table, in which case the predicate is re-run repeatedly during parsing.
+
+            @hl.ref(tests/"ExampleTests.scala", Seq("'charsWhileRaw", ""))
+
+            @p
+                This could be useful if you find your parsers are taking too long to
+                initialize and don't mind sacrificing a bit of steady-state
+                performance.
+
+        @sect{CharsWhileIn}
+            @i
+                See also @hl.scala{ElemsWhileIn} in @sect.ref{Abstraction}
+
+            @hl.ref(tests/"ExampleTests.scala", Seq("'charsWhileIn", ""))
+
+            @p
+                A combination of @sect.ref{CharsWhile} and @sect.ref{CharIn}, this
+                parser continues consuming characters as long as they are within
+                the set you characters you passed to it.
+            @p
+                If you find yourself using @sect.ref{CharsWhile} with @code{contains}
+                e.g. @hl.scala{CharsWhile("abc".contains)}, you probably could
+                use @code{CharsWhileIn} instead.
+        @sect{StringIn}
+            @i
+                See also @hl.scala{SeqIn} in @sect.ref{Abstraction}
+            @hl.ref(tests/"ExampleTests.scala", Seq("'stringIn", ""))
+
+            @p
+                Quickly parses one of any number of strings that you give it. Behind the scenes, it converts the list of strings into a Trie so it can attempt to parse all of them in a single pass.
+
+            @p
+                As a result, this is much faster to execute than if you had combined the individual strings with @hl.scala{"cow" | "cattle" | ...}.
+
+            @p
+                There is also a @code{StringInIgnoreCase} parser you can use
+                if you want to match things case-insensitively.
+    @sect{Cuts}
+        @p
+            A "cut" (@code{~/} in Fastparse) is a marker in a recursive-descent
+            parser that states "you cannot backtrack past this point". In
+            FastParse, this serves two purposes:
+
+        @ul
+            @li
+                Improving the quality of error-reporting while
+                @sect.ref{Debugging Parsers}: whether it's the parser that's
+                incorrect or the input that's incorrect, the improved error
+                messages due to Cuts makes it easier to figure out what's wrong
+            @li
+                Allowing @sect.ref{Streaming Parsing}: Even when parsing
+                streaming input, FastParse parsers have to buffer the input
+                in-memory in case the parser needs to backtrack, but adding
+                Cuts tells the parser it can safely drop earlier parts of the
+                input it can no longer backtrack to.
+
+        @sect{No Cuts}
+            @hl.ref(tests/"ExampleTests.scala", Seq("'nocut", ""))
+            @p
+                Above we have a naive scala definition parser: it either parses a @hl.scala{val} or @hl.scala{def}, a space, and its (lower-case only) name. On a success this works as expected, and extracts the name. However, on a failure, something odd happens: the deepest parser on-failure is shown to be the entire @sect.ref{Either}, rather than just the @hl.scala{alpha} that came after @hl.scala{"val "}. Why is that?
+
+            @p
+                By default, the parse has an opportunity to backtrack whenever it enters a
+
+            @ul
+                @li
+                    @hl.scala{p1 | p2}: If @hl.scala{p1} fails, it tries @hl.scala{p2}
+
+                @li
+                    @hl.scala{p.rep}, @hl.scala{p.?}: If parsing with @hl.scala{p} fails, it backtracks out of the failed parse and tries to parse whatever comes after the repeat/optional.
+            @p
+                e.g. in the case of @hl.scala{p1 | p2}, if it tries to parse @hl.scala{p1} and fails, it then tries to parse @hl.scala{p2}. If @i{that} fails, all that FastParse knows is that one of them should have succeeded. Specifically, FastParse does @i{not} know that after successfully parsing @hl.scala{"val "}, that only the left branch of the @sect.ref{Either} is viable! Thus it has no choice but to offer both alternatives in the error message.
+
+        @sect{Cuts}
+            @hl.ref(tests/"ExampleTests.scala", Seq("'withcut", ""))
+
+            @p
+                Cuts are added using the @hl.scala{~/} operator, which is similar to the @sect.ref{Sequence} operator @hl.scala{~}. Once the parse has crossed a cut, it can no longer backtrack past the point at which the cut occured. Hence, in this case you can see that it no longer backtracks to index 0, out of the enclosing @sect.ref{Either} parser and offering that in the error trace. Instead, it shows a much more precise error: at index @hl.scala{4}, expecting one of the small set of alphanumeric characters.
+            @p
+                In general, if you know that a parser is "committed" to one branch after parsing to a certain point, adding a cut will greatly improve the error message by ensuring that the parser @i{itself} knows that. Good places to add cuts include places like after keywords in a programming language parser, where a keyword can be followed by only one thing and anything else is an error.
+        @sect{Rep Cuts}
+
+            @hl.ref(tests/"ExampleTests.scala", Seq("'repnocut", ""))
+
+            @p
+                A similar problem occurs inside @sect.ref{Repeat} or @sect.ref{Optional} parsers, where the parser will give up and backtrack out if it fails, even if it really should succeed. Again, adding cuts would result in a more precise error message:
+
+            @hl.ref(tests/"ExampleTests.scala", Seq("'repcut", ""))
+
+            @p
+                Another case where you may want to pay attention is when you are using delimiters with your @hl.scala{.rep} calls:
+
+            @hl.ref(tests/"ExampleTests.scala", Seq("'delimiternocut", ""))
+
+            @p
+                in many (but not all!) cases, if a delimiter is parsed, you want to commit to parsing one more iteration of the @sect.ref{Repeat}. However, by default, it backtracks out of the @sect.ref{Repeat} entirely and starts trying to parse the next item in sequence (in this case the @hl.scala{")"} giving the behavior shown above.
+
+            @p
+                With a cut, the error is improved:
+
+            @hl.ref(tests/"ExampleTests.scala", Seq("'delimitercut", ""))
+
+            @p
+                The @hl.scala{~/} operator can be used without following parser as a shortcut for @hl.scala{~/ Pass}. Compare the previous example with the following one:
+
+            @hl.ref(tests/"ExampleTests.scala", Seq("'endcut", ""))
+
+        @sect{Isolating Cuts}
+            @p
+                Because cuts prevent backtracking throughout the entire parser, they make it difficult to compose arbitrary parsers:
+
+            @hl.ref(tests/"ExampleTests.scala", Seq("'composecut", ""))
+
+            @p
+                In the above case, @hl.scala{time1} and @hl.scala{time2} are arbitrary parsers containing @sect.ref{Cuts}. By default, that means that once you've crossed a cut, you can no longer backtrack. However, there are cases where you want to use an existing parser (for example @hl.scala{time1}) in a situation where you want to allow it to backtrack, but you don't want to rewrite it identically but without cuts. In this case it's trivial, but if @hl.scala{time1} was larger you would need to rewrite all of it as well as all of its transitive sub-parsers to make sure that not a single one had a cut inside!
+
+            @p
+                To explicitly isolate a cut to one branch of a parser, place that branch within @hl.scala{NoCut}.  Cuts within that branch will prevent backtracking inside that branch, but if that branch fails alternate branches will be tried as normal.
+
+            @hl.ref(tests/"ExampleTests.scala", Seq("'composenocut", ""))
+    @sect{Unapply}
+        @p
+            @hl.scala{Parser} class has a convenient method @hl.scala{unapply}
+            which allows to do pattern matching using parsers (like regular
+            expressions) in your code.
+
+            @hl.ref(tests/"ExampleTests.scala", "val capture1", "val captureOpt")
+        @p
+            If the parser succeeds, the return value of the parser is bound
+            to the name in the pattern match. If the parser fails, the
+            pattern match fails. Note you do not have access to the failure
+            details when pattern-matching-syntax/unapply with a parser: if
+            you need that, call @code{.parse} and pattern match on the
+            @sect.ref{Parsing Results} yourself

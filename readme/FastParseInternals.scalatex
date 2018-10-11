@@ -1,0 +1,132 @@
+@import Main._
+@sect{Internals}
+    @p
+        FastParse's internals are straightforward. Nonetheless, its design is unlike any other combinator library I've seen: externally immutable, pure-functional parser-combinators with mutable, highly-optimized internals.
+
+
+    @sect{Fast Interpreter}
+        @p
+            FastParse is designed as a fast, immutable interpreter. That means
+        @ul
+            @li
+                It does not do significant transformations of the grammar. The structure of the parser you define is the structure that will run. No transformation at compile time, no transformations at run-time.
+            @li
+                It provides fast primitives like @sect.ref{CharsWhile}, that you can drop in many places to speed up otherwise slow bulk operations (e.g. parsing whitespace, identifiers).
+            @li
+                Error reported is straightforward: the last index that it does not backtrack out of is the index that is reported, and the parser at that point is the parser that is reported.
+
+        @p
+            In theory, it could be possible to perform either compile-time or initialization-time (before actually parsing) optimizations on the parser to improve performance. So far, I have not managed to find a scheme that has a significant improvement at an acceptable cost in terms of complexity. Apart from trivial de-sugarings (e.g. merging together @hl.scala{(p1 | p2) | p3} into a single @hl.scala{Either} node) what you write is what gets run
+
+    @sect{External Immutabiliy}
+
+        @p
+            FastParse presents a pure-functional, immutable external API to the user. That means that you can call @hl.scala{Parser[T]#parse} and not worry about having to set up neccessary state or instantiating objects. You take a @hl.scala{Parser[T]}, call @hl.scala{.parse}, and get a @hl.scala{Success[T]} or @hl.scala{Failure}
+
+        @p
+            However, immutability poses a challenge: immutability usually involves lots of "copy & update" operations rather than "mutation" operations, and on the JVM that means excessive garbage generation and collection. This is harmful for performance.
+
+        @p
+            Thus FastParse performs some tricks internally to save allocations: the immutable @hl.scala{Parser.Success} and @hl.scala{Parser.Failure} result types are actually interfaces hiding @hl.scala{Parser.Mutable.Success} and @hl.scala{Parser.Mutable.Failure} implementations, which have entirely mutable fields.
+
+        @p
+            This means that the same @hl.scala{Parser.Mutable.Success} and @hl.scala{Parser.Mutable.Failure} objects are shared throughout an entire parsing run, mutated as the parse progresses, while the external user only sees an immutable facade. This also means that a run of the large-and-complex @sect.ref{ScalaParse} on a hundreds-of-kb source file results in exactly @i{three} allocations in all: one @hl.scala{Parser.Mutable.Success}, one @hl.scala{Parser.Mutable.Failure}, and one @hl.scala{Ctx} object holding them together.
+
+    @sect{Internal Optimizations}
+        @p
+            FastParse does some things that take advantage of the type-directed nature of the result-aggregation: while @hl.scala{Parser[T].rep} returns a @hl.scala{Parser[Seq[T]]} for an arbitrary @hl.scala{T}, there is a short circuit such that @hl.scala{Parser[Unit].rep} simple returns @hl.scala{Parser[Unit]}. This lets the common case of "parsing things, not caring about the result" avoid the allocation, while still allowing you to stick some other type in there (e.g. @hl.scala{Any}) if you really do care about the bucket-of-@hl.scala{Unit}s.
+
+        @p
+            FastParse also takes advantage of the fact that @hl.scala{Parser}s are immutable. That makes it feasible to make instantiation mildly-expensive, since each one only gets instantiated once rather than per-parse. As an example, @sect.ref{CharIn}, @sect.ref{CharPred} and @sect.ref{CharsWhile} all have their predicate converted to an identical bit-set to make character lookups extremely fast. Similarly, @sect.ref{StringIn} gets converted into a Trie in order to allow one-pass matching of dozens of strings at the same time.
+        @p
+            These operations are not cheap: the bitsets easily take a few KB of memory each, and involve 65k iterations to fill them in. However, since @hl.scala{Parser}s are immutable, this one-time-cost goes from "ridiculous" to "acceptable". All these internal optimizations are completely opaque to the user, who (apart from performance) never need to think about them.
+
+    @sect{Parsing Only}
+        @p
+            Fastparse, unlike libraries like @lnk("Scodec", "https://github.com/scodec/scodec")
+            or Python's @lnk("Construct", "https://pypi.python.org/pypi/construct"),
+            only allows you to define how to parse data from serialized
+            text/bytes into structured data, and not the other way around.
+
+        @p
+            It is probably possible to write a wrapper on top of FastParse
+            that will allow two-directional serialization, but such a thing
+            does not exist right now in the FastParse codebase, and would
+            likely be pretty difficult to design and implement. If you need
+            such a thing you could try writing your own wrapper and (if it
+            works out well) contributing it back to FastParse, or otherwise
+            just use something else like
+            @lnk("Scodec", "https://github.com/scodec/scodec")
+            which has this capability build in.
+
+    @sect{Abstraction}
+        @p
+            FastParse's basic parsers are all generic: things like
+            @sect.ref{Sequence}, @sect.ref{Repeat}, @sect.ref{Optional},
+            etc. are written to work on any sort of input, whether parsing
+            @code{String}s or @code{Array[Byte]}. The @code{Parser} and
+            @code{Result} types are themselves generic and can work on multiple
+            input and output types, hence the rather complex signatures:
+
+        @hl.scala
+            trait Parser[+T, Elem, Repr]
+            sealed trait Parsed[+T, Elem]
+        @p
+            From this generic baseline, FastParse defines multiple "Api"
+            modules. Each of these specializes the "generic" FastParse API
+            into something that's more convenient for a task at hand:
+
+        @ul
+            @li
+                @hl.scala{import fastparse.all._} for parsing @code{String}s
+            @li
+                @hl.scala{import fastparse.noApi._} for parsing @code{String}s,
+                in combination with custom @sect.ref{Whitespace Handling}
+            @li
+                @hl.scala{import fastparse.byte.all._} for parsing @sect.ref{Bytes}
+
+        @p
+            Each FastParse API has type aliases that narrow the type for its particular
+            use case: e.g. @code{fastparse.all} has aliased:
+
+        @hl.scala
+            type Parsed[+T] = core.Parsed[T, String]
+            type Parser[+T] = core.Parser[T, Char, String]
+        @p
+            While @code{fastparse.byte} has aliased:
+
+        @hl.scala
+            type Parsed[+T] = core.Parsed[T, Array[Byte]]
+            type Parser[+T] = core.Parser[T, Byte, Array[Byte]]
+
+        @p
+            Thus, you generally can worked directly with the aliases defined
+            in the relevant Api module without worrying about the more
+            generic form, though most of the core parsers are written
+            generically to work in any Api module. If you wished to, you
+            too could write a custom parser that can parse both @code{String}s
+            and @code{Array[Byte]}, by inheriting from the more generic
+            @hl.scala{Parser[+T, Elem, Repr]} trait.
+
+        @p
+            Apart from the direct aliases, FastParse also provides alternate names
+            for the "generic versions" of some of the common parsers:
+
+        @ul
+            @li
+                @hl.scala{AnyElem} for @hl.scala{AnyChar} and @hl.scala{AnyByte}
+            @li
+                @hl.scala{ElemPred} for @hl.scala{CharPred} and @hl.scala{BytePred}
+            @li
+                @hl.scala{ElemIn} for @hl.scala{CharIn} and @hl.scala{ByteIn}
+            @li
+                @hl.scala{ElemsWhile} for @hl.scala{CharsWhile} and @hl.scala{BytesWhile}
+            @li
+                @hl.scala{ElemsWhileIn} for @hl.scala{CharsWhileIn} and @hl.scala{BytesWhileIn}
+            @li
+                @hl.scala{SeqIn} for @hl.scala{StringIn}
+
+        @p
+            This is for backwards compatibility, and to allow you to use
+            more relevant names when writing your parser (e.g. @code{AnyChar}
+            instead of @code{AnyElem}).

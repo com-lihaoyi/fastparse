@@ -1,0 +1,233 @@
+@import Main._
+@sect{Change Log}
+    @sect{1.0.0}
+        @ul
+           @li
+                Published @code{fastparse-byte} for Scala Native.
+    @sect{0.4.4}
+        @ul
+            @li
+                Scala Native support for the modules: @code{fastparse},
+                @code{scalaparse}, @code{pythonparse} and @code{cssparse}.
+                Porting to Scala Native required no diffs in the source code,
+                only build modifications. This release should be identical to
+                0.4.3.
+
+    @sect{0.4.3}
+        @ul
+            @li
+                Added documentation on @sect.ref{Improving Performance} and
+                @sect.ref{Startup Performance}, along with many micro-optimizations
+                and additional tools (below) for improving startup performance. Using these
+                tools & techniques, you can expect about a 10x reduction in time
+                taken to initialize your FastParse parsers. This is particularly
+                relevant for using FastParse in interactive websites via Scala.js.
+
+            @li
+                Added @hl.scala{fastparse.CharPredicates}, which provides faster
+                versions of methods like @hl.scala{.isDigit} or @hl.scala{.isUpper}
+                which tend to be slow on Scala.js
+
+            @li
+                Added a @sect.ref{CharsWhileIn} (and the corresponding @code{BytesWhileIn})
+                operator: a hybrid between @sect.ref{CharsWhile} and @sect.ref{CharIn}.
+                This should make it more convenient to continually consume characters
+                within a certain set.
+
+            @li
+                Added @code{CharsWhile.raw}, @code{CharPred.raw}
+                intrinsics, which are identical to the non-@code{raw} versions except
+                these do not pre-compute a lookup table for use during parsing. This
+                could be useful if you find your parsers are taking too long to
+                initialize and don't mind sacrificing a bit of steady-state
+                performance.
+
+            @li
+                Trailing comma support for ScalaParse, thanks to
+                @lnk("Dale Wjinand", "https://github.com/dwijnand")
+
+            @li
+                Removed unnecessary runtime dependency from CssParse on
+                @code{net.sourceforge.cssparser}, since we were only using it
+                in tests, thanks to @lnk("ritschwumm", "https://github.com/ritschwumm")
+            @li
+                Tightening up Scalaparse: added some cuts to improve the error
+                positioning after semicolons within for-comprehensions,
+                reduced the number of places postfix expressions were allowed by our
+                parser to better reflect the actual Scala grammar
+
+    @sect{0.4.2}
+        @ul
+            @li
+                Cross-publish for Scala 2.12.x
+    @sect{0.4.1}
+        @ul
+            @li
+                Fix off-by-one error in generation of @code{line:col} indices
+                in error traces for string parsing
+            @li
+                Make @code{.log()} use the same @code{line:col} indices during
+                string-parsing that error traces do, for consistency
+            @li
+                Optimize @code{line:col} message generation to avoid
+                unnecessary allocations and copying.
+
+    @sect{0.4.0}
+        @ul
+            @li
+                New @sect.ref{CssParse} in cssparse module, as an example CSS parser
+                written using FastParse.
+
+            @li
+                FastParse now supports @sect.ref{Byte Parsers}! You can parse
+                binary data using FastParse, using all the same operators and
+                combinators you may already be familiar with
+
+            @li
+                New @sect.ref{MidiParse}, @sect.ref{BmpParser} and
+                @sect.ref{ClassParser} example parsers, as working examples of
+                how Fastparse's new @sect.ref{Byte Parsers} are written.
+
+            @li
+                Support for @sect.ref{Streaming Parsing}
+
+            @li
+                Many internal refactors in order to support the new
+                @sect.ref{Byte Parsers} and @sect.ref{Streaming Parsing}.
+                @code{Parser} and @code{ParserApi} are now
+                @hl.scala{abstract class}es instead of @hl.scala{trait}s, and
+                take implicits that are necessary for them to operate.
+
+            @li
+                Many of the original types have been moved from the
+                @code{fastparse} package into @code{fastparse.core}, and have
+                grown additional type-parameters and implicits. If you
+                @hl.scala{import fastparse.all._} or
+                @hl.scala{import fastparse.byte.all._}, that should include
+                aliases for most of the useful objects and types with the
+                relevant type-parameters set to the correct values, and bring
+                in the necessary implicits for things to work.
+
+            @li
+                The old @hl.scala{def wspStr(s: String): P0} implicit has been
+                renamed @hl.scala{def LiteralStr(s: String): P0}; the old name was a
+                copy-paste from scala-parser-combinators, and never made much
+                sense anyway
+
+            @li
+                @sect.ref{Unapply} method to allow pattern matching on parsers,
+                thanks to @a("volth", href:="https://github.com/volth").
+
+            @li
+                Added a @code{StringInIgnoreCase} parser to allow matching
+                on multiple strings like @sect.ref{StringIn} but case-insensitively,
+                thanks to @a("Jim Dickinson", href:="https://github.com/jimdickinson").
+
+    @sect{0.3.7}
+        @ul
+            @li
+                Bump version of @code{sourcecode} from @code{0.1.0} to @code{0.1.1}
+    @sect{0.3.6}
+        @ul
+            @li
+                Fix @b{#77}: deduplicate traceParsers in WhitespaceAPI to prevent stack overflow, by @a("Jeroen Rosenberg", href:="https://github.com/jeroenr")
+    @sect{0.3.5}
+        @ul
+            @li
+                Minor improvements to error-reporting in Scalaparse; error messages inside tuple-types and refinement-types should be slightly more precise
+    @sect{0.3.4}
+        @ul
+            @li
+                Fix @b{#69}: performance problem in the @hl.scala{StringsIn} parser, which resulted in initialization time exponential relative to the length of the longest string, by @a("Rudiger Klaehn", href:="https://github.com/rklaehn")
+    @sect{0.3.3}
+        @ul
+            @li
+                @b{#66} Bugfix: @hl.scala{Parser.rep} now handles max=0 properly, by @a("Martin Senne", href:="https://github.com/ProjectZetta/")
+
+            @li
+                Further restructuring of @hl.scala{Parsed.Result} by @a("Martin Senne", href:="https://github.com/ProjectZetta/")
+                 @ul
+                     @li
+                         Object @hl.scala{Result} has been renamed to @hl.scala{Parsed}
+
+                     @li
+                         Former @hl.scala{Result} has moved to @hl.scala{Parsed}.
+
+                     @li
+                         Methods for position retrieval @hl.scala{line} and @hl.scala{col} have moved to @hl.scala{Failure.Extra}
+
+            @li
+                @b{#59} Fix @hl.scala{fastparse.core.Result.Failure.formatParser()} throwing @hl.scala{UnsupportedOperationException} on receiving an empty string as an input, by @a("solar", href:="https://github.com/solar")
+            @li
+                @b{#61} Added the @sect.ref{Opaque} combinator, which allows to provide more high-level error messages, by @a("Nick Stanch", href:="https://github.com/stanch")
+            @li
+                @hl.scala{Result.Failure} has been restructured: Less-commonly-used properties like @hl.scala{input} and @hl.scala{traced} have been aggregated into an @hl.scala{Result.Failure.Extra} object, simplifying pattern matching. By @a("Martin Senne", href:="https://github.com/ProjectZetta/")
+
+    @sect{0.3.2}
+        @ul
+            @li
+                Slightly better parsing of triple-quote strings in Scalaparse
+            @li
+                Added an alias for @hl.scala{type Result[T]} to match the @hl.scala{val Result} inside @hl.scala{fastparse.all}
+    @sect{0.3.1}
+        @ul
+            @li
+                @b{#47} Upgraded to Scala.js 0.6.5, removed unnecessary @code{CharPredicate}s
+            @li
+                @b{#42} Renamed @hl.scala{a ~! b} to @hl.scala{a ~/ b} to avoid confusion with @hl.scala{a ~ !b}
+            @li
+                @hl.scala{Failure} objects now expose the @hl.scala{.line} and @hl.scala{.col} attributes, in addition to the raw @hl.scala{.index}, and display these in the default trace messages
+            @li
+                @b{#27} @hl.scala{.rep} now can take a @hl.scala{max} in addition to a @hl.scala{min}
+            @li
+                @b{#40} @hl.scala{.log} now properly displays the proper snippet of text when propagating failure upward
+    @sect{0.2.1}
+        @ul
+            @li
+                Simplified ScalaParse internals slightly
+            @li
+                @hl.scala{Parser#get} now throws a custom @hl.scala{SyntaxError} with relevant metadata, instead of a plain @hl.scala{Exception}
+            @li
+                @hl.scala{WhitespaceApi}'s @hl.scala{WL} value no longer leaks out when you import from it
+    @sect{0.2.0}
+        @ul
+            @li
+                Default import changed from @hl.scala{import fastparse._} to @hl.scala{import fastparse.all._}, to make space for @hl.scala{import fastparse.noApi._}
+            @li
+                Major changes to parser internals: the internal representation of parse results in @hl.scala("Mutable.{Success, Failure}") has been split off from the immutable external represenation @hl.scala("Result.{Success, Failure}")
+            @li
+                Error-reporting has been overhauled, and is greatly improved at the cost of being more expensive. Detailed errors now require a second parse with instrumentation
+            @li
+                The cheap & spartan error data in @hl.scala{Result.Failure} has been split out from the expensive but detailed error traces in @hl.scala{Result.Failure#traced}.
+            @li
+                @hl.scala{.log()} now uses the parser's own @hl.scala{.toString} by default if you don't pass in a tag, for convenience.
+            @li
+                Added the ability to exclude the default parser operators via @hl.scala{import fastparse.noApi._}, allowing you to import custom sets of operators tailored to your needs.
+            @li
+                Introduced the @hl.scala{fastparse.WhitespaceApi} class, which replaces the default set of operators with a new set which eagerly consumes whitespace between parsers.
+            @li
+                Updated ScalaParse to use @hl.scala{fastparse.WhitespaceApi}, resulting in much more precise error locations. Errors are now positioned before the characters which failed, rather than before the preceding whitespace, and syntax errors in comments now provide better errors
+            @li
+                Added unit tests and examples/demos of @sect.ref{Whitespace Handling} and @sect.ref{Indentation Grammars}
+            @li
+                Added @sect.ref{Filter} to the API, to complement @sect.ref{Map} and @sect.ref{FlatMap}
+    @sect{0.1.7}
+        @ul
+            @li
+                More fixes for ScalaParse, added more projects to test suite
+            @li
+                Auto-generate @hl.scala{Sequencer} instances up to 22
+            @li
+                Removed unnecessary runtime utest dependency
+    @sect{0.1.6}
+        @ul
+            @li
+                Introduced five new projects into the test suite: ScalaIDE, GitBucket, Scalding, Scaloid, Marathon
+            @li
+                Fixed bug in ScalaParse around using function @hl.scala{=>} types as type ascriptions
+            @li
+                Added ability to @hl.scala{instrument} parsers, in order to gather out-of-band information about them e.g. for debugging or profiling
+            @li
+                Added @hl.scala{IgnoreCase} combinator, for case-insensitive string matching
+            @li
+                Cross-published for Scala 2.10

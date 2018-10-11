@@ -1,0 +1,70 @@
+@import Main._
+
+@val tests = wd/'fastparse/'shared/'src/'test/'scala/'fastparse
+@val main = wd/'fastparse/'shared/'src/'main/'scala/'fastparse
+
+@hl.ref(tests/"MathTests.scala", "import fastparse", "val tests")
+@hl.ref(tests/"MathTests.scala", Seq("'pass", ""))
+@div(id := "splashdiv")
+@script(raw("""demo.DemoMain.math(document.getElementById("splashdiv"))"""))
+@p
+    FastParse is a Scala library for parsing strings and bytes into structured
+    data. This lets you easily write a parser for any arbitrary textual data
+    formats (e.g. program source code, JSON, ...) and have the parsers run at
+    an acceptable speed, with great error debuggability and error reporting.
+    Features include:
+
+@ul
+    @li
+        @sect.ref("Performance", "Up to 1/5 the speed of a hand-written parser"),
+        100x faster than @a("scala-parser-combinators",
+        href:="https://github.com/scala/scala-parser-combinators"), comparable
+        (though slightly slower than) @a("Parboiled2",
+        href:="https://github.com/sirthias/parboiled2")
+    @li
+        1/10th the size of a hand-written parser
+    @li
+        Automatic, excellent @sect.ref("Debugging Parsers", "error-reporting and diagnostics").
+    @li
+        Able to write parsers for both @sect.ref("Writing Parsers", "structured text")
+        as well as @sect.ref("Byte Parsers", "binary data"), using the same API
+    @li
+        @sect.ref{Streaming Parsing} of data-sets to avoid pre-loading
+        everything into memory
+    @li
+        Compatible with both Scala-JVM and Scala.js
+
+@p
+    FastParse is a project by @lnk("Li Haoyi", "http://www.lihaoyi.com/"). If
+    you use FastParse and enjoyed it, please chip in to support our development
+    at @lnk("https://www.patreon.com/lihaoyi", "https://www.patreon.com/lihaoyi").
+    
+@p
+     The following sections will introduce you to FastParse and how to use it. You can also watch this talk:
+@iframe(
+    src:="https://player.vimeo.com/video/142341803",
+    attr("width"):="800",
+    attr("height"):="450",
+    marginLeft.auto,
+    marginRight.auto,
+    display.block,
+    attr("frameborder"):="0",
+    attr("webkitallowfullscreen"):=1,
+    attr("mozallowfullscreen"):=1,
+    attr("allowfullscreen"):= 1
+)
+@p
+    Which will give you a quick 1-hour tour of how to use FastParse, the motivation behind the library, and how it fits into the bigger picture of how programmers parse unstructured text.
+
+@sect{Getting Started}
+    @p
+        To begin using FastParse, add
+
+    @hl.scala
+        "com.lihaoyi" %% "fastparse" % "@fastparse.Constants.version"
+
+    @p
+        To your SBT configuration. To use with Scala.js, you'll need
+    @hl.scala
+        "com.lihaoyi" %%% "fastparse" % "@fastparse.Constants.version"
+

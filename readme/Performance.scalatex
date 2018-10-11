@@ -1,0 +1,133 @@
+@import Main._
+@sect{Performance}
+    @p
+        FastParse will never be able to compete with hand-written recursive descent parsers for speed. However, it's no slouch either; here's a comparison of FastParse with alternatives, using Parboiled2's JSON parsing benchmark, which parses a ~21,500 line JSON file:
+
+    @table(width := "100%", cls := "pure-table")
+        @thead
+            @th{Benchmark}@th{Score}@th{Error}
+        @tbody
+            @tr
+                @td{fastparse}@td{80.536}@td{± 0.942}
+            @tr
+                @td{fastparse-no-trace}@td{89.873}@td{± 0.875}
+            @tr
+                @td{argonaut}@td{164.092}@td{± 2.869}
+            @tr
+                @td{json4s-jackson}@td{285.637}@td{± 3.954}
+            @tr
+                @td{json4s-native}@td{142.964}@td{± 2.076}
+            @tr
+                @td{parboiled2}@td{87.586}@td{± 1.176}
+            @tr
+                @td{scala-parser-combinators}@td{0.976}@td{± 0.018}
+            @tr
+                @td{spray-json}@td{189.784}@td{± 2.825}
+
+
+    @p
+        These numbers are the number of iterations/second of parsing a sample @code{test.json} file, averaged over 200 runs. As you can see, the FastParse based parser comes within a factor of 4 of the fastest hand written parser (Jackson), is just as fast as the Parboiled2 based parser (slightly faster/slower depending if full tracing is enabled), and is almost 100x faster than the scala-parser-combinators library.
+
+    @p
+        In exchange for the perf hit compared to hand-rolled solutions, you get the @sect.ref("Json", "short, super-simple parser definition"), and excellent error free error reporting. While for super-high-performance use cases you may still want a hand-rolled parser, for many ad-hoc situations a FastParse parser would do just fine. Remember, even at "only" 89 iterations per second that is still parsing 1,900,000 lines of JSON every second!
+
+    @p
+        A similar speed ratio can be seen in parsing a @a("sample Scala file", href:="https://github.com/scala-js/scala-js/blob/master/compiler/src/main/scala/org/scalajs/core/compiler/GenJSCode.scala") using FastParse, Parboiled2 and Scalac's inbuilt hand-written Scala-language parser:
+
+    @table(width := "100%", cls := "pure-table")
+        @thead
+            @th{Benchmark}@th{Score}@th{Error}
+        @tbody
+            @tr
+                @td{fastparse}@td{320.7}@td{15.4}
+            @tr
+                @td{fastparse-no-trace}@td{434.7}@td{23.4}
+            @tr
+                @td{parboiled2}@td{1354}@td{7.97}
+            @tr
+                @td{scalac}@td{4888}@td{113}
+
+    @p
+        These numbers are the number of iterations over 30 seconds, average of 4 runs, with 2 runs of warmup (discarded). FastParse performs worse here, at 11.5x slower than Scalac's in-built parser, and 3x slower than the equivalent Parboiled2-based parser. Depending on what you're doing, that may or may not be a problem: ScalaParse still makes progress at 57,027 lines of Scala per second, which despite being slower than the others is still blazing fast.
+
+    @sect{Improving Performance}
+
+        @p
+            There are many ways to improve performance of your FastParse parsers.
+            If you study the example parsers included in the repo, those already
+            have many of these techniques applied, and if you follow the same style
+            you'll probably do ok. Nevertheless, here are some concrete tips:
+
+        @ul
+            @li
+                @b{Understand your Parser's behavior}: using @sect.ref{Log}, or
+                by @sect.ref{Instrumenting Parsers}. Often poor performance is due
+                to parsers doing the wrong thing: attempting more alternatives
+                than they need to, or backtracking and repeating the same
+                parse many times. Understanding the flow of how your parser works
+                is the first step in identifying these issues and fixing them
+
+            @li
+                @b{Avoid Backtracking}: FastParse parsers have unlimited backtracking,
+                which is convenient for getting something working initially, but
+                inconvenient when you want things to be fast. If you have a parser
+                with lots of backtracking, see if you can factor out parts of it
+                so they only get parsed once, e.g. turning @code{a ~ b | a ~ c} into
+                @code{a ~ (b | c}
+
+            @li
+                @b{Use @sect.ref{Cuts}}: although you can remove backtracking manually,
+                it is easy to make a mistake and miss some of it, or for backtracking
+                to creep back in as you make further changes to your parser. Cuts
+                prevent that, ensuring that your parser never backtracks past certain
+                points no matter what.
+
+
+            @li
+                @b{Use @sect.ref{Intrinsics}}: things like @sect.ref{CharPred},
+                @sect.ref{CharIn}, @sect.ref{CharsWhile}, @sect.ref{StringIn},
+                @sect.ref{CharsWhileIn} are orders of magnitude faster than
+                implementing their behavior yourself with @code{|} and @code{.rep}.
+                Use them where-ever possible
+
+            @li
+                @b{Re-use your Parsers}: FastParse parsers are slightly expensive
+                to create, but immutable and thread-safe and fast to run
+                after they've been created. Take advantage of this by creating
+                your parsers in top-level @hl.scala{object}s where-ever possible,
+                so you only pay the creation cost once.
+
+
+    @sect{Startup Performance}
+
+        @p
+            FastParse performs a lot of it's optimizations on-startup; this usually
+            does not matter, e.g. if you're building a server or other long-running
+            process, but sometimes it does. Particularly if you are using Scala.js,
+            which has a combination of lower performance and higher expectations
+            (Users hate waiting!)
+
+        @p
+            To improve startup times, here are a few tips:
+
+        @ul
+            @li
+                @b{Simplify the contents of your @sect.ref{CharPred}s and @sect.ref{CharsWhile}
+                operators}: these tend to be pre-computed, so steady-state it doesn't matter
+                at all how complex the predicate you feed into them is. However, that means
+                during initialization, any slowness in the predicates are magnified.
+
+            @li
+                @b{Replace @sect.ref{CharPred} with @sect.ref{CharIn} and
+                @sect.ref{CharsWhile} with @sect.ref{CharsWhileIn}}: you cannot
+                always perform this replacement, but in the cases where you can,
+                @sect.ref{CharIn} and @sect.ref{CharsWhileIn} are much faster to
+                initialize than their predicate-based counterparts.
+            @li
+                @b{Use @hl.scala{fastparse.CharPredicates}}: these are versions of
+                the various @code{.isDigit}/@code{.isUpper}/etc.
+                methods that are pre-computed for characters from 0 to 65535. This
+                especially makes a difference when using FastParse in Scala.js,
+                where the @code{.isXXX} methods tend to be much slower than on the JVM.
+                Use the @hl.scala{fastparse.CharPredicates.isXXX(c)} methods within
+                your @sect.ref{CharPred}s or @sect.ref{CharsWhile}s wherever possible
