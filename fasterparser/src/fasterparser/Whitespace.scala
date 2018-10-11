@@ -8,7 +8,7 @@ import scala.annotation.{Annotation, switch, tailrec}
   */
 object NoWhitespace {
   implicit object noWhitespaceImplicit extends (Parse[_] => Parse[Unit]){
-    def apply(cfg: Parse[_]) = fasterparser.Parsing.Pass(cfg)
+    def apply(ctx: Parse[_]) = ctx.freshSuccess((), null)
   }
 }
 
@@ -17,14 +17,32 @@ object NoWhitespace {
   * characters.
   */
 object SingleLineWhitespace {
-  implicit def whitespace(cfg: Parse[_]): Parse[Unit] = CharsWhileIn(" \t", 0)(cfg)
+  implicit val whitespace = {implicit ctx: Parse[_] =>
+    var index = ctx.index
+    val input = ctx.input
+    
+    while(
+      input.isReachable(index) &&
+      (input(index) match{ case ' ' | '\t' => true case _ => false})
+    ) index += 1
+    ctx.freshSuccess((), "", index = index)
+  }
 }
 /**
   * Whitespace syntax that consumes both single-line " " and "\t" and multiline
   * "\r" and "\n" whitespace characters.
   */
 object MultiLineWhitespace {
-  implicit def whitespace(cfg: Parse[_]): Parse[Unit] = CharsWhileIn(" \t\r\n", 0)(cfg)
+  implicit val whitespace = {implicit ctx: Parse[_] =>
+    var index = ctx.index
+    val input = ctx.input
+
+    while(
+      input.isReachable(index) &&
+        (input(index) match{ case ' ' | '\t' | '\r' | '\n' => true case _ => false})
+    ) index += 1
+    ctx.freshSuccess((), "", index = index)
+  }
 }
 
 
@@ -34,10 +52,10 @@ object MultiLineWhitespace {
   * in the Java programming language
   */
 object JavaWhitespace{
-  implicit def whitespace(cfg: Parse[_]): Parse[Unit] = {
-    val input = cfg.input
+  implicit val whitespace = {implicit ctx: Parse[_] =>
+    val input = ctx.input
     @tailrec def rec(current: Int, state: Int): Parse[Unit] = {
-      if (!input.isReachable(current)) cfg.prepareSuccess((), current)
+      if (!input.isReachable(current)) ctx.prepareSuccess((), current)
       else {
         val currentChar = input(current)
         (state: @switch) match{
@@ -45,20 +63,20 @@ object JavaWhitespace{
             (currentChar: @switch) match{
               case ' ' | '\t' | '\n' | '\r' => rec(current + 1, state)
               case '/' => rec(current + 1, state = 2)
-              case _ => cfg.prepareSuccess((), current)
+              case _ => ctx.prepareSuccess((), current)
             }
           case 1 => rec(current + 1, state = if (currentChar == '\n') 0 else state)
           case 2 =>
             (currentChar: @switch) match{
               case '/' => rec(current + 1, state = 1)
-              case _ => cfg.prepareSuccess((), current - 1)
+              case _ => ctx.prepareSuccess((), current - 1)
             }
           case 3 => rec(current + 1, state = if (currentChar == '*') 4 else state)
           case 4 => rec(current + 1, state = if (currentChar == '/') 0 else 3)
         }
       }
     }
-    rec(current = cfg.index, state = 0)
+    rec(current = ctx.index, state = 0)
   }
 }
 /**
@@ -66,10 +84,10 @@ object JavaWhitespace{
   * programming languages such as Bash, Ruby, or Python
   */
 object ScriptWhitespace{
-  implicit def whitespace(cfg: Parse[_]): Parse[Unit] = {
-    val input = cfg.input
+  implicit val whitespace = {implicit ctx: Parse[_] =>
+    val input = ctx.input
     @tailrec def rec(current: Int, state: Int): Parse[Unit] = {
-      if (!input.isReachable(current)) cfg.prepareSuccess((), current)
+      if (!input.isReachable(current)) ctx.prepareSuccess((), current)
       else {
         val currentChar = input(current)
         (state: @switch) match{
@@ -77,13 +95,13 @@ object ScriptWhitespace{
             (currentChar: @switch) match{
               case ' ' | '\t' | '\n' | '\r' => rec(current + 1, state)
               case '#' => rec(current + 1, state = 1)
-              case _ => cfg.prepareSuccess((), current)
+              case _ => ctx.prepareSuccess((), current)
             }
           case 1 => rec(current + 1, state = if (currentChar == '\n') 0 else state)
         }
       }
     }
-    rec(current = cfg.index, state = 0)
+    rec(current = ctx.index, state = 0)
   }
 }
 
@@ -93,10 +111,10 @@ object ScriptWhitespace{
   * case in the Jsonnet programming language
   */
 object JsonnetWhitespace{
-  implicit def whitespace(cfg: Parse[_]): Parse[Unit] = {
-    val input = cfg.input
+  implicit val whitespace = {implicit ctx: Parse[_] =>
+    val input = ctx.input
     @tailrec def rec(current: Int, state: Int): Parse[Unit] = {
-      if (!input.isReachable(current)) cfg.prepareSuccess((), current)
+      if (!input.isReachable(current)) ctx.prepareSuccess((), current)
       else {
         val currentChar = input(current)
         (state: @switch) match{
@@ -105,21 +123,21 @@ object JsonnetWhitespace{
               case ' ' | '\t' | '\n' | '\r' => rec(current + 1, state)
               case '#' => rec(current + 1, state = 1)
               case '/' => rec(current + 1, state = 2)
-              case _ => cfg.prepareSuccess((), current)
+              case _ => ctx.prepareSuccess((), current)
             }
           case 1 => rec(current + 1, state = if (currentChar == '\n') 0 else state)
           case 2 =>
             (currentChar: @switch) match{
               case '/' => rec(current + 1, state = 1)
               case '*' => rec(current + 1, state = 3)
-              case _ => cfg.prepareSuccess((), current - 1)
+              case _ => ctx.prepareSuccess((), current - 1)
             }
           case 3 => rec(current + 1, state = if (currentChar == '*') 4 else state)
           case 4 => rec(current + 1, state = if (currentChar == '/') 0 else 3)
         }
       }
     }
-    rec(current = cfg.index, state = 0)
+    rec(current = ctx.index, state = 0)
   }
 }
 
@@ -129,11 +147,11 @@ object JsonnetWhitespace{
   * in the Scala programming language
   */
 object ScalaWhitespace {
-  implicit def whitespace(cfg: Parse[_]): Parse[Unit] = {
-    val input = cfg.input
+  implicit val whitespace = {implicit ctx: Parse[_] =>
+    val input = ctx.input
 
     @tailrec def rec(current: Int, state: Int, nesting: Int): Parse[Unit] = {
-      if (!input.isReachable(current)) cfg.prepareSuccess((), current)
+      if (!input.isReachable(current)) ctx.prepareSuccess((), current)
       else {
         val currentChar = input(current)
         (state: @switch) match{
@@ -141,14 +159,14 @@ object ScalaWhitespace {
             (currentChar: @switch) match{
               case ' ' | '\t' | '\n' | '\r' => rec(current + 1, state, 0)
               case '/' => rec(current + 1, state = 2, 0)
-              case _ => cfg.prepareSuccess((), current)
+              case _ => ctx.prepareSuccess((), current)
             }
           case 1 => rec(current + 1, state = if (currentChar == '\n') 0 else state, 0)
           case 2 =>
             (currentChar: @switch) match{
               case '/' => rec(current + 1, state = 1, 0)
               case '*' => rec(current + 1, state = 3, nesting + 1)
-              case _ => cfg.prepareSuccess((), current - 1)
+              case _ => ctx.prepareSuccess((), current - 1)
             }
           case 3 =>
             (currentChar: @switch) match{
@@ -162,7 +180,7 @@ object ScalaWhitespace {
         }
       }
     }
-    rec(current = cfg.index, state = 0, nesting = 0)
+    rec(current = ctx.index, state = 0, nesting = 0)
   }
 
 }

@@ -14,10 +14,7 @@ import scala.language.postfixOps
   */
 object GnipSubSyntaxTest extends TestSuite {
   object GnipRuleParser {
-    implicit def whitespace(cfg: Parse[_]): Parse[Unit] = {
-      implicit def cfg0 = cfg
-      NoTrace(" ".repX)
-    }
+    import SingleLineWhitespace._
 
     def keyword[_: P] = P(CharIn("a-z")!)
     def maybeNegatedKeyword[_: P] = P((("-"?) ~~ keyword)!)
