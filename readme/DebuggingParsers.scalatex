@@ -148,7 +148,7 @@
             will fail:
 
         @hl.scala
-            val Parsed.Failure(idx,expected,extra) = parse("(1+(2+3x))+4").read(Foo.expr(_))
+            val Parsed.Failure(stack, idx, extra) = parse("(1+(2+3x))+4").read(Foo.expr(_))
         @p
             We know that this input will fail, because our grammar (defined
             earlier) does not contain an @hl.scala{"x"} in it! It only handles
@@ -157,20 +157,21 @@
             @code{.toString}) and @code{idx} the index that it failed at:
         @hl.scala
             > (idx, expected) // Last index and last parser at which it failed
-            (7, ")")
+            (")", 7)
         @p
             But there is also the @code{extra} result which contains additional information you can use, e.g. the @code{extra.traced} result.
 
         @hl.scala
             > extra.traced.trace // The named parsers in the stack when it failed
-            expr:1:1 / side:1:1 / expr:1:2 / side:1:4 / (")" | CharIn("0123456789")):1:8 ..."x))+4"
+            Expected expr:1:1 / side:1:1 / expr:1:2 / side:1:4 / ([0-9] | ")"):1:8, found "x))+4"
 
             > extra.traced.stack // Same as .trace, but as a List[Frame] rather than String
-            Vector(
-              Frame(0,expr), // (1+(2+3x))+4
-              Frame(0,side), // (1+(2+3x))+4
-              Frame(1,expr), //  1+(2+3x))+4
-              Frame(3,side)  //    (2+3x))+4
+            List(
+                (([0-9] | ")"), 7),
+                (side, 3),
+                (expr, 1),
+                (side, 0),
+                (expr, 0)
             )
 
         @p
@@ -178,39 +179,8 @@
             parser in the stack when the parse failed, what indices they were
             tried at. Apart from getting it as a readable string via
             @hl.scala{.trace}, you can also get it as structured data via
-            @hl.scala{.stacK} in case you want to manipulate it programmatically.
-        @p
-            FastParse also provides the @hl.scala{.traceParsers} value, which
-            tells you every single parser which @i{could} have succeeded at
-            the index parsing failed. In thi
-        @hl.scala
-            > fail.traced.traceParsers // Every parser that could have succeeded at Failure#index
-            Set(")", CharIn("0123456789"))
-        @p
-            Thus, we can see that although FastParse last tried the
-            @hl.scala{")"} parser, it earlier @i{also} tried the
-            @hl.scala{CharIn("0123456789")} parser at the same spot. This makes
-            perfect sense: if instead of @hl.scala{"x"} we had a digit of some
-            kind, parsing could have continued! And we do not need to figure
-            this out ourselves; FastParse knows and can tell you.
-        @p
-            Lastly, tracing gives you access to the @hl.scala{.fullStack} of
-            the failure, which contains @i{every} parser in the stack when it
-            failed, not just the ones with names!
-        @p
-            Every expression in a fastparse parser is itself a parser:
-            @hl.scala{"("} is a parser, @hl.scala{"(" ~ expr ~ ")"} is a
-            parser, and so on. With @hl.scala{.fullStack}, we can see in great
-            detail what FastParse was trying to do when it failed:
+            @hl.scala{.stack} in case you want to manipulate it programmatically.
 
-        @hl.scala
-            > extra.traced.fullStack // Every single parser in the stack when it failed
-            Vector(
-              Frame(0,expr), Frame(0,expr),                    Frame(0,side ~ plus ~ side),
-              Frame(0,side), Frame(0,"(" ~/ expr ~ ")" | num), Frame(1,"(" ~/ expr ~ ")"),
-              Frame(1,expr), Frame(1,expr),                    Frame(3,side ~ plus ~ side),
-              Frame(3,side), Frame(3,"(" ~/ expr ~ ")" | num), Frame(7,"(" ~/ expr ~ ")")
-            )
 
     @sect{Use Cases}
         @p
@@ -226,7 +196,7 @@
                 enter invalid input. For example, instead of just
                 @i{"Syntax error at column @hl.scala{7}"} You can say
                 @i{"Syntax error at column @hl.scala{7}, expected
-                @hl.scala{(")" | CharIn("0123456789")}, while trying to parse a
+                @hl.scala{[0-9] | ")"}, while trying to parse a
                 @hl.scala{side} at column @hl.scala{3}, while trying to parse an
                 @hl.scala{expr} at column @hl.scala{1}, ..."}. Naturally, you do
                 not need to overwhelm the user with debug information, but now
@@ -234,13 +204,9 @@
 
             @li
                 You can customize the experience of your users when they enter
-                invalid input! For example, if I know that the rule
-                @hl.scala{side} failing @i{usually} means the user made some
-                common mistake, I can easily check for that via
-                @hl.scala{fail.traced.stack.contains(_.parser == Foo.side)} and
-                display a more helpful error @i{"Maybe try X?"} if it's found.
-                No need to embed your error-reporting deep in the parser, just
-                inspect the @hl.scala{stack} and find out after the fact.
+                invalid input, for example discarding portions of the error
+                stack you find not useful for debugging, and formatting the
+                remaining parts in a way that your users can best understand.
         @p
             In general, FastParse's error reporting is detailed and structured.
             As a @i{developer}, most of your time spent interacting with your
