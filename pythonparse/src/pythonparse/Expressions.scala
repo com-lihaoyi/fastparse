@@ -91,11 +91,9 @@ object Expressions {
   def shift_expr[_: P]: P[Ast.expr] = P( Chain(arith_expr, LShift | RShift) )
 
   def arith_expr[_: P]: P[Ast.expr] = P( Chain(term, Add | Sub) )
-  def term[_: P]: P[Ast.expr] = P( Chain(factor, Mult | Div | Mod | FloorDiv) )
-  // NUMBER appears here and below in `atom` to give it precedence.
-  // This ensures that "-2" will parse as `Num(-2)` rather than
-  // as `UnaryOp(USub, Num(2))`.
-  def factor[_: P]: P[Ast.expr] = P( NUMBER | Unary(factor) | power )
+  def term[_: P]: P[Ast.expr] = P( Chain(factor, Mult | FloorDiv | Div | Mod ) )
+
+  def factor[_: P]: P[Ast.expr] = P( power | Unary(factor) )
   def power[_: P]: P[Ast.expr] = P( atom ~ trailer.rep ~ (Pow ~ factor).? ).map{
     case (lhs, trailers, rhs) =>
       val left = trailers.foldLeft(lhs)((l, t) => t(l))
@@ -174,7 +172,9 @@ object Expressions {
 
   def arglist[_: P] = {
     def inits = P( (plain_argument ~ !"=").rep(0, ",") )
-    def later = P( named_argument.rep(0, ",") ~ ",".? ~ ("*" ~ test).? ~ ",".? ~ ("**" ~ test).? )
+    def later = P( named_argument.rep(0, ",") ~ ",".? ~ ("*" ~ test).? ~ ",".? ~ ("**" ~ test).? ~ ",".? ~ named_argument.rep(0, ",")).map{
+      case (named1, dot, star, named2) => (named1 ++ named2, dot, star )
+    }
     P( inits ~ ",".? ~ later )
   }
 

@@ -5,7 +5,9 @@ object fasterparser extends Module{
   object jvm extends Cross[FasterParserJvmModule](crossVersions:_*)
   class FasterParserJvmModule(val crossScalaVersion: String) extends FasterParserModule{
     def platformSegment = "jvm"
-    object test extends Tests with CommonTestModule
+    object test extends Tests with CommonTestModule{
+      def platformSegment = "jvm"
+    }
     object bench extends ScalaModule{
       def scalaVersion = crossScalaVersion
 
@@ -25,7 +27,9 @@ object fasterparser extends Module{
   class FasterParserJsModule(val crossScalaVersion: String) extends FasterParserModule with ScalaJSModule {
     def platformSegment = "js"
     def scalaJSVersion = "0.6.25"
-    object test extends Tests with CommonTestModule
+    object test extends Tests with CommonTestModule{
+      def platformSegment = "js"
+    }
   }
 }
 trait FasterParserModule extends CommonCrossModule{
@@ -99,14 +103,21 @@ trait ExampleParseJsModule extends CommonCrossModule with ScalaJSModule{
   def moduleDeps = Seq(fasterparser.js())
   def scalaJSVersion = "0.6.25"
   def platformSegment = "js"
-  object test extends Tests with CommonTestModule
+  object test extends Tests with CommonTestModule{
+    def platformSegment = "js"
+  }
 }
 
 
 trait ExampleParseJvmModule extends CommonCrossModule{
   def moduleDeps = Seq(fasterparser.jvm())
   def platformSegment = "jvm"
-  object test extends Tests with CommonTestModule
+  object test extends Tests with CommonTestModule{
+    def platformSegment = "jvm"
+    def ivyDeps = super.ivyDeps() ++ Agg(
+      ivy"net.sourceforge.cssparser:cssparser:0.9.18"
+    )
+  }
 }
 
 trait CommonCrossModule extends CrossScalaModule{
@@ -120,9 +131,14 @@ trait CommonCrossModule extends CrossScalaModule{
 
 }
 trait CommonTestModule extends ScalaModule with TestModule{
+  def platformSegment: String
   def ivyDeps = Agg(
     ivy"com.lihaoyi::utest::0.6.5",
   )
 
+  def sources = T.sources(
+    millSourcePath / "src",
+    millSourcePath / s"src-$platformSegment"
+  )
   def testFrameworks = Seq("utest.runner.Framework")
 }
