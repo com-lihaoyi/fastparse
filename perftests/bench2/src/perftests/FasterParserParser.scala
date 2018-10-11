@@ -1,11 +1,11 @@
 package perftests
 
-import fasterparser.JsonnetWhitespace._
-import fasterparser._
+import fastparse.JsonnetWhitespace._
+import fastparse._
 import Expr.Member.Visibility
 import scala.annotation.switch
 
-object FasterParserParser{
+object fastparseParser{
   val precedenceTable = Seq(
     Seq("*", "/", "%"),
     Seq("+", "-"),

@@ -1,7 +1,7 @@
 import scala.annotation.tailrec
 import scala.reflect.macros.blackbox.Context
 import language.experimental.macros
-package object fasterparser {
+package object fastparse {
 
   type P[+T] = ParsingRun[T]
   type P0 = ParsingRun[Unit]
@@ -36,7 +36,7 @@ package object fasterparser {
   }
 
 
-  implicit def EagerOpsStr(parse0: String)(implicit ctx: ParsingRun[Any]): fasterparser.EagerOps[Unit] = macro MacroImpls.eagerOpsStrMacro
+  implicit def EagerOpsStr(parse0: String)(implicit ctx: ParsingRun[Any]): fastparse.EagerOps[Unit] = macro MacroImpls.eagerOpsStrMacro
 
   def parsedSequence[T: c.WeakTypeTag, V: c.WeakTypeTag, R: c.WeakTypeTag]
   (c: Context)
@@ -112,7 +112,7 @@ package object fasterparser {
 
 
 
-  implicit def ByNameOpsStr(parse0: String)(implicit ctx: ParsingRun[Any]): fasterparser.ByNameOps[Unit] =
+  implicit def ByNameOpsStr(parse0: String)(implicit ctx: ParsingRun[Any]): fastparse.ByNameOps[Unit] =
   macro MacroImpls.byNameOpsStrMacro
 
   implicit def ByNameOps[T](parse0: => ParsingRun[T]) = new ByNameOps(() => parse0)
@@ -221,7 +221,7 @@ package object fasterparser {
     }
   }
 
-  implicit def LogOpsStr(parse0: String)(implicit ctx: ParsingRun[Any]): fasterparser.LogByNameOps[Unit] =
+  implicit def LogOpsStr(parse0: String)(implicit ctx: ParsingRun[Any]): fastparse.LogByNameOps[Unit] =
   macro MacroImpls.logOpsStrMacro
   /**
     * Separated out from [[ByNameOps]] because `.log` isn't easy to make an

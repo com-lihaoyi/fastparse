@@ -1,9 +1,9 @@
 package scalaparse.syntax
 
 
-import fasterparser._
-import fasterparser._
-import fasterparser.NoWhitespace._
+import fastparse._
+import fastparse._
+import fastparse.NoWhitespace._
 import CharPredicates._
 object Basic {
 

@@ -1,6 +1,6 @@
 package cssparse
 
-import fasterparser._
+import fastparse._
 
 object TestUtil {
 

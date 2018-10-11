@@ -1,7 +1,7 @@
 
-package test.fasterparser
+package test.fastparse
 
-import fasterparser.Implicits
+import fastparse.Implicits
 
 /**
   * Make sure the type-level logic does the right thing. Doesn't

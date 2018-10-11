@@ -64,7 +64,7 @@ object JsonParse extends TestSuite {
   val jsonExpr: P[Js.Val] = P(
     space ~ (obj | array | string | `true` | `false` | `null` | number) ~ space
   )
-  val crossValidationStream = getClass.getResourceAsStream("/fasterparser/test.json")
+  val crossValidationStream = getClass.getResourceAsStream("/fastparse/test.json")
   val crossValidationSource = scala.io.Source.fromInputStream(crossValidationStream).mkString
   def crossValidationIterator(size: Int) = crossValidationSource.grouped(size)
 

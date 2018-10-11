@@ -2,8 +2,8 @@ package scalaparse
 
 import language.implicitConversions
 import syntax._
-import fasterparser._
-import fasterparser._, ScalaWhitespace._
+import fastparse._
+import fastparse._, ScalaWhitespace._
 /**
  * Parser for Scala syntax.
  */

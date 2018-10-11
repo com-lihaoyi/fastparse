@@ -1,7 +1,7 @@
-package test.fasterparser
+package test.fastparse
 
 import utest._
-import fasterparser._
+import fastparse._
 
 import scala.language.postfixOps
 

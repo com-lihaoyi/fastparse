@@ -4,7 +4,7 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 import java.nio.file._
 import utest._
-import fasterparser._
+import fastparse._
 /**
  * Load external Python code and force feed it through the parser
  * to find out where it blows up

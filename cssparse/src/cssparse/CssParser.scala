@@ -1,10 +1,10 @@
 package cssparse
 
-import fasterparser._
+import fastparse._
 
 // According to https://www.w3.org/TR/css-syntax-3/
 
-import fasterparser.NoWhitespace._
+import fastparse.NoWhitespace._
 
 object CssTokensParser {
 

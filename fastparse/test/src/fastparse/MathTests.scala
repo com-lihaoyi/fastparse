@@ -1,5 +1,5 @@
-package test.fasterparser
-import fasterparser._
+package test.fastparse
+import fastparse._
 import utest._
 
 import scala.collection.mutable
@@ -9,7 +9,7 @@ import scala.collection.mutable
   * evaluating simple arithmetic expressions
   */
 object MathTests extends TestSuite{
-  import fasterparser.NoWhitespace._
+  import fastparse.NoWhitespace._
   def eval(tree: (Int, Seq[(String, Int)])) = {
     val (base, ops) = tree
     ops.foldLeft(base){ case (left, (op, right)) => op match{

@@ -1,8 +1,8 @@
 package scalaparse
 
 import syntax.Basic
-import fasterparser._
-import fasterparser._
+import fastparse._
+import fastparse._
 
 import scala.language.implicitConversions
 import NoWhitespace._

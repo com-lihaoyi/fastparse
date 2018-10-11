@@ -1,6 +1,6 @@
 package pythonparse
 
-import fasterparser._
+import fastparse._
 import Expressions.{whitespace => _, _}
 import Lexical.kw
 object Statements extends Statements(0)

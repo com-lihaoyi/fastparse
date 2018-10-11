@@ -4,9 +4,9 @@ import scalalib._
 import scalajslib._
 
 val crossVersions = Seq("2.11.12", "2.12.7")
-object fasterparser extends Module{
-  object jvm extends Cross[FasterParserJvmModule](crossVersions:_*)
-  class FasterParserJvmModule(val crossScalaVersion: String) extends FasterParserModule{
+object fastparse extends Module{
+  object jvm extends Cross[fastparseJvmModule](crossVersions:_*)
+  class fastparseJvmModule(val crossScalaVersion: String) extends fastparseModule{
     def platformSegment = "jvm"
     object test extends Tests with CommonTestModule{
       def platformSegment = "jvm"
@@ -14,7 +14,7 @@ object fasterparser extends Module{
     object bench extends ScalaModule{
       def scalaVersion = crossScalaVersion
 
-      def moduleDeps = super.moduleDeps ++ Seq(FasterParserJvmModule.this)
+      def moduleDeps = super.moduleDeps ++ Seq(fastparseJvmModule.this)
       def ivyDeps = Agg(
         ivy"com.lihaoyi::fastparse:1.0.0",
         ivy"com.lihaoyi::ammonite-ops:1.1.2",
@@ -24,8 +24,8 @@ object fasterparser extends Module{
 
   }
 
-  object js extends Cross[FasterParserJsModule](crossVersions:_*)
-  class FasterParserJsModule(val crossScalaVersion: String) extends FasterParserModule with ScalaJSModule {
+  object js extends Cross[fastparseJsModule](crossVersions:_*)
+  class fastparseJsModule(val crossScalaVersion: String) extends fastparseModule with ScalaJSModule {
     def platformSegment = "js"
     def scalaJSVersion = "0.6.25"
     object test extends Tests with CommonTestModule{
@@ -33,7 +33,7 @@ object fasterparser extends Module{
     }
   }
 }
-trait FasterParserModule extends CommonCrossModule{
+trait fastparseModule extends CommonCrossModule{
   def ivyDeps = Agg(
     ivy"com.lihaoyi::sourcecode::0.1.4",
   )
@@ -42,7 +42,7 @@ trait FasterParserModule extends CommonCrossModule{
   )
   def generatedSources = T{
     val dir = T.ctx().dest
-    val file = dir/"fasterparser"/"SequencerGen.scala"
+    val file = dir/"fastparse"/"SequencerGen.scala"
     // Only go up to 21, because adding the last element makes it 22
     val tuples = (2 to 21).map{ i =>
       val ts = (1 to i) map ("T" + _)
@@ -59,7 +59,7 @@ trait FasterParserModule extends CommonCrossModule{
           """
     }
     val output = s"""
-      package fasterparser
+      package fastparse
       trait SequencerGen[Sequencer[_, _, _]] extends LowestPriSequencer[Sequencer]{
         protected[this] def Sequencer0[A, B, C](f: (A, B) => C): Sequencer[A, B, C]
         ${tuples.mkString("\n")}
@@ -101,7 +101,7 @@ object pythonparse extends Module{
 
 
 trait ExampleParseJsModule extends CommonCrossModule with ScalaJSModule{
-  def moduleDeps = Seq(fasterparser.js())
+  def moduleDeps = Seq(fastparse.js())
   def scalaJSVersion = "0.6.25"
   def platformSegment = "js"
   object test extends Tests with CommonTestModule{
@@ -111,7 +111,7 @@ trait ExampleParseJsModule extends CommonCrossModule with ScalaJSModule{
 
 
 trait ExampleParseJvmModule extends CommonCrossModule{
-  def moduleDeps = Seq(fasterparser.jvm())
+  def moduleDeps = Seq(fastparse.jvm())
   def platformSegment = "jvm"
   object test extends Tests with CommonTestModule{
     def platformSegment = "jvm"
@@ -159,7 +159,7 @@ object perftests extends Module{
       scalaparse.jvm("2.12.7").test,
       pythonparse.jvm("2.12.7").test,
       cssparse.jvm("2.12.7").test,
-      fasterparser.jvm("2.12.7").test,
+      fastparse.jvm("2.12.7").test,
     )
   }
 
@@ -167,7 +167,7 @@ object perftests extends Module{
     def scalaVersion = "2.12.7"
     def resources = T.sources{
       Seq(PathRef(perftests.millSourcePath / "resources")) ++
-        fasterparser.jvm("2.12.7").test.resources()
+        fastparse.jvm("2.12.7").test.resources()
     }
     def testFrameworks = Seq("utest.runner.Framework")
     def ivyDeps = Agg(

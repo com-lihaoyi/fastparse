@@ -1,5 +1,5 @@
 package pythonparse
-import fasterparser.NoWhitespace._
+import fastparse.NoWhitespace._
 /**
  * Python's lexical grammar; how basic tokens get parsed. This stuff is
  * sensitive to whitespace, which can only appear where it's explicitly
@@ -8,7 +8,7 @@ import fasterparser.NoWhitespace._
  * Manually transcribed from https://docs.python.org/2/reference/lexical_analysis.html
  */
 object Lexical {
-  import fasterparser._
+  import fastparse._
 
   def kw[_: P](s: String) = s ~ !(letter | digit | "_")
   def comment[_: P] = P( "#" ~ CharsWhile(_ != '\n', min = 0) )

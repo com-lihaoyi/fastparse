@@ -1,6 +1,6 @@
 package cssparse
 
-import fasterparser.parse
+import fastparse.parse
 import utest._
 
 object PrettyPrinterTests extends TestSuite {

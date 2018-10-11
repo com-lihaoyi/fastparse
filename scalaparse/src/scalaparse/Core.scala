@@ -4,8 +4,8 @@ import syntax.{Basic, Key}
 
 import scala.language.implicitConversions
 import syntax.Identifiers
-import fasterparser._
-import fasterparser._, ScalaWhitespace._
+import fastparse._
+import fastparse._, ScalaWhitespace._
 
 import scala.annotation.{switch, tailrec}
 trait Core extends syntax.Literals{

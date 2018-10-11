@@ -1,15 +1,13 @@
-package fasterparser
+package test.fastparse
 
-import fasterparser._
+import fastparse._
 import utest._
 
 /**
   * Same as MathTests, but demonstrating the use of whitespace
   */
-object CustomWhitespaceMathTests extends TestSuite{
-  implicit val whitespace = { implicit ctx: ParsingRun[_] =>
-    CharsWhileIn(" \t", 0)
-  }
+object WhitespaceMathTests extends TestSuite{
+  import SingleLineWhitespace._
   def eval(tree: (Int, Seq[(String, Int)])): Int = {
     val (base, ops) = tree
     ops.foldLeft(base){ case (left, (op, right)) => op match{

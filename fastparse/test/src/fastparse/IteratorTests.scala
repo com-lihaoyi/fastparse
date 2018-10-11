@@ -1,5 +1,5 @@
-package test.fasterparser
-import fasterparser._
+package test.fastparse
+import fastparse._
 import utest._
 
 import scala.collection.mutable

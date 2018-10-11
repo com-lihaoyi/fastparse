@@ -1,4 +1,4 @@
-package fasterparser
+package fastparse
 
 import scala.annotation.unchecked.uncheckedVariance
 
@@ -77,7 +77,7 @@ final class ParsingRun[+T](val input: ParserInput,
   // Use telescoping methods rather than default arguments to try and minimize
   // the amount of bytecode generated at the callsite.
   //
-  // Because FasterParser inlines aggressively, it is very easy for a user to
+  // Because fastparse inlines aggressively, it is very easy for a user to
   // generate huge methods, so anything we can do to reduce the size of the
   // generated code helps avoid bytecode size blowup
 

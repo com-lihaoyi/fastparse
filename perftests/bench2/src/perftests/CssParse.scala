@@ -1,5 +1,5 @@
 package perftests.string
-import fasterparser._, NoWhitespace._
+import fastparse._, NoWhitespace._
 import perftests.Utils
 import utest._
 object CssParse extends TestSuite {

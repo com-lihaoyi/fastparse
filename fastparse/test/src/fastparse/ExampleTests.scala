@@ -1,14 +1,14 @@
-package test.fasterparser
+package test.fastparse
 
-import fasterparser._
+import fastparse._
 import utest._
-import fasterparser._
+import fastparse._
 /**
   * Demonstrates simulatneously parsing and
   * evaluating simple arithmetic expressions
   */
 object ExampleTests extends TestSuite{
-  import fasterparser.NoWhitespace._
+  import fastparse.NoWhitespace._
   val tests = Tests{
     'basic{
       'simple {

@@ -1,7 +1,7 @@
 package scalaparse
 
 import utest.assert
-import fasterparser._
+import fastparse._
 
 
 

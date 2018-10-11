@@ -1,4 +1,4 @@
-package fasterparser
+package fastparse
 
 /**
   * The outcome of a [[ParsingRun]] run, either a success (with value and index) or

@@ -1,4 +1,4 @@
-package fasterparser
+package fastparse
 
 
 import scala.annotation.tailrec
@@ -79,7 +79,7 @@ object MacroImpls {
               .map { case (char, i) => q"""$stringSym.apply($offsetSym + $i) == $char""" }
               .reduce[Tree]{case (l, r) => q"$l && $r"}
 
-            q"($stringSym: fasterparser.ParserInput, $offsetSym: scala.Int) => $checks"
+            q"($stringSym: fastparse.ParserInput, $offsetSym: scala.Int) => $checks"
           }
           reify {
 
@@ -201,10 +201,10 @@ object MacroImpls {
 
   def eagerOpsStrMacro(c: Context)
                       (parse0: c.Expr[String])
-                      (ctx: c.Expr[ParsingRun[Any]]): c.Expr[fasterparser.EagerOps[Unit]] = {
+                      (ctx: c.Expr[ParsingRun[Any]]): c.Expr[fastparse.EagerOps[Unit]] = {
     import c.universe._
     val literal = literalStrMacro(c)(parse0)(ctx)
-    reify{ fasterparser.EagerOps[Unit](literal.splice)}
+    reify{ fastparse.EagerOps[Unit](literal.splice)}
   }
 
 
@@ -283,7 +283,7 @@ object MacroImpls {
         }else if ($ctx1.traceIndex == $index){
           $ctx1.aggregateFailure($bracketed)
         }
-        $ctx1.asInstanceOf[fasterparser.P[Unit]]
+        $ctx1.asInstanceOf[fastparse.P[Unit]]
 
       }
     """
@@ -374,7 +374,7 @@ object MacroImpls {
     val consumeWhitespace = whitespace match{
       case None => reify{(c: ParsingRun[Any]) => true}
       case Some(ws) =>
-        if (ws.tree.tpe =:= typeOf[fasterparser.NoWhitespace.noWhitespaceImplicit.type]){
+        if (ws.tree.tpe =:= typeOf[fastparse.NoWhitespace.noWhitespaceImplicit.type]){
           reify{(c: ParsingRun[Any]) => true}
         }else{
           reify{(c: ParsingRun[Any]) =>
@@ -481,7 +481,7 @@ object MacroImpls {
         if ($ctx.index == $ctx1.traceIndex) $ctx1.aggregateFailure($bracketed)
         $ctx1.shortFailureMsg = () => $bracketed
         $ctx1.isSuccess = false
-        $ctx1.asInstanceOf[fasterparser.P[Unit]]
+        $ctx1.asInstanceOf[fastparse.P[Unit]]
       }
     """
     c.Expr[ParsingRun[Unit]](res)
@@ -490,18 +490,18 @@ object MacroImpls {
 
   def byNameOpsStrMacro(c: Context)
                        (parse0: c.Expr[String])
-                       (ctx: c.Expr[ParsingRun[Any]]): c.Expr[fasterparser.ByNameOps[Unit]] = {
+                       (ctx: c.Expr[ParsingRun[Any]]): c.Expr[fastparse.ByNameOps[Unit]] = {
     import c.universe._
     val literal = MacroImpls.literalStrMacro(c)(parse0)(ctx)
-    reify{ new fasterparser.ByNameOps[Unit](() => literal.splice)}
+    reify{ new fastparse.ByNameOps[Unit](() => literal.splice)}
   }
 
   def logOpsStrMacro(c: Context)
                        (parse0: c.Expr[String])
-                       (ctx: c.Expr[ParsingRun[Any]]): c.Expr[fasterparser.LogByNameOps[Unit]] = {
+                       (ctx: c.Expr[ParsingRun[Any]]): c.Expr[fastparse.LogByNameOps[Unit]] = {
     import c.universe._
     val literal = MacroImpls.literalStrMacro(c)(parse0)(ctx)
-    reify{ new fasterparser.LogByNameOps[Unit](literal.splice)(ctx.splice)}
+    reify{ new fastparse.LogByNameOps[Unit](literal.splice)(ctx.splice)}
   }
 
 

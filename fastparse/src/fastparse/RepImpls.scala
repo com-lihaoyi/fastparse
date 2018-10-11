@@ -1,4 +1,4 @@
-package fasterparser
+package fastparse
 
 import scala.annotation.tailrec
 import scala.reflect.macros.blackbox.Context
@@ -46,7 +46,7 @@ object RepImpls{
       case None => q"()"
       case Some(ws) =>
         q"""
-        if ($ws ne fasterparser.NoWhitespace.noWhitespaceImplicit) {
+        if ($ws ne fastparse.NoWhitespace.noWhitespaceImplicit) {
           val oldNoDropBuffer = $ctx1.noDropBuffer // completely disallow dropBuffer
           $ctx1.noDropBuffer = true
           $ws($ctx1)
@@ -64,12 +64,12 @@ object RepImpls{
         @_root_.scala.annotation.tailrec
         def $rec($startIndex: _root_.scala.Int,
                  $count: _root_.scala.Int,
-                 $precut: _root_.scala.Boolean): _root_.fasterparser.P[${c.weakTypeOf[V]}] = {
+                 $precut: _root_.scala.Boolean): _root_.fastparse.P[${c.weakTypeOf[V]}] = {
           $ctx1.cut = $precut
 
           ${c.prefix}.parse0()
           if (!$ctx1.isSuccess) {
-            if ($ctx1.cut) $ctx1.asInstanceOf[fasterparser.P[${c.weakTypeOf[V]}]]
+            if ($ctx1.cut) $ctx1.asInstanceOf[fastparse.P[${c.weakTypeOf[V]}]]
             else $endSnippet
           }else {
             val $beforeSepIndex = $ctx1.index

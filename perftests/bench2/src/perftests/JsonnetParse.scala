@@ -26,7 +26,7 @@ object JsonnetParse extends TestSuite {
     'CrossValidation - {
       Utils.benchmarkAll(
         "JsonnetParse",
-        FasterParserParser.document(_),
+        fastparseParser.document(_),
         crossValidationSource, Some("[ " + crossValidationSource),
         crossValidationIterator
       )

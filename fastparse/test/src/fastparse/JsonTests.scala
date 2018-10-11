@@ -1,8 +1,8 @@
 
-package test.fasterparser
+package test.fastparse
 
-import fasterparser._
-import fasterparser._
+import fastparse._
+import fastparse._
 import utest._
 
 object Js {
@@ -33,8 +33,8 @@ case class NamedFunction[T, V](f: T => V, name: String) extends (T => V){
 
 }
 object Json{
-  import fasterparser._
-  import fasterparser.NoWhitespace._
+  import fastparse._
+  import fastparse.NoWhitespace._
   def stringChars(c: Char) = c != '\"' && c != '\\'
   def spaceChars(c: Char) = c == ' ' || c == '\r' || c == '\n'
 
@@ -144,7 +144,7 @@ object JsonTests extends TestSuite{
       """)
     }
 //    'perf{
-//      val input = getClass.getResourceAsStream("/fasterparser/test.json")
+//      val input = getClass.getResourceAsStream("/fastparse/test.json")
 //
 //      val buffer = new java.io.BufferedReader(new java.io.InputStreamReader(input))
 //      import collection.JavaConverters._

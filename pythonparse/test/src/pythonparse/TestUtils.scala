@@ -6,9 +6,9 @@ import utest._
  * Created by haoyi on 10/8/15.
  */
 object TestUtils {
-  import fasterparser._
+  import fastparse._
   def check[T](rule: P[_] => P[T], expected: T, s: String) = {
-    import fasterparser.NoWhitespace._
+    import fastparse.NoWhitespace._
     def parseIt[_: P] = rule(P.current) ~ End
     val parsed = parse(s).read(parseIt(_))
     val stringResult = parsed match {

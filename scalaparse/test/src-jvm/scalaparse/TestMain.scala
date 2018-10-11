@@ -1,5 +1,5 @@
 package scalaparse
-import fasterparser._
+import fastparse._
 
 /**
   * Created by lihaoyi on 13/5/17.

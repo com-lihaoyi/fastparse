@@ -1,6 +1,6 @@
 package pythonparse
 
-import fasterparser._
+import fastparse._
 
 import Lexical.kw
 /**

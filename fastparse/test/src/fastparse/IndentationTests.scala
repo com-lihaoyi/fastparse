@@ -1,12 +1,12 @@
-package test.fasterparser
+package test.fastparse
 
 import utest._
-import fasterparser._
+import fastparse._
 /**
   * Same as MathTests, but demonstrating the use of whitespace
   */
 object IndentationTests extends TestSuite{
-  import fasterparser.NoWhitespace._
+  import fastparse.NoWhitespace._
   def eval(tree: (String, Seq[Int])) = tree match{
     case ("+", nums) => nums.reduceLeft(_+_)
     case ("-", nums) => nums.reduceLeft(_-_)

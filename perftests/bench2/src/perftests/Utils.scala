@@ -1,6 +1,6 @@
 package perftests
 
-import fasterparser._
+import fastparse._
 
 import scala.collection.mutable
 import scala.reflect.ClassTag
