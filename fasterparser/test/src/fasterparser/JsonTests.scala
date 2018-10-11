@@ -1,7 +1,7 @@
 
 package test.fasterparser
 
-import fasterparser.Parsing._
+import fasterparser._
 import fasterparser._
 import utest._
 
@@ -33,7 +33,7 @@ case class NamedFunction[T, V](f: T => V, name: String) extends (T => V){
 
 }
 object Json{
-  import fasterparser.Parsing._
+  import fasterparser._
   import fasterparser.NoWhitespace._
   def stringChars(c: Char) = c != '\"' && c != '\\'
   def spaceChars(c: Char) = c == ' ' || c == '\r' || c == '\n'
@@ -100,7 +100,7 @@ object JsonTests extends TestSuite{
   import Json._
   val tests = Tests{
     'pass {
-      def test(p: P[_] => P[_], s: String) = p(Parse(s)).result match{
+      def test(p: P[_] => P[_], s: String) = p(parse(s)).result match{
         case Parsed.Success(v, i) =>
           val expectedIndex = s.length
           assert(i == expectedIndex)
@@ -115,7 +115,7 @@ object JsonTests extends TestSuite{
       }
       'jsonExpr - {
         val Parsed.Success(value, _) =
-          Parse("""{"omg": "123", "wtf": 12.4123}""").read(jsonExpr(_))
+          parse("""{"omg": "123", "wtf": 12.4123}""").read(jsonExpr(_))
 
         assert(value == Js.Obj("omg" -> Js.Str("123"), "wtf" -> Js.Num(12.4123)))
       }
@@ -152,7 +152,7 @@ object JsonTests extends TestSuite{
 //      var count = 0
 //      val startTime = System.currentTimeMillis()
 //      while(startTime + 100 > System.currentTimeMillis()){
-//        Parse(txt).read(jsonExpr(_))
+//        parse(txt).read(jsonExpr(_))
 //        count += 1
 //      }
 //      println(txt)
@@ -160,7 +160,7 @@ object JsonTests extends TestSuite{
 //    }
     'fail{
       def check(s: String, expectedError: String, expectedShortError: String) = {
-        Parse(s).read(jsonExpr(_)) match{
+        parse(s).read(jsonExpr(_)) match{
           case s: Parsed.Success[_] => throw new Exception("Parsing should have failed:")
           case f: Parsed.Failure =>
 //            val error = f.extra.traced.trace

@@ -1,7 +1,7 @@
 package scalaparse
 
 import utest.assert
-import fasterparser._, Parsing._
+import fasterparser._
 
 
 
@@ -12,7 +12,7 @@ object TestUtil {
   def checkNeg[T](input: String, expected: String = "ADA???D", found: String = "ADQW??") = {
 //    println("Checking Neg...\n" )
 //    println(input)
-    Parse(input).read(Scala.CompilationUnit(_)) match{
+    parse(input).read(Scala.CompilationUnit(_)) match{
       case f: Parsed.Failure =>
 
         println("TRACING")
@@ -55,14 +55,14 @@ object TestUtil {
   }
 
   def check[T](input: String, tag: String = "", skipIterator: Boolean = false) = {
-//    println("Checking...\n" )
+    println("Checking...\n" )
 //    println(input)
-//    val normalRes = Parse(input).read(Scala.CompilationUnit(_))
+    val normalRes = parse(input).read(Scala.CompilationUnit(_))
     val iteratorRes =
       if (skipIterator) Nil
       else
-        for(chunkSize <- Seq(1))
-        yield Parse.iter(input.grouped(chunkSize)).read(Scala.CompilationUnit(_))
+        for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024))
+        yield parseIter(input.grouped(chunkSize)).read(Scala.CompilationUnit(_))
 
     for(res <- iteratorRes){
       res match{

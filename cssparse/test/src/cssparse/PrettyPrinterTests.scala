@@ -1,6 +1,6 @@
 package cssparse
 
-import fasterparser.Parse
+import fasterparser.parse
 import utest._
 
 object PrettyPrinterTests extends TestSuite {
@@ -159,7 +159,7 @@ object PrettyPrinterTests extends TestSuite {
         """.stripMargin
 
       def compareWithOutput(input: String): Unit = {
-        val pretty = PrettyPrinter.printRuleList(Parse(input).read(CssRulesParser.ruleList(_)).get.value)
+        val pretty = PrettyPrinter.printRuleList(parse(input).read(CssRulesParser.ruleList(_)).get.value)
         assert(pretty.trim == output.trim)
       }
       'test1 {

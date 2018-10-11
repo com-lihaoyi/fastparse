@@ -17,7 +17,7 @@ class FastParseParser{
     Seq("^"),
     Seq("|"),
     Seq("&&"),
-    Seq("||"),
+    Seq("||")
   )
   val precedence = precedenceTable
     .reverse

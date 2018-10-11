@@ -1,6 +1,5 @@
 package test.fasterparser
 import fasterparser._
-import Parsing._
 import utest._
 
 import scala.collection.mutable
@@ -29,17 +28,17 @@ object MathTests extends TestSuite{
 
   val tests = Tests {
     'pass - {
-      val Parsed.Success(2, _) = Parse("1+1").read(expr(_))
-      val Parsed.Success(15, _) = Parse("(1+1*2)+3*4").read(expr(_))
-      val Parsed.Success(21, _) = Parse("((1+1*2)+(3*4*5))/3").read(expr(_))
-      val Parsed.Failure(failIndex, expected, extra) = Parse("1+1*").read(expr(_))
+      val Parsed.Success(2, _) = parse("1+1").read(expr(_))
+      val Parsed.Success(15, _) = parse("(1+1*2)+3*4").read(expr(_))
+      val Parsed.Success(21, _) = parse("((1+1*2)+(3*4*5))/3").read(expr(_))
+      val Parsed.Failure(failIndex, expected, extra) = parse("1+1*").read(expr(_))
       assert(
         failIndex == 4,
         extra.traced.trace == """Expected expr:1:1 / addSub:1:1 / divMul:1:3 / factor:1:5 / ([0-9] | "("):1:5, found """"")
     }
     'fail - {
       def check(input: String, expectedTrace: String, expectedShortTrace: String) = {
-        val failure = Parse(input).read(expr(_)).asInstanceOf[Parsed.Failure]
+        val failure = parse(input).read(expr(_)).asInstanceOf[Parsed.Failure]
         val actualTrace = failure.extra.traced.trace
         assert(expectedTrace.trim == actualTrace.trim)
 
@@ -47,7 +46,7 @@ object MathTests extends TestSuite{
         // that we aren't checking the `.traced.trace` because that requires a
         // second parse which doesn't work with iterators (which get exhausted)
         for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)) {
-          val failure2 = Parse.iter(input.grouped(chunkSize)).read(expr(_)).asInstanceOf[Parsed.Failure]
+          val failure2 = parseIter(input.grouped(chunkSize)).read(expr(_)).asInstanceOf[Parsed.Failure]
           val trace = failure2.trace
           assert(trace == expectedShortTrace.trim)
         }

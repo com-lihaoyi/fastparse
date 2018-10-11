@@ -1,11 +1,11 @@
 package fasterparser
 
 /**
-  * The outcome of a [[Parse]] run, either a success (with value and index) or
+  * The outcome of a [[ParsingRun]] run, either a success (with value and index) or
   * failure (with associated debugging metadata to help figure out what went
   * wrong).
   *
-  * Doesn't contain any information not already present in [[Parse]], but
+  * Doesn't contain any information not already present in [[ParsingRun]], but
   * packages it up nicely in an immutable case class that's easy for external
   * code to make use of.
   */
@@ -30,7 +30,7 @@ object Parsed{
     def trace = {
       stack match{
         case List(("", index)) =>
-          "Position " + ReprOps.StringReprOps.prettyIndex(extra.input, index) +
+          "Position " + extra.input.prettyIndex(index) +
             ", found " + Failure.formatTrailing(extra.input, stack.head._2)
         case s =>
           "Expected " + Failure.formatStack(extra.input, stack) +
@@ -43,7 +43,7 @@ object Parsed{
   }
   object Failure{
     def formatStack(input: ParserInput, stack: List[(String, Int)]) = {
-      stack.reverse.map{case (s, i) => s"$s:${ReprOps.StringReprOps.prettyIndex(input, i)}"}.mkString(" / ")
+      stack.reverse.map{case (s, i) => s"$s:${input.prettyIndex(i)}"}.mkString(" / ")
     }
     def formatTrailing(input: ParserInput, index: Int) = {
       Util.literalize(input.slice(index, index + 10))
@@ -52,10 +52,10 @@ object Parsed{
   case class Extra(input: ParserInput,
                    startIndex: Int,
                    index: Int,
-                   originalParser: Parse[_] => Parse[_]) {
+                   originalParser: ParsingRun[_] => ParsingRun[_]) {
     def traced: Failure = {
       input.checkTraceable()
-      Parse(input, startIndex = startIndex, traceIndex = index)
+      parseInput(input, startIndex = startIndex, traceIndex = index)
         .read[Any](originalParser).asInstanceOf[Failure]
     }
   }

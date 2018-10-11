@@ -8,7 +8,7 @@ import fasterparser.NoWhitespace._
  * Manually transcribed from https://docs.python.org/2/reference/lexical_analysis.html
  */
 object Lexical {
-  import fasterparser._, Parsing._
+  import fasterparser._
 
   def kw[_: P](s: String) = s ~ !(letter | digit | "_")
   def comment[_: P] = P( "#" ~ CharsWhile(_ != '\n', min = 0) )

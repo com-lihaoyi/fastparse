@@ -1,7 +1,7 @@
 package cssparse
 
 import utest._
-import fasterparser._, Parsing._
+import fasterparser._
 import Ast._
 
 import scala.collection.mutable.ArrayBuffer
@@ -10,7 +10,7 @@ object CssTests extends TestSuite {
   val tests = this {
     'basic - {
       'test1 {
-        val Parsed.Success(value1, index1) = Parse(
+        val Parsed.Success(value1, index1) = parse(
           """
             |
             |  p    >    a
@@ -39,7 +39,7 @@ object CssTests extends TestSuite {
       }
 
       'test2 {
-        val Parsed.Success(value2, index2) = Parse(
+        val Parsed.Success(value2, index2) = parse(
           """
             |
             |/*!
@@ -70,7 +70,7 @@ object CssTests extends TestSuite {
       }
 
       'test3 {
-        val Parsed.Success(value3, index3) = Parse(
+        val Parsed.Success(value3, index3) = parse(
           """
             |
             |  after {
@@ -100,7 +100,7 @@ object CssTests extends TestSuite {
 
       'test4 {
 
-        val Parsed.Success(value4, index4) = Parse(
+        val Parsed.Success(value4, index4) = parse(
           """
             |
             | .label-info[href]:hover,
@@ -128,7 +128,7 @@ object CssTests extends TestSuite {
       }
 
       'test5 {
-        val Parsed.Success(value5, index5) = Parse(
+        val Parsed.Success(value5, index5) = parse(
           """
             |
             |   [hidden],
@@ -148,7 +148,7 @@ object CssTests extends TestSuite {
       }
 
       'test6 {
-        val Parsed.Success(value6, index6) = Parse(
+        val Parsed.Success(value6, index6) = parse(
           """
             |
             |@media (min-width: 768px) {
@@ -170,7 +170,7 @@ object CssTests extends TestSuite {
       }
 
       'test7 {
-        val Parsed.Success(value7, index7) = Parse(
+        val Parsed.Success(value7, index7) = parse(
           """|
              |@rule {
              |        unicode-range: U+26;                 /* single codepoint */

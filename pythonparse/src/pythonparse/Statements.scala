@@ -1,6 +1,6 @@
 package pythonparse
 
-import fasterparser._, Parsing._
+import fasterparser._
 import Expressions.{whitespace => _, _}
 import Lexical.kw
 object Statements extends Statements(0)
@@ -11,7 +11,7 @@ object Statements extends Statements(0)
  * Manually transcribed from https://docs.python.org/2/reference/grammar.html
  */
 class Statements(indent: Int){
-  implicit def whitespace(cfg: Parse[_]): Parse[Unit] = Lexical.wscomment(cfg)
+  implicit def whitespace(cfg: P[_]): P[Unit] = Lexical.wscomment(cfg)
   def space[_: P] = P( CharIn(" \n") )
   def NEWLINE[_: P]: P0 = P( "\n" | End )
   def ENDMARKER[_: P]: P0 = P( End )

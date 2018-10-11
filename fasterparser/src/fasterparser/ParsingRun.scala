@@ -57,20 +57,20 @@ import scala.annotation.unchecked.uncheckedVariance
   *                     implicitly backtracks if the parser on the RHS of the
   *                     whitespace fails or consumes 0 characters.
   */
-final class Parse[+T](val input: ParserInput,
-                      var shortFailureMsg: () => String,
-                      var failureStack: List[(String, Int)],
-                      var failureAggregate: List[String],
-                      var isSuccess: Boolean,
-                      var logDepth: Int,
-                      var index: Int,
-                      val startIndex: Int,
-                      var cut: Boolean,
-                      var successValue: Any,
-                      val traceIndex: Int,
-                      var originalParser: Parse[_] => Parse[_],
-                      var noDropBuffer: Boolean){
-  def read[T](p: Parse[_] => Parse[T] @uncheckedVariance): Parsed[T] = {
+final class ParsingRun[+T](val input: ParserInput,
+                           var shortFailureMsg: () => String,
+                           var failureStack: List[(String, Int)],
+                           var failureAggregate: List[String],
+                           var isSuccess: Boolean,
+                           var logDepth: Int,
+                           var index: Int,
+                           val startIndex: Int,
+                           var cut: Boolean,
+                           var successValue: Any,
+                           val traceIndex: Int,
+                           var originalParser: ParsingRun[_] => ParsingRun[_],
+                           var noDropBuffer: Boolean){
+  def read[T](p: ParsingRun[_] => ParsingRun[T] @uncheckedVariance): Parsed[T] = {
     if (originalParser == null) originalParser = p
     p(this).result
   }
@@ -86,30 +86,44 @@ final class Parse[+T](val input: ParserInput,
   }
   def freshSuccess[V](value: V, msg: => String, index: Int) = {
     if (traceIndex != -1 && traceIndex == this.index) aggregateFailure(msg)
-    prepareSuccess(value, index, cut = cut)
+    prepareSuccess(value, index)
   }
   def freshSuccess[V](value: V, msg: => String) = {
     if (traceIndex != -1 && traceIndex == this.index) aggregateFailure(msg)
-    prepareSuccess(value, index, cut = cut)
+    prepareSuccess(value, index)
   }
-  def prepareSuccess[V](value: V): Parse[V] = prepareSuccess(value, index, cut)
-  def prepareSuccess[V](value: V, index: Int): Parse[V] = prepareSuccess(value, index, cut)
-  def prepareSuccess[V](value: V, cut: Boolean): Parse[V] = prepareSuccess(value, index, cut)
-  def prepareSuccess[V](value: V, index: Int, cut: Boolean): Parse[V] = {
+  def prepareSuccess[V](value: V): ParsingRun[V] = {
+    isSuccess = true
+    successValue = value
+    this.asInstanceOf[ParsingRun[V]]
+  }
+  def prepareSuccess[V](value: V, index: Int): ParsingRun[V] = {
+    isSuccess = true
+    successValue = value
+    this.index = index
+    this.asInstanceOf[ParsingRun[V]]
+  }
+  def prepareSuccess[V](value: V, cut: Boolean): ParsingRun[V] = {
+    isSuccess = true
+    successValue = value
+    this.cut = cut
+    this.asInstanceOf[ParsingRun[V]]
+  }
+  def prepareSuccess[V](value: V, index: Int, cut: Boolean): ParsingRun[V] = {
     isSuccess = true
     successValue = value
     this.index = index
     this.cut = cut
-    this.asInstanceOf[Parse[V]]
+    this.asInstanceOf[ParsingRun[V]]
   }
-  def freshFailure(msg: => String): Parse[Nothing] = {
+  def freshFailure(msg: => String): ParsingRun[Nothing] = {
     failureStack = Nil
     val res = prepareFailure(index, cut = this.cut)
     if (traceIndex == -1) this.shortFailureMsg = () => msg
     else if (traceIndex == index) aggregateFailure(msg)
     res
   }
-  def freshFailure(msg: => String, startPos: Int): Parse[Nothing] = {
+  def freshFailure(msg: => String, startPos: Int): ParsingRun[Nothing] = {
     failureStack = Nil
     val res = prepareFailure(startPos, cut = this.cut)
     if (traceIndex == -1) this.shortFailureMsg = () => msg
@@ -117,12 +131,16 @@ final class Parse[+T](val input: ParserInput,
     res
   }
 
-  def prepareFailure(index: Int): Parse[Nothing] = prepareFailure(index, cut)
-  def prepareFailure(index: Int, cut: Boolean): Parse[Nothing] = {
+  def prepareFailure(index: Int): ParsingRun[Nothing] = {
+    isSuccess = false
+    this.index = index
+    this.asInstanceOf[ParsingRun[Nothing]]
+  }
+  def prepareFailure(index: Int, cut: Boolean): ParsingRun[Nothing] = {
     isSuccess = false
     this.index = index
     this.cut = cut
-    this.asInstanceOf[Parse[Nothing]]
+    this.asInstanceOf[ParsingRun[Nothing]]
   }
 
   def checkForDrop() = !noDropBuffer && cut
@@ -150,30 +168,7 @@ final class Parse[+T](val input: ParserInput,
     }
   }
 }
-object Parse{
-  def apply()(implicit i: Parse[Any]): Parse[Any] = i
-  def input(input: ParserInput, startIndex: Int = 0, traceIndex: Int = -1): Parse[_] = Parse(
-    input = input,
-    startIndex = startIndex,
-    traceIndex = traceIndex
-  )
-  def iter(input: Iterator[String], startIndex: Int = 0, traceIndex: Int = -1): Parse[_] = Parse(
-    input = IteratorParserInput(input),
-    startIndex = startIndex,
-    traceIndex = traceIndex
-  )
-  def apply(input: String, startIndex: Int = 0, traceIndex: Int = -1): Parse[_] = Parse(
-    input = IndexedParserInput(input),
-    startIndex = startIndex,
-    traceIndex = traceIndex
-  )
-  def apply(input: ParserInput, startIndex: Int, traceIndex: Int): Parse[_] = new Parse(
-    input = input,
-    shortFailureMsg = null,
-    failureStack = List.empty,
-    failureAggregate = List.empty,
-    isSuccess = true,
-    logDepth = 0,
-    startIndex, startIndex, true, (), traceIndex, null, false
-  )
+
+object ParsingRun{
+  def current(implicit i: ParsingRun[Any]): ParsingRun[Any] = i
 }

@@ -1,5 +1,5 @@
 package scalaparse
-import fasterparser._, Parsing._
+import fasterparser._
 
 /**
   * Created by lihaoyi on 13/5/17.
@@ -12,7 +12,7 @@ object TestMain {
     |   val x = 1
     |   ;
     | """.stripMargin
-    val res = Parse(input).read(scalaparse.Scala.CompilationUnit(_))
+    val res = parse(input).read(scalaparse.Scala.CompilationUnit(_))
 //    val fail = res.asInstanceOf[Result.Failure]
     println(res)
 //    for(frame <- fail.extra.traced.stack){

@@ -1,7 +1,7 @@
 package test.fasterparser
 
 import utest._
-import fasterparser._, Parsing._
+import fasterparser._
 
 import scala.language.postfixOps
 
@@ -31,7 +31,7 @@ object GnipSubSyntaxTest extends TestSuite {
 
   object GnipRuleValidator {
 
-    def apply(rule: String) = Parse(rule).read(GnipRuleParser.parse(_))
+    def apply(rule: String) = parse(rule).read(GnipRuleParser.parse(_))
   }
 
   val tests = Tests {

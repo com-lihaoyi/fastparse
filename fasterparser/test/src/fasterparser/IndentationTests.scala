@@ -1,7 +1,7 @@
 package test.fasterparser
 
 import utest._
-import fasterparser._, Parsing._
+import fasterparser._
 /**
   * Same as MathTests, but demonstrating the use of whitespace
   */
@@ -36,7 +36,7 @@ object IndentationTests extends TestSuite{
   val tests = Tests {
     'pass - {
       def check(str: String, num: Int) = {
-        val Parsed.Success(value, _) = Parse(str).read(expr(_))
+        val Parsed.Success(value, _) = parse(str).read(expr(_))
         assert(value == num)
       }
 
@@ -121,7 +121,7 @@ object IndentationTests extends TestSuite{
     }
     'fail - {
       def check(input: String, expectedTrace: String) = {
-        val failure = Parse(input).read(expr(_)).asInstanceOf[Parsed.Failure]
+        val failure = parse(input).read(expr(_)).asInstanceOf[Parsed.Failure]
         val actualTrace = failure.extra.traced.trace
         assert(expectedTrace.trim == actualTrace.trim)
       }

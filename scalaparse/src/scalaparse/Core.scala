@@ -4,7 +4,7 @@ import syntax.{Basic, Key}
 
 import scala.language.implicitConversions
 import syntax.Identifiers
-import fasterparser.Parsing._
+import fasterparser._
 import fasterparser._, ScalaWhitespace._
 
 import scala.annotation.{switch, tailrec}

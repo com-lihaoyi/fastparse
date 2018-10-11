@@ -1,6 +1,6 @@
 package cssparse
 
-import fasterparser._, Parsing._
+import fasterparser._
 
 // According to https://www.w3.org/TR/css-syntax-3/
 

@@ -1,8 +1,6 @@
 package test.fasterparser
 
-import fasterparser.Parse
-import test.fasterparser.FasterParserParser
-import fasterparser.Parsing._
+import fasterparser._
 object BenchMain{
 
   // Parsing example jsonnet files taken from https://github.com/grafana/jsonnet-libs
@@ -32,7 +30,7 @@ object BenchMain{
     for((name, body) <- names.zip(bodies)){
       println(name)
       val oldResult = parser.document.parse(body).get.value
-      val newResult = Parse(body).read(parser2.document(_)).get.value
+      val newResult = parse(body).read(parser2.document(_)).get.value
       assert(oldResult == newResult, oldResult + " != " + newResult)
 
     }
@@ -51,7 +49,7 @@ object BenchMain{
     var count2 = 0
     while(System.currentTimeMillis() - start2 < 20000){
       count2 += 1
-      bodies.foreach(b => Parse(b).read(parser2.document(_)))
+      bodies.foreach(b => parse(b).read(parser2.document(_)))
 
     }
     println(count2)

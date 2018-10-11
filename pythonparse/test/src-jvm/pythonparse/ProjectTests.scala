@@ -4,7 +4,7 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 import java.nio.file._
 import utest._
-import fasterparser._, Parsing._
+import fasterparser._
 /**
  * Load external Python code and force feed it through the parser
  * to find out where it blows up
@@ -55,7 +55,7 @@ object ProjectTests extends TestSuite{
     }), Duration.Inf).groupBy(_._1).mapValues(_.map(_._2))
     val selfParsed = grouped(0) groupBy { x =>
       print(".")
-      Parse(new String(Files.readAllBytes(Paths.get(x)))).read(pythonparse.Statements.file_input(_)).getClass
+      parse(new String(Files.readAllBytes(Paths.get(x)))).read(pythonparse.Statements.file_input(_)).getClass
     }
 
     selfParsed.get(classOf[Parsed.Failure]) match{
@@ -77,14 +77,14 @@ object ProjectTests extends TestSuite{
 
 //    'test - {
 //      val txt = new String(Files.readAllBytes(Paths.get("out/repos/ansible/lib/ansible/modules/cloud/cloudstack/cs_instance.py")))
-//      Parse(txt).read(pythonparse.Statements.file_input(_))
+//      parse(txt).read(pythonparse.Statements.file_input(_))
 //    }
 //    'bench - {
 //      val path = "pythonparse/jvm/src/test/resources/pythonparse/bench.py"
 //      val data = Files.readAllBytes(Paths.get(path))
 //      val code = new String(data)
 //      import NoWhitespace._
-//      Parse(code).read(implicit ctx => pythonparse.Statements.file_input ~ End).get
+//      parse(code).read(implicit ctx => pythonparse.Statements.file_input ~ End).get
 //    }
   }
 }

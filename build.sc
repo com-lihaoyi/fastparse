@@ -11,8 +11,6 @@ object fasterparser extends Module{
     object bench extends ScalaModule{
       def scalaVersion = crossScalaVersion
 
-      override def scalacOptions = Seq("-opt:l:method")
-
       def moduleDeps = super.moduleDeps ++ Seq(FasterParserJvmModule.this)
       def ivyDeps = Agg(
         ivy"com.lihaoyi::fastparse:1.0.0",

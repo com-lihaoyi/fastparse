@@ -1,5 +1,5 @@
 package scalaparse.syntax
-import fasterparser.Parsing._
+import fasterparser._
 import fasterparser._
 import NoWhitespace._
 import Basic._

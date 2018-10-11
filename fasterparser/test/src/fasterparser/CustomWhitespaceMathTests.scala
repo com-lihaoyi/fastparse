@@ -1,13 +1,13 @@
 package fasterparser
 
-import fasterparser.Parsing._
+import fasterparser._
 import utest._
 
 /**
   * Same as MathTests, but demonstrating the use of whitespace
   */
 object CustomWhitespaceMathTests extends TestSuite{
-  implicit val whitespace = { implicit ctx: Parse[_] =>
+  implicit val whitespace = { implicit ctx: ParsingRun[_] =>
     CharsWhileIn(" \t", 0)
   }
   def eval(tree: (Int, Seq[(String, Int)])): Int = {
@@ -28,7 +28,7 @@ object CustomWhitespaceMathTests extends TestSuite{
   val tests = Tests {
     'pass - {
       def check(str: String, num: Int) = {
-        val Parsed.Success(value, _) = Parse(str).read(expr(_))
+        val Parsed.Success(value, _) = parse(str).read(expr(_))
         assert(value == num)
       }
 
@@ -42,7 +42,7 @@ object CustomWhitespaceMathTests extends TestSuite{
     }
     'fail - {
       def check(input: String, expectedTrace: String) = {
-        val failure =  Parse(input).read(expr(_)).asInstanceOf[Parsed.Failure]
+        val failure =  parse(input).read(expr(_)).asInstanceOf[Parsed.Failure]
         val actualTrace = failure.extra.traced.trace
         assert(expectedTrace.trim == actualTrace.trim)
       }

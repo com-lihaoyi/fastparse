@@ -1,6 +1,5 @@
 package fasterparser
 
-import scala.reflect.ClassTag
 
 /**
   * Trait that represents classes with isReachable method
@@ -11,59 +10,6 @@ import scala.reflect.ClassTag
 trait IsReachable {
   def apply(index: Int): Char
   def isReachable(index: Int): Boolean
-}
-
-object ReprOps{
-  implicit
-  object StringReprOps{
-    def apply(input: String, i: Int) = input.charAt(i)
-    def slice(input: String, start: Int, end: Int) = input.slice(start, end)
-    def length(input: String) = input.length
-
-    def fromArray(input: Array[Char]): String = input.mkString
-    def fromSeq(input: Seq[Char]): String = input.mkString
-    def fromSingle(input: Char): String = input.toString
-    def toArray(input: String): Array[Char] = input.toCharArray
-    def flatten(input: Seq[String]): String = input.mkString
-    def prettyPrint(input: String): String = input
-    def literalize(input: String): String = Util.literalize(input)
-    def errorMessage(input: ParserInput, expected: String, idx: Int): String = {
-      val locationCode = {
-        val first = input.slice(idx - 20, idx)
-        val last = input.slice(idx, idx + 20)
-        val emptyString = ""
-        val lastSnippet: String = last.lines.toSeq.headOption.getOrElse(emptyString)
-        val firstSnippet: String = first.reverse.lines.toSeq.headOption.getOrElse(emptyString).reverse
-
-        prettyPrint(firstSnippet) + prettyPrint(lastSnippet) + "\n" + (" " * firstSnippet.length) + "^"
-      }
-      val literal = literalize(input.slice(idx, idx + 20))
-      s"found $literal, expected $expected at index $idx\n$locationCode"
-      //TODO Probably we could avoid code duplication by creating only method `locationCode`
-      //TODO but it reduces the abstraction
-    }
-
-    def prettyIndex(input: ParserInput, index: Int): String = {
-      input match {
-        case IndexedParserInput(data) =>
-          var line = 1
-          var col = 1
-          var i = 0
-          while (i < index){
-            if (data(i) == '\n') {
-              col = 1
-              line += 1
-            }else{
-              col += 1
-            }
-            i += 1
-          }
-          s"$line:$col"
-        case _ => String.valueOf(index)
-      }
-    }
-
-  }
 }
 
 
@@ -100,11 +46,11 @@ abstract class ParserInput extends IsReachable {
   def isReachable(index: Int): Boolean
 
   def checkTraceable(): Unit
+
+  def prettyIndex(index: Int): String
 }
 
-case class IndexedParserInput(data: String)
-
-  extends ParserInput {
+case class IndexedParserInput(data: String) extends ParserInput {
   override def apply(index: Int) = data.charAt(index)
 
   /**
@@ -129,6 +75,22 @@ case class IndexedParserInput(data: String)
   override def isReachable(index: Int): Boolean = index < length
 
   def checkTraceable() = ()
+
+  def prettyIndex(index: Int): String = {
+    var line = 1
+    var col = 1
+    var i = 0
+    while (i < index){
+      if (data(i) == '\n') {
+        col = 1
+        line += 1
+      }else{
+        col += 1
+      }
+      i += 1
+    }
+    s"$line:$col"
+  }
 }
 
 /**
@@ -142,8 +104,7 @@ case class IndexedParserInput(data: String)
   * either the new batches are requested to extend the buffer, either it's inaccessible at all,
   * so calling of `dropBuffer` should guarantee that there won't be any attempts to access to the elements in dropped part of input.
   */
-case class IteratorParserInput(data: Iterator[String])
-  extends ParserInput{
+case class IteratorParserInput(data: Iterator[String]) extends ParserInput{
   private val buffer: UberBuffer = new UberBuffer(16)
   private var firstIdx: Int = 0 // index in the data corresponding to the 0th element in the buffer
 
@@ -207,4 +168,8 @@ case class IteratorParserInput(data: Iterator[String])
       "the input a second time to collect traces, which is impossible after an " +
       "`IteratorParserInput` is used once and the underlying Iterator exhausted."
   )
+
+  def prettyIndex(index: Int): String = {
+    String.valueOf(index)
+  }
 }

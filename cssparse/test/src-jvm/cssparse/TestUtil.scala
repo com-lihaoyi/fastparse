@@ -1,6 +1,6 @@
 package cssparse
 
-import fasterparser._, Parsing._
+import fasterparser._
 
 object TestUtil {
 
@@ -17,11 +17,11 @@ object TestUtil {
       }
     }
 
-    val res = Parse(input).read(CssRulesParser.ruleList(_))
+    val res = parse(input).read(CssRulesParser.ruleList(_))
     checkParsed(input, res)
 
     val parsedInput = PrettyPrinter.printRuleList(res.get.value)
-    val res2 = Parse(parsedInput).read(CssRulesParser.ruleList(_))
+    val res2 = parse(parsedInput).read(CssRulesParser.ruleList(_))
     checkParsed(parsedInput, res2)
   }
 
@@ -52,7 +52,7 @@ object TestUtil {
       errors
     }
 
-    val parsedInput = PrettyPrinter.printRuleList(Parse(input).read(CssRulesParser.ruleList(_)).get.value)
+    val parsedInput = PrettyPrinter.printRuleList(parse(input).read(CssRulesParser.ruleList(_)).get.value)
     val initialErrors = getErrors(input)
     val parsingErrors = getErrors(parsedInput)
 

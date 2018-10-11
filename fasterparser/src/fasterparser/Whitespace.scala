@@ -1,14 +1,14 @@
 package fasterparser
 
-import fasterparser.Parsing._
+import fasterparser._
 
 import scala.annotation.{Annotation, switch, tailrec}
 /**
   * No-op whitespace syntax that doesn't consume anything
   */
 object NoWhitespace {
-  implicit object noWhitespaceImplicit extends (Parse[_] => Parse[Unit]){
-    def apply(ctx: Parse[_]) = ctx.freshSuccess((), null)
+  implicit object noWhitespaceImplicit extends (ParsingRun[_] => ParsingRun[Unit]){
+    def apply(ctx: ParsingRun[_]) = ctx.freshSuccess((), null)
   }
 }
 
@@ -17,7 +17,7 @@ object NoWhitespace {
   * characters.
   */
 object SingleLineWhitespace {
-  implicit val whitespace = {implicit ctx: Parse[_] =>
+  implicit val whitespace = {implicit ctx: ParsingRun[_] =>
     var index = ctx.index
     val input = ctx.input
     
@@ -33,7 +33,7 @@ object SingleLineWhitespace {
   * "\r" and "\n" whitespace characters.
   */
 object MultiLineWhitespace {
-  implicit val whitespace = {implicit ctx: Parse[_] =>
+  implicit val whitespace = {implicit ctx: ParsingRun[_] =>
     var index = ctx.index
     val input = ctx.input
 
@@ -52,9 +52,9 @@ object MultiLineWhitespace {
   * in the Java programming language
   */
 object JavaWhitespace{
-  implicit val whitespace = {implicit ctx: Parse[_] =>
+  implicit val whitespace = {implicit ctx: ParsingRun[_] =>
     val input = ctx.input
-    @tailrec def rec(current: Int, state: Int): Parse[Unit] = {
+    @tailrec def rec(current: Int, state: Int): ParsingRun[Unit] = {
       if (!input.isReachable(current)) ctx.prepareSuccess((), current)
       else {
         val currentChar = input(current)
@@ -84,9 +84,9 @@ object JavaWhitespace{
   * programming languages such as Bash, Ruby, or Python
   */
 object ScriptWhitespace{
-  implicit val whitespace = {implicit ctx: Parse[_] =>
+  implicit val whitespace = {implicit ctx: ParsingRun[_] =>
     val input = ctx.input
-    @tailrec def rec(current: Int, state: Int): Parse[Unit] = {
+    @tailrec def rec(current: Int, state: Int): ParsingRun[Unit] = {
       if (!input.isReachable(current)) ctx.prepareSuccess((), current)
       else {
         val currentChar = input(current)
@@ -111,9 +111,9 @@ object ScriptWhitespace{
   * case in the Jsonnet programming language
   */
 object JsonnetWhitespace{
-  implicit val whitespace = {implicit ctx: Parse[_] =>
+  implicit val whitespace = {implicit ctx: ParsingRun[_] =>
     val input = ctx.input
-    @tailrec def rec(current: Int, state: Int): Parse[Unit] = {
+    @tailrec def rec(current: Int, state: Int): ParsingRun[Unit] = {
       if (!input.isReachable(current)) ctx.prepareSuccess((), current)
       else {
         val currentChar = input(current)
@@ -147,10 +147,10 @@ object JsonnetWhitespace{
   * in the Scala programming language
   */
 object ScalaWhitespace {
-  implicit val whitespace = {implicit ctx: Parse[_] =>
+  implicit val whitespace = {implicit ctx: ParsingRun[_] =>
     val input = ctx.input
 
-    @tailrec def rec(current: Int, state: Int, nesting: Int): Parse[Unit] = {
+    @tailrec def rec(current: Int, state: Int, nesting: Int): ParsingRun[Unit] = {
       if (!input.isReachable(current)) ctx.prepareSuccess((), current)
       else {
         val currentChar = input(current)

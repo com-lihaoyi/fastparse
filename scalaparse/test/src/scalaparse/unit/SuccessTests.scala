@@ -1,7 +1,7 @@
 package scalaparse.unit
 
 import scalaparse.{TestUtil, Scala}
-import fasterparser._, Parsing._
+import fasterparser._
 import utest._
 import TestUtil._
 object SuccessTests extends TestSuite{

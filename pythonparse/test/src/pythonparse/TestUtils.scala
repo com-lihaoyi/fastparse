@@ -6,11 +6,11 @@ import utest._
  * Created by haoyi on 10/8/15.
  */
 object TestUtils {
-  import fasterparser._, Parsing._
-  def check[T](rule: P[_] => Parse[T], expected: T, s: String) = {
+  import fasterparser._
+  def check[T](rule: P[_] => P[T], expected: T, s: String) = {
     import fasterparser.NoWhitespace._
-    def parseIt[_: P] = rule(Parse()) ~ End
-    val parsed = Parse(s).read(parseIt(_))
+    def parseIt[_: P] = rule(P.current) ~ End
+    val parsed = parse(s).read(parseIt(_))
     val stringResult = parsed match {
       case f: Parsed.Failure => throw new Exception(f.extra.traced.trace)
       case s: Parsed.Success[T] =>

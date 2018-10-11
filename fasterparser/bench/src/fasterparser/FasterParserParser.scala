@@ -1,5 +1,5 @@
 package test.fasterparser
-import fasterparser.Parsing._
+import fasterparser._
 import fasterparser._, JsonnetWhitespace._
 import test.fasterparser.Expr.Member.Visibility
 
@@ -16,7 +16,7 @@ class FasterParserParser{
     Seq("^"),
     Seq("|"),
     Seq("&&"),
-    Seq("||"),
+    Seq("||")
   )
 
   val precedence = precedenceTable
@@ -231,7 +231,7 @@ class FasterParserParser{
         case '|' => tripleBarString.map(constructString(index, _))
         case '$' => Pass(Expr.$(index))
         case '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' =>
-          Parse().index = index; number
+          P.current.index = index; number
         case x if idStartChar(x) => CharsWhileIn("_a-zA-Z0-9", 0).!.flatMap { y =>
           x + y match {
             case "null"      => Pass(Expr.Null(index))

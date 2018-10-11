@@ -1,6 +1,5 @@
 package fasterparser
 
-import fasterparser.Parsing.EagerOps
 
 import scala.annotation.tailrec
 import scala.reflect.macros.blackbox.Context
@@ -8,29 +7,29 @@ import scala.reflect.macros.blackbox.Context
 object MacroImpls {
   def filterMacro[T: c.WeakTypeTag](c: Context)
                                    (f: c.Expr[T => Boolean])
-                                   (ctx: c.Expr[Parse[_]]) = {
+                                   (ctx: c.Expr[ParsingRun[_]]) = {
     import c.universe._
     val lhs = c.prefix.asInstanceOf[c.Expr[EagerOps[T]]]
     reify{
       val ctx1 = ctx.splice
       lhs.splice
-      if (!ctx1.isSuccess) ctx1.asInstanceOf[Parse[T]]
-      else if (f.splice(ctx1.successValue.asInstanceOf[T])) ctx1.asInstanceOf[Parse[T]]
+      if (!ctx1.isSuccess) ctx1.asInstanceOf[ParsingRun[T]]
+      else if (f.splice(ctx1.successValue.asInstanceOf[T])) ctx1.asInstanceOf[ParsingRun[T]]
       else {
         val prevCut = ctx1.cut
-        val res = ctx1.freshFailure("filter").asInstanceOf[Parse[T]]
+        val res = ctx1.freshFailure("filter").asInstanceOf[ParsingRun[T]]
         res.cut = prevCut
         res
       }
     }
   }
   def pMacro[T: c.WeakTypeTag](c: Context)
-                              (t: c.Expr[Parse[T]])
+                              (t: c.Expr[ParsingRun[T]])
                               (name: c.Expr[sourcecode.Name],
-                               ctx: c.Expr[Parse[_]]): c.Expr[Parse[T]] = {
+                               ctx: c.Expr[ParsingRun[_]]): c.Expr[ParsingRun[T]] = {
 
     import c.universe._
-    reify[Parse[T]]{
+    reify[ParsingRun[T]]{
       val startIndex = ctx.splice.index
       t.splice match{case ctx0 =>
         if ((ctx0.traceIndex != -1 | ctx0.logDepth != 0) && !ctx0.isSuccess) {
@@ -53,7 +52,7 @@ object MacroImpls {
     }
     rec(0)
   }
-  def literalStrMacro(c: Context)(s: c.Expr[String])(ctx: c.Expr[Parse[Any]]): c.Expr[Parse[Unit]] = {
+  def literalStrMacro(c: Context)(s: c.Expr[String])(ctx: c.Expr[ParsingRun[Any]]): c.Expr[ParsingRun[Unit]] = {
     import c.universe._
     s.actualType match{
       case ConstantType(Constant(x: String)) =>
@@ -66,7 +65,7 @@ object MacroImpls {
               if (ctx1.input.isReachable(ctx1.index) && ctx1.input(ctx1.index) == charLiteral.splice){
                 ctx1.freshSuccess((), literalized.splice, ctx1.index + 1)
               }else{
-                ctx1.freshFailure(literalized.splice).asInstanceOf[Parse[Unit]]
+                ctx1.freshFailure(literalized.splice).asInstanceOf[ParsingRun[Unit]]
               }
             }
           }
@@ -88,7 +87,7 @@ object MacroImpls {
               val end = ctx1.index + xLength.splice
               if (ctx1.input.isReachable(end - 1)  && checker.splice(ctx1.input, ctx1.index) ) {
                 ctx1.freshSuccess((), literalized.splice, end)
-              }else ctx1.freshFailure(literalized.splice).asInstanceOf[Parse[Unit]]
+              }else ctx1.freshFailure(literalized.splice).asInstanceOf[ParsingRun[Unit]]
 
             }
           }
@@ -98,7 +97,7 @@ object MacroImpls {
           val s1 = s.splice
           ctx.splice match{ case ctx1 =>
             if (startsWith(ctx1.input, s1, ctx1.index)) ctx1.freshSuccess((), Util.literalize(s1), ctx1.index + s1.length)
-            else ctx1.freshFailure(Util.literalize(s1)).asInstanceOf[Parse[Unit]]
+            else ctx1.freshFailure(Util.literalize(s1)).asInstanceOf[ParsingRun[Unit]]
           }
         }
     }
@@ -107,15 +106,15 @@ object MacroImpls {
 
   def mapMacro[T: c.WeakTypeTag, V: c.WeakTypeTag]
               (c: Context)
-              (f: c.Expr[T => V]): c.Expr[Parse[V]] = {
+              (f: c.Expr[T => V]): c.Expr[ParsingRun[V]] = {
     import c.universe._
 
     val lhs0 = c.prefix.asInstanceOf[c.Expr[EagerOps[T]]]
     reify {
       lhs0.splice.parse0 match{ case lhs =>
-        if (!lhs.isSuccess) lhs.asInstanceOf[Parse[V]]
+        if (!lhs.isSuccess) lhs.asInstanceOf[ParsingRun[V]]
         else {
-          val this2 = lhs.asInstanceOf[Parse[V]]
+          val this2 = lhs.asInstanceOf[ParsingRun[V]]
           this2.successValue = f.splice(this2.successValue.asInstanceOf[T])
           this2
         }
@@ -126,13 +125,13 @@ object MacroImpls {
 
   def flatMapMacro[T: c.WeakTypeTag, V: c.WeakTypeTag]
                   (c: Context)
-                  (f: c.Expr[T => Parse[V]]): c.Expr[Parse[V]] = {
+                  (f: c.Expr[T => ParsingRun[V]]): c.Expr[ParsingRun[V]] = {
     import c.universe._
 
     val lhs0 = c.prefix.asInstanceOf[c.Expr[EagerOps[T]]]
     reify {
       val lhs = lhs0.splice.parse0
-      if (!lhs.isSuccess) lhs.asInstanceOf[Parse[V]]
+      if (!lhs.isSuccess) lhs.asInstanceOf[ParsingRun[V]]
       else {
         val sCut = lhs.cut
         val res = f.splice(lhs.successValue.asInstanceOf[T])
@@ -144,13 +143,13 @@ object MacroImpls {
 
   def eitherMacro[T: c.WeakTypeTag, V >: T: c.WeakTypeTag]
                   (c: Context)
-                  (other: c.Expr[Parse[V]])
-                  (ctx: c.Expr[Parse[Any]]): c.Expr[Parse[V]] = {
+                  (other: c.Expr[ParsingRun[V]])
+                  (ctx: c.Expr[ParsingRun[Any]]): c.Expr[ParsingRun[V]] = {
     import c.universe._
 
     val lhs0 = c.prefix.asInstanceOf[c.Expr[EagerOps[T]]]
     reify {
-      val ctx5 = ctx.splice.asInstanceOf[Parse[V]]
+      val ctx5 = ctx.splice.asInstanceOf[ParsingRun[V]]
       val oldCut = ctx5.cut
       ctx5.cut = false
       val startPos = ctx5.index
@@ -182,7 +181,7 @@ object MacroImpls {
   }
 
   def captureMacro(c: Context)
-                  (ctx: c.Expr[Parse[Any]]): c.Expr[Parse[String]] = {
+                  (ctx: c.Expr[ParsingRun[Any]]): c.Expr[ParsingRun[String]] = {
     import c.universe._
 
     val lhs0 = c.prefix.asInstanceOf[c.Expr[EagerOps[_]]]
@@ -194,7 +193,7 @@ object MacroImpls {
       ctx6.noDropBuffer = true
       lhs0.splice
       ctx6.noDropBuffer = oldCapturing
-      if (!ctx6.isSuccess) ctx6.asInstanceOf[Parse[String]]
+      if (!ctx6.isSuccess) ctx6.asInstanceOf[ParsingRun[String]]
       else ctx6.prepareSuccess(ctx6.input.slice(startPos, ctx6.index))
     }
   }
@@ -202,26 +201,26 @@ object MacroImpls {
 
   def eagerOpsStrMacro(c: Context)
                       (parse0: c.Expr[String])
-                      (ctx: c.Expr[Parse[Any]]): c.Expr[fasterparser.Parsing.EagerOps[Unit]] = {
+                      (ctx: c.Expr[ParsingRun[Any]]): c.Expr[fasterparser.EagerOps[Unit]] = {
     import c.universe._
     val literal = literalStrMacro(c)(parse0)(ctx)
-    reify{ fasterparser.Parsing.EagerOps[Unit](literal.splice)}
+    reify{ fasterparser.EagerOps[Unit](literal.splice)}
   }
 
 
   def stringInMacro(c: Context)
                    (s: c.Expr[String]*)
-                   (ctx: c.Expr[Parse[Any]]): c.Expr[Parse[Unit]] = {
+                   (ctx: c.Expr[ParsingRun[Any]]): c.Expr[ParsingRun[Unit]] = {
     stringInMacro0(c)(false, s:_*)(ctx)
   }
   def stringInIgnoreCaseMacro(c: Context)
                              (s: c.Expr[String]*)
-                             (ctx: c.Expr[Parse[Any]]): c.Expr[Parse[Unit]] = {
+                             (ctx: c.Expr[ParsingRun[Any]]): c.Expr[ParsingRun[Unit]] = {
     stringInMacro0(c)(true, s:_*)(ctx)
   }
   def stringInMacro0(c: Context)
                     (ignoreCase: Boolean, s: c.Expr[String]*)
-                    (ctx: c.Expr[Parse[Any]]): c.Expr[Parse[Unit]] = {
+                    (ctx: c.Expr[ParsingRun[Any]]): c.Expr[ParsingRun[Unit]] = {
     import c.universe._
 
     val literals = s.map(_.actualType match{
@@ -284,12 +283,12 @@ object MacroImpls {
         }else if ($ctx1.traceIndex == $index){
           $ctx1.aggregateFailure($bracketed)
         }
-        $ctx1.asInstanceOf[Parse[Unit]]
+        $ctx1.asInstanceOf[fasterparser.P[Unit]]
 
       }
     """
 
-    c.Expr[Parse[Unit]](res)
+    c.Expr[ParsingRun[Unit]](res)
 
   }
   final class TrieNode(strings: Seq[String], ignoreCase: Boolean = false) {
@@ -341,7 +340,7 @@ object MacroImpls {
 
   def charInMacro(c: Context)
                  (s: c.Expr[String]*)
-                 (ctx: c.Expr[Parse[Any]]): c.Expr[Parse[Unit]] = {
+                 (ctx: c.Expr[ParsingRun[Any]]): c.Expr[ParsingRun[Unit]] = {
     import c.universe._
 
     val literals = s.map(_.actualType match{
@@ -354,31 +353,31 @@ object MacroImpls {
     reify {
 
       if (!ctx.splice.input.isReachable(ctx.splice.index)) {
-        ctx.splice.freshFailure(bracketed.splice).asInstanceOf[Parse[Unit]]
+        ctx.splice.freshFailure(bracketed.splice).asInstanceOf[ParsingRun[Unit]]
       } else parsed.splice match {
         case true => ctx.splice.freshSuccess((), bracketed.splice, ctx.splice.index + 1)
-        case false => ctx.splice.freshFailure(bracketed.splice).asInstanceOf[Parse[Unit]]
+        case false => ctx.splice.freshFailure(bracketed.splice).asInstanceOf[ParsingRun[Unit]]
       }
     }
   }
 
   def parsedSequence0[T: c.WeakTypeTag, V: c.WeakTypeTag, R: c.WeakTypeTag]
                      (c: Context)
-                     (other: c.Expr[Parse[V]], cut: Boolean)
+                     (other: c.Expr[ParsingRun[V]], cut: Boolean)
                      (s: c.Expr[Implicits.Sequencer[T, V, R]],
-                      whitespace: Option[c.Expr[Parse[Any] => Parse[Unit]]],
-                      ctx: c.Expr[Parse[_]]): c.Expr[Parse[R]] = {
+                      whitespace: Option[c.Expr[ParsingRun[Any] => ParsingRun[Unit]]],
+                      ctx: c.Expr[ParsingRun[_]]): c.Expr[ParsingRun[R]] = {
     import c.universe._
 
     val lhs = c.prefix.asInstanceOf[Expr[EagerOps[T]]]
     val cut1 = c.Expr[Boolean](if(cut) q"true" else q"false")
     val consumeWhitespace = whitespace match{
-      case None => reify{(c: Parse[Any]) => true}
+      case None => reify{(c: ParsingRun[Any]) => true}
       case Some(ws) =>
         if (ws.tree.tpe =:= typeOf[fasterparser.NoWhitespace.noWhitespaceImplicit.type]){
-          reify{(c: Parse[Any]) => true}
+          reify{(c: ParsingRun[Any]) => true}
         }else{
-          reify{(c: Parse[Any]) =>
+          reify{(c: ParsingRun[Any]) =>
             val oldCapturing = c.noDropBuffer // completely disallow dropBuffer
             c.noDropBuffer = true
             ws.splice(c)
@@ -425,11 +424,11 @@ object MacroImpls {
           }
 
         }
-      }.asInstanceOf[Parse[R]]
+      }.asInstanceOf[ParsingRun[R]]
     }
   }
 
-  def cutMacro[T: c.WeakTypeTag](c: Context)(ctx: c.Expr[Parse[_]]): c.Expr[Parse[T]] = {
+  def cutMacro[T: c.WeakTypeTag](c: Context)(ctx: c.Expr[ParsingRun[_]]): c.Expr[ParsingRun[T]] = {
     import c.universe._
     val lhs = c.prefix.asInstanceOf[c.Expr[EagerOps[_]]]
     reify{
@@ -438,7 +437,7 @@ object MacroImpls {
       val ctx1 = lhs.splice.parse0
       if (ctx1.isSuccess) {
         if (ctx1.index > startIndex && ctx1.checkForDrop()) ctx1.input.dropBuffer(ctx1.index)
-        ctx1.prepareSuccess(ctx1.successValue, cut = true).asInstanceOf[Parse[T]]
+        ctx1.prepareSuccess(ctx1.successValue, cut = true).asInstanceOf[ParsingRun[T]]
       }
       else ctx1.prepareFailure(ctx1.index)
     }
@@ -447,13 +446,13 @@ object MacroImpls {
 
   def charsWhileInMacro1(c: Context)
                         (s: c.Expr[String])
-                        (ctx: c.Expr[Parse[Any]]): c.Expr[Parse[Unit]] = {
+                        (ctx: c.Expr[ParsingRun[Any]]): c.Expr[ParsingRun[Unit]] = {
     import c.universe._
     charsWhileInMacro(c)(s, reify(1))(ctx)
   }
   def charsWhileInMacro(c: Context)
                        (s: c.Expr[String], min: c.Expr[Int])
-                       (ctx: c.Expr[Parse[Any]]): c.Expr[Parse[Unit]] = {
+                       (ctx: c.Expr[ParsingRun[Any]]): c.Expr[ParsingRun[Unit]] = {
     import c.universe._
 
     val literal = s.actualType match{
@@ -482,27 +481,27 @@ object MacroImpls {
         if ($ctx.index == $ctx1.traceIndex) $ctx1.aggregateFailure($bracketed)
         $ctx1.shortFailureMsg = () => $bracketed
         $ctx1.isSuccess = false
-        $ctx1.asInstanceOf[Parse[Unit]]
+        $ctx1.asInstanceOf[fasterparser.P[Unit]]
       }
     """
-    c.Expr[Parse[Unit]](res)
+    c.Expr[ParsingRun[Unit]](res)
   }
 
 
   def byNameOpsStrMacro(c: Context)
                        (parse0: c.Expr[String])
-                       (ctx: c.Expr[Parse[Any]]): c.Expr[fasterparser.Parsing.ByNameOps[Unit]] = {
+                       (ctx: c.Expr[ParsingRun[Any]]): c.Expr[fasterparser.ByNameOps[Unit]] = {
     import c.universe._
     val literal = MacroImpls.literalStrMacro(c)(parse0)(ctx)
-    reify{ new fasterparser.Parsing.ByNameOps[Unit](() => literal.splice)}
+    reify{ new fasterparser.ByNameOps[Unit](() => literal.splice)}
   }
 
   def logOpsStrMacro(c: Context)
                        (parse0: c.Expr[String])
-                       (ctx: c.Expr[Parse[Any]]): c.Expr[fasterparser.Parsing.LogByNameOps[Unit]] = {
+                       (ctx: c.Expr[ParsingRun[Any]]): c.Expr[fasterparser.LogByNameOps[Unit]] = {
     import c.universe._
     val literal = MacroImpls.literalStrMacro(c)(parse0)(ctx)
-    reify{ new fasterparser.Parsing.LogByNameOps[Unit](literal.splice)(ctx.splice)}
+    reify{ new fasterparser.LogByNameOps[Unit](literal.splice)(ctx.splice)}
   }
 
 
