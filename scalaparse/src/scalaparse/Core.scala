@@ -33,8 +33,15 @@ trait Core extends syntax.Literals{
                 case '*' => rec(current + 1, state = 3, nesting + 1)
                 case _ => cfg.prepareSuccess((), current - 1)
               }
-            case 3 => rec(current + 1, state = if (currentChar == '*') 4 else state, nesting)
-            case 4 => rec(current + 1, state = if (currentChar == '/' && nesting == 1) 0 else 3, nesting - 1)
+            case 3 =>
+              (currentChar: @switch) match{
+                case '/' => rec(current + 1, state = 2, nesting)
+                case '*' => rec(current + 1, state = 4 , nesting)
+                case _ => rec(current + 1, state = state, nesting)
+              }
+            case 4 =>
+              if (currentChar == '/') rec(current + 1, state = if (nesting == 1) 0 else 3 , nesting - 1)
+              else rec(current + 1, state = 3, nesting)
           }
         }
       }

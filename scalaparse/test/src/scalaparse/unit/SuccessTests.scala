@@ -608,6 +608,12 @@ object SuccessTests extends TestSuite{
       """.stripMargin
     )
     * - check(
+      """object Build {/*/* */}*/}""".stripMargin
+    )
+    * - check(
+      """object Build {/*/* */*/}""".stripMargin
+    )
+    * - check(
       """trait ParserApi{
         |  def map: X
         |  /** */
