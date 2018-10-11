@@ -1,5 +1,9 @@
 @import Main._
 @sect{Change Log}
+    @sect{2.0.0}
+        @ul
+           @li
+                Total rewrite
     @sect{1.0.0}
         @ul
            @li

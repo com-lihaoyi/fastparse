@@ -1,6 +1,6 @@
 @import Main._
-@val tests = wd/'fastparse/'shared/'src/'test/'scala/'fastparse
-@val main = wd/'fastparse/'shared/'src/'main/'scala/'fastparse
+@val tests = wd/'fastparse/'test/'src/'fastparse
+@val main = wd/'fastparse/'src/'fastparse
 
 @sect{Streaming Parsing}
     @p
