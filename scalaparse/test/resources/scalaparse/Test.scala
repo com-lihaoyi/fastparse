@@ -1,4 +1,1 @@
-
-class Baz {
-    ba /*caret*/r
-}
+object Build {/*/* */}*/}

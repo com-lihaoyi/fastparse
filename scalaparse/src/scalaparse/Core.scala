@@ -15,30 +15,30 @@ trait Core extends syntax.Literals{
     val input = cfg.input
 
     P{
-      @tailrec def rec(current: Int, state: Int): Parse[Unit] = {
-        if (!input.isReachable(current)) cfg.prepareSuccess((), current, false)
+      @tailrec def rec(current: Int, state: Int, nesting: Int): Parse[Unit] = {
+        if (!input.isReachable(current)) cfg.prepareSuccess((), current)
         else {
           val currentChar = input(current)
           (state: @switch) match{
             case 0 =>
               (currentChar: @switch) match{
-                case ' ' | '\t' | '\n' | '\r' => rec(current + 1, state)
-                case '/' => rec(current + 1, state = 2)
-                case _ => cfg.prepareSuccess((), current, false)
+                case ' ' | '\t' | '\n' | '\r' => rec(current + 1, state, 0)
+                case '/' => rec(current + 1, state = 2, 0)
+                case _ => cfg.prepareSuccess((), current)
               }
-            case 1 => rec(current + 1, state = if (currentChar == '\n') 0 else state)
+            case 1 => rec(current + 1, state = if (currentChar == '\n') 0 else state, 0)
             case 2 =>
               (currentChar: @switch) match{
-                case '/' => rec(current + 1, state = 1)
-                case '*' => rec(current + 1, state = 3)
-                case _ => cfg.prepareSuccess((), current - 1, false)
+                case '/' => rec(current + 1, state = 1, 0)
+                case '*' => rec(current + 1, state = 3, nesting + 1)
+                case _ => cfg.prepareSuccess((), current - 1)
               }
-            case 3 => rec(current + 1, state = if (currentChar == '*') 4 else state)
-            case 4 => rec(current + 1, state = if (currentChar == '/') 0 else 3)
+            case 3 => rec(current + 1, state = if (currentChar == '*') 4 else state, nesting)
+            case 4 => rec(current + 1, state = if (currentChar == '/' && nesting == 1) 0 else 3, nesting - 1)
           }
         }
       }
-      rec(current = cfg.index, state = 0)
+      rec(current = cfg.index, state = 0, nesting = 0)
     }
   }
 

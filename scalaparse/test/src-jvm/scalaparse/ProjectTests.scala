@@ -3,7 +3,7 @@ package scalaparse
 import java.io.File
 import java.nio.file.{Files, Path, Paths}
 
-import fastparse.utils.IndexedParserInput
+
 
 import concurrent.ExecutionContext.Implicits.global
 import utest._

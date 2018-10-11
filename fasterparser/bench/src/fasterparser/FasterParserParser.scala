@@ -31,7 +31,7 @@ class FasterParserParser{
     val input = cfg.input
     P{
       @tailrec def rec(current: Int, state: Int): Parse[Unit] = {
-        if (!input.isReachable(current)) cfg.prepareSuccess((), current, false)
+        if (!input.isReachable(current)) cfg.prepareSuccess((), current)
         else {
           val currentChar = input(current)
           (state: @switch) match{
@@ -40,14 +40,14 @@ class FasterParserParser{
                 case ' ' | '\t' | '\n' | '\r' => rec(current + 1, state)
                 case '#' => rec(current + 1, state = 1)
                 case '/' => rec(current + 1, state = 2)
-                case _ => cfg.prepareSuccess((), current, false)
+                case _ => cfg.prepareSuccess((), current)
               }
             case 1 => rec(current + 1, state = if (currentChar == '\n') 0 else state)
             case 2 =>
               (currentChar: @switch) match{
                 case '/' => rec(current + 1, state = 1)
                 case '*' => rec(current + 1, state = 3)
-                case _ => cfg.prepareSuccess((), current - 1, false)
+                case _ => cfg.prepareSuccess((), current - 1)
               }
             case 3 => rec(current + 1, state = if (currentChar == '*') 4 else state)
             case 4 => rec(current + 1, state = if (currentChar == '/') 0 else 3)

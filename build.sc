@@ -115,7 +115,8 @@ trait ExampleParseJvmModule extends CommonCrossModule{
   object test extends Tests with CommonTestModule{
     def platformSegment = "jvm"
     def ivyDeps = super.ivyDeps() ++ Agg(
-      ivy"net.sourceforge.cssparser:cssparser:0.9.18"
+      ivy"net.sourceforge.cssparser:cssparser:0.9.18",
+      ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
     )
   }
 }
