@@ -608,6 +608,15 @@ object SuccessTests extends TestSuite{
       """.stripMargin
     )
     * - check(
+      """object Foo{
+        |/*
+        |       //
+        |       *
+        |*/
+        |}
+      """.stripMargin
+    )
+    * - check(
       """object Build {/*/* */}*/}""".stripMargin
     )
     * - check(

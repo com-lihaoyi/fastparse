@@ -8,8 +8,20 @@ import scala.annotation.unchecked.uncheckedVariance
   * be necessary during the parse, in order to avoid the individual parsers
   * needing to perform their own allocations and instantiations.
   *
+  * The value for the fields [[cut]] and [[noDropBuffer]] are lexically scoped,
+  * but it is up to the individual parser method implementations to set the
+  * values and remember to un-set them to the previous value after they finish.
+  * Forgetting to re-set them to their previous value can cause strange
+  * behavior or crashes.
+  *
+  * For any higher-order-parser that wishes to ignore changes to a field within
+  * their wrapped parser method, a common pattern is to save the value of the
+  * field before the wrapped parser runs, and then re-set the field. This can
+  * be used to backtrack [[index]] after a lookahead parser finishes, or to reset
+  * [[failureAggregate]] after an opaque parser finishes.
+  *
   * @param input The input to the parsing run, as a String.
-
+  *
   * @param shortFailureMsg The failure message that gets returned when tracing
   *                        is disabled (`traceIndex` == -1). Usually a single
   *                        string or token which is cheap to compute, even if
@@ -32,6 +44,7 @@ import scala.annotation.unchecked.uncheckedVariance
   * @param logDepth How many nested `.log` calls are currently surrounding us.
   *                 Used to nicely indent the log output so you can see which
   *                 parsers are nested within which other parsers
+  *
   * @param index The current index of the parse
   *
   * @param startIndex Where the parse initially started, so as to allow

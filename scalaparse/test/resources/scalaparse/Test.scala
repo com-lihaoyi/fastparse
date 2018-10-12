@@ -1,1 +1,4 @@
-object  GenJSCode {/* / * for it.*/}
+/*
+       //
+       *
+*/
