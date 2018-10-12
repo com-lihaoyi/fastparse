@@ -18,7 +18,7 @@ matrix:
     jdk: oraclejdk10
 
   - env: CMD="sbt readme/run"
-    jdk: oraclejdk10
+    jdk: oraclejdk8
 
 script:
 - curl -L -o ~/bin/mill https://github.com/lihaoyi/mill/releases/download/0.2.7/0.2.7 && chmod +x ~/bin/mill
