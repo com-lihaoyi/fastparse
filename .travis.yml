@@ -14,7 +14,7 @@ matrix:
   - env: CMD="mill __.js[2.12.7].test"
     jdk: oraclejdk10
 
-  - env: CMD="mill '{demo.fastOpt,perftests.__.compile}'"
+  - env: CMD="mill all demo.fastOpt perftests.__.compile"
     jdk: oraclejdk10
 
   - env: CMD="sbt readme/run"
