@@ -171,7 +171,7 @@ object ScalaWhitespace {
             (currentChar: @switch) match{
               case '/' =>
                 if (nesting == 0) rec(current + 1, state = 1, 0)
-                else rec(current + 1, state = 3, nesting)
+                else rec(current + 1, state = 2, nesting)
               case '*' => rec(current + 1, state = 3, nesting + 1)
               case _ =>
                 if (nesting == 0) ctx.prepareSuccess((), current - 1)

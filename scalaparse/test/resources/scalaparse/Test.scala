@@ -1,4 +1,1 @@
-
-class TimeFormat{
-  /** **/
-}
+object Foo{/*/*//*/ val y = 1 */*/*/}
