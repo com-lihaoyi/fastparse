@@ -167,6 +167,8 @@ object perftests extends Module{
   object json extends PerfTestModule {
     def moduleDeps = Seq(
       fastparse.jvm("2.12.7").test,
+      scalaparse.jvm("2.12.7").test,
+      pythonparse.jvm("2.12.7").test
     )
     def ivyDeps = super.ivyDeps() ++ Agg(
       ivy"org.json4s::json4s-ast:3.6.0",
@@ -177,7 +179,8 @@ object perftests extends Module{
       ivy"com.typesafe.play::play-json:2.6.9",
       ivy"com.fasterxml.jackson.core:jackson-databind:2.9.4",
       ivy"com.lihaoyi::ujson:0.6.7",
-      ivy"org.scala-lang.modules::scala-parser-combinators:1.1.1"
+      ivy"org.scala-lang.modules::scala-parser-combinators:1.1.1",
+      ivy"org.python:jython:2.7.1b3"
     )
   }
 
