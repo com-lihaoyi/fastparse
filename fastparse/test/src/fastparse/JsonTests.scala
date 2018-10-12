@@ -35,33 +35,14 @@ case class NamedFunction[T, V](f: T => V, name: String) extends (T => V){
 object Json{
   import fastparse._, NoWhitespace._
   def stringChars(c: Char) = c != '\"' && c != '\\'
-  def spaceChars(c: Char) = c == ' ' || c == '\r' || c == '\n'
 
-  def numChars(c: Char) = (
-    c == '0' ||
-    c == '1' ||
-    c == '2' ||
-    c == '3' ||
-    c == '4' ||
-    c == '5' ||
-    c == '6' ||
-    c == '7' ||
-    c == '8' ||
-    c == '9'
-  )
-  def eChars(c: Char) = c == 'e' || c == 'E'
-  def plusMinus(c: Char) = c == '-' || c == '+'
-
-  val hexChars = Set('0'to'9', 'a'to'f', 'A'to'F').flatten
-  val escChars = "\"/\\bfnrt".toSet
-
-  def space[_: P]         = P( (" " | "\r" | "\n").rep )
-  def digits[_: P]        = P( ("0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9").rep(1) )
-  def exponent[_: P]      = P( ("e" | "E") ~ ("+" | "-").? ~ digits )
+  def space[_: P]         = P( CharsWhileIn(" \r\n", 0) )
+  def digits[_: P]        = P( CharsWhileIn("0-9") )
+  def exponent[_: P]      = P( CharIn("eE") ~ CharIn("+\\-").? ~ digits )
   def fractional[_: P]    = P( "." ~ digits )
-  def integral[_: P]      = P( "0" | ("1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9")  ~ digits.? )
+  def integral[_: P]      = P( "0" | CharIn("1-9")  ~ digits.? )
 
-  def number[_: P] = P( ("+" | "-").? ~ integral ~ fractional.? ~ exponent.? ).!.map(
+  def number[_: P] = P(  CharIn("+\\-").? ~ integral ~ fractional.? ~ exponent.? ).!.map(
     x => Js.Num(x.toDouble)
   )
 
@@ -69,9 +50,9 @@ object Json{
   def `false`[_: P]       = P( "false" ).map(_ => Js.False)
   def `true`[_: P]        = P( "true" ).map(_ => Js.True)
 
-  def hexDigit[_: P]      = P( CharPred(hexChars) )
+  def hexDigit[_: P]      = P( CharIn("0-9a-fA-F") )
   def unicodeEscape[_: P] = P( "u" ~ hexDigit ~ hexDigit ~ hexDigit ~ hexDigit )
-  def escape[_: P]        = P( "\\" ~ (("\"" | "/" | "\\" | "b" | "f" | "n" | "r" | "t") | unicodeEscape) )
+  def escape[_: P]        = P( "\\" ~ (CharIn("\"/\\\\bfnrt") | unicodeEscape) )
 
   def strChars[_: P] = P( CharsWhile(stringChars) )
   def string[_: P] =

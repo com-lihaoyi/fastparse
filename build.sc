@@ -163,6 +163,24 @@ object perftests extends Module{
     )
   }
 
+
+  object json extends PerfTestModule {
+    def moduleDeps = Seq(
+      fastparse.jvm("2.12.7").test,
+    )
+    def ivyDeps = super.ivyDeps() ++ Agg(
+      ivy"org.json4s::json4s-ast:3.6.0",
+      ivy"org.json4s::json4s-native:3.6.0",
+      ivy"org.json4s::json4s-jackson:3.6.0",
+      ivy"io.circe::circe-parser:0.9.1",
+      ivy"io.argonaut::argonaut:6.2",
+      ivy"com.typesafe.play::play-json:2.6.9",
+      ivy"com.fasterxml.jackson.core:jackson-databind:2.9.4",
+      ivy"com.lihaoyi::ujson:0.6.7",
+      ivy"org.scala-lang.modules::scala-parser-combinators:1.1.1"
+    )
+  }
+
   trait PerfTestModule extends ScalaModule with TestModule{
     def scalaVersion = "2.12.7"
     def resources = T.sources{
