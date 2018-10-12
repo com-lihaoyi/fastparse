@@ -40,19 +40,19 @@ trait Types extends Core{
   def SimpleType[_: P]: P[Unit] = {
     // Can't `cut` after the opening paren, because we might be trying to parse `()`
     // or `() => T`! only cut after parsing one type
-    def TupleType = P( "(" ~/ Type.rep/*TC*/(sep = ",") ~ ")" )
+    def TupleType = P( "(" ~/ Type.repTC() ~ ")" )
     def BasicType = P( TupleType | Literals.Expr.Literal | TypeId ~ ("." ~ `type`).?  | `_` )
     P( BasicType ~ (TypeArgs | `#` ~/ Id).rep )
   }
 
-  def TypeArgs[_: P] = P( "[" ~/ Type.rep/*TC*/(sep = ",") ~ "]" )
+  def TypeArgs[_: P] = P( "[" ~/ Type.repTC() ~ "]" )
 
 
   def FunSig[_: P]: P[Unit] = {
     def FunArg = P( Annot.rep ~ Id ~ (`:` ~/ Type).? ~ (`=` ~/ TypeExpr).? )
-    def Args = P( FunArg.rep/*TC*/(1, sep = ",") )
+    def Args = P( FunArg.repTC(1) )
     def FunArgs = P( OneNLMax ~ "(" ~/ `implicit`.? ~ Args.? ~ ")" )
-    def FunTypeArgs = P( "[" ~/ (Annot.rep ~ TypeArg).rep/*TC*/(1, sep = ",") ~ "]" )
+    def FunTypeArgs = P( "[" ~/ (Annot.rep ~ TypeArg).repTC(1) ~ "]" )
     P( (Id | `this`) ~ (FunTypeArgs).? ~~ FunArgs.rep )
   }
 
@@ -66,7 +66,7 @@ trait Types extends Core{
 
   def TypeArgList[_: P]: P[Unit] = {
     def Variant: P[Unit] = P( Annot.rep ~ CharIn("+\\-").? ~ TypeArg )
-    P( "[" ~/ Variant.rep/*TC*/(1, sep = ",") ~ "]" )
+    P( "[" ~/ Variant.repTC(1) ~ "]" )
   }
   def Exprs[_: P]: P[Unit] = P( TypeExpr.rep(1, ",") )
   def TypeDef[_: P]: P[Unit] = P( Id ~ TypeArgList.? ~ (`=` ~/ Type | TypeBounds) )

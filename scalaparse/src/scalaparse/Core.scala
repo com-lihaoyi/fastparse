@@ -11,7 +11,12 @@ import scala.annotation.{switch, tailrec}
 trait Core extends syntax.Literals{
 
 
-
+  implicit class TrailingCommaOps[+T](p0: => P[T]) {
+    def repTC[R](min: Int = 0, max: Int = Int.MaxValue, exactly: Int = -1)
+                (implicit ev: fastparse.Implicits.Repeater[T, R],
+                 ctx: P[_]): P[R] =
+      p0.rep[R](min = min, sep = ",", max = max, exactly = exactly) ~ TrailingComma
+  }
   // Aliases for common things. These things are used in almost every parser
   // in the file, so it makes sense to keep them short.
 

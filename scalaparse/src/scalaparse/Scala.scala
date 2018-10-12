@@ -31,7 +31,7 @@ object Scala extends Core with Types with Exprs with Xml{
     def ClsArgMod = P( Mod.rep ~ (`val` | `var`) )
     def ClsArg = P( Annot.rep ~ ClsArgMod.? ~ Id ~ `:` ~ Type ~ (`=` ~ ExprCtx.Expr).? )
 
-    def ClsArgs = P( OneNLMax ~ "(" ~/ `implicit`.? ~ ClsArg.rep/*TC*/(sep = ",") ~ ")" )
+    def ClsArgs = P( OneNLMax ~ "(" ~/ `implicit`.? ~ ClsArg.repTC() ~ ")" )
     P( `case`.? ~ `class` ~/ Id ~ TypeArgList.? ~~ Prelude.? ~~ ClsArgs.repX ~ DefTmpl.? )
   }
 

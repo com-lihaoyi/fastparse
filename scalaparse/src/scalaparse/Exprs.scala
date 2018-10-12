@@ -10,7 +10,7 @@ trait Exprs extends Core with Types with Xml{
 
   def Import[_: P]: P[Unit] = {
     def Selector: P[Unit] = P( (Id | `_`) ~ (`=>` ~/ (Id | `_`)).? )
-    def Selectors: P[Unit] = P( "{" ~/ Selector.rep/*TC*/(sep = ",") ~ "}" )
+    def Selectors: P[Unit] = P( "{" ~/ Selector.repTC() ~ "}" )
     def ImportExpr: P[Unit] = P( StableId ~ ("." ~/ (`_` | Selectors)).? )
     P( `import` ~/ ImportExpr.rep(1, sep = ","./) )
   }
@@ -95,7 +95,7 @@ trait Exprs extends Core with Types with Xml{
 
     def PostfixExpr[_: P]: P[Unit] = P( PrefixExpr ~~ ExprSuffix ~~ PostfixSuffix )
 
-    def Parened[_: P] = P ( "(" ~/ TypeExpr.rep/*TC*/(sep = ",") ~ ")" )
+    def Parened[_: P] = P ( "(" ~/ TypeExpr.repTC() ~ ")" )
     def SimpleExpr[_: P]: P[Unit] = {
       def New = P( `new` ~/ AnonTmpl )
 
@@ -104,7 +104,7 @@ trait Exprs extends Core with Types with Xml{
     def Guard[_: P] : P[Unit] = P( `if` ~/ PostfixExpr )
   }
   def SimplePattern[_: P]: P[Unit] = {
-    def TupleEx = P( "(" ~/ Pattern.rep/*TC*/(sep = ",") ~ ")" )
+    def TupleEx = P( "(" ~/ Pattern.repTC() ~ ")" )
     def Extractor = P( StableId ~ TypeArgs.? ~ TupleEx.? )
     def Thingy = P( `_` ~ (`:` ~/ TypePat).? ~ !("*" ~~ !syntax.Basic.OpChar) )
     P( XmlPattern | Thingy | PatLiteral | TupleEx | Extractor | VarId)

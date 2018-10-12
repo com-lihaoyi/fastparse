@@ -412,21 +412,21 @@ object ExampleTests extends TestSuite{
         implicit val logger = Logger(logged.append(_))
 
         def DeepFailure[_: P] = P( "C" ).log
-        def Foo[_: P] = P( (DeepFailure | "A".log("A")) ~ "B".!.log("B") ).log
+        def Foo[_: P] = P( (DeepFailure | "A".log("A", logger)) ~ "B".!.log("B", logger) ).log
 
         parse("AB").read(Foo(_))
 
         val allLogged = logged.mkString("\n")
 
         val expected =
-          """+Foo:1:1
+          """+Foo:1:1, cut
             |  +DeepFailure:1:1
             |  -DeepFailure:1:1:Failure(DeepFailure:1:1 / "C":1:1 ..."AB")
             |  +A:1:1
             |  -A:1:1:Success(1:2)
-            |  +B:1:2
-            |  -B:1:2:Success(1:3)
-            |-Foo:1:1:Success(1:3)
+            |  +B:1:2, cut
+            |  -B:1:2:Success(1:3, cut)
+            |-Foo:1:1:Success(1:3, cut)
             |
         """.stripMargin.trim
         assert(allLogged == expected)
