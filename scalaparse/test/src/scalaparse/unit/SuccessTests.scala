@@ -617,6 +617,38 @@ object SuccessTests extends TestSuite{
       """.stripMargin
     )
     * - check(
+      """
+        |class TimeFormat{
+        |  /** **/
+        |}
+        |
+      """.stripMargin
+    )
+    * - check(
+      """
+        |class TimeFormat{
+        |  /****/
+        |}
+        |
+      """.stripMargin
+    )
+    * - check(
+      """
+        |class TimeFormat{
+        |  /***/
+        |}
+        |
+      """.stripMargin
+    )
+    * - check(
+      """
+        |class TimeFormat{
+        |  /**/
+        |}
+        |
+      """.stripMargin
+    )
+    * - check(
       """object Build {/*/* */}*/}""".stripMargin
     )
     * - check(

@@ -72,7 +72,13 @@ object JavaWhitespace{
               case _ => ctx.prepareSuccess((), current - 1)
             }
           case 3 => rec(current + 1, state = if (currentChar == '*') 4 else state)
-          case 4 => rec(current + 1, state = if (currentChar == '/') 0 else 3)
+          case 4 =>
+            (currentChar: @switch) match{
+              case '/' => rec(current + 1, state = 0)
+              case '*' => rec(current + 1, state = 4)
+              case _ => rec(current + 1, state = 3)
+            }
+//            rec(current + 1, state = if (currentChar == '/') 0 else 3)
         }
       }
     }
@@ -178,8 +184,11 @@ object ScalaWhitespace {
               case _ => rec(current + 1, state = state, nesting)
             }
           case 4 =>
-            if (currentChar == '/') rec(current + 1, state = if (nesting == 1) 0 else 3 , nesting - 1)
-            else rec(current + 1, state = 3, nesting)
+            (currentChar: @switch) match{
+              case '/' => rec(current + 1, state = if (nesting == 1) 0 else 3 , nesting - 1)
+              case '*' => rec(current + 1, state = 4, nesting)
+              case _ => rec(current + 1, state = 3, nesting)
+            }
         }
       }
     }
