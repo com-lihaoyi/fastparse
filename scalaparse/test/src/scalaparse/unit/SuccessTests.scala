@@ -1546,5 +1546,8 @@ object SuccessTests extends TestSuite{
         |{}
         |/**/""".stripMargin
     )
+    * - check(
+        """object a {1/**/}""".stripMargin
+    )
   }
 }

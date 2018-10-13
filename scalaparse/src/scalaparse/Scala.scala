@@ -13,7 +13,7 @@ object Scala extends Core with Types with Exprs with Xml{
     def Prelude = P( (Annot ~ OneNLMax).rep ~ Mod./.rep )
     def TmplStat = P( Import | Prelude ~ BlockDef | StatCtx.Expr )
 
-    P( "{" ~/ BlockLambda.? ~ Semis.? ~ TmplStat.repX(sep = Semis) ~ Semis.? ~ `}` )
+    P( "{" ~/ BlockLambda.? ~ Semis.? ~ TmplStat.repX(sep = NoCut(Semis)) ~ Semis.? ~ `}` )
   }
 
   def ValVarDef[_: P] = P( BindPattern.rep(1, ","./) ~ (`:` ~/ Type).? ~ (`=` ~/ FreeCtx.Expr).? )
