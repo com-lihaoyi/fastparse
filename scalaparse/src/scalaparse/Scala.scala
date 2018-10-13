@@ -10,7 +10,7 @@ import fastparse._, ScalaWhitespace._
 object Scala extends Core with Types with Exprs with Xml{
 
   def TmplBody[_: P]: P[Unit] = {
-    def Prelude = P( (Annot ~ OneNLMax).rep ~ (Mod ~/ Pass).rep )
+    def Prelude = P( (Annot ~ OneNLMax).rep ~ Mod./.rep )
     def TmplStat = P( Import | Prelude ~ BlockDef | StatCtx.Expr )
 
     P( "{" ~/ BlockLambda.? ~ Semis.? ~ TmplStat.repX(sep = Semis) ~ Semis.? ~ `}` )

@@ -14,7 +14,7 @@ trait Literals { l =>
    * really useful in e.g. {} blocks, where we want to avoid
    * capturing newlines so semicolon-inference would work
    */
-  def WS[_: P]: P[Unit] = P( NoCut(NoTrace((Basic.WSChars | Literals.Comment).rep)) )
+  def WS[_: P]: P[Unit] = P( NoTrace((Basic.WSChars | Literals.Comment).rep) )
 
   /**
    * Parses whitespace, including newlines.

@@ -156,7 +156,7 @@ object MacroImpls {
 
       lhs0.splice
       if (ctx5.isSuccess) {
-        ctx5.cut = oldCut
+        ctx5.cut |= oldCut
         ctx5
       }
       else if(ctx5.cut) ctx5
@@ -165,12 +165,12 @@ object MacroImpls {
         ctx5.cut = false
         other.splice
         if (ctx5.isSuccess) {
-          ctx5.cut = oldCut
+          ctx5.cut |= oldCut
           ctx5
         }else if (ctx5.cut) ctx5
         else {
           val res = ctx5.prepareFailure(startPos)
-          ctx5.cut = ctx5.cut | oldCut
+          ctx5.cut |= oldCut
           ctx5.failureStack = Nil
           if (ctx5.traceIndex == -1) ctx5.shortFailureMsg = () => ""
           res
@@ -436,8 +436,9 @@ object MacroImpls {
       val startIndex = ctx.splice.index
       val ctx1 = lhs.splice.parse0
       if (ctx1.isSuccess) {
-        if (ctx1.index > startIndex && ctx1.checkForDrop()) ctx1.input.dropBuffer(ctx1.index)
-        ctx1.prepareSuccess(ctx1.successValue, cut = true).asInstanceOf[ParsingRun[T]]
+        val progress = ctx1.index > startIndex
+        if (progress && ctx1.checkForDrop()) ctx1.input.dropBuffer(ctx1.index)
+        ctx1.prepareSuccess(ctx1.successValue, cut = ctx1.cut | progress).asInstanceOf[ParsingRun[T]]
       }
       else ctx1.prepareFailure(ctx1.index)
     }

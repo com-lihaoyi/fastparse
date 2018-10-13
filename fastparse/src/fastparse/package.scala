@@ -209,13 +209,13 @@ package object fastparse {
       parse0()
       if (ctx.isSuccess) {
         val res = ctx.prepareSuccess(optioner.some(ctx.successValue.asInstanceOf[T]))
-        res.cut = startCut
+        res.cut |= startCut
         res
       }
       else if (ctx.cut) ctx.asInstanceOf[ParsingRun[V]]
       else {
         val res = ctx.freshSuccess(optioner.none, null, startPos)
-        res.cut = startCut
+        res.cut |= startCut
         res
       }
     }
