@@ -51,27 +51,31 @@ object ProjectTests extends TestSuite{
                   filter: String => Boolean = _ => true)
                  (implicit testPath: utest.framework.TestPath) = {
 
-      val repo = "https://github.com/" + testPath.value.last
-      import sys.process._
-      val name = repo.split("/").last
-      println("CLONING?")
-      val path = Paths.get("out", "repos", name)
-      if (!Files.exists(path)){
-        println("CLONING")
+      if (scala.util.Properties.javaVersion.startsWith("1.8")) {
+        val repo = "https://github.com/" + testPath.value.last
+        import sys.process._
+        val name = repo.split("/").last
+        println("CLONING?")
+        val path = Paths.get("out", "repos", name)
+        if (!Files.exists(path)) {
+          println("CLONING")
 
-        new java.lang.ProcessBuilder()
-          .command("git", "clone", repo, path.toString)
-          .directory(new java.io.File("."))
-          .start()
-          .waitFor()
+          new java.lang.ProcessBuilder()
+            .command("git", "clone", repo, path.toString)
+            .directory(new java.io.File("."))
+            .start()
+            .waitFor()
 
-        new java.lang.ProcessBuilder()
-          .command("git", "checkout", commitHash)
-          .directory(path.toFile)
-          .start()
-          .waitFor()
+          new java.lang.ProcessBuilder()
+            .command("git", "checkout", commitHash)
+            .directory(path.toFile)
+            .start()
+            .waitFor()
+        }
+        checkDir("out/repos/" + name, filter)
+      }else{
+        "Skipping because Scalac reference test only works on java 8"
       }
-      checkDir("out/repos/"+name, filter)
     }
 
 
