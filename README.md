@@ -6,26 +6,47 @@ to use Fastparse, you probably will want to check out the documentation:
 
 - [Documentation](http://lihaoyi.github.io/fastparse)
 
-This readme contains some developer docs, if you intend on working on the fastparse repo, not just using it as a library.
+This readme contains some developer docs, if you intend on working on the
+fastparse repo, not just using it as a library.
 
 Developer Docs
 ==============
 
-The core of FastParse lives in the `fastparse/` folder. It is cross-built ScalaJVM/Scala.js codebase, with almost everything shared between the two platforms in the `fastparse/shared/` and minor differences in `fastparse/js/` and `fastparse/jvm/`.
+The core of FastParse lives in the `fastparse/` folder. It is cross-built
+ScalaJVM/Scala.js codebase, with almost everything shared between the two
+platforms in the `fastparse/src/` and minor differences in `fastparse/src-js/`
+and `fastparse/src-jvm/`.
 
-The three subprojects `scalaparse/`, `pythonparse/` and `cssparse/` are FastParse parsers for those respective languages. These are both usable as standalone libraries, and also serve as extensive test-suites and use-cases for FastParse itself. Each of those projects clones & parses large quantities of code from Github as part of *their* own test suites.
-`byteparse` module has also two subprojects `classparse` and BMP parser. The first one is parser for .class files for java-bytecode.
+The three subprojects `scalaparse/`, `pythonparse/` and `cssparse/` are
+FastParse parsers for those respective languages. These are both usable as
+standalone libraries, and also serve as extensive test-suites and use-cases for
+FastParse itself. Each of those projects clones & parses large quantities of
+code from Github as part of *their* own test suites.
 
-`perftests/` constains performance tests for main projects in the library including `ScalaParse`, `PythonParse`, `CssParse`, `ClassParse` and `ByteParse`. `util/` contains some basic utilities that FastParse uses that aren't specific to parsers: bitsets, escaping, tries, etc.. `readme/` contains the documentation site, which contains several live demos of FastParse parsers compiled to Scala.js. These all live in `demo/`.
+`perftests/` constains performance tests for main projects in the library
+including `ScalaParse`, `PythonParse`, `CssParse`, `readme/` contains the
+documentation site, which contains several live demos of FastParse parsers
+compiled to Scala.js. These all live in `demo/`.
 
 Common Commands
 ---------------
 
-- `sbt ~fastparseJVM/test` runs the main testsuite. If you're hacking on FastParse, this is often where you want to go
-- You can run the other suites for `fastparseJS`, `scalaparseJVM`, etc. if you wish, but I typically don't and leave that to CI unless I'm actively working on the sub-project
-- You can use `+` to run it under different Scala versions, but again I usually don't bother
-- `very test` is the aggregate test-all command, and `very publishSigned` is publish-all. Other things (`compile`, etc.) can also be run prefixed with `very`
-- `readme/run` builds the documentation site, which can then be found at `readme/target/scalatex/index.html`
+- `mill -w fastparse.jvm[2.12.7].test` runs the main testsuite. If you're
+  hacking on FastParse, this is often where you want to go
+
+- You can run the other suites via `fastparse.js`, `scalaparse.jvm`, etc. if you
+  wish, but I typically don't and leave that to CI unless I'm actively working
+  on the sub-project
+
+- You can use `mill -w fastparse.jvm[_].test` to run it under different Scala
+  versions, but again I usually don't bother
+
+- `mill __.test.test` is the aggregate test-all command, but is pretty slow. You
+  can use `mill __.jvm[2.12.7].test` to run all tests only under JVM/Scala-2.12,
+  which is much faster and catches most issues
+
+- `mill demo.fullOpt && sbt readme/run` builds the documentation site, which can
+  then be found at `readme/target/scalatex/index.html`
 
 Contribution Guidelines
 -----------------------

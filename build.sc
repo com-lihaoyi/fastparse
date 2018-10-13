@@ -1,12 +1,12 @@
 import mill._
-import perftests.bench2.scalaVersion
 import scalalib._
 import scalajslib._
+import publish._
 
 val crossVersions = Seq("2.11.12", "2.12.7")
 object fastparse extends Module{
   object jvm extends Cross[fastparseJvmModule](crossVersions:_*)
-  class fastparseJvmModule(val crossScalaVersion: String) extends fastparseModule{
+  class fastparseJvmModule(val crossScalaVersion: String) extends FastparseModule{
     def platformSegment = "jvm"
     object test extends Tests with CommonTestModule{
       def platformSegment = "jvm"
@@ -25,7 +25,7 @@ object fastparse extends Module{
   }
 
   object js extends Cross[fastparseJsModule](crossVersions:_*)
-  class fastparseJsModule(val crossScalaVersion: String) extends fastparseModule with ScalaJSModule {
+  class fastparseJsModule(val crossScalaVersion: String) extends FastparseModule with ScalaJSModule {
     def platformSegment = "js"
     def scalaJSVersion = "0.6.25"
     object test extends Tests with CommonTestModule{
@@ -33,7 +33,7 @@ object fastparse extends Module{
     }
   }
 }
-trait fastparseModule extends CommonCrossModule{
+trait FastparseModule extends CommonCrossModule{
   def ivyDeps = Agg(
     ivy"com.lihaoyi::sourcecode::0.1.4",
   )
@@ -98,8 +98,6 @@ object pythonparse extends Module{
   class PythonParseJvmModule(val crossScalaVersion: String) extends ExampleParseJvmModule
 }
 
-
-
 trait ExampleParseJsModule extends CommonCrossModule with ScalaJSModule{
   def moduleDeps = Seq(fastparse.js())
   def scalaJSVersion = "0.6.25"
@@ -122,7 +120,23 @@ trait ExampleParseJvmModule extends CommonCrossModule{
   }
 }
 
-trait CommonCrossModule extends CrossScalaModule{
+trait CommonCrossModule extends CrossScalaModule with PublishModule{
+
+  def publishVersion = "2.0.0b1"
+  def pomSettings = PomSettings(
+    description = artifactName(),
+    organization = "com.lihaoyi",
+    url = "https://github.com/lihaoyi/fastparse",
+    licenses = Seq(License.MIT),
+    scm = SCM(
+      "git://github.com/lihaoyi/fastparse.git",
+      "scm:git://github.com/lihaoyi/fastparse.git"
+    ),
+    developers = Seq(
+      Developer("lihaoyi", "Li Haoyi","https://github.com/lihaoyi")
+    )
+  )
+
   def platformSegment: String
   def millSourcePath = super.millSourcePath / ammonite.ops.up
   def sources = T.sources(
