@@ -23,7 +23,7 @@ object PythonBench extends TestSuite{
 
   val tests = Tests{
     'fastparse - bench{
-      fastparse.parse(txt).read(pythonparse.Statements.file_input(_))
+      fastparse.parse(txt, pythonparse.Statements.file_input(_))
     }
     'jython - bench{
       org.python.core.ParserFacade.parse(txt, CompileMode.exec, "<test>", CompilerFlags.getCompilerFlags)

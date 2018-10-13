@@ -55,7 +55,7 @@ object ProjectTests extends TestSuite{
     }), Duration.Inf).groupBy(_._1).mapValues(_.map(_._2))
     val selfParsed = grouped(0) groupBy { x =>
       print(".")
-      parse(new String(Files.readAllBytes(Paths.get(x)))).read(pythonparse.Statements.file_input(_)).getClass
+      parse(new String(Files.readAllBytes(Paths.get(x))), pythonparse.Statements.file_input(_)).getClass
     }
 
     selfParsed.get(classOf[Parsed.Failure]) match{

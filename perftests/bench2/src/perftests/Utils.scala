@@ -61,12 +61,12 @@ object Utils {
     sizes.foreach(s => {
       println("Parsing for batch size " + s)
       val input = new LoggedMaxBufferLengthParserInput(iteratorFactory(s))
-      parseInput(input).read(parser)
+      parseInput(input, parser)
       println(s"Batch size: $s. Max buffer size: ${input.maxInnerLength}.")
     })
 
     val input = new LoggedDistributionBufferLengthParserInput(iteratorFactory(1))
-    parseInput(input).read(parser)
+    parseInput(input, parser)
     println("Distibutions of buffer size:")
 
     val chunkSize = (input.drops.size - 11) / 10
@@ -87,9 +87,9 @@ object Utils {
 
     val results = Utils.benchmark(s"$name Benchmark",
       Seq(
-        Some(() => parse(data).read(parser).asInstanceOf[Parsed.Success[_]]),
+        Some(() => parse(data, parser).asInstanceOf[Parsed.Success[_]]),
         dataFailOpt.map(dataFail =>
-          () => parse(dataFail).read(parser).asInstanceOf[Parsed.Failure].extra.traced
+          () => parse(dataFail, parser).asInstanceOf[Parsed.Failure].extra.traced
         )
       ).flatten
     )
@@ -100,7 +100,7 @@ object Utils {
     Utils.benchmarkIteratorBufferSizes(parser, sizes, iteratorFactory)
 
     val iteratorResults = Utils.benchmark(s"$name Iterator Benchmark",
-      sizes.map(s => () => parseIterator(iteratorFactory(s)).read(parser(_)).asInstanceOf[Parsed.Success[_]])
+      sizes.map(s => () => parseIterator(iteratorFactory(s), parser(_)).asInstanceOf[Parsed.Success[_]])
     )
 
     println(iteratorResults.map(_.mkString(" ")).mkString("\n"))

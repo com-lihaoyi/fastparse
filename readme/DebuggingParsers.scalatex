@@ -148,7 +148,7 @@
             will fail:
 
         @hl.scala
-            val Parsed.Failure(stack, idx, extra) = parse("(1+(2+3x))+4").read(Foo.expr(_))
+            val Parsed.Failure(stack, idx, extra) = parse("(1+(2+3x))+4", Foo.expr(_))
         @p
             We know that this input will fail, because our grammar (defined
             earlier) does not contain an @hl.scala{"x"} in it! It only handles

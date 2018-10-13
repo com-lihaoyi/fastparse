@@ -22,7 +22,9 @@ object CssTests extends TestSuite {
             |    text-decoration              :       underline
             |  }
             |
-          """.stripMargin).read(CssRulesParser.ruleList(_))
+          """.stripMargin,
+          CssRulesParser.ruleList(_)
+        )
 
         assert(
           value1 ==
@@ -54,7 +56,7 @@ object CssTests extends TestSuite {
             |      -ms-text-size-adjust: 100%;
             |}
             |
-          """.stripMargin).read(CssRulesParser.ruleList(_))
+          """.stripMargin, CssRulesParser.ruleList(_))
 
         assert(
           value2 ==
@@ -81,7 +83,7 @@ object CssTests extends TestSuite {
             |          box-shadow: none !important;
             |        }
             |
-          """.stripMargin).read(CssRulesParser.ruleList(_))
+          """.stripMargin, CssRulesParser.ruleList(_))
 
         val expected = RuleList(ArrayBuffer(
           QualifiedRule(
@@ -108,7 +110,7 @@ object CssTests extends TestSuite {
             |          background-color: #31b0d5;
             |  }
             |
-          """.stripMargin).read(CssRulesParser.ruleList(_))
+          """.stripMargin, CssRulesParser.ruleList(_))
 
         assert(
           value4 ==
@@ -136,7 +138,7 @@ object CssTests extends TestSuite {
             |     display: none;
             |   }
             |
-          """.stripMargin).read(CssRulesParser.ruleList(_))
+          """.stripMargin, CssRulesParser.ruleList(_))
 
         assert(value5 == RuleList(ArrayBuffer(
           QualifiedRule(
@@ -157,7 +159,7 @@ object CssTests extends TestSuite {
             |          }
             |        }
             |
-          """.stripMargin).read(CssRulesParser.ruleList(_))
+          """.stripMargin, CssRulesParser.ruleList(_))
 
         assert(value6 == RuleList(ArrayBuffer(
           AtRule("media", ArrayBuffer(
@@ -179,7 +181,7 @@ object CssTests extends TestSuite {
              |        unicode-range: U+4??;                /* wildcard range */
              |        unicode-range: U+0025-00FF, U+4??;
              |}
-          """.stripMargin).read(CssRulesParser.ruleList(_))
+          """.stripMargin, CssRulesParser.ruleList(_))
         assert(value7 == RuleList(ArrayBuffer(
           AtRule("rule", ArrayBuffer(), Some(Left(
             DeclarationList(ArrayBuffer(

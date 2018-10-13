@@ -26,7 +26,7 @@ object ScalaBench extends TestSuite{
   val tests = Tests{
     'fastparse - bench{
 
-      fastparse.parse(txt).read(scalaparse.Scala.CompilationUnit(_))
+      fastparse.parse(txt, scalaparse.Scala.CompilationUnit(_))
     }
     'scalac - bench{
       ScalacParser.checkParseFails(txt)

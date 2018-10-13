@@ -159,7 +159,7 @@ object PrettyPrinterTests extends TestSuite {
         """.stripMargin
 
       def compareWithOutput(input: String): Unit = {
-        val pretty = PrettyPrinter.printRuleList(parse(input).read(CssRulesParser.ruleList(_)).get.value)
+        val pretty = PrettyPrinter.printRuleList(parse(input, CssRulesParser.ruleList(_)).get.value)
         assert(pretty.trim == output.trim)
       }
       'test1 {

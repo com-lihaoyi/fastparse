@@ -31,7 +31,7 @@ object GnipSubSyntaxTest extends TestSuite {
 
   object GnipRuleValidator {
 
-    def apply(rule: String) = parse(rule).read(GnipRuleParser.parse(_))
+    def apply(rule: String) = parse(rule, GnipRuleParser.parse(_))
   }
 
   val tests = Tests {

@@ -27,7 +27,7 @@ object IteratorTests extends TestSuite {
       import NoWhitespace._
       def p[_: P] = P( "ab" ~/ "cd".rep().! ~ "ef" | "z" )
 
-      val Parsed.Success(res, i) = parseIterator(Iterator("ab", "cd", "cd", "cd", "ef")).read(p(_))
+      val Parsed.Success(res, i) = parseIterator(Iterator("ab", "cd", "cd", "cd", "ef"), p(_))
 
       assert(res == "cdcdcd")
     }
@@ -37,7 +37,7 @@ object IteratorTests extends TestSuite {
       def p[_: P] = P( "ab" ~/ "cd" | "z" ).log
 
       val input = toInput("abcdef")
-      val Parsed.Success(res, i) = parseInput(input).read(p(_))
+      val Parsed.Success(res, i) = parseInput(input, p(_))
       // Make sure that we drop immediately at position 2, since that is where
       // the cut has taken place, rather than at position 4 as we did earlier.
       assert(input.drops == Set(2, 4))
@@ -53,7 +53,7 @@ object IteratorTests extends TestSuite {
       def p[_: P] = P( "ab" ~/ "cd" | "z" )
 
       val input = toInput("abcdef")
-      val Parsed.Success(res, i) = parseInput(input).read(p(_))
+      val Parsed.Success(res, i) = parseInput(input, p(_))
       // Make sure that we drop immediately at position 2, since that is where
       // the cut has taken place, rather than at position 4 as we did earlier.
       assert(input.drops == Set(2, 4))
@@ -67,7 +67,7 @@ object IteratorTests extends TestSuite {
       def p[_: P] = P( "a" ~ "b" ~ "c")
       def capt[_ : P] = P( p ~ p ~ p)
       val input = toInput("abcabcabc")
-      val Parsed.Success(res, i) = parseInput(input).read(capt(_))
+      val Parsed.Success(res, i) = parseInput(input, p(_))
       println(i)
       assert(input.drops == Set(1, 2, 3, 4, 5, 6, 7, 8, 9))
     }
@@ -79,7 +79,7 @@ object IteratorTests extends TestSuite {
         def p[_: P] = P( "a" ~/ "b" ~/ "c")
         def capt[_: P] = P( p.! ~ p.! ~ p.!)
         val input = toInput("abcabcabc")
-        val Parsed.Success(res, i) = parseInput(input).read(capt(_))
+        val Parsed.Success(res, i) = parseInput(input, p(_))
         assert(
           i == 9,
           res == ("abc", "abc", "abc"),
@@ -94,14 +94,14 @@ object IteratorTests extends TestSuite {
         def nocut[_: P] = P((NoCut(p) ~ NoCut(p) ~/ NoCut(p)) | "abcd")
 
         val input1 = toInput("abcabcabc")
-        val Parsed.Success(_, i1) = parseInput(input1).read(nocut(_))
+        val Parsed.Success(_, i1) = parseInput(input1, nocut(_))
         assert(
           i1 == 9,
           Set(6, 9) == input1.drops // drop non-droppable NoCut block after cut
         )
 
         val input2 = toInput("abcd")
-        val Parsed.Success(_, i2) = parseInput(input2).read(nocut(_))
+        val Parsed.Success(_, i2) = parseInput(input2, nocut(_))
         assert(
           i2 == 4,
           input2.drops.isEmpty // no drops during simple parsers, for instance literal
@@ -115,7 +115,7 @@ object IteratorTests extends TestSuite {
         def eitherCutted[_: P] = P( (p ~ End) | ("abc" ~ p ~ End) | ("abcabc" ~/ p ~ End))
 
         val input1 = toInput("abcabcabc")
-        val Parsed.Success(_, i1) = parseInput(input1).read(either(_))
+        val Parsed.Success(_, i1) = parseInput(input1, either(_))
         assert(
           i1 == 9,
           // We do not expect any drops in the last branch of the Either,
@@ -126,7 +126,7 @@ object IteratorTests extends TestSuite {
           // already been dropped
           Set() == input1.drops
         )
-        val Parsed.Success(_, i2) = parseInput(input1).read(eitherCutted(_))
+        val Parsed.Success(_, i2) = parseInput(input1, eitherCutted(_))
         assert(
           i2 == 9,
           // With explicit cuts, we can accept drops
@@ -134,14 +134,14 @@ object IteratorTests extends TestSuite {
         )
 
         val input2 = toInput("abcabc")
-        val Parsed.Success(_, i3) = parseInput(input2).read(either(_))
+        val Parsed.Success(_, i3) = parseInput(input2, either(_))
         assert(
           i3 == 6,
           input2.drops.isEmpty // no drops at the end
         )
 
         val input3 = toInput("abc")
-        val Parsed.Success(_, i4) = parseInput(input3).read(either(_))
+        val Parsed.Success(_, i4) = parseInput(input3, either(_))
         assert(
           i4 == 3,
           input3.drops.isEmpty // no drops at the end
@@ -155,14 +155,14 @@ object IteratorTests extends TestSuite {
         def repCutted[_: P] = P( (p.rep ~ "d") | (p.rep ~/ "e") )
 
         val input1 = toInput("abcabcabcd")
-        val Parsed.Success(_, i1) = parseInput(input1).read(rep(_))
+        val Parsed.Success(_, i1) = parseInput(input1, rep(_))
         assert(
           i1 == 10,
           Set() == input1.drops // no drops at the end of first branch
         )
 
         val input2 = toInput("abcabcabce")
-        val Parsed.Success(_, i2) = parseInput(input2).read(rep(_))
+        val Parsed.Success(_, i2) = parseInput(input2, rep(_))
 
         assert(
           i1 == 10,
@@ -170,7 +170,7 @@ object IteratorTests extends TestSuite {
         )
 
         val input3 = toInput("abcabcabce")
-        val Parsed.Success(_, i3) = parseInput(input3).read(repCutted(_))
+        val Parsed.Success(_, i3) = parseInput(input3, repCutted(_))
 
         assert(
           i1 == 10,
@@ -187,7 +187,7 @@ object IteratorTests extends TestSuite {
 
         val input = toInput("abded")
 
-        val Parsed.Success(res, _) = parseInput(input).read(all(_))
+        val Parsed.Success(res, _) = parseInput(input, all(_))
         assert(
           res == "abded",
           input.drops.isEmpty // no drops in literal
@@ -206,7 +206,7 @@ object IteratorTests extends TestSuite {
         def ab[_: P] = P( a ~ b.? ~~ " " ~~ "ccc" )
 
         val input1 = toInput("aaa   bbb ccc")
-        val Parsed.Success(_, i1) = parseInput(input1).read(ab(_))
+        val Parsed.Success(_, i1) = parseInput(input1, ab(_))
         val drops = input1.drops
         assert(
           i1 == 13,
@@ -215,7 +215,7 @@ object IteratorTests extends TestSuite {
         )
 
         val input2 = toInput("aaa ccc")
-        val Parsed.Success(_, i2) = parseInput(input2).read(ab(_))
+        val Parsed.Success(_, i2) = parseInput(input2, ab(_))
         assert(
           i2 == 7,
           Set(3, 4, 7) == input2.drops // drops after a, whitespace and ccc
@@ -224,7 +224,7 @@ object IteratorTests extends TestSuite {
         val input3 = toInput("aaa  ccc")
         // this shows behavior of whitespaceApi which requires quite tricky dropBuffer calls
         // it totally ignores first ~ and produces error in the second ~~
-        assert(parseInput(input3).read(ab(_)).isInstanceOf[Parsed.Failure])
+        assert(parseInput(input3, ab(_)).isInstanceOf[Parsed.Failure])
       }
 
       'zeroDrops - {
@@ -233,7 +233,7 @@ object IteratorTests extends TestSuite {
           (("big, " ~ ("another, " ~ ("X".? ~/ "Y".?)) | "small, ") ~ "end") | "other"
         )
         val input = toInput("big, another, end")
-        val Parsed.Success(_, i) = parseInput(input).read(p(_))
+        val Parsed.Success(_, i) = parseInput(input, p(_))
         val drops = input.drops
         assert(
           i == 17,
@@ -250,9 +250,9 @@ object IteratorTests extends TestSuite {
       import NoWhitespace._
       def p[_: P] = P("[" ~ "]")
 
-      parse("[ ]").read(p(_)).asInstanceOf[Parsed.Failure].extra.traced
+      parse("[ ]", p(_)).asInstanceOf[Parsed.Failure].extra.traced
       val e = intercept[RuntimeException] {
-        parseIterator(Iterator("[", " ", "]")).read(p(_)).asInstanceOf[Parsed.Failure].extra.traced
+        parseIterator(Iterator("[", " ", "]"), p(_)).asInstanceOf[Parsed.Failure].extra.traced
       }
       assert(e.getMessage.contains("Cannot perform `.traced` on an `IteratorParserInput`"))
     }

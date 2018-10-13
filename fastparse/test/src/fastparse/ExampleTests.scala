@@ -14,10 +14,10 @@ object ExampleTests extends TestSuite{
         import fastparse._, NoWhitespace._
         def parseA[_: P] = P( "a" )
 
-        val Parsed.Success(value, successIndex) = parse("a").read(parseA(_))
+        val Parsed.Success(value, successIndex) = parse("a", parseA(_))
         assert(value == (), successIndex == 1)
 
-        val failure = parse("b").read(parseA(_)).asInstanceOf[Parsed.Failure]
+        val failure = parse("b", parseA(_)).asInstanceOf[Parsed.Failure]
         val trace = failure.traced.trace
         assert(
           failure.stack == List(("\"a\"", 0)),
@@ -29,44 +29,44 @@ object ExampleTests extends TestSuite{
       'sequence {
         def ab[_: P] = P( EagerOpsStr("a").~[Unit, Unit](LiteralStr("b")(implicitly)) )
 
-        val Parsed.Success(_, 2) = parse("ab").read(ab(_))
+        val Parsed.Success(_, 2) = parse("ab", ab(_))
 
-        val Parsed.Failure(_, 1, _) = parse("aa").read(ab(_))
+        val Parsed.Failure(_, 1, _) = parse("aa", ab(_))
       }
       'repeat{
         def ab[_: P] = P( "a".rep ~ "b" )
-        val Parsed.Success(_, 8) = parse("aaaaaaab").read(ab(_))
-        val Parsed.Success(_, 4) = parse("aaaba").read(ab(_))
+        val Parsed.Success(_, 8) = parse("aaaaaaab", ab(_))
+        val Parsed.Success(_, 4) = parse("aaaba", ab(_))
 
         def abc[_: P] = P( "a".rep(sep="b") ~ "c")
-        val Parsed.Success(_, 8) = parse("abababac").read(abc(_))
-        val Parsed.Failure(_, 3, _) = parse("abaabac").read(abc(_))
+        val Parsed.Success(_, 8) = parse("abababac", abc(_))
+        val Parsed.Failure(_, 3, _) = parse("abaabac", abc(_))
 
         def ab4[_: P] = P( "a".rep(min=2, max=4, sep="b") )
-        val Parsed.Success(_, 7) = parse("ababababababa").read(ab4(_))
+        val Parsed.Success(_, 7) = parse("ababababababa", ab4(_))
 
         def ab2exactly[_: P] = P( "ab".rep(exactly=2) )
-        val Parsed.Success(_, 4) = parse("abab").read(ab2exactly(_))
+        val Parsed.Success(_, 4) = parse("abab", ab2exactly(_))
 
         def ab4c[_: P] = P ( "a".rep(min=2, max=4, sep="b") ~ "c" )
-        val Parsed.Failure(_, 1, _) = parse("ac").read(ab4c(_))
-        val Parsed.Success(_, 4) = parse("abac").read(ab4c(_))
-        val Parsed.Success(_, 8) = parse("abababac").read(ab4c(_))
-        val Parsed.Failure(_, 7, _) = parse("ababababac").read(ab4c(_))
+        val Parsed.Failure(_, 1, _) = parse("ac", ab4c(_))
+        val Parsed.Success(_, 4) = parse("abac", ab4c(_))
+        val Parsed.Success(_, 8) = parse("abababac", ab4c(_))
+        val Parsed.Failure(_, 7, _) = parse("ababababac", ab4c(_))
       }
 
       'option{
         def option[_: P] = P( "c".? ~ "a".rep(sep="b").! ~ End)
 
-        val Parsed.Success("aba", 3) = parse("aba").read(option(_))
-        val Parsed.Success("aba", 3) = parse("aba").read(option(_))
+        val Parsed.Success("aba", 3) = parse("aba", option(_))
+        val Parsed.Success("aba", 3) = parse("aba", option(_))
       }
 
       'either{
         def either[_: P] = P( "a".rep ~ ("b" | "c" | "d") ~ End)
 
-        val Parsed.Success(_, 6) = parse("aaaaab").read(either(_))
-        val f @ Parsed.Failure(_, 5, _) = parse("aaaaae").read(either(_))
+        val Parsed.Success(_, 6) = parse("aaaaab", either(_))
+        val f @ Parsed.Failure(_, 5, _) = parse("aaaaae", either(_))
         val trace = f.traced.trace
         assert(
           f.toString == """Parsed.Failure(Position 1:6, found "e")""",
@@ -79,59 +79,59 @@ object ExampleTests extends TestSuite{
         def noEnd[_: P] = P( "a".rep ~ "b")
         def withEnd[_: P] = P( "a".rep ~ "b" ~ End)
 
-        val Parsed.Success(_, 4) = parse("aaaba").read(noEnd(_))
-        val Parsed.Failure(_, 4, _) = parse("aaaba").read(withEnd(_))
+        val Parsed.Success(_, 4) = parse("aaaba", noEnd(_))
+        val Parsed.Failure(_, 4, _) = parse("aaaba", withEnd(_))
 
       }
       'start{
         def ab[_: P] = P( (("a" | Start) ~ "b").rep ~ End).!
 
-        val Parsed.Success("abab", 4) = parse("abab").read(ab(_))
-        val Parsed.Success("babab", 5) = parse("babab").read(ab(_))
+        val Parsed.Success("abab", 4) = parse("abab", ab(_))
+        val Parsed.Success("babab", 5) = parse("babab", ab(_))
 
-        val Parsed.Failure(_, 2, _) = parse("abb").read(ab(_))
+        val Parsed.Failure(_, 2, _) = parse("abb", ab(_))
 
       }
 
       'passfail{
-        val Parsed.Success((), 0) = parse("asdad").read(Pass(_))
-        val Parsed.Failure(_, 0, _) = parse("asdad").read(Fail(_))
+        val Parsed.Success((), 0) = parse("asdad", Pass(_))
+        val Parsed.Failure(_, 0, _) = parse("asdad", Fail(_))
       }
 
       'index{
         def finder[_: P] = P( "hay".rep ~ Index ~ "needle" ~ "hay".rep )
 
-        val Parsed.Success(9, _) = parse("hayhayhayneedlehay").read(finder(_))
+        val Parsed.Success(9, _) = parse("hayhayhayneedlehay", finder(_))
       }
 
       'capturing{
         def capture1[_: P] = P( "a".rep.! ~ "b" ~ End)
 
-        val Parsed.Success("aaa", 4) = parse("aaab").read(capture1(_))
+        val Parsed.Success("aaa", 4) = parse("aaab", capture1(_))
 
         def capture2[_: P] = P( "a".rep.! ~ "b".! ~ End)
 
-        val Parsed.Success(("aaa", "b"), 4) = parse("aaab").read(capture2(_))
+        val Parsed.Success(("aaa", "b"), 4) = parse("aaab", capture2(_))
 
         def capture3[_: P] = P( "a".rep.! ~ "b".! ~ "c".! ~ End)
 
-        val Parsed.Success(("aaa", "b", "c"), 5) = parse("aaabc").read(capture3(_))
+        val Parsed.Success(("aaa", "b", "c"), 5) = parse("aaabc", capture3(_))
 
         def captureRep[_: P] = P( "a".!.rep ~ "b" ~ End)
 
-        val Parsed.Success(Seq("a", "a", "a"), 4) = parse("aaab").read(captureRep(_))
+        val Parsed.Success(Seq("a", "a", "a"), 4) = parse("aaab", captureRep(_))
 
         def captureOpt[_: P] = P( "a".rep ~ "b".!.? ~ End)
 
-        val Parsed.Success(Some("b"), 4) = parse("aaab").read(captureOpt(_))
+        val Parsed.Success(Some("b"), 4) = parse("aaab", captureOpt(_))
       }
 
       'anychar{
         def ab[_: P] = P( "'" ~ AnyChar.! ~ "'" )
 
-        val Parsed.Success("-", 3) = parse("'-'").read(ab(_))
+        val Parsed.Success("-", 3) = parse("'-'", ab(_))
 
-        val Parsed.Failure(stack, 2, _) = parse("'-='").read(ab(_))
+        val Parsed.Failure(stack, 2, _) = parse("'-='", ab(_))
         assert(stack.head._1 == "\"'\"")
       }
 
@@ -139,34 +139,34 @@ object ExampleTests extends TestSuite{
       'lookahead{
         def keyword[_: P] = P( ("hello" ~ &(" ")).!.rep )
 
-        val Parsed.Success(Seq("hello"), _) = parse("hello ").read(keyword(_))
-        val Parsed.Success(Seq(), __) = parse("helloX").read(keyword(_))
+        val Parsed.Success(Seq("hello"), _) = parse("hello ", keyword(_))
+        val Parsed.Success(Seq(), __) = parse("helloX", keyword(_))
       }
       'neglookahead{
         def keyword[_: P] = P( "hello" ~ !" " ~ AnyChar ~ "world" ).!
 
-        val Parsed.Success("hello-world", _) = parse("hello-world").read(keyword(_))
-        val Parsed.Success("hello_world", _) = parse("hello_world").read(keyword(_))
+        val Parsed.Success("hello-world", _) = parse("hello-world", keyword(_))
+        val Parsed.Success("hello_world", _) = parse("hello_world", keyword(_))
 
-        val Parsed.Failure(_, 5, _) = parse("hello world").read(keyword(_))
+        val Parsed.Failure(_, 5, _) = parse("hello world", keyword(_))
 //        assert(parser == !(" "))
       }
       'map{
         def binary[_: P] = P( ("0" | "1" ).rep.! )
         def binaryNum[_: P] = P( binary.map(Integer.parseInt(_, 2)) )
 
-        val Parsed.Success("1100", _) = parse("1100").read(binary(_))
-        val Parsed.Success(12, _) = parse("1100").read(binaryNum(_))
+        val Parsed.Success("1100", _) = parse("1100", binary(_))
+        val Parsed.Success(12, _) = parse("1100", binaryNum(_))
       }
       'flatMap{
         def leftTag[_: P] = P( "<" ~ (!">" ~ AnyChar).rep(1).! ~ ">")
         def rightTag[_: P](s: String) = P( "</" ~ s.! ~ ">" )
         def xml[_: P] = P( leftTag.flatMap(rightTag) )
 
-        val Parsed.Success("a", _) = parse("<a></a>").read(xml(_))
-        val Parsed.Success("abcde", _) = parse("<abcde></abcde>").read(xml(_))
+        val Parsed.Success("a", _) = parse("<a></a>", xml(_))
+        val Parsed.Success("abcde", _) = parse("<abcde></abcde>", xml(_))
 
-        val failure = parse("<abcde></edcba>").read(xml(_)).asInstanceOf[Parsed.Failure]
+        val failure = parse("<abcde></edcba>", xml(_)).asInstanceOf[Parsed.Failure]
         assert(
           failure.traced.trace == """Expected xml:1:1 / rightTag:1:8 / "abcde":1:10, found "edcba>""""
         )
@@ -181,10 +181,10 @@ object ExampleTests extends TestSuite{
           } yield right
         )
 
-        val Parsed.Success("a", _) = parse("<a></a>").read(xml(_))
-        val Parsed.Success("abcde", _) = parse("<abcde></abcde>").read(xml(_))
+        val Parsed.Success("a", _) = parse("<a></a>", xml(_))
+        val Parsed.Success("abcde", _) = parse("<abcde></abcde>", xml(_))
 
-        val failure = parse("<abcde></edcba>").read(xml(_)).asInstanceOf[Parsed.Failure]
+        val failure = parse("<abcde></edcba>", xml(_)).asInstanceOf[Parsed.Failure]
         assert(
           failure.extra.traced.trace == """Expected xml:1:1 / rightTag:1:8 / "abcde":1:10, found "edcba>""""
         )
@@ -192,15 +192,15 @@ object ExampleTests extends TestSuite{
       'filter{
         def digits[_: P] = P(CharPred(c => '0' <= c && c <= '9').rep(1).!).map(_.toInt)
         def even[_: P] = P( digits.filter(_ % 2 == 0) )
-        val Parsed.Success(12, _) = parse("12").read(even(_))
-        val failure = parse("123").read(even(_)).asInstanceOf[Parsed.Failure]
+        val Parsed.Success(12, _) = parse("12", even(_))
+        val failure = parse("123", even(_)).asInstanceOf[Parsed.Failure]
       }
       'opaque{
         def digit[_: P] = CharIn("0-9")
         def letter[_: P] = CharIn("A-Z")
         def twice[T, _: P](p: => P[T]) = p ~ p
         def errorMessage[T](p: P[_] => P[T], str: String) =
-          parse(str).read(p).asInstanceOf[Parsed.Failure].trace
+          parse(str, p).asInstanceOf[Parsed.Failure].trace
 
         // Portuguese number plate format since 2006
         def numberPlate[_: P] = P(twice(digit) ~ "-" ~ twice(letter) ~ "-" ~ twice(digit))
@@ -219,41 +219,41 @@ object ExampleTests extends TestSuite{
       'charPred{
         def cp[_: P] = P( CharPred(_.isUpper).rep.! ~ "." ~ End )
 
-        val Parsed.Success("ABC", _) = parse("ABC.").read(cp(_))
-        val Parsed.Failure(_, 2, _) = parse("ABc.").read(cp(_))
+        val Parsed.Success("ABC", _) = parse("ABC.", cp(_))
+        val Parsed.Failure(_, 2, _) = parse("ABc.", cp(_))
       }
 
       'charIn{
         def ci[_: P] = P( CharIn("abc", "xyz").rep.! ~ End )
 
-        val Parsed.Success("aaabbccxyz", _) = parse("aaabbccxyz").read(ci(_))
-        val Parsed.Failure(_, 7, _) = parse("aaabbccdxyz.").read(ci(_))
+        val Parsed.Success("aaabbccxyz", _) = parse("aaabbccxyz", ci(_))
+        val Parsed.Failure(_, 7, _) = parse("aaabbccdxyz.", ci(_))
 
 
         def digits[_: P] = P( CharIn("0-9").rep.! )
 
-        val Parsed.Success("12345", _) = parse("12345abcde").read(digits(_))
-        val Parsed.Success("123", _) = parse("123abcde45").read(digits(_))
+        val Parsed.Success("12345", _) = parse("12345abcde", digits(_))
+        val Parsed.Success("123", _) = parse("123abcde45", digits(_))
       }
 
       'charsWhile{
         def cw[_: P] = P( CharsWhile(_ != ' ').! )
 
-        val Parsed.Success("12345", _) = parse("12345").read(cw(_))
-        val Parsed.Success("123", _) = parse("123 45").read(cw(_))
+        val Parsed.Success("12345", _) = parse("12345", cw(_))
+        val Parsed.Success("123", _) = parse("123 45", cw(_))
       }
       'charsWhileIn{
         def cw[_: P] = P( CharsWhileIn("123456789").! )
 
-        val Parsed.Success("12345", _) = parse("12345").read(cw(_))
-        val Parsed.Success("123", _) = parse("123 45").read(cw(_))
+        val Parsed.Success("12345", _) = parse("12345", cw(_))
+        val Parsed.Success("123", _) = parse("123 45", cw(_))
       }
 
       'stringIn{
         def si[_: P] = P( StringIn("cow", "cattle").!.rep )
 
-        val Parsed.Success(Seq("cow", "cattle"), _) = parse("cowcattle").read(si(_))
-        val Parsed.Success(Seq("cow"), _) = parse("cowmoo").read(si(_))
+        val Parsed.Success(Seq("cow", "cattle"), _) = parse("cowcattle", si(_))
+        val Parsed.Success(Seq("cow"), _) = parse("cowmoo", si(_))
       }
     }
     'cuts{
@@ -261,9 +261,9 @@ object ExampleTests extends TestSuite{
         def alpha[_: P] = P( CharIn("a-z") )
         def nocut[_: P] = P( "val " ~ alpha.rep(1).! | "def " ~ alpha.rep(1).!)
 
-        val Parsed.Success("abcd", _) = parse("val abcd").read(nocut(_))
+        val Parsed.Success("abcd", _) = parse("val abcd", nocut(_))
 
-        val failure = parse("val 1234").read(nocut(_)).asInstanceOf[Parsed.Failure]
+        val failure = parse("val 1234", nocut(_)).asInstanceOf[Parsed.Failure]
         val trace = failure.extra.traced.trace
         assert(
           failure.index == 0,
@@ -274,9 +274,9 @@ object ExampleTests extends TestSuite{
         def alpha[_: P] = P( CharIn("a-z") )
         def nocut[_: P] = P( "val " ~/ alpha.rep(1).! | "def " ~/ alpha.rep(1).!)
 
-        val Parsed.Success("abcd", _) = parse("val abcd").read(nocut(_))
+        val Parsed.Success("abcd", _) = parse("val abcd", nocut(_))
 
-        val failure = parse("val 1234").read(nocut(_)).asInstanceOf[Parsed.Failure]
+        val failure = parse("val 1234", nocut(_)).asInstanceOf[Parsed.Failure]
         val trace = failure.extra.traced.trace
         assert(
           failure.index == 4,
@@ -289,10 +289,10 @@ object ExampleTests extends TestSuite{
         def stmt[_: P] = P( "val " ~ alpha.rep(1).! ~ ";" ~ " ".rep )
         def stmts[_: P] = P( stmt.rep(1) ~ End )
 
-        val Parsed.Success(Seq("abcd"), _) = parse("val abcd;").read(stmts(_))
-        val Parsed.Success(Seq("abcd", "efg"), _) = parse("val abcd; val efg;").read(stmts(_))
+        val Parsed.Success(Seq("abcd"), _) = parse("val abcd;", stmts(_))
+        val Parsed.Success(Seq("abcd", "efg"), _) = parse("val abcd; val efg;", stmts(_))
 
-        val failure = parse("val abcd; val ").read(stmts(_)).asInstanceOf[Parsed.Failure]
+        val failure = parse("val abcd; val ", stmts(_)).asInstanceOf[Parsed.Failure]
         val trace = failure.extra.traced.trace
         assert(
           failure.index == 10,
@@ -304,10 +304,10 @@ object ExampleTests extends TestSuite{
         def stmt[_: P] = P( "val " ~/ alpha.rep(1).! ~ ";" ~ " ".rep )
         def stmts[_: P] = P( stmt.rep(1) ~ End )
 
-        val Parsed.Success(Seq("abcd"), _) = parse("val abcd;").read(stmts(_))
-        val Parsed.Success(Seq("abcd", "efg"), _) = parse("val abcd; val efg;").read(stmts(_))
+        val Parsed.Success(Seq("abcd"), _) = parse("val abcd;", stmts(_))
+        val Parsed.Success(Seq("abcd", "efg"), _) = parse("val abcd; val efg;", stmts(_))
 
-        val failure = parse("val abcd; val ").read(stmts(_)).asInstanceOf[Parsed.Failure]
+        val failure = parse("val abcd; val ", stmts(_)).asInstanceOf[Parsed.Failure]
         val trace = failure.extra.traced.trace
         assert(
           failure.index == 14,
@@ -318,9 +318,9 @@ object ExampleTests extends TestSuite{
         def digits[_: P] = P( CharIn("0-9").rep(1) )
         def tuple[_: P] = P( "(" ~ digits.!.rep(sep=",") ~ ")" )
 
-        val Parsed.Success(Seq("1", "23"), _) = parse("(1,23)").read(tuple(_))
+        val Parsed.Success(Seq("1", "23"), _) = parse("(1,23)", tuple(_))
 
-        val failure = parse("(1,)").read(tuple(_)).asInstanceOf[Parsed.Failure]
+        val failure = parse("(1,)", tuple(_)).asInstanceOf[Parsed.Failure]
         val trace = failure.extra.traced.trace
         assert(
           failure.index == 2,
@@ -331,9 +331,9 @@ object ExampleTests extends TestSuite{
         def digits[_: P] = P( CharIn("0-9").rep(1) )
         def tuple[_: P] = P( "(" ~ digits.!.rep(sep=","./) ~ ")" )
 
-        val Parsed.Success(Seq("1", "23"), _) = parse("(1,23)").read(tuple(_))
+        val Parsed.Success(Seq("1", "23"), _) = parse("(1,23)", tuple(_))
 
-        val failure = parse("(1,)").read(tuple(_)).asInstanceOf[Parsed.Failure]
+        val failure = parse("(1,)", tuple(_)).asInstanceOf[Parsed.Failure]
         val index = failure.index
         val trace = failure.extra.traced.trace
         assert(
@@ -345,9 +345,9 @@ object ExampleTests extends TestSuite{
         def digits[_: P] = P( CharIn("0-9").rep(1) )
         def tuple[_: P] = P( "(" ~ digits.!.rep(sep=","./) ~ ")" )
 
-        val Parsed.Success(Seq("1", "23"), _) = parse("(1,23)").read(tuple(_))
+        val Parsed.Success(Seq("1", "23"), _) = parse("(1,23)", tuple(_))
 
-        val failure = parse("(1,)").read(tuple(_)).asInstanceOf[Parsed.Failure]
+        val failure = parse("(1,)", tuple(_)).asInstanceOf[Parsed.Failure]
         val trace = failure.extra.traced.trace
         assert(
           failure.index == 3,
@@ -359,22 +359,22 @@ object ExampleTests extends TestSuite{
         def digit[_: P] = P( CharIn("0-9") )
         def time1[_: P] = P( ("1".? ~ digit) ~ ":" ~/ digit ~ digit ~ ("am" | "pm") )
         def time2[_: P] = P( (("1" | "2").? ~ digit) ~ ":" ~/ digit ~ digit )
-        val Parsed.Success((), _) = parse("12:30pm").read(time1(_))
-        val Parsed.Success((), _) = parse("17:45").read(time2(_))
+        val Parsed.Success((), _) = parse("12:30pm", time1(_))
+        val Parsed.Success((), _) = parse("17:45", time2(_))
         def time[_: P] = P( time1 | time2 ).log
-        val Parsed.Success((), _) = parse("12:30pm").read(time(_))
-        val failure = parse("17:45").read(time(_)).asInstanceOf[Parsed.Failure]
+        val Parsed.Success((), _) = parse("12:30pm", time(_))
+        val failure = parse("17:45", time(_)).asInstanceOf[Parsed.Failure]
         assert(failure.index == 5)  // Expects am or pm
       }
       'composenocut{
         def digit[_: P] = P( CharIn("0-9") )
         def time1[_: P] = P( ("1".? ~ digit) ~ ":" ~/ digit ~ digit ~ ("am" | "pm") )
         def time2[_: P] = P( (("1" | "2").? ~ digit) ~ ":" ~/ digit ~ digit )
-        val Parsed.Success((), _) = parse("12:30pm").read(time1(_))
-        val Parsed.Success((), _) = parse("17:45").read(time2(_))
+        val Parsed.Success((), _) = parse("12:30pm", time1(_))
+        val Parsed.Success((), _) = parse("17:45", time2(_))
         def time[_: P] = P( NoCut(time1) | time2 )
-        val Parsed.Success((), _) = parse("12:30pm").read(time(_))
-        val Parsed.Success((), _) = parse("17:45").read(time(_))
+        val Parsed.Success((), _) = parse("12:30pm", time(_))
+        val Parsed.Success((), _) = parse("17:45", time(_))
       }
     }
     'debugging{
@@ -390,7 +390,7 @@ object ExampleTests extends TestSuite{
 
 
         check(
-          parse("(1+(2+3x))+4").read(Foo.expr(_)),
+          parse("(1+(2+3x))+4", Foo.expr(_)),
           """Parsed.Failure(Position 1:1, found "(1+(2+3x))")"""
         )
       }
@@ -403,7 +403,7 @@ object ExampleTests extends TestSuite{
           def expr[_: P]: P[Int] = P( side ~ plus ~ side ).map{case (l, r) => l + r}
         }
         check(
-          parse("(1+(2+3x))+4").read(Foo.expr(_)),
+          parse("(1+(2+3x))+4", Foo.expr(_)),
           """Parsed.Failure(Expected ")":1:8, found "x))+4")"""
         )
       }
@@ -414,7 +414,7 @@ object ExampleTests extends TestSuite{
         def DeepFailure[_: P] = P( "C" ).log
         def Foo[_: P] = P( (DeepFailure | "A".log("A", logger)) ~ "B".!.log("B", logger) ).log
 
-        parse("AB").read(Foo(_))
+        parse("AB", Foo(_))
 
         val allLogged = logged.mkString("\n")
 
@@ -443,7 +443,7 @@ object ExampleTests extends TestSuite{
         }
 
 
-        parse("(1+(2+3x))+4").read(Foo.expr(_))
+        parse("(1+(2+3x))+4", Foo.expr(_))
 
 
         val expected = """
@@ -479,7 +479,7 @@ object ExampleTests extends TestSuite{
       def andOr[_: P] = P(and | or)
 
       def check(input: String, expectedOutput: String) = {
-        val folded = andOr(parse(input)).result.fold(
+        val folded = parse(input, andOr(_)).fold(
           (_, _) => s"Cannot parse $input as an AndOr",
           (v, _) => s"Parsed: $v"
         )

@@ -21,7 +21,7 @@ object JsonBench extends TestSuite{
 
   val tests = Tests{
     'fastparse - bench{
-      fastparse.parse(txt).read(test.fastparse.Json.jsonExpr(_))
+      fastparse.parse(txt, test.fastparse.Json.jsonExpr(_))
     }
     'circe - bench{
       io.circe.parser.parse(txt).asInstanceOf[Right[_, _]]

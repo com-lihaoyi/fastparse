@@ -89,10 +89,6 @@ final class ParsingRun[+T](val input: ParserInput,
                            val traceIndex: Int,
                            var originalParser: ParsingRun[_] => ParsingRun[_],
                            var noDropBuffer: Boolean){
-  def read[T](p: ParsingRun[_] => ParsingRun[T] @uncheckedVariance): Parsed[T] = {
-    if (originalParser == null) originalParser = p
-    p(this).result
-  }
   // Use telescoping methods rather than default arguments to try and minimize
   // the amount of bytecode generated at the callsite.
   //

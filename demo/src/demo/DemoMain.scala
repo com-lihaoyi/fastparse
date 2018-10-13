@@ -117,7 +117,7 @@ object DemoMain {
 
     def recalc() = {
       inputBox.rows = inputBox.value.lines.length
-      val details = parse(inputBox.value).read(parser) match{
+      val details = parse(inputBox.value, parser) match{
         case s: fastparse.Parsed.Success[_] =>
           table(
             width := "100%",

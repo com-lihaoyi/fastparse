@@ -12,7 +12,7 @@ object TestUtil {
   def checkNeg[T](input: String, expected: String = "ADA???D", found: String = "ADQW??") = {
 //    println("Checking Neg...\n" )
 //    println(input)
-    parse(input).read(Scala.CompilationUnit(_)) match{
+    parse(input, Scala.CompilationUnit(_)) match{
       case f: Parsed.Failure =>
 
         println("TRACING")
@@ -32,7 +32,7 @@ object TestUtil {
       case _: Parsed.Success[_] => assert({implicitly(input); false})
     }
     for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
-      val res = parseIterator(input.grouped(chunkSize)).read(Scala.CompilationUnit(_))
+      val res = parseIterator(input.grouped(chunkSize), Scala.CompilationUnit(_))
       res match{
         case f: Parsed.Failure =>
 
@@ -57,12 +57,12 @@ object TestUtil {
   def check[T](input: String, tag: String = "", skipIterator: Boolean = false) = {
 //    println("Checking...\n" )
 //    println(input)
-    val normalRes = parse(input).read(Scala.CompilationUnit(_))
+    val normalRes = parse(input, Scala.CompilationUnit(_))
     val iteratorRes =
       if (skipIterator) Nil
       else
         for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024))
-        yield parseIterator(input.grouped(chunkSize)).read(Scala.CompilationUnit(_))
+        yield parseIterator(input.grouped(chunkSize), Scala.CompilationUnit(_))
 
     for(res <- normalRes +: iteratorRes){
       res match{

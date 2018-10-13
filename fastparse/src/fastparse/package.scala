@@ -354,23 +354,10 @@ package object fastparse {
   def StringIn(s: String*)(implicit ctx: ParsingRun[_]): ParsingRun[Unit] = macro MacroImpls.stringInMacro
   def StringInIgnoreCase(s: String*)(implicit ctx: ParsingRun[_]): ParsingRun[Unit] = macro MacroImpls.stringInIgnoreCaseMacro
 
-
-  def parseInput(input: ParserInput, startIndex: Int = 0, traceIndex: Int = -1): ParsingRun[_] = parse(
-    input = input,
-    startIndex = startIndex,
-    traceIndex = traceIndex
-  )
-  def parseIterator(input: Iterator[String], startIndex: Int = 0, traceIndex: Int = -1): ParsingRun[_] = parse(
-    input = IteratorParserInput(input),
-    startIndex = startIndex,
-    traceIndex = traceIndex
-  )
-  def parse(input: String, startIndex: Int = 0, traceIndex: Int = -1): ParsingRun[_] = parse(
-    input = IndexedParserInput(input),
-    startIndex = startIndex,
-    traceIndex = traceIndex
-  )
-  def parse(input: ParserInput, startIndex: Int, traceIndex: Int): ParsingRun[_] = new ParsingRun(
+  def parseInput[T](input: ParserInput,
+                    parser: ParsingRun[_] => ParsingRun[T],
+                    startIndex: Int = 0,
+                    traceIndex: Int = -1): Parsed[T] = parser(new ParsingRun(
     input = input,
     shortFailureMsg = null,
     failureStack = List.empty,
@@ -378,5 +365,23 @@ package object fastparse {
     isSuccess = true,
     logDepth = 0,
     startIndex, startIndex, true, (), traceIndex, null, false
+  )).result
+  def parseIterator[T](input: Iterator[String],
+                       parser: ParsingRun[_] => ParsingRun[T],
+                       startIndex: Int = 0,
+                       traceIndex: Int = -1): Parsed[T] = parseInput(
+    input = IteratorParserInput(input),
+    parser = parser,
+    startIndex = startIndex,
+    traceIndex = traceIndex
+  )
+  def parse[T](input: String,
+               parser: ParsingRun[_] => ParsingRun[T],
+               startIndex: Int = 0,
+               traceIndex: Int = -1): Parsed[T] = parseInput(
+    input = IndexedParserInput(input),
+    parser = parser,
+    startIndex = startIndex,
+    traceIndex = traceIndex
   )
 }

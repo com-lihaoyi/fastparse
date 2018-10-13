@@ -12,7 +12,7 @@ object TestMain {
     |   val x = 1
     |   ;
     | """.stripMargin
-    val res = parse(input).read(scalaparse.Scala.CompilationUnit(_))
+    val res = parse(input, scalaparse.Scala.CompilationUnit(_))
 //    val fail = res.asInstanceOf[Result.Failure]
     println(res)
 //    for(frame <- fail.extra.traced.stack){
