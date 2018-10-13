@@ -30,8 +30,15 @@ object MacroImpls {
 
     import c.universe._
     reify[ParsingRun[T]]{
+
       val startIndex = ctx.splice.index
+      if (ctx.splice.instrument != null) {
+        ctx.splice.instrument.beforeParse(name.splice.value, startIndex)
+      }
       t.splice match{case ctx0 =>
+        if (ctx.splice.instrument != null) {
+          ctx.splice.instrument.afterParse(name.splice.value, ctx0.index, ctx0.isSuccess)
+        }
         if ((ctx0.traceIndex != -1 | ctx0.logDepth != 0) && !ctx0.isSuccess) {
           ctx0.failureStack = (name.splice.value -> startIndex) :: ctx0.failureStack
         }

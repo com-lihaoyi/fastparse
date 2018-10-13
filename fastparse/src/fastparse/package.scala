@@ -357,31 +357,36 @@ package object fastparse {
   def parseInput[T](input: ParserInput,
                     parser: ParsingRun[_] => ParsingRun[T],
                     startIndex: Int = 0,
-                    traceIndex: Int = -1): Parsed[T] = parser(new ParsingRun(
+                    traceIndex: Int = -1,
+                    instrument: ParsingRun.Instrument = null): Parsed[T] = parser(new ParsingRun(
     input = input,
     shortFailureMsg = null,
     failureStack = List.empty,
     failureAggregate = List.empty,
     isSuccess = true,
     logDepth = 0,
-    startIndex, startIndex, true, (), traceIndex, parser, false
+    startIndex, startIndex, true, (), traceIndex, parser, false, instrument
   )).result
   def parseIterator[T](input: Iterator[String],
                        parser: ParsingRun[_] => ParsingRun[T],
                        startIndex: Int = 0,
-                       traceIndex: Int = -1): Parsed[T] = parseInput(
+                       traceIndex: Int = -1,
+                       instrument: ParsingRun.Instrument = null): Parsed[T] = parseInput(
     input = IteratorParserInput(input),
     parser = parser,
     startIndex = startIndex,
-    traceIndex = traceIndex
+    traceIndex = traceIndex,
+    instrument = instrument
   )
   def parse[T](input: String,
                parser: ParsingRun[_] => ParsingRun[T],
                startIndex: Int = 0,
-               traceIndex: Int = -1): Parsed[T] = parseInput(
+               traceIndex: Int = -1,
+               instrument: ParsingRun.Instrument = null): Parsed[T] = parseInput(
     input = IndexedParserInput(input),
     parser = parser,
     startIndex = startIndex,
-    traceIndex = traceIndex
+    traceIndex = traceIndex,
+    instrument = instrument
   )
 }

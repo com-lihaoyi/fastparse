@@ -88,7 +88,8 @@ final class ParsingRun[+T](val input: ParserInput,
                            var successValue: Any,
                            val traceIndex: Int,
                            var originalParser: ParsingRun[_] => ParsingRun[_],
-                           var noDropBuffer: Boolean){
+                           var noDropBuffer: Boolean,
+                           val instrument: ParsingRun.Instrument){
   // Use telescoping methods rather than default arguments to try and minimize
   // the amount of bytecode generated at the callsite.
   //
@@ -185,5 +186,9 @@ final class ParsingRun[+T](val input: ParserInput,
 }
 
 object ParsingRun{
+  trait Instrument{
+    def beforeParse(parser: String, index: Int): Unit
+    def afterParse(parser: String, index: Int, success: Boolean): Unit
+  }
   def current(implicit i: ParsingRun[Any]): ParsingRun[Any] = i
 }
