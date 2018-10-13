@@ -56,7 +56,7 @@ object JavaWhitespace{
     val input = ctx.input
     @tailrec def rec(current: Int, state: Int): ParsingRun[Unit] = {
       if (!input.isReachable(current)) {
-        if (state == 0 || state == 2) ctx.prepareSuccess((), current)
+        if (state == 0 || state == 1) ctx.prepareSuccess((), current)
         else ctx.freshFailure("*/", current)
       } else {
         val currentChar = input(current)
@@ -123,7 +123,7 @@ object JsonnetWhitespace{
     val input = ctx.input
     @tailrec def rec(current: Int, state: Int): ParsingRun[Unit] = {
       if (!input.isReachable(current)) {
-        if (state == 0 || state == 2) ctx.prepareSuccess((), current)
+        if (state == 0 || state == 1) ctx.prepareSuccess((), current)
         else ctx.freshFailure("*/", current)
       } else {
         val currentChar = input(current)
@@ -161,7 +161,7 @@ object ScalaWhitespace {
     val input = ctx.input
     @tailrec def rec(current: Int, state: Int, nesting: Int): ParsingRun[Unit] = {
       if (!input.isReachable(current)) {
-        if (state == 0 || state == 2) ctx.prepareSuccess((), current)
+        if (state == 0 || state == 1) ctx.prepareSuccess((), current)
         else ctx.freshFailure("*/", current)
       } else {
         val currentChar = input(current)

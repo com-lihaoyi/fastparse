@@ -1549,5 +1549,11 @@ object SuccessTests extends TestSuite{
     * - check(
         """object a {1/**/}""".stripMargin
     )
+    * - check(
+        """// hello""".stripMargin
+    )
+    * - check(
+        """//""".stripMargin
+    )
   }
 }
