@@ -1533,5 +1533,18 @@ object SuccessTests extends TestSuite{
         |  } yield a
         |}""".stripMargin
     )
+    * - check(
+        """
+        |package org
+        |/**  */
+        |trait JSConsole
+        |""".stripMargin
+    )
+    * - check(
+        """
+        |class JSUniquenessCache
+        |{}
+        |/**/""".stripMargin
+    )
   }
 }
