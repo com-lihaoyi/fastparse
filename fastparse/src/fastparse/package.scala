@@ -364,7 +364,7 @@ package object fastparse {
     failureAggregate = List.empty,
     isSuccess = true,
     logDepth = 0,
-    startIndex, startIndex, true, (), traceIndex, null, false
+    startIndex, startIndex, true, (), traceIndex, parser, false
   )).result
   def parseIterator[T](input: Iterator[String],
                        parser: ParsingRun[_] => ParsingRun[T],

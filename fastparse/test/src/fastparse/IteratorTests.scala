@@ -67,7 +67,7 @@ object IteratorTests extends TestSuite {
       def p[_: P] = P( "a" ~ "b" ~ "c")
       def capt[_ : P] = P( p ~ p ~ p)
       val input = toInput("abcabcabc")
-      val Parsed.Success(res, i) = parseInput(input, p(_))
+      val Parsed.Success(res, i) = parseInput(input, capt(_))
       println(i)
       assert(input.drops == Set(1, 2, 3, 4, 5, 6, 7, 8, 9))
     }
@@ -79,7 +79,7 @@ object IteratorTests extends TestSuite {
         def p[_: P] = P( "a" ~/ "b" ~/ "c")
         def capt[_: P] = P( p.! ~ p.! ~ p.!)
         val input = toInput("abcabcabc")
-        val Parsed.Success(res, i) = parseInput(input, p(_))
+        val Parsed.Success(res, i) = parseInput(input, capt(_))
         assert(
           i == 9,
           res == ("abc", "abc", "abc"),

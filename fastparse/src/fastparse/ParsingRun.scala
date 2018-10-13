@@ -14,7 +14,7 @@ import scala.annotation.unchecked.uncheckedVariance
   * be used to backtrack [[index]] after a lookahead parser finishes, or to reset
   * [[failureAggregate]] after an opaque parser finishes.
   *
-  * @param input            The input to the parsing run, as a String.
+  * @param input            The input to the parsing run, as a [[ParserInput]].
   *
   * @param shortFailureMsg  The failure message that gets returned when tracing
   *                         is disabled (`traceIndex` == -1). Usually a single
