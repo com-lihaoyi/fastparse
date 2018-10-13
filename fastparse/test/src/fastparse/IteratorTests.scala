@@ -237,10 +237,10 @@ object IteratorTests extends TestSuite {
         val drops = input.drops
         assert(
           i == 17,
-          Set(14) == drops
-          // drops after "another, " because of the nested cut ~/, but not
-          // after `"end" because cuts only apply to the `|` blocks
-          // they are nested within
+          Set(14, 17) == drops
+          // drops after "another, " because of the nested cut ~/, and again
+          // after `"end" because the cut prevents it from backtracking out of
+          // the most outer `|`
         )
 
       }
