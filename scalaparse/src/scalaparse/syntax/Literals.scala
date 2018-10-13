@@ -23,8 +23,7 @@ trait Literals { l =>
   def WL0[_: P]: P[Unit] = P( NoTrace((Basic.WSChars | Literals.Comment | Basic.Newline).rep) )("WL", implicitly)
   def WL[_: P]: P[Unit] = P( NoCut(WL0) )
 
-  def Semi[_: P]: P[Unit] = P( WS ~ Basic.Semi )
-  def Semis[_: P]: P[Unit] = P( Semi.rep(1) ~ WS )
+  def Semis[_: P]: P[Unit] = P( NoCut(WS) ~ Basic.Semi.rep(1, NoCut(WS)) ~ NoCut(WS) )
   def Newline[_: P]: P[Unit] = P( WL ~ Basic.Newline )
 
   def NotNewline[_: P]: P[Unit] = P( &( WS ~ !Basic.Newline ) )

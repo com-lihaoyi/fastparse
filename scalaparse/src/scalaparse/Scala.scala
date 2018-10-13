@@ -54,11 +54,11 @@ object Scala extends Core with Types with Exprs with Xml{
   def TopStatSeq[_: P]: P[Unit] = {
     def Tmpl = P( (Annot ~~ OneNLMax).rep ~ Mod.rep ~ (TraitDef | ClsDef | ObjDef) )
     def TopStat = P( Pkg | Import | Tmpl )
-    P( TopStat.repX(1, NoCut(Semis)) )
+    P( TopStat.repX(1, Semis) )
   }
-  def TopPkgSeq[_: P] = P( ((`package` ~ QualId) ~~ !(WS ~ "{")).repX(1, NoCut(Semis)) )
+  def TopPkgSeq[_: P] = P( ((`package` ~ QualId) ~~ !(WS ~ "{")).repX(1, Semis) )
   def CompilationUnit[_: P]: P[Unit] = {
     def Body = P( TopPkgSeq ~~ (Semis ~ TopStatSeq).? | TopStatSeq )
-    P( Semis.? ~ Body.? ~~ NoCut(Semis).? ~ WL ~ End )
+    P( Semis.? ~ Body.? ~~ Semis.? ~ WL0 ~ End )
   }
 }

@@ -55,8 +55,10 @@ object JavaWhitespace{
   implicit val whitespace = {implicit ctx: ParsingRun[_] =>
     val input = ctx.input
     @tailrec def rec(current: Int, state: Int): ParsingRun[Unit] = {
-      if (!input.isReachable(current)) ctx.prepareSuccess((), current)
-      else {
+      if (!input.isReachable(current)) {
+        if (state == 0 || state == 2) ctx.prepareSuccess((), current)
+        else ctx.freshFailure("*/", current)
+      } else {
         val currentChar = input(current)
         (state: @switch) match{
           case 0 =>
@@ -120,8 +122,10 @@ object JsonnetWhitespace{
   implicit val whitespace = {implicit ctx: ParsingRun[_] =>
     val input = ctx.input
     @tailrec def rec(current: Int, state: Int): ParsingRun[Unit] = {
-      if (!input.isReachable(current)) ctx.prepareSuccess((), current)
-      else {
+      if (!input.isReachable(current)) {
+        if (state == 0 || state == 2) ctx.prepareSuccess((), current)
+        else ctx.freshFailure("*/", current)
+      } else {
         val currentChar = input(current)
         (state: @switch) match{
           case 0 =>
@@ -156,8 +160,10 @@ object ScalaWhitespace {
   implicit val whitespace = {implicit ctx: ParsingRun[_] =>
     val input = ctx.input
     @tailrec def rec(current: Int, state: Int, nesting: Int): ParsingRun[Unit] = {
-      if (!input.isReachable(current)) ctx.prepareSuccess((), current)
-      else {
+      if (!input.isReachable(current)) {
+        if (state == 0 || state == 2) ctx.prepareSuccess((), current)
+        else ctx.freshFailure("*/", current)
+      } else {
         val currentChar = input(current)
         (state: @switch) match{
           case 0 =>

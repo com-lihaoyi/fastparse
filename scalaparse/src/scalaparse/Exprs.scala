@@ -49,7 +49,7 @@ trait Exprs extends Core with Types with Xml{
 
     def Expr[_: P]: P[Unit] = {
       def If = {
-        def Else = P( Semi.? ~ `else` ~/ Expr )
+        def Else = P( Semis.? ~ `else` ~/ Expr )
         P( `if` ~/ "(" ~ ExprCtx.Expr ~ ")" ~ Expr ~ Else.? )
       }
       def While = P( `while` ~/ "(" ~ ExprCtx.Expr ~ ")" ~ Expr )
@@ -58,7 +58,7 @@ trait Exprs extends Core with Types with Xml{
         def Finally = P( `finally` ~/ Expr )
         P( `try` ~/ Expr ~ Catch.? ~ Finally.? )
       }
-      def DoWhile = P( `do` ~/ Expr ~ Semi.? ~ `while` ~ "(" ~ ExprCtx.Expr ~ ")" )
+      def DoWhile = P( `do` ~/ Expr ~ Semis.? ~ `while` ~ "(" ~ ExprCtx.Expr ~ ")" )
 
       def For = {
         def Body= P( "(" ~/ ExprCtx.Enumerators ~ ")" | "{" ~/ StatCtx.Enumerators ~ "}" )
