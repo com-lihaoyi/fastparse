@@ -68,5 +68,80 @@ object MathTests extends TestSuite{
         """Expected ")":7, found "x))+4""""
       )
     }
+    'instrument - {
+      'simple - {
+        val callCount = mutable.Map.empty[String, Int]
+
+
+        val instrument = new ParsingRun.Instrument {
+          def beforeParse(parser: String, index: Int): Unit = {
+            callCount(parser) = callCount.getOrElse(parser, 0) + 1
+          }
+          def afterParse(parser: String, index: Int, success: Boolean): Unit = ()
+        }
+
+        parse("((1+1*2)+(3*4*5))/3", expr(_), instrument = instrument)
+
+        val expectedCallCount = Map(
+          "expr" -> 1,
+          "addSub" -> 4,
+          "divMul" -> 6,
+          "factor" -> 10,
+          "number" -> 10,
+          "parens" -> 3
+        )
+        assert(callCount == expectedCallCount)
+      }
+      'continuation - {
+        val resultCount = mutable.Map.empty[(String, Boolean), Int]
+        val instrument = new ParsingRun.Instrument {
+          def beforeParse(parser: String, index: Int): Unit = ()
+          def afterParse(parser: String, index: Int, success: Boolean): Unit = {
+            val resultKey = (parser, success)
+            resultCount(resultKey) = resultCount.getOrElse(resultKey, 0) + 1
+          }
+        }
+
+        // Good Parse
+        parse("((1+1*2)+(3*4*5))/3", expr(_), instrument = instrument)
+
+        val expectedResultCount = Map(
+          ("expr", true) -> 1,
+          ("addSub", true) -> 4,
+          ("divMul", true) -> 6,
+          ("factor", true) -> 10,
+          ("number", true) -> 7,
+          ("number", false) -> 3,
+          ("parens", true) -> 3
+        )
+        assert(resultCount == expectedResultCount)
+
+        // Bad Parse
+        resultCount.clear()
+        parse("((1+1*2)+(3*4*))/3", expr(_), instrument = instrument)
+
+        val expectedResultCount2 = Map(
+          ("expr", false) -> 1,
+
+          ("addSub", true) -> 1,
+          ("addSub", false) -> 3,
+
+          ("divMul", true) -> 3,
+          ("divMul", false) -> 3,
+
+          ("factor", true) -> 6,
+          ("factor", false) -> 3,
+
+          ("number", true) -> 5,
+          ("number", false) -> 4,
+
+          ("parens", true) -> 1,
+          ("parens", false) -> 3
+        )
+        assert(resultCount == expectedResultCount2)
+      }
+
+    }
+
   }
 }

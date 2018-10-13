@@ -182,6 +182,62 @@
             @hl.scala{.stack} in case you want to manipulate it programmatically.
 
 
+    @sect{Instrumenting Parsers}
+        @p
+            FastParse provides an @code{instrument} argument, which you can
+            use to inject callbacks that let you run code before or after
+            every named parse (defined inside a @code{P}) is called. This can
+            be used for a wide variety of things. For example, you could use it
+            to count how many times each parser in the example @sect.ref{Math}
+            parser gets called when you parse a simple arithmetic expression:
+
+        @hl.ref(tests/"MathTests.scala", Seq("'instrument", "simple", ""))
+
+        @p
+            This is useful for ad-hoc investigation of what your parser is doing:
+            you can easily count how many times various parsers are being run,
+            whether they're succeeding and failing and at what indices.
+        @p
+            The above example runs code @i{before} each named @code{P(...)}
+            parser is run. You can also run code @i{after} the parser is
+            run:
+
+        @hl.ref(tests/"MathTests.scala", Seq("'instrument", "'continuation", ""), "// Good Parse")
+
+        @p
+            In this case, we are using it to count not just how many times each
+            named @code{P(...)} parser is run, but also how many times it
+            succeeds and fails. We can parse a "good" input and see that
+            most of the attempts by named parser succeed:
+
+        @hl.ref(tests/"MathTests.scala", Seq("'instrument", "'continuation", "", "// Good Parse"), "// Bad Parse")
+
+        @p
+            And we can parse invalid input, and see that it results in many of
+            the named parsers failing repeatedly in the course of the parse:
+
+        @hl.ref(tests/"MathTests.scala", Seq("'instrument", "'continuation", "", "// Bad Parse"))
+
+        @p
+            Which is what you would expect, since the parse overall failed!
+            This measurement of pass/fail rates for each parser is a useful
+            tool for understanding how the overall parser behaves at runtime:
+            which individual parsers are being used over and over and are worth
+            optimizing, and which are called only a handful of times and not
+            bothering with. If an individual parser is being called over and
+            over, you could optimize its internals to make it faster, or you
+            could try to refactor the rest of the overall parser so this
+            individual parser gets called fewer times.
+
+        @p
+            Instrumenting parsers typically isn't something you want to
+            use on a "production" parser.
+            Nevertheless, @code{instrument} it is still a useful tool to
+            have available in your toolbox if you are unsure of what a
+            parser is doing, and can be used to give you insight into
+            the runtime behavior of your parsers which is hard to get
+            otherwise.
+
     @sect{Use Cases}
         @p
             What's the purpose of all this detailed error reporting? The goal
