@@ -166,7 +166,7 @@ package object fastparse {
       val oldFailures = ctx.failureAggregate
       val oldIndex = ctx.index
       val res = parse0()
-      if (ctx.traceIndex != -1){
+      if (!ctx.tracingDisabled){
         ctx.failureAggregate = oldFailures
         if (ctx.traceIndex == oldIndex && !res.isSuccess) {
           ctx.failureStack = Nil
@@ -192,7 +192,7 @@ package object fastparse {
         if (!ctx.isSuccess) ctx.freshSuccess((), null, startPos)
         else {
           val msg = ctx.shortFailureMsg
-          val res = ctx.prepareFailure("!" + msg(), startPos)
+          val res = ctx.augmentFailure("!" + msg(), startPos)
           // Do not aggregate failures inside the !(...) expression,
           // since those failures are desired to make the parse succeed!
           ctx.failureAggregate = startFailures
@@ -209,7 +209,7 @@ package object fastparse {
       parse0()
       if (ctx.isSuccess) {
         val msg = ctx.shortFailureMsg
-        val res = ctx.prepareSuccess(
+        val res = ctx.freshSuccess(
           optioner.some(ctx.successValue.asInstanceOf[T]),
           msg() + ".?"
         )
@@ -277,7 +277,7 @@ package object fastparse {
     ctx.noDropBuffer = oldNoCut
     val msg = ctx.shortFailureMsg
     val res =
-      if (ctx.isSuccess) ctx.prepareSuccess((), s"&(${msg()})", startPos)
+      if (ctx.isSuccess) ctx.freshSuccess((), s"&(${msg()})", startPos)
       else ctx.asInstanceOf[ParsingRun[Unit]]
     res.cut = startCut
     res
@@ -300,7 +300,7 @@ package object fastparse {
   def NoTrace[T](p: => ParsingRun[T])(implicit ctx: ParsingRun[_]): ParsingRun[T] = {
     val preMsg = ctx.failureAggregate
     val res = p
-    if (ctx.traceIndex != -1) ctx.failureAggregate = preMsg
+    if (!ctx.tracingDisabled) ctx.failureAggregate = preMsg
     res
   }
   def Pass[T](v: T)(implicit ctx: ParsingRun[_]): ParsingRun[T] = ctx.freshSuccess(v, "")

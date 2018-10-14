@@ -34,12 +34,12 @@ object RepImpls{
     val endSnippet = min match{
       case None =>
         q"""
-          $ctx1.prepareSuccess($repeater1.result($acc), $parsedMsg() + ".rep", $startIndex, $originalCut)
+          $ctx1.freshSuccess($repeater1.result($acc), $parsedMsg() + ".rep", $startIndex, $originalCut)
         """
       case Some(min1) =>
         q"""
-           if ($count < $min1) $ctx1.prepareFailure($parsedMsg() + ".rep", $startIndex, $originalCut)
-           else $ctx1.prepareSuccess($repeater1.result($acc), $parsedMsg() + ".rep", $startIndex, $originalCut)
+           if ($count < $min1) $ctx1.augmentFailure($parsedMsg() + ".rep", $startIndex, $originalCut)
+           else $ctx1.freshSuccess($repeater1.result($acc), $parsedMsg() + ".rep", $startIndex, $originalCut)
         """
     }
 
@@ -133,12 +133,12 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
     val actualMax = if(exactly == -1) max else exactly
     var originalCut = ctx.cut
     def end(successIndex: Int, index: Int, count: Int, shortMsg: => String) = {
-      if (count < actualMin) ctx.prepareFailure(shortMsg + ".rep", index, originalCut)
-      else ctx.prepareSuccess(repeater.result(acc), shortMsg + ".rep", successIndex, originalCut)
+      if (count < actualMin) ctx.augmentFailure(shortMsg + ".rep", index, originalCut)
+      else ctx.freshSuccess(repeater.result(acc), shortMsg + ".rep", successIndex, originalCut)
     }
     @tailrec def rec(startIndex: Int, count: Int, precut: Boolean): ParsingRun[V] = {
       ctx.cut = precut
-      if (count == 0 && actualMax == 0) ctx.prepareSuccess(
+      if (count == 0 && actualMax == 0) ctx.freshSuccess(
         repeater.result(acc),
         "",
         startIndex
@@ -163,7 +163,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
             if (sep1 == null) rec(beforeSepIndex, nextCount, false)
             else {
               if (ctx.isSuccess) rec(beforeSepIndex, nextCount, ctx.cut)
-              else if (ctx.cut) ctx.prepareFailure(parseMsg() + ".rep", beforeSepIndex, originalCut)
+              else if (ctx.cut) ctx.augmentFailure(parseMsg() + ".rep", beforeSepIndex, originalCut)
               else end(beforeSepIndex, beforeSepIndex, nextCount, parseMsg())
             }
           }
@@ -179,8 +179,8 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
     var originalCut = ctx.cut
     val acc = repeater.initial
     def end(successIndex: Int, index: Int, count: Int, shortMsg: => String) = {
-      if (count < min) ctx.prepareFailure(shortMsg + ".rep", index, originalCut)
-      else ctx.prepareSuccess(repeater.result(acc), shortMsg + ".rep", successIndex, originalCut)
+      if (count < min) ctx.augmentFailure(shortMsg + ".rep", index, originalCut)
+      else ctx.freshSuccess(repeater.result(acc), shortMsg + ".rep", successIndex, originalCut)
     }
     @tailrec def rec(startIndex: Int, count: Int, precut: Boolean): ParsingRun[V] = {
       ctx.cut = precut
@@ -200,7 +200,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
         if (sep1 == null) rec(beforeSepIndex, nextCount, false)
         else {
           if (ctx.isSuccess) rec(beforeSepIndex, nextCount, ctx.cut)
-          else if (ctx.cut) ctx.prepareFailure(parsedMsg() + ".rep", beforeSepIndex, ctx.cut | originalCut)
+          else if (ctx.cut) ctx.augmentFailure(parsedMsg() + ".rep", beforeSepIndex, ctx.cut | originalCut)
           else end(beforeSepIndex, beforeSepIndex, nextCount, parsedMsg())
         }
       }
@@ -220,12 +220,12 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
     val actualMin = if(exactly == -1) min else exactly
     val actualMax = if(exactly == -1) max else exactly
     def end(successIndex: Int, index: Int, count: Int, shortMsg: => String) = {
-      if (count < actualMin) ctx.prepareFailure(shortMsg + ".rep", index, originalCut)
-      else ctx.prepareSuccess(repeater.result(acc), shortMsg + ".rep", successIndex, originalCut)
+      if (count < actualMin) ctx.augmentFailure(shortMsg + ".rep", index, originalCut)
+      else ctx.freshSuccess(repeater.result(acc), shortMsg + ".rep", successIndex, originalCut)
     }
     @tailrec def rec(startIndex: Int, count: Int, precut: Boolean): ParsingRun[V] = {
       ctx.cut = precut
-      if (count == 0 && actualMax == 0) ctx.prepareSuccess(repeater.result(acc), "", startIndex)
+      if (count == 0 && actualMax == 0) ctx.freshSuccess(repeater.result(acc), "", startIndex)
       else {
         parse0()
         val parsedMsg = ctx.shortFailureMsg
@@ -249,7 +249,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
               if (whitespace ne NoWhitespace.noWhitespaceImplicit) whitespace(ctx)
               rec(beforeSepIndex, nextCount, sepCut)
             }
-            else if (ctx.cut) ctx.prepareFailure(parsedMsg() + ".rep", beforeSepIndex, originalCut)
+            else if (ctx.cut) ctx.augmentFailure(parsedMsg() + ".rep", beforeSepIndex, originalCut)
             else end(beforeSepIndex, beforeSepIndex, nextCount, parsedMsg())
           }
         }
@@ -266,8 +266,8 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
     var originalCut = ctx.cut
     val acc = repeater.initial
     def end(successIndex: Int, index: Int, count: Int, shortMsg: => String) = {
-      if (count < min) ctx.prepareFailure(shortMsg + ".rep", index, originalCut)
-      else ctx.prepareSuccess(repeater.result(acc), shortMsg + ".rep", successIndex, originalCut)
+      if (count < min) ctx.augmentFailure(shortMsg + ".rep", index, originalCut)
+      else ctx.freshSuccess(repeater.result(acc), shortMsg + ".rep", successIndex, originalCut)
     }
     @tailrec def rec(startIndex: Int, count: Int, precut: Boolean): ParsingRun[V] = {
       ctx.cut = precut
@@ -301,7 +301,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
           }
           rec(beforeSepIndex, nextCount, sepCut)
         }
-        else if (ctx.cut) ctx.prepareFailure(parsedMsg() + ".rep", beforeSepIndex, ctx.cut | originalCut)
+        else if (ctx.cut) ctx.augmentFailure(parsedMsg() + ".rep", beforeSepIndex, ctx.cut | originalCut)
         else end(beforeSepIndex, beforeSepIndex, nextCount, parsedMsg())
       }
     }

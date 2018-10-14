@@ -87,9 +87,11 @@ final class ParsingRun[+T](val input: ParserInput,
                            var cut: Boolean,
                            var successValue: Any,
                            val traceIndex: Int,
-                           var originalParser: ParsingRun[_] => ParsingRun[_],
+                           val originalParser: ParsingRun[_] => ParsingRun[_],
                            var noDropBuffer: Boolean,
                            val instrument: ParsingRun.Instrument){
+
+  val tracingDisabled = traceIndex == -1
   // Use telescoping methods rather than default arguments to try and minimize
   // the amount of bytecode generated at the callsite.
   //
@@ -97,61 +99,61 @@ final class ParsingRun[+T](val input: ParserInput,
   // generate huge methods, so anything we can do to reduce the size of the
   // generated code helps avoid bytecode size blowup
 
-  def freshSuccess[V](value: V, msg: => String, index: Int) = {
-    prepareSuccess(value, msg, index)
-  }
-  def freshSuccess[V](value: V, msg: => String) = {
-    prepareSuccess(value, msg, index)
-  }
-  def prepareSuccess[V](value: V, msg: => String): ParsingRun[V] = {
+  def freshSuccess[V](value: V, msg: => String): ParsingRun[V] = {
     isSuccess = true
     successValue = value
     this.asInstanceOf[ParsingRun[V]]
-  }
-  def prepareSuccess[V](value: V, msg: => String, index: Int): ParsingRun[V] = {
-    isSuccess = true
-    successValue = value
-    shortFailureMsg = () => msg
-    this.index = index
-    this.asInstanceOf[ParsingRun[V]]
-  }
-  def prepareSuccess[V](value: V, msg: => String, cut: Boolean): ParsingRun[V] = {
-    isSuccess = true
-    successValue = value
-    shortFailureMsg = () => msg
-    this.cut = cut
-    this.asInstanceOf[ParsingRun[V]]
-  }
-  def prepareSuccess[V](value: V, msg: => String, index: Int, cut: Boolean): ParsingRun[V] = {
-    isSuccess = true
-    successValue = value
-    shortFailureMsg = () => msg
-    this.index = index
-    this.cut = cut
-    this.asInstanceOf[ParsingRun[V]]
-  }
-  def freshFailure(msg: => String): ParsingRun[Nothing] = {
-    failureStack = Nil
-    val res = prepareFailure(msg, index, cut = this.cut)
-    this.shortFailureMsg = () => msg
-    res
-  }
-  def freshFailure(msg: => String, startPos: Int): ParsingRun[Nothing] = {
-    failureStack = Nil
-    val res = prepareFailure(msg, startPos, cut = this.cut)
-    this.shortFailureMsg = () => msg
-    res
   }
 
-  def prepareFailure(msg: => String, index: Int): ParsingRun[Nothing] = {
+  def freshSuccess[V](value: V, msg: => String, index: Int): ParsingRun[V] = {
+    isSuccess = true
+    successValue = value
+    shortFailureMsg = if (tracingDisabled) null else () => msg
+    this.index = index
+    this.asInstanceOf[ParsingRun[V]]
+  }
+
+  def freshSuccess[V](value: V, msg: => String, cut: Boolean): ParsingRun[V] = {
+    isSuccess = true
+    successValue = value
+    shortFailureMsg = if (tracingDisabled) null else () => msg
+    this.cut = cut
+    this.asInstanceOf[ParsingRun[V]]
+  }
+
+  def freshSuccess[V](value: V, msg: => String, index: Int, cut: Boolean): ParsingRun[V] = {
+    isSuccess = true
+    successValue = value
+    shortFailureMsg = if (tracingDisabled) null else () => msg
+    this.index = index
+    this.cut = cut
+    this.asInstanceOf[ParsingRun[V]]
+  }
+
+  def freshFailure(msg: => String): ParsingRun[Nothing] = {
+    failureStack = Nil
     isSuccess = false
-    shortFailureMsg = () => msg
+    shortFailureMsg = if (tracingDisabled) null else () => msg
+    this.asInstanceOf[ParsingRun[Nothing]]
+  }
+
+  def freshFailure(msg: => String, startPos: Int): ParsingRun[Nothing] = {
+    failureStack = Nil
+    isSuccess = false
+    shortFailureMsg = if (tracingDisabled) null else () => msg
+    index = startPos
+    this.asInstanceOf[ParsingRun[Nothing]]
+  }
+
+  def augmentFailure(msg: => String, index: Int): ParsingRun[Nothing] = {
+    isSuccess = false
+    shortFailureMsg = if (tracingDisabled) null else () => msg
     this.index = index
     this.asInstanceOf[ParsingRun[Nothing]]
   }
-  def prepareFailure(msg: => String, index: Int, cut: Boolean): ParsingRun[Nothing] = {
+  def augmentFailure(msg: => String, index: Int, cut: Boolean): ParsingRun[Nothing] = {
     isSuccess = false
-    shortFailureMsg = () => msg
+    shortFailureMsg = if (tracingDisabled) null else () => msg
     this.index = index
     this.cut = cut
     this.asInstanceOf[ParsingRun[Nothing]]
