@@ -139,13 +139,11 @@ final class ParsingRun[+T](val input: ParserInput,
   }
 
   def augmentFailure(index: Int): ParsingRun[Nothing] = {
-    isSuccess = false
     this.index = index
     this.asInstanceOf[ParsingRun[Nothing]]
   }
 
   def augmentFailure(index: Int, cut: Boolean): ParsingRun[Nothing] = {
-    isSuccess = false
     this.index = index
     this.cut = cut
     this.asInstanceOf[ParsingRun[Nothing]]
