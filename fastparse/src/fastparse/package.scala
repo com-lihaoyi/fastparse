@@ -192,7 +192,8 @@ package object fastparse {
       val res =
         if (!ctx.isSuccess) ctx.freshSuccess((), null, startPos)
         else {
-          val res = ctx.prepareFailure(startPos)
+          val msg = ctx.shortFailureMsg
+          val res = ctx.prepareFailure("!" + msg(), startPos)
           // Do not aggregate failures inside the !(...) expression,
           // since those failures are desired to make the parse succeed!
           ctx.failureAggregate = startFailures
@@ -208,7 +209,11 @@ package object fastparse {
       ctx.cut = false
       parse0()
       if (ctx.isSuccess) {
-        val res = ctx.prepareSuccess(optioner.some(ctx.successValue.asInstanceOf[T]))
+        val msg = ctx.shortFailureMsg
+        val res = ctx.prepareSuccess(
+          optioner.some(ctx.successValue.asInstanceOf[T]),
+          msg() + ".?"
+        )
         res.cut |= startCut
         res
       }
@@ -271,8 +276,9 @@ package object fastparse {
     ctx.noDropBuffer = true
     parse
     ctx.noDropBuffer = oldNoCut
+    val msg = ctx.shortFailureMsg
     val res =
-      if (ctx.isSuccess) ctx.prepareSuccess((), startPos)
+      if (ctx.isSuccess) ctx.prepareSuccess((), s"&(${msg()})", startPos)
       else ctx.asInstanceOf[ParsingRun[Unit]]
     res.cut = startCut
     res
@@ -291,18 +297,18 @@ package object fastparse {
 
   }
 
-  def Pass(implicit ctx: ParsingRun[_]): ParsingRun[Unit] = ctx.freshSuccess((), null)
+  def Pass(implicit ctx: ParsingRun[_]): ParsingRun[Unit] = ctx.freshSuccess((), "")
   def NoTrace[T](p: => ParsingRun[T])(implicit ctx: ParsingRun[_]): ParsingRun[T] = {
     val preMsg = ctx.failureAggregate
     val res = p
     if (ctx.traceIndex != -1) ctx.failureAggregate = preMsg
     res
   }
-  def Pass[T](v: T)(implicit ctx: ParsingRun[_]): ParsingRun[T] = ctx.freshSuccess(v, null)
+  def Pass[T](v: T)(implicit ctx: ParsingRun[_]): ParsingRun[T] = ctx.freshSuccess(v, "")
 
   def Fail(implicit ctx: ParsingRun[_]): ParsingRun[Nothing] = ctx.freshFailure("failure").asInstanceOf[ParsingRun[Nothing]]
 
-  def Index(implicit ctx: ParsingRun[_]): ParsingRun[Int] = ctx.freshSuccess(ctx.index, null)
+  def Index(implicit ctx: ParsingRun[_]): ParsingRun[Int] = ctx.freshSuccess(ctx.index, "")
 
   def AnyChar(implicit ctx: ParsingRun[_]): ParsingRun[Unit] = {
     if (!ctx.input.isReachable(ctx.index)) ctx.freshFailure("any-character").asInstanceOf[ParsingRun[Unit]]

@@ -96,14 +96,14 @@ object Utils {
 
     println(results.map(_.mkString(" ")).mkString("\n"))
 
-    val sizes = Seq(1, 64, 4096)
-    Utils.benchmarkIteratorBufferSizes(parser, sizes, iteratorFactory)
-
-    val iteratorResults = Utils.benchmark(s"$name Iterator Benchmark",
-      sizes.map(s => () => parseIterator(iteratorFactory(s), parser(_)).asInstanceOf[Parsed.Success[_]])
-    )
-
-    println(iteratorResults.map(_.mkString(" ")).mkString("\n"))
+//    val sizes = Seq(1, 64, 4096)
+//    Utils.benchmarkIteratorBufferSizes(parser, sizes, iteratorFactory)
+//
+//    val iteratorResults = Utils.benchmark(s"$name Iterator Benchmark",
+//      sizes.map(s => () => parseIterator(iteratorFactory(s), parser(_)).asInstanceOf[Parsed.Success[_]])
+//    )
+//
+//    println(iteratorResults.map(_.mkString(" ")).mkString("\n"))
   }
 }
 

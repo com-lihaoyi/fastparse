@@ -162,6 +162,7 @@ object MacroImpls {
       val startPos = ctx5.index
 
       lhs0.splice
+      val lhsMsg = ctx5.shortFailureMsg
       if (ctx5.isSuccess) {
         ctx5.cut |= oldCut
         ctx5
@@ -176,10 +177,10 @@ object MacroImpls {
           ctx5
         }else if (ctx5.cut) ctx5
         else {
-          val res = ctx5.prepareFailure(startPos)
+          val rhsMsg = ctx5.shortFailureMsg
+          val res = ctx5.prepareFailure(lhsMsg() + " | " + rhsMsg(), startPos)
           ctx5.cut |= oldCut
           ctx5.failureStack = Nil
-          if (ctx5.traceIndex == -1) ctx5.shortFailureMsg = () => ""
           res
         }
       }
@@ -200,8 +201,9 @@ object MacroImpls {
       ctx6.noDropBuffer = true
       lhs0.splice
       ctx6.noDropBuffer = oldCapturing
+      val msg = ctx6.shortFailureMsg
       if (!ctx6.isSuccess) ctx6.asInstanceOf[ParsingRun[String]]
-      else ctx6.prepareSuccess(ctx6.input.slice(startPos, ctx6.index))
+      else ctx6.prepareSuccess(ctx6.input.slice(startPos, ctx6.index), msg() + ".!")
     }
   }
 
@@ -400,6 +402,7 @@ object MacroImpls {
         lhs.splice.parse0 match{ case ctx3 =>
           if (!ctx3.isSuccess) ctx3
           else {
+            val lhsMsg = ctx3.shortFailureMsg
             ctx3.cut |= cut1.splice
             if (ctx3.index > startIndex && ctx3.checkForDrop()) ctx3.input.dropBuffer(ctx3.index)
 
@@ -412,7 +415,12 @@ object MacroImpls {
               val postOtherIndex = ctx3.index
 
               val rhsNewCut = cut1.splice | ctx3.cut
-              if (!ctx3.isSuccess) ctx3.prepareFailure(ctx3.index, cut = rhsNewCut)
+              val msg = ctx3.shortFailureMsg
+              if (!ctx3.isSuccess) ctx3.prepareFailure(
+                lhsMsg() + " ~ " + msg(),
+                ctx3.index,
+                cut = rhsNewCut
+              )
               else {
                 val rhsMadeProgress = postOtherIndex > preOtherIndex
                 val nextIndex =
@@ -421,8 +429,10 @@ object MacroImpls {
 
                 if (rhsMadeProgress && ctx3.checkForDrop()) ctx3.input.dropBuffer(ctx3.index)
 
+                val msg = ctx3.shortFailureMsg
                 ctx3.prepareSuccess(
                   s.splice.apply(pValue.asInstanceOf[T], ctx3.successValue.asInstanceOf[V]),
+                  lhsMsg() + " ~ " + msg(),
                   nextIndex,
                   cut = rhsNewCut
                 )
@@ -445,9 +455,17 @@ object MacroImpls {
       if (ctx1.isSuccess) {
         val progress = ctx1.index > startIndex
         if (progress && ctx1.checkForDrop()) ctx1.input.dropBuffer(ctx1.index)
-        ctx1.prepareSuccess(ctx1.successValue, cut = ctx1.cut | progress).asInstanceOf[ParsingRun[T]]
+        val msg = ctx1.shortFailureMsg
+        ctx1.prepareSuccess(
+          ctx1.successValue,
+          msg() + "./",
+          cut = ctx1.cut | progress
+        ).asInstanceOf[ParsingRun[T]]
       }
-      else ctx1.prepareFailure(ctx1.index)
+      else {
+        val msg = ctx1.shortFailureMsg
+        ctx1.prepareFailure(msg() + "./", ctx1.index)
+      }
     }
   }
 

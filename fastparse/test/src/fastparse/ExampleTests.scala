@@ -27,7 +27,7 @@ object ExampleTests extends TestSuite{
       }
 
       'sequence {
-        def ab[_: P] = P( EagerOpsStr("a").~[Unit, Unit](LiteralStr("b")(implicitly)) )
+        def ab[_: P] = P( "a" ~ "b" )
 
         val Parsed.Success(_, 2) = parse("ab", ab(_))
 
