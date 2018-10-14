@@ -42,6 +42,7 @@ object MacroImpls {
         if ((ctx0.traceIndex != -1 | ctx0.logDepth != 0) && !ctx0.isSuccess) {
           ctx0.failureStack = (name.splice.value -> startIndex) :: ctx0.failureStack
         }
+        ctx0.shortFailureMsg = () => name.splice.value
         ctx0
       }
     }
