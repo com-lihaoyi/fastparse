@@ -164,17 +164,15 @@ package object fastparse {
     macro RepImpls.repXMacro2ws[T, V]
 
     def opaque(msg: String)(implicit ctx: ParsingRun[Any]) = {
-      val oldFailures = ctx.failureAggregate
       val oldIndex = ctx.index
       val res = parse0()
       if (ctx.tracingEnabled){
-        ctx.failureAggregate = oldFailures
         if (ctx.traceIndex == oldIndex && !res.isSuccess) {
           ctx.failureStack = Nil
         }
       } else if (!res.isSuccess){
         ctx.failureStack = Nil
-        ctx.shortFailureMsg = () => msg
+        if (ctx.tracingEnabled) ctx.shortFailureMsg = () => msg
         ctx.index = oldIndex
       }
       res
@@ -184,7 +182,6 @@ package object fastparse {
     def unary_!(implicit ctx: ParsingRun[Any]) : ParsingRun[Unit] = {
       val startPos = ctx.index
       val startCut = ctx.cut
-      val startFailures = ctx.failureAggregate
       val oldNoCut = ctx.noDropBuffer
       ctx.noDropBuffer = true
       parse0()
@@ -294,21 +291,25 @@ package object fastparse {
 
   }
 
-  def Pass(implicit ctx: ParsingRun[_]): ParsingRun[Unit] = ctx.freshSuccess(())
-  def NoTrace[T](p: => ParsingRun[T])(implicit ctx: ParsingRun[_]): ParsingRun[T] = {
-    val preMsg = ctx.failureAggregate
-    val res = p
-    if (ctx.tracingEnabled) ctx.failureAggregate = preMsg
-    res
+  def Pass(implicit ctx: ParsingRun[_]): ParsingRun[Unit] = {
+    if (ctx.tracingEnabled) ctx.shortFailureMsg = () => "Pass"
+    ctx.freshSuccess(())
   }
-  def Pass[T](v: T)(implicit ctx: ParsingRun[_]): ParsingRun[T] = ctx.freshSuccess(v)
+
+  def Pass[T](v: T)(implicit ctx: ParsingRun[_]): ParsingRun[T] = {
+    if (ctx.tracingEnabled) ctx.shortFailureMsg = () => "Pass"
+    ctx.freshSuccess(v)
+  }
 
   def Fail(implicit ctx: ParsingRun[_]): ParsingRun[Nothing] = {
     if (ctx.tracingEnabled) ctx.shortFailureMsg = () => "fail"
     ctx.freshFailure().asInstanceOf[ParsingRun[Nothing]]
   }
 
-  def Index(implicit ctx: ParsingRun[_]): ParsingRun[Int] = ctx.freshSuccess(ctx.index)
+  def Index(implicit ctx: ParsingRun[_]): ParsingRun[Int] = {
+    if (ctx.tracingEnabled) ctx.shortFailureMsg = () => "Index"
+    ctx.freshSuccess(ctx.index)
+  }
 
   def AnyChar(implicit ctx: ParsingRun[_]): ParsingRun[Unit] = {
     if (ctx.tracingEnabled) ctx.shortFailureMsg = () => "any-character"
@@ -367,10 +368,16 @@ package object fastparse {
     input = input,
     shortFailureMsg = () => "",
     failureStack = List.empty,
-    failureAggregate = List.empty,
     isSuccess = true,
     logDepth = 0,
-    startIndex, startIndex, true, (), traceIndex, parser, false, instrument
+    startIndex,
+    startIndex,
+    true,
+    (),
+    traceIndex,
+    parser,
+    false,
+    instrument
   )).result
   def parseIterator[T](input: Iterator[String],
                        parser: ParsingRun[_] => ParsingRun[T],

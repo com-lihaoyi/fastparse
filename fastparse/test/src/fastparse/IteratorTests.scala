@@ -45,9 +45,8 @@ object IteratorTests extends TestSuite {
 
     'whitespaceImmediateCutDrop - {
       import NoWhitespace._
-      implicit def whitespace(ctx: ParsingRun[_]) = {
-        implicit def ctx1 = ctx
-        NoTrace(" ".? ~ " ".rep)
+      implicit def whitespace{implicit ctx: P[_] =>
+        " ".? ~ " ".rep
       }
 
       def p[_: P] = P( "ab" ~/ "cd" | "z" )
@@ -196,9 +195,8 @@ object IteratorTests extends TestSuite {
 
       'whitespaceApi - {
 
-        implicit def whitespace(ctx: ParsingRun[_]): ParsingRun[Unit] = {
-          implicit def ctx1 = ctx
-          NoTrace(" ".? ~~/ " ".repX) // note that the whitespace delimiter has cut
+        implicit def whitespace = { implicit ctx: P[_] =>
+          " ".? ~~/ " ".repX
         }
 
         def a[_: P] = P( "aaa" )

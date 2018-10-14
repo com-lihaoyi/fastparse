@@ -7,9 +7,8 @@ package fastparse
   *
   * For any higher-order-parser that wishes to ignore changes to a field within
   * their wrapped parser method, a common pattern is to save the value of the
-  * field before the wrapped parser runs, and then re-set the field. This can
-  * be used to backtrack [[index]] after a lookahead parser finishes, or to reset
-  * [[failureAggregate]] after an opaque parser finishes.
+  * field before the wrapped parser runs, and then re-set the field. e.g. this
+  * can be used to backtrack [[index]] after a lookahead parser finishes
   *
   * @param input            The input to the parsing run, as a [[ParserInput]].
   *
@@ -22,13 +21,7 @@ package fastparse
   * @param failureStack     The stack of named P(...) parsers in effect when the
   *                         failure occured; only constructed when tracing is
   *                         enabled via `traceIndex != -1`
-  *
-  * @param failureAggregate The list of failures that get returned when tracing
-  *                         is enabled. This contains every failure message
-  *                         that occurred at the exact position of `traceIndex`,
-  *                         which is then formatted and presented to the user
-  *                         as a better error message for what they could
-  *                         possibly do to make their parse succeed
+
   *
   * @param isSuccess        Whether or not the parse is currently successful
   *
@@ -76,7 +69,6 @@ package fastparse
 final class ParsingRun[+T](val input: ParserInput,
                            var shortFailureMsg: () => String,
                            var failureStack: List[(String, Int)],
-                           var failureAggregate: List[String],
                            var isSuccess: Boolean,
                            var logDepth: Int,
                            var index: Int,
@@ -153,25 +145,11 @@ final class ParsingRun[+T](val input: ParserInput,
 
   def result: Parsed[T] = {
     if (isSuccess) Parsed.Success(successValue.asInstanceOf[T], index)
-    else {
-      val stack =
-        if (failureAggregate.isEmpty) {
-          if (shortFailureMsg == null) List("" -> index)
-          else List(shortFailureMsg() -> index)
-        }else{
-
-          val tokens = failureAggregate.distinct.reverse
-          val combined =
-            if (tokens.length == 1) tokens.mkString(" | ")
-            else tokens.mkString("(", " | ", ")")
-            (combined -> index) :: failureStack.reverse
-        }
-      Parsed.Failure(
-        stack,
-        index,
-        Parsed.Extra(input, startIndex, index, originalParser)
-      )
-    }
+    else Parsed.Failure(
+      (shortFailureMsg() -> index) :: failureStack.reverse,
+      index,
+      Parsed.Extra(input, startIndex, index, originalParser)
+    )
   }
 }
 
