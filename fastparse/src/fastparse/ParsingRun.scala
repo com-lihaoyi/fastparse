@@ -1,8 +1,5 @@
 package fastparse
 
-import scala.annotation.unchecked.uncheckedVariance
-
-
 /**
   * Models an in-progress parsing run; contains all the mutable state that may
   * be necessary during the parse, in order to avoid the individual parsers
@@ -91,7 +88,7 @@ final class ParsingRun[+T](val input: ParserInput,
                            var noDropBuffer: Boolean,
                            val instrument: ParsingRun.Instrument){
 
-  val tracingDisabled = traceIndex == -1
+  val tracingEnabled = traceIndex != -1
   // Use telescoping methods rather than default arguments to try and minimize
   // the amount of bytecode generated at the callsite.
   //
@@ -108,7 +105,7 @@ final class ParsingRun[+T](val input: ParserInput,
   def freshSuccess[V](value: V, msg: => String, index: Int): ParsingRun[V] = {
     isSuccess = true
     successValue = value
-    shortFailureMsg = if (tracingDisabled) null else () => msg
+    if (tracingEnabled) shortFailureMsg = () => msg
     this.index = index
     this.asInstanceOf[ParsingRun[V]]
   }
@@ -116,7 +113,7 @@ final class ParsingRun[+T](val input: ParserInput,
   def freshSuccess[V](value: V, msg: => String, cut: Boolean): ParsingRun[V] = {
     isSuccess = true
     successValue = value
-    shortFailureMsg = if (tracingDisabled) null else () => msg
+    if (tracingEnabled) shortFailureMsg = () => msg
     this.cut = cut
     this.asInstanceOf[ParsingRun[V]]
   }
@@ -124,7 +121,7 @@ final class ParsingRun[+T](val input: ParserInput,
   def freshSuccess[V](value: V, msg: => String, index: Int, cut: Boolean): ParsingRun[V] = {
     isSuccess = true
     successValue = value
-    shortFailureMsg = if (tracingDisabled) null else () => msg
+    if (tracingEnabled) shortFailureMsg = () => msg
     this.index = index
     this.cut = cut
     this.asInstanceOf[ParsingRun[V]]
@@ -133,27 +130,27 @@ final class ParsingRun[+T](val input: ParserInput,
   def freshFailure(msg: => String): ParsingRun[Nothing] = {
     failureStack = Nil
     isSuccess = false
-    shortFailureMsg = if (tracingDisabled) null else () => msg
+    if (tracingEnabled) shortFailureMsg = () => msg
     this.asInstanceOf[ParsingRun[Nothing]]
   }
 
   def freshFailure(msg: => String, startPos: Int): ParsingRun[Nothing] = {
     failureStack = Nil
     isSuccess = false
-    shortFailureMsg = if (tracingDisabled) null else () => msg
+    if (tracingEnabled) shortFailureMsg = () => msg
     index = startPos
     this.asInstanceOf[ParsingRun[Nothing]]
   }
 
   def augmentFailure(msg: => String, index: Int): ParsingRun[Nothing] = {
     isSuccess = false
-    shortFailureMsg = if (tracingDisabled) null else () => msg
+    if (tracingEnabled) shortFailureMsg = () => msg
     this.index = index
     this.asInstanceOf[ParsingRun[Nothing]]
   }
   def augmentFailure(msg: => String, index: Int, cut: Boolean): ParsingRun[Nothing] = {
     isSuccess = false
-    shortFailureMsg = if (tracingDisabled) null else () => msg
+    if (tracingEnabled) shortFailureMsg = () => msg
     this.index = index
     this.cut = cut
     this.asInstanceOf[ParsingRun[Nothing]]

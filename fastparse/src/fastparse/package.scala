@@ -166,7 +166,7 @@ package object fastparse {
       val oldFailures = ctx.failureAggregate
       val oldIndex = ctx.index
       val res = parse0()
-      if (!ctx.tracingDisabled){
+      if (ctx.tracingEnabled){
         ctx.failureAggregate = oldFailures
         if (ctx.traceIndex == oldIndex && !res.isSuccess) {
           ctx.failureStack = Nil
@@ -300,7 +300,7 @@ package object fastparse {
   def NoTrace[T](p: => ParsingRun[T])(implicit ctx: ParsingRun[_]): ParsingRun[T] = {
     val preMsg = ctx.failureAggregate
     val res = p
-    if (!ctx.tracingDisabled) ctx.failureAggregate = preMsg
+    if (ctx.tracingEnabled) ctx.failureAggregate = preMsg
     res
   }
   def Pass[T](v: T)(implicit ctx: ParsingRun[_]): ParsingRun[T] = ctx.freshSuccess(v, "")
