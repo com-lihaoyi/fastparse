@@ -170,7 +170,6 @@ package object fastparse {
         ctx.failureAggregate = oldFailures
         if (ctx.traceIndex == oldIndex && !res.isSuccess) {
           ctx.failureStack = Nil
-          ctx.aggregateFailure(msg)
         }
       } else if (!res.isSuccess){
         ctx.failureStack = Nil
@@ -338,7 +337,6 @@ package object fastparse {
     while(input.isReachable(index) && p(input(index))) index += 1
     if (index - start >= min) ctx.freshSuccess((), s"chars-while($min)", index = index)
     else {
-      if (ctx.index == ctx.traceIndex) ctx.aggregateFailure(s"chars-while($min)")
       ctx.isSuccess = false
       ctx.shortFailureMsg = () => s"chars-while($min)"
       ctx.asInstanceOf[ParsingRun[Unit]]

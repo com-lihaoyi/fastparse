@@ -289,8 +289,6 @@ object MacroImpls {
         $ctx1.isSuccess = false
         if ($ctx1.traceIndex == -1){
           $ctx1.shortFailureMsg = () => $bracketed
-        }else if ($ctx1.traceIndex == $index){
-          $ctx1.aggregateFailure($bracketed)
         }
         $ctx1.asInstanceOf[fastparse.P[Unit]]
 
@@ -504,7 +502,6 @@ object MacroImpls {
       ) $index += 1
       if ($index - $start >= $min) $ctx1.freshSuccess((), "chars-while-in(" + $bracketed+ ", " + $min + ")", index = $index)
       else {
-        if ($ctx.index == $ctx1.traceIndex) $ctx1.aggregateFailure($bracketed)
         $ctx1.shortFailureMsg = () => $bracketed
         $ctx1.isSuccess = false
         $ctx1.asInstanceOf[fastparse.P[Unit]]

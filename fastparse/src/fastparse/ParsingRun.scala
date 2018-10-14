@@ -97,15 +97,10 @@ final class ParsingRun[+T](val input: ParserInput,
   // generate huge methods, so anything we can do to reduce the size of the
   // generated code helps avoid bytecode size blowup
 
-  def aggregateFailure(msg: String) = {
-    if (msg != null) failureAggregate = msg :: failureAggregate
-  }
   def freshSuccess[V](value: V, msg: => String, index: Int) = {
-    if (traceIndex != -1 && traceIndex == this.index) aggregateFailure(msg)
     prepareSuccess(value, msg, index)
   }
   def freshSuccess[V](value: V, msg: => String) = {
-    if (traceIndex != -1 && traceIndex == this.index) aggregateFailure(msg)
     prepareSuccess(value, msg, index)
   }
   def prepareSuccess[V](value: V, msg: => String): ParsingRun[V] = {
@@ -138,15 +133,13 @@ final class ParsingRun[+T](val input: ParserInput,
   def freshFailure(msg: => String): ParsingRun[Nothing] = {
     failureStack = Nil
     val res = prepareFailure(msg, index, cut = this.cut)
-    if (traceIndex == -1) this.shortFailureMsg = () => msg
-    else if (traceIndex == index) aggregateFailure(msg)
+    this.shortFailureMsg = () => msg
     res
   }
   def freshFailure(msg: => String, startPos: Int): ParsingRun[Nothing] = {
     failureStack = Nil
     val res = prepareFailure(msg, startPos, cut = this.cut)
-    if (traceIndex == -1) this.shortFailureMsg = () => msg
-    else if (traceIndex == index) aggregateFailure(msg)
+    this.shortFailureMsg = () => msg
     res
   }
 
