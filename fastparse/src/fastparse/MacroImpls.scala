@@ -13,11 +13,13 @@ object MacroImpls {
     reify{
       val ctx1 = ctx.splice
       lhs.splice
+      if (ctx1.tracingEnabled) ctx1.shortFailureMsg = () => "filter"
       if (!ctx1.isSuccess) ctx1.asInstanceOf[ParsingRun[T]]
       else if (f.splice(ctx1.successValue.asInstanceOf[T])) ctx1.asInstanceOf[ParsingRun[T]]
       else {
         val prevCut = ctx1.cut
-        val res = ctx1.freshFailure("filter").asInstanceOf[ParsingRun[T]]
+
+        val res = ctx1.freshFailure().asInstanceOf[ParsingRun[T]]
         res.cut = prevCut
         res
       }
@@ -42,7 +44,7 @@ object MacroImpls {
         if ((ctx0.tracingEnabled | ctx0.logDepth != 0) && !ctx0.isSuccess) {
           ctx0.failureStack = (name.splice.value -> startIndex) :: ctx0.failureStack
         }
-        ctx0.shortFailureMsg = () => name.splice.value
+        if (ctx0.tracingEnabled) ctx0.shortFailureMsg = () => name.splice.value
         ctx0
       }
     }
@@ -65,15 +67,16 @@ object MacroImpls {
     s.actualType match{
       case ConstantType(Constant(x: String)) =>
         val literalized = c.Expr[String](Literal(Constant(Util.literalize(x))))
-        if (x.length == 0) reify{ ctx.splice.freshSuccess((), "") }
+        if (x.length == 0) reify{ ctx.splice.freshSuccess(()) }
         else if (x.length == 1){
           val charLiteral = c.Expr[Char](Literal(Constant(x.charAt(0))))
           reify {
+            if (ctx.splice.tracingEnabled) ctx.splice.shortFailureMsg = () => literalized.splice
             ctx.splice match{ case ctx1 =>
               if (ctx1.input.isReachable(ctx1.index) && ctx1.input(ctx1.index) == charLiteral.splice){
-                ctx1.freshSuccess((), literalized.splice, ctx1.index + 1)
+                ctx1.freshSuccess((), ctx1.index + 1)
               }else{
-                ctx1.freshFailure(literalized.splice).asInstanceOf[ParsingRun[Unit]]
+                ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
               }
             }
           }
@@ -93,9 +96,10 @@ object MacroImpls {
 
             ctx.splice match{ case ctx1 =>
               val end = ctx1.index + xLength.splice
+              if (ctx.splice.tracingEnabled) ctx.splice.shortFailureMsg = () => literalized.splice
               if (ctx1.input.isReachable(end - 1)  && checker.splice(ctx1.input, ctx1.index) ) {
-                ctx1.freshSuccess((), literalized.splice, end)
-              }else ctx1.freshFailure(literalized.splice).asInstanceOf[ParsingRun[Unit]]
+                ctx1.freshSuccess((), end)
+              }else ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
 
             }
           }
@@ -104,8 +108,9 @@ object MacroImpls {
         reify{
           val s1 = s.splice
           ctx.splice match{ case ctx1 =>
-            if (startsWith(ctx1.input, s1, ctx1.index)) ctx1.freshSuccess((), Util.literalize(s1), ctx1.index + s1.length)
-            else ctx1.freshFailure(Util.literalize(s1)).asInstanceOf[ParsingRun[Unit]]
+            if (ctx.splice.tracingEnabled) ctx.splice.shortFailureMsg = () => Util.literalize(s1)
+            if (startsWith(ctx1.input, s1, ctx1.index)) ctx1.freshSuccess((), ctx1.index + s1.length)
+            else ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
           }
         }
     }
@@ -173,13 +178,14 @@ object MacroImpls {
         ctx5.index = startPos
         ctx5.cut = false
         other.splice
+        val rhsMsg = ctx5.shortFailureMsg
+        if (ctx.splice.tracingEnabled) ctx.splice.shortFailureMsg = () => lhsMsg() + " | " + rhsMsg()
         if (ctx5.isSuccess) {
           ctx5.cut |= oldCut
           ctx5
         }else if (ctx5.cut) ctx5
         else {
-          val rhsMsg = ctx5.shortFailureMsg
-          val res = ctx5.augmentFailure(lhsMsg() + " | " + rhsMsg(), startPos)
+          val res = ctx5.augmentFailure(startPos)
           ctx5.cut |= oldCut
           ctx5.failureStack = Nil
           res
@@ -203,8 +209,9 @@ object MacroImpls {
       lhs0.splice
       ctx6.noDropBuffer = oldCapturing
       val msg = ctx6.shortFailureMsg
+      if (ctx6.tracingEnabled) ctx6.shortFailureMsg = () => msg() + ".!"
       if (!ctx6.isSuccess) ctx6.asInstanceOf[ParsingRun[String]]
-      else ctx6.freshSuccess(ctx6.input.slice(startPos, ctx6.index), msg() + ".!")
+      else ctx6.freshSuccess(ctx6.input.slice(startPos, ctx6.index))
     }
   }
 
@@ -285,15 +292,9 @@ object MacroImpls {
 
       var $output: Int = -1
       ${rec(0, trie)}
-      if ($output != -1) $ctx1.freshSuccess((), $bracketed, index = $output)
-      else {
-        $ctx1.isSuccess = false
-        if ($ctx1.traceIndex == -1){
-          $ctx1.shortFailureMsg = () => $bracketed
-        }
-        $ctx1.asInstanceOf[fastparse.P[Unit]]
-
-      }
+      if ($ctx1.tracingEnabled) $ctx1.shortFailureMsg = () => $bracketed
+      if ($output != -1) $ctx1.freshSuccess((), index = $output)
+      else $ctx1.freshFailure()
     """
 
     c.Expr[ParsingRun[Unit]](res)
@@ -359,12 +360,12 @@ object MacroImpls {
     val parsed = parseCharCls(c)(reify(ctx.splice.input(ctx.splice.index)), literals)
     val bracketed = c.Expr[String](Literal(Constant(literals.map("[" + _ + "]").mkString)))
     reify {
-
+      if (ctx.splice.tracingEnabled) ctx.splice.shortFailureMsg = () => bracketed.splice
       if (!ctx.splice.input.isReachable(ctx.splice.index)) {
-        ctx.splice.freshFailure(bracketed.splice).asInstanceOf[ParsingRun[Unit]]
+        ctx.splice.freshFailure().asInstanceOf[ParsingRun[Unit]]
       } else parsed.splice match {
-        case true => ctx.splice.freshSuccess((), bracketed.splice, ctx.splice.index + 1)
-        case false => ctx.splice.freshFailure(bracketed.splice).asInstanceOf[ParsingRun[Unit]]
+        case true => ctx.splice.freshSuccess((), ctx.splice.index + 1)
+        case false => ctx.splice.freshFailure().asInstanceOf[ParsingRun[Unit]]
       }
     }
   }
@@ -415,8 +416,8 @@ object MacroImpls {
 
               val rhsNewCut = cut1.splice | ctx3.cut
               val msg = ctx3.shortFailureMsg
+              if (ctx3.tracingEnabled) ctx3.shortFailureMsg = () => lhsMsg() + " ~ " + msg()
               if (!ctx3.isSuccess) ctx3.augmentFailure(
-                lhsMsg() + " ~ " + msg(),
                 ctx3.index,
                 cut = rhsNewCut
               )
@@ -431,7 +432,6 @@ object MacroImpls {
                 val msg = ctx3.shortFailureMsg
                 ctx3.freshSuccess(
                   s.splice.apply(pValue.asInstanceOf[T], ctx3.successValue.asInstanceOf[V]),
-                  lhsMsg() + " ~ " + msg(),
                   nextIndex,
                   cut = rhsNewCut
                 )
@@ -455,15 +455,15 @@ object MacroImpls {
         val progress = ctx1.index > startIndex
         if (progress && ctx1.checkForDrop()) ctx1.input.dropBuffer(ctx1.index)
         val msg = ctx1.shortFailureMsg
+        if (ctx1.tracingEnabled) ctx1.shortFailureMsg = () => msg() + "./"
         ctx1.freshSuccess(
           ctx1.successValue,
-          msg() + "./",
           cut = ctx1.cut | progress
         ).asInstanceOf[ParsingRun[T]]
       }
       else {
         val msg = ctx1.shortFailureMsg
-        ctx1.augmentFailure(msg() + "./", ctx1.index)
+        ctx1.augmentFailure(ctx1.index)
       }
     }
   }
@@ -501,9 +501,9 @@ object MacroImpls {
         $ctx1.input.isReachable($index) &&
         ${parseCharCls(c)(c.Expr[Char](q"$input($index)"), Seq(literal))}
       ) $index += 1
-      if ($index - $start >= $min) $ctx1.freshSuccess((), "chars-while-in(" + $bracketed+ ", " + $min + ")", index = $index)
+      if ($ctx1.tracingEnabled) $ctx1.shortFailureMsg = () => $bracketed
+      if ($index - $start >= $min) $ctx1.freshSuccess((), index = $index)
       else {
-        $ctx1.shortFailureMsg = () => $bracketed
         $ctx1.isSuccess = false
         $ctx1.asInstanceOf[fastparse.P[Unit]]
       }
