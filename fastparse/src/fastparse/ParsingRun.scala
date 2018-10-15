@@ -67,6 +67,7 @@ package fastparse
   *                         behavior or crashes.
   */
 final class ParsingRun[+T](val input: ParserInput,
+                           var failureAggregate: List[() => String],
                            var shortFailureMsg: () => String,
                            var failureStack: List[(String, Int)],
                            var isSuccess: Boolean,
@@ -81,13 +82,20 @@ final class ParsingRun[+T](val input: ParserInput,
                            val instrument: ParsingRun.Instrument){
 
   val tracingEnabled = traceIndex != -1
+  var isFreshFailure = false
+
+  def aggregateFailure(f: () => String): this.type = {
+    if (!isSuccess && index == traceIndex && isFreshFailure) failureAggregate ::= f
+    shortFailureMsg = f
+    this
+  }
+
   // Use telescoping methods rather than default arguments to try and minimize
   // the amount of bytecode generated at the callsite.
   //
   // Because fastparse inlines aggressively, it is very easy for a user to
   // generate huge methods, so anything we can do to reduce the size of the
   // generated code helps avoid bytecode size blowup
-
   def freshSuccess[V](value: V): ParsingRun[V] = {
     isSuccess = true
     successValue = value
@@ -118,24 +126,29 @@ final class ParsingRun[+T](val input: ParserInput,
   }
 
   def freshFailure(): ParsingRun[Nothing] = {
+    isFreshFailure = true
     failureStack = Nil
     isSuccess = false
     this.asInstanceOf[ParsingRun[Nothing]]
   }
 
   def freshFailure(startPos: Int): ParsingRun[Nothing] = {
+    isFreshFailure = true
     failureStack = Nil
     isSuccess = false
     index = startPos
     this.asInstanceOf[ParsingRun[Nothing]]
   }
 
+
   def augmentFailure(index: Int): ParsingRun[Nothing] = {
+    isFreshFailure = false
     this.index = index
     this.asInstanceOf[ParsingRun[Nothing]]
   }
 
   def augmentFailure(index: Int, cut: Boolean): ParsingRun[Nothing] = {
+    isFreshFailure = false
     this.index = index
     this.cut = cut
     this.asInstanceOf[ParsingRun[Nothing]]
@@ -145,11 +158,25 @@ final class ParsingRun[+T](val input: ParserInput,
 
   def result: Parsed[T] = {
     if (isSuccess) Parsed.Success(successValue.asInstanceOf[T], index)
-    else Parsed.Failure(
-      (shortFailureMsg() -> index) :: failureStack.reverse,
-      index,
-      Parsed.Extra(input, startIndex, index, originalParser)
-    )
+    else {
+      val stack =
+        if (failureAggregate.isEmpty) {
+          if (shortFailureMsg == null) List("" -> index)
+          else List(shortFailureMsg() -> index)
+        }else{
+
+          val tokens = failureAggregate.distinct.reverse.map(_())
+          val combined =
+            if (tokens.length == 1) tokens.mkString(" | ")
+            else tokens.mkString("(", " | ", ")")
+            (combined -> index) :: failureStack.reverse
+        }
+      Parsed.Failure(
+        stack,
+        index,
+        Parsed.Extra(input, startIndex, index, originalParser)
+      )
+    }
   }
 }
 
