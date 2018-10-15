@@ -44,7 +44,7 @@ object RepImpls{
     }
 
     val wsSnippet = whitespace match{
-      case None => q"()"
+      case None => q"$rec($beforeSepIndex, $count + 1, false)"
       case Some(ws) =>
         q"""
         if ($ws ne fastparse.NoWhitespace.noWhitespaceImplicit) {
@@ -53,7 +53,11 @@ object RepImpls{
           $ws($ctx1)
           $ctx1.noDropBuffer = oldNoDropBuffer
         }
-        $ctx1.cut = false
+        if (!$ctx1.isSuccess && $ctx1.cut) $ctx1.asInstanceOf[fastparse.ParsingRun[scala.Nothing]]
+        else{
+          $ctx1.cut = false
+          $rec($beforeSepIndex, $count + 1, false)
+        }
         """
     }
 
@@ -82,7 +86,7 @@ object RepImpls{
             $repeater1.accumulate($ctx1.successValue.asInstanceOf[${c.weakTypeOf[T]}], $acc)
             $ctx1.cut = false
             $wsSnippet
-            $rec($beforeSepIndex, $count + 1, false)
+
           }
         }
         $rec($ctx1.index, 0, false)
@@ -252,13 +256,13 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
         parse0()
         val parsedMsg = ctx.shortFailureMsg
         originalCut |= ctx.cut
-        if (!ctx.isSuccess){
+        if (!ctx.isSuccess) {
           val res =
             if (ctx.cut) ctx.asInstanceOf[ParsingRun[V]]
             else end(startIndex, startIndex, count)
           if (ctx.tracingEnabled) ctx.setMsg(() => parsedMsg() + ".rep")
           res
-        }else{
+        } else {
           val beforeSepIndex = ctx.index
           repeater.accumulate(ctx.successValue.asInstanceOf[T], acc)
           val nextCount = count + 1
@@ -269,21 +273,25 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
           }
           else {
             if (whitespace ne NoWhitespace.noWhitespaceImplicit) whitespace(ctx)
-            ctx.cut = false
-            val sep1 = sep
-            originalCut |= ctx.cut
-            if (sep1 == null) rec(beforeSepIndex, nextCount, false)
-            else if (ctx.isSuccess) {
-              val sepCut = ctx.cut
-              if (whitespace ne NoWhitespace.noWhitespaceImplicit) whitespace(ctx)
-              rec(beforeSepIndex, nextCount, sepCut)
-            }
+            if (!ctx.isSuccess && ctx.cut) ctx.asInstanceOf[ParsingRun[Nothing]]
             else {
-              val res =
-                if (ctx.cut) ctx.augmentFailure(beforeSepIndex, originalCut)
-                else end(beforeSepIndex, beforeSepIndex, nextCount)
-              if (ctx.tracingEnabled) ctx.setMsg(() => parsedMsg() + ".rep")
-              res
+              ctx.cut = false
+              val sep1 = sep
+              originalCut |= ctx.cut
+              if (sep1 == null) rec(beforeSepIndex, nextCount, false)
+              else if (ctx.isSuccess) {
+                val sepCut = ctx.cut
+                if (whitespace ne NoWhitespace.noWhitespaceImplicit) whitespace(ctx)
+                if (!ctx.isSuccess && ctx.cut) ctx.asInstanceOf[ParsingRun[Nothing]]
+                else rec(beforeSepIndex, nextCount, sepCut)
+              }
+              else {
+                val res =
+                  if (ctx.cut) ctx.augmentFailure(beforeSepIndex, originalCut)
+                  else end(beforeSepIndex, beforeSepIndex, nextCount)
+                if (ctx.tracingEnabled) ctx.setMsg(() => parsedMsg() + ".rep")
+                res
+              }
             }
           }
         }
@@ -324,26 +332,29 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
           whitespace(ctx)
           ctx.noDropBuffer = oldCapturing
         }
-        ctx.cut = false
-        val sep1 = sep
-        originalCut |= ctx.cut
-        if (sep1 == null) rec(beforeSepIndex, nextCount, false)
-        else if (ctx.isSuccess) {
-          val sepCut = ctx.cut
-          if (whitespace ne NoWhitespace.noWhitespaceImplicit) {
-            val oldCapturing = ctx.noDropBuffer // completely disallow dropBuffer
-            ctx.noDropBuffer = true
-            whitespace(ctx)
-            ctx.noDropBuffer = oldCapturing
-          }
-          rec(beforeSepIndex, nextCount, sepCut)
-        }
+        if (!ctx.isSuccess && ctx.cut) ctx.asInstanceOf[ParsingRun[Nothing]]
         else {
-          val res =
-            if (ctx.cut) ctx.augmentFailure(beforeSepIndex, ctx.cut | originalCut)
-            else end(beforeSepIndex, beforeSepIndex, nextCount)
-          if (ctx.tracingEnabled) ctx.setMsg(() => parsedMsg() + s".rep($min)")
-          res
+          ctx.cut = false
+          val sep1 = sep
+          originalCut |= ctx.cut
+          if (sep1 == null) rec(beforeSepIndex, nextCount, false)
+          else if (ctx.isSuccess) {
+            val sepCut = ctx.cut
+            if (whitespace ne NoWhitespace.noWhitespaceImplicit) {
+              val oldCapturing = ctx.noDropBuffer // completely disallow dropBuffer
+              ctx.noDropBuffer = true
+              whitespace(ctx)
+              ctx.noDropBuffer = oldCapturing
+            }
+            rec(beforeSepIndex, nextCount, sepCut)
+          }
+          else {
+            val res =
+              if (ctx.cut) ctx.augmentFailure(beforeSepIndex, ctx.cut | originalCut)
+              else end(beforeSepIndex, beforeSepIndex, nextCount)
+            if (ctx.tracingEnabled) ctx.setMsg(() => parsedMsg() + s".rep($min)")
+            res
+          }
         }
       }
     }

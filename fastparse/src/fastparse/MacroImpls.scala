@@ -431,32 +431,35 @@ object MacroImpls {
             val preWsIndex = ctx3.index
             if (!consumeWhitespace.splice(ctx3)) ctx3
             else {
-              val preOtherIndex = ctx3.index
-              other.splice
-              val postOtherIndex = ctx3.index
+              if (!ctx3.isSuccess && ctx3.cut) ctx3
+              else {
+                val preOtherIndex = ctx3.index
+                other.splice
+                val postOtherIndex = ctx3.index
 
-              val rhsNewCut = cut1.splice | ctx3.cut
-              val msg = ctx3.shortFailureMsg
-              val res =
-                if (!ctx3.isSuccess) ctx3.augmentFailure(
-                  ctx3.index,
-                  cut = rhsNewCut
-                ) else {
-                  val rhsMadeProgress = postOtherIndex > preOtherIndex
-                  val nextIndex =
-                    if (!rhsMadeProgress && ctx3.input.isReachable(postOtherIndex)) preWsIndex
-                    else ctx3.index
-
-                  if (rhsMadeProgress && ctx3.checkForDrop()) ctx3.input.dropBuffer(ctx3.index)
-
-                  ctx3.freshSuccess(
-                    s.splice.apply(pValue.asInstanceOf[T], ctx3.successValue.asInstanceOf[V]),
-                    nextIndex,
+                val rhsNewCut = cut1.splice | ctx3.cut
+                val msg = ctx3.shortFailureMsg
+                val res =
+                  if (!ctx3.isSuccess) ctx3.augmentFailure(
+                    ctx3.index,
                     cut = rhsNewCut
-                  )
-                }
-              if (ctx3.tracingEnabled) ctx3.setMsg(() => lhsMsg() + " ~ " + msg())
-              res
+                  ) else {
+                    val rhsMadeProgress = postOtherIndex > preOtherIndex
+                    val nextIndex =
+                      if (!rhsMadeProgress && ctx3.input.isReachable(postOtherIndex)) preWsIndex
+                      else ctx3.index
+
+                    if (rhsMadeProgress && ctx3.checkForDrop()) ctx3.input.dropBuffer(ctx3.index)
+
+                    ctx3.freshSuccess(
+                      s.splice.apply(pValue.asInstanceOf[T], ctx3.successValue.asInstanceOf[V]),
+                      nextIndex,
+                      cut = rhsNewCut
+                    )
+                  }
+                if (ctx3.tracingEnabled) ctx3.setMsg(() => lhsMsg() + " ~ " + msg())
+                res
+              }
             }
           }
 

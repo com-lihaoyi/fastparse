@@ -414,7 +414,7 @@ package object fastparse {
     /**
       * Prints the given message, nicely indented, after the wrapped parser finishes
       */
-    def logAfter(msg: => String)(implicit logger: Logger = Logger.stdout): P[T] = {
+    def logAfter(msg: => Any)(implicit logger: Logger = Logger.stdout): P[T] = {
       val indent = "  " * ctx.logDepth
       val res = parse0
       if (ctx.logDepth != -1) println(indent + msg)
@@ -424,7 +424,7 @@ package object fastparse {
     /**
       * Prints the given message, nicely indented, before the wrapped parser starts
       */
-    def logBefore(msg: => String)(implicit logger: Logger = Logger.stdout): P[T] = {
+    def logBefore(msg: => Any)(implicit logger: Logger = Logger.stdout): P[T] = {
       val indent = "  " * ctx.logDepth
       if (ctx.logDepth != -1) println(indent + msg)
       val res = parse0

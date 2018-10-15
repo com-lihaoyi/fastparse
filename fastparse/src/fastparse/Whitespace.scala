@@ -45,6 +45,31 @@ object MultiLineWhitespace {
   }
 }
 
+/**
+  * Whitespace syntax that supports # line-comments, as in the case in
+  * programming languages such as Bash, Ruby, or Python
+  */
+object ScriptWhitespace{
+  implicit val whitespace = {implicit ctx: ParsingRun[_] =>
+    val input = ctx.input
+    @tailrec def rec(current: Int, state: Int): ParsingRun[Unit] = {
+      if (!input.isReachable(current)) ctx.freshSuccess((), current)
+      else {
+        val currentChar = input(current)
+        (state: @switch) match{
+          case 0 =>
+            (currentChar: @switch) match{
+              case ' ' | '\t' | '\n' | '\r' => rec(current + 1, state)
+              case '#' => rec(current + 1, state = 1)
+              case _ => ctx.freshSuccess((), current)
+            }
+          case 1 => rec(current + 1, state = if (currentChar == '\n') 0 else state)
+        }
+      }
+    }
+    rec(current = ctx.index, state = 0)
+  }
+}
 
 /**
   * Whitespace syntax that supports // line-comments and /* */
@@ -58,8 +83,10 @@ object JavaWhitespace{
       if (!input.isReachable(current)) {
         if (state == 0 || state == 1) ctx.freshSuccess((), current)
         else {
-          if (ctx.tracingEnabled) ctx.shortFailureMsg = () => "*/"
-          ctx.freshFailure(current)
+          ctx.cut = true
+          val res = ctx.freshFailure(current)
+          if (ctx.tracingEnabled) ctx.aggregateMsg(() => Util.literalize("*/"))
+          res
         }
       } else {
         val currentChar = input(current)
@@ -90,31 +117,6 @@ object JavaWhitespace{
     rec(current = ctx.index, state = 0)
   }
 }
-/**
-  * Whitespace syntax that supports # line-comments, as in the case in
-  * programming languages such as Bash, Ruby, or Python
-  */
-object ScriptWhitespace{
-  implicit val whitespace = {implicit ctx: ParsingRun[_] =>
-    val input = ctx.input
-    @tailrec def rec(current: Int, state: Int): ParsingRun[Unit] = {
-      if (!input.isReachable(current)) ctx.freshSuccess((), current)
-      else {
-        val currentChar = input(current)
-        (state: @switch) match{
-          case 0 =>
-            (currentChar: @switch) match{
-              case ' ' | '\t' | '\n' | '\r' => rec(current + 1, state)
-              case '#' => rec(current + 1, state = 1)
-              case _ => ctx.freshSuccess((), current)
-            }
-          case 1 => rec(current + 1, state = if (currentChar == '\n') 0 else state)
-        }
-      }
-    }
-    rec(current = ctx.index, state = 0)
-  }
-}
 
 /**
   * Whitespace syntax that supports // and # line comments, and /* */
@@ -128,8 +130,10 @@ object JsonnetWhitespace{
       if (!input.isReachable(current)) {
         if (state == 0 || state == 1) ctx.freshSuccess((), current)
         else {
-          if (ctx.tracingEnabled) ctx.shortFailureMsg = () => "*/"
-          ctx.freshFailure(current)
+          ctx.cut = true
+          val res = ctx.freshFailure(current)
+          if (ctx.tracingEnabled) ctx.aggregateMsg(() => Util.literalize("*/"))
+          res
         }
       } else {
         val currentChar = input(current)
@@ -169,8 +173,10 @@ object ScalaWhitespace {
       if (!input.isReachable(current)) {
         if (state == 0 || state == 1) ctx.freshSuccess((), current)
         else {
-          if (ctx.tracingEnabled) ctx.shortFailureMsg = () => "*/"
-          ctx.freshFailure(current)
+          ctx.cut = true
+          val res = ctx.freshFailure(current)
+          if (ctx.tracingEnabled) ctx.aggregateMsg(() => Util.literalize("*/"))
+          res
         }
       } else {
         val currentChar = input(current)
