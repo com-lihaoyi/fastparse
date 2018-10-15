@@ -9,7 +9,7 @@ import fastparse._
  * Created by haoyi on 5/3/15.
  */
 object TestUtil {
-  def checkNeg[T](input: String, expected: String = "ADA???D", found: String = "ADQW??") = {
+  def checkNeg[T](input: String, expected: String = null, found: String = "ADQW??") = {
 //    println("Checking Neg...\n" )
 //    println(input)
     parse(input, Scala.CompilationUnit(_)) match{
@@ -26,7 +26,7 @@ object TestUtil {
           implicitly(stack)
           implicitly(index)
           implicitly(parsedFound)
-          expected.trim == parsedExpected.trim && parsedFound.startsWith(found)
+          (expected == null || expected.trim == parsedExpected.trim) && parsedFound.startsWith(found)
         }
         )
 

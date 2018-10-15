@@ -40,7 +40,7 @@ trait Types extends Core{
     // Can't `cut` after the opening paren, because we might be trying to parse `()`
     // or `() => T`! only cut after parsing one type
     def TupleType = P( "(" ~/ Type.repTC() ~ ")" )
-    def BasicType = P( TupleType | Literals.Expr.Literal | TypeId ~ ("." ~ `type`).?  | `_` )
+    def BasicType = P( TupleType | SimpleTrace("literal-type")(Literals.Expr.Literal) | TypeId ~ ("." ~ `type`).?  | `_` )
     P( BasicType ~ (TypeArgs | `#` ~/ Id).rep )
   }
 
