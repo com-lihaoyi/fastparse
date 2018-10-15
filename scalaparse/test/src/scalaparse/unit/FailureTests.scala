@@ -478,7 +478,7 @@ object FailureTests extends TestSuite{
         |  { a: L = }
         |}
       """.stripMargin,
-      expected = """("." | "[" | "#" | "@" | "with" | "{" | "*" | Id | "=>" | "⇒" | "(" | "this" | "_" | "import" | "implicit" | "lazy" | local-modifier | definition | Expr | ";" | "}")""",
+      expected = """("." | "[" | "#" | "@" | "with" | "{" | "*" | Id | "=>" | "⇒" | "(" | "this" | "_" | "import" | local-modifier | definition | Expr | ";" | "}")""",
       found = "= }"
     )
       * - checkNeg(
@@ -606,7 +606,7 @@ object FailureTests extends TestSuite{
           |  }
           |}
         """.stripMargin,
-        expected = """("." | "[" | "=>" | "⇒" | "=" | "match" | ":" | ";" | "(" | "this" | Id | "_" | "import" | "@" | "implicit" | "lazy" | local-modifier | definition | Expr | "}")""",
+        expected = """("." | "[" | "=>" | "⇒" | "=" | "match" | ":" | ";" | "(" | "this" | Id | "_" | "import" | "@" | local-modifier | definition | Expr | "}")""",
         found = "case for"
       )
       * - checkNeg(
@@ -882,7 +882,7 @@ object FailureTests extends TestSuite{
           |    val x = 1
           |    ;
           |    """.stripMargin,
-        expected = """(";" | "import" | "@" | "implicit" | "lazy" | local-modifier | definition | Expr | "(" | "this" | Id | "_" | "}")""",
+        expected = """(";" | "import" | "@" | local-modifier | definition | Expr | "(" | "this" | Id | "_" | "}")""",
         found = ""
       )
 
