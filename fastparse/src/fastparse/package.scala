@@ -1,176 +1,326 @@
-import scala.annotation.tailrec
-import scala.reflect.macros.blackbox.Context
 import language.experimental.macros
-package object fastparse {
 
+package object fastparse {
+  /**
+    * Parses the given input [[String]] using the given parser and returns
+    * a [[Parsed]] result containing the success value or failure metadata
+    */
+  def parse[T](input: String,
+               parser: P[_] => P[T],
+               startIndex: Int = 0,
+               traceIndex: Int = -1,
+               instrument: P.Instrument = null,
+               enableLogging: Boolean = true): Parsed[T] = parseInput(
+    input = IndexedParserInput(input),
+    parser = parser,
+    startIndex = startIndex,
+    traceIndex = traceIndex,
+    instrument = instrument,
+    enableLogging = enableLogging
+  )
+
+  /**
+    * Parses the given input [[Iterator]] using the given parser and returns
+    * a [[Parsed]] result containing the success value or failure metadata
+    */
+  def parseIterator[T](input: Iterator[String],
+                       parser: P[_] => P[T],
+                       startIndex: Int = 0,
+                       traceIndex: Int = -1,
+                       instrument: P.Instrument = null,
+                       enableLogging: Boolean = true): Parsed[T] = parseInput(
+    input = IteratorParserInput(input),
+    parser = parser,
+    startIndex = startIndex,
+    traceIndex = traceIndex,
+    instrument = instrument,
+    enableLogging = enableLogging
+  )
+
+  /**
+    * Parses the given input [[ParserInput]] using the given parser and returns
+    * a [[Parsed]] result containing the success value or failure metadata
+    */
+  def parseInput[T](input: ParserInput,
+                    parser: P[_] => P[T],
+                    startIndex: Int = 0,
+                    traceIndex: Int = -1,
+                    instrument: P.Instrument = null,
+                    enableLogging: Boolean = true): Parsed[T] = parser(new P(
+    input = input,
+    failureAggregate = List.empty,
+    shortFailureMsg = () => "",
+    failureStack = List.empty,
+    isSuccess = true,
+    logDepth = if (enableLogging) 0 else -1,
+    startIndex,
+    startIndex,
+    true,
+    (),
+    traceIndex,
+    parser,
+    false,
+    instrument
+  )).result
+
+
+  /**
+    * Shorthand alias for [[ParsingRun]]; this is both the parameter-to and the
+    * return type for all Fastparse's parsing methods.
+    *
+    * @tparam T is the type of the value returned by the parser method on success
+    */
   type P[+T] = ParsingRun[T]
-  type P0 = ParsingRun[Unit]
   val P = ParsingRun
+  /**
+    * Shorthand for `P[Unit]`
+    */
+  type P0 = P[Unit]
+
   /**
     * Delimits a named parser. This name will appear in the parser failure
     * messages and stack traces, and by default is taken from the name of the
     * enclosing method.
     */
-  def P[T](t: ParsingRun[T])(implicit name: sourcecode.Name, ctx: ParsingRun[_]): ParsingRun[T] = macro MacroImpls.pMacro[T]
+  def P[T](t: P[T])(implicit name: sourcecode.Name, ctx: P[_]): P[T] = macro MacroImpls.pMacro[T]
 
+  /**
+    * Parses an exact string value.
+    */
+  implicit def LiteralStr(s: String)(implicit ctx: P[Any]): P[Unit] = macro MacroImpls.literalStrMacro
 
-  implicit def LiteralStr(s: String)(implicit ctx: ParsingRun[Any]): ParsingRun[Unit] = macro MacroImpls.literalStrMacro
-
-
-  def startsWithIgnoreCase(src: ParserInput, prefix: IndexedSeq[Char], offset: Int) = {
-    @tailrec def rec(i: Int): Boolean = {
-      if (i >= prefix.length) true
-      else if(!src.isReachable(i + offset)) false
-      else {
-        val c1: Char = src(i + offset)
-        val c2: Char = prefix(i)
-        if (c1 != c2 && c1.toLower != c2.toLower) false
-        else rec(i + 1)
-      }
-    }
-    rec(0)
-  }
-  def IgnoreCase(s: String)(implicit ctx: ParsingRun[Any]): ParsingRun[Unit] = {
+  /**
+    * Parses a string value case-insensitively
+    */
+  def IgnoreCase(s: String)(implicit ctx: P[Any]): P[Unit] = {
     val res =
-      if (startsWithIgnoreCase(ctx.input, s, ctx.index)) ctx.freshSuccess((), ctx.index + s.length)
-      else ctx.freshFailure().asInstanceOf[ParsingRun[Unit]]
+      if (Util.startsWithIgnoreCase(ctx.input, s, ctx.index)) ctx.freshSuccess((), ctx.index + s.length)
+      else ctx.freshFailure().asInstanceOf[P[Unit]]
     if (ctx.tracingEnabled) ctx.aggregateMsg(() => Util.literalize(s))
     res
   }
 
-
-  implicit def EagerOpsStr(parse0: String)(implicit ctx: ParsingRun[Any]): fastparse.EagerOps[Unit] = macro MacroImpls.eagerOpsStrMacro
-
-  def parsedSequence[T: c.WeakTypeTag, V: c.WeakTypeTag, R: c.WeakTypeTag]
-  (c: Context)
-  (other: c.Expr[ParsingRun[V]])
-  (s: c.Expr[Implicits.Sequencer[T, V, R]],
-   whitespace: c.Expr[ParsingRun[Any] => ParsingRun[Unit]],
-   ctx: c.Expr[ParsingRun[_]]): c.Expr[ParsingRun[R]] = {
-    import c.universe._
-    MacroImpls.parsedSequence0[T, V, R](c)(other, false)(s, Some(whitespace), ctx)
-  }
-
-  def parsedSequenceCut[T: c.WeakTypeTag, V: c.WeakTypeTag, R: c.WeakTypeTag]
-  (c: Context)
-  (other: c.Expr[ParsingRun[V]])
-  (s: c.Expr[Implicits.Sequencer[T, V, R]],
-   whitespace: c.Expr[ParsingRun[Any] => ParsingRun[Unit]],
-   ctx: c.Expr[ParsingRun[_]]): c.Expr[ParsingRun[R]] = {
-    import c.universe._
-    MacroImpls.parsedSequence0[T, V, R](c)(other, true)(s, Some(whitespace), ctx)
-  }
-  def parsedSequence1[T: c.WeakTypeTag, V: c.WeakTypeTag, R: c.WeakTypeTag]
-  (c: Context)
-  (other: c.Expr[ParsingRun[V]])
-  (s: c.Expr[Implicits.Sequencer[T, V, R]],
-   ctx: c.Expr[ParsingRun[_]]): c.Expr[ParsingRun[R]] = {
-    import c.universe._
-    MacroImpls.parsedSequence0[T, V, R](c)(other, false)(s, None, ctx)
-  }
-  def parsedSequenceCut1[T: c.WeakTypeTag, V: c.WeakTypeTag, R: c.WeakTypeTag]
-  (c: Context)
-  (other: c.Expr[ParsingRun[V]])
-  (s: c.Expr[Implicits.Sequencer[T, V, R]],
-   ctx: c.Expr[ParsingRun[_]]): c.Expr[ParsingRun[R]] = {
-    import c.universe._
-    MacroImpls.parsedSequence0[T, V, R](c)(other, true)(s, None, ctx)
-  }
+  /**
+    * Provides [[EagerOps]] extension methods on [[String]]
+    */
+  implicit def EagerOpsStr(parse0: String)(implicit ctx: P[Any]): fastparse.EagerOps[Unit] = macro MacroImpls.eagerOpsStrMacro
 
 
-  implicit class EagerOps[T](val parse0: ParsingRun[T]) extends AnyVal{
+  /**
+    * Provides [[EagerOps]] extension methods on [[P]]]
+    */
+  implicit class EagerOps[T](val parse0: P[T]) extends AnyVal{
+    /**
+      * Plain cut operator. Runs the parser, and if it succeeds, backtracking
+      * past that point is no longer prohibited
+      */
+    def /(implicit ctx: P[_]): P[T] = macro MacroImpls.cutMacro[T]
 
-    def ~/[V, R](other: ParsingRun[V])
+    /**
+      * Sequence-with-cut operator. Runs two parsers one after the other,
+      * with optional whitespace in between. If the first parser completes
+      * successfully, backtracking is no longer prohibited. If both parsers
+      * return a value, this returns a tuple.
+      */
+    def ~/[V, R](other: P[V])
                 (implicit s: Implicits.Sequencer[T, V, R],
-                 whitespace: ParsingRun[Any] => ParsingRun[Unit],
-                 ctx: ParsingRun[_]): ParsingRun[R] = macro parsedSequenceCut[T, V, R]
+                 whitespace: P[Any] => P[Unit],
+                 ctx: P[_]): P[R] = macro MacroImpls.parsedSequenceCut[T, V, R]
 
-    def /(implicit ctx: ParsingRun[_]): ParsingRun[T] = macro MacroImpls.cutMacro[T]
-
-    def ~[V, R](other:  ParsingRun[V])
+    /**
+      * Sequence operator. Runs two parsers one after the other,
+      * with optional whitespace in between.If both parsers
+      * return a value, this returns a tuple.
+      */
+    def ~[V, R](other:  P[V])
                (implicit s: Implicits.Sequencer[T, V, R],
-                whitespace: ParsingRun[Any] => ParsingRun[Unit],
-                ctx: ParsingRun[_]): ParsingRun[R] = macro parsedSequence[T, V, R]
+                whitespace: P[Any] => P[Unit],
+                ctx: P[_]): P[R] = macro MacroImpls.parsedSequence[T, V, R]
 
-
-    def ~~/[V, R](other: ParsingRun[V])
+    /**
+      * Raw sequence-with-cut operator. Runs two parsers one after the other,
+      * *without* whitespace in between. If the first parser completes
+      * successfully, backtracking is no longer prohibited. If both parsers
+      * return a value, this returns a tuple.
+      */
+    def ~~/[V, R](other: P[V])
                  (implicit s: Implicits.Sequencer[T, V, R],
-                  ctx: ParsingRun[_]): ParsingRun[R] = macro parsedSequenceCut1[T, V, R]
+                  ctx: P[_]): P[R] = macro MacroImpls.parsedSequenceCut1[T, V, R]
 
-
-    def ~~[V, R](other: ParsingRun[V])
+    /**
+      * Raw sequence operator. Runs two parsers one after the other,
+      * with optional whitespace in between. If both parsers
+      * return a value, this returns a tuple.
+      */
+    def ~~[V, R](other: P[V])
                 (implicit s: Implicits.Sequencer[T, V, R],
-                 ctx: ParsingRun[_]): ParsingRun[R] = macro parsedSequence1[T, V, R]
+                 ctx: P[_]): P[R] = macro MacroImpls.parsedSequence1[T, V, R]
 
-    def map[V](f: T => V): ParsingRun[V] = macro MacroImpls.mapMacro[T, V]
+    /**
+      * Transforms the result of this parser using the given function. Useful
+      * for turning the [[String]]s captured by [[!]] and the tuples built
+      * by [[~]] into your own case classes or data structure
+      */
+    def map[V](f: T => V): P[V] = macro MacroImpls.mapMacro[T, V]
 
+    /**
+      * Tests the output of the parser with a given predicate, failing the
+      * parse if the predicate returns false. Useful for doing local validation
+      * on bits and pieces of your parsed output
+      */
     def filter(f: T => Boolean)
-              (implicit ctx: ParsingRun[Any]): ParsingRun[T] = macro MacroImpls.filterMacro[T]
+              (implicit ctx: P[Any]): P[T] = macro MacroImpls.filterMacro[T]
+    /**
+      * Transforms the result of this parser using the given function into a
+      * new parser which is applied. Useful for doing dependent parsing, e.g.
+      * when parsing JSON you may first parse a character to see if it's a `[`,
+      * `{`, or `"`, and then deciding whether you next want to parse an array,
+      * dictionary or string.
+      */
+    def flatMap[V](f: T => P[V]): P[V] = macro MacroImpls.flatMapMacro[T, V]
 
-    def flatMap[V](f: T => ParsingRun[V]): ParsingRun[V] = macro MacroImpls.flatMapMacro[T, V]
+    /**
+      * Either-or operator: tries to parse the left-hand-side, and if that
+      * fails it backtracks and tries to pass the right-hand-side. Can be
+      * chained more than once to parse larger numbers of alternatives.
+      */
+    def |[V >: T](other: P[V])
+                 (implicit ctx: P[Any]): P[V] = macro MacroImpls.eitherMacro[T, V]
 
-    def |[V >: T](other: ParsingRun[V])
-                 (implicit ctx: ParsingRun[Any]): ParsingRun[V] = macro MacroImpls.eitherMacro[T, V]
+    /**
+      * Capture operator; makes the parser return the span of input it parsed
+      * as a [[String]], which can then be processed further using [[~]],
+      * [[map]] or [[flatMap]]
+      */
+    def !(implicit ctx: P[Any]): P[String] = macro MacroImpls.captureMacro
 
-    def !(implicit ctx: ParsingRun[Any]): ParsingRun[String] = macro MacroImpls.captureMacro
-
+    /**
+      * Optional operator. Parses the given input to wrap it in a `Some`, but
+      * if parsing fails backtracks and returns `None`
+      */
     def ?[V](implicit optioner: Implicits.Optioner[T, V],
-             ctx: ParsingRun[Any]): ParsingRun[V] = macro MacroImpls.optionMacro[T, V]
+             ctx: P[Any]): P[V] = macro MacroImpls.optionMacro[T, V]
   }
 
-
-
-  implicit def ByNameOpsStr(parse0: String)(implicit ctx: ParsingRun[Any]): fastparse.ByNameOps[Unit] =
+  /**
+    * Provides [[ByNameOps]] extension methods on [[String]]s
+    */
+  implicit def ByNameOpsStr(parse0: String)(implicit ctx: P[Any]): fastparse.ByNameOps[Unit] =
   macro MacroImpls.byNameOpsStrMacro
-
-  implicit def ByNameOps[T](parse0: => ParsingRun[T]) = new ByNameOps(() => parse0)
-  class ByNameOps[T](val parse0: () => ParsingRun[T]) extends AnyVal{
-
-    def repX[V](implicit repeater: Implicits.Repeater[T, V], ctx: ParsingRun[Any]): ParsingRun[V] =
-    macro RepImpls.repXMacro1[T, V]
-    def repX[V](min: Int = 0,
-                sep: => ParsingRun[_] = null,
-                max: Int = Int.MaxValue,
-                exactly: Int = -1)
-               (implicit repeater: Implicits.Repeater[T, V],
-                ctx: ParsingRun[Any]): ParsingRun[V] =
-      new RepImpls[T](parse0).repX[V](min, sep, max, exactly)
-    def repX[V](min: Int,
-                sep: => ParsingRun[_])
-               (implicit repeater: Implicits.Repeater[T, V],
-                ctx: ParsingRun[Any]): ParsingRun[V] =
-      new RepImpls[T](parse0).repX[V](min, sep)
-    def repX[V](min: Int)
-               (implicit repeater: Implicits.Repeater[T, V],
-                ctx: ParsingRun[Any]): ParsingRun[V] =
-    macro RepImpls.repXMacro2[T, V]
-
+  /**
+    * Provides [[ByNameOps]] extension methods on [[P]]s
+    */
+  implicit def ByNameOps[T](parse0: => P[T]) = new ByNameOps(() => parse0)
+  class ByNameOps[T](val parse0: () => P[T]) extends AnyVal{
+    /**
+      * Repeat operator; runs the LHS parser 0 or more times separated by the
+      * given whitespace (in implicit scope), and returns
+      * a `Seq[T]` of the parsed values. On failure, backtracks to the starting
+      * index of the last run.
+      */
     def rep[V](implicit repeater: Implicits.Repeater[T, V],
-               whitespace: ParsingRun[_] => ParsingRun[Unit],
-               ctx: ParsingRun[Any]): ParsingRun[V] =
-    macro RepImpls.repXMacro1ws[T, V]
+               whitespace: P[_] => P[Unit],
+               ctx: P[Any]): P[V] = macro RepImpls.repXMacro1ws[T, V]
+    /**
+      * Repeat operator; runs the LHS parser at least `min` to at most `max`
+      * times separated by the given whitespace (in implicit scope) and
+      * separator `sep`, and returns a `Seq[T]` of the parsed values. On
+      * failure, backtracks to the starting index of the last run.
+      *
+      * The convenience parameter `exactly` is provided to set both `min` and
+      * `max` to the same value.
+      */
     def rep[V](min: Int = 0,
-               sep: => ParsingRun[_] = null,
+               sep: => P[_] = null,
                max: Int = Int.MaxValue,
                exactly: Int = -1)
               (implicit repeater: Implicits.Repeater[T, V],
-               whitespace: ParsingRun[_] => ParsingRun[Unit],
-               ctx: ParsingRun[Any]): ParsingRun[V] =
+               whitespace: P[_] => P[Unit],
+               ctx: P[Any]): P[V] =
       new RepImpls[T](parse0).rep[V](min, sep, max, exactly)
+
+    /**
+      * Repeat operator; runs the LHS parser at least `min`
+      * times separated by the given whitespace (in implicit scope) and
+      * separator `sep`, and returns a `Seq[T]` of the parsed values. On
+      * failure, backtracks to the starting index of the last run.
+      */
     def rep[V](min: Int,
-               sep: => ParsingRun[_])
+               sep: => P[_])
               (implicit repeater: Implicits.Repeater[T, V],
-               whitespace: ParsingRun[_] => ParsingRun[Unit],
-               ctx: ParsingRun[Any]): ParsingRun[V] =
+               whitespace: P[_] => P[Unit],
+               ctx: P[Any]): P[V] =
       new RepImpls[T](parse0).rep[V](min, sep)
 
+    /**
+      * Repeat operator; runs the LHS parser at least `min`
+      * times separated by the given whitespace (in implicit scope),
+      * and returns a `Seq[T]` of the parsed values. On
+      * failure, backtracks to the starting index of the last run.
+      */
     def rep[V](min: Int)
               (implicit repeater: Implicits.Repeater[T, V],
-               whitespace: ParsingRun[_] => ParsingRun[Unit],
-               ctx: ParsingRun[Any]): ParsingRun[V] =
+               whitespace: P[_] => P[Unit],
+               ctx: P[Any]): P[V] =
     macro RepImpls.repXMacro2ws[T, V]
 
-    def opaque(msg: String)(implicit ctx: ParsingRun[Any]): P[T] = {
+    /**
+      * Raw repeat operator; runs the LHS parser 0 or more times *without*
+      * any whitespace in between, and returns
+      * a `Seq[T]` of the parsed values. On failure, backtracks to the starting
+      * index of the last run.
+      */
+    def repX[V](implicit repeater: Implicits.Repeater[T, V],
+                ctx: P[Any]): P[V] =
+    macro RepImpls.repXMacro1[T, V]
+
+    /**
+      * Raw repeat operator; runs the LHS parser at least `min` to at most `max`
+      * times separated by the
+      * separator `sep` *without* any whitespace in between, and returns a `Seq[T]` of the parsed values. On
+      * failure, backtracks to the starting index of the last run.
+      *
+      * The convenience parameter `exactly` is provided to set both `min` and
+      * `max` to the same value.
+      */
+    def repX[V](min: Int = 0,
+                sep: => P[_] = null,
+                max: Int = Int.MaxValue,
+                exactly: Int = -1)
+               (implicit repeater: Implicits.Repeater[T, V],
+                ctx: P[Any]): P[V] =
+      new RepImpls[T](parse0).repX[V](min, sep, max, exactly)
+
+    /**
+      * Raw repeat operator; runs the LHS parser at least `min`
+      * times separated by the separator `sep`, *without* any whitespace
+      * in between, and returns a `Seq[T]` of the parsed values. On
+      * failure, backtracks to the starting index of the last run.
+      */
+    def repX[V](min: Int,
+                sep: => P[_])
+               (implicit repeater: Implicits.Repeater[T, V],
+                ctx: P[Any]): P[V] =
+      new RepImpls[T](parse0).repX[V](min, sep)
+
+    /**
+      * Raw repeat operator; runs the LHS parser at least `min`
+      * times *without* any whitespace in between,
+      * and returns a `Seq[T]` of the parsed values. On
+      * failure, backtracks to the starting index of the last run.
+      */
+    def repX[V](min: Int)
+               (implicit repeater: Implicits.Repeater[T, V],
+                ctx: P[Any]): P[V] =
+    macro RepImpls.repXMacro2[T, V]
+
+    /**
+      * Hides the internals of the given parser when it fails, such that it
+      * only succeeds completely or fails completely, and none of it's internal
+      * parsers end up in the failure traces or failure stack to be displayed
+      * to the user.
+      */
+    def opaque(msg: String)(implicit ctx: P[Any]): P[T] = {
       val oldIndex = ctx.index
       val oldFailureAggregate = ctx.failureAggregate
       val res = parse0()
@@ -183,8 +333,12 @@ package object fastparse {
       res2.asInstanceOf[P[T]]
     }
 
-
-    def unary_!(implicit ctx: ParsingRun[Any]) : ParsingRun[Unit] = {
+    /**
+      * Negative lookahead operator: succeeds if the wrapped parser fails and
+      * fails if the wrapped parser succeeds. In all cases, it ends up
+      * consuming zero characters.
+      */
+    def unary_!(implicit ctx: P[Any]) : P[Unit] = {
       val startPos = ctx.index
       val startCut = ctx.cut
       val oldNoCut = ctx.noDropBuffer
@@ -206,28 +360,25 @@ package object fastparse {
 
   }
 
-  implicit def LogOpsStr(parse0: String)(implicit ctx: ParsingRun[Any]): fastparse.LogByNameOps[Unit] =
-  macro MacroImpls.logOpsStrMacro
+  /**
+    * Provides logging-related [[LogByNameOps]] implicits on [[String]].
+    */
+  implicit def LogOpsStr(parse0: String)
+                        (implicit ctx: P[Any]): fastparse.LogByNameOps[Unit] =
+    macro MacroImpls.logOpsStrMacro
   /**
     * Separated out from [[ByNameOps]] because `.log` isn't easy to make an
     * [[AnyVal]] extension method, but it doesn't matter since `.log` calls
     * are only for use in development while the other [[ByNameOps]] operators
     * are more performance-sensitive
     */
-  implicit class  LogByNameOps[T](parse0: => ParsingRun[T])(implicit ctx: ParsingRun[_]) {
-    def logAfter(msg: => String)(implicit logger: Logger = Logger.stdout): ParsingRun[T] = {
-      val indent = "  " * ctx.logDepth
-      val res = parse0
-      if (ctx.logDepth != -1) println(indent + msg)
-      res
-    }
-    def logBefore(msg: => String)(implicit logger: Logger = Logger.stdout): ParsingRun[T] = {
-      val indent = "  " * ctx.logDepth
-      if (ctx.logDepth != -1) println(indent + msg)
-      val res = parse0
-      res
-    }
-    def log(implicit name: sourcecode.Name, logger: Logger = Logger.stdout): ParsingRun[T] = {
+  implicit class  LogByNameOps[T](parse0: => P[T])(implicit ctx: P[_]) {
+    /**
+      * Wraps a parser to log when it succeeds and fails, and at what index.
+      * Useful for seeing what is going on within your parser. Nicely indents
+      * the logs for easy reading
+      */
+    def log(implicit name: sourcecode.Name, logger: Logger = Logger.stdout): P[T] = {
       if (ctx.logDepth == -1) parse0
       else {
         val msg = name.value
@@ -256,12 +407,37 @@ package object fastparse {
         }
         output(s"$indent-$msg:${ctx.input.prettyIndex(startIndex)}:$strRes")
         //        output(s"$indent-$msg:${repr.prettyIndex(cfg.input, index)}:$strRes")
-        ctx.asInstanceOf[ParsingRun[T]]
+        ctx.asInstanceOf[P[T]]
       }
+    }
+
+    /**
+      * Prints the given message, nicely indented, after the wrapped parser finishes
+      */
+    def logAfter(msg: => String)(implicit logger: Logger = Logger.stdout): P[T] = {
+      val indent = "  " * ctx.logDepth
+      val res = parse0
+      if (ctx.logDepth != -1) println(indent + msg)
+      res
+    }
+
+    /**
+      * Prints the given message, nicely indented, before the wrapped parser starts
+      */
+    def logBefore(msg: => String)(implicit logger: Logger = Logger.stdout): P[T] = {
+      val indent = "  " * ctx.logDepth
+      if (ctx.logDepth != -1) println(indent + msg)
+      val res = parse0
+      res
     }
   }
 
-  def &(parse: => ParsingRun[_])(implicit ctx: ParsingRun[_]): ParsingRun[Unit] = {
+  /**
+    * Positive lookahead operator: succeeds if the wrapped parser succeeds and
+    * fails if the wrapped parser fails, but in all cases consumes zero
+    * characters.
+    */
+  def &(parse: => P[_])(implicit ctx: P[_]): P[Unit] = {
 
     val startPos = ctx.index
     val startCut = ctx.cut
@@ -273,96 +449,173 @@ package object fastparse {
 
     val res =
       if (ctx.isSuccess) ctx.freshSuccess((), startPos)
-      else ctx.asInstanceOf[ParsingRun[Unit]]
+      else ctx.asInstanceOf[P[Unit]]
     if (ctx.tracingEnabled) ctx.setMsg(() => s"&(${msg()})")
     res.cut = startCut
     res
-
   }
 
-  def End(implicit ctx: ParsingRun[_]): ParsingRun[Unit] = {
+  /**
+    * Parser that is only successful at the end of the input. Useful to ensure
+    * your parser parses the whole file.
+    */
+  def End(implicit ctx: P[_]): P[Unit] = {
     val res =
       if (!ctx.input.isReachable(ctx.index)) ctx.freshSuccess(())
-      else ctx.freshFailure().asInstanceOf[ParsingRun[Unit]]
+      else ctx.freshFailure().asInstanceOf[P[Unit]]
     if (ctx.tracingEnabled) ctx.aggregateMsg(() => "end-of-input")
     res
 
   }
-
-  def Start(implicit ctx: ParsingRun[_]): ParsingRun[Unit] = {
+  /**
+    * Parser that is only successful at the start of the input.
+    */
+  def Start(implicit ctx: P[_]): P[Unit] = {
     val res =
       if (ctx.index == 0) ctx.freshSuccess(())
-      else ctx.freshFailure().asInstanceOf[ParsingRun[Unit]]
+      else ctx.freshFailure().asInstanceOf[P[Unit]]
     if (ctx.tracingEnabled) ctx.aggregateMsg(() => "start-of-input")
     res
   }
 
-  def NoTrace[T](p: => ParsingRun[T], label: String = null)(implicit ctx: ParsingRun[_]): ParsingRun[T] = {
+  /**
+    * Wraps a parser and ensures that none of the parsers within it leave
+    * failure traces in failureAggregate, though unlike [[ByNameOps.opaque]]
+    * if there is a failure *within* the wrapped parser the failure's location
+    * and error message will still be shown
+    *
+    * Useful for wrapping things like whitespace, code-comment, etc. parsers
+    * which can be applied everywhere and are not useful to display to the user
+    * as part of the error message.
+    */
+  def NoTrace[T](p: => P[T])(implicit ctx: P[_]): P[T] = {
     val preMsg = ctx.failureAggregate
+    val res = p
+    if (ctx.tracingEnabled) ctx.failureAggregate = preMsg
+    res
+  }
+
+  /**
+    * Wraps a parser such that if the parser fails at a particular index, the
+    * given label is shown as the error message rather than the inner parsers
+    * which may have failed at that spot. Useful for wrapping parsers which
+    * contain larger `a | b | c | d ...` blocks, since showing every
+    * possibility to the user on-error is generally not useful
+    */
+  def SimpleTrace[T](label: String)(p: => P[T])(implicit ctx: P[_]): P[T] = {
+    val beforeAggregate = ctx.failureAggregate
     val startIndex = ctx.index
     val res = p
     if (ctx.tracingEnabled) {
       if (startIndex >= res.traceIndex) {
-        ctx.failureAggregate = preMsg
-        if (label != null) ctx.failureAggregate ::= (() => label)
+        ctx.failureAggregate = beforeAggregate
+        ctx.failureAggregate ::= (() => label)
       }
     }
     res
   }
 
-  def Pass(implicit ctx: ParsingRun[_]): ParsingRun[Unit] = {
+  /**
+    * No-op parser that always succeeds, consuming zero characters
+    */
+  def Pass(implicit ctx: P[_]): P[Unit] = {
     val res = ctx.freshSuccess(())
     if (ctx.tracingEnabled) ctx.setMsg(() => "Pass")
     res
   }
 
-  def Pass[T](v: T)(implicit ctx: ParsingRun[_]): ParsingRun[T] = {
+  /**
+    * No-op parser that always succeeds with the given value, consuming zero
+    * characters
+    */
+  def Pass[T](v: T)(implicit ctx: P[_]): P[T] = {
     val res = ctx.freshSuccess(v)
     if (ctx.tracingEnabled) ctx.setMsg(() => "Pass")
     res
   }
 
-  def Fail(implicit ctx: ParsingRun[_]): ParsingRun[Nothing] = {
+  /**
+    * No-op parser that always fails, consuming zero characters
+    */
+  def Fail(implicit ctx: P[_]): P[Nothing] = {
     val res = ctx.freshFailure()
     if (ctx.tracingEnabled) ctx.setMsg(() => "fail")
     res
   }
 
-  def Index(implicit ctx: ParsingRun[_]): ParsingRun[Int] = {
+  /**
+    * Parser that always succeeds and returns the current index into the parsed
+    * input. Useful for e.g. capturing source locations so when downstream
+    * valiation raises errors you can tell the user where in the input the
+    * error originated from
+    */
+  def Index(implicit ctx: P[_]): P[Int] = {
     val res = ctx.freshSuccess(ctx.index)
     if (ctx.tracingEnabled) ctx.setMsg(() => "Index")
     res
   }
 
-  def AnyChar(implicit ctx: ParsingRun[_]): ParsingRun[Unit] = {
+  /**
+    * Parses a single character, any character, as long as there is at least
+    * one character for it to parse (i.e. the input isn't at its end)
+    */
+  def AnyChar(implicit ctx: P[_]): P[Unit] = {
     val res =
-      if (!ctx.input.isReachable(ctx.index)) ctx.freshFailure().asInstanceOf[ParsingRun[Unit]]
+      if (!ctx.input.isReachable(ctx.index)) ctx.freshFailure().asInstanceOf[P[Unit]]
       else ctx.freshSuccess((), ctx.index + 1)
     if (ctx.tracingEnabled) ctx.aggregateMsg(() => "any-character")
     res
   }
-  def SingleChar(implicit ctx: ParsingRun[_]): ParsingRun[Char] = {
+
+  /**
+    * Like [[AnyChar]], but returns the single character it parses. Useful
+    * together with [[EagerOps.flatMap]] to provide one-character-lookahead
+    * style parsing: [[SingleChar]] consumes the single character, and then
+    * [[EagerOps.flatMap]] can `match` on that single character and decide
+    * which downstream parser you wish to invoke
+    */
+  def SingleChar(implicit ctx: P[_]): P[Char] = {
     val res =
-      if (!ctx.input.isReachable(ctx.index)) ctx.freshFailure().asInstanceOf[ParsingRun[Char]]
+      if (!ctx.input.isReachable(ctx.index)) ctx.freshFailure().asInstanceOf[P[Char]]
       else ctx.freshSuccess(ctx.input(ctx.index), ctx.index + 1)
     if (ctx.tracingEnabled) ctx.aggregateMsg(() => "any-character")
     res
   }
-  def CharPred(p: Char => Boolean)(implicit ctx: ParsingRun[_]): ParsingRun[Unit] = {
+
+  /**
+    * Parses a single character satisfying the given predicate
+    */
+  def CharPred(p: Char => Boolean)(implicit ctx: P[_]): P[Unit] = {
     val res =
-      if (!(ctx.input.isReachable(ctx.index) && p(ctx.input(ctx.index)))) ctx.freshFailure().asInstanceOf[ParsingRun[Unit]]
+      if (!(ctx.input.isReachable(ctx.index) && p(ctx.input(ctx.index)))) ctx.freshFailure().asInstanceOf[P[Unit]]
       else ctx.freshSuccess((), ctx.index + 1)
     if (ctx.tracingEnabled) ctx.aggregateMsg(() => "character-predicate")
     res
   }
-  def CharIn(s: String*)(implicit ctx: ParsingRun[_]): ParsingRun[Unit] = macro MacroImpls.charInMacro
-
+  /**
+    * Parses a single character in one of the input strings representing
+    * character classes
+    */
+  def CharIn(s: String*)(implicit ctx: P[_]): P[Unit] = macro MacroImpls.charInMacro
+  /**
+    * Parses zero or more characters as long as they are contained
+    * in one of the input strings representing character classes
+    */
   def CharsWhileIn(s: String)
-                  (implicit ctx: ParsingRun[_]): ParsingRun[Unit] = macro MacroImpls.charsWhileInMacro1
-  def CharsWhileIn(s: String, min: Int)
-                  (implicit ctx: ParsingRun[_]): ParsingRun[Unit] = macro MacroImpls.charsWhileInMacro
+                  (implicit ctx: P[_]): P[Unit] = macro MacroImpls.charsWhileInMacro1
 
-  def CharsWhile(p: Char => Boolean, min: Int = 1)(implicit ctx: ParsingRun[_]): ParsingRun[Unit] = {
+  /**
+    * Parses `min` or more characters as long as they are contained
+    * in one of the input strings representing character classes
+    */
+  def CharsWhileIn(s: String, min: Int)
+                  (implicit ctx: P[_]): P[Unit] = macro MacroImpls.charsWhileInMacro
+
+  /**
+    * Parses `min` or more characters as long as they satisfy the given
+    * predicate
+    */
+  def CharsWhile(p: Char => Boolean, min: Int = 1)(implicit ctx: P[_]): P[Unit] = {
     var index = ctx.index
     val input = ctx.input
 
@@ -376,7 +629,13 @@ package object fastparse {
     res
   }
 
-  def NoCut[T](parse: => ParsingRun[T])(implicit ctx: ParsingRun[_]): ParsingRun[T] = {
+  /**
+    * Allows backtracking regardless of whether cuts happen within the wrapped
+    * parser; this is useful for re-using an existing parser with cuts within
+    * it, in other parts of your grammar where backtracking is necessary and
+    * unavoidable.
+    */
+  def NoCut[T](parse: => P[T])(implicit ctx: P[_]): P[T] = {
     val cut = ctx.cut
     val oldNoCut = ctx.noDropBuffer
     ctx.noDropBuffer = true
@@ -388,54 +647,16 @@ package object fastparse {
   }
 
 
-  def StringIn(s: String*)(implicit ctx: ParsingRun[_]): ParsingRun[Unit] = macro MacroImpls.stringInMacro
-  def StringInIgnoreCase(s: String*)(implicit ctx: ParsingRun[_]): ParsingRun[Unit] = macro MacroImpls.stringInIgnoreCaseMacro
+  /**
+    * Efficiently parses any one of the given [[String]]s; more efficient than
+    * chaining [[EagerOps.|]] together
+    */
+  def StringIn(s: String*)(implicit ctx: P[_]): P[Unit] = macro MacroImpls.stringInMacro
 
-  def parseInput[T](input: ParserInput,
-                    parser: ParsingRun[_] => ParsingRun[T],
-                    startIndex: Int = 0,
-                    traceIndex: Int = -1,
-                    instrument: ParsingRun.Instrument = null,
-                    enableLogging: Boolean = true): Parsed[T] = parser(new ParsingRun(
-    input = input,
-    failureAggregate = List.empty,
-    shortFailureMsg = () => "",
-    failureStack = List.empty,
-    isSuccess = true,
-    logDepth = if (enableLogging) 0 else -1,
-    startIndex,
-    startIndex,
-    true,
-    (),
-    traceIndex,
-    parser,
-    false,
-    instrument
-  )).result
-  def parseIterator[T](input: Iterator[String],
-                       parser: ParsingRun[_] => ParsingRun[T],
-                       startIndex: Int = 0,
-                       traceIndex: Int = -1,
-                       instrument: ParsingRun.Instrument = null,
-                       enableLogging: Boolean = true): Parsed[T] = parseInput(
-    input = IteratorParserInput(input),
-    parser = parser,
-    startIndex = startIndex,
-    traceIndex = traceIndex,
-    instrument = instrument,
-    enableLogging = enableLogging
-  )
-  def parse[T](input: String,
-               parser: ParsingRun[_] => ParsingRun[T],
-               startIndex: Int = 0,
-               traceIndex: Int = -1,
-               instrument: ParsingRun.Instrument = null,
-               enableLogging: Boolean = true): Parsed[T] = parseInput(
-    input = IndexedParserInput(input),
-    parser = parser,
-    startIndex = startIndex,
-    traceIndex = traceIndex,
-    instrument = instrument,
-    enableLogging = enableLogging
-  )
+  /**
+    * Efficiently parses any one of the given [[String]]s, case-insensitively;
+    * more efficient than chaining [[EagerOps.|]] together with [[IgnoreCase]]
+    */
+  def StringInIgnoreCase(s: String*)(implicit ctx: P[_]): P[Unit] = macro MacroImpls.stringInIgnoreCaseMacro
+
 }

@@ -582,4 +582,41 @@ object MacroImpls {
       }
     }
   }
+
+  def parsedSequence[T: c.WeakTypeTag, V: c.WeakTypeTag, R: c.WeakTypeTag]
+                    (c: Context)
+                    (other: c.Expr[ParsingRun[V]])
+                    (s: c.Expr[Implicits.Sequencer[T, V, R]],
+                     whitespace: c.Expr[ParsingRun[Any] => ParsingRun[Unit]],
+                     ctx: c.Expr[ParsingRun[_]]): c.Expr[ParsingRun[R]] = {
+    import c.universe._
+    MacroImpls.parsedSequence0[T, V, R](c)(other, false)(s, Some(whitespace), ctx)
+  }
+
+  def parsedSequenceCut[T: c.WeakTypeTag, V: c.WeakTypeTag, R: c.WeakTypeTag]
+                       (c: Context)
+                       (other: c.Expr[ParsingRun[V]])
+                       (s: c.Expr[Implicits.Sequencer[T, V, R]],
+                        whitespace: c.Expr[ParsingRun[Any] => ParsingRun[Unit]],
+                        ctx: c.Expr[ParsingRun[_]]): c.Expr[ParsingRun[R]] = {
+    import c.universe._
+    MacroImpls.parsedSequence0[T, V, R](c)(other, true)(s, Some(whitespace), ctx)
+  }
+  def parsedSequence1[T: c.WeakTypeTag, V: c.WeakTypeTag, R: c.WeakTypeTag]
+                     (c: Context)
+                     (other: c.Expr[ParsingRun[V]])
+                     (s: c.Expr[Implicits.Sequencer[T, V, R]],
+                      ctx: c.Expr[ParsingRun[_]]): c.Expr[ParsingRun[R]] = {
+    import c.universe._
+    MacroImpls.parsedSequence0[T, V, R](c)(other, false)(s, None, ctx)
+  }
+  def parsedSequenceCut1[T: c.WeakTypeTag, V: c.WeakTypeTag, R: c.WeakTypeTag]
+                        (c: Context)
+                        (other: c.Expr[ParsingRun[V]])
+                        (s: c.Expr[Implicits.Sequencer[T, V, R]],
+                         ctx: c.Expr[ParsingRun[_]]): c.Expr[ParsingRun[R]] = {
+    import c.universe._
+    MacroImpls.parsedSequence0[T, V, R](c)(other, true)(s, None, ctx)
+  }
+
 }

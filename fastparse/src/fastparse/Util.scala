@@ -1,8 +1,23 @@
 package fastparse
 
-import scala.annotation.switch
+import scala.annotation.{switch, tailrec}
 
 object Util {
+
+  def startsWithIgnoreCase(src: ParserInput, prefix: IndexedSeq[Char], offset: Int) = {
+    @tailrec def rec(i: Int): Boolean = {
+      if (i >= prefix.length) true
+      else if(!src.isReachable(i + offset)) false
+      else {
+        val c1: Char = src(i + offset)
+        val c2: Char = prefix(i)
+        if (c1 != c2 && c1.toLower != c2.toLower) false
+        else rec(i + 1)
+      }
+    }
+    rec(0)
+  }
+
   def prettyIndex(data: String, index: Int): String = {
     var line = 1
     var col = 1
