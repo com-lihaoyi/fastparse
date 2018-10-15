@@ -26,7 +26,7 @@ object TestUtil {
           implicitly(stack)
           implicitly(index)
           implicitly(parsedFound)
-          /*expected.trim == parsedExpected.trim && */parsedFound.startsWith(found)
+          expected.trim == parsedExpected.trim && parsedFound.startsWith(found)
         }
         )
 

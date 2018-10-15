@@ -198,7 +198,7 @@ object MacroImpls {
             ctx5
           }else if (ctx5.cut) ctx5
           else {
-            val res = ctx5.augmentFailure(startPos)
+            val res = ctx5.freshFailure(startPos)
             ctx5.cut |= oldCut
             ctx5.failureStack = Nil
             res

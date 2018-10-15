@@ -170,19 +170,17 @@ package object fastparse {
                ctx: ParsingRun[Any]): ParsingRun[V] =
     macro RepImpls.repXMacro2ws[T, V]
 
-    def opaque(msg: String)(implicit ctx: ParsingRun[Any]) = {
+    def opaque(msg: String)(implicit ctx: ParsingRun[Any]): P[T] = {
       val oldIndex = ctx.index
+      val oldFailureAggregate = ctx.failureAggregate
       val res = parse0()
-      if (ctx.tracingEnabled){
-        if (ctx.traceIndex == oldIndex && !res.isSuccess) {
-          ctx.failureStack = Nil
-        }
-      } else if (!res.isSuccess){
-        ctx.failureStack = Nil
-        if (ctx.tracingEnabled) ctx.aggregateMsg(() => msg)
-        ctx.index = oldIndex
-      }
-      res
+
+      if (ctx.tracingEnabled) ctx.failureAggregate = oldFailureAggregate
+      ctx.aggregateMsg(() => msg)
+      val res2 =
+        if (res.isSuccess) ctx.freshSuccess(ctx.successValue)
+        else ctx.freshFailure(oldIndex)
+      res2.asInstanceOf[P[T]]
     }
 
 
@@ -217,37 +215,50 @@ package object fastparse {
     * are more performance-sensitive
     */
   implicit class  LogByNameOps[T](parse0: => ParsingRun[T])(implicit ctx: ParsingRun[_]) {
-    def log(implicit name: sourcecode.Name, logger: Logger = Logger.stdout): ParsingRun[T] = {
-
-      val msg = name.value
-      val output = logger.f
+    def logAfter(msg: => String)(implicit logger: Logger = Logger.stdout): ParsingRun[T] = {
       val indent = "  " * ctx.logDepth
-
-      output(s"$indent+$msg:${ctx.input.prettyIndex(ctx.index)}${if (ctx.cut) ", cut" else ""}")
-      val depth = ctx.logDepth
-      ctx.logDepth += 1
-      val startIndex = ctx.index
-      parse0
-      ctx.logDepth = depth
-      val strRes = if (ctx.isSuccess){
-        val prettyIndex = ctx.input.prettyIndex(ctx.index)
-        s"Success($prettyIndex${if (ctx.cut) ", cut" else ""})"
-      } else{
-        val trace = Parsed.Failure.formatStack(
-          ctx.input,
-          (Option(ctx.shortFailureMsg).fold("")(_()) -> ctx.index) :: ctx.failureStack.reverse
-        )
-        val trailing = ctx.input match{
-          case c: IndexedParserInput => Parsed.Failure.formatTrailing(ctx.input, startIndex)
-          case _ => ""
-        }
-        s"Failure($trace ...$trailing${if (ctx.cut) ", cut" else ""})"
-      }
-      output(s"$indent-$msg:${ctx.input.prettyIndex(startIndex)}:$strRes")
-      //        output(s"$indent-$msg:${repr.prettyIndex(cfg.input, index)}:$strRes")
-      ctx.asInstanceOf[ParsingRun[T]]
+      val res = parse0
+      if (ctx.logDepth != -1) println(indent + msg)
+      res
     }
+    def logBefore(msg: => String)(implicit logger: Logger = Logger.stdout): ParsingRun[T] = {
+      val indent = "  " * ctx.logDepth
+      if (ctx.logDepth != -1) println(indent + msg)
+      val res = parse0
+      res
+    }
+    def log(implicit name: sourcecode.Name, logger: Logger = Logger.stdout): ParsingRun[T] = {
+      if (ctx.logDepth == -1) parse0
+      else {
+        val msg = name.value
+        val output = logger.f
+        val indent = "  " * ctx.logDepth
 
+        output(s"$indent+$msg:${ctx.input.prettyIndex(ctx.index)}${if (ctx.cut) ", cut" else ""}")
+        val depth = ctx.logDepth
+        ctx.logDepth += 1
+        val startIndex = ctx.index
+        parse0
+        ctx.logDepth = depth
+        val strRes = if (ctx.isSuccess) {
+          val prettyIndex = ctx.input.prettyIndex(ctx.index)
+          s"Success($prettyIndex${if (ctx.cut) ", cut" else ""})"
+        } else {
+          val trace = Parsed.Failure.formatStack(
+            ctx.input,
+            (Option(ctx.shortFailureMsg).fold("")(_ ()) -> ctx.index) :: ctx.failureStack.reverse
+          )
+          val trailing = ctx.input match {
+            case c: IndexedParserInput => Parsed.Failure.formatTrailing(ctx.input, startIndex)
+            case _ => ""
+          }
+          s"Failure($trace ...$trailing${if (ctx.cut) ", cut" else ""})"
+        }
+        output(s"$indent-$msg:${ctx.input.prettyIndex(startIndex)}:$strRes")
+        //        output(s"$indent-$msg:${repr.prettyIndex(cfg.input, index)}:$strRes")
+        ctx.asInstanceOf[ParsingRun[T]]
+      }
+    }
   }
 
   def &(parse: => ParsingRun[_])(implicit ctx: ParsingRun[_]): ParsingRun[Unit] = {
@@ -288,10 +299,13 @@ package object fastparse {
 
   def NoTrace[T](p: => ParsingRun[T], label: String = null)(implicit ctx: ParsingRun[_]): ParsingRun[T] = {
     val preMsg = ctx.failureAggregate
+    val startIndex = ctx.index
     val res = p
-    if (ctx.tracingEnabled && res.index >= res.traceIndex) {
-      ctx.failureAggregate = preMsg
-      if (label != null) ctx.failureAggregate ::= (() => label)
+    if (ctx.tracingEnabled) {
+      if (startIndex >= res.traceIndex) {
+        ctx.failureAggregate = preMsg
+        if (label != null) ctx.failureAggregate ::= (() => label)
+      }
     }
     res
   }
@@ -381,13 +395,14 @@ package object fastparse {
                     parser: ParsingRun[_] => ParsingRun[T],
                     startIndex: Int = 0,
                     traceIndex: Int = -1,
-                    instrument: ParsingRun.Instrument = null): Parsed[T] = parser(new ParsingRun(
+                    instrument: ParsingRun.Instrument = null,
+                    enableLogging: Boolean = true): Parsed[T] = parser(new ParsingRun(
     input = input,
     failureAggregate = List.empty,
     shortFailureMsg = () => "",
     failureStack = List.empty,
     isSuccess = true,
-    logDepth = 0,
+    logDepth = if (enableLogging) 0 else -1,
     startIndex,
     startIndex,
     true,
@@ -401,22 +416,26 @@ package object fastparse {
                        parser: ParsingRun[_] => ParsingRun[T],
                        startIndex: Int = 0,
                        traceIndex: Int = -1,
-                       instrument: ParsingRun.Instrument = null): Parsed[T] = parseInput(
+                       instrument: ParsingRun.Instrument = null,
+                       enableLogging: Boolean = true): Parsed[T] = parseInput(
     input = IteratorParserInput(input),
     parser = parser,
     startIndex = startIndex,
     traceIndex = traceIndex,
-    instrument = instrument
+    instrument = instrument,
+    enableLogging = enableLogging
   )
   def parse[T](input: String,
                parser: ParsingRun[_] => ParsingRun[T],
                startIndex: Int = 0,
                traceIndex: Int = -1,
-               instrument: ParsingRun.Instrument = null): Parsed[T] = parseInput(
+               instrument: ParsingRun.Instrument = null,
+               enableLogging: Boolean = true): Parsed[T] = parseInput(
     input = IndexedParserInput(input),
     parser = parser,
     startIndex = startIndex,
     traceIndex = traceIndex,
-    instrument = instrument
+    instrument = instrument,
+    enableLogging = enableLogging
   )
 }

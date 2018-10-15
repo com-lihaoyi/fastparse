@@ -6,7 +6,7 @@ import TestUtil._
 object FailureTests extends TestSuite{
   val tests = Tests {
 
-    * - checkNeg("package package", """(Id | "case" | "object"):""", "package")
+    * - checkNeg("package package", """(Id | "case" | "object")""", "package")
 
     * - checkNeg(
       """package torimatomeru
@@ -35,7 +35,7 @@ object FailureTests extends TestSuite{
         |  type T = (A B)
         |}
       """.stripMargin,
-      expected = """("." | "[" | "#" | "@" | "with" | "{" | Newline | "=>" | "⇒" | "forSome" | ">:" | "<:" | "*" | "," | ")")""",
+      expected = """("." | "[" | "#" | "@" | "with" | "{" | "=>" | "⇒" | "forSome" | ">:" | "<:" | "*" | "," | ")")""",
       found = "B)"
     )
     * - checkNeg(
@@ -44,7 +44,7 @@ object FailureTests extends TestSuite{
         |  if (n == 1) c + 1 else
         |}
       """.stripMargin,
-      expected = """If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | SmallerExprOrLambda""",
+      expected = """Expr""",
       found = ""
     )
     * - checkNeg(

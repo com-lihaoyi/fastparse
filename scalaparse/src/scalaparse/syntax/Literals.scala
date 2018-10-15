@@ -20,7 +20,7 @@ trait Literals { l =>
    * Parses whitespace, including newlines.
    * This is the default for most things
    */
-  def WL0[_: P]: P[Unit] = P( NoTrace((Basic.WSChars | Literals.Comment | Basic.Newline).rep) )
+  def WL0[_: P]: P[Unit] = P( ScalaWhitespace.whitespace(P.current) )
   def WL[_: P]: P[Unit] = P( NoCut(WL0) )
 
   def Semis[_: P]: P[Unit] = P( NoCut(WS) ~ Basic.Semi.rep(1, NoCut(WS)) ~ NoCut(WS) )
@@ -28,7 +28,7 @@ trait Literals { l =>
 
   def NotNewline[_: P]: P[Unit] = P( &( WS ~ !Basic.Newline ) )
   def OneNLMax[_: P]: P[Unit] = {
-    def ConsumeComments = P( (Basic.WSChars.? ~ Literals.Comment ~ Basic.WSChars.? ~ Basic.Newline).rep )
+    def ConsumeComments = P( (Basic.WSChars.? ~ NoTrace(Literals.Comment) ~ Basic.WSChars.? ~ Basic.Newline).rep )
     P( NoCut( WS ~ Basic.Newline.? ~ ConsumeComments ~ NotNewline) )
   }
   def TrailingComma[_: P]: P[Unit] = P( ("," ~ WS ~ Basic.Newline).? )

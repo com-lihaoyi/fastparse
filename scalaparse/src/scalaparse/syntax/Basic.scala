@@ -18,8 +18,8 @@ object Basic {
   def Exp[_: P] = P( CharIn("Ee") ~ CharIn("+\\-").? ~ DecNum )
   def FloatType[_: P] = P( CharIn("fFdD") )
 
-  def WSChars[_: P] = P( CharsWhileIn("\u0020\u0009") )
-  def Newline[_: P] = P( NoTrace(StringIn("\r\n", "\n")) ).opaque("Newline")
+  def WSChars[_: P] = P( NoTrace(CharsWhileIn("\u0020\u0009")) )
+  def Newline[_: P] = P( NoTrace(StringIn("\r\n", "\n")) )
   def Semi[_: P] = P( ";" | Newline.rep(1) )
   def OpChar[_: P] = P ( CharPred(isOpChar) )
 
@@ -44,5 +44,5 @@ object Basic {
 object Key {
   def W[_: P](s: String) = P( s ~ !Basic.LetterDigitDollarUnderscore )(s"`$s`", implicitly)
   // If the operator is followed by a comment, stop early so we can parse the comment
-  def O[_: P](s: String) = P( s ~ (!Basic.OpChar | &(StringIn("/*", "//"))) )(s"`$s`", implicitly)
+  def O[_: P](s: String) = P( s ~ (!Basic.OpChar | &(NoTrace(StringIn("/*", "//")))) )(s"`$s`", implicitly)
 }

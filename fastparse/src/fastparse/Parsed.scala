@@ -55,8 +55,13 @@ object Parsed{
                    originalParser: ParsingRun[_] => ParsingRun[_]) {
     def traced: Failure = {
       input.checkTraceable()
-      parseInput[Any](input, originalParser, startIndex = startIndex, traceIndex = index)
-        .asInstanceOf[Failure]
+      parseInput[Any](
+        input,
+        originalParser,
+        startIndex = startIndex,
+        traceIndex = index,
+        enableLogging = true
+      ).asInstanceOf[Failure]
     }
   }
 }

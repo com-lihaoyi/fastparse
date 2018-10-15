@@ -27,7 +27,8 @@ package fastparse
   *
   * @param logDepth         How many nested `.log` calls are currently surrounding us.
   *                         Used to nicely indent the log output so you can see which
-  *                         parsers are nested within which other parsers
+  *                         parsers are nested within which other parsers; -1 means
+  *                         logging is disabled
   *
   * @param index            The current index of the parse
   *

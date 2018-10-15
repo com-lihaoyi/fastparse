@@ -16,7 +16,7 @@ object Identifiers{
   val NotBackTick = NamedFunction(_ != '`')
 
   def Operator[_: P] = P(
-    !Keywords ~ (!StringIn("/*", "//") ~ (CharsWhile(OpCharNotSlash) | "/")).rep(1)
+    !SymbolicKeywords ~ (!StringIn("/*", "//") ~ (CharsWhile(OpCharNotSlash) | "/")).rep(1)
   )
 
   def VarId[_: P] = VarId0(true)
