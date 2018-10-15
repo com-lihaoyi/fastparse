@@ -1,6 +1,9 @@
 package fastparse
 
+import java.util
+
 import scala.annotation.{switch, tailrec}
+import scala.collection.mutable.ArrayBuffer
 
 object Util {
 
@@ -17,21 +20,28 @@ object Util {
     }
     rec(0)
   }
-
-  def prettyIndex(data: String, index: Int): String = {
-    var line = 1
-    var col = 1
+  def lineNumberLookup(data: String): Array[Int] = {
+    val lineStarts = new ArrayBuffer[Int]()
     var i = 0
-    while (i < index){
-      if (data(i) == '\n') {
+    var col = 1
+    var cr = false
+    while (i < data.length){
+      if (data(i) == '\r') {
         col = 1
-        line += 1
+        cr = true
+      }else if (data(i) == '\n') {
+        if (cr){
+          col = 1
+        }
+        cr = false
       }else{
+        if (col == 1) lineStarts.append(i)
         col += 1
+        cr = false
       }
       i += 1
     }
-    s"$line:$col"
+    lineStarts.toArray
   }
 
   def literalize(s: IndexedSeq[Char], unicode: Boolean = false) = {

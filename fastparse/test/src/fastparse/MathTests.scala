@@ -64,7 +64,7 @@ object MathTests extends TestSuite{
       )
       check(
         "(1+(2+3x))+4",
-        """Expected expr:1:1 / addSub:1:1 / divMul:1:1 / factor:1:1 / parens:1:1 / addSub:1:2 / divMul:1:4 / factor:1:4 / parens:1:4 / ([0-9] | [*/] | [+\-] | ")"):1:8, found "x))+4"""",
+        """Expected expr:1:1 / addSub:1:1 / divMul:1:1 / factor:1:1 / parens:1:1 / addSub:1:2 / divMul:1:4 / factor:1:4 / parens:1:4 / ([0-9] | [*/] | [+\\-] | ")"):1:8, found "x))+4"""",
         """Expected ")":7, found "x))+4""""
       )
     }
