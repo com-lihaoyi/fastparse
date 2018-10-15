@@ -7,7 +7,7 @@ trait Types extends Core{
   def ValVarDef[_: P]: P[Unit]
   def FunDef[_: P]: P[Unit]
 
-  def LocalMod[_: P]: P[Unit] = P( `abstract` | `final` | `sealed` | `implicit` | `lazy` )
+  def LocalMod[_: P]: P[Unit] = P( SimpleTrace("local-modifier")(`abstract` | `final` | `sealed` | `implicit` | `lazy`) )
   def AccessMod[_: P]: P[Unit] = {
     def AccessQualifier = P( "[" ~/ (`this` | Id) ~ "]" )
     P( (`private` | `protected`) ~ AccessQualifier.? )

@@ -123,7 +123,7 @@ object FailureTests extends TestSuite{
         | private[this] applyMacroFull = 1
         |}
       """.stripMargin,
-      expected = """("abstract" | "final" | "sealed" | "implicit" | "lazy" | "private" | "protected" | "override" | "val" | "var" | "def" | "type" | "trait" | "case" | "class" | "object")""",
+      expected = """(local-modifier | "private" | "protected" | "override" | definition)""",
       found = "applyM"
     )
     * - checkNeg(
@@ -376,7 +376,7 @@ object FailureTests extends TestSuite{
         |  val trueA = 1
         |}
       """.stripMargin,
-      expected = """("extends" | "<:" | "{" | ";" | "package" | "import" | "@" | "abstract" | "final" | "sealed" | "implicit" | "lazy" | "private" | "protected" | "override" | "trait" | "case" | "class" | "object" | end-of-input)""",
+      expected = """("extends" | "<:" | "{" | ";" | "package" | "import" | "@" | local-modifier | "private" | "protected" | "override" | "trait" | "case" | "class" | "object" | end-of-input)""",
       found = "val trueA"
     )
     * - checkNeg(
@@ -452,7 +452,7 @@ object FailureTests extends TestSuite{
         |class Parser([
         |
       """.stripMargin,
-      expected = """("implicit" | "@" | "abstract" | "final" | "sealed" | "lazy" | "private" | "protected" | "override" | "val" | "var" | Id | "," | ")")""",
+      expected = """("implicit" | "@" | local-modifier | "private" | "protected" | "override" | "val" | "var" | Id | "," | ")")""",
       found = "["
     )
     * - checkNeg(
@@ -461,7 +461,7 @@ object FailureTests extends TestSuite{
         | @mog
         |}
       """.stripMargin,
-      expected = """("." | "[" | "#" | "(" | "@" | "abstract" | "final" | "sealed" | "implicit" | "lazy" | "private" | "protected" | "override" | "val" | "var" | "def" | "type" | "trait" | "case" | "class" | "object")""",
+      expected = """("." | "[" | "#" | "(" | "@" | local-modifier | "private" | "protected" | "override" | definition)""",
       found = "}"
     )
     * - checkNeg(
@@ -478,7 +478,7 @@ object FailureTests extends TestSuite{
         |  { a: L = }
         |}
       """.stripMargin,
-      expected = """ ("." | "[" | "#" | "@" | "with" | "{" | "*" | Id | "=>" | "⇒" | "(" | "this" | "_" | "import" | "implicit" | "lazy" | "abstract" | "final" | "sealed" | "val" | "var" | "def" | "type" | "trait" | "case" | "class" | "object" | Expr | ";" | "}")""",
+      expected = """("." | "[" | "#" | "@" | "with" | "{" | "*" | Id | "=>" | "⇒" | "(" | "this" | "_" | "import" | "implicit" | "lazy" | local-modifier | definition | Expr | ";" | "}")""",
       found = "= }"
     )
       * - checkNeg(
@@ -513,7 +513,7 @@ object FailureTests extends TestSuite{
           |  private O
           |}
         """.stripMargin,
-        expected = """ ("[" | "abstract" | "final" | "sealed" | "implicit" | "lazy" | "private" | "protected" | "override" | "val" | "var" | "def" | "type" | "trait" | "case" | "class" | "object")""",
+        expected = """("[" | local-modifier | "private" | "protected" | "override" | definition)""",
         found = "O\n"
       )
       * - checkNeg(
@@ -606,7 +606,7 @@ object FailureTests extends TestSuite{
           |  }
           |}
         """.stripMargin,
-        expected = """("." | "[" | "=>" | "⇒" | "=" | "match" | ":" | ";" | "(" | "this" | Id | "_" | "import" | "@" | "implicit" | "lazy" | "abstract" | "final" | "sealed" | "val" | "var" | "def" | "type" | "trait" | Expr | "}")""",
+        expected = """("." | "[" | "=>" | "⇒" | "=" | "match" | ":" | ";" | "(" | "this" | Id | "_" | "import" | "@" | "implicit" | "lazy" | local-modifier | definition | Expr | "}")""",
         found = "case for"
       )
       * - checkNeg(
@@ -882,7 +882,7 @@ object FailureTests extends TestSuite{
           |    val x = 1
           |    ;
           |    """.stripMargin,
-        expected = """(";" | "import" | "@" | "implicit" | "lazy" | "abstract" | "final" | "sealed" | "val" | "var" | "def" | "type" | "trait" | "case" | "class" | "object" | Expr | "(" | "this" | Id | "_" | "}")""",
+        expected = """(";" | "import" | "@" | "implicit" | "lazy" | local-modifier | definition | Expr | "(" | "this" | Id | "_" | "}")""",
         found = ""
       )
 
