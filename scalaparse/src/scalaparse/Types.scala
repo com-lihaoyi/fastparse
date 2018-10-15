@@ -23,10 +23,9 @@ trait Types extends Core{
   def Type[_: P]: P[Unit] = P( `=>`.? ~~ PostfixType ~ TypeBounds ~ `*`.? )
 
 
-  // Can't cut after `Id` because it may be a `*`, in which case
-  // we may need to backtrack and settle for the `*`-postfix rather than
-  // an infix type
-  def InfixType[_: P] = P( CompoundType ~~ (NotNewline ~ Id ~~ OneNLMax ~ CompoundType).repX )
+  // Can't cut after `*` because we may need to backtrack and settle for
+  // the `*`-postfix rather than an infix type
+  def InfixType[_: P] = P( CompoundType ~~ (NotNewline ~ (`*` | Id./) ~~ OneNLMax ~ CompoundType).repX )
 
   def CompoundType[_: P]  = {
     def Refinement = P( OneNLMax ~ `{` ~/ Dcl.repX(sep=Semis) ~ `}` )

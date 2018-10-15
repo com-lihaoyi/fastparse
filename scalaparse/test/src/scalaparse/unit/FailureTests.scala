@@ -35,8 +35,8 @@ object FailureTests extends TestSuite{
         |  type T = (A B)
         |}
       """.stripMargin,
-      expected = """("." | "[" | "#" | "@" | "with" | "{" | "=>" | "⇒" | "forSome" | ">:" | "<:" | "*" | "," | ")")""",
-      found = "B)"
+      expected = """("(" | "-" | "." | [0-9] | "0x" | "true" | "false" | Id | "\"\"\"" | "\"" | "'" | "null" | "this" | "super" | "_" | "{")""",
+      found = ")"
     )
     * - checkNeg(
       """object O{
@@ -49,7 +49,7 @@ object FailureTests extends TestSuite{
     )
     * - checkNeg(
       "import scala.util.{Failure, Success + 1}",
-      expected = """ "," | "}" """,
+      expected = """("=>" | "⇒" | "," | "}")""",
       found = "+ 1}"
     )
     * - checkNeg(
@@ -60,7 +60,7 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      expected = """ ";" | Newline.rep(1) | "}" """,
+      expected = """("(" | ":" | "=" | "{" | ";" | "}")""",
       found = "](input: S"
     )
     * - checkNeg(
@@ -70,7 +70,7 @@ object FailureTests extends TestSuite{
         |  throw 1
         |}
       """.stripMargin,
-      expected = """ "," | ")" """,
+      expected = """("." | "[" | "(" | "{" | "_" | Id | "=>" | "⇒" | "=" | "match" | ":" | "," | ")")""",
       found ="}"
     )
     * - checkNeg(
