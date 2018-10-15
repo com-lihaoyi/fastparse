@@ -35,7 +35,7 @@ object FailureTests extends TestSuite{
         |  type T = (A B)
         |}
       """.stripMargin,
-      expected = """("(" | literal-type | "this" | "super" | Id | "_" | "{")""",
+      expected = """("(" | literal | "this" | "super" | Id | "_" | "{")""",
       found = ")"
     )
     * - checkNeg(
@@ -137,7 +137,7 @@ object FailureTests extends TestSuite{
         |                      }
         |}
       """.stripMargin,
-      expected = """("=>" | "⇒" | "(" | literal-type | "this" | "super" | Id | "_" | "{")""",
+      expected = """("=>" | "⇒" | "(" | literal | "this" | "super" | Id | "_" | "{")""",
       found = "= {"
     )
     * - checkNeg(
@@ -171,7 +171,7 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      expected = """(XmlPattern | "_" | "-" | "." | [0-9] | "0x" | "true" | "false" | Id | "\"\"\"" | "\"" | "'" | "null" | "(" | "this" | "super" | !AlphabetKeywords | SymbolicKeywords)""",
+      expected = """(XmlPattern | "_" | literal | "(" | "this" | "super" | Id | !AlphabetKeywords | SymbolicKeywords)""",
       found = "=> 0"
     )
     * - checkNeg(
@@ -285,7 +285,7 @@ object FailureTests extends TestSuite{
         |    val c = f
         |}
       """.stripMargin,
-      expected = """(XmlPattern | "_" | "-" | "." | [0-9] | "0x" | "true" | "false" | Id | "\"\"\"" | "\"" | "'" | "null" | "(" | "this" | "super" | !AlphabetKeywords)""",
+      expected = """(XmlPattern | "_" | literal | "(" | "this" | "super" | Id | !AlphabetKeywords)""",
       found = "val b = e"
     )
     * - checkNeg(
@@ -308,7 +308,7 @@ object FailureTests extends TestSuite{
         |  1
         |}
       """.stripMargin,
-      expected = """("=>" | "⇒" | "(" | literal-type | "this" | "super" | Id | "_" | "{")""",
+      expected = """("=>" | "⇒" | "(" | literal | "this" | "super" | Id | "_" | "{")""",
       found = "val c"
     )
     * - checkNeg(
@@ -326,7 +326,7 @@ object FailureTests extends TestSuite{
         |  a =:= .c
         |}
       """.stripMargin,
-      expected = """("[" | [\\-+!~] | XmlExpr | "new" | "{" | "-" | [0-9] | "0x" | "true" | "false" | Id | "\"\"\"" | "\"" | "'" | "null" | "this" | "super" | "_" | "(" | "=>" | "⇒" | "=" | "match" | ":" | ";" | "}")""",
+      expected = """("[" | [\\-+!~] | XmlExpr | "new" | "{" | literal | "this" | "super" | Id | "_" | "(" | "=>" | "⇒" | "=" | "match" | ":" | ";" | "}")""",
       found = ".c"
     )
     * - checkNeg(
@@ -337,7 +337,7 @@ object FailureTests extends TestSuite{
         |  )
         |}
       """.stripMargin,
-      expected = """("_" | "=>" | "⇒" | "(" | literal-type | "this" | "super" | Id | "{" | "@")""",
+      expected = """("_" | "=>" | "⇒" | "(" | literal | "this" | "super" | Id | "{" | "@")""",
       found = ")\n}"
     )
     * - checkNeg(
@@ -346,7 +346,7 @@ object FailureTests extends TestSuite{
         |  a[)
         |}
       """.stripMargin,
-      expected = """("=>" | "⇒" | "(" | literal-type | "this" | "super" | Id | "_" | "{" | "," | "]")""",
+      expected = """("=>" | "⇒" | "(" | literal | "this" | "super" | Id | "_" | "{" | "," | "]")""",
       found = ")"
     )
     * - checkNeg(
@@ -404,7 +404,7 @@ object FailureTests extends TestSuite{
         |  var = 2
         |}
       """.stripMargin,
-      expected = """(Id | "_" | XmlPattern | "-" | "." | [0-9] | "0x" | "true" | "false" | "\"\"\"" | "\"" | "'" | "null" | "(" | "this" | "super" | !AlphabetKeywords | SymbolicKeywords)""",
+      expected = """(Id | "_" | XmlPattern | literal | "(" | "this" | "super" | !AlphabetKeywords | SymbolicKeywords)""",
       found = "= 2"
     )
     * - checkNeg(
@@ -415,7 +415,7 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      expected = """(XmlPattern | "_" | "-" | "." | [0-9] | "0x" | "true" | "false" | Id | "\"\"\"" | "\"" | "'" | "null" | "(" | "this" | "super" | !AlphabetKeywords | SymbolicKeywords)""",
+      expected = """ (XmlPattern | "_" | literal | "(" | "this" | "super" | Id | !AlphabetKeywords | SymbolicKeywords)""",
       found = "=> 1"
     )
     * - checkNeg(
@@ -434,7 +434,7 @@ object FailureTests extends TestSuite{
         |  a!.b
         |}
       """.stripMargin,
-      expected = """("[" | [\\-+!~] | XmlExpr | "new" | "{" | "-" | [0-9] | "0x" | "true" | "false" | Id | "\"\"\"" | "\"" | "'" | "null" | "this" | "super" | "_" | "(" | "=>" | "⇒" | "=" | "match" | ":" | ";" | "}")""",
+      expected = """("[" | [\\-+!~] | XmlExpr | "new" | "{" | literal | "this" | "super" | Id | "_" | "(" | "=>" | "⇒" | "=" | "match" | ":" | ";" | "}")""",
       found = ".b"
     )
     * - checkNeg(
@@ -560,7 +560,7 @@ object FailureTests extends TestSuite{
         |  } yield x
         |}
       """.stripMargin,
-      expected = """("." | "[" | "=>" | "⇒" | "=" | "match" | ":" | "if" | ";" | "val" | "_" | "`" | character-predicate | Id | XmlPattern | "-" | [0-9] | "0x" | "true" | "false" | "\"\"\"" | "\"" | "'" | "null" | "(" | "this" | "super" | "}")""",
+      expected = """("." | "[" | "=>" | "⇒" | "=" | "match" | ":" | "if" | ";" | "val" | "_" | "`" | character-predicate | Id | XmlPattern | literal | "(" | "this" | "super" | "}")""",
       found = "{\n"
     )
       * - checkNeg(
@@ -584,7 +584,7 @@ object FailureTests extends TestSuite{
           |}
           |
         """.stripMargin,
-        expected = """("[" | "#" | "@" | "with" | "{" | "*" | Id | "=>" | "⇒" | "forSome" | ">:" | "<:" | literal-type | "]")""",
+        expected = """("[" | "#" | "@" | "with" | "{" | "*" | Id | "=>" | "⇒" | "forSome" | ">:" | "<:" | literal | "]")""",
         found = ", ]"
       )
       * - checkNeg(
@@ -679,7 +679,7 @@ object FailureTests extends TestSuite{
            |  val x, = 1
            |}
         """.stripMargin,
-        expected = """(Id | "_" | XmlPattern | "-" | "." | [0-9] | "0x" | "true" | "false" | "\"\"\"" | "\"" | "'" | "null" | "(" | "this" | "super" | !AlphabetKeywords | SymbolicKeywords)""",
+        expected = """(Id | "_" | XmlPattern | literal | "(" | "this" | "super" | !AlphabetKeywords | SymbolicKeywords)""",
         found = "= 1"
       )
     * - checkNeg(
@@ -688,14 +688,14 @@ object FailureTests extends TestSuite{
          |  val (x,) = 1
          |}
         """.stripMargin,
-      expected = """(chars-while(1) | [_] | ":" | "@" | "\"\"\"" | "\"" | "." | "[" | "(" | Id | "|" | XmlPattern | ")")""",
+      expected = """(chars-while(1) | [_] | ":" | "@" | "\"\"\"" | "\"" | "." | "[" | "(" | Id | "|" | XmlPattern | literal | ")")""",
       found = ",)"
     )
     * - checkNeg(
       s"""
          |object X{ val (_:) = 1 }
         """.stripMargin,
-      expected = """("(" | literal-type | "this" | "super" | Id | "_" | "{")""",
+      expected = """("(" | literal | "this" | "super" | Id | "_" | "{")""",
       found = ") = 1"
     )
     * - checkNeg(
@@ -716,7 +716,7 @@ object FailureTests extends TestSuite{
       s"""
          |object X{type T = A with}
         """.stripMargin,
-      expected = """("(" | literal-type | "this" | "super" | Id | "_")""",
+      expected = """("(" | literal | "this" | "super" | Id | "_")""",
       found = "}"
     )
     * - checkNeg(
@@ -737,14 +737,14 @@ object FailureTests extends TestSuite{
       s"""
          |object X{f[A,]}
         """.stripMargin,
-      expected = """("\"\"\"" | "\"" | "." | "[" | "#" | "@" | "with" | "{" | "*" | Id | "=>" | "⇒" | "forSome" | ">:" | "<:" | literal-type | "]")""",
+      expected = """("\"\"\"" | "\"" | "." | "[" | "#" | "@" | "with" | "{" | "*" | Id | "=>" | "⇒" | "forSome" | ">:" | "<:" | literal | "]")""",
       found = ",]"
     )
     * - checkNeg(
       s"""
          |object X{def f[T <% A <%] = 1}
         """.stripMargin,
-      expected = """("=>" | "⇒" | "(" | literal-type | "this" | "super" | Id | "_" | "{")""",
+      expected = """("=>" | "⇒" | "(" | literal | "this" | "super" | Id | "_" | "{")""",
       found = "]"
     )
     * - checkNeg(
@@ -780,7 +780,7 @@ object FailureTests extends TestSuite{
       s"""
          |object X{type T = }
         """.stripMargin,
-      expected = """("=>" | "⇒" | "(" | literal-type | "this" | "super" | Id | "_" | "{")""",
+      expected = """("=>" | "⇒" | "(" | literal | "this" | "super" | Id | "_" | "{")""",
       found = "}\n"
     )
     * - checkNeg(
@@ -794,7 +794,7 @@ object FailureTests extends TestSuite{
       s"""
          |object X{type T <: }
         """.stripMargin,
-      expected = """("=>" | "⇒" | "(" | literal-type | "this" | "super" | Id | "_" | "{")""",
+      expected = """("=>" | "⇒" | "(" | literal | "this" | "super" | Id | "_" | "{")""",
       found = "}\n"
     )
       * - checkNeg(
@@ -851,7 +851,7 @@ object FailureTests extends TestSuite{
            |  for(i <- Nil if x: Int => bar) 1
            |}
          """.stripMargin,
-        expected = """("\"\"\"" | "\"" | "." | "[" | "(" | "{" | "_" | Id | ";" | "val" | "`" | !AlphabetKeywords | SymbolicKeywords | XmlPattern | "-" | [0-9] | "0x" | "true" | "false" | "'" | "null" | "this" | "super" | "if" | ")")""",
+        expected = """("\"\"\"" | "\"" | "." | "[" | "(" | "{" | "_" | Id | ";" | "val" | "`" | !AlphabetKeywords | SymbolicKeywords | XmlPattern | literal | "this" | "super" | "if" | ")")""",
         found = ": Int"
       )
       * - checkNeg(
@@ -861,7 +861,7 @@ object FailureTests extends TestSuite{
       )
       * - checkNeg(
         s"""object Foo{ (i: Int => +i) }""",
-        expected = """("(" | literal-type | "this" | "super" | Id | "_" | "{")""",
+        expected = """("(" | literal | "this" | "super" | Id | "_" | "{")""",
         found = ")"
       )
       * - checkNeg(
@@ -872,7 +872,7 @@ object FailureTests extends TestSuite{
           |    ;
           |  } yield a
           |}""".stripMargin,
-        expected = """("val" | "_" | "`" | character-predicate | Id | XmlPattern | "-" | "." | [0-9] | "0x" | "true" | "false" | "\"\"\"" | "\"" | "'" | "null" | "(" | "this" | "super" | "if")""",
+        expected = """("val" | "_" | "`" | character-predicate | Id | XmlPattern | literal | "(" | "this" | "super" | "if")""",
         found = "} yield a"
       )
       * - checkNeg(
