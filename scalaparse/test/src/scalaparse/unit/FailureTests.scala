@@ -123,7 +123,7 @@ object FailureTests extends TestSuite{
         | private[this] applyMacroFull = 1
         |}
       """.stripMargin,
-      expected = """(local-modifier | "private" | "protected" | "override" | definition)""",
+      expected = """(modifier | definition)""",
       found = "applyM"
     )
     * - checkNeg(
@@ -376,7 +376,7 @@ object FailureTests extends TestSuite{
         |  val trueA = 1
         |}
       """.stripMargin,
-      expected = """("extends" | "<:" | "{" | ";" | "package" | "import" | "@" | local-modifier | "private" | "protected" | "override" | "trait" | "case" | "class" | "object" | end-of-input)""",
+      expected = """ ("extends" | "<:" | "{" | ";" | "package" | "import" | "@" | modifier | "trait" | "case" | "class" | "object" | end-of-input)""",
       found = "val trueA"
     )
     * - checkNeg(
@@ -452,7 +452,7 @@ object FailureTests extends TestSuite{
         |class Parser([
         |
       """.stripMargin,
-      expected = """("implicit" | "@" | local-modifier | "private" | "protected" | "override" | "val" | "var" | Id | "," | ")")""",
+      expected = """("implicit" | "@" | modifier | "val" | "var" | Id | "," | ")")""",
       found = "["
     )
     * - checkNeg(
@@ -461,7 +461,7 @@ object FailureTests extends TestSuite{
         | @mog
         |}
       """.stripMargin,
-      expected = """("." | "[" | "#" | "(" | "@" | local-modifier | "private" | "protected" | "override" | definition)""",
+      expected = """("." | "[" | "#" | "(" | "@" | modifier | definition)""",
       found = "}"
     )
     * - checkNeg(
@@ -513,7 +513,7 @@ object FailureTests extends TestSuite{
           |  private O
           |}
         """.stripMargin,
-        expected = """("[" | local-modifier | "private" | "protected" | "override" | definition)""",
+        expected = """("[" | modifier | definition)""",
         found = "O\n"
       )
       * - checkNeg(

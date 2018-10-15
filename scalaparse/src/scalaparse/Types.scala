@@ -16,7 +16,7 @@ trait Types extends Core{
     P( (`val` | `var`) ~/ ValVarDef | `def` ~/ FunDef | `type` ~/ TypeDef )
   }
 
-  def Mod[_: P]: P[Unit] = P( LocalMod | AccessMod | `override` )
+  def Mod[_: P]: P[Unit] = P( SimpleTrace("modifier")(LocalMod | AccessMod | `override`) )
 
   def ExistentialClause[_: P] = P( `forSome` ~/ `{` ~ Dcl.repX(1, Semis) ~ `}` )
   def PostfixType[_: P] = P( InfixType ~ (`=>` ~/ Type | ExistentialClause).? )
