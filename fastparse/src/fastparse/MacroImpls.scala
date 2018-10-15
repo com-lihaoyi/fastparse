@@ -377,7 +377,7 @@ object MacroImpls {
     })
 
     val parsed = parseCharCls(c)(reify(ctx.splice.input(ctx.splice.index)), literals)
-    val bracketed = c.Expr[String](Literal(Constant(literals.map("[" + _ + "]").mkString)))
+    val bracketed = c.Expr[String](Literal(Constant(literals.map(l => "[" + Util.literalize(l).drop(1).dropRight(1) + "]").mkString)))
     reify {
       val res =
         if (!ctx.splice.input.isReachable(ctx.splice.index)) {
@@ -507,7 +507,7 @@ object MacroImpls {
       case _ => c.abort(c.enclosingPosition, "Function can only accept constant singleton type")
     }
 
-    val bracketed = c.Expr[String](Literal(Constant("[" + literal + "]")))
+    val bracketed = c.Expr[String](Literal(Constant("[" + Util.literalize(literal).drop(1).dropRight(1) + "]")))
 
     val ctx1 = TermName(c.freshName("ctx"))
     val index = TermName(c.freshName("index"))
