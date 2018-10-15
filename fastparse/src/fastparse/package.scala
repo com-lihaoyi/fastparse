@@ -190,13 +190,16 @@ package object fastparse {
       val startPos = ctx.index
       val startCut = ctx.cut
       val oldNoCut = ctx.noDropBuffer
+      val oldFailureAggregate = ctx.failureAggregate
       ctx.noDropBuffer = true
       parse0()
       ctx.noDropBuffer = oldNoCut
+      ctx.failureAggregate = oldFailureAggregate
       val msg = ctx.shortFailureMsg
+
       val res =
-        if (!ctx.isSuccess) ctx.freshSuccess((), startPos)
-        else ctx.augmentFailure(startPos)
+        if (ctx.isSuccess) ctx.freshFailure(startPos)
+        else ctx.freshSuccess((), startPos)
 
       if (ctx.tracingEnabled) ctx.aggregateMsg(() => "!" + msg())
       res.cut = startCut
