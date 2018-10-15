@@ -163,7 +163,7 @@ final class ParsingRun[+T](val input: ParserInput,
           else List(shortFailureMsg() -> index)
         }else{
 
-          val tokens = failureAggregate.distinct.reverse.map(_())
+          val tokens = failureAggregate.reverse.map(_()).distinct
           val combined =
             if (tokens.length == 1) tokens.mkString(" | ")
             else tokens.mkString("(", " | ", ")")

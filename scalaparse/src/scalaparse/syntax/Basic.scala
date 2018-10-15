@@ -19,7 +19,7 @@ object Basic {
   def FloatType[_: P] = P( CharIn("fFdD") )
 
   def WSChars[_: P] = P( CharsWhileIn("\u0020\u0009") )
-  def Newline[_: P] = P( StringIn("\r\n", "\n") ).opaque("Newline")
+  def Newline[_: P] = P( NoTrace(StringIn("\r\n", "\n")) ).opaque("Newline")
   def Semi[_: P] = P( ";" | Newline.rep(1) )
   def OpChar[_: P] = P ( CharPred(isOpChar) )
 

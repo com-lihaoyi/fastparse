@@ -286,6 +286,16 @@ package object fastparse {
     res
   }
 
+  def NoTrace[T](p: => ParsingRun[T], label: String = null)(implicit ctx: ParsingRun[_]): ParsingRun[T] = {
+    val preMsg = ctx.failureAggregate
+    val res = p
+    if (ctx.tracingEnabled && res.index >= res.traceIndex) {
+      ctx.failureAggregate = preMsg
+      if (label != null) ctx.failureAggregate ::= (() => label)
+    }
+    res
+  }
+
   def Pass(implicit ctx: ParsingRun[_]): ParsingRun[Unit] = {
     val res = ctx.freshSuccess(())
     if (ctx.tracingEnabled) ctx.setMsg(() => "Pass")

@@ -74,8 +74,11 @@ trait Exprs extends Core with Types with Xml{
       def PostfixLambda = P( PostfixExpr ~ (`=>` ~ LambdaRhs.? | SuperPostfixSuffix).? )
       def SmallerExprOrLambda = P( ParenedLambda | PostfixLambda )
       P(
-        If | While | Try | DoWhile | For | Throw | Return |
-        ImplicitLambda | SmallerExprOrLambda
+        NoTrace(
+          If | While | Try | DoWhile | For | Throw | Return |
+          ImplicitLambda | SmallerExprOrLambda,
+          "Expr"
+        )
       )
     }
     def SuperPostfixSuffix[_: P] = P( (`=` ~/ Expr).? ~ MatchAscriptionSuffix.? )
