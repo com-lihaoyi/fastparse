@@ -34,7 +34,7 @@ package object fastparse {
     val res =
       if (startsWithIgnoreCase(ctx.input, s, ctx.index)) ctx.freshSuccess((), ctx.index + s.length)
       else ctx.freshFailure().asInstanceOf[ParsingRun[Unit]]
-    if (ctx.tracingEnabled) ctx.aggregateFailure(() => Util.literalize(s))
+    if (ctx.tracingEnabled) ctx.aggregateMsg(() => Util.literalize(s))
     res
   }
 
@@ -179,7 +179,7 @@ package object fastparse {
         }
       } else if (!res.isSuccess){
         ctx.failureStack = Nil
-        if (ctx.tracingEnabled) ctx.aggregateFailure(() => msg)
+        if (ctx.tracingEnabled) ctx.aggregateMsg(() => msg)
         ctx.index = oldIndex
       }
       res
@@ -198,7 +198,7 @@ package object fastparse {
         if (!ctx.isSuccess) ctx.freshSuccess((), startPos)
         else ctx.augmentFailure(startPos)
 
-      if (ctx.tracingEnabled) ctx.aggregateFailure(() => "!" + msg())
+      if (ctx.tracingEnabled) ctx.aggregateMsg(() => "!" + msg())
       res.cut = startCut
       res
     }
@@ -260,7 +260,7 @@ package object fastparse {
     val res =
       if (ctx.isSuccess) ctx.freshSuccess((), startPos)
       else ctx.asInstanceOf[ParsingRun[Unit]]
-    if (ctx.tracingEnabled) ctx.aggregateFailure(() => s"&(${msg()})")
+    if (ctx.tracingEnabled) ctx.setMsg(() => s"&(${msg()})")
     res.cut = startCut
     res
 
@@ -270,7 +270,7 @@ package object fastparse {
     val res =
       if (!ctx.input.isReachable(ctx.index)) ctx.freshSuccess(())
       else ctx.freshFailure().asInstanceOf[ParsingRun[Unit]]
-    if (ctx.tracingEnabled) ctx.aggregateFailure(() => "end-of-input")
+    if (ctx.tracingEnabled) ctx.aggregateMsg(() => "end-of-input")
     res
 
   }
@@ -279,56 +279,53 @@ package object fastparse {
     val res =
       if (ctx.index == 0) ctx.freshSuccess(())
       else ctx.freshFailure().asInstanceOf[ParsingRun[Unit]]
-    if (ctx.tracingEnabled) ctx.aggregateFailure(() => "start-of-input")
+    if (ctx.tracingEnabled) ctx.aggregateMsg(() => "start-of-input")
     res
   }
 
   def Pass(implicit ctx: ParsingRun[_]): ParsingRun[Unit] = {
     val res = ctx.freshSuccess(())
-    if (ctx.tracingEnabled) ctx.aggregateFailure(() => "Pass")
+    if (ctx.tracingEnabled) ctx.setMsg(() => "Pass")
     res
   }
 
   def Pass[T](v: T)(implicit ctx: ParsingRun[_]): ParsingRun[T] = {
     val res = ctx.freshSuccess(v)
-    if (ctx.tracingEnabled) ctx.aggregateFailure(() => "Pass")
+    if (ctx.tracingEnabled) ctx.setMsg(() => "Pass")
     res
   }
 
   def Fail(implicit ctx: ParsingRun[_]): ParsingRun[Nothing] = {
     val res = ctx.freshFailure()
-    if (ctx.tracingEnabled) ctx.aggregateFailure(() => "fail")
+    if (ctx.tracingEnabled) ctx.setMsg(() => "fail")
     res
   }
 
   def Index(implicit ctx: ParsingRun[_]): ParsingRun[Int] = {
     val res = ctx.freshSuccess(ctx.index)
-    if (ctx.tracingEnabled) ctx.aggregateFailure(() => "Index")
+    if (ctx.tracingEnabled) ctx.setMsg(() => "Index")
     res
   }
 
   def AnyChar(implicit ctx: ParsingRun[_]): ParsingRun[Unit] = {
-    val startPos = ctx.index
     val res =
       if (!ctx.input.isReachable(ctx.index)) ctx.freshFailure().asInstanceOf[ParsingRun[Unit]]
       else ctx.freshSuccess((), ctx.index + 1)
-    if (ctx.tracingEnabled) ctx.aggregateFailure(() => "any-character")
+    if (ctx.tracingEnabled) ctx.aggregateMsg(() => "any-character")
     res
   }
   def SingleChar(implicit ctx: ParsingRun[_]): ParsingRun[Char] = {
-    val startPos = ctx.index
     val res =
       if (!ctx.input.isReachable(ctx.index)) ctx.freshFailure().asInstanceOf[ParsingRun[Char]]
       else ctx.freshSuccess(ctx.input(ctx.index), ctx.index + 1)
-    if (ctx.tracingEnabled) ctx.aggregateFailure(() => "any-character")
+    if (ctx.tracingEnabled) ctx.aggregateMsg(() => "any-character")
     res
   }
   def CharPred(p: Char => Boolean)(implicit ctx: ParsingRun[_]): ParsingRun[Unit] = {
-    val startPos = ctx.index
     val res =
       if (!(ctx.input.isReachable(ctx.index) && p(ctx.input(ctx.index)))) ctx.freshFailure().asInstanceOf[ParsingRun[Unit]]
       else ctx.freshSuccess((), ctx.index + 1)
-    if (ctx.tracingEnabled) ctx.aggregateFailure(() => "character-predicate")
+    if (ctx.tracingEnabled) ctx.aggregateMsg(() => "character-predicate")
     res
   }
   def CharIn(s: String*)(implicit ctx: ParsingRun[_]): ParsingRun[Unit] = macro MacroImpls.charInMacro
@@ -348,7 +345,7 @@ package object fastparse {
     val res =
       if (index - start >= min) ctx.freshSuccess((), index = index)
       else ctx.freshFailure()
-    if (ctx.tracingEnabled) ctx.aggregateFailure(() => s"chars-while($min)")
+    if (ctx.tracingEnabled) ctx.aggregateMsg(() => s"chars-while($min)")
     res
   }
 

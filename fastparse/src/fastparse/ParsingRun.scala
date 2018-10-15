@@ -82,12 +82,14 @@ final class ParsingRun[+T](val input: ParserInput,
                            val instrument: ParsingRun.Instrument){
 
   val tracingEnabled = traceIndex != -1
-  var isFreshFailure = false
 
-  def aggregateFailure(f: () => String): this.type = {
-    if (!isSuccess && index == traceIndex && isFreshFailure) failureAggregate ::= f
+  def setMsg(f: () => String): Unit = {
     shortFailureMsg = f
-    this
+  }
+
+  def aggregateMsg(f: () => String): Unit = {
+    if (!isSuccess && index == traceIndex) failureAggregate ::= f
+    shortFailureMsg = f
   }
 
   // Use telescoping methods rather than default arguments to try and minimize
@@ -126,14 +128,12 @@ final class ParsingRun[+T](val input: ParserInput,
   }
 
   def freshFailure(): ParsingRun[Nothing] = {
-    isFreshFailure = true
     failureStack = Nil
     isSuccess = false
     this.asInstanceOf[ParsingRun[Nothing]]
   }
 
   def freshFailure(startPos: Int): ParsingRun[Nothing] = {
-    isFreshFailure = true
     failureStack = Nil
     isSuccess = false
     index = startPos
@@ -142,13 +142,11 @@ final class ParsingRun[+T](val input: ParserInput,
 
 
   def augmentFailure(index: Int): ParsingRun[Nothing] = {
-    isFreshFailure = false
     this.index = index
     this.asInstanceOf[ParsingRun[Nothing]]
   }
 
   def augmentFailure(index: Int, cut: Boolean): ParsingRun[Nothing] = {
-    isFreshFailure = false
     this.index = index
     this.cut = cut
     this.asInstanceOf[ParsingRun[Nothing]]

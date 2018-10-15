@@ -176,6 +176,7 @@ object perftests extends Module{
       cssparse.jvm("2.12.7").test,
       fastparse.jvm("2.12.7").test,
     )
+
   }
 
 
@@ -201,6 +202,7 @@ object perftests extends Module{
 
   trait PerfTestModule extends ScalaModule with TestModule{
     def scalaVersion = "2.12.7"
+    def scalacOptions = Seq("-opt:l:method")
     def resources = T.sources{
       Seq(PathRef(perftests.millSourcePath / "resources")) ++
         fastparse.jvm("2.12.7").test.resources()
