@@ -102,13 +102,18 @@ package object fastparse {
 
     def map[V](f: T => V): ParsingRun[V] = macro MacroImpls.mapMacro[T, V]
 
-    def filter(f: T => Boolean)(implicit ctx: ParsingRun[Any]): ParsingRun[T] = macro MacroImpls.filterMacro[T]
+    def filter(f: T => Boolean)
+              (implicit ctx: ParsingRun[Any]): ParsingRun[T] = macro MacroImpls.filterMacro[T]
 
     def flatMap[V](f: T => ParsingRun[V]): ParsingRun[V] = macro MacroImpls.flatMapMacro[T, V]
 
-    def |[V >: T](other: ParsingRun[V])(implicit ctx: ParsingRun[Any]): ParsingRun[V] = macro MacroImpls.eitherMacro[T, V]
+    def |[V >: T](other: ParsingRun[V])
+                 (implicit ctx: ParsingRun[Any]): ParsingRun[V] = macro MacroImpls.eitherMacro[T, V]
 
     def !(implicit ctx: ParsingRun[Any]): ParsingRun[String] = macro MacroImpls.captureMacro
+
+    def ?[V](implicit optioner: Implicits.Optioner[T, V],
+             ctx: ParsingRun[Any]): ParsingRun[V] = macro MacroImpls.optionMacro[T, V]
   }
 
 
@@ -196,25 +201,6 @@ package object fastparse {
       res
     }
 
-    def ?[V](implicit optioner: Implicits.Optioner[T, V], ctx: ParsingRun[Any]): ParsingRun[V] = {
-      val startPos = ctx.index
-      val startCut = ctx.cut
-      ctx.cut = false
-      parse0()
-      val msg = ctx.shortFailureMsg
-      if (ctx.tracingEnabled) ctx.shortFailureMsg = () => msg() + ".?"
-      if (ctx.isSuccess) {
-        val res = ctx.freshSuccess(optioner.some(ctx.successValue.asInstanceOf[T]))
-        res.cut |= startCut
-        res
-      }
-      else if (ctx.cut) ctx.asInstanceOf[ParsingRun[V]]
-      else {
-        val res = ctx.freshSuccess(optioner.none, startPos)
-        res.cut |= startCut
-        res
-      }
-    }
   }
 
   implicit def LogOpsStr(parse0: String)(implicit ctx: ParsingRun[Any]): fastparse.LogByNameOps[Unit] =

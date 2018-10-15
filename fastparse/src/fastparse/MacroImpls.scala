@@ -528,5 +528,32 @@ object MacroImpls {
     reify{ new fastparse.LogByNameOps[Unit](literal.splice)(ctx.splice)}
   }
 
+  def optionMacro[T: c.WeakTypeTag, V: c.WeakTypeTag](c: Context)
+                 (optioner: c.Expr[Implicits.Optioner[T, V]],
+                  ctx: c.Expr[ParsingRun[Any]]): c.Expr[ParsingRun[V]] = {
+    import c.universe._
+    val lhs0 = c.prefix.asInstanceOf[c.Expr[EagerOps[_]]]
+    reify{
+      ctx.splice match{ case ctx1 =>
+        val startPos = ctx1.index
+        val startCut = ctx1.cut
+        ctx1.cut = false
+        lhs0.splice
+        val msg = ctx1.shortFailureMsg
+        if (ctx1.tracingEnabled) ctx1.shortFailureMsg = () => msg() + ".?"
+        if (ctx1.isSuccess) {
+          val res = ctx1.freshSuccess(optioner.splice.some(ctx1.successValue.asInstanceOf[T]))
+          res.cut |= startCut
+          res
+        }
+        else if (ctx1.cut) ctx1.asInstanceOf[ParsingRun[V]]
+        else {
+          val res = ctx1.freshSuccess(optioner.splice.none, startPos)
+          res.cut |= startCut
+          res
+        }
 
+      }
+    }
+  }
 }
