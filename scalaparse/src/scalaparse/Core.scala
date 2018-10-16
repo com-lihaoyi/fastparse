@@ -22,8 +22,8 @@ trait Core extends syntax.Literals{
 
   import Key._
   // Keywords that match themselves and nothing else
-  def `=>`[_: P] = O("=>") | O("⇒")
-  def `<-`[_: P] = O("<-") | O("←")
+  def `=>`[_: P] = (O("=>") | O("⇒")).opaque("\"=>\"")
+  def `<-`[_: P] = O("<-") | O("←").opaque("\"<-\"")
   def `:`[_: P] = O(":")
   def `=`[_: P] = O("=")
   def `@`[_: P] = O("@")

@@ -17,19 +17,20 @@ object Identifiers{
 
   def Operator[_: P] = P(
     !SymbolicKeywords ~ (!StringIn("/*", "//") ~ (CharsWhile(OpCharNotSlash) | "/")).rep(1)
-  )
+  ).opaque("operator")
 
-  def VarId[_: P] = VarId0(true)
+  def VarId[_: P] = P( VarId0(true) ).opaque("var-id")
 
   def VarId0[_: P](dollar: Boolean) = P( !Keywords ~ Lower ~ IdRest(dollar) )
 
   def UppercaseId[_: P](dollar: Boolean) = P( !Keywords ~ Upper ~ IdRest(dollar) )
   def PlainId[_: P] = P( UppercaseId(true) | VarId | Operator ~ (!OpChar | &(StringIn("/*", "//"))) )
+    .opaque("plain-id")
 
-  def PlainIdNoDollar[_: P] = P( UppercaseId(false) | VarId0(false) | Operator )
+  def PlainIdNoDollar[_: P] = P( UppercaseId(false) | VarId0(false) | Operator ).opaque("plain-id")
 
   def BacktickId[_: P] = P( "`" ~ CharsWhile(NotBackTick) ~ "`" )
-  def Id[_: P]: P[Unit] = P( BacktickId | PlainId ).opaque("Id")
+  def Id[_: P]: P[Unit] = P( BacktickId | PlainId ).opaque("id")
 
   def IdRest[_: P](allowDollar: Boolean) = {
 
