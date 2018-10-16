@@ -3,12 +3,27 @@ package fastparse
 /**
   * Models an in-progress parsing run; contains all the mutable state that may
   * be necessary during the parse, in order to avoid the individual parsers
-  * needing to perform their own allocations and instantiations.
+  * needing to perform their own allocations and instantiations, and greatly
+  * improving performance
   *
-  * For any higher-order-parser that wishes to ignore changes to a field within
-  * their wrapped parser method, a common pattern is to save the value of the
-  * field before the wrapped parser runs, and then re-set the field. e.g. this
-  * can be used to backtrack [[index]] after a lookahead parser finishes
+  * There are a few patterns that let us program with these mutable variables
+  * in a sort-of-pure-functional way:
+  *
+  * - If a parser that wishes to ignore changes to a field within their child
+  *   parsers, a common pattern is to save the value of the field before the
+  *   wrapped parser runs, and then re-set the field. e.g. this can be used to
+  *   backtrack [[index]] after a lookahead parser finishes
+  *
+  * - If a parser wants to read the value of the field "returned" by multiple
+  *   child parsers, make sure to read the field into a local variable after
+  *   each child parser is complete to make sure the value you want from an
+  *   earlier child isn't stomped over by a later child
+  *
+  *   In general, for a parser to "return" a value in a mutable field, it is
+  *   sufficient to simply set the value of that field before returning. It
+  *   is the parent-parser's responsibility to make sure it reads out the value
+  *   of the field to a local variable before running another child parser that
+  *   will over-write the mutable field
   *
   * @param input            The input to the parsing run, as a [[ParserInput]].
   *
@@ -22,6 +37,9 @@ package fastparse
   * @param traceIndex       The index we wish to trace if tracing is enabled, else
   *                         -1. Used to find failure messages to aggregate into
   *                         `failureAggregate`
+  *
+  * @param instrument       Callbacks that can be injected before/after every
+  *                         `P(...)` parser.
   *
   * @param failureAggregate When tracing is enabled, this collects up all the
   *                         upper-most failures that happen at [[traceIndex]]
@@ -51,7 +69,6 @@ package fastparse
   * @param failureStack     The stack of named `P(...)` parsers in effect when
   *                         the failure occured; only constructed when tracing
   *                         is enabled via `traceIndex != -1`
-
   *
   * @param isSuccess        Whether or not the parse is currently successful
   *
@@ -92,14 +109,12 @@ package fastparse
   *                         the previous value after they finish. Forgetting to
   *                         re-set it to the previous value can cause strange
   *                         behavior or crashes.
-  *
-  * @param instrument       Callbacks that can be injected before/after every
-  *                         `P(...)` parser.
   */
 final class ParsingRun[+T](val input: ParserInput,
                            val startIndex: Int,
                            val originalParser: ParsingRun[_] => ParsingRun[_],
                            val traceIndex: Int,
+                           val instrument: Instrument,
                            // Mutable vars below:
                            var failureAggregate: List[Lazy[String]],
                            var shortParserMsg: Lazy[String],
@@ -112,8 +127,7 @@ final class ParsingRun[+T](val input: ParserInput,
                            var cut: Boolean,
                            var successValue: Any,
                            var tracingEnabled: Boolean,
-                           var noDropBuffer: Boolean,
-                           val instrument: Instrument){
+                           var noDropBuffer: Boolean){
 
 
   def setMsg(f: Lazy[String]): Unit = {

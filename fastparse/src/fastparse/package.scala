@@ -51,6 +51,7 @@ package object fastparse {
     startIndex = startIndex,
     originalParser = parser,
     traceIndex = traceIndex,
+    instrument = instrument,
     failureAggregate = List.empty,
     shortParserMsg = () => "",
     lastFailureMsg = () => "",
@@ -62,8 +63,7 @@ package object fastparse {
     true,
     (),
     traceIndex != -1,
-    false,
-    instrument
+    false
   )).result
 
 
