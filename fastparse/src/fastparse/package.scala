@@ -9,7 +9,7 @@ package object fastparse {
                parser: P[_] => P[T],
                startIndex: Int = 0,
                traceIndex: Int = -1,
-               instrument: P.Instrument = null,
+               instrument: Instrument = null,
                enableLogging: Boolean = true): Parsed[T] = parseInput(
     input = IndexedParserInput(input),
     parser = parser,
@@ -27,7 +27,7 @@ package object fastparse {
                        parser: P[_] => P[T],
                        startIndex: Int = 0,
                        traceIndex: Int = -1,
-                       instrument: P.Instrument = null,
+                       instrument: Instrument = null,
                        enableLogging: Boolean = true): Parsed[T] = parseInput(
     input = IteratorParserInput(input),
     parser = parser,
@@ -45,7 +45,7 @@ package object fastparse {
                     parser: P[_] => P[T],
                     startIndex: Int = 0,
                     traceIndex: Int = -1,
-                    instrument: P.Instrument = null,
+                    instrument: Instrument = null,
                     enableLogging: Boolean = true): Parsed[T] = parser(new P(
     input = input,
     failureAggregate = List.empty,

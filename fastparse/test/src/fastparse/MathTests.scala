@@ -65,7 +65,7 @@ object MathTests extends TestSuite{
       check(
         "(1+(2+3x))+4",
         """Expected expr:1:1 / addSub:1:1 / divMul:1:1 / factor:1:1 / parens:1:1 / addSub:1:2 / divMul:1:4 / factor:1:4 / parens:1:4 / ([0-9] | [*/] | [+\\-] | ")"):1:8, found "x))+4"""",
-        """Expected ")":7, found "x))+4""""
+        """Position 7, found "x))+4""""
       )
     }
     'instrument - {
@@ -73,7 +73,7 @@ object MathTests extends TestSuite{
         val callCount = mutable.Map.empty[String, Int]
 
 
-        val instrument = new ParsingRun.Instrument {
+        val instrument = new Instrument {
           def beforeParse(parser: String, index: Int): Unit = {
             callCount(parser) = callCount.getOrElse(parser, 0) + 1
           }
@@ -94,7 +94,7 @@ object MathTests extends TestSuite{
       }
       'continuation - {
         val resultCount = mutable.Map.empty[(String, Boolean), Int]
-        val instrument = new ParsingRun.Instrument {
+        val instrument = new Instrument {
           def beforeParse(parser: String, index: Int): Unit = ()
           def afterParse(parser: String, index: Int, success: Boolean): Unit = {
             val resultKey = (parser, success)

@@ -30,9 +30,7 @@ object Util {
         col = 1
         cr = true
       }else if (data(i) == '\n') {
-        if (cr){
-          col = 1
-        }
+        col = 1
         cr = false
       }else{
         if (col == 1) lineStarts.append(i)
@@ -41,6 +39,7 @@ object Util {
       }
       i += 1
     }
+
     lineStarts.toArray
   }
 
@@ -68,10 +67,21 @@ object Util {
 
     sb.result()
   }
-
+}
+object Lazy{
+  implicit def make[T](calc0: () => T) = new Lazy(calc0)
+}
+class Lazy[T](calc0: () => T){
+  lazy val force = calc0()
+  def apply(): T = force
 }
 
 case class Logger(f: String => Unit)
 object Logger {
   implicit val stdout = Logger(println)
+}
+
+trait Instrument{
+  def beforeParse(parser: String, index: Int): Unit
+  def afterParse(parser: String, index: Int, success: Boolean): Unit
 }

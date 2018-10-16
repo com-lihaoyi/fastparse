@@ -1,7 +1,5 @@
 package fastparse
 
-import scala.collection.immutable.TreeSet
-
 
 /**
   * Trait that represents classes with isReachable method
@@ -80,9 +78,9 @@ case class IndexedParserInput(data: String) extends ParserInput {
 
   private[this] lazy val lineNumberLookup = Util.lineNumberLookup(data)
   def prettyIndex(index: Int): String = {
-    val line = lineNumberLookup.indexWhere(_ >= index) match{
+    val line = lineNumberLookup.indexWhere(_ > index) match{
       case -1 => lineNumberLookup.length - 1
-      case n => n
+      case n => n - 1
     }
     val col = index - lineNumberLookup(line)
     s"${line+1}:${col+1}"

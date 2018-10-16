@@ -133,7 +133,6 @@ object ExampleTests extends TestSuite{
         val Parsed.Success("-", 3) = parse("'-'", ab(_))
 
         val Parsed.Failure(stack, 2, _) = parse("'-='", ab(_))
-        assert(stack.head._1 == "\"'\"")
       }
 
 
@@ -201,13 +200,13 @@ object ExampleTests extends TestSuite{
         def letter[_: P] = CharIn("A-Z")
         def twice[T, _: P](p: => P[T]) = p ~ p
         def errorMessage[T](p: P[_] => P[T], str: String) =
-          parse(str, p).asInstanceOf[Parsed.Failure].trace
+          parse(str, p).asInstanceOf[Parsed.Failure].traced.trace
 
         // Portuguese number plate format since 2006
         def numberPlate[_: P] = P(twice(digit) ~ "-" ~ twice(letter) ~ "-" ~ twice(digit))
 
         val err1 = errorMessage(numberPlate(_), "11-A1-22")
-        assert(err1 == """Expected [A-Z]:1:5, found "1-22"""")
+        assert(err1 == """Expected numberPlate:1:1 / [A-Z]:1:5, found "1-22"""")
 
         // Suppress implementation details from the error message
         def opaqueNumberPlate[_: P] = numberPlate.opaque("<number-plate>")
@@ -257,6 +256,7 @@ object ExampleTests extends TestSuite{
         val Parsed.Success(Seq("cow"), _) = parse("cowmoo", si(_))
       }
     }
+
     'cuts{
       'nocut{
         def alpha[_: P] = P( CharIn("a-z") )
@@ -268,9 +268,10 @@ object ExampleTests extends TestSuite{
         val trace = failure.extra.traced.trace
         assert(
           failure.index == 0,
-          trace == """Expected nocut:1:1 / ("val " | "def "):1:1, found "val 1234""""
+          trace == """Expected nocut:1:1 / ("val " ~ alpha.rep(1).! | "def "):1:1, found "val 1234""""
         )
       }
+
       'withcut{
         def alpha[_: P] = P( CharIn("a-z") )
         def nocut[_: P] = P( "val " ~/ alpha.rep(1).! | "def " ~/ alpha.rep(1).!)
@@ -297,9 +298,10 @@ object ExampleTests extends TestSuite{
         val trace = failure.extra.traced.trace
         assert(
           failure.index == 10,
-          trace == """Expected stmts:1:1 / (" " | "val " | end-of-input):1:11, found "val """"
+          trace == """Expected stmts:1:1 / (" " | stmt.rep(1) | end-of-input):1:11, found "val """"
         )
       }
+
       'repcut{
         def alpha[_: P] = P( CharIn("a-z") )
         def stmt[_: P] = P( "val " ~/ alpha.rep(1).! ~ ";" ~ " ".rep )
@@ -325,7 +327,7 @@ object ExampleTests extends TestSuite{
         val trace = failure.extra.traced.trace
         assert(
           failure.index == 2,
-          trace == """Expected tuple:1:1 / ([0-9] | "," | ")"):1:3, found ",)""""
+          trace == """Expected tuple:1:1 / ([0-9] | digits.!.rep | ")"):1:3, found ",)""""
         )
       }
       'delimitercut{
@@ -405,7 +407,7 @@ object ExampleTests extends TestSuite{
         }
         check(
           parse("(1+(2+3x))+4", Foo.expr(_)),
-          """Parsed.Failure(Expected ")":1:8, found "x))+4")"""
+          """Parsed.Failure(Position 1:8, found "x))+4")"""
         )
       }
       'logSimple - {

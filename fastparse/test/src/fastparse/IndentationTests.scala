@@ -33,6 +33,7 @@ object IndentationTests extends TestSuite{
     def expr[_: P]: P[Int]   = P( block ~ End )
   }
   def expr[_: P] = new Parser(indent = 0).expr
+
   val tests = Tests {
     'pass - {
       def check(str: String, num: Int) = {
@@ -141,7 +142,7 @@ object IndentationTests extends TestSuite{
           |  1
           |   1
         """.stripMargin.trim,
-        """ Expected expr:1:1 / block:1:1 / factor:3:3 / ([0-9] | [+\-*/]):3:3, found " 1" """
+        """ Expected expr:1:1 / block:1:1 / factor:3:3 / ([0-9] | [+\\-*/]):3:3, found " 1" """
       )
     }
   }

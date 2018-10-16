@@ -12,15 +12,34 @@ package fastparse
   *
   * @param input            The input to the parsing run, as a [[ParserInput]].
   *
-  * @param shortFailureMsg  The failure message that gets returned when tracing
-  *                         is disabled (`traceIndex` == -1). Usually a single
-  *                         string or token which is cheap to compute, even if
-  *                         it isn't as helpful for debugging as the full traced
-  *                         failure message
+  * @param failureAggregate When tracing is enabled, this collects up all the
+  *                         upper-most failures that happen at [[traceIndex]]
+  *                         (in [[Lazy]] wrappers) so they can be shown to the
+  *                         user at end-of-parse as suggestions for what could
+  *                         make the parse succeed. For terminal parsers like
+  *                         [[LiteralStr]], it just aggregate's the string
+  *                         representation. For composite parsers like `a ~ b`
+  *                         or `!a` which may fail at [[traceIndex]] even
+  *                         without any of their wrapped terminal parsers
+  *                         failing there, it makes use of the
+  *                         [[shortFailureMsg]] as the string representation of
+  *                         the composite parser.
   *
-  * @param failureStack     The stack of named P(...) parsers in effect when the
-  *                         failure occured; only constructed when tracing is
-  *                         enabled via `traceIndex != -1`
+  * @param shortFailureMsg  When tracing is enabled, this contains string
+  *                         representation of the last parser to run. Since
+  *                         parsers aren't really objects, we piece together
+  *                         the string in the parser body and return store it
+  *                         here, and an enclosing parser may fetch it back
+  *                         out to help build its own string representation.
+  *                         Stored in a [[Lazy]] wrapper to avoid paying the
+  *                         string-construction cost unless truly necessary;
+  *                         in exchange we pay a small cost constructing the
+  *                         chain of functions that can  be invoked to create
+  *                         the string
+  *
+  * @param failureStack     The stack of named `P(...)` parsers in effect when
+  *                         the failure occured; only constructed when tracing
+  *                         is enabled via `traceIndex != -1`
 
   *
   * @param isSuccess        Whether or not the parse is currently successful
@@ -68,8 +87,8 @@ package fastparse
   *                         behavior or crashes.
   */
 final class ParsingRun[+T](val input: ParserInput,
-                           var failureAggregate: List[() => String],
-                           var shortFailureMsg: () => String,
+                           var failureAggregate: List[Lazy[String]],
+                           var shortFailureMsg: Lazy[String],
                            var failureStack: List[(String, Int)],
                            var isSuccess: Boolean,
                            var logDepth: Int,
@@ -80,15 +99,32 @@ final class ParsingRun[+T](val input: ParserInput,
                            val traceIndex: Int,
                            val originalParser: ParsingRun[_] => ParsingRun[_],
                            var noDropBuffer: Boolean,
-                           val instrument: ParsingRun.Instrument){
+                           val instrument: Instrument){
 
   val tracingEnabled = traceIndex != -1
 
-  def setMsg(f: () => String): Unit = {
+  def setMsg(f: Lazy[String]): Unit = {
     shortFailureMsg = f
   }
 
-  def aggregateMsg(f: () => String): Unit = {
+  /**
+    * Special case of [[aggregateMsg]] which ignores isSuccess status and only
+    * performs aggregation if the [[failureAggregate]] has not already changed
+    * from when it was recorded as `startAggregate`. This allows any failures
+    * aggregated by the child parsers to take priority if present, but if not
+    * present then the outer less-specific failure can then be aggregated
+    */
+  def aggregateMsgPostBacktrack(startAggregate: List[Lazy[String]], f: Lazy[String]): Unit = {
+    // We do not check for isSuccess status here, because after backtracking
+    // isSuccess could well have been reset to `true` but we still want to
+    // perform aggregation
+    if (index == traceIndex && (startAggregate eq failureAggregate)) {
+      failureAggregate ::= f
+    }
+    shortFailureMsg = f
+  }
+
+  def aggregateMsg(f: Lazy[String]): Unit = {
     if (!isSuccess && index == traceIndex) failureAggregate ::= f
     shortFailureMsg = f
   }
@@ -161,10 +197,10 @@ final class ParsingRun[+T](val input: ParserInput,
       val stack =
         if (failureAggregate.isEmpty) {
           if (shortFailureMsg == null) List("" -> index)
-          else List(shortFailureMsg() -> index)
+          else List(shortFailureMsg.force -> index)
         }else{
 
-          val tokens = failureAggregate.reverse.map(_()).distinct
+          val tokens = failureAggregate.reverse.map(_.force).distinct
           val combined =
             if (tokens.length == 1) tokens.mkString(" | ")
             else tokens.mkString("(", " | ", ")")
@@ -180,9 +216,5 @@ final class ParsingRun[+T](val input: ParserInput,
 }
 
 object ParsingRun{
-  trait Instrument{
-    def beforeParse(parser: String, index: Int): Unit
-    def afterParse(parser: String, index: Int, success: Boolean): Unit
-  }
   def current(implicit i: ParsingRun[Any]): ParsingRun[Any] = i
 }
