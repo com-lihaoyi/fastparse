@@ -48,6 +48,9 @@ package object fastparse {
                     instrument: Instrument = null,
                     enableLogging: Boolean = true): Parsed[T] = parser(new P(
     input = input,
+    startIndex = startIndex,
+    originalParser = parser,
+    traceIndex = traceIndex,
     failureAggregate = List.empty,
     shortParserMsg = () => "",
     lastFailureMsg = () => "",
@@ -56,11 +59,9 @@ package object fastparse {
     isSuccess = true,
     logDepth = if (enableLogging) 0 else -1,
     startIndex,
-    startIndex,
     true,
     (),
-    traceIndex,
-    parser,
+    traceIndex != -1,
     false,
     instrument
   )).result
@@ -398,15 +399,18 @@ package object fastparse {
         val depth = ctx.logDepth
         ctx.logDepth += 1
         val startIndex = ctx.index
+        val oldTracingEnabled = ctx.tracingEnabled
+        ctx.tracingEnabled = true
         parse0
+        ctx.tracingEnabled = oldTracingEnabled
         ctx.logDepth = depth
+        val prettyIndex = ctx.input.prettyIndex(ctx.index)
         val strRes = if (ctx.isSuccess) {
-          val prettyIndex = ctx.input.prettyIndex(ctx.index)
           s"Success($prettyIndex${if (ctx.cut) ", cut" else ""})"
         } else {
           val trace = Parsed.Failure.formatStack(
             ctx.input,
-            (Option(ctx.shortParserMsg).fold("")(_ ()) -> ctx.index) :: ctx.failureStack.reverse
+            (Option(ctx.lastFailureMsg).fold("")(_ ()) -> ctx.index) :: ctx.failureStack.reverse
           )
           val trailing = ctx.input match {
             case c: IndexedParserInput => Parsed.Failure.formatTrailing(ctx.input, startIndex)

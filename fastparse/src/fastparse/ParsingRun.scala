@@ -12,6 +12,17 @@ package fastparse
   *
   * @param input            The input to the parsing run, as a [[ParserInput]].
   *
+  * @param startIndex       Where the parse initially started, so as to allow
+  *                         `.result.traced`  to re-create it with tracing enabled.
+  *
+  * @param originalParser   The original parsing function we used to start this
+  *                         run, so as to allow `.result.traced` to re-create
+  *                         it with tracing enabled.
+  *
+  * @param traceIndex       The index we wish to trace if tracing is enabled, else
+  *                         -1. Used to find failure messages to aggregate into
+  *                         `failureAggregate`
+  *
   * @param failureAggregate When tracing is enabled, this collects up all the
   *                         upper-most failures that happen at [[traceIndex]]
   *                         (in [[Lazy]] wrappers) so they can be shown to the
@@ -25,7 +36,7 @@ package fastparse
   *                         [[shortParserMsg]] as the string representation of
   *                         the composite parser.
   *
-  * @param shortParserMsg  When tracing is enabled, this contains string
+  * @param shortParserMsg   When tracing is enabled, this contains string
   *                         representation of the last parser to run. Since
   *                         parsers aren't really objects, we piece together
   *                         the string in the parser body and return store it
@@ -51,8 +62,6 @@ package fastparse
   *
   * @param index            The current index of the parse
   *
-  * @param startIndex       Where the parse initially started, so as to allow
-  *                         `.result.traced`  to re-create it with tracing enabled.
   *
   * @param cut              Has the current parse been prevented from backtracking?
   *                         This field starts as `true` at top-level, since there
@@ -64,13 +73,11 @@ package fastparse
   *
   * @param successValue     The currently returned success value
   *
-  * @param traceIndex       The index we wish to trace if tracing is enabled, else
-  *                         -1. Used to find failure messages to aggregate into
-  *                         `failureAggregate`
-  *
-  * @param originalParser   The original parsing function we used to start this
-  *                         run, so as to allow `.result.traced` to re-create
-  *                         it with tracing enabled.
+  * @param tracingEnabled   Whether or not we are currently collecting [[lastFailureMsg]]s
+  *                         and [[failureAggregate]]s; defaults to false, unless
+  *                         [[traceIndex]] is set OR we are inside a [[LogByNameOps.log]]
+  *                         call which necessitates tracing in order to print out
+  *                         failure traces during logging
   *
   * @param noDropBuffer     Flag that prevents the parser from dropping earlier
   *                         input. Used for the `.!` capture operator that needs
@@ -85,8 +92,15 @@ package fastparse
   *                         the previous value after they finish. Forgetting to
   *                         re-set it to the previous value can cause strange
   *                         behavior or crashes.
+  *
+  * @param instrument       Callbacks that can be injected before/after every
+  *                         `P(...)` parser.
   */
 final class ParsingRun[+T](val input: ParserInput,
+                           val startIndex: Int,
+                           val originalParser: ParsingRun[_] => ParsingRun[_],
+                           val traceIndex: Int,
+                           // Mutable vars below:
                            var failureAggregate: List[Lazy[String]],
                            var shortParserMsg: Lazy[String],
                            var lastFailureMsg: Lazy[String],
@@ -95,18 +109,15 @@ final class ParsingRun[+T](val input: ParserInput,
                            var isSuccess: Boolean,
                            var logDepth: Int,
                            var index: Int,
-                           val startIndex: Int,
                            var cut: Boolean,
                            var successValue: Any,
-                           val traceIndex: Int,
-                           val originalParser: ParsingRun[_] => ParsingRun[_],
+                           var tracingEnabled: Boolean,
                            var noDropBuffer: Boolean,
                            val instrument: Instrument){
 
-  val tracingEnabled = traceIndex != -1
 
   def setMsg(f: Lazy[String]): Unit = {
-    if (!isSuccess) lastFailureMsg = f
+    if (!isSuccess && lastFailureMsg == null) lastFailureMsg = f
     shortParserMsg = f
   }
 
@@ -131,7 +142,7 @@ final class ParsingRun[+T](val input: ParserInput,
     if (!isSuccess){
       if (index == traceIndex) failureAggregate ::= f
       earliestAggregatedFailure = index
-      lastFailureMsg = f
+      if (lastFailureMsg == null) lastFailureMsg = f
     }
     shortParserMsg = f
   }
@@ -176,6 +187,7 @@ final class ParsingRun[+T](val input: ParserInput,
   }
 
   def freshFailure(): ParsingRun[Nothing] = {
+    lastFailureMsg = null
     earliestAggregatedFailure = index
     failureStack = Nil
     isSuccess = false
@@ -183,6 +195,7 @@ final class ParsingRun[+T](val input: ParserInput,
   }
 
   def freshFailure(startPos: Int): ParsingRun[Nothing] = {
+    lastFailureMsg = null
     earliestAggregatedFailure = index
     failureStack = Nil
     isSuccess = false
