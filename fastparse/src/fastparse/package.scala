@@ -49,7 +49,7 @@ package object fastparse {
                     enableLogging: Boolean = true): Parsed[T] = parser(new P(
     input = input,
     failureAggregate = List.empty,
-    shortFailureMsg = () => "",
+    shortParserMsg = () => "",
     failureStack = List.empty,
     isSuccess = true,
     logDepth = if (enableLogging) 0 else -1,
@@ -347,7 +347,7 @@ package object fastparse {
       parse0()
       ctx.noDropBuffer = oldNoCut
       ctx.failureAggregate = oldFailureAggregate
-      val msg = ctx.shortFailureMsg
+      val msg = ctx.shortParserMsg
 
       val res =
         if (ctx.isSuccess) ctx.freshFailure(startPos)
@@ -395,9 +395,10 @@ package object fastparse {
           val prettyIndex = ctx.input.prettyIndex(ctx.index)
           s"Success($prettyIndex${if (ctx.cut) ", cut" else ""})"
         } else {
+          println("log [" + ctx.shortParserMsg() + "]")
           val trace = Parsed.Failure.formatStack(
             ctx.input,
-            (Option(ctx.shortFailureMsg).fold("")(_ ()) -> ctx.index) :: ctx.failureStack.reverse
+            (Option(ctx.shortParserMsg).fold("")(_ ()) -> ctx.index) :: ctx.failureStack.reverse
           )
           val trailing = ctx.input match {
             case c: IndexedParserInput => Parsed.Failure.formatTrailing(ctx.input, startIndex)
@@ -445,7 +446,7 @@ package object fastparse {
     ctx.noDropBuffer = true
     parse
     ctx.noDropBuffer = oldNoCut
-    val msg = ctx.shortFailureMsg
+    val msg = ctx.shortParserMsg
 
     val res =
       if (ctx.isSuccess) ctx.freshSuccess((), startPos)

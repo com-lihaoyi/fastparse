@@ -182,7 +182,7 @@ object MacroImpls {
 
       val startAggregate = ctx5.failureAggregate
       lhs0.splice
-      val lhsMsg = ctx5.shortFailureMsg
+      val lhsMsg = ctx5.shortParserMsg
       if (ctx5.isSuccess) {
         ctx5.cut |= oldCut
         ctx5
@@ -190,11 +190,11 @@ object MacroImpls {
       else if(ctx5.cut) ctx5
       else {
         ctx5.index = startPos
-        val msg = ctx5.shortFailureMsg
+        val msg = ctx5.shortParserMsg
         ctx5.aggregateMsgPostBacktrack(startAggregate, msg)
         ctx5.cut = false
         other.splice
-        val rhsMsg = ctx5.shortFailureMsg
+        val rhsMsg = ctx5.shortParserMsg
         val res =
           if (ctx5.isSuccess) {
             ctx5.cut |= oldCut
@@ -226,7 +226,7 @@ object MacroImpls {
       ctx6.noDropBuffer = true
       lhs0.splice
       ctx6.noDropBuffer = oldCapturing
-      val msg = ctx6.shortFailureMsg
+      val msg = ctx6.shortParserMsg
       val res =
         if (!ctx6.isSuccess) ctx6.asInstanceOf[ParsingRun[String]]
         else ctx6.freshSuccess(ctx6.input.slice(startPos, ctx6.index))
@@ -426,7 +426,7 @@ object MacroImpls {
         lhs.splice.parse0 match{ case ctx3 =>
           if (!ctx3.isSuccess) ctx3
           else {
-            val lhsMsg = ctx3.shortFailureMsg
+            val lhsMsg = ctx3.shortParserMsg
             ctx3.cut |= cut1.splice
             if (ctx3.index > startIndex && ctx3.checkForDrop()) ctx3.input.dropBuffer(ctx3.index)
 
@@ -441,7 +441,7 @@ object MacroImpls {
                 val postOtherIndex = ctx3.index
 
                 val rhsNewCut = cut1.splice | ctx3.cut
-                val msg = ctx3.shortFailureMsg
+                val msg = ctx3.shortParserMsg
                 val res =
                   if (!ctx3.isSuccess) ctx3.augmentFailure(
                     ctx3.index,
@@ -481,7 +481,7 @@ object MacroImpls {
       else {
         val progress = ctx1.index > startIndex
         if (progress && ctx1.checkForDrop()) ctx1.input.dropBuffer(ctx1.index)
-        val msg = ctx1.shortFailureMsg
+        val msg = ctx1.shortParserMsg
 
         val res =
           ctx1.freshSuccess(
@@ -569,7 +569,7 @@ object MacroImpls {
         val startAggregate = ctx1.failureAggregate
         ctx1.cut = false
         lhs0.splice
-        val msg = ctx1.shortFailureMsg
+        val msg = ctx1.shortParserMsg
         val res =
           if (ctx1.isSuccess) {
             val res = ctx1.freshSuccess(optioner.splice.some(ctx1.successValue.asInstanceOf[T]))

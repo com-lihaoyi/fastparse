@@ -77,7 +77,7 @@ object RepImpls{
 
           val $startAggregate = $ctx1.failureAggregate
           ${c.prefix}.parse0()
-          val $parsedMsg = $ctx1.shortFailureMsg
+          val $parsedMsg = $ctx1.shortParserMsg
           $originalCut |= $ctx1.cut
           if (!$ctx1.isSuccess) {
             val res =
@@ -156,7 +156,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
       else {
         val startAggregate = ctx.failureAggregate
         parse0()
-        val parseMsg = ctx.shortFailureMsg
+        val parseMsg = ctx.shortParserMsg
         originalCut |= ctx.cut
         if (!ctx.isSuccess) {
           val res =
@@ -212,7 +212,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
       ctx.cut = precut
       val startAggregate = ctx.failureAggregate
       parse0()
-      val parsedMsg = ctx.shortFailureMsg
+      val parsedMsg = ctx.shortParserMsg
       originalCut |= ctx.cut
       if (!ctx.isSuccess) {
         val res =
@@ -266,7 +266,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
       else {
         val startAggregate = ctx.failureAggregate
         parse0()
-        val parsedMsg = ctx.shortFailureMsg
+        val parsedMsg = ctx.shortParserMsg
         originalCut |= ctx.cut
         if (!ctx.isSuccess) {
           val res =
@@ -329,7 +329,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
       ctx.cut = precut
       val startAggregate = ctx.failureAggregate
       parse0()
-      val parsedMsg = ctx.shortFailureMsg
+      val parsedMsg = ctx.shortParserMsg
       originalCut |= ctx.cut
       if (!ctx.isSuccess){
         val res =

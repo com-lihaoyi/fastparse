@@ -22,10 +22,10 @@ package fastparse
   *                         or `!a` which may fail at [[traceIndex]] even
   *                         without any of their wrapped terminal parsers
   *                         failing there, it makes use of the
-  *                         [[shortFailureMsg]] as the string representation of
+  *                         [[shortParserMsg]] as the string representation of
   *                         the composite parser.
   *
-  * @param shortFailureMsg  When tracing is enabled, this contains string
+  * @param shortParserMsg  When tracing is enabled, this contains string
   *                         representation of the last parser to run. Since
   *                         parsers aren't really objects, we piece together
   *                         the string in the parser body and return store it
@@ -88,7 +88,7 @@ package fastparse
   */
 final class ParsingRun[+T](val input: ParserInput,
                            var failureAggregate: List[Lazy[String]],
-                           var shortFailureMsg: Lazy[String],
+                           var shortParserMsg: Lazy[String],
                            var failureStack: List[(String, Int)],
                            var isSuccess: Boolean,
                            var logDepth: Int,
@@ -104,7 +104,7 @@ final class ParsingRun[+T](val input: ParserInput,
   val tracingEnabled = traceIndex != -1
 
   def setMsg(f: Lazy[String]): Unit = {
-    shortFailureMsg = f
+    shortParserMsg = f
   }
 
   /**
@@ -121,12 +121,12 @@ final class ParsingRun[+T](val input: ParserInput,
     if (index == traceIndex && (startAggregate eq failureAggregate)) {
       failureAggregate ::= f
     }
-    shortFailureMsg = f
+    shortParserMsg = f
   }
 
   def aggregateMsg(f: Lazy[String]): Unit = {
     if (!isSuccess && index == traceIndex) failureAggregate ::= f
-    shortFailureMsg = f
+    shortParserMsg = f
   }
 
   // Use telescoping methods rather than default arguments to try and minimize
@@ -195,10 +195,8 @@ final class ParsingRun[+T](val input: ParserInput,
     if (isSuccess) Parsed.Success(successValue.asInstanceOf[T], index)
     else {
       val stack =
-        if (failureAggregate.isEmpty) {
-          if (shortFailureMsg == null) List("" -> index)
-          else List(shortFailureMsg.force -> index)
-        }else{
+        if (failureAggregate.isEmpty) List("" -> index)
+        else{
 
           val tokens = failureAggregate.reverse.map(_.force).distinct
           val combined =
