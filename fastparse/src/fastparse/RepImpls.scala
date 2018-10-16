@@ -75,8 +75,8 @@ object RepImpls{
                  $precut: _root_.scala.Boolean): _root_.fastparse.P[${c.weakTypeOf[V]}] = {
           $ctx1.cut = $precut
 
-          val $startAggregate = $ctx1.failureAggregate
           ${c.prefix}.parse0()
+          val $startAggregate = $ctx1.earliestAggregatedFailure
           val $parsedMsg = $ctx1.shortParserMsg
           $originalCut |= $ctx1.cut
           if (!$ctx1.isSuccess) {
@@ -147,15 +147,15 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
       if (count < actualMin) ctx.augmentFailure(index, originalCut)
       else ctx.freshSuccess(repeater.result(acc), successIndex, originalCut)
     }
-    @tailrec def rec(startIndex: Int, count: Int, precut: Boolean): ParsingRun[V] = {
+    @tailrec def rec(startIndex: Int, count: Int, precut: Boolean, preSep: Boolean): ParsingRun[V] = {
       ctx.cut = precut
       if (count == 0 && actualMax == 0) ctx.freshSuccess(
         repeater.result(acc),
         startIndex
       )
       else {
-        val startAggregate = ctx.failureAggregate
         parse0()
+        val earliestAggregated = ctx.earliestAggregatedFailure
         val parseMsg = ctx.shortParserMsg
         originalCut |= ctx.cut
         if (!ctx.isSuccess) {
@@ -163,8 +163,8 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
             if (ctx.cut) ctx.asInstanceOf[ParsingRun[V]]
             else end(startIndex, startIndex, count)
 
-          if (ctx.tracingEnabled) {
-            ctx.aggregateMsgPostBacktrack(startAggregate, () => parseMsg() + ".repX" + (if(min == 0) "" else s"($min)"))
+          if (ctx.tracingEnabled && !preSep) {
+            ctx.aggregateMsgPostBacktrack(earliestAggregated, () => parseMsg() + ".repX" + (if(min == 0) "" else s"($min)"))
           }
           res
         }else {
@@ -181,9 +181,9 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
 
             val sep1 = sep
             originalCut |= ctx.cut
-            if (sep1 == null) rec(beforeSepIndex, nextCount, false)
+            if (sep1 == null) rec(beforeSepIndex, nextCount, false, false)
             else {
-              if (ctx.isSuccess) rec(beforeSepIndex, nextCount, ctx.cut)
+              if (ctx.isSuccess) rec(beforeSepIndex, nextCount, ctx.cut, true)
               else {
                 val res =
                   if (ctx.cut) ctx.augmentFailure(beforeSepIndex, originalCut)
@@ -196,7 +196,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
         }
       }
     }
-    rec(ctx.index, 0, false)
+    rec(ctx.index, 0, false, false)
   }
   def repX[V](min: Int,
               sep: => ParsingRun[_])
@@ -208,18 +208,18 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
       if (count < min) ctx.augmentFailure(index, originalCut)
       else ctx.freshSuccess(repeater.result(acc), successIndex, originalCut)
     }
-    @tailrec def rec(startIndex: Int, count: Int, precut: Boolean): ParsingRun[V] = {
+    @tailrec def rec(startIndex: Int, count: Int, precut: Boolean, preSep: Boolean): ParsingRun[V] = {
       ctx.cut = precut
-      val startAggregate = ctx.failureAggregate
       parse0()
+      val earliestAggregated = ctx.earliestAggregatedFailure
       val parsedMsg = ctx.shortParserMsg
       originalCut |= ctx.cut
       if (!ctx.isSuccess) {
         val res =
           if (ctx.cut) ctx.asInstanceOf[ParsingRun[V]]
           else end(startIndex, startIndex, count)
-        if (ctx.tracingEnabled) {
-          ctx.aggregateMsgPostBacktrack(startAggregate, () => parsedMsg() + s".repX($min)")
+        if (ctx.tracingEnabled && !preSep) {
+          ctx.aggregateMsgPostBacktrack(earliestAggregated, () => parsedMsg() + s".repX($min)")
         }
         res
       }else {
@@ -229,9 +229,9 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
         ctx.cut = false
         val sep1 = sep
         originalCut |= ctx.cut
-        if (sep1 == null) rec(beforeSepIndex, nextCount, false)
+        if (sep1 == null) rec(beforeSepIndex, nextCount, false, false)
         else {
-          if (ctx.isSuccess) rec(beforeSepIndex, nextCount, ctx.cut)
+          if (ctx.isSuccess) rec(beforeSepIndex, nextCount, ctx.cut, true)
           else {
             val res =
               if (ctx.cut) ctx.augmentFailure(beforeSepIndex, ctx.cut | originalCut)
@@ -242,7 +242,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
         }
       }
     }
-    rec(ctx.index, 0, false)
+    rec(ctx.index, 0, false, false)
   }
   def rep[V](min: Int = 0,
              sep: => ParsingRun[_] = null,
@@ -260,20 +260,20 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
       if (count < actualMin) ctx.augmentFailure(index, originalCut)
       else ctx.freshSuccess(repeater.result(acc), successIndex, originalCut)
     }
-    @tailrec def rec(startIndex: Int, count: Int, precut: Boolean): ParsingRun[V] = {
+    @tailrec def rec(startIndex: Int, count: Int, precut: Boolean, preSep: Boolean): ParsingRun[V] = {
       ctx.cut = precut
       if (count == 0 && actualMax == 0) ctx.freshSuccess(repeater.result(acc), startIndex)
       else {
-        val startAggregate = ctx.failureAggregate
         parse0()
+        val earliestAggregated = ctx.earliestAggregatedFailure
         val parsedMsg = ctx.shortParserMsg
         originalCut |= ctx.cut
         if (!ctx.isSuccess) {
           val res =
             if (ctx.cut) ctx.asInstanceOf[ParsingRun[V]]
             else end(startIndex, startIndex, count)
-          if (ctx.tracingEnabled) {
-            ctx.aggregateMsgPostBacktrack(startAggregate, () => parsedMsg() + ".rep" + (if(min == 0) "" else s"($min)"))
+          if (ctx.tracingEnabled && !preSep) {
+            ctx.aggregateMsgPostBacktrack(earliestAggregated, () => parsedMsg() + ".rep" + (if(min == 0) "" else s"($min)"))
           }
           res
         } else {
@@ -292,12 +292,12 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
               ctx.cut = false
               val sep1 = sep
               originalCut |= ctx.cut
-              if (sep1 == null) rec(beforeSepIndex, nextCount, false)
+              if (sep1 == null) rec(beforeSepIndex, nextCount, false, false)
               else if (ctx.isSuccess) {
                 val sepCut = ctx.cut
                 if (whitespace ne NoWhitespace.noWhitespaceImplicit) whitespace(ctx)
                 if (!ctx.isSuccess && ctx.cut) ctx.asInstanceOf[ParsingRun[Nothing]]
-                else rec(beforeSepIndex, nextCount, sepCut)
+                else rec(beforeSepIndex, nextCount, sepCut, true)
               }
               else {
                 val res =
@@ -311,7 +311,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
         }
       }
     }
-    rec(ctx.index, 0, false)
+    rec(ctx.index, 0, false, false)
   }
   def rep[V](min: Int,
              sep: => ParsingRun[_])
@@ -325,9 +325,9 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
       if (count < min) ctx.augmentFailure(index, originalCut)
       else ctx.freshSuccess(repeater.result(acc), successIndex, originalCut)
     }
-    @tailrec def rec(startIndex: Int, count: Int, precut: Boolean): ParsingRun[V] = {
+    @tailrec def rec(startIndex: Int, count: Int, precut: Boolean, preSep: Boolean): ParsingRun[V] = {
       ctx.cut = precut
-      val startAggregate = ctx.failureAggregate
+      val earliestAggregated = ctx.earliestAggregatedFailure
       parse0()
       val parsedMsg = ctx.shortParserMsg
       originalCut |= ctx.cut
@@ -335,8 +335,8 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
         val res =
           if (ctx.cut) ctx.asInstanceOf[ParsingRun[V]]
           else end(startIndex, startIndex, count)
-        if (ctx.tracingEnabled) {
-          ctx.aggregateMsgPostBacktrack(startAggregate, () => parsedMsg() + s".rep($min)")
+        if (ctx.tracingEnabled && !preSep) {
+          ctx.aggregateMsgPostBacktrack(earliestAggregated, () => parsedMsg() + s".rep($min)")
         }
         res
       }else{
@@ -354,7 +354,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
           ctx.cut = false
           val sep1 = sep
           originalCut |= ctx.cut
-          if (sep1 == null) rec(beforeSepIndex, nextCount, false)
+          if (sep1 == null) rec(beforeSepIndex, nextCount, false, false)
           else if (ctx.isSuccess) {
             val sepCut = ctx.cut
             if (whitespace ne NoWhitespace.noWhitespaceImplicit) {
@@ -363,7 +363,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
               whitespace(ctx)
               ctx.noDropBuffer = oldCapturing
             }
-            rec(beforeSepIndex, nextCount, sepCut)
+            rec(beforeSepIndex, nextCount, sepCut, true)
           }
           else {
             val res =
@@ -375,7 +375,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
         }
       }
     }
-    rec(ctx.index, 0, false)
+    rec(ctx.index, 0, false, false)
   }
 
 }

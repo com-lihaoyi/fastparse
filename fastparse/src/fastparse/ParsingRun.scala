@@ -89,7 +89,9 @@ package fastparse
 final class ParsingRun[+T](val input: ParserInput,
                            var failureAggregate: List[Lazy[String]],
                            var shortParserMsg: Lazy[String],
+                           var lastFailureMsg: Lazy[String],
                            var failureStack: List[(String, Int)],
+                           var earliestAggregatedFailure: Int,
                            var isSuccess: Boolean,
                            var logDepth: Int,
                            var index: Int,
@@ -104,6 +106,7 @@ final class ParsingRun[+T](val input: ParserInput,
   val tracingEnabled = traceIndex != -1
 
   def setMsg(f: Lazy[String]): Unit = {
+    if (!isSuccess) lastFailureMsg = f
     shortParserMsg = f
   }
 
@@ -114,18 +117,22 @@ final class ParsingRun[+T](val input: ParserInput,
     * aggregated by the child parsers to take priority if present, but if not
     * present then the outer less-specific failure can then be aggregated
     */
-  def aggregateMsgPostBacktrack(startAggregate: List[Lazy[String]], f: Lazy[String]): Unit = {
+  def aggregateMsgPostBacktrack(startAggregate: Int, f: Lazy[String]): Unit = {
     // We do not check for isSuccess status here, because after backtracking
     // isSuccess could well have been reset to `true` but we still want to
     // perform aggregation
-    if (index == traceIndex && (startAggregate eq failureAggregate)) {
+    if (index == traceIndex && startAggregate > index && startAggregate != Int.MaxValue) {
       failureAggregate ::= f
     }
     shortParserMsg = f
   }
 
   def aggregateMsg(f: Lazy[String]): Unit = {
-    if (!isSuccess && index == traceIndex) failureAggregate ::= f
+    if (!isSuccess){
+      if (index == traceIndex) failureAggregate ::= f
+      earliestAggregatedFailure = index
+      lastFailureMsg = f
+    }
     shortParserMsg = f
   }
 
@@ -136,12 +143,14 @@ final class ParsingRun[+T](val input: ParserInput,
   // generate huge methods, so anything we can do to reduce the size of the
   // generated code helps avoid bytecode size blowup
   def freshSuccess[V](value: V): ParsingRun[V] = {
+    earliestAggregatedFailure = Int.MaxValue
     isSuccess = true
     successValue = value
     this.asInstanceOf[ParsingRun[V]]
   }
 
   def freshSuccess[V](value: V, index: Int): ParsingRun[V] = {
+    earliestAggregatedFailure = Int.MaxValue
     isSuccess = true
     successValue = value
 
@@ -150,6 +159,7 @@ final class ParsingRun[+T](val input: ParserInput,
   }
 
   def freshSuccess[V](value: V, cut: Boolean): ParsingRun[V] = {
+    earliestAggregatedFailure = Int.MaxValue
     isSuccess = true
     successValue = value
     this.cut = cut
@@ -157,6 +167,7 @@ final class ParsingRun[+T](val input: ParserInput,
   }
 
   def freshSuccess[V](value: V, index: Int, cut: Boolean): ParsingRun[V] = {
+    earliestAggregatedFailure = Int.MaxValue
     isSuccess = true
     successValue = value
     this.index = index
@@ -165,12 +176,14 @@ final class ParsingRun[+T](val input: ParserInput,
   }
 
   def freshFailure(): ParsingRun[Nothing] = {
+    earliestAggregatedFailure = index
     failureStack = Nil
     isSuccess = false
     this.asInstanceOf[ParsingRun[Nothing]]
   }
 
   def freshFailure(startPos: Int): ParsingRun[Nothing] = {
+    earliestAggregatedFailure = index
     failureStack = Nil
     isSuccess = false
     index = startPos

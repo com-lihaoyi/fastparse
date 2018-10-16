@@ -180,8 +180,8 @@ object MacroImpls {
       ctx5.cut = false
       val startPos = ctx5.index
 
-      val startAggregate = ctx5.failureAggregate
       lhs0.splice
+      val earliestAggregated = ctx5.earliestAggregatedFailure
       val lhsMsg = ctx5.shortParserMsg
       if (ctx5.isSuccess) {
         ctx5.cut |= oldCut
@@ -190,8 +190,7 @@ object MacroImpls {
       else if(ctx5.cut) ctx5
       else {
         ctx5.index = startPos
-        val msg = ctx5.shortParserMsg
-        ctx5.aggregateMsgPostBacktrack(startAggregate, msg)
+        ctx5.aggregateMsgPostBacktrack(earliestAggregated, ctx5.shortParserMsg)
         ctx5.cut = false
         other.splice
         val rhsMsg = ctx5.shortParserMsg
@@ -566,10 +565,10 @@ object MacroImpls {
       ctx.splice match{ case ctx1 =>
         val startPos = ctx1.index
         val startCut = ctx1.cut
-        val startAggregate = ctx1.failureAggregate
         ctx1.cut = false
         lhs0.splice
         val msg = ctx1.shortParserMsg
+        val earliestFailure = ctx1.earliestAggregatedFailure
         val res =
           if (ctx1.isSuccess) {
             val res = ctx1.freshSuccess(optioner.splice.some(ctx1.successValue.asInstanceOf[T]))
@@ -582,7 +581,8 @@ object MacroImpls {
             res.cut |= startCut
             res
           }
-        if (ctx1.tracingEnabled) ctx1.aggregateMsgPostBacktrack(startAggregate, () => msg() + ".?")
+
+        if (ctx1.tracingEnabled) ctx1.aggregateMsgPostBacktrack(earliestFailure, () => msg() + ".?")
         res
 
       }

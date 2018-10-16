@@ -649,7 +649,7 @@ object FailureTests extends TestSuite{
           |}
           |
         """.stripMargin,
-        expected = """("\\" | plain-id | AlphabetKeywords | SymbolicKeywords)""",
+        expected = """("\\" | Char | plain-id | AlphabetKeywords | SymbolicKeywords)""",
         found = "'\n"
       )
 
@@ -842,7 +842,7 @@ object FailureTests extends TestSuite{
           |}
           |
         """.stripMargin,
-        expected = """("&" | !"<" | "{{" | "{" | "</")""",
+        expected = """("&" | !"<" | "{{" | "{" | CharDataP | ScalaPatterns | ElemPattern.rep | "</")""",
         found = "<</xml:unp"
       )
 

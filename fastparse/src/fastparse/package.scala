@@ -50,7 +50,9 @@ package object fastparse {
     input = input,
     failureAggregate = List.empty,
     shortParserMsg = () => "",
+    lastFailureMsg = () => "",
     failureStack = List.empty,
+    earliestAggregatedFailure = Int.MaxValue,
     isSuccess = true,
     logDepth = if (enableLogging) 0 else -1,
     startIndex,
@@ -323,13 +325,20 @@ package object fastparse {
     def opaque(msg: String)(implicit ctx: P[Any]): P[T] = {
       val oldIndex = ctx.index
       val oldFailureAggregate = ctx.failureAggregate
+      val preEarliest = ctx.earliestAggregatedFailure
+
       val res = parse0()
 
-      if (ctx.tracingEnabled) ctx.failureAggregate = oldFailureAggregate
-      ctx.aggregateMsg(() => msg)
+      if (ctx.tracingEnabled) {
+        ctx.failureAggregate = oldFailureAggregate
+        ctx.earliestAggregatedFailure = preEarliest
+      }
       val res2 =
         if (res.isSuccess) ctx.freshSuccess(ctx.successValue)
         else ctx.freshFailure(oldIndex)
+
+      ctx.aggregateMsg(() => msg)
+
       res2.asInstanceOf[P[T]]
     }
 
@@ -395,7 +404,6 @@ package object fastparse {
           val prettyIndex = ctx.input.prettyIndex(ctx.index)
           s"Success($prettyIndex${if (ctx.cut) ", cut" else ""})"
         } else {
-          println("log [" + ctx.shortParserMsg() + "]")
           val trace = Parsed.Failure.formatStack(
             ctx.input,
             (Option(ctx.shortParserMsg).fold("")(_ ()) -> ctx.index) :: ctx.failureStack.reverse
@@ -418,7 +426,7 @@ package object fastparse {
     def logAfter(msg: => Any)(implicit logger: Logger = Logger.stdout): P[T] = {
       val indent = "  " * ctx.logDepth
       val res = parse0
-      if (ctx.logDepth != -1) println(indent + msg)
+      if (ctx.logDepth != -1) logger.f(indent + msg)
       res
     }
 
@@ -427,7 +435,7 @@ package object fastparse {
       */
     def logBefore(msg: => Any)(implicit logger: Logger = Logger.stdout): P[T] = {
       val indent = "  " * ctx.logDepth
-      if (ctx.logDepth != -1) println(indent + msg)
+      if (ctx.logDepth != -1) logger.f(indent + msg)
       val res = parse0
       res
     }
@@ -491,8 +499,12 @@ package object fastparse {
     */
   def NoTrace[T](p: => P[T])(implicit ctx: P[_]): P[T] = {
     val preMsg = ctx.failureAggregate
+    val preEarliest = ctx.earliestAggregatedFailure
     val res = p
-    if (ctx.tracingEnabled) ctx.failureAggregate = preMsg
+    if (ctx.tracingEnabled) {
+      ctx.earliestAggregatedFailure = preEarliest
+      ctx.failureAggregate = preMsg
+    }
     res
   }
 
@@ -505,10 +517,12 @@ package object fastparse {
     */
   def SimpleTrace[T](label: String)(p: => P[T])(implicit ctx: P[_]): P[T] = {
     val beforeAggregate = ctx.failureAggregate
+    val preEarliest = ctx.earliestAggregatedFailure
     val startIndex = ctx.index
     val res = p
     if (ctx.tracingEnabled) {
       if (startIndex >= res.traceIndex) {
+        ctx.earliestAggregatedFailure = preEarliest
         ctx.failureAggregate = beforeAggregate
         ctx.failureAggregate ::= (() => label)
       }
