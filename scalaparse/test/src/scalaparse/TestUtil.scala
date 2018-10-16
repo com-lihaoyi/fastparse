@@ -17,7 +17,7 @@ object TestUtil {
 
         val traced = f.extra.traced
         val index = f.index
-        val parsedExpected = traced.stack.head._1
+        val parsedExpected = traced.aggregateMsg
         val parsedFound = input.slice(f.index, f.index + 10)
         val stack = traced.trace
 
@@ -72,7 +72,7 @@ object TestUtil {
           //        println(f.formatExpectedAsString)
           //        println(f.formatTraces)
           println("TRACING")
-          throw new Exception(tag + "\n" + input + "\n" + f.trace)
+          throw new Exception(tag + "\n" + input + "\n" + f.traced.trace)
         case s: Parsed.Success[_] =>
           //        println(parsed)
           val inputLength = input.length

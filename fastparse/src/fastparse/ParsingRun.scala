@@ -98,8 +98,8 @@ package fastparse
   *
   * @param successValue     The currently returned success value
   *
-  * @param tracingEnabled   Whether or not we are currently collecting [[lastFailureMsg]]s
-  *                         and [[failureAggregate]]s; defaults to false, unless
+  * @param verboseFailures  Whether or not we are currently collecting [[lastFailureMsg]]s;
+  *                         defaults to false, unless
   *                         [[traceIndex]] is set OR we are inside a [[LogByNameOps.log]]
   *                         call which necessitates tracing in order to print out
   *                         failure traces during logging
@@ -134,7 +134,7 @@ final class ParsingRun[+T](val input: ParserInput,
                            var index: Int,
                            var cut: Boolean,
                            var successValue: Any,
-                           var tracingEnabled: Boolean,
+                           var verboseFailures: Boolean,
                            var noDropBuffer: Boolean){
 
 
@@ -238,27 +238,6 @@ final class ParsingRun[+T](val input: ParserInput,
   }
 
   def checkForDrop() = !noDropBuffer && cut
-
-  def result: Parsed[T] = {
-    if (isSuccess) Parsed.Success(successValue.asInstanceOf[T], index)
-    else {
-      val stack =
-        if (failureAggregate.isEmpty) List("" -> index)
-        else{
-
-          val tokens = failureAggregate.reverse.map(_.force).distinct
-          val combined =
-            if (tokens.length == 1) tokens.mkString(" | ")
-            else tokens.mkString("(", " | ", ")")
-            (combined -> index) :: failureStack.reverse
-        }
-      Parsed.Failure(
-        stack,
-        index,
-        Parsed.Extra(input, startIndex, index, originalParser)
-      )
-    }
-  }
 }
 
 object ParsingRun{

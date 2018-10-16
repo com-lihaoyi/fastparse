@@ -483,7 +483,7 @@ object ExampleTests extends TestSuite{
 
       def check(input: String, expectedOutput: String) = {
         val folded = parse(input, andOr(_)).fold(
-          (_, _) => s"Cannot parse $input as an AndOr",
+          (_, _, _) => s"Cannot parse $input as an AndOr",
           (v, _) => s"Parsed: $v"
         )
         assert(folded == expectedOutput)
