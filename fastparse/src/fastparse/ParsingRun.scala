@@ -70,6 +70,14 @@ package fastparse
   *                         the failure occured; only constructed when tracing
   *                         is enabled via `traceIndex != -1`
   *
+  * @param earliestAggregate Lets backtracking parsers keep track on-failure of
+  *                          where the earliest actually-aggregated terminal
+  *                          failure within the backtracked parse happened.
+  *                          This is necessary to provide a high-level error
+  *                          message based on [[shortParserMsg]] if no low-level
+  *                          error message based on a terminal parser was
+  *                          recorded at the right index
+  *
   * @param isSuccess        Whether or not the parse is currently successful
   *
   * @param logDepth         How many nested `.log` calls are currently surrounding us.
@@ -120,7 +128,7 @@ final class ParsingRun[+T](val input: ParserInput,
                            var shortParserMsg: Lazy[String],
                            var lastFailureMsg: Lazy[String],
                            var failureStack: List[(String, Int)],
-                           var earliestAggregatedFailure: Int,
+                           var earliestAggregate: Int,
                            var isSuccess: Boolean,
                            var logDepth: Int,
                            var index: Int,
@@ -155,7 +163,7 @@ final class ParsingRun[+T](val input: ParserInput,
   def aggregateMsg(f: Lazy[String]): Unit = {
     if (!isSuccess){
       if (index == traceIndex) failureAggregate ::= f
-      earliestAggregatedFailure = index
+      earliestAggregate = index
       if (lastFailureMsg == null) lastFailureMsg = f
     }
     shortParserMsg = f
@@ -168,14 +176,14 @@ final class ParsingRun[+T](val input: ParserInput,
   // generate huge methods, so anything we can do to reduce the size of the
   // generated code helps avoid bytecode size blowup
   def freshSuccess[V](value: V): ParsingRun[V] = {
-    earliestAggregatedFailure = Int.MaxValue
+    earliestAggregate = Int.MaxValue
     isSuccess = true
     successValue = value
     this.asInstanceOf[ParsingRun[V]]
   }
 
   def freshSuccess[V](value: V, index: Int): ParsingRun[V] = {
-    earliestAggregatedFailure = Int.MaxValue
+    earliestAggregate = Int.MaxValue
     isSuccess = true
     successValue = value
 
@@ -184,7 +192,7 @@ final class ParsingRun[+T](val input: ParserInput,
   }
 
   def freshSuccess[V](value: V, cut: Boolean): ParsingRun[V] = {
-    earliestAggregatedFailure = Int.MaxValue
+    earliestAggregate = Int.MaxValue
     isSuccess = true
     successValue = value
     this.cut = cut
@@ -192,7 +200,7 @@ final class ParsingRun[+T](val input: ParserInput,
   }
 
   def freshSuccess[V](value: V, index: Int, cut: Boolean): ParsingRun[V] = {
-    earliestAggregatedFailure = Int.MaxValue
+    earliestAggregate = Int.MaxValue
     isSuccess = true
     successValue = value
     this.index = index
@@ -202,7 +210,7 @@ final class ParsingRun[+T](val input: ParserInput,
 
   def freshFailure(): ParsingRun[Nothing] = {
     lastFailureMsg = null
-    earliestAggregatedFailure = index
+    earliestAggregate = index
     failureStack = Nil
     isSuccess = false
     this.asInstanceOf[ParsingRun[Nothing]]
@@ -210,7 +218,7 @@ final class ParsingRun[+T](val input: ParserInput,
 
   def freshFailure(startPos: Int): ParsingRun[Nothing] = {
     lastFailureMsg = null
-    earliestAggregatedFailure = index
+    earliestAggregate = index
     failureStack = Nil
     isSuccess = false
     index = startPos

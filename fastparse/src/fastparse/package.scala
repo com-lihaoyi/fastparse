@@ -56,7 +56,7 @@ package object fastparse {
     shortParserMsg = () => "",
     lastFailureMsg = () => "",
     failureStack = List.empty,
-    earliestAggregatedFailure = Int.MaxValue,
+    earliestAggregate = Int.MaxValue,
     isSuccess = true,
     logDepth = if (enableLogging) 0 else -1,
     startIndex,
@@ -326,13 +326,13 @@ package object fastparse {
     def opaque(msg: String)(implicit ctx: P[Any]): P[T] = {
       val oldIndex = ctx.index
       val oldFailureAggregate = ctx.failureAggregate
-      val preEarliest = ctx.earliestAggregatedFailure
+      val preEarliest = ctx.earliestAggregate
 
       val res = parse0()
 
       if (ctx.tracingEnabled) {
         ctx.failureAggregate = oldFailureAggregate
-        ctx.earliestAggregatedFailure = preEarliest
+        ctx.earliestAggregate = preEarliest
       }
       val res2 =
         if (res.isSuccess) ctx.freshSuccess(ctx.successValue)
@@ -503,10 +503,10 @@ package object fastparse {
     */
   def NoTrace[T](p: => P[T])(implicit ctx: P[_]): P[T] = {
     val preMsg = ctx.failureAggregate
-    val preEarliest = ctx.earliestAggregatedFailure
+    val preEarliest = ctx.earliestAggregate
     val res = p
     if (ctx.tracingEnabled) {
-      ctx.earliestAggregatedFailure = preEarliest
+      ctx.earliestAggregate = preEarliest
       ctx.failureAggregate = preMsg
     }
     res
@@ -521,12 +521,12 @@ package object fastparse {
     */
   def SimpleTrace[T](label: String)(p: => P[T])(implicit ctx: P[_]): P[T] = {
     val beforeAggregate = ctx.failureAggregate
-    val preEarliest = ctx.earliestAggregatedFailure
+    val preEarliest = ctx.earliestAggregate
     val startIndex = ctx.index
     val res = p
     if (ctx.tracingEnabled) {
       if (startIndex >= res.traceIndex) {
-        ctx.earliestAggregatedFailure = preEarliest
+        ctx.earliestAggregate = preEarliest
         ctx.failureAggregate = beforeAggregate
         ctx.failureAggregate ::= (() => label)
       }

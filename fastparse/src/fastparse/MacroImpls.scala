@@ -181,7 +181,7 @@ object MacroImpls {
       val startPos = ctx5.index
 
       lhs0.splice
-      val earliestAggregated = ctx5.earliestAggregatedFailure
+      val earliestAggregated = ctx5.earliestAggregate
       val lhsMsg = ctx5.shortParserMsg
       if (ctx5.isSuccess) {
         ctx5.cut |= oldCut
@@ -568,7 +568,7 @@ object MacroImpls {
         ctx1.cut = false
         lhs0.splice
         val msg = ctx1.shortParserMsg
-        val earliestFailure = ctx1.earliestAggregatedFailure
+        val earliestFailure = ctx1.earliestAggregate
         val res =
           if (ctx1.isSuccess) {
             val res = ctx1.freshSuccess(optioner.splice.some(ctx1.successValue.asInstanceOf[T]))
