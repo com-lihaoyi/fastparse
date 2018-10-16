@@ -327,7 +327,7 @@ object ExampleTests extends TestSuite{
         val trace = failure.extra.traced.trace
         assert(
           failure.index == 2,
-          trace == """Expected tuple:1:1 / ([0-9] | digits.!.rep | ")"):1:3, found ",)""""
+          trace == """Expected tuple:1:1 / ([0-9] | ")"):1:3, found ",)""""
         )
       }
       'delimitercut{
