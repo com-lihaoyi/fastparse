@@ -18,14 +18,24 @@ object ExampleTests extends TestSuite{
         val Parsed.Success(value, successIndex) = parse("a", parseA(_))
         assert(value == (), successIndex == 1)
 
-        val failure = parse("b", parseA(_)).asInstanceOf[Parsed.Failure]
-        val trace = failure.traced.trace
+        val f @ Parsed.Failure(msg, index, extra) = parse("b", parseA(_))
         assert(
-//          failure.stack == List(("\"a\"", 0)),
-//          failure.toString == """Parsed.Failure(Expected "a":1:1, found "b")""",
-//          trace == """Expected parseA:1:1 / "a":1:1, found "b""""
+          msg == "",
+          index == 0,
+          f.toString == """Parsed.Failure(Position 1:1, found "b")"""
         )
-        trace
+
+        val f2 @ Parsed.Failure(msg2, index2, _) = parse("b", parseA(_), verboseFailures = true)
+        assert(
+          msg2 == "\"a\"",
+          index2 == 0,
+          f2.toString == """Parsed.Failure(Expected "a":1:1, found "b")"""
+        )
+
+        val trace = extra.traced.trace
+        assert(
+          trace == """Expected parseA:1:1 / "a":1:1, found "b""""
+        )
       }
 
       'sequence {

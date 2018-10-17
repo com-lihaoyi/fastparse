@@ -12,7 +12,30 @@
         @p
             Such a parser returns a @hl.scala{Parsed.Success} if the input matches the string, and otherwise returns a @hl.scala{Parsed.Failure}.
         @p
-            As you can see, by default the @hl.scala{Parsed.Success} contains a @hl.scala{(): Unit}, unless you use @sect.ref{Capture} or @sect.ref{Map} described below. Also, apart from the structured data of the failure, @hl.scala{Parsed.Failure} also contains a nice human-readable trace of the parse showing the stack of parsers which were in progress when the parse failed. The trace can be obtained via @hl.scala{Parsed.Failure.Extra.trace}.
+            As you can see, by default the @hl.scala{Parsed.Success} contains
+            a @hl.scala{(): Unit}, unless you use @sect.ref{Capture} or
+            @sect.ref{Map} described below. There are three levels of error
+            reporting you can ask for when a parse fails:
+        @ol
+            @li
+                The default @hl.scala{Parsed.Failure} only tells you the
+                position of the error message, without any clues what went
+                wrong at that position.
+            @li
+                You can pass in the flag @hl.scala{verboseFailures = true} to
+                get a better description of what caused the parse failure at the
+                specified index, although it slows the parse down by a
+                significant amount (takes ~50% longer than a normal parse)
+            @li
+                You can call @code{failure.traced.trace}, which provides a much
+                more detailed view: the stack of parsers which were in progress
+                when the parse failed, as well as what a comprehensive list of
+                things that it tried unsuccessfully to parse at the index at
+                which the parse failed. This is even slower than
+                @code{verboseFailures}: it can only take place @i{after} a
+                failed parse has occurred, slowing down the parse significantly
+                (takes ~150% longer than a normal parse, not counting the time
+                taken for the necessary first parse)
 
         @p
             You can also wrap the strings in an @hl.scala{IgnoreCase("...")} if you want the matching to be case-insensitive.
