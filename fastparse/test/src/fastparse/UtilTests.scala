@@ -2,7 +2,23 @@ package fastparse
 import utest._
 object UtilTests extends TestSuite {
   val tests = Tests{
-    'hello - {
+    'hello1 - {
+      val shortTxt =
+        """'
+          |""".stripMargin
+
+      val lineStarts = fastparse.internal.Util.lineNumberLookup(shortTxt)
+      lineStarts.toList ==> List(0, 2)
+      val input = IndexedParserInput(shortTxt)
+
+      val pretties = for(i <- 0 to shortTxt.length) yield input.prettyIndex(i)
+      val expected = Vector(
+        "1:1", "1:2",
+        "2:1"
+      )
+      assert(pretties == expected)
+    }
+    'hello2 - {
       val txt =
         """a
           |bc

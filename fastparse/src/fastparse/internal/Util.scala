@@ -44,6 +44,7 @@ object Util {
       prev = char
       i += 1
     }
+    if (col == 1) lineStarts.append(i)
 
     lineStarts.toArray
   }
