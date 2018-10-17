@@ -33,10 +33,10 @@ object Parsed{
   final case class Failure(parseFailureString: String,
                            index: Int,
                            extra: Extra) extends Parsed[Nothing](false){
-    def get = throw new Exception("Parse Error, " + trace)
+    def get = throw new Exception("Parse Error, " + msg)
     def fold[V](onFailure: (String, Int, Extra) => V, onSuccess: (Nothing, Int) => V) = onFailure(parseFailureString, index, extra)
-    override def toString() = s"Parsed.Failure($trace)"
-    def trace = {
+    override def toString() = s"Parsed.Failure($msg)"
+    def msg = {
       parseFailureString match{
         case "" =>
           "Position " + extra.input.prettyIndex(index) +
@@ -45,9 +45,10 @@ object Parsed{
           "Expected " + s + ":" + extra.input.prettyIndex(index) +
             ", found " + Failure.formatTrailing(extra.input, index)
       }
-
     }
-    def traced = extra.traced
+
+    def traceAggregate() = extra.traceAggregate
+    def traceVerbose() = extra.traceVerbose
   }
 
   object Failure{
@@ -63,7 +64,16 @@ object Parsed{
                    startIndex: Int,
                    index: Int,
                    originalParser: ParsingRun[_] => ParsingRun[_]) {
-    def traced = {
+    @deprecated("Use .traceAggregate instead")
+    def traced = traceAggregate
+
+    /**
+      * Re-runs the failed parse with aggregation turned on. This is the
+      * slowest of Fastparse's error reporting mode, taking ~2.5x as long
+      * as the original parse, but provides the greatest detail in the error
+      * message
+      */
+    def traceAggregate() = {
       input.checkTraceable()
       TracedFailure.fromParsingRun(
         parseInputRaw[Any](
@@ -75,6 +85,25 @@ object Parsed{
           verboseFailures = true
         )
       )
+    }
+
+    /**
+      * Re-runs the failed parse with `verboseFailures` turned on. This
+      * provides a somewhat more detailed error message at a cost of taking
+      * ~1.5x as long than the original parse
+      */
+    def traceVerbose() = {
+      input.checkTraceable()
+      Parsed.fromParsingRun(
+        parseInputRaw[Any](
+          input,
+          originalParser,
+          startIndex = startIndex,
+          traceIndex = -1,
+          enableLogging = false,
+          verboseFailures = true
+        )
+      ).asInstanceOf[Failure]
     }
   }
 
@@ -98,7 +127,10 @@ object Parsed{
       case Seq(x) => x
       case items => items.mkString("(", " | ", ")")
     }
-    def trace = {
+
+    @deprecated("Use .msg instead")
+    def trace = msg
+    def msg = {
       "Expected " + Failure.formatStack(input, stack ++ Seq(aggregateMsg -> index)) +
       ", found " + Failure.formatTrailing(input, index)
     }
