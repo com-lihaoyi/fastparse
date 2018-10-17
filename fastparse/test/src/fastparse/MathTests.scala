@@ -41,7 +41,7 @@ object MathTests extends TestSuite{
     'fail - {
       def check(input: String, expectedTrace: String, expectedShortTrace: String) = {
         val failure = parse(input, expr(_)).asInstanceOf[Parsed.Failure]
-        val actualTrace = failure.extra.traced.trace
+        val actualTrace = failure.traceAggregate().msg
         assert(expectedTrace.trim == actualTrace.trim)
 
         // Check iterator parsing results in a failure in the right place. Note
