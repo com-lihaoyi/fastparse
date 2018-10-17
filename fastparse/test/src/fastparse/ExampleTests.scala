@@ -18,6 +18,9 @@ object ExampleTests extends TestSuite{
         val Parsed.Success(value, successIndex) = parse("a", parseA(_))
         assert(value == (), successIndex == 1)
 
+      'failures {
+        import fastparse._, NoWhitespace._
+        def parseA[_: P] = P( "a" )
         val f @ Parsed.Failure(msg, index, extra) = parse("b", parseA(_))
         assert(
           msg == "",
@@ -36,6 +39,7 @@ object ExampleTests extends TestSuite{
         assert(
           trace == """Expected parseA:1:1 / "a":1:1, found "b""""
         )
+      }
       }
 
       'sequence {
