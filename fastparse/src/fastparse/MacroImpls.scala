@@ -273,41 +273,41 @@ object MacroImpls {
       case ConstantType(Constant(x: String)) => x
       case _ => c.abort(c.enclosingPosition, "Function can only accept constant singleton type")
     })
-    val trie = new TrieNode(if (ignoreCase) literals.map(_.toLowerCase) else literals)
+    val trie = new CompactTrieNode(
+      new TrieNode(if (ignoreCase) literals.map(_.toLowerCase) else literals)
+    )
     val ctx1 = TermName(c.freshName("ctx"))
     val output = TermName(c.freshName("output"))
     val index = TermName(c.freshName("index"))
     val input = TermName(c.freshName("input"))
     val n = TermName(c.freshName("n"))
-    def rec(depth: Int, t: TrieNode): c.Expr[Unit] = {
-      val charAt = if (ignoreCase) q"$input.apply($n).toLower" else q"$input.apply($n)"
-      val children = if (t.children.size == 0) q"()"
-      else if (t.children.size > 1){
+    def charAtN(n: Tree) = if (ignoreCase) q"$input.apply($n).toLower" else q"$input.apply($n)"
+    def rec(depth: Int, t: CompactTrieNode): c.Expr[Unit] = {
+      val charAt = charAtN(q"$n")
+      val children = if (t.children.isEmpty) q"()"
+      else {
         q"""
         $charAt match {
-          case ..${t.children.map { case (k, v) => cq"$k => ${rec(depth + 1, v)}" }}
+          case ..${t.children.map {
+            case (k, ("", v)) => cq"$k => ${rec(depth + 1, v)}"
+            case (k, (s, v)) =>
+              val checks = s
+                .zipWithIndex
+                .map { case (char, i) => q"""${charAtN(q"$index + ${depth + i + 1}")} == $char""" }
+                .reduce[Tree]{case (l, r) => q"$l && $r"}
+              cq"$k => if ($input.isReachable($index + ${depth + s.length}) && $checks) ${rec(depth + s.length + 1, v)}"
+          }}
           case _ =>
         }
         """
-      }else{
-        q"""
-        if($charAt == ${t.children.keys.head}) ${rec(depth + 1, t.children.values.head)}
-        """
       }
-      val run = q"""
-         val $n = $index + $depth
-         ..${if (t.word) Seq(q"$output = $n") else Nil}
-         if ($input.isReachable($n)) $children
-      """
-      val wrap = TermName(c.freshName("wrap"))
+
       c.Expr[Unit](
-        // Best effort attempt to break up the huge methods that tend to be
-        // created by StringsIn. Not exact, but hopefully will result in
-        // multiple smaller methods being created
-        if (!t.break) run
-        else q"""
-          def $wrap() = $run
-          $wrap()
+        q"""
+        val $n = $index + $depth
+        ..${if (t.word) Seq(q"$output = $n") else Nil}
+        if ($input.isReachable($n)) $children
+
         """
       )
     }
@@ -330,21 +330,9 @@ object MacroImpls {
       }
     """
 
+    println(res)
     c.Expr[ParsingRun[Unit]](res)
 
-  }
-  final class TrieNode(strings: Seq[String], ignoreCase: Boolean = false) {
-
-    val ignoreCaseStrings = if (ignoreCase) strings.map(_.map(_.toLower)) else strings
-    val children = ignoreCaseStrings.filter(!_.isEmpty)
-      .groupBy(_(0))
-      .map { case (k,ss) => k -> new TrieNode(ss.map(_.tail), ignoreCase) }
-
-    val rawSize = children.values.map(_.size).sum + children.size
-
-    val break = rawSize >= 8
-    val size: Int = if (break) 1 else rawSize
-    val word: Boolean = strings.exists(_.isEmpty) || children.isEmpty
   }
 
   def parseCharCls(c: Context)(char: c.Expr[Char], ss: Seq[String]) = {

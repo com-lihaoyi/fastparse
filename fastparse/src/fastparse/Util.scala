@@ -85,3 +85,35 @@ trait Instrument{
   def beforeParse(parser: String, index: Int): Unit
   def afterParse(parser: String, index: Int, success: Boolean): Unit
 }
+
+
+final class TrieNode(strings: Seq[String], ignoreCase: Boolean = false) {
+
+  val ignoreCaseStrings = if (ignoreCase) strings.map(_.map(_.toLower)) else strings
+  val children = ignoreCaseStrings.filter(!_.isEmpty)
+    .groupBy(_(0))
+    .map { case (k,ss) => k -> new TrieNode(ss.map(_.tail), ignoreCase) }
+
+  val rawSize = children.values.map(_.size).sum + children.size
+
+  val break = rawSize >= 8
+  val size: Int = if (break) 1 else rawSize
+  val word: Boolean = strings.exists(_.isEmpty) || children.isEmpty
+}
+final class CompactTrieNode(source: TrieNode){
+  val children: Map[Char, (String, CompactTrieNode)] = {
+    val iter = for(char <- source.children.keys) yield char -> {
+      val string = new StringBuilder
+      var child = source.children(char)
+      while(!child.word && child.children.size == 1){
+        string.append(child.children.keys.head)
+        child = child.children.values.head
+      }
+      (string.toString(), new CompactTrieNode(child))
+    }
+    iter.toMap
+  }
+
+
+  val word = source.word
+}

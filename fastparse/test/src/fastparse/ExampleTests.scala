@@ -250,10 +250,11 @@ object ExampleTests extends TestSuite{
       }
 
       'stringIn{
-        def si[_: P] = P( StringIn("cow", "cattle").!.rep )
+        def si[_: P] = P( StringIn("cow", "cattle").!.rep(1) )
 
         val Parsed.Success(Seq("cow", "cattle"), _) = parse("cowcattle", si(_))
         val Parsed.Success(Seq("cow"), _) = parse("cowmoo", si(_))
+        val Parsed.Failure(_, _, _) = parse("co", si(_))
       }
     }
 
