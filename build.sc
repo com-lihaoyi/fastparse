@@ -122,7 +122,7 @@ trait ExampleParseJvmModule extends CommonCrossModule{
 
 trait CommonCrossModule extends CrossScalaModule with PublishModule{
 
-  def publishVersion = "2.0.0b1"
+  def publishVersion = "2.0.0b2"
   def artifactName = millModuleSegments.parts.dropRight(2).mkString("-")
   def pomSettings = PomSettings(
     description = artifactName(),

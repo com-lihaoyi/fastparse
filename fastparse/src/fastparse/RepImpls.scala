@@ -50,13 +50,13 @@ object RepImpls{
       case None => q"$rec($beforeSepIndex, $count + 1, false)"
       case Some(ws) =>
         q"""
-        if ($ws ne fastparse.NoWhitespace.noWhitespaceImplicit) {
+        if ($ws ne _root_.fastparse.NoWhitespace.noWhitespaceImplicit) {
           val oldNoDropBuffer = $ctx1.noDropBuffer // completely disallow dropBuffer
           $ctx1.noDropBuffer = true
           $ws($ctx1)
           $ctx1.noDropBuffer = oldNoDropBuffer
         }
-        if (!$ctx1.isSuccess && $ctx1.cut) $ctx1.asInstanceOf[fastparse.ParsingRun[scala.Nothing]]
+        if (!$ctx1.isSuccess && $ctx1.cut) $ctx1.asInstanceOf[_root_.fastparse.ParsingRun[scala.Nothing]]
         else{
           $ctx1.cut = false
           $rec($beforeSepIndex, $count + 1, false)
@@ -81,7 +81,7 @@ object RepImpls{
             $originalCut |= $ctx1.cut
             if (!$ctx1.isSuccess) {
               val res =
-                if ($ctx1.cut) $ctx1.asInstanceOf[fastparse.P[${c.weakTypeOf[V]}]]
+                if ($ctx1.cut) $ctx1.asInstanceOf[_root_.fastparse.P[${c.weakTypeOf[V]}]]
                 else $endSnippet
               if ($ctx1.verboseFailures) $ctx1.aggregateMsgPostBacktrack($startAggregate, () => $parsedMsg() + ".rep" + $aggregateSnippet)
               res
