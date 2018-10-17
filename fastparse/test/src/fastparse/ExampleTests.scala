@@ -2,8 +2,9 @@ package test.fastparse
 
 import utest._
 import fastparse._
+import fastparse.internal.Logger
 /**
-  * Demonstrates simulatneously parsing and
+  * Demonstrates simultaneously parsing and
   * evaluating simple arithmetic expressions
   */
 object ExampleTests extends TestSuite{

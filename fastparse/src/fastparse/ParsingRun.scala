@@ -1,5 +1,8 @@
 package fastparse
 
+import fastparse.internal.{Instrument, Lazy}
+import fastparse.internal.Instrument
+
 /**
   * Models an in-progress parsing run; contains all the mutable state that may
   * be necessary during the parse, in order to avoid the individual parsers
@@ -26,21 +29,16 @@ package fastparse
   *   will over-write the mutable field
   *
   * @param input            The input to the parsing run, as a [[ParserInput]].
-  *
   * @param startIndex       Where the parse initially started, so as to allow
   *                         `.result.traced`  to re-create it with tracing enabled.
-  *
   * @param originalParser   The original parsing function we used to start this
   *                         run, so as to allow `.result.traced` to re-create
   *                         it with tracing enabled.
-  *
   * @param traceIndex       The index we wish to trace if tracing is enabled, else
   *                         -1. Used to find failure messages to aggregate into
   *                         `failureAggregate`
-  *
   * @param instrument       Callbacks that can be injected before/after every
   *                         `P(...)` parser.
-  *
   * @param failureAggregate When tracing is enabled, this collects up all the
   *                         upper-most failures that happen at [[traceIndex]]
   *                         (in [[Lazy]] wrappers) so they can be shown to the
@@ -53,7 +51,6 @@ package fastparse
   *                         failing there, it makes use of the
   *                         [[shortParserMsg]] as the string representation of
   *                         the composite parser.
-  *
   * @param shortParserMsg   When tracing is enabled, this contains string
   *                         representation of the last parser to run. Since
   *                         parsers aren't really objects, we piece together
@@ -65,11 +62,9 @@ package fastparse
   *                         in exchange we pay a small cost constructing the
   *                         chain of functions that can  be invoked to create
   *                         the string
-  *
   * @param failureStack     The stack of named `P(...)` parsers in effect when
   *                         the failure occured; only constructed when tracing
   *                         is enabled via `traceIndex != -1`
-  *
   * @param earliestAggregate Lets backtracking parsers keep track on-failure of
   *                          where the earliest actually-aggregated terminal
   *                          failure within the backtracked parse happened.
@@ -77,17 +72,12 @@ package fastparse
   *                          message based on [[shortParserMsg]] if no low-level
   *                          error message based on a terminal parser was
   *                          recorded at the right index
-  *
   * @param isSuccess        Whether or not the parse is currently successful
-  *
   * @param logDepth         How many nested `.log` calls are currently surrounding us.
   *                         Used to nicely indent the log output so you can see which
   *                         parsers are nested within which other parsers; -1 means
   *                         logging is disabled
-  *
   * @param index            The current index of the parse
-  *
-  *
   * @param cut              Has the current parse been prevented from backtracking?
   *                         This field starts as `true` at top-level, since there
   *                         is nowhere to backtrack to. Upon entering a parser
@@ -95,15 +85,12 @@ package fastparse
   *                         it is set to `false`, and re-set to `true` upon
   *                         encountering a `./` or `~/` cut operator that prevents
   *                         backtracking.
-  *
   * @param successValue     The currently returned success value
-  *
   * @param verboseFailures  Whether or not we are currently collecting [[lastFailureMsg]]s;
   *                         defaults to false, unless
   *                         [[traceIndex]] is set OR we are inside a [[LogByNameOps.log]]
   *                         call which necessitates tracing in order to print out
   *                         failure traces during logging
-  *
   * @param noDropBuffer     Flag that prevents the parser from dropping earlier
   *                         input. Used for the `.!` capture operator that needs
   *                         the input around to return as a string, the `NoCut`

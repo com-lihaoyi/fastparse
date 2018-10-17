@@ -4,6 +4,7 @@ import cssparse.PrettyPrinter
 import org.scalajs.dom
 import org.scalajs.dom.{Event, UIEvent, html}
 import fastparse._
+import fastparse.internal.Util
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}

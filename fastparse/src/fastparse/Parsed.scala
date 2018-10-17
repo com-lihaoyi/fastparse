@@ -1,5 +1,7 @@
 package fastparse
 
+import fastparse.internal.Util
+
 /**
   * The outcome of a [[ParsingRun]] run, either a success (with value and index) or
   * failure (with associated debugging metadata to help figure out what went

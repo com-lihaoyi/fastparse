@@ -1,5 +1,7 @@
 package fastparse
 
+import fastparse.internal.{UberBuffer, Util}
+
 
 /**
   * Trait that represents classes with isReachable method

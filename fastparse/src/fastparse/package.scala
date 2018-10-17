@@ -1,3 +1,6 @@
+import fastparse.internal._
+import fastparse.internal.{Instrument, Logger}
+
 import language.experimental.macros
 
 package object fastparse {

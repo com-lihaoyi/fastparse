@@ -1,5 +1,4 @@
-package fastparse
-import scala.reflect.ClassTag
+package fastparse.internal
 
 
 /**

@@ -1,4 +1,6 @@
-package fastparse
+package fastparse.internal
+
+import fastparse.{Implicits, NoWhitespace, ParsingRun}
 
 import scala.annotation.tailrec
 import scala.reflect.macros.blackbox.Context

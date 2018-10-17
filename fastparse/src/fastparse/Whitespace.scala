@@ -1,6 +1,7 @@
 package fastparse
 
 import fastparse._
+import fastparse.internal.Util
 
 import scala.annotation.{Annotation, switch, tailrec}
 /**
