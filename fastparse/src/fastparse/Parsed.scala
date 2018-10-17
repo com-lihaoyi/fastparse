@@ -69,7 +69,7 @@ object Parsed{
           originalParser,
           startIndex = startIndex,
           traceIndex = index,
-          enableLogging = true,
+          enableLogging = false,
           verboseFailures = true
         )
       )

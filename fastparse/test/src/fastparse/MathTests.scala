@@ -47,7 +47,7 @@ object MathTests extends TestSuite{
         // that we aren't checking the `.traced.trace` because that requires a
         // second parse which doesn't work with iterators (which get exhausted)
         for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)) {
-          val failure2 = parseIterator(input.grouped(chunkSize), expr(_)).asInstanceOf[Parsed.Failure]
+          val failure2 = parse(input.grouped(chunkSize), expr(_)).asInstanceOf[Parsed.Failure]
           val trace = failure2.trace
           assert(trace == expectedShortTrace.trim)
         }

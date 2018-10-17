@@ -5,10 +5,9 @@
 @sect{Streaming Parsing}
     @p
         In addition to the parsing strings, you can also parse "streaming"
-        data from @hl.scala{Iterator}s. To do so, call
-        @hl.scala{fastparse.parseIterator}
-        instead of @hl.scala{fastparse.parse} in your parser and pass the
-        @hl.scala{Iterator[String]}.
+        data from @hl.scala{Iterator}s. To do so, simply pass in an
+        @hl.scala{Iterator[String]} instead of a @code{String} to the
+        @hl.scala{fastparse.parse} method.
 
     @hl.ref(tests/"IteratorTests.scala", Seq("'basic", ""))
 

@@ -20,7 +20,7 @@ object TestUtils {
     }
 
 //    for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)){
-//      val parsed = (rule ~ End).parseIterator(s.grouped(chunkSize))
+//      val parsed = (rule ~ End).parse(s.grouped(chunkSize))
 //      val stringResult = parsed match {
 //        case f: Result.Failure => throw new Exception(f.extra.traced.trace)
 //        case s: Result.Success[T] =>

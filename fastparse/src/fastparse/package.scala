@@ -2,77 +2,50 @@ import language.experimental.macros
 
 package object fastparse {
   /**
-    * Parses the given input [[String]] using the given parser and returns
-    * a [[Parsed]] result containing the success value or failure metadata
-    */
-  def parse[T](input: String,
-               parser: P[_] => P[T],
-               startIndex: Int = 0,
-               traceIndex: Int = -1,
-               instrument: Instrument = null,
-               enableLogging: Boolean = true,
-               verboseFailures: Boolean = false): Parsed[T] = parseInput(
-    input = IndexedParserInput(input),
-    parser = parser,
-    startIndex = startIndex,
-    traceIndex = traceIndex,
-    instrument = instrument,
-    enableLogging = enableLogging,
-    verboseFailures = verboseFailures
-  )
-
-  /**
-    * Parses the given input [[Iterator]] using the given parser and returns
-    * a [[Parsed]] result containing the success value or failure metadata
-    */
-  def parseIterator[T](input: Iterator[String],
-                       parser: P[_] => P[T],
-                       startIndex: Int = 0,
-                       traceIndex: Int = -1,
-                       instrument: Instrument = null,
-                       enableLogging: Boolean = true,
-                       verboseFailures: Boolean = false): Parsed[T] = parseInput(
-    input = IteratorParserInput(input),
-    parser = parser,
-    startIndex = startIndex,
-    traceIndex = traceIndex,
-    instrument = instrument,
-    enableLogging = enableLogging,
-    verboseFailures = verboseFailures
-  )
-
-  /**
     * Parses the given input [[ParserInput]] using the given parser and returns
-    * a [[Parsed]] result containing the success value or failure metadata
+    * a [[Parsed]] result containing the success value or failure metadata.
+    *
+    * Can take either a [[String]], an [[Iterator]] or strings or a
+    * [[fastparse.ParserInput]] object
+    *
+    * @param input the input to parse
+    *
+    * @param parser the parser method to use to parse the input
+    *
+    * @param verboseFailures enable this to show a more detailed error message
+    *                        if a parser fails, without needing to run
+    *                        `.traced.trace`. Defaults to `false` as it slows
+    *                        down parsing considerably
+    *
+    * @param startIndex where in the input to start parsing
+    *
+    * @param instrument Callbacks that get run before and after every named
+    *                   `P(...)` parser
+    *
+    *
     */
-  def parseInput[T](input: ParserInput,
-                    parser: P[_] => P[T],
-                    startIndex: Int = 0,
-                    traceIndex: Int = -1,
-                    instrument: Instrument = null,
-                    enableLogging: Boolean = true,
-                    verboseFailures: Boolean = false): Parsed[T] = {
-    Parsed.fromParsingRun(parseInputRaw(
+  def parse[T](input: ParserInput,
+               parser: P[_] => P[T],
+               verboseFailures: Boolean = false,
+               startIndex: Int = 0,
+               instrument: Instrument = null): Parsed[T] = {
+    Parsed.fromParsingRun(parseInputRaw[T](
       input,
       parser,
+      verboseFailures,
       startIndex,
-      traceIndex,
-      instrument,
-      enableLogging,
-      verboseFailures
+      -1,
+      instrument
     ))
   }
-  /**
-    * Parses the given input [[ParserInput]] using the given parser and returns
-    * a [[Parsed]] result containing the success value or failure metadata
-    */
+
   def parseInputRaw[T](input: ParserInput,
                        parser: P[_] => P[T],
+                       verboseFailures: Boolean = false,
                        startIndex: Int = 0,
                        traceIndex: Int = -1,
                        instrument: Instrument = null,
-                       enableLogging: Boolean = true,
-                       verboseFailures: Boolean = false): ParsingRun[T] = parser(new ParsingRun(
+                       enableLogging: Boolean = true): ParsingRun[T] = parser(new ParsingRun(
     input = input,
     startIndex = startIndex,
     originalParser = parser,

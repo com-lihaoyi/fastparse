@@ -12,7 +12,10 @@ trait IsReachable {
   def isReachable(index: Int): Boolean
 }
 
-
+object ParserInput{
+  implicit def fromString(s: String): ParserInput = new IndexedParserInput(s)
+  implicit def fromIterator(s: Iterator[String]): ParserInput = new IteratorParserInput(s)
+}
 /**
   * ParserInput class represents data that is needed to parse.
   *

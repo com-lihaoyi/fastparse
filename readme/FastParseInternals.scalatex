@@ -45,7 +45,7 @@
         @p
             As plain methods, Fastparse parsers are synchrous: calling a parser
             method does not return  until the parse is complete. Even if
-            parsing streaming input via @code{parseIterator}, FastParse will block
+            parsing streaming input, FastParse will block
             on the input iterator until it either provides the text to parse
             or is exhausted.
 
