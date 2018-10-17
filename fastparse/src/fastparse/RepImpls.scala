@@ -66,34 +66,35 @@ object RepImpls{
 
     q"""
       $ctx match{ case $ctx1 =>
-        var $originalCut = $ctx1.cut
-        val $repeater1 = $repeater
-        val $acc = $repeater1.initial
-        @_root_.scala.annotation.tailrec
-        def $rec($startIndex: _root_.scala.Int,
-                 $count: _root_.scala.Int,
-                 $precut: _root_.scala.Boolean): _root_.fastparse.P[${c.weakTypeOf[V]}] = {
-          $ctx1.cut = $precut
+        $repeater match {case $repeater1 =>
+          var $originalCut = $ctx1.cut
+          val $acc = $repeater1.initial
+          @_root_.scala.annotation.tailrec
+          def $rec($startIndex: _root_.scala.Int,
+                   $count: _root_.scala.Int,
+                   $precut: _root_.scala.Boolean): _root_.fastparse.P[${c.weakTypeOf[V]}] = {
+            $ctx1.cut = $precut
 
-          ${c.prefix}.parse0()
-          val $startAggregate = $ctx1.earliestAggregate
-          val $parsedMsg = $ctx1.shortParserMsg
-          $originalCut |= $ctx1.cut
-          if (!$ctx1.isSuccess) {
-            val res =
-              if ($ctx1.cut) $ctx1.asInstanceOf[fastparse.P[${c.weakTypeOf[V]}]]
-              else $endSnippet
-            if ($ctx1.verboseFailures) $ctx1.aggregateMsgPostBacktrack($startAggregate, () => $parsedMsg() + ".rep" + $aggregateSnippet)
-            res
-          }else {
-            val $beforeSepIndex = $ctx1.index
-            $repeater1.accumulate($ctx1.successValue.asInstanceOf[${c.weakTypeOf[T]}], $acc)
-            $ctx1.cut = false
-            $wsSnippet
+            ${c.prefix}.parse0()
+            val $startAggregate = $ctx1.earliestAggregate
+            val $parsedMsg = $ctx1.shortParserMsg
+            $originalCut |= $ctx1.cut
+            if (!$ctx1.isSuccess) {
+              val res =
+                if ($ctx1.cut) $ctx1.asInstanceOf[fastparse.P[${c.weakTypeOf[V]}]]
+                else $endSnippet
+              if ($ctx1.verboseFailures) $ctx1.aggregateMsgPostBacktrack($startAggregate, () => $parsedMsg() + ".rep" + $aggregateSnippet)
+              res
+            }else {
+              val $beforeSepIndex = $ctx1.index
+              $repeater1.accumulate($ctx1.successValue.asInstanceOf[${c.weakTypeOf[T]}], $acc)
+              $ctx1.cut = false
+              $wsSnippet
 
+            }
           }
+          $rec($ctx1.index, 0, false)
         }
-        $rec($ctx1.index, 0, false)
       }
     """
   }
