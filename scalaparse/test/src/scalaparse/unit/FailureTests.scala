@@ -639,7 +639,7 @@ object FailureTests extends TestSuite{
           |}
           |
         """.stripMargin,
-        expected = """(chars-while(1) | "\"" | "\"\"\"")""",
+        expected = """(chars-while(1) | "\"" | [\\\\$\n] | "\"\"\"")""",
         found = ""
       )
       * - checkNeg(
@@ -832,7 +832,7 @@ object FailureTests extends TestSuite{
         s"""
           |object System {
           |  $tq """".stripMargin,
-        expected = """("\"" | chars-while(1) | "\"\"\"")""",
+        expected = """("\"" | chars-while(1) | [\\\\$\n] | "\"\"\"")""",
         found = ""
       )
       * - checkNeg(

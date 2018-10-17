@@ -25,13 +25,8 @@ object MacroImpls {
         val res =
           if (!ctx1.isSuccess) ctx1.asInstanceOf[ParsingRun[T]]
           else if (f.splice(ctx1.successValue.asInstanceOf[T])) ctx1.asInstanceOf[ParsingRun[T]]
-          else {
-            val prevCut = ctx1.cut
+          else ctx1.freshFailure().asInstanceOf[ParsingRun[T]]
 
-            val res = ctx1.freshFailure().asInstanceOf[ParsingRun[T]]
-            res.cut = prevCut
-            res
-          }
         if (ctx1.verboseFailures) ctx1.aggregateMsg(() => "filter")
         res
       }
@@ -176,12 +171,7 @@ object MacroImpls {
     reify {
       val lhs = lhs0.splice.parse0
       if (!lhs.isSuccess) lhs.asInstanceOf[ParsingRun[V]]
-      else {
-        val sCut = lhs.cut
-        val res = f.splice(lhs.successValue.asInstanceOf[T])
-        res.cut |= sCut
-        res
-      }
+      else f.splice(lhs.successValue.asInstanceOf[T])
     }
   }
 
@@ -403,17 +393,17 @@ object MacroImpls {
     val parsed = parseCharCls(c)(reify(ctx.splice.input(ctx.splice.index)), literals)
     val bracketed = c.Expr[String](Literal(Constant(literals.map(l => "[" + Util.literalize(l).drop(1).dropRight(1) + "]").mkString)))
     reify {
-      ctx.splice match{case ctx1 =>
-        if (!ctx1.input.isReachable(ctx1.index)) {
-          ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
-        } else {
-          parsed.splice match {
-            case true => ctx1.freshSuccess((), ctx1.index + 1)
+      ctx.splice match { case ctx1 =>
+        val index = ctx1.index
+        val res =
+          if (!ctx1.input.isReachable(index)) {
+            ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
+          } else parsed.splice match {
+            case true => ctx1.freshSuccess((), index + 1)
             case false => ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
           }
-          if (ctx1.verboseFailures) ctx1.aggregateMsg(() => bracketed.splice)
-          ctx1.asInstanceOf[P[Unit]]
-        }
+        if (ctx1.verboseFailures) ctx1.aggregateMsg(() => bracketed.splice)
+        res
       }
     }
   }
