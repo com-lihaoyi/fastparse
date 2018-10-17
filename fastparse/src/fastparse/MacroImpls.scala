@@ -295,7 +295,11 @@ object MacroImpls {
                 .zipWithIndex
                 .map { case (char, i) => q"""${charAtN(q"$index + ${depth + i + 1}")} == $char""" }
                 .reduce[Tree]{case (l, r) => q"$l && $r"}
-              cq"$k => if ($input.isReachable($index + ${depth + s.length}) && $checks) ${rec(depth + s.length + 1, v)}"
+              cq"""
+                $k => if ($input.isReachable($index + ${depth + s.length}) && $checks){
+                  ${rec(depth + s.length + 1, v)}
+                }
+              """
           }}
           case _ =>
         }
@@ -330,7 +334,6 @@ object MacroImpls {
       }
     """
 
-    println(res)
     c.Expr[ParsingRun[Unit]](res)
 
   }
@@ -379,7 +382,9 @@ object MacroImpls {
     })
 
     val parsed = parseCharCls(c)(reify(ctx.splice.input(ctx.splice.index)), literals)
-    val bracketed = c.Expr[String](Literal(Constant(literals.map(l => "[" + Util.literalize(l).drop(1).dropRight(1) + "]").mkString)))
+    val bracketed = c.Expr[String](
+      Literal(Constant(literals.map(l => "[" + Util.literalize(l).drop(1).dropRight(1) + "]").mkString))
+    )
     reify {
       ctx.splice match { case ctx1 =>
         val index = ctx1.index

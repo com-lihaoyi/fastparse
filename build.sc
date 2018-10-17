@@ -138,6 +138,8 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule{
     )
   )
 
+  def scalacOptions = T{ if (scalaVersion() == "2.12.7") Seq("-opt:l:method") else Nil }
+
   def platformSegment: String
   def millSourcePath = super.millSourcePath / ammonite.ops.up
   def sources = T.sources(
@@ -152,6 +154,8 @@ trait CommonTestModule extends ScalaModule with TestModule{
   def ivyDeps = Agg(
     ivy"com.lihaoyi::utest::0.6.5",
   )
+
+  def scalacOptions = Seq("-opt:l:method")
 
   def sources = T.sources(
     millSourcePath / "src",
