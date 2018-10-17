@@ -155,7 +155,7 @@ trait CommonTestModule extends ScalaModule with TestModule{
     ivy"com.lihaoyi::utest::0.6.5",
   )
 
-  def scalacOptions = Seq("-opt:l:method")
+  def scalacOptions = T{ if (scalaVersion() == "2.12.7") Seq("-opt:l:method") else Nil }
 
   def sources = T.sources(
     millSourcePath / "src",
