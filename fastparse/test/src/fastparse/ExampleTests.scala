@@ -13,34 +13,50 @@ object ExampleTests extends TestSuite{
     'basic{
       'simple {
         import fastparse._, NoWhitespace._
-        def parseA[_: P] = P( "a" )
+        def parseA[_: P] = P("a")
 
         val Parsed.Success(value, successIndex) = parse("a", parseA(_))
         assert(value == (), successIndex == 1)
 
+        val f @ Parsed.Failure(failureLabel, index, extra) = parse("b", parseA(_))
+        assert(
+          failureLabel == "",
+          index == 0,
+          f.msg == """Position 1:1, found "b""""
+        )
+      }
+
       'failures {
         import fastparse._, NoWhitespace._
-        def parseA[_: P] = P( "a" )
-        val f @ Parsed.Failure(msg, index, extra) = parse("b", parseA(_))
+        def parseA[_: P] = P( ("a" | "b").? ~ "c" )
+        val f @ Parsed.Failure(failureString, index, extra) = parse("d", parseA(_))
+
         assert(
-          msg == "",
+          failureString == "",
           index == 0,
-          f.toString == """Parsed.Failure(Position 1:1, found "b")"""
+          f.msg == """Position 1:1, found "d""""
         )
 
-        val f2 @ Parsed.Failure(msg2, index2, _) = parse("b", parseA(_), verboseFailures = true)
+        // .trace() collects additional metadata to use for error reporting
+        val trace = f.trace()
+
+        // `.msg` records the last parser that failed, which is "c", and
+        // `.longMsg` also shows the parsing stack at point of failure
         assert(
-          msg2 == "\"a\"",
-          index2 == 0,
-          f2.toString == """Parsed.Failure(Expected "a":1:1, found "b")"""
+          trace.failureLabel == "\"c\"",
+          trace.index == 0,
+          trace.msg == """Expected "c":1:1, found "d"""",
+          trace.longMsg == """Expected parseA:1:1 / "c":1:1, found "d""""
         )
 
-        val trace = extra.traceAggregate().msg
+        // aggregateMsg and longAggregateMsg record all parsers
+        // failing at the position, "a" | "b" | "c",
         assert(
-          trace == """Expected parseA:1:1 / "a":1:1, found "b""""
+          trace.aggregateMsg == """Expected ("a" | "b" | "c"):1:1, found "d"""",
+          trace.longAggregateMsg == """Expected parseA:1:1 / ("a" | "b" | "c"):1:1, found "d""""
         )
       }
-      }
+
 
       'sequence {
         def ab[_: P] = P( "a" ~ "b" )
@@ -83,7 +99,7 @@ object ExampleTests extends TestSuite{
 
         val Parsed.Success(_, 6) = parse("aaaaab", either(_))
         val f @ Parsed.Failure(_, 5, _) = parse("aaaaae", either(_))
-        val trace = f.traceAggregate().msg
+        val trace = f.trace().longAggregateMsg
         assert(
           f.toString == """Parsed.Failure(Position 1:6, found "e")""",
           trace == """Expected either:1:1 / ("a" | "b" | "c" | "d"):1:6, found "e""""
@@ -183,7 +199,7 @@ object ExampleTests extends TestSuite{
 
         val failure = parse("<abcde></edcba>", xml(_)).asInstanceOf[Parsed.Failure]
         assert(
-          failure.traceAggregate().msg == """Expected xml:1:1 / rightTag:1:8 / "abcde":1:10, found "edcba>""""
+          failure.trace().longAggregateMsg == """Expected xml:1:1 / rightTag:1:8 / "abcde":1:10, found "edcba>""""
         )
       }
       'flatMapFor{
@@ -201,7 +217,7 @@ object ExampleTests extends TestSuite{
 
         val failure = parse("<abcde></edcba>", xml(_)).asInstanceOf[Parsed.Failure]
         assert(
-          failure.traceAggregate().msg == """Expected xml:1:1 / rightTag:1:8 / "abcde":1:10, found "edcba>""""
+          failure.trace().longAggregateMsg == """Expected xml:1:1 / rightTag:1:8 / "abcde":1:10, found "edcba>""""
         )
       }
       'filter{
@@ -215,7 +231,7 @@ object ExampleTests extends TestSuite{
         def letter[_: P] = CharIn("A-Z")
         def twice[T, _: P](p: => P[T]) = p ~ p
         def errorMessage[T](p: P[_] => P[T], str: String) =
-          parse(str, p).asInstanceOf[Parsed.Failure].traceAggregate().msg
+          parse(str, p).asInstanceOf[Parsed.Failure].trace().longAggregateMsg
 
         // Portuguese number plate format since 2006
         def numberPlate[_: P] = P(twice(digit) ~ "-" ~ twice(letter) ~ "-" ~ twice(digit))
@@ -281,7 +297,7 @@ object ExampleTests extends TestSuite{
         val Parsed.Success("abcd", _) = parse("val abcd", nocut(_))
 
         val failure = parse("val 1234", nocut(_)).asInstanceOf[Parsed.Failure]
-        val trace = failure.traceAggregate().msg
+        val trace = failure.trace().longAggregateMsg
         assert(
           failure.index == 0,
           trace == """Expected nocut:1:1 / ("val " ~ alpha.rep(1).! | "def "):1:1, found "val 1234""""
@@ -295,7 +311,7 @@ object ExampleTests extends TestSuite{
         val Parsed.Success("abcd", _) = parse("val abcd", nocut(_))
 
         val failure = parse("val 1234", nocut(_)).asInstanceOf[Parsed.Failure]
-        val trace = failure.traceAggregate().msg
+        val trace = failure.trace().longAggregateMsg
         assert(
           failure.index == 4,
           trace == """Expected nocut:1:1 / alpha:1:5 / [a-z]:1:5, found "1234""""
@@ -311,7 +327,7 @@ object ExampleTests extends TestSuite{
         val Parsed.Success(Seq("abcd", "efg"), _) = parse("val abcd; val efg;", stmts(_))
 
         val failure = parse("val abcd; val ", stmts(_)).asInstanceOf[Parsed.Failure]
-        val trace = failure.traceAggregate().msg
+        val trace = failure.trace().longAggregateMsg
         assert(
           failure.index == 10,
           trace == """Expected stmts:1:1 / (" " | stmt.rep(1) | end-of-input):1:11, found "val """"
@@ -327,7 +343,7 @@ object ExampleTests extends TestSuite{
         val Parsed.Success(Seq("abcd", "efg"), _) = parse("val abcd; val efg;", stmts(_))
 
         val failure = parse("val abcd; val ", stmts(_)).asInstanceOf[Parsed.Failure]
-        val trace = failure.traceAggregate().msg
+        val trace = failure.trace().longAggregateMsg
         assert(
           failure.index == 14,
           trace == """Expected stmts:1:1 / stmt:1:11 / alpha:1:15 / [a-z]:1:15, found """""
@@ -340,7 +356,7 @@ object ExampleTests extends TestSuite{
         val Parsed.Success(Seq("1", "23"), _) = parse("(1,23)", tuple(_))
 
         val failure = parse("(1,)", tuple(_)).asInstanceOf[Parsed.Failure]
-        val trace = failure.traceAggregate().msg
+        val trace = failure.trace().longAggregateMsg
         assert(
           failure.index == 2,
           trace == """Expected tuple:1:1 / ([0-9] | ")"):1:3, found ",)""""
@@ -354,7 +370,7 @@ object ExampleTests extends TestSuite{
 
         val failure = parse("(1,)", tuple(_)).asInstanceOf[Parsed.Failure]
         val index = failure.index
-        val trace = failure.traceAggregate().msg
+        val trace = failure.trace().longAggregateMsg
         assert(
           index == 3,
           trace == """Expected tuple:1:1 / digits:1:4 / [0-9]:1:4, found ")""""
@@ -367,7 +383,7 @@ object ExampleTests extends TestSuite{
         val Parsed.Success(Seq("1", "23"), _) = parse("(1,23)", tuple(_))
 
         val failure = parse("(1,)", tuple(_)).asInstanceOf[Parsed.Failure]
-        val trace = failure.traceAggregate().msg
+        val trace = failure.trace().longAggregateMsg
         assert(
           failure.index == 3,
           trace == """Expected tuple:1:1 / digits:1:4 / [0-9]:1:4, found ")""""

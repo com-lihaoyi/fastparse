@@ -40,27 +40,28 @@
                     position of the error message, without any clues what went
                     wrong at that position.
                 @li
-                    You can pass in the flag @hl.scala{verboseFailures = true} to
-                    get a better description of what caused the parse failure at the
-                    specified index, although it slows the parse down by a
-                    significant amount (takes ~50% longer than a normal parse)
+                    You can pass in the flag @hl.scala{verboseFailures = true}
+                    to @code{fastparse.parse}, or call @code{failure.trace()} on
+                    an existing failure, to get a better description of what
+                    caused the parse failure. This slows the parse down by a
+                    significant amount (takes ~50% longer than a normal parse),
+                    You can then use the @code{.msg} or @code{.longMsg} to see
+                    what's going on.
                 @li
-                    You can call @code{failure.traced.trace}, which provides a much
-                    more detailed view: the stack of parsers which were in progress
-                    when the parse failed, as well as what a comprehensive list of
-                    things that it tried unsuccessfully to parse at the index at
-                    which the parse failed. This is even slower than
-                    @code{verboseFailures}: it can only take place @i{after} a
-                    failed parse has occurred, slowing down the parse significantly
-                    (takes ~150% longer than a normal parse, not counting the time
-                    taken for the necessary first parse)
+                    You can call @code{failure.trace()} on an existing failure
+                    to perform a second parse over the initial input. This also
+                    gives you access to @code{failure.trace().msg} and
+                    @code{failure.trace().longMsg}, but additionally provides
+                    @code{.aggregateMsg} and @code{.longAggregateMsg} for even
+                    more details about what went wrong.
+
             @p
                 In general, you may either want to run your parses with
                 @code{verboseFailures} enabled, or run in the default fast mode
-                and fall back to @code{.traced.trace} when something goes wrong.
-                Often the number of parse failures is small compared to the
-                number of successes, and this approach ensures the common
-                success case is as fast as possible.
+                and fall back to @code{.trace()} when
+                something goes wrong. Often the number of parse failures is
+                small compared to the number of successes, and this approach
+                ensures the common success case is as fast as possible.
 
         @sect{Sequence}
 

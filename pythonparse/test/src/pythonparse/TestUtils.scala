@@ -12,7 +12,7 @@ object TestUtils {
     def parseIt[_: P] = rule(P.current) ~ End
     val parsed = parse(s, parseIt(_))
     val stringResult = parsed match {
-      case f: Parsed.Failure => throw new Exception(f.traceAggregate().msg)
+      case f: Parsed.Failure => throw new Exception(f.trace().longAggregateMsg)
       case s: Parsed.Success[T] =>
         val result = s.value
         assert(result == expected)

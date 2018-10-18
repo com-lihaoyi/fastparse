@@ -22,7 +22,7 @@ object Parsed{
     else Parsed.Failure(
       Option(p.lastFailureMsg).fold("")(_()),
       p.index,
-      Parsed.Extra(p.input, p.startIndex, p.index, p.originalParser)
+      Parsed.Extra(p.input, p.startIndex, p.index, p.originalParser, p.failureStack)
     )
   }
   final case class Success[+T](value: T, index: Int) extends Parsed[T](true){
@@ -30,28 +30,51 @@ object Parsed{
     def fold[V](onFailure: (String, Int, Extra) => V, onSuccess: (T, Int) => V) = onSuccess(value, index)
     override def toString() = s"Parsed.Success($value, $index)"
   }
-  final case class Failure(parseFailureString: String,
+  final case class Failure(failureLabel: String,
                            index: Int,
                            extra: Extra) extends Parsed[Nothing](false){
     def get = throw new Exception("Parse Error, " + msg)
-    def fold[V](onFailure: (String, Int, Extra) => V, onSuccess: (Nothing, Int) => V) = onFailure(parseFailureString, index, extra)
+    def fold[V](onFailure: (String, Int, Extra) => V, onSuccess: (Nothing, Int) => V) = onFailure(failureLabel, index, extra)
     override def toString() = s"Parsed.Failure($msg)"
+
+    /**
+      * Displays the failure message excluding the parse stack
+      */
     def msg = {
-      parseFailureString match{
+      failureLabel match{
         case "" =>
           "Position " + extra.input.prettyIndex(index) +
-            ", found " + Failure.formatTrailing(extra.input, index)
-        case s =>
-          "Expected " + s + ":" + extra.input.prettyIndex(index) +
-            ", found " + Failure.formatTrailing(extra.input, index)
+          ", found " + Failure.formatTrailing(extra.input, index)
+        case s => Failure.formatMsg(extra.input, List(s -> index), index)
       }
     }
 
-    def traceAggregate() = extra.traceAggregate
-    def traceVerbose() = extra.traceVerbose
+    /**
+      * Displays the failure message including the parse stack, if possible
+      */
+    def longMsg = {
+      if (extra.stack.nonEmpty) {
+        Failure.formatMsg(extra.input, extra.stack ++ List(failureLabel -> index), index)
+      } else throw new Exception(
+        "`.longMsg` requires the parser to be run with `verboseFailures = true`, " +
+        "or to be called via `.trace().longMsg` or `.trace().longAggregateMsg`"
+      )
+    }
+
+    /**
+      * Re-runs the failed parse with `verboseFailures` turned on and failure
+      * aggregation enabled. This allows Fastparse to provide much more
+      * detailed error messages, at a cost of taking ~2x as long than the
+      * original parse
+      */
+    def trace() = extra.trace
   }
 
   object Failure{
+    def formatMsg(input: ParserInput, stack: List[(String, Int)], index: Int) = {
+      "Expected " + Failure.formatStack(input, stack) +
+      ", found " + Failure.formatTrailing(input, index)
+    }
     def formatStack(input: ParserInput, stack: List[(String, Int)]) = {
       stack.map{case (s, i) => s"$s:${input.prettyIndex(i)}"}.mkString(" / ")
     }
@@ -63,17 +86,18 @@ object Parsed{
   case class Extra(input: ParserInput,
                    startIndex: Int,
                    index: Int,
-                   originalParser: ParsingRun[_] => ParsingRun[_]) {
-    @deprecated("Use .traceAggregate instead")
-    def traced = traceAggregate
+                   originalParser: ParsingRun[_] => ParsingRun[_],
+                   stack: List[(String, Int)]) {
+    @deprecated("Use .trace instead")
+    def traced = trace
 
     /**
       * Re-runs the failed parse with aggregation turned on. This is the
-      * slowest of Fastparse's error reporting mode, taking ~2.5x as long
+      * slowest of Fastparse's error reporting mode, taking ~2x as long
       * as the original parse, but provides the greatest detail in the error
       * message
       */
-    def traceAggregate() = {
+    def trace() = {
       input.checkTraceable()
       TracedFailure.fromParsingRun(
         parseInputRaw[Any](
@@ -86,25 +110,6 @@ object Parsed{
         )
       )
     }
-
-    /**
-      * Re-runs the failed parse with `verboseFailures` turned on. This
-      * provides a somewhat more detailed error message at a cost of taking
-      * ~1.5x as long than the original parse
-      */
-    def traceVerbose() = {
-      input.checkTraceable()
-      Parsed.fromParsingRun(
-        parseInputRaw[Any](
-          input,
-          originalParser,
-          startIndex = startIndex,
-          traceIndex = -1,
-          enableLogging = false,
-          verboseFailures = true
-        )
-      ).asInstanceOf[Failure]
-    }
   }
 
   object TracedFailure{
@@ -112,28 +117,37 @@ object Parsed{
     def fromParsingRun[T](p: ParsingRun[T]) = {
       assert(!p.isSuccess)
       TracedFailure(
-        p.failureStack,
-        p.index,
-        p.input,
-        p.failureAggregate.reverse.map(_()).distinct
+        p.failureAggregate.reverse.map(_()).distinct,
+        Parsed.fromParsingRun(p).asInstanceOf[Failure]
       )
     }
   }
-  case class TracedFailure(stack: List[(String, Int)],
-                           index: Int,
-                           input: ParserInput,
-                           failureAggregate: Seq[String]){
-    def aggregateMsg = failureAggregate match{
+  case class TracedFailure(failureAggregate: Seq[String],
+                           failure: Failure){
+    def failureLabel = failure.failureLabel
+    def index = failure.index
+    def input = failure.extra.input
+    def stack = failure.extra.stack
+    def aggregateString = failureAggregate match{
       case Seq(x) => x
       case items => items.mkString("(", " | ", ")")
     }
 
     @deprecated("Use .msg instead")
-    def trace = msg
-    def msg = {
-      "Expected " + Failure.formatStack(input, stack ++ Seq(aggregateMsg -> index)) +
-      ", found " + Failure.formatTrailing(input, index)
-    }
+    def trace = longAggregateMsg
+
+    def msg = failure.msg
+
+    def longMsg = failure.longMsg
+    /**
+      * Displays the aggregate failure message, excluding the parse stack
+      */
+    def aggregateMsg = Failure.formatMsg(input, List(aggregateString -> index), index)
+
+    /**
+      * Displays the aggregate failure message, including the parse stack
+      */
+    def longAggregateMsg = Failure.formatMsg(input, stack ++ Seq(aggregateString -> index), index)
   }
 }
 

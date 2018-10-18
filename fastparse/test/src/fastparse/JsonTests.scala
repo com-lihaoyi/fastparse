@@ -143,7 +143,7 @@ object JsonTests extends TestSuite{
         parse(s, jsonExpr(_)) match{
           case s: Parsed.Success[_] => throw new Exception("Parsing should have failed:")
           case f: Parsed.Failure =>
-//            val error = f.traceAggregate().msg
+//            val error = f.deepTrace().msg
 //            val expected = expectedError.trim
 //            assert(error == expected)
         }

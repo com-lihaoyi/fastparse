@@ -72,7 +72,7 @@ object TestUtil {
           //        println(f.formatExpectedAsString)
           //        println(f.formatTraces)
           println("TRACING")
-          throw new Exception(tag + "\n" + input + "\n" + f.traceAggregate().trace)
+          throw new Exception(tag + "\n" + input + "\n" + f.trace().msg)
         case s: Parsed.Success[_] =>
           //        println(parsed)
           val inputLength = input.length

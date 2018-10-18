@@ -209,7 +209,7 @@ object ParsingTests extends TestSuite{
     'failureMsg - {
       def parser[_: P] = P( "hello" | "world" )
       val f = parse("cow", parser(_)).asInstanceOf[Parsed.Failure]
-      val msg = f.traceVerbose().msg
+      val msg = f.trace().msg
       msg ==> """Expected "hello" | "world":1:1, found "cow" """.trim
     }
   }
