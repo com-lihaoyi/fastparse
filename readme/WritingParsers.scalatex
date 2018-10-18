@@ -41,8 +41,7 @@
                     wrong at that position.
                 @li
                     You can pass in the flag @hl.scala{verboseFailures = true}
-                    to @code{fastparse.parse}, or call @code{failure.trace()} on
-                    an existing failure, to get a better description of what
+                    to @code{fastparse.parse} to get a better description of what
                     caused the parse failure. This slows the parse down by a
                     significant amount (takes ~50% longer than a normal parse),
                     You can then use the @code{.msg} or @code{.longMsg} to see

@@ -18,8 +18,8 @@
             is a Java library, and does not/cannot work on Scala.js
         @li
             @a("scala-parser-combinators", href:="https://github.com/scala/scala-parser-combinators")
-             is similar, but poorly executed. It is ~2-300x slower than FastParse,
-             has an awkward inheritance-based API, and is full of bugs despite
-             being half a decade old. FastParse is faster, has self-contained
-             pure-functional parsers, and fixes bugs e.g. by having the
-             @hl.scala{.log} operator actually work.
+            is similar, but poorly executed. It is ~2-300x slower than FastParse,
+            has an awkward inheritance-based API, and is full of bugs despite
+            being half a decade old. FastParse is faster, has self-contained
+            pure-functional parsers, and fixes bugs e.g. by having the
+            @hl.scala{.log} operator actually work.
