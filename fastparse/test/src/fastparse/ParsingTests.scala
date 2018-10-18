@@ -206,6 +206,12 @@ object ParsingTests extends TestSuite{
       check(implicit c => StringInIgnoreCase("abc","abde","abdgh").!, ("ABCDE", 0), Success(("ABC"), 3))
       checkFail(implicit c => StringInIgnoreCase("abc","def","ghi"), ("bcde", 0), 0)
     }
+    'failureMsg - {
+      def parser[_: P] = P( "hello" | "world" )
+      val f = parse("cow", parser(_)).asInstanceOf[Parsed.Failure]
+      val msg = f.traceVerbose().msg
+      msg ==> """Expected "hello" | "world":1:1, found "cow" """.trim
+    }
   }
   // Broken out of the TestSuite block to avoid problems in our 2.10.x
   // build due to https://issues.scala-lang.org/browse/SI-7987
