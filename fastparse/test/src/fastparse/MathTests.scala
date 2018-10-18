@@ -35,7 +35,8 @@ object MathTests extends TestSuite{
       val Parsed.Failure(expected, failIndex, extra) = parse("1+1*", expr(_))
       assert(
         failIndex == 4,
-        extra.trace().longAggregateMsg == """Expected expr:1:1 / addSub:1:1 / divMul:1:3 / factor:1:5 / ([0-9] | "("):1:5, found """""
+        extra.trace().longAggregateMsg == 
+        """Expected expr:1:1 / addSub:1:1 / divMul:1:3 / factor:1:5 / ([0-9] | "("):1:5, found """""
       )
     }
     'fail - {
