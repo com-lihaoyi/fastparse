@@ -118,6 +118,7 @@
 
     @sect{Json}
         @hl.ref(tests/"JsonTests.scala", Seq("object Js {", ""))
+        @hl.ref(tests/"JsonTests.scala", Seq("object Json{", ""))
 
         @p
             This is a somewhat larger example than the math parser shown above. In it, we parse a JSON expression from a string, including all the proper handling for whitespace and error-handling built in.
