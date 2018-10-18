@@ -41,25 +41,25 @@ object Parsed{
   /**
     * The outcome of a failed parse
     *
-    * @param failureLabel A hint as to why the parse failed. Defaults to "",
+    * @param label A hint as to why the parse failed. Defaults to "",
     *                     unless you set `verboseFailures = true` or call
     *                     `.trace()` on an existing failure
     * @param index The index at which the parse failed
     * @param extra Metadata about the parse; useful for re-running the parse
     *              to trace out a more detailed error report
     */
-  final case class Failure(failureLabel: String,
+  final case class Failure(label: String,
                            index: Int,
                            extra: Extra) extends Parsed[Nothing](false){
     def get = throw new Exception("Parse Error, " + msg)
-    def fold[V](onFailure: (String, Int, Extra) => V, onSuccess: (Nothing, Int) => V) = onFailure(failureLabel, index, extra)
+    def fold[V](onFailure: (String, Int, Extra) => V, onSuccess: (Nothing, Int) => V) = onFailure(label, index, extra)
     override def toString() = s"Parsed.Failure($msg)"
 
     /**
       * Displays the failure message excluding the parse stack
       */
     def msg = {
-      failureLabel match{
+      label match{
         case "" =>
           "Position " + extra.input.prettyIndex(index) +
           ", found " + Failure.formatTrailing(extra.input, index)
@@ -72,7 +72,7 @@ object Parsed{
       */
     def longMsg = {
       if (extra.stack.nonEmpty) {
-        Failure.formatMsg(extra.input, extra.stack ++ List(failureLabel -> index), index)
+        Failure.formatMsg(extra.input, extra.stack ++ List(label -> index), index)
       } else throw new Exception(
         "`.longMsg` requires the parser to be run with `verboseFailures = true`, " +
         "or to be called via `.trace().longMsg` or `.trace().longAggregateMsg`"
@@ -154,7 +154,7 @@ object Parsed{
     */
   case class TracedFailure(failureAggregate: Seq[String],
                            failure: Failure){
-    def failureLabel = failure.failureLabel
+    def label = failure.label
     def index = failure.index
     def input = failure.extra.input
     def stack = failure.extra.stack

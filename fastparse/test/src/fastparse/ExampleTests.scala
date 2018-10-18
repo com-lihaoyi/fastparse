@@ -18,9 +18,9 @@ object ExampleTests extends TestSuite{
         val Parsed.Success(value, successIndex) = parse("a", parseA(_))
         assert(value == (), successIndex == 1)
 
-        val f @ Parsed.Failure(failureLabel, index, extra) = parse("b", parseA(_))
+        val f @ Parsed.Failure(label, index, extra) = parse("b", parseA(_))
         assert(
-          failureLabel == "",
+          label == "",
           index == 0,
           f.msg == """Position 1:1, found "b""""
         )
@@ -43,7 +43,7 @@ object ExampleTests extends TestSuite{
         // `.msg` records the last parser that failed, which is "c", and
         // `.longMsg` also shows the parsing stack at point of failure
         assert(
-          trace.failureLabel == "\"c\"",
+          trace.label == "\"c\"",
           trace.index == 0,
           trace.msg == """Expected "c":1:1, found "d"""",
           trace.longMsg == """Expected parseA:1:1 / "c":1:1, found "d""""
