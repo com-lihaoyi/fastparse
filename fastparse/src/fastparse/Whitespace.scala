@@ -83,11 +83,7 @@ object JavaWhitespace{
     @tailrec def rec(current: Int, state: Int): ParsingRun[Unit] = {
       if (!input.isReachable(current)) {
         if (state == 0 || state == 1) ctx.freshSuccess((), current)
-        else if(state == 2) {
-          val res = ctx.freshFailure(current)
-          if (ctx.verboseFailures) ctx.setMsg(() => Util.literalize("[*/]"))
-          res
-        }
+        else if(state == 2)  ctx.freshSuccess((), current - 1)
         else {
           ctx.cut = true
           val res = ctx.freshFailure(current)
@@ -107,6 +103,7 @@ object JavaWhitespace{
           case 2 =>
             (currentChar: @switch) match{
               case '/' => rec(current + 1, state = 1)
+              case '*' => rec(current + 1, state = 3)
               case _ => ctx.freshSuccess((), current - 1)
             }
           case 3 => rec(current + 1, state = if (currentChar == '*') 4 else state)
@@ -135,11 +132,7 @@ object JsonnetWhitespace{
     @tailrec def rec(current: Int, state: Int): ParsingRun[Unit] = {
       if (!input.isReachable(current)) {
         if (state == 0 || state == 1) ctx.freshSuccess((), current)
-        else if(state == 2) {
-          val res = ctx.freshFailure(current)
-          if (ctx.verboseFailures) ctx.setMsg(() => Util.literalize("[*/]"))
-          res
-        }
+        else if(state == 2)  ctx.freshSuccess((), current - 1)
         else {
           ctx.cut = true
           val res = ctx.freshFailure(current)
@@ -164,7 +157,12 @@ object JsonnetWhitespace{
               case _ => ctx.freshSuccess((), current - 1)
             }
           case 3 => rec(current + 1, state = if (currentChar == '*') 4 else state)
-          case 4 => rec(current + 1, state = if (currentChar == '/') 0 else 3)
+          case 4 =>
+            (currentChar: @switch) match{
+              case '/' => rec(current + 1, state = 0)
+              case '*' => rec(current + 1, state = 4)
+              case _ => rec(current + 1, state = 3)
+            }
         }
       }
     }
@@ -183,11 +181,8 @@ object ScalaWhitespace {
     @tailrec def rec(current: Int, state: Int, nesting: Int): ParsingRun[Unit] = {
       if (!input.isReachable(current)) {
         if (state == 0 || state == 1) ctx.freshSuccess((), current)
-        else if(state == 2 && nesting == 0) {
-          val res = ctx.freshFailure(current)
-          if (ctx.verboseFailures) ctx.setMsg(() => Util.literalize("[*/]"))
-          res
-        } else {
+        else if(state == 2 && nesting == 0) ctx.freshSuccess((), current - 1)
+        else {
           ctx.cut = true
           val res = ctx.freshFailure(current)
           if (ctx.verboseFailures) ctx.aggregateMsg(() => Util.literalize("*/"))
