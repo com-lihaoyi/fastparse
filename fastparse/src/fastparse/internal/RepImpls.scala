@@ -17,7 +17,7 @@ import language.experimental.macros
   * for various sorts of inputs as a best-effort attempt ot minimize branching
   * in the hot paths.
   */
-object RepImpls{
+object MacroRepImpls{
   def repXMacro0[T: c.WeakTypeTag, V: c.WeakTypeTag](c: Context)
                                                     (whitespace: Option[c.Tree], min: Option[c.Tree])
                                                     (repeater: c.Tree,
@@ -105,7 +105,7 @@ object RepImpls{
                                                     (repeater: c.Tree,
                                                      ctx: c.Tree): c.Tree = {
     import c.universe._
-    RepImpls.repXMacro0[T, V](c)(None, None)(repeater, ctx)
+    MacroRepImpls.repXMacro0[T, V](c)(None, None)(repeater, ctx)
   }
 
   def repXMacro2[T: c.WeakTypeTag, V: c.WeakTypeTag](c: Context)
@@ -113,7 +113,7 @@ object RepImpls{
                                                     (repeater: c.Tree,
                                                      ctx: c.Tree): c.Tree = {
     import c.universe._
-    RepImpls.repXMacro0[T, V](c)(None, Some(min))(repeater, ctx)
+    MacroRepImpls.repXMacro0[T, V](c)(None, Some(min))(repeater, ctx)
   }
 
   def repXMacro1ws[T: c.WeakTypeTag, V: c.WeakTypeTag](c: Context)
@@ -121,7 +121,7 @@ object RepImpls{
                                                        whitespace: c.Tree,
                                                        ctx: c.Tree): c.Tree = {
     import c.universe._
-    RepImpls.repXMacro0[T, V](c)(Some(whitespace), None)(repeater, ctx)
+    MacroRepImpls.repXMacro0[T, V](c)(Some(whitespace), None)(repeater, ctx)
   }
 
   def repXMacro2ws[T: c.WeakTypeTag, V: c.WeakTypeTag](c: Context)
@@ -130,7 +130,7 @@ object RepImpls{
                                                        whitespace: c.Tree,
                                                        ctx: c.Tree): c.Tree = {
     import c.universe._
-    RepImpls.repXMacro0[T, V](c)(Some(whitespace), Some(min))(repeater, ctx)
+    MacroRepImpls.repXMacro0[T, V](c)(Some(whitespace), Some(min))(repeater, ctx)
   }
 }
 

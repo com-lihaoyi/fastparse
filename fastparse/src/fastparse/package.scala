@@ -234,7 +234,7 @@ package object fastparse {
       */
     def rep[V](implicit repeater: Implicits.Repeater[T, V],
                whitespace: P[_] => P[Unit],
-               ctx: P[Any]): P[V] = macro RepImpls.repXMacro1ws[T, V]
+               ctx: P[Any]): P[V] = macro MacroRepImpls.repXMacro1ws[T, V]
     /**
       * Repeat operator; runs the LHS parser at least `min` to at most `max`
       * times separated by the given whitespace (in implicit scope) and
@@ -276,7 +276,7 @@ package object fastparse {
               (implicit repeater: Implicits.Repeater[T, V],
                whitespace: P[_] => P[Unit],
                ctx: P[Any]): P[V] =
-    macro RepImpls.repXMacro2ws[T, V]
+    macro MacroRepImpls.repXMacro2ws[T, V]
 
     /**
       * Raw repeat operator; runs the LHS parser 0 or more times *without*
@@ -286,7 +286,7 @@ package object fastparse {
       */
     def repX[V](implicit repeater: Implicits.Repeater[T, V],
                 ctx: P[Any]): P[V] =
-    macro RepImpls.repXMacro1[T, V]
+    macro MacroRepImpls.repXMacro1[T, V]
 
     /**
       * Raw repeat operator; runs the LHS parser at least `min` to at most `max`
@@ -326,7 +326,7 @@ package object fastparse {
     def repX[V](min: Int)
                (implicit repeater: Implicits.Repeater[T, V],
                 ctx: P[Any]): P[V] =
-    macro RepImpls.repXMacro2[T, V]
+    macro MacroRepImpls.repXMacro2[T, V]
 
     /**
       * Hides the internals of the given parser when it fails, such that it
