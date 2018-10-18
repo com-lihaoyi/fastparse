@@ -1,7 +1,7 @@
 package test.fastparse
 import fastparse._
 import utest._
-import NoWhitespace._
+
 object ParsingTests extends TestSuite{
 
 
@@ -33,7 +33,7 @@ object ParsingTests extends TestSuite{
 
   }
   val tests = Tests {
-
+    import NoWhitespace._
 
     'literal - {
       checkFail(implicit c => "Hello WOrld!", ("Hello", 0), 0)
@@ -185,7 +185,8 @@ object ParsingTests extends TestSuite{
         checkFail(implicit c => ("Hello" ~/ "Bye").?, ("HelloBoo", 0), 5)
       }
       'flatMap - {
-        checkFlatmap()
+        checkFail(implicit c => ("Hello" ~/ "Boo").flatMapX(_ => Fail).?, ("HelloBoo", 0), 8)
+        checkFail(implicit c => (("Hello" ~/ "Boo").flatMapX(_ => Pass) ~ Fail).?, ("HelloBoo", 0), 8)
       }
       'filter - {
         checkFail(implicit c => ("Hello" ~/ "Boo").filter(_ => false) | "", ("HelloBoo", 0), 8)
@@ -212,11 +213,17 @@ object ParsingTests extends TestSuite{
       val msg = f.trace().msg
       msg ==> """Expected "hello" | "world":1:1, found "cow" """.trim
     }
+    'whitespaceFlatMap{
+      checkWhitespaceFlatMap()
+    }
   }
-  // Broken out of the TestSuite block to avoid problems in our 2.10.x
-  // build due to https://issues.scala-lang.org/browse/SI-7987
-  def checkFlatmap() = {
-    checkFail(implicit c => ("Hello" ~/ "Boo").flatMap(_ => Fail).?, ("HelloBoo", 0), 8)
-    checkFail(implicit c => (("Hello" ~/ "Boo").flatMap(_ => Pass) ~ Fail).?, ("HelloBoo", 0), 8)
+
+  def checkWhitespaceFlatMap() = {
+    import fastparse._, SingleLineWhitespace._
+    def parser[_: P] = P( CharsWhileIn("a").!.flatMap{n => "b" * n.length} ~ End )
+    val Parsed.Success(_, _) = parse("aaa bbb", parser(_))
+    val Parsed.Success(_, _) = parse("aa    bb", parser(_))
+    val Parsed.Failure(_, _, _) = parse("aaa bb", parser(_))
+    val Parsed.Failure(_, _, _) = parse("aaa b", parser(_))
   }
 }

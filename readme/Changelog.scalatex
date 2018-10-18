@@ -7,7 +7,7 @@
                 user-facing interface; binary and source incompatible with
                 @sect.ref{1.0.0}
             @li
-                3-5x performance improvements on most benchmarks
+                3-4x performance improvements on most benchmarks
             @li
                 Parsers are no longer immutable objects, but just methods taking
                 and returning @code{fastparse.ParsingRun} instances
@@ -25,6 +25,9 @@
             @li
                 Dropped support for Byte Parsers (due to low uptake), Scala 2.10,
                 Scala-Native (until 0.4.0 is out)
+            @li
+                @code{.flatMap} now consumes whitespace between the first and
+                second parsers; use @code{.flatMapX} if you want to avoid this.
     @sect{1.0.0}
         @ul
            @li

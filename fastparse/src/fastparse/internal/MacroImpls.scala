@@ -163,7 +163,7 @@ object MacroImpls {
   }
 
 
-  def flatMapMacro[T: c.WeakTypeTag, V: c.WeakTypeTag]
+  def flatMapXMacro[T: c.WeakTypeTag, V: c.WeakTypeTag]
                   (c: Context)
                   (f: c.Expr[T => ParsingRun[V]]): c.Expr[ParsingRun[V]] = {
     import c.universe._
@@ -173,6 +173,30 @@ object MacroImpls {
       val lhs = lhs0.splice.parse0
       if (!lhs.isSuccess) lhs.asInstanceOf[ParsingRun[V]]
       else f.splice(lhs.successValue.asInstanceOf[T])
+    }
+  }
+
+  def flatMapMacro[T: c.WeakTypeTag, V: c.WeakTypeTag]
+                  (c: Context)
+                  (f: c.Expr[T => ParsingRun[V]])
+                  (whitespace: c.Expr[ParsingRun[Any] => ParsingRun[Unit]]): c.Expr[ParsingRun[V]] = {
+    import c.universe._
+
+    val lhs0 = c.prefix.asInstanceOf[c.Expr[EagerOps[T]]]
+    reify {
+      val lhs = lhs0.splice.parse0
+      whitespace.splice match{ case ws =>
+        if (!lhs.isSuccess) lhs.asInstanceOf[ParsingRun[V]]
+        else {
+          val oldCapturing = lhs.noDropBuffer
+          val successValue = lhs.successValue
+          lhs.noDropBuffer = true
+          ws(lhs)
+          lhs.noDropBuffer = oldCapturing
+          if (!lhs.isSuccess && lhs.cut) lhs.asInstanceOf[ParsingRun[V]]
+          else f.splice(successValue.asInstanceOf[T])
+        }
+      }
     }
   }
 

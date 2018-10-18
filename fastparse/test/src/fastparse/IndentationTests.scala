@@ -23,7 +23,7 @@ object IndentationTests extends TestSuite{
     def number[_: P]: P[Int] = P( CharIn("0-9").rep(1).!.map(_.toInt) )
 
     def deeper[_: P]: P[Int] = P( " ".rep(indent + 1).!.map(_.length) )
-    def blockBody[_: P]: P[Seq[Int]] = "\n" ~ deeper.flatMap(i =>
+    def blockBody[_: P]: P[Seq[Int]] = "\n" ~ deeper.flatMapX(i =>
       new Parser(indent = i).factor.rep(1, sep = ("\n" + " " * i)./)
     )
     def block[_: P]: P[Int] = P( CharIn("+\\-*/").! ~/ blockBody).map(eval)

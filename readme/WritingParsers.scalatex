@@ -196,6 +196,11 @@
             @p
                 Which is equivalent and behaves exactly the same.
 
+            @p
+                Note that @code{.flatMap} consumes whitespace between the first
+                and second parsers; in cases where you do not want to do this,
+                use @code{.flatMapX}
+
         @sect{Filter}
             @hl.ref(tests/"ExampleTests.scala", Seq("'filter", ""))
 

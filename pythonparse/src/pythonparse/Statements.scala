@@ -189,7 +189,7 @@ class Statements(indent: Int){
         _.collectFirst{ case (s, None) => s}
       }.filter(_.isDefined).map(_.get)
     }
-    def indented = P( deeper.flatMap{ nextIndent =>
+    def indented = P( deeper.flatMapX{ nextIndent =>
       new Statements(nextIndent).stmt.repX(1, spaces.repX(1) ~~ (" " * nextIndent | "\t" * nextIndent)).map(_.flatten)
     } )
     P( indented | " ".rep ~ simple_stmt )

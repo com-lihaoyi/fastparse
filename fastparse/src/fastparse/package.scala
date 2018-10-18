@@ -177,12 +177,21 @@ package object fastparse {
               (implicit ctx: P[Any]): P[T] = macro MacroImpls.filterMacro[T]
     /**
       * Transforms the result of this parser using the given function into a
-      * new parser which is applied. Useful for doing dependent parsing, e.g.
-      * when parsing JSON you may first parse a character to see if it's a `[`,
-      * `{`, or `"`, and then deciding whether you next want to parse an array,
-      * dictionary or string.
+      * new parser which is applied (after whitespace). Useful for doing
+      * dependent parsing, e.g. when parsing JSON you may first parse a
+      * character to see if it's a `[`, `{`, or `"`, and then deciding whether
+      * you next want to parse an array, dictionary or string.
       */
-    def flatMap[V](f: T => P[V]): P[V] = macro MacroImpls.flatMapMacro[T, V]
+    def flatMap[V](f: T => P[V])
+                  (implicit whitespace: P[Any] => P[Unit]): P[V] = macro MacroImpls.flatMapMacro[T, V]
+    /**
+      * Transforms the result of this parser using the given function into a
+      * new parser which is applied (without consuming whitespace). Useful for
+      * doing dependent parsing, e.g. when parsing JSON you may first parse a
+      * character to see if it's a `[`, `{`, or `"`, and then deciding whether
+      * you next want to parse an array, dictionary or string.
+      */
+    def flatMapX[V](f: T => P[V]): P[V] = macro MacroImpls.flatMapXMacro[T, V]
 
     /**
       * Either-or operator: tries to parse the left-hand-side, and if that
@@ -195,7 +204,7 @@ package object fastparse {
     /**
       * Capture operator; makes the parser return the span of input it parsed
       * as a [[String]], which can then be processed further using [[~]],
-      * [[map]] or [[flatMap]]
+      * [[map]] or [[flatMapX]]
       */
     def !(implicit ctx: P[Any]): P[String] = macro MacroImpls.captureMacro
 
@@ -590,9 +599,9 @@ package object fastparse {
 
   /**
     * Like [[AnyChar]], but returns the single character it parses. Useful
-    * together with [[EagerOps.flatMap]] to provide one-character-lookahead
+    * together with [[EagerOps.flatMapX]] to provide one-character-lookahead
     * style parsing: [[SingleChar]] consumes the single character, and then
-    * [[EagerOps.flatMap]] can `match` on that single character and decide
+    * [[EagerOps.flatMapX]] can `match` on that single character and decide
     * which downstream parser you wish to invoke
     */
   def SingleChar(implicit ctx: P[_]): P[Char] = {
