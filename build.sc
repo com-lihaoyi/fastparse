@@ -138,6 +138,7 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule{
     )
   )
 
+  def scalaDocPluginClasspath = T{ Agg() }
   def scalacOptions = T{ if (scalaVersion() == "2.12.7") Seq("-opt:l:method") else Nil }
 
   def platformSegment: String
