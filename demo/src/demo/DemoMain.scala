@@ -133,7 +133,7 @@ object DemoMain {
             tr(td("Failure!")),
             tr(td("at index:"), td(code(index))),
             tr(td("found:"), td("...", code(pretty))),
-            tr(td("expected:"), td(code(extra.trace().msg)))
+            tr(td("expected:"), td(code(extra.trace().failureLabel)))
           )
       }
       outputBox.innerHTML = ""
