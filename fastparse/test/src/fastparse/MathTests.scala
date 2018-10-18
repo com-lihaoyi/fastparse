@@ -42,6 +42,7 @@ object MathTests extends TestSuite{
       def check(input: String, expectedTrace: String, expectedShortTrace: String) = {
         val failure = parse(input, expr(_)).asInstanceOf[Parsed.Failure]
         val actualTrace = failure.traceAggregate().msg
+        val index = failure.index
         assert(expectedTrace.trim == actualTrace.trim)
 
         // Check iterator parsing results in a failure in the right place. Note
@@ -49,8 +50,7 @@ object MathTests extends TestSuite{
         // second parse which doesn't work with iterators (which get exhausted)
         for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)) {
           val failure2 = parse(input.grouped(chunkSize), expr(_)).asInstanceOf[Parsed.Failure]
-          val trace = failure2.traceAggregate().msg
-          assert(trace == expectedShortTrace.trim)
+          assert(failure2.index == index)
         }
       }
       check(
