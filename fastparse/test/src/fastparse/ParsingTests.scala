@@ -214,7 +214,9 @@ object ParsingTests extends TestSuite{
       msg ==> """Expected "hello" | "world":1:1, found "cow" """.trim
     }
     'whitespaceFlatMap{
+      // Separated out so they don't pick up the NoWhitespace._ import up top
       checkWhitespaceFlatMap()
+      checkNonWhitespaceFlatMap()
     }
   }
 
@@ -225,5 +227,14 @@ object ParsingTests extends TestSuite{
     val Parsed.Success(_, _) = parse("aa    bb", parser(_))
     val Parsed.Failure(_, _, _) = parse("aaa bb", parser(_))
     val Parsed.Failure(_, _, _) = parse("aaa b", parser(_))
+  }
+
+  def checkNonWhitespaceFlatMap() = {
+    import fastparse._, SingleLineWhitespace._
+    def parser[_: P] = P( CharsWhileIn("a").!.flatMapX{n => "b" * n.length} ~ End )
+    val Parsed.Success(_, _) = parse("aaabbb", parser(_))
+    val Parsed.Success(_, _) = parse("aabb", parser(_))
+    val Parsed.Failure(_, _, _) = parse("aaa bbb", parser(_))
+    val Parsed.Failure(_, _, _) = parse("aa bb", parser(_))
   }
 }
