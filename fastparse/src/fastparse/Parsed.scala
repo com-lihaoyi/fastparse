@@ -128,7 +128,7 @@ object Parsed{
     def index = failure.index
     def input = failure.extra.input
     def stack = failure.extra.stack
-    def aggregateString = failureAggregate match{
+    def combinedAggregateString = failureAggregate match{
       case Seq(x) => x
       case items => items.mkString("(", " | ", ")")
     }
@@ -142,12 +142,12 @@ object Parsed{
     /**
       * Displays the aggregate failure message, excluding the parse stack
       */
-    def aggregateMsg = Failure.formatMsg(input, List(aggregateString -> index), index)
+    def aggregateMsg = Failure.formatMsg(input, List(combinedAggregateString -> index), index)
 
     /**
       * Displays the aggregate failure message, including the parse stack
       */
-    def longAggregateMsg = Failure.formatMsg(input, stack ++ Seq(aggregateString -> index), index)
+    def longAggregateMsg = Failure.formatMsg(input, stack ++ Seq(combinedAggregateString -> index), index)
   }
 }
 

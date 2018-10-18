@@ -15,11 +15,11 @@ object TestUtil {
     parse(input, Scala.CompilationUnit(_)) match{
       case f: Parsed.Failure =>
 
-        val traced = f.extra.traced
+        val trace = f.extra.trace
         val index = f.index
-        val parsedExpected = traced.aggregateMsg
+        val parsedExpected = trace.combinedAggregateString
         val parsedFound = input.slice(f.index, f.index + 10)
-        val stack = traced.trace
+        val stack = trace.longAggregateMsg
 
         assert(
         { implicitly(input)
@@ -30,7 +30,7 @@ object TestUtil {
         }
         )
 
-        traced
+        trace
       case _: Parsed.Success[_] => assert({implicitly(input); false})
     }
 //    for(chunkSize <- Seq(/*1, 4, 16, 64, 256, 1024*/)){
