@@ -35,7 +35,7 @@ object MathTests extends TestSuite{
       val Parsed.Failure(expected, failIndex, extra) = parse("1+1*", expr(_))
       assert(
         failIndex == 4,
-        extra.traced.trace == """Expected expr:1:1 / addSub:1:1 / divMul:1:3 / factor:1:5 / ([0-9] | "("):1:5, found """""
+        extra.traceAggregate().msg == """Expected expr:1:1 / addSub:1:1 / divMul:1:3 / factor:1:5 / ([0-9] | "("):1:5, found """""
       )
     }
     'fail - {
@@ -49,7 +49,7 @@ object MathTests extends TestSuite{
         // second parse which doesn't work with iterators (which get exhausted)
         for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024)) {
           val failure2 = parse(input.grouped(chunkSize), expr(_)).asInstanceOf[Parsed.Failure]
-          val trace = failure2.trace
+          val trace = failure2.traceAggregate().msg
           assert(trace == expectedShortTrace.trim)
         }
       }
