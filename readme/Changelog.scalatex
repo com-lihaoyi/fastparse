@@ -1,6 +1,6 @@
 @import Main._
 @sect{Change Log}
-    @sect{2.0.0}
+    @sect{2.0.1}
         @ul
             @li
                 Major rewrite of @sect.ref{Internals} with some changes to

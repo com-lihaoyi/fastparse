@@ -25,11 +25,29 @@ object Parsed{
       Parsed.Extra(p.input, p.startIndex, p.index, p.originalParser, p.failureStack)
     )
   }
+
+  /**
+    * The outcome of a successful parse
+    *
+    * @param value The value returned by the parse
+    * @param index The index at which the parse completed at
+    */
   final case class Success[+T](value: T, index: Int) extends Parsed[T](true){
     def get = this
     def fold[V](onFailure: (String, Int, Extra) => V, onSuccess: (T, Int) => V) = onSuccess(value, index)
     override def toString() = s"Parsed.Success($value, $index)"
   }
+
+  /**
+    * The outcome of a failed parse
+    *
+    * @param failureLabel A hint as to why the parse failed. Defaults to "",
+    *                     unless you set `verboseFailures = true` or call
+    *                     `.trace()` on an existing failure
+    * @param index The index at which the parse failed
+    * @param extra Metadata about the parse; useful for re-running the parse
+    *              to trace out a more detailed error report
+    */
   final case class Failure(failureLabel: String,
                            index: Int,
                            extra: Extra) extends Parsed[Nothing](false){
@@ -122,6 +140,18 @@ object Parsed{
       )
     }
   }
+
+  /**
+    * A decorated [[Failure]] with extra metadata; provides a much more
+    * detailed, through verbose, of the possible inputs that may have been
+    * expected at the index at which the parse failed.
+    *
+    * @param failureAggregate contains not just the parsers which were present
+    *                         when the parse finally failed, but also any other
+    *                         parsers which may have earlier been tried at the
+    *                         same index.
+    * @param failure The raw failure object
+    */
   case class TracedFailure(failureAggregate: Seq[String],
                            failure: Failure){
     def failureLabel = failure.failureLabel
@@ -135,9 +165,13 @@ object Parsed{
 
     @deprecated("Use .msg instead")
     def trace = longAggregateMsg
-
+    /**
+      * Displays the failure message excluding the parse stack
+      */
     def msg = failure.msg
-
+    /**
+      * Displays the failure message including the parse stack, if possible
+      */
     def longMsg = failure.longMsg
     /**
       * Displays the aggregate failure message, excluding the parse stack

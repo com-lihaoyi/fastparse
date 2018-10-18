@@ -122,7 +122,7 @@ trait ExampleParseJvmModule extends CommonCrossModule{
 
 trait CommonCrossModule extends CrossScalaModule with PublishModule{
 
-  def publishVersion = "2.0.0"
+  def publishVersion = "2.0.1"
   def artifactName = millModuleSegments.parts.dropRight(2).mkString("-")
   def pomSettings = PomSettings(
     description = artifactName(),
@@ -138,7 +138,7 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule{
     )
   )
 
-  def scalaDocPluginClasspath = T{ Agg() }
+  def scalaDocPluginClasspath = T{ Agg[PathRef]() }
   def scalacOptions = T{ if (scalaVersion() == "2.12.7") Seq("-opt:l:method") else Nil }
 
   def platformSegment: String
