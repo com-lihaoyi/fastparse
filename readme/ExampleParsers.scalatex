@@ -7,7 +7,7 @@
         Above, we've already covered all the individual bits and pieces that make writing a parser possible. But how does that fit together? Let's take a look at some examples.
 
     @sect{Math}
-        @hl.ref(tests/"MathTests.scala", "import fastparse", "val tests")
+        @hl.ref(tests/"MathTests.scala", "import fastparse._", "val tests")
 
 
         @p
