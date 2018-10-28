@@ -19,7 +19,11 @@ jobs:
     jdk: openjdk10
 
   - script: "./mill all demo.fastOpt perftests.__.compile"
+
+  - env: CMD="mill __.native[2.11.12].test"
     jdk: openjdk10
+    before_install:
+    - curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
 
   - script: "./mill demo.fullOpt && sbt readme/run"
     jdk: oraclejdk9
