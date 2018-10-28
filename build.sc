@@ -214,7 +214,7 @@ object perftests extends Module{
     }
     def testFrameworks = Seq("utest.runner.Framework")
     def ivyDeps = Agg(
-      ivy"com.lihaoyi::utest::0.6.5",
+      ivy"com.lihaoyi::utest::0.6.6",
       ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
     )
   }

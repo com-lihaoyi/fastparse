@@ -65,12 +65,12 @@ object Utils {
     sizes.foreach(s => {
       println("Parsing for batch size " + s)
       val input = new LoggedMaxBufferLengthParserInput(iteratorFactory(s))
-      parser.parse(input)
+      parser.parseInput(input)
       println(s"Batch size: $s. Max buffer size: ${input.maxInnerLength}.")
     })
 
     val input = new LoggedDistributionBufferLengthParserInput(iteratorFactory(1))
-    parser.parse(input)
+    parser.parseInput(input)
     println("Distibutions of buffer size:")
 
     val chunkSize = (input.drops.size - 11) / 10
