@@ -51,7 +51,7 @@ object Implicits {
       type Acc = mutable.Buffer[Any]
       def initial = mutable.Buffer.empty[Any]
       def accumulate(t: Any, acc: mutable.Buffer[Any]) = acc += t
-      def result(acc: mutable.Buffer[Any]) = acc
+      def result(acc: mutable.Buffer[Any]) = acc.toSeq
     }
   }
 

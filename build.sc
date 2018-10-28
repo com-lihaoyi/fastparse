@@ -3,7 +3,7 @@ import scalalib._
 import scalajslib._
 import publish._
 
-val crossVersions = Seq("2.11.12", "2.12.7")
+val crossVersions = Seq("2.11.12", "2.12.7", "2.13.0-M5")
 object fastparse extends Module{
   object jvm extends Cross[fastparseJvmModule](crossVersions:_*)
   class fastparseJvmModule(val crossScalaVersion: String) extends FastparseModule{
@@ -35,7 +35,7 @@ object fastparse extends Module{
 }
 trait FastparseModule extends CommonCrossModule{
   def ivyDeps = Agg(
-    ivy"com.lihaoyi::sourcecode::0.1.4",
+    ivy"com.lihaoyi::sourcecode::0.1.5",
   )
   def compileIvyDeps = Agg(
     ivy"org.scala-lang:scala-reflect:${scalaVersion()}"
@@ -153,7 +153,7 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule{
 trait CommonTestModule extends ScalaModule with TestModule{
   def platformSegment: String
   def ivyDeps = Agg(
-    ivy"com.lihaoyi::utest::0.6.5",
+    ivy"com.lihaoyi::utest::0.6.6",
   )
 
   def scalacOptions = T{ if (scalaVersion() == "2.12.7") Seq("-opt:l:method") else Nil }
