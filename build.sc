@@ -1,9 +1,13 @@
 import mill._
 import scalalib._
 import scalajslib._
+import scalanativelib._
 import publish._
 
-val crossVersions = Seq("2.11.12", "2.12.7", "2.13.0-RC1")
+val Scala211 = "2.11.12"
+
+val crossVersions = Seq(Scala211, "2.12.7", "2.13.0-RC1")
+
 object fastparse extends Module{
   object jvm extends Cross[fastparseJvmModule](crossVersions:_*)
   class fastparseJvmModule(val crossScalaVersion: String) extends FastparseModule{
@@ -21,7 +25,6 @@ object fastparse extends Module{
         ivy"org.scala-lang:scala-reflect:${scalaVersion()}",
       )
     }
-
   }
 
   object js extends Cross[fastparseJsModule](crossVersions:_*)
@@ -32,7 +35,22 @@ object fastparse extends Module{
       def platformSegment = "js"
     }
   }
+
+  object native extends Cross[fastparseNativeModule](Scala211)
+  class fastparseNativeModule(val crossScalaVersion: String) extends FastparseModule with ScalaNativeModule {
+    def platformSegment = "native"
+    def scalaNativeVersion = "0.3.9"
+    def sources = T.sources(
+      millSourcePath / "src",
+      millSourcePath / s"src-$platformSegment",
+      millSourcePath / s"src-jvm",  // we are taking JVM's implementation of CharPredicates.
+    )
+    object test extends Tests with CommonTestModule{
+      def platformSegment = "native"
+    }
+  }
 }
+
 trait FastparseModule extends CommonCrossModule{
   def ivyDeps = Agg(
     ivy"com.lihaoyi::sourcecode::0.1.6",
@@ -81,8 +99,10 @@ object scalaparse extends Module{
 
   object jvm extends Cross[ScalaParseJvmModule](crossVersions:_*)
   class ScalaParseJvmModule(val crossScalaVersion: String) extends ExampleParseJvmModule
-}
 
+  object native extends Cross[ScalaParseNativeModule](Scala211)
+  class ScalaParseNativeModule(val crossScalaVersion: String) extends ExampleParseNativeModule
+}
 
 object cssparse extends Module{
   object js extends Cross[CssParseJsModule](crossVersions:_*)
@@ -90,13 +110,20 @@ object cssparse extends Module{
 
   object jvm extends Cross[CssParseJvmModule](crossVersions:_*)
   class CssParseJvmModule(val crossScalaVersion: String) extends ExampleParseJvmModule
+
+  object native extends Cross[CssParseNativeModule](Scala211)
+  class CssParseNativeModule(val crossScalaVersion: String) extends ExampleParseNativeModule
 }
+
 object pythonparse extends Module{
   object js extends Cross[PythonParseJsModule](crossVersions:_*)
   class PythonParseJsModule(val crossScalaVersion: String) extends ExampleParseJsModule
 
   object jvm extends Cross[PythonParseJvmModule](crossVersions:_*)
   class PythonParseJvmModule(val crossScalaVersion: String) extends ExampleParseJvmModule
+
+  object native extends Cross[PythonParseNativeModule](Scala211)
+  class PythonParseNativeModule(val crossScalaVersion: String) extends ExampleParseNativeModule
 }
 
 trait ExampleParseJsModule extends CommonCrossModule with ScalaJSModule{
@@ -118,6 +145,15 @@ trait ExampleParseJvmModule extends CommonCrossModule{
       ivy"net.sourceforge.cssparser:cssparser:0.9.18",
       ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
     )
+  }
+}
+
+trait ExampleParseNativeModule extends CommonCrossModule with ScalaNativeModule{
+  def platformSegment = "native"
+  def scalaNativeVersion = "0.3.9"
+  def moduleDeps = Seq(fastparse.native())
+  object test extends Tests with CommonTestModule{
+    def platformSegment = "native"
   }
 }
 

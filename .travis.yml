@@ -24,6 +24,13 @@ jobs:
   - env: CMD="mill __.js[2.13.0-RC1].test"
     jdk: openjdk10
 
+  - env: CMD="mill __.native[2.11.12].test"
+    jdk: openjdk10
+    before_install:
+    - sudo apt-get update
+    - curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
+    - curl -L -o ~/bin/mill https://github.com/lihaoyi/mill/releases/download/0.3.6/0.3.6-85-38fce6 && chmod +x ~/bin/mill
+
   - env: CMD="mill all demo.fastOpt perftests.__.compile"
     jdk: openjdk10
 
