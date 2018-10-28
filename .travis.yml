@@ -9,19 +9,19 @@ matrix:
     jdk: oraclejdk9
 
   - env: CMD="mill __.jvm[2.13.0-M5].test"
-    jdk: oraclejdk10
+    jdk: openjdk10
 
   - env: CMD="mill __.js[2.11.12].test"
     jdk: oraclejdk9
 
   - env: CMD="mill __.js[2.12.7].test"
-    jdk: oraclejdk10
+    jdk: openjdk10
 
   - env: CMD="mill __.js[2.13.0-M5].test"
-    jdk: oraclejdk10
+    jdk: openjdk10
 
   - env: CMD="mill all demo.fastOpt perftests.__.compile"
-    jdk: oraclejdk10
+    jdk: openjdk10
 
   - env: CMD="sbt readme/run"
     jdk: oraclejdk8
