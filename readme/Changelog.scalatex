@@ -1,5 +1,10 @@
 @import Main._
 @sect{Change Log}
+    @sect{2.0.5}
+        @ul
+            @li
+                Remove unnecessary runtime scala-reflect dependency when parsing
+                non-literal strings
     @sect{2.0.4}
         @ul
             @li

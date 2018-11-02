@@ -1,7 +1,7 @@
 @import Main._
 @sect{Internals}
     @p
-        FastParse 2.0.4 is implemented as a set of methods that perform a
+        FastParse 2.0.5 is implemented as a set of methods that perform a
         recursive-descent parse on the given input, with all book-keeping
         information maintained in the @code{fastparse.ParsingRun[T]} objects
         (abbreviated @code{fastparse.P[T]}). @code{ParsingRun}s are mutable,
