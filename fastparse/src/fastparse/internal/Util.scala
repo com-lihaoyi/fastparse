@@ -6,6 +6,15 @@ import scala.annotation.{switch, tailrec}
 import scala.collection.mutable.ArrayBuffer
 
 object Util {
+  def startsWith(src: ParserInput, prefix: String, offset: Int) = {
+    @tailrec def rec(i: Int): Boolean = {
+      if (i >= prefix.length) true
+      else if (!src.isReachable(i + offset)) false
+      else if (src(i + offset) != prefix.charAt(i)) false
+      else rec(i + 1)
+    }
+    rec(0)
+  }
 
   def startsWithIgnoreCase(src: ParserInput, prefix: IndexedSeq[Char], offset: Int) = {
     @tailrec def rec(i: Int): Boolean = {

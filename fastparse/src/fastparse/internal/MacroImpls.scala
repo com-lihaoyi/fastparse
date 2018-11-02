@@ -59,19 +59,7 @@ object MacroImpls {
       }
     }
   }
-  /**
-    * Workaround https://github.com/scala-js/scala-js/issues/1603
-    * by implementing startsWith myself
-    */
-  def startsWith(src: ParserInput, prefix: String, offset: Int) = {
-    @tailrec def rec(i: Int): Boolean = {
-      if (i >= prefix.length) true
-      else if (!src.isReachable(i + offset)) false
-      else if (src(i + offset) != prefix.charAt(i)) false
-      else rec(i + 1)
-    }
-    rec(0)
-  }
+
   def literalStrMacro(c: Context)
                      (s: c.Expr[String])
                      (ctx: c.Expr[ParsingRun[Any]]): c.Expr[ParsingRun[Unit]] = {
@@ -134,7 +122,7 @@ object MacroImpls {
           val s1 = s.splice
           ctx.splice match{ case ctx1 =>
             val res =
-              if (startsWith(ctx1.input, s1, ctx1.index)) ctx1.freshSuccess((), ctx1.index + s1.length)
+              if (Util.startsWith(ctx1.input, s1, ctx1.index)) ctx1.freshSuccess((), ctx1.index + s1.length)
               else ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
             if (ctx1.verboseFailures) ctx1.aggregateMsg(() => Util.literalize(s1))
             res
