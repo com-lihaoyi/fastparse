@@ -12,7 +12,7 @@ trait Xml {
   def WS[_: P]: P0
   def Block[_: P]: P0
   def Patterns[_: P]: P[Unit]
-  def XmlExpr[_: P] = P WL ~ Xml.XmlContent.rep(min = 1, sep = WL.?) )
+  def XmlExpr[_: P] = P( WL ~ Xml.XmlContent.rep(min = 1, sep = WL.?) )
   def XmlPattern[_: P] = P( WL ~ Xml.ElemPattern )
 
   private[this] object Xml {

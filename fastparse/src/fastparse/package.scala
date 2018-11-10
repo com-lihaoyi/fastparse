@@ -99,7 +99,7 @@ package object fastparse {
     */
   def IgnoreCase(s: String)(implicit ctx: P[Any]): P[Unit] = {
     val res =
-      if (Util.startsWithIgnoreCase(ctx.input, s, ctx.index)) ctx.freshSuccess((), ctx.index + s.length)
+      if (Util.startsWithIgnoreCase(ctx.input, s, ctx.index)) ctx.freshSuccessUnit(ctx.index + s.length)
       else ctx.freshFailure().asInstanceOf[P[Unit]]
     if (ctx.verboseFailures) ctx.aggregateTerminal(() => Util.literalize(s))
     res
@@ -368,7 +368,7 @@ package object fastparse {
 
       val res =
         if (ctx.isSuccess) ctx.freshFailure(startPos)
-        else ctx.freshSuccess((), startPos)
+        else ctx.freshSuccessUnit(startPos)
 
       if (ctx.verboseFailures) ctx.aggregateTerminal(() => "!" + Util.parenthize(msg))
       res.cut = startCut
@@ -468,7 +468,7 @@ package object fastparse {
     val msg = ctx.shortParserMsg
 
     val res =
-      if (ctx.isSuccess) ctx.freshSuccess((), startPos)
+      if (ctx.isSuccess) ctx.freshSuccessUnit(startPos)
       else ctx.asInstanceOf[P[Unit]]
     if (ctx.verboseFailures) ctx.aggregateTerminal(() =>
       msg match{
@@ -486,7 +486,7 @@ package object fastparse {
     */
   def End(implicit ctx: P[_]): P[Unit] = {
     val res =
-      if (!ctx.input.isReachable(ctx.index)) ctx.freshSuccess(())
+      if (!ctx.input.isReachable(ctx.index)) ctx.freshSuccessUnit()
       else ctx.freshFailure().asInstanceOf[P[Unit]]
     if (ctx.verboseFailures) ctx.aggregateTerminal(() => "end-of-input")
     res
@@ -497,7 +497,7 @@ package object fastparse {
     */
   def Start(implicit ctx: P[_]): P[Unit] = {
     val res =
-      if (ctx.index == 0) ctx.freshSuccess(())
+      if (ctx.index == 0) ctx.freshSuccessUnit()
       else ctx.freshFailure().asInstanceOf[P[Unit]]
     if (ctx.verboseFailures) ctx.aggregateTerminal(() => "start-of-input")
     res
@@ -524,7 +524,7 @@ package object fastparse {
     * No-op parser that always succeeds, consuming zero characters
     */
   def Pass(implicit ctx: P[_]): P[Unit] = {
-    val res = ctx.freshSuccess(())
+    val res = ctx.freshSuccessUnit()
     if (ctx.verboseFailures) ctx.setMsg(() => "Pass")
     res
   }
@@ -567,7 +567,7 @@ package object fastparse {
   def AnyChar(implicit ctx: P[_]): P[Unit] = {
     val res =
       if (!ctx.input.isReachable(ctx.index)) ctx.freshFailure().asInstanceOf[P[Unit]]
-      else ctx.freshSuccess((), ctx.index + 1)
+      else ctx.freshSuccessUnit(ctx.index + 1)
     if (ctx.verboseFailures) ctx.aggregateTerminal(() => "any-character")
     res
   }
@@ -593,7 +593,7 @@ package object fastparse {
   def CharPred(p: Char => Boolean)(implicit ctx: P[_]): P[Unit] = {
     val res =
       if (!(ctx.input.isReachable(ctx.index) && p(ctx.input(ctx.index)))) ctx.freshFailure().asInstanceOf[P[Unit]]
-      else ctx.freshSuccess((), ctx.index + 1)
+      else ctx.freshSuccessUnit(ctx.index + 1)
     if (ctx.verboseFailures) ctx.aggregateTerminal(() => "character-predicate")
     res
   }
@@ -628,7 +628,7 @@ package object fastparse {
     val start = index
     while(input.isReachable(index) && p(input(index))) index += 1
     val res =
-      if (index - start >= min) ctx.freshSuccess((), index = index)
+      if (index - start >= min) ctx.freshSuccessUnit(index = index)
       else ctx.freshFailure()
     if (ctx.verboseFailures) ctx.aggregateTerminal(() => s"chars-while($min)")
     res

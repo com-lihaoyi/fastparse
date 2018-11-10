@@ -67,16 +67,17 @@ object MacroImpls {
     s.actualType match{
       case ConstantType(Constant(x: String)) =>
         val literalized = c.Expr[String](Literal(Constant(Util.literalize(x))))
-        if (x.length == 0) reify{ ctx.splice.freshSuccess(()) }
+        if (x.length == 0) reify{ ctx.splice.freshSuccessUnit() }
         else if (x.length == 1){
           val charLiteral = c.Expr[Char](Literal(Constant(x.charAt(0))))
           reify {
 
             ctx.splice match{ case ctx1 =>
               val input = ctx1.input
+              val index = ctx1.index
               val res =
-                if (input.isReachable(ctx1.index) && input(ctx1.index) == charLiteral.splice){
-                  ctx1.freshSuccess((), ctx1.index + 1)
+                if (input.isReachable(index) && input(index) == charLiteral.splice){
+                  ctx1.freshSuccessUnit(index + 1)
                 }else{
                   ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
                 }
@@ -105,7 +106,7 @@ object MacroImpls {
               val input = ctx1.input
               val res =
                 if (input.isReachable(end - 1)  && checker.splice(input, index) ) {
-                  ctx1.freshSuccess((), end)
+                  ctx1.freshSuccessUnit(end)
                 }else {
                   ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
                 }
@@ -122,7 +123,7 @@ object MacroImpls {
           val s1 = s.splice
           ctx.splice match{ case ctx1 =>
             val res =
-              if (Util.startsWith(ctx1.input, s1, ctx1.index)) ctx1.freshSuccess((), ctx1.index + s1.length)
+              if (Util.startsWith(ctx1.input, s1, ctx1.index)) ctx1.freshSuccessUnit(ctx1.index + s1.length)
               else ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
             if (ctx1.verboseFailures) ctx1.aggregateTerminal(() => Util.literalize(s1))
             res
@@ -212,7 +213,7 @@ object MacroImpls {
           if (ctx5.verboseFailures) ctx5.aggregateMsg(lhsMsg, startGroup)
 
           ctx5.index = startPos
-          ctx5.setMsg(ctx5.shortParserMsg:_*)
+          ctx5.setMsg(ctx5.shortParserMsg)
           ctx5.cut = false
           other.splice
           val rhsMsg = ctx5.shortParserMsg
@@ -227,7 +228,7 @@ object MacroImpls {
               ctx5.cut |= oldCut
               res
             }
-          if (ctx5.verboseFailures) ctx5.setMsg(rhsMsg ::: lhsMsg:_*)
+          if (ctx5.verboseFailures) ctx5.setMsg(rhsMsg ::: lhsMsg)
           res.asInstanceOf[ParsingRun[V]]
         }
       }
@@ -338,7 +339,7 @@ object MacroImpls {
         var $output: Int = -1
         ${rec(0, trie)}
         val res =
-          if ($output != -1) $ctx1.freshSuccess((), index = $output)
+          if ($output != -1) $ctx1.freshSuccessUnit(index = $output)
           else $ctx1.freshFailure()
         if ($ctx1.verboseFailures) $ctx1.setMsg(() => $bracketed)
         res
@@ -403,7 +404,7 @@ object MacroImpls {
           if (!ctx1.input.isReachable(index)) {
             ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
           } else parsed.splice match {
-            case true => ctx1.freshSuccess((), index + 1)
+            case true => ctx1.freshSuccessUnit(index + 1)
             case false => ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
           }
         if (ctx1.verboseFailures) ctx1.aggregateTerminal(() => bracketed.splice)
@@ -552,7 +553,7 @@ object MacroImpls {
           ${parseCharCls(c)(c.Expr[Char](q"$input($index)"), Seq(literal))}
         ) $index += 1
         val res =
-          if ($index - $start >= $min) $ctx1.freshSuccess((), index = $index)
+          if ($index - $start >= $min) $ctx1.freshSuccessUnit(index = $index)
           else {
             $ctx1.isSuccess = false
             $ctx1.asInstanceOf[fastparse.P[Unit]]

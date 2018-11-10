@@ -129,7 +129,7 @@ final class ParsingRun[+T](val input: ParserInput,
       failureGroupAggregate = parsedMsg ::: startGroup
     }
 
-    setMsg(msgToSet:_*)
+    setMsg(msgToSet)
   }
 
   def aggregateTerminal(f: Lazy[String]): Unit = {
@@ -139,9 +139,13 @@ final class ParsingRun[+T](val input: ParserInput,
     }
     shortParserMsg = List(f)
   }
-  def setMsg(f: Lazy[String]*): Unit = {
-    if (!isSuccess && lastFailureMsg == null) lastFailureMsg = f.toList
-    shortParserMsg = f.toList
+  def setMsg(f: Lazy[String]): Unit = {
+    if (!isSuccess && lastFailureMsg == null) lastFailureMsg = List(f)
+    shortParserMsg = List(f)
+  }
+  def setMsg(f: List[Lazy[String]]): Unit = {
+    if (!isSuccess && lastFailureMsg == null) lastFailureMsg = f
+    shortParserMsg = f
   }
 
   // Use telescoping methods rather than default arguments to try and minimize
@@ -156,6 +160,19 @@ final class ParsingRun[+T](val input: ParserInput,
     this.asInstanceOf[ParsingRun[V]]
   }
 
+  def freshSuccessUnit(): ParsingRun[Unit] = {
+    isSuccess = true
+    successValue = ()
+    this.asInstanceOf[ParsingRun[Unit]]
+  }
+
+  def freshSuccessUnit(index: Int): ParsingRun[Unit] = {
+    isSuccess = true
+    successValue = ()
+
+    this.index = index
+    this.asInstanceOf[ParsingRun[Unit]]
+  }
   def freshSuccess[V](value: V, index: Int): ParsingRun[V] = {
     isSuccess = true
     successValue = value

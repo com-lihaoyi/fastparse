@@ -147,25 +147,27 @@ object Parsed{
     * detailed, through verbose, of the possible inputs that may have been
     * expected at the index at which the parse failed.
     *
-    * @param failureGroupAggregate contains not just the parsers which were present
-    *                         when the parse finally failed, but also any other
-    *                         parsers which may have earlier been tried at the
-    *                         same index.
+    * @param terminals A list of all the lowest level parsers which could have
+    *                  succeeded at the failure index. These are things like
+    *                  literal string parsers, [[CharIn]], [[CharPred]], etc.
+    * @param groups A list of all the highest level parsers which could have
+    *               succeeded at the given failure index. These give you a
+    *               good
     * @param failure The raw failure object
     */
-  case class TracedFailure(failureTerminalAggregate: Seq[String],
-                           failureGroupAggregate: Seq[String],
+  case class TracedFailure(terminals: Seq[String],
+                           groups: Seq[String],
                            failure: Failure){
     def label = failure.label
     def index = failure.index
     def input = failure.extra.input
     def stack = failure.extra.stack
-    def terminalAggregateString = failureTerminalAggregate match{
+    def terminalAggregateString = terminals match{
       case Seq(x) => x
       case items => items.mkString("(", " | ", ")")
     }
 
-    def groupAggregateString = failureGroupAggregate match{
+    def groupAggregateString = groups match{
       case Seq(x) => x
       case items => items.mkString("(", " | ", ")")
     }
@@ -173,30 +175,41 @@ object Parsed{
     @deprecated("Use .msg instead")
     def trace = aggregateMsg
     /**
-      * Displays the failure message excluding the parse stack
+      * Displays the short failure message excluding the parse stack. This shows
+      * the last parser which failed causing the parse to fail. Note that this
+      * does not include other parsers which may have failed earlier; see [[terminalsMsg]]
+      * and [[aggregateMsg]] for more detailed errors
       */
     def msg = failure.msg
     /**
-      * Displays the failure message including the parse stack, if possible
-      */
-    def longMsg = failure.longMsg
-    /**
-      * Displays the aggregate failure message, excluding the parse stack
+      * Displays the terminals failure message, excluding the parse stack. This
+      * includes a list of all lowest-level parsers which could have succeeded
+      * at the failure index: literal strings, [[CharIn]], [[CharPred]]s, etc.
+      * This gives you a detailed listing of how the parse could be corrected,
+      * though it can be verbose.
       */
     def terminalsMsg = Failure.formatMsg(input, List(terminalAggregateString -> index), index)
 
     /**
-      * Displays the aggregate failure message, excluding the parse stack
+      * Displays the aggregate failure message, excluding the parse stack. This
+      * includes a list of all highest-level parsers which could have succeeded
+      * at the failure index. This gives you a good high-level overview of what
+      * the parser expected, at the cost
       */
     def aggregateMsg = Failure.formatMsg(input, List(groupAggregateString -> index), index)
 
     /**
-      * Displays the aggregate failure message, including the parse stack
+      * A version of [[msg]] that includes the parse stack
+      */
+    def longMsg = failure.longMsg
+
+    /**
+      * A version of [[terminalsMsg]] that includes the parse stack.
       */
     def longTerminalsMsg = Failure.formatMsg(input, stack ++ Seq(terminalAggregateString -> index), index)
 
     /**
-      * Displays the aggregate failure message, including the parse stack
+      * A version of [[aggregateMsg]] that includes the parse stack
       */
     def longAggregateMsg = Failure.formatMsg(input, stack ++ Seq(groupAggregateString -> index), index)
   }
