@@ -28,7 +28,7 @@ object MacroImpls {
           else if (f.splice(ctx1.successValue.asInstanceOf[T])) ctx1.asInstanceOf[ParsingRun[T]]
           else ctx1.freshFailure().asInstanceOf[ParsingRun[T]]
 
-        if (ctx1.verboseFailures) ctx1.setMsg(() => "filter")
+        if (ctx1.verboseFailures) ctx1.aggregateTerminal(() => "filter")
         res
       }
     }
@@ -80,7 +80,7 @@ object MacroImpls {
                 }else{
                   ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
                 }
-              if (ctx1.verboseFailures) ctx1.setMsg(() => literalized.splice)
+              if (ctx1.verboseFailures) ctx1.aggregateTerminal(() => literalized.splice)
               res
             }
 
@@ -110,7 +110,7 @@ object MacroImpls {
                   ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
                 }
               if (ctx1.verboseFailures) {
-                ctx1.setMsg(() => literalized.splice)
+                ctx1.aggregateTerminal(() => literalized.splice)
               }
               res
 
@@ -124,7 +124,7 @@ object MacroImpls {
             val res =
               if (Util.startsWith(ctx1.input, s1, ctx1.index)) ctx1.freshSuccess((), ctx1.index + s1.length)
               else ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
-            if (ctx1.verboseFailures) ctx1.setMsg(() => Util.literalize(s1))
+            if (ctx1.verboseFailures) ctx1.aggregateTerminal(() => Util.literalize(s1))
             res
           }
         }
@@ -406,7 +406,7 @@ object MacroImpls {
             case true => ctx1.freshSuccess((), index + 1)
             case false => ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
           }
-        if (ctx1.verboseFailures) ctx1.setMsg(() => bracketed.splice)
+        if (ctx1.verboseFailures) ctx1.aggregateTerminal(() => bracketed.splice)
         res
       }
     }
@@ -557,7 +557,7 @@ object MacroImpls {
             $ctx1.isSuccess = false
             $ctx1.asInstanceOf[fastparse.P[Unit]]
           }
-        if ($ctx1.verboseFailures) $ctx1.setMsg(() => $bracketed)
+        if ($ctx1.verboseFailures) $ctx1.aggregateTerminal(() => $bracketed)
         res
       }
     """

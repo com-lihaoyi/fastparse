@@ -41,11 +41,18 @@ object MathTests extends TestSuite{
       )
     }
     'fail - {
-      def check(input: String, expectedTrace: String, expectedShortTrace: String) = {
+      def check(input: String,
+                expectedTrace: String,
+                expectedShortTrace: String,
+                expectedTerminalTrace: String) = {
         val failure = parse(input, expr(_)).asInstanceOf[Parsed.Failure]
-        val actualTrace = failure.trace().longAggregateMsg
+        val trace = failure.trace()
         val index = failure.index
-        assert(expectedTrace.trim == actualTrace.trim)
+        assert(
+          expectedTrace.trim == trace.longAggregateMsg.trim,
+          expectedTerminalTrace.trim == trace.longTerminalsMsg.trim,
+          expectedShortTrace.trim == failure.msg
+        )
 
         // Check iterator parsing results in a failure in the right place. Note
         // that we aren't checking the `.traced.trace` because that requires a
@@ -58,17 +65,20 @@ object MathTests extends TestSuite{
       check(
         "(+)",
         """Expected expr:1:1 / addSub:1:1 / divMul:1:1 / factor:1:1 / parens:1:1 / addSub:1:2 / divMul:1:2 / factor:1:2 / (number | parens):1:2, found "+)"""",
-        """Position 1, found "+)""""
+        """Position 1:2, found "+)"""",
+        """Expected expr:1:1 / addSub:1:1 / divMul:1:1 / factor:1:1 / parens:1:1 / addSub:1:2 / divMul:1:2 / factor:1:2 / ([0-9] | "("):1:2, found "+)""""
       )
       check(
         "1+-",
         """Expected expr:1:1 / addSub:1:1 / divMul:1:3 / factor:1:3 / (number | parens):1:3, found "-"""",
-        """Position 2, found "-""""
+        """Position 1:3, found "-"""",
+        """Expected expr:1:1 / addSub:1:1 / divMul:1:3 / factor:1:3 / ([0-9] | "("):1:3, found "-""""
       )
       check(
         "(1+(2+3x))+4",
         """Expected expr:1:1 / addSub:1:1 / divMul:1:1 / factor:1:1 / parens:1:1 / addSub:1:2 / divMul:1:4 / factor:1:4 / parens:1:4 / ([0-9] | [*/] | [+\\-] | ")"):1:8, found "x))+4"""",
-        """Position 7, found "x))+4""""
+        """Position 1:8, found "x))+4"""",
+        """Expected expr:1:1 / addSub:1:1 / divMul:1:1 / factor:1:1 / parens:1:1 / addSub:1:2 / divMul:1:4 / factor:1:4 / parens:1:4 / ([0-9] | [*/] | [+\\-] | ")"):1:8, found "x))+4""""
       )
     }
 

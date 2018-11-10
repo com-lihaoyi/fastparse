@@ -7,7 +7,10 @@ object FailureTests extends TestSuite{
       val f @ Parsed.Failure(failureString, index, extra) = parse("d", parser(_))
       val trace = f.trace()
 
-      assert(trace.groupAggregateString == """(parseB | "c")""")
+      assert(
+        trace.terminalAggregateString == """("a" | "b" | "c")""",
+        trace.groupAggregateString == """(parseB | "c")"""
+      )
     }
 
     'simple - {

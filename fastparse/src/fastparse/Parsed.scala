@@ -135,7 +135,8 @@ object Parsed{
     def fromParsingRun[T](p: ParsingRun[T]) = {
       assert(!p.isSuccess)
       TracedFailure(
-        (p.lastFailureMsg ::: p.failureGroupAggregate).distinct.reverse.map(_()),
+        p.failureTerminalAggregate.reverse.map(_()).distinct,
+        (p.lastFailureMsg ++ p.failureGroupAggregate).reverse.map(_()).distinct,
         Parsed.fromParsingRun(p).asInstanceOf[Failure]
       )
     }
@@ -152,12 +153,18 @@ object Parsed{
     *                         same index.
     * @param failure The raw failure object
     */
-  case class TracedFailure(failureGroupAggregate: Seq[String],
+  case class TracedFailure(failureTerminalAggregate: Seq[String],
+                           failureGroupAggregate: Seq[String],
                            failure: Failure){
     def label = failure.label
     def index = failure.index
     def input = failure.extra.input
     def stack = failure.extra.stack
+    def terminalAggregateString = failureTerminalAggregate match{
+      case Seq(x) => x
+      case items => items.mkString("(", " | ", ")")
+    }
+
     def groupAggregateString = failureGroupAggregate match{
       case Seq(x) => x
       case items => items.mkString("(", " | ", ")")
@@ -173,11 +180,20 @@ object Parsed{
       * Displays the failure message including the parse stack, if possible
       */
     def longMsg = failure.longMsg
+    /**
+      * Displays the aggregate failure message, excluding the parse stack
+      */
+    def terminalsMsg = Failure.formatMsg(input, List(terminalAggregateString -> index), index)
 
     /**
       * Displays the aggregate failure message, excluding the parse stack
       */
     def aggregateMsg = Failure.formatMsg(input, List(groupAggregateString -> index), index)
+
+    /**
+      * Displays the aggregate failure message, including the parse stack
+      */
+    def longTerminalsMsg = Failure.formatMsg(input, stack ++ Seq(terminalAggregateString -> index), index)
 
     /**
       * Displays the aggregate failure message, including the parse stack

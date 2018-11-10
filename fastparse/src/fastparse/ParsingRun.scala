@@ -38,6 +38,18 @@ import fastparse.internal.{Instrument, Lazy, Util}
   *                         `failureTerminalAggregate`
   * @param instrument       Callbacks that can be injected before/after every
   *                         `P(...)` parser.
+  * @param failureTerminalAggregate When tracing is enabled, this collects up all the
+  *                         upper-most failures that happen at [[traceIndex]]
+  *                         (in [[Lazy]] wrappers) so they can be shown to the
+  *                         user at end-of-parse as suggestions for what could
+  *                         make the parse succeed. For terminal parsers like
+  *                         [[LiteralStr]], it just aggregate's the string
+  *                         representation. For composite parsers like `a ~ b`
+  *                         or `!a` which may fail at [[traceIndex]] even
+  *                         without any of their wrapped terminal parsers
+  *                         failing there, it makes use of the
+  *                         [[shortParserMsg]] as the string representation of
+  *                         the composite parser.
   * @param shortParserMsg   When tracing is enabled, this contains string
   *                         representation of the last parser to run. Since
   *                         parsers aren't really objects, we piece together
@@ -91,6 +103,7 @@ final class ParsingRun[+T](val input: ParserInput,
                            val traceIndex: Int,
                            val instrument: Instrument,
                            // Mutable vars below:
+                           var failureTerminalAggregate: List[Lazy[String]],
                            var failureGroupAggregate: List[Lazy[String]],
                            var shortParserMsg: List[Lazy[String]],
                            var lastFailureMsg: List[Lazy[String]],
@@ -119,6 +132,13 @@ final class ParsingRun[+T](val input: ParserInput,
     setMsg(msgToSet:_*)
   }
 
+  def aggregateTerminal(f: Lazy[String]): Unit = {
+    if (!isSuccess){
+      if (index == traceIndex) failureTerminalAggregate ::= f
+      if (lastFailureMsg == null) lastFailureMsg = List(f)
+    }
+    shortParserMsg = List(f)
+  }
   def setMsg(f: Lazy[String]*): Unit = {
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = f.toList
     shortParserMsg = f.toList
