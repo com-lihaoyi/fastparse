@@ -18,6 +18,7 @@ object ParsingTests extends TestSuite{
       assert(parsed == rhs)
     }
   }
+
   def checkFail[T](parser: P[_] => P[T], input: (String, Int), expectedFailureIndex: Int) = {
     val (str, index) = input
     // Test normal parsing
@@ -30,8 +31,8 @@ object ParsingTests extends TestSuite{
       val failureIndex = parsed.asInstanceOf[Parsed.Failure].index
       assert(failureIndex == expectedFailureIndex)
     }
-
   }
+
   val tests = Tests {
     import NoWhitespace._
 
@@ -211,7 +212,7 @@ object ParsingTests extends TestSuite{
       def parser[_: P] = P( "hello" | "world" )
       val f = parse("cow", parser(_)).asInstanceOf[Parsed.Failure]
       val msg = f.trace().msg
-      msg ==> """Expected "hello" | "world":1:1, found "cow" """.trim
+      msg ==> """Expected ("hello" | "world"):1:1, found "cow" """.trim
     }
     'whitespaceFlatMap{
       // Separated out so they don't pick up the NoWhitespace._ import up top

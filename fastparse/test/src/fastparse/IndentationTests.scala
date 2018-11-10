@@ -2,6 +2,8 @@ package test.fastparse
 
 import utest._
 import fastparse._
+import fastparse.internal.Util
+
 /**
   * Same as MathTests, but demonstrating the use of whitespace
   */
@@ -48,6 +50,7 @@ object IndentationTests extends TestSuite{
         """.stripMargin.trim,
         2
       )
+
       check(
         """+
           |  1
@@ -121,9 +124,10 @@ object IndentationTests extends TestSuite{
       )
     }
     'fail - {
-      def check(input: String, expectedTrace: String) = {
+      def check(input: String, expectedTrace: String): Unit = {
         val failure = parse(input, expr(_)).asInstanceOf[Parsed.Failure]
-        val actualTrace = failure.trace().longTerminalsMsg
+        println("================================TRACE================================")
+        val actualTrace = failure.trace(enableLogging = true).longAggregateMsg
         assert(expectedTrace.trim == actualTrace.trim)
       }
       * - check(
@@ -142,9 +146,8 @@ object IndentationTests extends TestSuite{
           |  1
           |   1
         """.stripMargin.trim,
-        """ Expected expr:1:1 / block:1:1 / factor:3:3 / ([0-9] | [+\\-*/]):3:3, found " 1" """
+        """ Expected expr:1:1 / block:1:1 / factor:3:3 / (number | block):3:3, found " 1" """
       )
     }
   }
-
 }

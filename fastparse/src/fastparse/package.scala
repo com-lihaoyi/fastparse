@@ -54,12 +54,10 @@ package object fastparse {
     originalParser = parser,
     traceIndex = traceIndex,
     instrument = instrument,
-    failureTerminalAggregate = List.empty,
     failureGroupAggregate = List.empty,
-    shortParserMsg = () => "",
-    lastFailureMsg = () => "",
+    shortParserMsg = Nil,
+    lastFailureMsg = Nil,
     failureStack = List.empty,
-    earliestAggregate = Int.MaxValue,
     isSuccess = true,
     logDepth = if (enableLogging) 0 else -1,
     startIndex,
@@ -102,7 +100,7 @@ package object fastparse {
     val res =
       if (Util.startsWithIgnoreCase(ctx.input, s, ctx.index)) ctx.freshSuccess((), ctx.index + s.length)
       else ctx.freshFailure().asInstanceOf[P[Unit]]
-    if (ctx.verboseFailures) ctx.aggregateTerminal(() => Util.literalize(s))
+    if (ctx.verboseFailures) ctx.setMsg(() => Util.literalize(s))
     res
   }
 
@@ -337,20 +335,18 @@ package object fastparse {
       */
     def opaque(msg: String)(implicit ctx: P[Any]): P[T] = {
       val oldIndex = ctx.index
-      val oldfailureTerminalAggregate = ctx.failureTerminalAggregate
-      val preEarliest = ctx.earliestAggregate
+      val preAggregate = ctx.failureGroupAggregate
 
       val res = parse0()
 
       if (ctx.verboseFailures) {
-        ctx.failureTerminalAggregate = oldfailureTerminalAggregate
-        ctx.earliestAggregate = preEarliest
+        ctx.failureGroupAggregate = preAggregate
       }
       val res2 =
         if (res.isSuccess) ctx.freshSuccess(ctx.successValue)
         else ctx.freshFailure(oldIndex)
 
-      ctx.aggregateTerminal(() => msg)
+      ctx.setMsg(() => msg)
 
       res2.asInstanceOf[P[T]]
     }
@@ -364,18 +360,16 @@ package object fastparse {
       val startPos = ctx.index
       val startCut = ctx.cut
       val oldNoCut = ctx.noDropBuffer
-      val oldfailureTerminalAggregate = ctx.failureTerminalAggregate
       ctx.noDropBuffer = true
       parse0()
       ctx.noDropBuffer = oldNoCut
-      ctx.failureTerminalAggregate = oldfailureTerminalAggregate
       val msg = ctx.shortParserMsg
 
       val res =
         if (ctx.isSuccess) ctx.freshFailure(startPos)
         else ctx.freshSuccess((), startPos)
 
-      if (ctx.verboseFailures) ctx.aggregateTerminal(() => "!" + msg())
+      if (ctx.verboseFailures) ctx.setMsg(() => "!" + Util.parenthize(msg))
       res.cut = startCut
       res
     }
@@ -422,7 +416,7 @@ package object fastparse {
         } else {
           val trace = Parsed.Failure.formatStack(
             ctx.input,
-            ctx.failureStack ++ Seq(Option(ctx.lastFailureMsg).fold("")(_ ()) -> ctx.index)
+            ctx.failureStack ++ Seq(Option(ctx.lastFailureMsg).fold("")(Util.parenthize(_)) -> ctx.index)
           )
           val trailing = ctx.input match {
             case c: IndexedParserInput => Parsed.Failure.formatTrailing(ctx.input, startIndex)
@@ -475,7 +469,12 @@ package object fastparse {
     val res =
       if (ctx.isSuccess) ctx.freshSuccess((), startPos)
       else ctx.asInstanceOf[P[Unit]]
-    if (ctx.verboseFailures) ctx.setMsg(() => s"&(${msg()})")
+    if (ctx.verboseFailures) ctx.setMsg(() =>
+      msg match{
+        case Seq(x) => s"&(${Util.parenthize(msg)})"
+        case xs => s"&${Util.parenthize(msg)}"
+      }
+    )
     res.cut = startCut
     res
   }
@@ -488,7 +487,7 @@ package object fastparse {
     val res =
       if (!ctx.input.isReachable(ctx.index)) ctx.freshSuccess(())
       else ctx.freshFailure().asInstanceOf[P[Unit]]
-    if (ctx.verboseFailures) ctx.aggregateTerminal(() => "end-of-input")
+    if (ctx.verboseFailures) ctx.setMsg(() => "end-of-input")
     res
 
   }
@@ -499,7 +498,7 @@ package object fastparse {
     val res =
       if (ctx.index == 0) ctx.freshSuccess(())
       else ctx.freshFailure().asInstanceOf[P[Unit]]
-    if (ctx.verboseFailures) ctx.aggregateTerminal(() => "start-of-input")
+    if (ctx.verboseFailures) ctx.setMsg(() => "start-of-input")
     res
   }
 
@@ -514,35 +513,9 @@ package object fastparse {
     * as part of the error message.
     */
   def NoTrace[T](p: => P[T])(implicit ctx: P[_]): P[T] = {
-    val preMsg = ctx.failureTerminalAggregate
-    val preEarliest = ctx.earliestAggregate
+    val preAggregate = ctx.failureGroupAggregate
     val res = p
-    if (ctx.verboseFailures) {
-      ctx.earliestAggregate = preEarliest
-      ctx.failureTerminalAggregate = preMsg
-    }
-    res
-  }
-
-  /**
-    * Wraps a parser such that if the parser fails at a particular index, the
-    * given label is shown as the error message rather than the inner parsers
-    * which may have failed at that spot. Useful for wrapping parsers which
-    * contain larger `a | b | c | d ...` blocks, since showing every
-    * possibility to the user on-error is generally not useful
-    */
-  def SimpleTrace[T](label: String)(p: => P[T])(implicit ctx: P[_]): P[T] = {
-    val beforeAggregate = ctx.failureTerminalAggregate
-    val preEarliest = ctx.earliestAggregate
-    val startIndex = ctx.index
-    val res = p
-    if (ctx.verboseFailures) {
-      if (startIndex >= res.traceIndex) {
-        ctx.earliestAggregate = preEarliest
-        ctx.failureTerminalAggregate = beforeAggregate
-        ctx.failureTerminalAggregate ::= (() => label)
-      }
-    }
+    if (ctx.verboseFailures) ctx.failureGroupAggregate = preAggregate
     res
   }
 
@@ -594,7 +567,7 @@ package object fastparse {
     val res =
       if (!ctx.input.isReachable(ctx.index)) ctx.freshFailure().asInstanceOf[P[Unit]]
       else ctx.freshSuccess((), ctx.index + 1)
-    if (ctx.verboseFailures) ctx.aggregateTerminal(() => "any-character")
+    if (ctx.verboseFailures) ctx.setMsg(() => "any-character")
     res
   }
 
@@ -609,7 +582,7 @@ package object fastparse {
     val res =
       if (!ctx.input.isReachable(ctx.index)) ctx.freshFailure().asInstanceOf[P[Char]]
       else ctx.freshSuccess(ctx.input(ctx.index), ctx.index + 1)
-    if (ctx.verboseFailures) ctx.aggregateTerminal(() => "any-character")
+    if (ctx.verboseFailures) ctx.setMsg(() => "any-character")
     res
   }
 
@@ -620,7 +593,7 @@ package object fastparse {
     val res =
       if (!(ctx.input.isReachable(ctx.index) && p(ctx.input(ctx.index)))) ctx.freshFailure().asInstanceOf[P[Unit]]
       else ctx.freshSuccess((), ctx.index + 1)
-    if (ctx.verboseFailures) ctx.aggregateTerminal(() => "character-predicate")
+    if (ctx.verboseFailures) ctx.setMsg(() => "character-predicate")
     res
   }
   /**
@@ -656,7 +629,7 @@ package object fastparse {
     val res =
       if (index - start >= min) ctx.freshSuccess((), index = index)
       else ctx.freshFailure()
-    if (ctx.verboseFailures) ctx.aggregateTerminal(() => s"chars-while($min)")
+    if (ctx.verboseFailures) ctx.setMsg(() => s"chars-while($min)")
     res
   }
 

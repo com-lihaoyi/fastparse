@@ -7,10 +7,7 @@ object FailureTests extends TestSuite{
       val f @ Parsed.Failure(failureString, index, extra) = parse("d", parser(_))
       val trace = f.trace()
 
-      assert(
-        trace.terminalAggregateString == """("a" | "b" | "c")""",
-        trace.groupAggregateString == """(parseB | "c")"""
-      )
+      assert(trace.groupAggregateString == """(parseB | "c")""")
     }
 
     'simple - {
@@ -83,6 +80,15 @@ object FailureTests extends TestSuite{
         def parseA[_: P] = P( parseB.repX() ~ "c" )
         parseA(_)
       }
+    }
+
+    'sep - {
+      def parseB[_: P] = P( "a" | "b" )
+      def parseA[_: P] = P( parseB.rep(sep = ",") ~ "c" )
+      val f @ Parsed.Failure(failureString, index, extra) = parse("ad", parseA(_))
+      val trace = f.trace()
+
+      assert(trace.groupAggregateString == """("," | "c")""")
     }
   }
 }

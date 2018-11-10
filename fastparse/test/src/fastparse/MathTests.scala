@@ -33,16 +33,17 @@ object MathTests extends TestSuite{
       val Parsed.Success(15, _) = parse("(1+1*2)+3*4", expr(_))
       val Parsed.Success(21, _) = parse("((1+1*2)+(3*4*5))/3", expr(_))
       val Parsed.Failure(expected, failIndex, extra) = parse("1+1*", expr(_))
+      val longAggMsg = extra.trace().longAggregateMsg
       assert(
         failIndex == 4,
-        extra.trace().longTerminalsMsg ==
-        """Expected expr:1:1 / addSub:1:1 / divMul:1:3 / factor:1:5 / ([0-9] | "("):1:5, found """""
+        longAggMsg ==
+        """Expected expr:1:1 / addSub:1:1 / divMul:1:3 / factor:1:5 / (number | parens):1:5, found """""
       )
     }
     'fail - {
       def check(input: String, expectedTrace: String, expectedShortTrace: String) = {
         val failure = parse(input, expr(_)).asInstanceOf[Parsed.Failure]
-        val actualTrace = failure.trace().longTerminalsMsg
+        val actualTrace = failure.trace().longAggregateMsg
         val index = failure.index
         assert(expectedTrace.trim == actualTrace.trim)
 
@@ -56,12 +57,12 @@ object MathTests extends TestSuite{
       }
       check(
         "(+)",
-        """Expected expr:1:1 / addSub:1:1 / divMul:1:1 / factor:1:1 / parens:1:1 / addSub:1:2 / divMul:1:2 / factor:1:2 / ([0-9] | "("):1:2, found "+)"""",
+        """Expected expr:1:1 / addSub:1:1 / divMul:1:1 / factor:1:1 / parens:1:1 / addSub:1:2 / divMul:1:2 / factor:1:2 / (number | parens):1:2, found "+)"""",
         """Position 1, found "+)""""
       )
       check(
         "1+-",
-        """Expected expr:1:1 / addSub:1:1 / divMul:1:3 / factor:1:3 / ([0-9] | "("):1:3, found "-"""",
+        """Expected expr:1:1 / addSub:1:1 / divMul:1:3 / factor:1:3 / (number | parens):1:3, found "-"""",
         """Position 2, found "-""""
       )
       check(
@@ -70,6 +71,7 @@ object MathTests extends TestSuite{
         """Position 7, found "x))+4""""
       )
     }
+
     'instrument - {
       'simple - {
         val callCount = mutable.Map.empty[String, Int]

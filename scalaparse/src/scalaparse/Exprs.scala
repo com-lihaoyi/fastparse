@@ -74,10 +74,8 @@ trait Exprs extends Core with Types with Xml{
       def PostfixLambda = P( PostfixExpr ~ (`=>` ~ LambdaRhs.? | SuperPostfixSuffix).? )
       def SmallerExprOrLambda = P( ParenedLambda | PostfixLambda )
       P(
-        SimpleTrace("Expr")(
-          If | While | Try | DoWhile | For | Throw | Return |
-          ImplicitLambda | SmallerExprOrLambda
-        )
+        If | While | Try | DoWhile | For | Throw | Return |
+        ImplicitLambda | SmallerExprOrLambda
       )
     }
     def SuperPostfixSuffix[_: P] = P( (`=` ~/ Expr).? ~ MatchAscriptionSuffix.? )
@@ -95,13 +93,13 @@ trait Exprs extends Core with Types with Xml{
 
     def PostfixSuffix[_: P] = P( InfixSuffix.repX ~~ PostFix.?)
 
-    def PostfixExpr[_: P]: P[Unit] = P( SimpleTrace("PostfixExpr")(PrefixExpr ~~ ExprSuffix ~~ PostfixSuffix) )
+    def PostfixExpr[_: P]: P[Unit] = P( PrefixExpr ~~ ExprSuffix ~~ PostfixSuffix )
 
     def Parened[_: P] = P ( "(" ~/ TypeExpr.repTC() ~ ")" )
     def SimpleExpr[_: P]: P[Unit] = {
       def New = P( `new` ~/ AnonTmpl )
 
-      P( SimpleTrace("SimpleExpr")(XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | Parened) )
+      P( XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | Parened )
     }
     def Guard[_: P] : P[Unit] = P( `if` ~/ PostfixExpr )
   }
@@ -109,7 +107,7 @@ trait Exprs extends Core with Types with Xml{
     def TupleEx = P( "(" ~/ Pattern.repTC() ~ ")" )
     def Extractor = P( StableId ~ TypeArgs.? ~ TupleEx.? )
     def Thingy = P( `_` ~ (`:` ~/ TypePat).? ~ !("*" ~~ !syntax.Basic.OpChar) )
-    P( SimpleTrace("SimplePattern")(XmlPattern | Thingy | PatLiteral | TupleEx | Extractor | VarId) )
+    P( XmlPattern | Thingy | PatLiteral | TupleEx | Extractor | VarId )
   }
 
   def BlockExpr[_: P]: P[Unit] = P( "{" ~/ (CaseClauses | Block ~ "}") )

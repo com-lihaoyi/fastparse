@@ -70,7 +70,7 @@ trait Literals { l =>
     }
 
     class InterpCtx(interp: Option[() => P[Unit]]) {
-      def Literal[_: P] = P( SimpleTrace("literal")(("-".? ~ (Float | Int)) | Bool | String | "'" ~/ (Char | Symbol) | Null) )
+      def Literal[_: P] = P( ("-".? ~ (Float | Int)) | Bool | String | "'" ~/ (Char | Symbol) | Null )
       def Interp[_: P] = interp match{
         case None => P ( Fail )
         case Some(p) => P( "$" ~ Identifiers.PlainIdNoDollar | ("${" ~ p() ~ WL ~ "}") | "$$" )

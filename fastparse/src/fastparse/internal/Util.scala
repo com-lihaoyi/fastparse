@@ -6,6 +6,11 @@ import scala.annotation.{switch, tailrec}
 import scala.collection.mutable.ArrayBuffer
 
 object Util {
+  def parenthize(fs: Seq[Lazy[String]]) = fs match{
+    case Seq(x) => x()
+    case xs => xs.reverseIterator.map(_()).mkString("(", " | ", ")")
+  }
+
   def startsWith(src: ParserInput, prefix: String, offset: Int) = {
     @tailrec def rec(i: Int): Boolean = {
       if (i >= prefix.length) true

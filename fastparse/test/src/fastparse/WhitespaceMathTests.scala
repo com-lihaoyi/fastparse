@@ -38,19 +38,20 @@ object WhitespaceMathTests extends TestSuite{
       * - check("(1+    1*2)+(3      *4*5)/20", 6)
       * - check("((1+      1*2)+(3*4*5))/3", 21)
     }
+
     'fail - {
       def check(input: String, expectedTrace: String) = {
         val failure =  parse(input, expr(_)).asInstanceOf[Parsed.Failure]
-        val actualTrace = failure.trace().longTerminalsMsg
+        val actualTrace = failure.trace().longAggregateMsg
         assert(expectedTrace.trim == actualTrace.trim)
       }
       * - check(
         "(  +  )",
-        """ Expected expr:1:1 / addSub:1:1 / divMul:1:1 / factor:1:1 / parens:1:1 / addSub:1:4 / divMul:1:4 / factor:1:4 / ([0-9] | "("):1:4, found "+  )" """
+        """ Expected expr:1:1 / addSub:1:1 / divMul:1:1 / factor:1:1 / parens:1:1 / addSub:1:4 / divMul:1:4 / factor:1:4 / (number | parens):1:4, found "+  )" """
       )
       * - check(
         "1  +  - ",
-        """ Expected expr:1:1 / addSub:1:1 / divMul:1:7 / factor:1:7 / ([0-9] | "("):1:7, found "- " """
+        """ Expected expr:1:1 / addSub:1:1 / divMul:1:7 / factor:1:7 / (number | parens):1:7, found "- " """
       )
     }
   }

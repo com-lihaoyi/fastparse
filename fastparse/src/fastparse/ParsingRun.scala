@@ -1,7 +1,6 @@
 package fastparse
 
-import fastparse.internal.{Instrument, Lazy}
-import fastparse.internal.Instrument
+import fastparse.internal.{Instrument, Lazy, Util}
 
 /**
   * Models an in-progress parsing run; contains all the mutable state that may
@@ -39,18 +38,6 @@ import fastparse.internal.Instrument
   *                         `failureTerminalAggregate`
   * @param instrument       Callbacks that can be injected before/after every
   *                         `P(...)` parser.
-  * @param failureTerminalAggregate When tracing is enabled, this collects up all the
-  *                         upper-most failures that happen at [[traceIndex]]
-  *                         (in [[Lazy]] wrappers) so they can be shown to the
-  *                         user at end-of-parse as suggestions for what could
-  *                         make the parse succeed. For terminal parsers like
-  *                         [[LiteralStr]], it just aggregate's the string
-  *                         representation. For composite parsers like `a ~ b`
-  *                         or `!a` which may fail at [[traceIndex]] even
-  *                         without any of their wrapped terminal parsers
-  *                         failing there, it makes use of the
-  *                         [[shortParserMsg]] as the string representation of
-  *                         the composite parser.
   * @param shortParserMsg   When tracing is enabled, this contains string
   *                         representation of the last parser to run. Since
   *                         parsers aren't really objects, we piece together
@@ -65,13 +52,6 @@ import fastparse.internal.Instrument
   * @param failureStack     The stack of named `P(...)` parsers in effect when
   *                         the failure occured; only constructed when tracing
   *                         is enabled via `traceIndex != -1`
-  * @param earliestAggregate Lets backtracking parsers keep track on-failure of
-  *                          where the earliest actually-aggregated terminal
-  *                          failure within the backtracked parse happened.
-  *                          This is necessary to provide a high-level error
-  *                          message based on [[shortParserMsg]] if no low-level
-  *                          error message based on a terminal parser was
-  *                          recorded at the right index
   * @param isSuccess        Whether or not the parse is currently successful
   * @param logDepth         How many nested `.log` calls are currently surrounding us.
   *                         Used to nicely indent the log output so you can see which
@@ -111,12 +91,10 @@ final class ParsingRun[+T](val input: ParserInput,
                            val traceIndex: Int,
                            val instrument: Instrument,
                            // Mutable vars below:
-                           var failureTerminalAggregate: List[Lazy[String]],
                            var failureGroupAggregate: List[Lazy[String]],
-                           var shortParserMsg: Lazy[String],
-                           var lastFailureMsg: Lazy[String],
+                           var shortParserMsg: List[Lazy[String]],
+                           var lastFailureMsg: List[Lazy[String]],
                            var failureStack: List[(String, Int)],
-                           var earliestAggregate: Int,
                            var isSuccess: Boolean,
                            var logDepth: Int,
                            var index: Int,
@@ -126,35 +104,24 @@ final class ParsingRun[+T](val input: ParserInput,
                            var noDropBuffer: Boolean){
 
 
-  def setMsg(f: Lazy[String]): Unit = {
-    if (!isSuccess && lastFailureMsg == null) lastFailureMsg = f
-    shortParserMsg = f
+  def aggregateMsg(parsedMsg: List[Lazy[String]],
+                   startGroup: List[Lazy[String]]): Unit = {
+    aggregateMsg(parsedMsg, parsedMsg, startGroup)
   }
 
-  /**
-    * Special case of [[aggregateTerminal]] which ignores isSuccess status and only
-    * performs aggregation if the [[failureTerminalAggregate]] has not already changed
-    * from when it was recorded as `startAggregate`. This allows any failures
-    * aggregated by the child parsers to take priority if present, but if not
-    * present then the outer less-specific failure can then be aggregated
-    */
-  def aggregateTerminalPostBacktrack(startAggregate: Int, f: Lazy[String]): Unit = {
-    // We do not check for isSuccess status here, because after backtracking
-    // isSuccess could well have been reset to `true` but we still want to
-    // perform aggregation
-    if (index == traceIndex && startAggregate > index && startAggregate != Int.MaxValue) {
-      failureTerminalAggregate ::= f
+  def aggregateMsg(msgToSet: List[Lazy[String]],
+                   parsedMsg: List[Lazy[String]],
+                   startGroup: List[Lazy[String]]): Unit = {
+    if (index == traceIndex && (!cut || isSuccess)) {
+      failureGroupAggregate = parsedMsg ::: startGroup
     }
-    shortParserMsg = f
+
+    setMsg(msgToSet:_*)
   }
 
-  def aggregateTerminal(f: Lazy[String]): Unit = {
-    if (!isSuccess){
-      if (index == traceIndex) failureTerminalAggregate ::= f
-      earliestAggregate = index
-      if (lastFailureMsg == null) lastFailureMsg = f
-    }
-    shortParserMsg = f
+  def setMsg(f: Lazy[String]*): Unit = {
+    if (!isSuccess && lastFailureMsg == null) lastFailureMsg = f.toList
+    shortParserMsg = f.toList
   }
 
   // Use telescoping methods rather than default arguments to try and minimize
@@ -164,14 +131,12 @@ final class ParsingRun[+T](val input: ParserInput,
   // generate huge methods, so anything we can do to reduce the size of the
   // generated code helps avoid bytecode size blowup
   def freshSuccess[V](value: V): ParsingRun[V] = {
-    earliestAggregate = Int.MaxValue
     isSuccess = true
     successValue = value
     this.asInstanceOf[ParsingRun[V]]
   }
 
   def freshSuccess[V](value: V, index: Int): ParsingRun[V] = {
-    earliestAggregate = Int.MaxValue
     isSuccess = true
     successValue = value
 
@@ -180,7 +145,6 @@ final class ParsingRun[+T](val input: ParserInput,
   }
 
   def freshSuccess[V](value: V, cut: Boolean): ParsingRun[V] = {
-    earliestAggregate = Int.MaxValue
     isSuccess = true
     successValue = value
     this.cut = cut
@@ -188,7 +152,6 @@ final class ParsingRun[+T](val input: ParserInput,
   }
 
   def freshSuccess[V](value: V, index: Int, cut: Boolean): ParsingRun[V] = {
-    earliestAggregate = Int.MaxValue
     isSuccess = true
     successValue = value
     this.index = index
@@ -198,7 +161,6 @@ final class ParsingRun[+T](val input: ParserInput,
 
   def freshFailure(): ParsingRun[Nothing] = {
     lastFailureMsg = null
-    earliestAggregate = index
     failureStack = Nil
     isSuccess = false
     this.asInstanceOf[ParsingRun[Nothing]]
@@ -206,7 +168,6 @@ final class ParsingRun[+T](val input: ParserInput,
 
   def freshFailure(startPos: Int): ParsingRun[Nothing] = {
     lastFailureMsg = null
-    earliestAggregate = index
     failureStack = Nil
     isSuccess = false
     index = startPos

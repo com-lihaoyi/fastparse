@@ -12,8 +12,8 @@ trait Xml {
   def WS[_: P]: P0
   def Block[_: P]: P0
   def Patterns[_: P]: P[Unit]
-  def XmlExpr[_: P] = P( SimpleTrace("XmlExpr")(WL ~ Xml.XmlContent.rep(min = 1, sep = WL.?)) )
-  def XmlPattern[_: P] = P( SimpleTrace("XmlPattern")(WL ~ Xml.ElemPattern) )
+  def XmlExpr[_: P] = P WL ~ Xml.XmlContent.rep(min = 1, sep = WL.?) )
+  def XmlPattern[_: P] = P( WL ~ Xml.ElemPattern )
 
   private[this] object Xml {
     def Element[_: P] = P( TagHeader ~/ ("/>" | ">" ~/ Content ~/ ETag ) )
