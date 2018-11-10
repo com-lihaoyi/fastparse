@@ -17,9 +17,9 @@ object TestUtil {
 
         val trace = f.extra.trace
         val index = f.index
-        val parsedExpected = trace.combinedAggregateString
+        val parsedExpected = trace.terminalAggregateString
         val parsedFound = input.slice(f.index, f.index + 10)
-        val stack = trace.longAggregateMsg
+        val stack = trace.longTerminalsMsg
 
         assert(
         { implicitly(input)

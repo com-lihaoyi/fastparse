@@ -35,14 +35,14 @@ object MathTests extends TestSuite{
       val Parsed.Failure(expected, failIndex, extra) = parse("1+1*", expr(_))
       assert(
         failIndex == 4,
-        extra.trace().longAggregateMsg == 
+        extra.trace().longTerminalsMsg ==
         """Expected expr:1:1 / addSub:1:1 / divMul:1:3 / factor:1:5 / ([0-9] | "("):1:5, found """""
       )
     }
     'fail - {
       def check(input: String, expectedTrace: String, expectedShortTrace: String) = {
         val failure = parse(input, expr(_)).asInstanceOf[Parsed.Failure]
-        val actualTrace = failure.trace().longAggregateMsg
+        val actualTrace = failure.trace().longTerminalsMsg
         val index = failure.index
         assert(expectedTrace.trim == actualTrace.trim)
 

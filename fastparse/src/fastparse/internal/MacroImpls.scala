@@ -28,7 +28,7 @@ object MacroImpls {
           else if (f.splice(ctx1.successValue.asInstanceOf[T])) ctx1.asInstanceOf[ParsingRun[T]]
           else ctx1.freshFailure().asInstanceOf[ParsingRun[T]]
 
-        if (ctx1.verboseFailures) ctx1.aggregateMsg(() => "filter")
+        if (ctx1.verboseFailures) ctx1.aggregateTerminal(() => "filter")
         res
       }
     }
@@ -80,7 +80,7 @@ object MacroImpls {
                 }else{
                   ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
                 }
-              if (ctx1.verboseFailures) ctx1.aggregateMsg(() => literalized.splice)
+              if (ctx1.verboseFailures) ctx1.aggregateTerminal(() => literalized.splice)
               res
             }
 
@@ -110,7 +110,7 @@ object MacroImpls {
                   ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
                 }
               if (ctx1.verboseFailures) {
-                ctx1.aggregateMsg(() => literalized.splice)
+                ctx1.aggregateTerminal(() => literalized.splice)
               }
               res
 
@@ -124,7 +124,7 @@ object MacroImpls {
             val res =
               if (Util.startsWith(ctx1.input, s1, ctx1.index)) ctx1.freshSuccess((), ctx1.index + s1.length)
               else ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
-            if (ctx1.verboseFailures) ctx1.aggregateMsg(() => Util.literalize(s1))
+            if (ctx1.verboseFailures) ctx1.aggregateTerminal(() => Util.literalize(s1))
             res
           }
         }
@@ -200,7 +200,7 @@ object MacroImpls {
         val oldCut = ctx5.cut
         ctx5.cut = false
         val startPos = ctx5.index
-
+        val startGroup = ctx5.failureGroupAggregate
         lhs0.splice
         val earliestAggregated = ctx5.earliestAggregate
         val lhsMsg = ctx5.shortParserMsg
@@ -210,8 +210,9 @@ object MacroImpls {
         }
         else if (ctx5.cut) ctx5.asInstanceOf[ParsingRun[V]]
         else {
+          if (ctx5.index == ctx5.traceIndex) ctx5.failureGroupAggregate = lhsMsg :: startGroup
           ctx5.index = startPos
-          ctx5.aggregateMsgPostBacktrack(earliestAggregated, ctx5.shortParserMsg)
+          ctx5.aggregateTerminalPostBacktrack(earliestAggregated, ctx5.shortParserMsg)
           ctx5.cut = false
           other.splice
           val rhsMsg = ctx5.shortParserMsg
@@ -342,7 +343,7 @@ object MacroImpls {
         val res =
           if ($output != -1) $ctx1.freshSuccess((), index = $output)
           else $ctx1.freshFailure()
-        if ($ctx1.verboseFailures) $ctx1.aggregateMsg(() => $bracketed)
+        if ($ctx1.verboseFailures) $ctx1.aggregateTerminal(() => $bracketed)
         res
       }
     """
@@ -408,7 +409,7 @@ object MacroImpls {
             case true => ctx1.freshSuccess((), index + 1)
             case false => ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
           }
-        if (ctx1.verboseFailures) ctx1.aggregateMsg(() => bracketed.splice)
+        if (ctx1.verboseFailures) ctx1.aggregateTerminal(() => bracketed.splice)
         res
       }
     }
@@ -513,7 +514,7 @@ object MacroImpls {
               ctx1.successValue,
               cut = ctx1.cut | progress
             ).asInstanceOf[ParsingRun[T]]
-          if (ctx1.verboseFailures) ctx1.aggregateMsg(() => msg() + "./")
+          if (ctx1.verboseFailures) ctx1.aggregateTerminal(() => msg() + "./")
           res
         }
       }
@@ -559,7 +560,7 @@ object MacroImpls {
             $ctx1.isSuccess = false
             $ctx1.asInstanceOf[fastparse.P[Unit]]
           }
-        if ($ctx1.verboseFailures) $ctx1.aggregateMsg(() => $bracketed)
+        if ($ctx1.verboseFailures) $ctx1.aggregateTerminal(() => $bracketed)
         res
       }
     """
@@ -593,6 +594,7 @@ object MacroImpls {
         optioner.splice match { case optioner1 =>
           val startPos = ctx1.index
           val startCut = ctx1.cut
+          val startGroup = ctx1.failureGroupAggregate
           ctx1.cut = false
           lhs0.splice
           val msg = ctx1.shortParserMsg
@@ -610,7 +612,10 @@ object MacroImpls {
               res
             }
 
-          if (ctx1.verboseFailures) ctx1.aggregateMsgPostBacktrack(earliestFailure, () => msg() + ".?")
+          if (ctx1.verboseFailures) {
+            if (ctx1.index == ctx1.traceIndex) ctx1.failureGroupAggregate = msg :: startGroup
+            ctx1.aggregateTerminalPostBacktrack(earliestFailure, () => msg() + ".?")
+          }
           res
         }
       }

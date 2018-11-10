@@ -139,7 +139,7 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule{
   )
 
   def scalaDocPluginClasspath = T{ Agg[PathRef]() }
-  def scalacOptions = T{ if (scalaVersion() == "2.12.7") Seq("-opt:l:method") else Nil }
+//  def scalacOptions = T{ if (scalaVersion() == "2.12.7") Seq("-opt:l:method") else Nil }
 
   def platformSegment: String
   def millSourcePath = super.millSourcePath / ammonite.ops.up
@@ -156,7 +156,7 @@ trait CommonTestModule extends ScalaModule with TestModule{
     ivy"com.lihaoyi::utest::0.6.6",
   )
 
-  def scalacOptions = T{ if (scalaVersion() == "2.12.7") Seq("-opt:l:method") else Nil }
+//  def scalacOptions = T{ if (scalaVersion() == "2.12.7") Seq("-opt:l:method") else Nil }
 
   def sources = T.sources(
     millSourcePath / "src",

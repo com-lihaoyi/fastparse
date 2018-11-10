@@ -36,10 +36,10 @@ import fastparse.internal.Instrument
   *                         it with tracing enabled.
   * @param traceIndex       The index we wish to trace if tracing is enabled, else
   *                         -1. Used to find failure messages to aggregate into
-  *                         `failureAggregate`
+  *                         `failureTerminalAggregate`
   * @param instrument       Callbacks that can be injected before/after every
   *                         `P(...)` parser.
-  * @param failureAggregate When tracing is enabled, this collects up all the
+  * @param failureTerminalAggregate When tracing is enabled, this collects up all the
   *                         upper-most failures that happen at [[traceIndex]]
   *                         (in [[Lazy]] wrappers) so they can be shown to the
   *                         user at end-of-parse as suggestions for what could
@@ -111,7 +111,8 @@ final class ParsingRun[+T](val input: ParserInput,
                            val traceIndex: Int,
                            val instrument: Instrument,
                            // Mutable vars below:
-                           var failureAggregate: List[Lazy[String]],
+                           var failureTerminalAggregate: List[Lazy[String]],
+                           var failureGroupAggregate: List[Lazy[String]],
                            var shortParserMsg: Lazy[String],
                            var lastFailureMsg: Lazy[String],
                            var failureStack: List[(String, Int)],
@@ -131,25 +132,25 @@ final class ParsingRun[+T](val input: ParserInput,
   }
 
   /**
-    * Special case of [[aggregateMsg]] which ignores isSuccess status and only
-    * performs aggregation if the [[failureAggregate]] has not already changed
+    * Special case of [[aggregateTerminal]] which ignores isSuccess status and only
+    * performs aggregation if the [[failureTerminalAggregate]] has not already changed
     * from when it was recorded as `startAggregate`. This allows any failures
     * aggregated by the child parsers to take priority if present, but if not
     * present then the outer less-specific failure can then be aggregated
     */
-  def aggregateMsgPostBacktrack(startAggregate: Int, f: Lazy[String]): Unit = {
+  def aggregateTerminalPostBacktrack(startAggregate: Int, f: Lazy[String]): Unit = {
     // We do not check for isSuccess status here, because after backtracking
     // isSuccess could well have been reset to `true` but we still want to
     // perform aggregation
     if (index == traceIndex && startAggregate > index && startAggregate != Int.MaxValue) {
-      failureAggregate ::= f
+      failureTerminalAggregate ::= f
     }
     shortParserMsg = f
   }
 
-  def aggregateMsg(f: Lazy[String]): Unit = {
+  def aggregateTerminal(f: Lazy[String]): Unit = {
     if (!isSuccess){
-      if (index == traceIndex) failureAggregate ::= f
+      if (index == traceIndex) failureTerminalAggregate ::= f
       earliestAggregate = index
       if (lastFailureMsg == null) lastFailureMsg = f
     }

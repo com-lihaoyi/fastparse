@@ -34,6 +34,7 @@ object MacroRepImpls{
     val originalCut = TermName(c.freshName("originalCut"))
     val parsedMsg = TermName(c.freshName("parsedMsg"))
     val startAggregate = TermName(c.freshName("startAggregate"))
+    val startGroup = TermName(c.freshName("startGroup"))
     val (endSnippet, aggregateSnippet) = min match{
       case None =>
         q"""
@@ -76,7 +77,7 @@ object MacroRepImpls{
                    $count: _root_.scala.Int,
                    $precut: _root_.scala.Boolean): _root_.fastparse.P[${c.weakTypeOf[V]}] = {
             $ctx1.cut = $precut
-
+            val $startGroup = $ctx1.failureGroupAggregate
             ${c.prefix}.parse0()
             val $startAggregate = $ctx1.earliestAggregate
             val $parsedMsg = $ctx1.shortParserMsg
@@ -85,7 +86,10 @@ object MacroRepImpls{
               val res =
                 if ($ctx1.cut) $ctx1.asInstanceOf[_root_.fastparse.P[${c.weakTypeOf[V]}]]
                 else $endSnippet
-              if ($ctx1.verboseFailures) $ctx1.aggregateMsgPostBacktrack($startAggregate, () => $parsedMsg() + ".rep" + $aggregateSnippet)
+              if ($ctx1.verboseFailures) {
+                if ($ctx1.index == $ctx1.traceIndex) $ctx1.failureGroupAggregate = $ctx1.shortParserMsg :: $startGroup
+                $ctx1.aggregateTerminalPostBacktrack($startAggregate, () => $parsedMsg() + ".rep" + $aggregateSnippet)
+              }
               res
             }else {
               val $beforeSepIndex = $ctx1.index
@@ -152,11 +156,9 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
     }
     @tailrec def rec(startIndex: Int, count: Int, precut: Boolean, preSep: Boolean): ParsingRun[V] = {
       ctx.cut = precut
-      if (count == 0 && actualMax == 0) ctx.freshSuccess(
-        repeater.result(acc),
-        startIndex
-      )
+      if (count == 0 && actualMax == 0) ctx.freshSuccess(repeater.result(acc), startIndex)
       else {
+        val startGroup = ctx.failureGroupAggregate
         parse0()
         val earliestAggregated = ctx.earliestAggregate
         val parseMsg = ctx.shortParserMsg
@@ -167,7 +169,8 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
             else end(startIndex, startIndex, count)
 
           if (ctx.verboseFailures && !preSep) {
-            ctx.aggregateMsgPostBacktrack(earliestAggregated, () => parseMsg() + ".repX" + (if(min == 0) "" else s"($min)"))
+            if (ctx.index == ctx.traceIndex) ctx.failureGroupAggregate = ctx.shortParserMsg :: startGroup
+            ctx.aggregateTerminalPostBacktrack(earliestAggregated, () => parseMsg() + ".repX" + (if(min == 0) "" else s"($min)"))
           }
           res
         }else {
@@ -191,7 +194,10 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
                 val res =
                   if (ctx.cut) ctx.augmentFailure(beforeSepIndex, originalCut)
                   else end(beforeSepIndex, beforeSepIndex, nextCount)
-                if (ctx.verboseFailures) ctx.setMsg(() => parseMsg() + ".repX" + (if(min == 0) "" else s"($min)"))
+                if (ctx.verboseFailures) {
+                  if (ctx.index == ctx.traceIndex) ctx.failureGroupAggregate ::= ctx.shortParserMsg
+                  ctx.setMsg(() => parseMsg() + ".repX" + (if(min == 0) "" else s"($min)"))
+                }
                 res
               }
             }
@@ -213,6 +219,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
     }
     @tailrec def rec(startIndex: Int, count: Int, precut: Boolean, preSep: Boolean): ParsingRun[V] = {
       ctx.cut = precut
+      val startGroup = ctx.failureGroupAggregate
       parse0()
       val earliestAggregated = ctx.earliestAggregate
       val parsedMsg = ctx.shortParserMsg
@@ -222,7 +229,8 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
           if (ctx.cut) ctx.asInstanceOf[ParsingRun[V]]
           else end(startIndex, startIndex, count)
         if (ctx.verboseFailures && !preSep) {
-          ctx.aggregateMsgPostBacktrack(earliestAggregated, () => parsedMsg() + s".repX($min)")
+          if (ctx.index == ctx.traceIndex) ctx.failureGroupAggregate = ctx.shortParserMsg :: startGroup
+          ctx.aggregateTerminalPostBacktrack(earliestAggregated, () => parsedMsg() + s".repX($min)")
         }
         res
       }else {
@@ -239,7 +247,10 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
             val res =
               if (ctx.cut) ctx.augmentFailure(beforeSepIndex, ctx.cut | originalCut)
               else end(beforeSepIndex, beforeSepIndex, nextCount)
-            if (ctx.verboseFailures) ctx.setMsg(() => parsedMsg() + s".repX($min)")
+            if (ctx.verboseFailures) {
+              if (ctx.index == ctx.traceIndex) ctx.failureGroupAggregate ::= ctx.shortParserMsg
+              ctx.setMsg(() => parsedMsg() + s".repX($min)")
+            }
             res
           }
         }
@@ -267,6 +278,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
       ctx.cut = precut
       if (count == 0 && actualMax == 0) ctx.freshSuccess(repeater.result(acc), startIndex)
       else {
+        val startGroup = ctx.failureGroupAggregate
         parse0()
         val earliestAggregated = ctx.earliestAggregate
         val parsedMsg = ctx.shortParserMsg
@@ -276,7 +288,8 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
             if (ctx.cut) ctx.asInstanceOf[ParsingRun[V]]
             else end(startIndex, startIndex, count)
           if (ctx.verboseFailures && !preSep) {
-            ctx.aggregateMsgPostBacktrack(earliestAggregated, () => parsedMsg() + ".rep" + (if(min == 0) "" else s"($min)"))
+            if (ctx.index == ctx.traceIndex) ctx.failureGroupAggregate = ctx.shortParserMsg :: startGroup
+            ctx.aggregateTerminalPostBacktrack(earliestAggregated, () => parsedMsg() + ".rep" + (if(min == 0) "" else s"($min)"))
           }
           res
         } else {
@@ -306,7 +319,10 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
                 val res =
                   if (ctx.cut) ctx.augmentFailure(beforeSepIndex, originalCut)
                   else end(beforeSepIndex, beforeSepIndex, nextCount)
-                if (ctx.verboseFailures) ctx.setMsg(() => parsedMsg() + ".rep" + (if(min == 0) "" else s"($min)"))
+                if (ctx.verboseFailures) {
+                  if (ctx.index == ctx.traceIndex) ctx.failureGroupAggregate = ctx.shortParserMsg :: startGroup
+                  ctx.setMsg(() => parsedMsg() + ".rep" + (if(min == 0) "" else s"($min)"))
+                }
                 res
               }
             }
@@ -331,6 +347,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
     @tailrec def rec(startIndex: Int, count: Int, precut: Boolean, preSep: Boolean): ParsingRun[V] = {
       ctx.cut = precut
       val earliestAggregated = ctx.earliestAggregate
+      val startGroup = ctx.failureGroupAggregate
       parse0()
       val parsedMsg = ctx.shortParserMsg
       originalCut |= ctx.cut
@@ -339,7 +356,8 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
           if (ctx.cut) ctx.asInstanceOf[ParsingRun[V]]
           else end(startIndex, startIndex, count)
         if (ctx.verboseFailures && !preSep) {
-          ctx.aggregateMsgPostBacktrack(earliestAggregated, () => parsedMsg() + s".rep($min)")
+          if (ctx.index == ctx.traceIndex) ctx.failureGroupAggregate = ctx.shortParserMsg :: startGroup
+          ctx.aggregateTerminalPostBacktrack(earliestAggregated, () => parsedMsg() + s".rep($min)")
         }
         res
       }else{
@@ -372,7 +390,10 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
             val res =
               if (ctx.cut) ctx.augmentFailure(beforeSepIndex, ctx.cut | originalCut)
               else end(beforeSepIndex, beforeSepIndex, nextCount)
-            if (ctx.verboseFailures) ctx.setMsg(() => parsedMsg() + s".rep($min)")
+            if (ctx.verboseFailures) {
+              if (ctx.index == ctx.traceIndex) ctx.failureGroupAggregate = ctx.shortParserMsg :: startGroup
+              ctx.setMsg(() => parsedMsg() + s".rep($min)")
+            }
             res
           }
         }
