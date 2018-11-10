@@ -6,14 +6,20 @@ import TestUtil._
 object FailureTests extends TestSuite{
   val tests = Tests {
 
-    * - checkNeg("package package", """(id | "case" | "object")""", "package")
+    * - checkNeg(
+      "package package",
+      aggregate = """(Id | PkgBlock | `case` | PkgObj)""",
+      terminals = """("`" | var-id | chars-while(OpCharNotSlash, 1) | "/" | operator | plain-id | id | "case" | "object")""",
+      found = "package"
+    )
 
     * - checkNeg(
       """package torimatomeru
         |import a
         |import import
       """.stripMargin,
-      expected = """("this" | "super" | id)""",
+      aggregate = """(ThisPath | IdPath)""",
+      terminals = """("this" | "super" | "`" | var-id | chars-while(OpCharNotSlash, 1) | "/" | operator | plain-id | id)""",
       found = "import"
     )
 
@@ -27,7 +33,8 @@ object FailureTests extends TestSuite{
         |  } yield x
         |}
       """.stripMargin,
-      expected = """(id | "<-" | "=")""",
+      aggregate = """(Id | Generator | Assign)""",
+      terminals = """(id | "<-" | "=")""",
       found = "} yield x"
     )
     * - checkNeg(
@@ -35,7 +42,8 @@ object FailureTests extends TestSuite{
         |  type T = (A B)
         |}
       """.stripMargin,
-      expected = """("(" | literal | "this" | "super" | id | "_" | "{")""",
+      aggregate = """""",
+      terminals = """("(" | literal | "this" | "super" | id | "_" | "{")""",
       found = ")"
     )
     * - checkNeg(
@@ -44,12 +52,14 @@ object FailureTests extends TestSuite{
         |  if (n == 1) c + 1 else
         |}
       """.stripMargin,
-      expected = """Expr""",
+      aggregate = """""",
+      terminals = """Expr""",
       found = ""
     )
     * - checkNeg(
       "import scala.util.{Failure, Success + 1}",
-      expected = """("=>" | "," | "}")""",
+      aggregate = """""",
+      terminals = """("=>" | "," | "}")""",
       found = "+ 1}"
     )
     * - checkNeg(
@@ -60,7 +70,8 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      expected = """("(" | ":" | "=" | "{" | ";" | "}")""",
+      aggregate = """""",
+      terminals = """("(" | ":" | "=" | "{" | ";" | "}")""",
       found = "](input: S"
     )
     * - checkNeg(
@@ -70,7 +81,8 @@ object FailureTests extends TestSuite{
         |  throw 1
         |}
       """.stripMargin,
-      expected = """("." | "[" | "(" | "{" | "_" | id | "=>" | "=" | "match" | ":" | "," | ")")""",
+      aggregate = """""",
+      terminals = """("." | "[" | "(" | "{" | "_" | id | "=>" | "=" | "match" | ":" | "," | ")")""",
       found ="}"
     )
     * - checkNeg(
@@ -81,7 +93,8 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      expected = """("=>" | ":" | "." | "[" | "(" | "{" | "_" | id | "=" | "match" | ";" | "}")""",
+      aggregate = """""",
+      terminals = """("=>" | ":" | "." | "[" | "(" | "{" | "_" | id | "=" | "match" | ";" | "}")""",
       found ="1\n"
     )
     * - checkNeg(
@@ -94,7 +107,8 @@ object FailureTests extends TestSuite{
         |  .
         |}
       """.stripMargin,
-      expected = """("this" | id)""",
+      aggregate = """""",
+      terminals = """("this" | id)""",
       found = "."
     )
     * - checkNeg(
@@ -103,7 +117,8 @@ object FailureTests extends TestSuite{
         | filename.asInstanceOf 10
         |}
       """.stripMargin,
-      expected = """("." | "[" | "(" | "{" | "_" | id | "=>" | "=" | "match" | ":" | ";" | "}")""",
+      aggregate = """""",
+      terminals = """("." | "[" | "(" | "{" | "_" | id | "=>" | "=" | "match" | ":" | ";" | "}")""",
       found = "10"
     )
     * - checkNeg(
@@ -114,7 +129,8 @@ object FailureTests extends TestSuite{
         |  1
         |}
       """.stripMargin,
-      expected = """("extends" | "<:" | "{" | ";" | end-of-input)""",
+      aggregate = """""",
+      terminals = """("extends" | "<:" | "{" | ";" | end-of-input)""",
       found = "o w{"
     )
     * - checkNeg(
@@ -123,7 +139,8 @@ object FailureTests extends TestSuite{
         | private[this] applyMacroFull = 1
         |}
       """.stripMargin,
-      expected = """(modifier | definition)""",
+      aggregate = """""",
+      terminals = """(modifier | definition)""",
       found = "applyM"
     )
     * - checkNeg(
@@ -137,7 +154,8 @@ object FailureTests extends TestSuite{
         |                      }
         |}
       """.stripMargin,
-      expected = """("=>" | "(" | literal | "this" | "super" | id | "_" | "{")""",
+      aggregate = """""",
+      terminals = """("=>" | "(" | literal | "this" | "super" | id | "_" | "{")""",
       found = "= {"
     )
     * - checkNeg(
@@ -148,7 +166,8 @@ object FailureTests extends TestSuite{
         |  1
         |}
       """.stripMargin,
-      expected = """id""",
+      aggregate = """""",
+      terminals = """id""",
       found = "1 extends"
     )
     * - checkNeg(
@@ -160,7 +179,8 @@ object FailureTests extends TestSuite{
         |import org.parboiled2 _
         |
       """.stripMargin,
-      expected = """("." | "," | ";" | end-of-input)""",
+      aggregate = """""",
+      terminals = """("." | "," | ";" | end-of-input)""",
       found = "_"
     )
     * - checkNeg(
@@ -171,7 +191,8 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      expected = """SimplePattern""",
+      aggregate = """""",
+      terminals = """SimplePattern""",
       found = "=> 0"
     )
     * - checkNeg(
@@ -188,7 +209,8 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      expected = """ "{" """,
+      aggregate = """""",
+      terminals = """ "{" """,
       found = "case 0 =>"
     )
     * - checkNeg(
@@ -198,7 +220,8 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      expected = """("." | "[" | "(" | "{" | "_" | id | "=>" | "=" | "match" | ":" | ";" | "}")""",
+      aggregate = """""",
+      terminals = """("." | "[" | "(" | "{" | "_" | id | "=>" | "=" | "match" | ":" | ";" | "}")""",
       found = ")"
     )
     * - checkNeg(
@@ -207,7 +230,8 @@ object FailureTests extends TestSuite{
         |   A(A(A(A(A(A(A(A(A(A(A(A(A(A(A(A()))))))))))))))
         |}
       """.stripMargin,
-      expected = """("." | "[" | "(" | "{" | "_" | id | "=>" | "=" | "match" | ":" | "," | ")")""",
+      aggregate = """""",
+      terminals = """("." | "[" | "(" | "{" | "_" | id | "=>" | "=" | "match" | ":" | "," | ")")""",
       found = "}"
     )
     * - checkNeg(
@@ -216,7 +240,8 @@ object FailureTests extends TestSuite{
         |  a.b =
         |}
       """.stripMargin,
-      expected = "Expr",
+      aggregate = """""",
+      terminals = "Expr",
       found = "}"
     )
     * - checkNeg(
@@ -226,7 +251,8 @@ object FailureTests extends TestSuite{
         |  d = 1
         |
       """.stripMargin,
-      expected = """("." | "[" | "=>" | "=" | "match" | ":" | ";" | "}")""",
+      aggregate = """""",
+      terminals = """("." | "[" | "=>" | "=" | "match" | ":" | ";" | "}")""",
       found = ""
     )
     * - checkNeg(
@@ -235,7 +261,8 @@ object FailureTests extends TestSuite{
         |package scala.scalajs.cli
         |
       """.stripMargin,
-      expected = """ "*/" """,
+      aggregate = """""",
+      terminals = """ "*/" """,
       found = ""
     )
     * - checkNeg(
@@ -244,7 +271,8 @@ object FailureTests extends TestSuite{
         |package scala.scalajs.cli
         |
       """.stripMargin,
-      expected = """ "*/" """,
+      aggregate = """""",
+      terminals = """ "*/" """,
       found = ""
     )
     * - checkNeg(
@@ -256,7 +284,8 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      expected = """("yield" | Expr)""",
+      aggregate = """""",
+      terminals = """("yield" | Expr)""",
       found = "}"
     )
     * - checkNeg(
@@ -265,7 +294,8 @@ object FailureTests extends TestSuite{
         |  val jarFile = catch { case _: F => G }
         |}
       """.stripMargin,
-      expected = "Expr",
+      aggregate = """""",
+      terminals = "Expr",
       found = "catch {"
     )
     * - checkNeg(
@@ -274,7 +304,8 @@ object FailureTests extends TestSuite{
         |  func{ case _: F = fail }
         |}
       """.stripMargin,
-      expected = """("." | "[" | "#" | "@" | "with" | "{" | "|" | "if" | "=>")""",
+      aggregate = """""",
+      terminals = """("." | "[" | "#" | "@" | "with" | "{" | "|" | "if" | "=>")""",
       found = "= fail"
     )
     * - checkNeg(
@@ -285,7 +316,8 @@ object FailureTests extends TestSuite{
         |    val c = f
         |}
       """.stripMargin,
-      expected = """SimplePattern""",
+      aggregate = """""",
+      terminals = """SimplePattern""",
       found = "val b = e"
     )
     * - checkNeg(
@@ -296,7 +328,8 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      expected = """(":" | "@" | "." | "[" | "(" | id | "|" | "," | ")")""",
+      aggregate = """""",
+      terminals = """(":" | "@" | "." | "[" | "(" | id | "|" | "," | ")")""",
       found = "=> z"
     )
     * - checkNeg(
@@ -308,7 +341,8 @@ object FailureTests extends TestSuite{
         |  1
         |}
       """.stripMargin,
-      expected = """("=>" | "(" | literal | "this" | "super" | id | "_" | "{")""",
+      aggregate = """""",
+      terminals = """("=>" | "(" | literal | "this" | "super" | id | "_" | "{")""",
       found = "val c"
     )
     * - checkNeg(
@@ -317,7 +351,8 @@ object FailureTests extends TestSuite{
         |  def run(def apply() {}) {}
         |}
       """.stripMargin,
-      expected = """("implicit" | "@" | id | ")")""",
+      aggregate = """""",
+      terminals = """("implicit" | "@" | id | ")")""",
       found = "def apply"
     )
     * - checkNeg(
@@ -326,7 +361,8 @@ object FailureTests extends TestSuite{
         |  a =:= .c
         |}
       """.stripMargin,
-      expected = """("[" | [\\-+!~] | SimpleExpr | "=>" | "=" | "match" | ":" | ";" | "}")""",
+      aggregate = """""",
+      terminals = """("[" | [\\-+!~] | SimpleExpr | "=>" | "=" | "match" | ":" | ";" | "}")""",
       found = ".c"
     )
     * - checkNeg(
@@ -337,7 +373,8 @@ object FailureTests extends TestSuite{
         |  )
         |}
       """.stripMargin,
-      expected = """("_" | "=>" | "(" | literal | "this" | "super" | id | "{" | "@")""",
+      aggregate = """""",
+      terminals = """("_" | "=>" | "(" | literal | "this" | "super" | id | "{" | "@")""",
       found = ")\n}"
     )
     * - checkNeg(
@@ -346,7 +383,8 @@ object FailureTests extends TestSuite{
         |  a[)
         |}
       """.stripMargin,
-      expected = """("=>" | "(" | literal | "this" | "super" | id | "_" | "{" | "," | "]")""",
+      aggregate = """""",
+      terminals = """("=>" | "(" | literal | "this" | "super" | id | "_" | "{" | "," | "]")""",
       found = ")"
     )
     * - checkNeg(
@@ -355,7 +393,8 @@ object FailureTests extends TestSuite{
         |  a[b)
         |}
       """.stripMargin,
-      expected = """("\"\"\"" | "\"" | "." | "[" | "#" | "@" | "with" | "{" | "*" | id | "=>" | "forSome" | ">:" | "<:" | "," | "]")""",
+      aggregate = """""",
+      terminals = """("\"\"\"" | "\"" | "." | "[" | "#" | "@" | "with" | "{" | "*" | id | "=>" | "forSome" | ">:" | "<:" | "," | "]")""",
       found = ")"
     )
     * - checkNeg(
@@ -366,7 +405,8 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      expected = """ "case" """,
+      aggregate = """""",
+      terminals = """ "case" """,
       found = "stats :+ e"
     )
 
@@ -376,7 +416,8 @@ object FailureTests extends TestSuite{
         |  val trueA = 1
         |}
       """.stripMargin,
-      expected = """ ("extends" | "<:" | "{" | ";" | "package" | "import" | "@" | modifier | "trait" | "case" | "class" | "object" | end-of-input)""",
+      aggregate = """""",
+      terminals = """ ("extends" | "<:" | "{" | ";" | "package" | "import" | "@" | modifier | "trait" | "case" | "class" | "object" | end-of-input)""",
       found = "val trueA"
     )
     * - checkNeg(
@@ -385,7 +426,8 @@ object FailureTests extends TestSuite{
         |  val null null cow = 1
         |}
       """.stripMargin,
-      expected = """(id | "," | ":" | "=" | ";" | "}")""",
+      aggregate = """""",
+      terminals = """(id | "," | ":" | "=" | ";" | "}")""",
       found = "null cow"
     )
     * - checkNeg(
@@ -394,7 +436,8 @@ object FailureTests extends TestSuite{
         |  val omg_+_+ = 1
         |}
       """.stripMargin,
-      expected = """("@" | "\"\"\"" | "\"" | "." | "[" | "(" | id | "," | ":" | "=" | ";" | "}")""",
+      aggregate = """""",
+      terminals = """("@" | "\"\"\"" | "\"" | "." | "[" | "(" | id | "," | ":" | "=" | ";" | "}")""",
       found = "_+ = 1"
     )
     * - checkNeg(
@@ -404,7 +447,8 @@ object FailureTests extends TestSuite{
         |  var = 2
         |}
       """.stripMargin,
-      expected = """(id | "_" | SimplePattern | var-id)""",
+      aggregate = """""",
+      terminals = """(id | "_" | SimplePattern | var-id)""",
       found = "= 2"
     )
     * - checkNeg(
@@ -415,7 +459,8 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      expected = """SimplePattern""",
+      aggregate = """""",
+      terminals = """SimplePattern""",
       found = "=> 1"
     )
     * - checkNeg(
@@ -426,7 +471,8 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      expected = """("@" | "." | "[" | "(" | id | "|" | "if" | "=>")""",
+      aggregate = """""",
+      terminals = """("@" | "." | "[" | "(" | id | "|" | "if" | "=>")""",
       found = "case"
     )
     * - checkNeg(
@@ -434,7 +480,8 @@ object FailureTests extends TestSuite{
         |  a!.b
         |}
       """.stripMargin,
-      expected = """("[" | [\\-+!~] | SimpleExpr | "=>" | "=" | "match" | ":" | ";" | "}")""",
+      aggregate = """""",
+      terminals = """("[" | [\\-+!~] | SimpleExpr | "=>" | "=" | "match" | ":" | ";" | "}")""",
       found = ".b"
     )
     * - checkNeg(
@@ -444,7 +491,8 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      expected = """("(" | "this" | id | "_" | Expr | "," | ")")""",
+      aggregate = """""",
+      terminals = """("(" | "this" | id | "_" | Expr | "," | ")")""",
       found = "=> }"
     )
     * - checkNeg(
@@ -452,7 +500,8 @@ object FailureTests extends TestSuite{
         |class Parser([
         |
       """.stripMargin,
-      expected = """("implicit" | "@" | modifier | "val" | "var" | id | "," | ")")""",
+      aggregate = """""",
+      terminals = """("implicit" | "@" | modifier | "val" | "var" | id | "," | ")")""",
       found = "["
     )
     * - checkNeg(
@@ -461,7 +510,8 @@ object FailureTests extends TestSuite{
         | @mog
         |}
       """.stripMargin,
-      expected = """("." | "[" | "#" | "(" | "@" | modifier | definition)""",
+      aggregate = """""",
+      terminals = """("." | "[" | "#" | "(" | "@" | modifier | definition)""",
       found = "}"
     )
     * - checkNeg(
@@ -469,7 +519,8 @@ object FailureTests extends TestSuite{
         |package omg
         |;
       """.stripMargin,
-      expected = """("." | "{")""",
+      aggregate = """""",
+      terminals = """("." | "{")""",
       found = ";"
     )
 
@@ -478,7 +529,8 @@ object FailureTests extends TestSuite{
         |  { a: L = }
         |}
       """.stripMargin,
-      expected = """("." | "[" | "#" | "@" | "with" | "{" | "*" | id | "=>" | "(" | "this" | "_" | "import" | local-modifier | definition | Expr | ";" | "}")""",
+      aggregate = """""",
+      terminals = """("." | "[" | "#" | "@" | "with" | "{" | "*" | id | "=>" | "(" | "this" | "_" | "import" | local-modifier | definition | Expr | ";" | "}")""",
       found = "= }"
     )
       * - checkNeg(
@@ -487,7 +539,8 @@ object FailureTests extends TestSuite{
           |}
           |
         """.stripMargin,
-        expected = """("this" | id)""",
+        aggregate = """""",
+      terminals = """("this" | id)""",
         found = "()"
       )
     * - checkNeg(
@@ -496,7 +549,8 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      expected = """(!`super` | "this" ~ !LetterDigitDollarUnderscore | id)""",
+      aggregate = """""",
+      terminals = """(!`super` | "this" ~ !LetterDigitDollarUnderscore | id)""",
       found = "this"
     )
     * - checkNeg(
@@ -505,7 +559,8 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      expected = """("this" | id)""",
+      aggregate = """""",
+      terminals = """("this" | id)""",
       found = "()"
     )
       * - checkNeg(
@@ -513,7 +568,8 @@ object FailureTests extends TestSuite{
           |  private O
           |}
         """.stripMargin,
-        expected = """("[" | modifier | definition)""",
+        aggregate = """""",
+      terminals = """("[" | modifier | definition)""",
         found = "O\n"
       )
       * - checkNeg(
@@ -523,7 +579,8 @@ object FailureTests extends TestSuite{
           |    false  1
           |}
         """.stripMargin,
-        expected = """ "(" """,
+        aggregate = """""",
+      terminals = """ "(" """,
         found = "eqeq"
       )
       * - checkNeg(
@@ -536,7 +593,8 @@ object FailureTests extends TestSuite{
           |  } yield x
           |}
         """.stripMargin,
-        expected = """(":" | "@" | "." | "[" | "(" | id | "|" | "," | ")")""",
+        aggregate = """""",
+      terminals = """(":" | "@" | "." | "[" | "(" | id | "|" | "," | ")")""",
         found = "=> x)"
       )
     * - checkNeg(
@@ -548,7 +606,8 @@ object FailureTests extends TestSuite{
         |  } yield x
         |}
       """.stripMargin,
-      expected = """(id | "<-" | "=")""",
+      aggregate = """""",
+      terminals = """(id | "<-" | "=")""",
       found = "} yield"
     )
     * - checkNeg(
@@ -560,7 +619,8 @@ object FailureTests extends TestSuite{
         |  } yield x
         |}
       """.stripMargin,
-      expected = """("." | "[" | "=>" | "=" | "match" | ":" | "if" | ";" | "val" | "_" | "`" | var-id | id | SimplePattern | "}")""",
+      aggregate = """""",
+      terminals = """("." | "[" | "=>" | "=" | "match" | ":" | "if" | ";" | "val" | "_" | "`" | var-id | id | SimplePattern | "}")""",
       found = "{\n"
     )
       * - checkNeg(
@@ -574,7 +634,8 @@ object FailureTests extends TestSuite{
           |  } yield
           |}
         """.stripMargin,
-        expected = "Expr",
+        aggregate = """""",
+      terminals = "Expr",
         found = "}"
       )
       * - checkNeg(
@@ -584,7 +645,8 @@ object FailureTests extends TestSuite{
           |}
           |
         """.stripMargin,
-        expected = """("[" | "#" | "@" | "with" | "{" | "*" | id | "=>" | "forSome" | ">:" | "<:" | literal | "]")""",
+        aggregate = """""",
+      terminals = """("[" | "#" | "@" | "with" | "{" | "*" | id | "=>" | "forSome" | ">:" | "<:" | literal | "]")""",
         found = ", ]"
       )
       * - checkNeg(
@@ -594,7 +656,8 @@ object FailureTests extends TestSuite{
           |}
           |
         """.stripMargin,
-        expected = """("macro" | Expr)""",
+        aggregate = """""",
+      terminals = """("macro" | Expr)""",
         found = ")\n"
 
       )
@@ -606,7 +669,8 @@ object FailureTests extends TestSuite{
           |  }
           |}
         """.stripMargin,
-        expected = """("." | "[" | "=>" | "=" | "match" | ":" | ";" | "(" | "this" | id | "_" | "import" | "@" | local-modifier | definition | Expr | "}")""",
+        aggregate = """""",
+      terminals = """("." | "[" | "=>" | "=" | "match" | ":" | ";" | "(" | "this" | id | "_" | "import" | "@" | local-modifier | definition | Expr | "}")""",
         found = "case for"
       )
       * - checkNeg(
@@ -615,7 +679,8 @@ object FailureTests extends TestSuite{
           |}
           |
         """.stripMargin,
-        expected = """([btnfr'\\\\\"]] | [0-9] | "u")""",
+        aggregate = """""",
+      terminals = """([btnfr'\\\\\"]] | [0-9] | "u")""",
         found = "q"
       )
       * - checkNeg(
@@ -626,7 +691,8 @@ object FailureTests extends TestSuite{
           |}
           |
         """.stripMargin,
-        expected = """(chars-while(1) | "\\" | ![\n\"] | "\"")""",
+        aggregate = """""",
+      terminals = """(chars-while(1) | "\\" | ![\n\"] | "\"")""",
         found = "\n"
       )
       val tq = "\"\"\""
@@ -639,7 +705,8 @@ object FailureTests extends TestSuite{
           |}
           |
         """.stripMargin,
-        expected = """(chars-while(1) | "\"" | [\\\\$\n] | "\"\"\"")""",
+        aggregate = """""",
+      terminals = """(chars-while(1) | "\"" | [\\\\$\n] | "\"\"\"")""",
         found = ""
       )
       * - checkNeg(
@@ -649,7 +716,8 @@ object FailureTests extends TestSuite{
           |}
           |
         """.stripMargin,
-        expected = """("\\" | Char | plain-id | AlphabetKeywords | SymbolicKeywords)""",
+        aggregate = """""",
+      terminals = """("\\" | Char | plain-id | AlphabetKeywords | SymbolicKeywords)""",
         found = "'\n"
       )
 
@@ -661,7 +729,8 @@ object FailureTests extends TestSuite{
           |}
           |
         """.stripMargin,
-        expected = """([0-9] | id)""",
+        aggregate = """""",
+      terminals = """([0-9] | id)""",
         found = ")"
       )
       * - checkNeg(
@@ -670,7 +739,8 @@ object FailureTests extends TestSuite{
            |  1..toString
            |}
         """.stripMargin,
-        expected = """([0-9] | id)""",
+        aggregate = """""",
+      terminals = """([0-9] | id)""",
         found = ".toString"
       )
       * - checkNeg(
@@ -679,7 +749,8 @@ object FailureTests extends TestSuite{
            |  val x, = 1
            |}
         """.stripMargin,
-        expected = """(id | "_" | SimplePattern | var-id)""",
+        aggregate = """""",
+      terminals = """(id | "_" | SimplePattern | var-id)""",
         found = "= 1"
       )
     * - checkNeg(
@@ -688,77 +759,88 @@ object FailureTests extends TestSuite{
          |  val (x,) = 1
          |}
         """.stripMargin,
-      expected = """(":" | "@" | "\"\"\"" | "\"" | "." | "[" | "(" | id | "|" | SimplePattern | ")")""",
+      aggregate = """""",
+      terminals = """(":" | "@" | "\"\"\"" | "\"" | "." | "[" | "(" | id | "|" | SimplePattern | ")")""",
       found = ",)"
     )
     * - checkNeg(
       s"""
          |object X{ val (_:) = 1 }
         """.stripMargin,
-      expected = """("(" | literal | "this" | "super" | id | "_" | "{")""",
+      aggregate = """""",
+      terminals = """("(" | literal | "this" | "super" | id | "_" | "{")""",
       found = ") = 1"
     )
     * - checkNeg(
       s"""
          |import x.{y=>}
         """.stripMargin,
-      expected = """(id | "_")""",
+      aggregate = """""",
+      terminals = """(id | "_")""",
       found = "}"
     )
     * - checkNeg(
       s"""
          |import x.y,
         """.stripMargin,
-      expected = """("this" | "super" | id)""",
+      aggregate = """""",
+      terminals = """("this" | "super" | id)""",
       found = ""
     )
     * - checkNeg(
       s"""
          |object X{type T = A with}
         """.stripMargin,
-      expected = """("(" | literal | "this" | "super" | id | "_")""",
+      aggregate = """""",
+      terminals = """("(" | literal | "this" | "super" | id | "_")""",
       found = "}"
     )
     * - checkNeg(
       s"""
          |object X{def f(x: Int, ) = 1}
         """.stripMargin,
-      expected = """("\"\"\"" | "\"" | "." | "[" | "#" | "@" | "with" | "{" | "*" | id | "=>" | "forSome" | ">:" | "<:" | "=" | ")")""",
+      aggregate = """""",
+      terminals = """("\"\"\"" | "\"" | "." | "[" | "#" | "@" | "with" | "{" | "*" | id | "=>" | "forSome" | ">:" | "<:" | "=" | ")")""",
       found = ", )"
     )
     * - checkNeg(
       s"""
          |object X{val x = (1, 2,)}
         """.stripMargin,
-      expected = """("." | [Ee] | [fFdD] | "L" | "l" | "[" | "(" | "{" | "_" | id | "=>" | "=" | "match" | ":" | Expr | ")")""",
+      aggregate = """""",
+      terminals = """("." | [Ee] | [fFdD] | "L" | "l" | "[" | "(" | "{" | "_" | id | "=>" | "=" | "match" | ":" | Expr | ")")""",
       found = ",)"
     )
     * - checkNeg(
       s"""
          |object X{f[A,]}
         """.stripMargin,
-      expected = """("\"\"\"" | "\"" | "." | "[" | "#" | "@" | "with" | "{" | "*" | id | "=>" | "forSome" | ">:" | "<:" | literal | "]")""",
+      aggregate = """""",
+      terminals = """("\"\"\"" | "\"" | "." | "[" | "#" | "@" | "with" | "{" | "*" | id | "=>" | "forSome" | ">:" | "<:" | literal | "]")""",
       found = ",]"
     )
     * - checkNeg(
       s"""
          |object X{def f[T <% A <%] = 1}
         """.stripMargin,
-      expected = """("=>" | "(" | literal | "this" | "super" | id | "_" | "{")""",
+      aggregate = """""",
+      terminals = """("=>" | "(" | literal | "this" | "super" | id | "_" | "{")""",
       found = "]"
     )
     * - checkNeg(
       s"""
          |object X{def f[T, B,] = 1}
         """.stripMargin,
-      expected = """("[" | ">:" | "<:" | "<%" | ":" | "]")""" ,
+      aggregate = """""",
+      terminals = """("[" | ">:" | "<:" | "<%" | ":" | "]")""" ,
       found = ",]"
     )
     * - checkNeg(
       s"""
          |object X{type T = F forSome }}
         """.stripMargin,
-      expected = """ "{" """,
+      aggregate = """""",
+      terminals = """ "{" """,
       found = "}}"
     )
 
@@ -766,35 +848,40 @@ object FailureTests extends TestSuite{
       s"""
          |object X{def f(x: Int =) = 1}
         """.stripMargin,
-      expected = """Expr""",
+      aggregate = """""",
+      terminals = """Expr""",
       found = ") = 1"
     )
     * - checkNeg(
       s"""
          |object X{type T = Int#}
         """.stripMargin,
-      expected = """id""",
+      aggregate = """""",
+      terminals = """id""",
       found = "}"
     )
     * - checkNeg(
       s"""
          |object X{type T = }
         """.stripMargin,
-      expected = """("=>" | "(" | literal | "this" | "super" | id | "_" | "{")""",
+      aggregate = """""",
+      terminals = """("=>" | "(" | literal | "this" | "super" | id | "_" | "{")""",
       found = "}\n"
     )
     * - checkNeg(
       s"""
          |object X{type T[,] = A }
         """.stripMargin,
-      expected = """("@" | [+\\-] | id | "_")""" ,
+      aggregate = """""",
+      terminals = """("@" | [+\\-] | id | "_")""" ,
       found = ",]"
     )
     * - checkNeg(
       s"""
          |object X{type T <: }
         """.stripMargin,
-      expected = """("=>" | "(" | literal | "this" | "super" | id | "_" | "{")""",
+      aggregate = """""",
+      terminals = """("=>" | "(" | literal | "this" | "super" | id | "_" | "{")""",
       found = "}\n"
     )
       * - checkNeg(
@@ -804,7 +891,8 @@ object FailureTests extends TestSuite{
           |}
           |
         """.stripMargin,
-        expected = """("[" | ">:" | "<:" | "<%" | ":" | "," | "]")""",
+        aggregate = """""",
+      terminals = """("[" | ">:" | "<:" | "<%" | ":" | "," | "]")""",
         found = "@f"
       )
       * - checkNeg(
@@ -814,7 +902,8 @@ object FailureTests extends TestSuite{
           |}
           |
         """.stripMargin,
-        expected = """(Expr | "," | ")")""",
+        aggregate = """""",
+      terminals = """(Expr | "," | ")")""",
         found = "}"
       )
       * - checkNeg(
@@ -824,7 +913,8 @@ object FailureTests extends TestSuite{
           |}
           |
         """.stripMargin,
-        expected = """("@" | id | "_")""",
+        aggregate = """""",
+      terminals = """("@" | id | "_")""",
         found = "["
       )
 
@@ -832,7 +922,8 @@ object FailureTests extends TestSuite{
         s"""
           |object System {
           |  $tq """".stripMargin,
-        expected = """("\"" | chars-while(1) | [\\\\$\n] | "\"\"\"")""",
+        aggregate = """""",
+      terminals = """("\"" | chars-while(1) | [\\\\$\n] | "\"\"\"")""",
         found = ""
       )
       * - checkNeg(
@@ -842,7 +933,8 @@ object FailureTests extends TestSuite{
           |}
           |
         """.stripMargin,
-        expected = """("&" | !"<" | "{{" | "{" | CharDataP | ScalaPatterns | ElemPattern.rep | "</")""",
+        aggregate = """""",
+      terminals = """("&" | !"<" | "{{" | "{" | CharDataP | ScalaPatterns | ElemPattern.rep | "</")""",
         found = "<</xml:unp"
       )
 
@@ -851,17 +943,20 @@ object FailureTests extends TestSuite{
            |  for(i <- Nil if x: Int => bar) 1
            |}
          """.stripMargin,
-        expected = """("\"\"\"" | "\"" | "." | "[" | "(" | "{" | "_" | id | ";" | "val" | "`" | var-id | SimplePattern | "if" | ")")""",
+        aggregate = """""",
+      terminals = """("\"\"\"" | "\"" | "." | "[" | "(" | "{" | "_" | id | ";" | "val" | "`" | var-id | SimplePattern | "if" | ")")""",
         found = ": Int"
       )
       * - checkNeg(
         s"""object Foo{; x: Int => x}""",
-        expected = """("." | "[" | "#" | "@" | "with" | "{" | "*" | id | ";" | "}")""",
+        aggregate = """""",
+      terminals = """("." | "[" | "#" | "@" | "with" | "{" | "*" | id | ";" | "}")""",
         found = "=> x"
       )
       * - checkNeg(
         s"""object Foo{ (i: Int => +i) }""",
-        expected = """("(" | literal | "this" | "super" | id | "_" | "{")""",
+        aggregate = """""",
+      terminals = """("(" | literal | "this" | "super" | id | "_" | "{")""",
         found = ")"
       )
       * - checkNeg(
@@ -872,7 +967,8 @@ object FailureTests extends TestSuite{
           |    ;
           |  } yield a
           |}""".stripMargin,
-        expected = """("val" | "_" | "`" | var-id | id | SimplePattern | "if")""",
+        aggregate = """""",
+      terminals = """("val" | "_" | "`" | var-id | id | SimplePattern | "if")""",
         found = "} yield a"
       )
       * - checkNeg(
@@ -882,7 +978,8 @@ object FailureTests extends TestSuite{
           |    val x = 1
           |    ;
           |    """.stripMargin,
-        expected = """(";" | "import" | "@" | local-modifier | definition | Expr | "(" | "this" | id | "_" | "}")""",
+        aggregate = """""",
+      terminals = """(";" | "import" | "@" | local-modifier | definition | Expr | "(" | "this" | id | "_" | "}")""",
         found = ""
       )
 

@@ -48,7 +48,8 @@ object Identifiers{
       "for", "if", "implicit", "import", "lazy", "match", "new",
       "null", "object", "override", "package", "private", "protected",
       "return", "sealed", "super", "this", "throw", "trait", "try",
-      "true", "type", "val", "var", "while", "with", "yield", "_", "macro") ~ !Letter
+      "true", "type", "val", "var", "while", "with", "yield", "_", "macro") ~
+      !CharPred(Basic.LetterDigitDollarUnderscore)
   }.opaque("AlphabetKeywords")
 
   def SymbolicKeywords[_: P] = P{

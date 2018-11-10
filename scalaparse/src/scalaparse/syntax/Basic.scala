@@ -5,6 +5,7 @@ import fastparse._
 import fastparse._
 import fastparse.NoWhitespace._
 import CharPredicates._
+import scalaparse.syntax.Identifiers.NamedFunction
 object Basic {
 
   def UnicodeEscape[_: P] = P( "u" ~ HexDigit ~ HexDigit ~ HexDigit ~ HexDigit )
@@ -28,11 +29,15 @@ object Basic {
          ':' | '<' | '=' | '>' | '?' | '@' | '\\' | '^' | '|' | '~' => true
     case _ => isOtherSymbol(c) || isMathSymbol(c)
   }
-  def Letter[_: P] = P( CharPred(c => isLetter(c) | isDigit(c) | c == '$' | c == '_' ) )
-  def LetterDigitDollarUnderscore[_: P] =  P(
-    CharPred(c => isLetter(c) | isDigit(c) | c == '$' | c == '_' )
+
+  val LetterDigitDollarUnderscore = NamedFunction(
+    c => isLetter(c) | isDigit(c) | c == '$' | c == '_'
   )
-  def Lower[_: P] = P( CharPred(c => isLower(c) || c == '$' | c == '_') )
+  val LowerChar = NamedFunction(
+    c => isLower(c) || c == '$' | c == '_'
+  )
+
+  def Lower[_: P] = P( CharPred(LowerChar) )
   def Upper[_: P] = P( CharPred(isUpper) )
 }
 /**
@@ -42,7 +47,7 @@ object Basic {
  * (W) and key-operators (O) which have different non-match criteria.
  */
 object Key {
-  def W[_: P](s: String) = P( s ~ !Basic.LetterDigitDollarUnderscore )(s"`$s`", implicitly)
+  def W[_: P](s: String) = P( s ~ !CharPred(Basic.LetterDigitDollarUnderscore) )(s"`$s`", implicitly)
   // If the operator is followed by a comment, stop early so we can parse the comment
   def O[_: P](s: String) = P( s ~ (!Basic.OpChar | &(NoTrace(StringIn("/*", "//")))) )(s"`$s`", implicitly)
 }

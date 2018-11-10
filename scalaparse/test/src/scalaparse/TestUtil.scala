@@ -9,15 +9,19 @@ import fastparse._
  * Created by haoyi on 5/3/15.
  */
 object TestUtil {
-  def checkNeg[T](input: String, expected: String = null, found: String = "ADQW??") = {
+  def checkNeg[T](input: String,
+                  terminals: String,
+                  aggregate: String,
+                  found: String) = {
 //    println("Checking Neg...\n" )
 //    println(input)
     parse(input, Scala.CompilationUnit(_)) match{
       case f: Parsed.Failure =>
 
-        val trace = f.extra.trace
+        val trace = f.extra.trace()
         val index = f.index
-        val parsedExpected = trace.terminalAggregateString
+        val parsedTerminals = trace.terminalAggregateString
+        val parsedAggregate = trace.groupAggregateString
         val parsedFound = input.slice(f.index, f.index + 10)
         val stack = trace.longTerminalsMsg
 
@@ -26,7 +30,9 @@ object TestUtil {
           implicitly(stack)
           implicitly(index)
           implicitly(parsedFound)
-          (expected == null || expected.trim == parsedExpected.trim) && parsedFound.startsWith(found)
+          (aggregate == null || aggregate.trim == parsedAggregate.trim) &&
+          (terminals == null || terminals.trim == parsedTerminals.trim) &&
+          parsedFound.startsWith(found)
         }
         )
 
