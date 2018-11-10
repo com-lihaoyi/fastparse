@@ -24,10 +24,10 @@ object Basic {
   def Semi[_: P] = P( ";" | Newline.rep(1) )
   def OpChar[_: P] = P ( CharPred(isOpChar) )
 
-  def isOpChar(c: Char) = c match{
+  val isOpChar = NamedFunction{
     case '!' | '#' | '%' | '&' | '*' | '+' | '-' | '/' |
          ':' | '<' | '=' | '>' | '?' | '@' | '\\' | '^' | '|' | '~' => true
-    case _ => isOtherSymbol(c) || isMathSymbol(c)
+    case c => isOtherSymbol(c) || isMathSymbol(c)
   }
 
   val LetterDigitDollarUnderscore = NamedFunction(
@@ -36,9 +36,10 @@ object Basic {
   val LowerChar = NamedFunction(
     c => isLower(c) || c == '$' | c == '_'
   )
+  val UpperChar = NamedFunction(isUpper)
 
   def Lower[_: P] = P( CharPred(LowerChar) )
-  def Upper[_: P] = P( CharPred(isUpper) )
+  def Upper[_: P] = P( CharPred(UpperChar) )
 }
 /**
  * Most keywords don't just require the correct characters to match,

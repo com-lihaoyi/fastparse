@@ -52,7 +52,7 @@ trait Types extends Core{
     def Args = P( FunArg.repTC(1) )
     def FunArgs = P( OneNLMax ~ "(" ~/ `implicit`.? ~ Args.? ~ ")" )
     def FunTypeArgs = P( "[" ~/ (Annot.rep ~ TypeArg).repTC(1) ~ "]" )
-    P( (Id | `this`) ~ (FunTypeArgs).? ~~ FunArgs.rep )
+    P( (Id | `this`) ~ FunTypeArgs.? ~~ FunArgs.rep )
   }
 
   def TypeBounds[_: P]: P[Unit] = P( (`>:` ~/ Type).? ~ (`<:` ~/ Type).? )
