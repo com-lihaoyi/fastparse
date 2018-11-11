@@ -364,7 +364,7 @@ object ExampleTests extends TestSuite{
         val trace = failure.trace().longAggregateMsg
         assert(
           failure.index == 2,
-          trace == """Expected tuple:1:1 / ([0-9] | ")"):1:3, found ",)""""
+          trace == """Expected tuple:1:1 / ([0-9] | "," ~ digits | ")"):1:3, found ",)""""
         )
       }
 

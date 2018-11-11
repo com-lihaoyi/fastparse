@@ -88,10 +88,34 @@ object FailureTests extends TestSuite{
     'sep - {
       def parseB[_: P] = P( "a" | "b" )
       def parseA[_: P] = P( parseB.rep(sep = ",") ~ "c" )
-      val f @ Parsed.Failure(failureString, index, extra) = parse("ad", parseA(_))
-      val trace = f.trace()
+      val f1 @ Parsed.Failure(_, _, _) = parse("ad", parseA(_))
+      val trace = f1.trace()
 
       assert(trace.groupAggregateString == """("," | "c")""")
+
+      val f2 @ Parsed.Failure(_, _, _) = parse("a,d", parseA(_))
+      val trace2 = f2.trace()
+
+      // Make sure if the parse fails after the separator and has to backtrack,
+      // we list both the separator and the post-separator parse that failed
+      // since showing the separator alone (which passed) is misleading
+      assert(trace2.groupAggregateString == """("," ~ parseB | "c")""")
+      f2.index
+    }
+
+    'sepCut - {
+      def parseB[_: P] = P( "a" | "b" )
+      def parseA[_: P] = P( parseB.rep(sep = ","./) ~ "c" )
+      val f1 @ Parsed.Failure(_, _, _) = parse("ad", parseA(_))
+      val trace = f1.trace()
+
+      assert(trace.groupAggregateString == """("," | "c")""")
+
+      val f2 @ Parsed.Failure(_, _, _) = parse("a,d", parseA(_))
+      val trace2 = f2.trace()
+
+      assert(trace2.groupAggregateString == """("a" | "b")""")
+      f2.index
     }
   }
 }
