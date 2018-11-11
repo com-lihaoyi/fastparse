@@ -1,5 +1,13 @@
 @import Main._
 @sect{Change Log}
+    @sect{2.1.0}
+        @ul
+            @li
+                Reverted the failure-tracing behavior of @code{trace.aggregateMsg}
+                back to it's behavior in Fastparse 1.x (i.e. showing the high-level
+                parsers that failed, rather than the low-level terminals). The
+                previous Fastparse 2.0.5 behavior of showing the failed terminals
+                is now available separately under @code{trace.terminalsMsg}
     @sect{2.0.5}
         @ul
             @li

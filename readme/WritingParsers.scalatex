@@ -51,8 +51,11 @@
                     to perform a second parse over the initial input. This also
                     gives you access to @code{failure.trace().msg} and
                     @code{failure.trace().longMsg}, but additionally provides
-                    @code{.aggregateMsg} and @code{.longAggregateMsg} for even
-                    more details about what went wrong.
+                    @code{.aggregateMsg} and @code{.longAggregateMsg} for
+                    high-level listing of what was expected at point of failure,
+                    or @code{.terminalsMsg} and @code{.longTerminalsMsg} for a
+                    low-level view of what individual strings or characters
+                    were expected at point of failure.
 
             @p
                 In general, you may either want to run your parses with
