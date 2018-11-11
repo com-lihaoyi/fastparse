@@ -12,18 +12,20 @@ object TestUtil {
   def checkNeg[T](input: String,
                   terminals: String,
                   aggregate: String,
-                  found: String) = {
+                  found: String)
+                 (implicit line: sourcecode.Line) = {
 //    println("Checking Neg...\n" )
 //    println(input)
     parse(input, Scala.CompilationUnit(_)) match{
       case f: Parsed.Failure =>
 
-        val trace = f.extra.trace()
+        println("=" * 100)
+        val trace = f.extra.trace(true)
         val index = f.index
         val parsedTerminals = trace.terminalAggregateString
         val parsedAggregate = trace.groupAggregateString
         val parsedFound = input.slice(f.index, f.index + 10)
-        val stack = trace.longTerminalsMsg
+        val stack = trace.longAggregateMsg
 
         assert(
         { implicitly(input)
@@ -36,8 +38,10 @@ object TestUtil {
         }
         )
 
-        trace
-      case _: Parsed.Success[_] => assert({implicitly(input); false})
+        line.value
+      case _: Parsed.Success[_] =>
+        assert({implicitly(input); false})
+        line.value
     }
 //    for(chunkSize <- Seq(/*1, 4, 16, 64, 256, 1024*/)){
 //      val res = parse(input.grouped(chunkSize), Scala.CompilationUnit(_))

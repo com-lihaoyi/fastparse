@@ -213,24 +213,29 @@ object MacroImpls {
         else if (ctx5.cut) ctx5.asInstanceOf[ParsingRun[V]]
         else {
           val verboseFailures = ctx5.verboseFailures
-          if (verboseFailures) ctx5.aggregateMsg(lhsMsg, startGroup)
 
           ctx5.index = startPos
-          ctx5.setMsg(ctx5.shortParserMsg)
+          if (verboseFailures) ctx5.aggregateMsg(lhsMsg, startGroup)
+
           ctx5.cut = false
           other.splice
           val rhsMsg = ctx5.shortParserMsg
           val rhsCut = ctx5.cut
           val endCut = rhsCut | oldCut
           if (!ctx5.isSuccess) {
-            if (!ctx5.cut) ctx5.freshFailure(startPos)
+            if (!rhsCut) ctx5.freshFailure(startPos)
             ctx5.cut = endCut
             if (verboseFailures) {
-              ctx5.aggregateMsg(rhsMsg ::: lhsMsg ::: startGroup, Nil, startGroup)
+              if (!rhsCut) {
+                ctx5.aggregateMsg(rhsMsg ::: lhsMsg, rhsMsg ::: lhsMsg, startGroup, force = true)
+              }
+              else {
+                ctx5.aggregateMsg(rhsMsg ::: lhsMsg, rhsMsg ::: lhsMsg, startGroup)
+              }
             }
           }else{
             ctx5.cut = endCut
-            if (verboseFailures) ctx5.setMsg(rhsMsg ::: lhsMsg ::: startGroup)
+            if (verboseFailures) ctx5.setMsg(rhsMsg ::: lhsMsg)
           }
 
           ctx5.asInstanceOf[ParsingRun[V]]
@@ -585,6 +590,7 @@ object MacroImpls {
           val startGroup = ctx1.failureGroupAggregate
           ctx1.cut = false
           lhs0.splice
+          val postSuccess = ctx1.isSuccess
           val msg = ctx1.shortParserMsg
           val res =
             if (ctx1.isSuccess) {
@@ -600,7 +606,9 @@ object MacroImpls {
             }
 
           if (ctx1.verboseFailures) {
-            ctx1.aggregateMsg(() => Util.parenthize(msg) + ".?", msg, startGroup)
+            if (!postSuccess){
+              ctx1.aggregateMsg(() => Util.parenthize(msg) + ".?", msg, startGroup)
+            }
           }
           res
         }

@@ -1,5 +1,7 @@
 package test.fastparse
-import fastparse._, NoWhitespace._
+import fastparse._
+import NoWhitespace._
+import fastparse.internal.Util
 import utest._
 
 object FailureTests extends TestSuite{
@@ -138,6 +140,24 @@ object FailureTests extends TestSuite{
       trace.groupAggregateString ==> """"c""""
     }
 
+    'sequentialEithers - {
+      def parseD[_: P] = P( (("m" | "n") | "o").rep )
+      def parseC[_: P] = P( (("g" | "h") | "i").? )
+      def parseB[_: P] = P( ("a" | "b") | "c" | "" )
+      def parseA[_: P] = P(
+         parseB ~ ("d" | ("e" | "f") | "") ~
+         parseC ~ ("j" | ("k" | "l")).? ~
+         parseD ~ ("p" | ("q" | "r")).rep ~
+         "x"
+      )
+      val f1 @ Parsed.Failure(_, _, _) = parse("z", parseA(_))
+
+      val trace = f1.trace()
+
+      trace.groupAggregateString ==>
+      """("a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "x")"""
+    }
+
     'passingNamedParsersAggregateIsShallow - {
       def parseB[_: P] = P( "a" ~ "b".? )
       def parseA[_: P] = P( (parseB ~ Fail).? ~ "c" )
@@ -157,6 +177,33 @@ object FailureTests extends TestSuite{
       val f1 @ Parsed.Failure(_, _, _) = parse("_", parseA(_))
       val trace = f1.trace()
       assert(trace.groupAggregateString == """(parseB | parseZ)""")
+    }
+
+    'offset - {
+      'either1 - {
+        def parseA[_: P] = P("a" ~ "b" | "a" ~/ "c")
+        val f1@Parsed.Failure(_, _, _) = parse("ax", parseA(_))
+        val trace = f1.trace()
+        assert(trace.groupAggregateString == """("b" | "c")""")
+      }
+      'either2 - {
+        def parseA[_: P] = P(("a" ~ "b" | "a" ~ "c" | "") ~ "a" ~ "d")
+        val f1@Parsed.Failure(_, _, _) = parse("ax", parseA(_))
+        val trace = f1.trace()
+        assert(trace.groupAggregateString == """("b" | "c" | "d")""")
+      }
+      'opt - {
+        def parseA[_: P] = P(("a" ~ "b").? ~ "a" ~ "d")
+        val f1@Parsed.Failure(_, _, _) = parse("ax", parseA(_))
+        val trace = f1.trace()
+        assert(trace.groupAggregateString == """("b" | "d")""")
+      }
+      'rep - {
+        def parseA[_: P] = P(("a" ~ "b").rep ~ "a" ~ "d")
+        val f1@Parsed.Failure(_, _, _) = parse("ax", parseA(_))
+        val trace = f1.trace()
+        assert(trace.groupAggregateString == """("b" | "d")""")
+      }
     }
   }
 }

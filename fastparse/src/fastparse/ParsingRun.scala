@@ -129,7 +129,8 @@ final class ParsingRun[+T](val input: ParserInput,
   }
   def aggregateMsg(msgToSet: List[Lazy[String]],
                    parsedMsg: List[Lazy[String]],
-                   startGroup: List[Lazy[String]]): Unit = {
+                   startGroup: List[Lazy[String]],
+                   force: Boolean = false): Unit = {
     // We only aggregate the msg under the following conditions:
     //
     // - The current index matches the traceIndex; all messages at other
@@ -142,7 +143,7 @@ final class ParsingRun[+T](val input: ParserInput,
     //   - Successes we *do* log, because often aggregateMsg gets called from
     //     .rep and .? bodies, where the parse succeeds even though the last
     //     aborted inner-parse failed (and needs to be aggregated)
-    if (index == traceIndex && (!cut || isSuccess)) {
+    if (index == traceIndex && (!cut || isSuccess || force)) {
       failureGroupAggregate = parsedMsg ::: startGroup
     }
 

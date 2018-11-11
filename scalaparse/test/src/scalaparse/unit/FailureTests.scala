@@ -70,7 +70,7 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      aggregate = """ (FunTypeArgs | FunArgs | `:` | Body | Semis | "}")""",
+      aggregate = """(FunArgs | `:` | Body | Semis | "}")""",
       terminals = null,
       found = "](input: S"
     )
@@ -251,7 +251,7 @@ object FailureTests extends TestSuite{
         |  d = 1
         |
       """.stripMargin,
-      aggregate = """(SuperPostfixSuffix | Semis | "}")""",
+      aggregate = """("=>" | SuperPostfixSuffix | Semis | "}")""",
       terminals = null,
       found = ""
     )
@@ -436,7 +436,7 @@ object FailureTests extends TestSuite{
         |  val omg_+_+ = 1
         |}
       """.stripMargin,
-      aggregate = """(Binding | id ~ TQ | "." | TypeArgs | TupleEx | Id | "," | `:` | `=` | Semis | "}")""",
+      aggregate = """(Binding | "." | TypeArgs | TupleEx | Id | "," | `:` | `=` | Semis | "}")""",
       terminals = null,
       found = "_+ = 1"
     )
@@ -480,7 +480,7 @@ object FailureTests extends TestSuite{
         |  a!.b
         |}
       """.stripMargin,
-      aggregate = """(TypeArgs | ExprPrefix | XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | Parened | PostFix | SuperPostfixSuffix | Semis | "}")""",
+      aggregate = """(TypeArgs | ExprPrefix | PostFix | "=>" | SuperPostfixSuffix | Semis | "}")""",
       terminals = null,
       found = ".b"
     )
@@ -669,7 +669,7 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      aggregate = """(WL ~ "." | SuperPostfixSuffix | Semi | ";" | Newline.rep(1) | BlockLambda | BlockStat | Semis | "}")""",
+      aggregate = """(WL ~ "." | "=>" | SuperPostfixSuffix | Semi | BlockLambda | BlockStat | Semis | "}")""",
       terminals = null,
       found = "case for"
     )
@@ -716,7 +716,7 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      aggregate = """(Escape | Symbol)""",
+      aggregate = """(Char | Symbol)""",
       terminals = null,
       found = "'\n"
     )
@@ -729,7 +729,7 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      aggregate = """("." ~ Thing | id)""",
+      aggregate = """id""",
       terminals = null,
       found = ")"
     )
@@ -739,7 +739,7 @@ object FailureTests extends TestSuite{
          |  1..toString
          |}
       """.stripMargin,
-      aggregate = """("." ~ Thing | id)""",
+      aggregate = """id""",
       terminals = null,
       found = ".toString"
     )
@@ -759,7 +759,7 @@ object FailureTests extends TestSuite{
        |  val (x,) = 1
        |}
       """.stripMargin,
-    aggregate = """(TypePattern | Binding | id ~ TQ | "." | TypeArgs | TupleEx | Id | "|" | "," ~ Pattern | "," ~ WS ~ Newline | ")")""",
+    aggregate = """(TypePattern | Binding | "." | TypeArgs | TupleEx | Id | "|" | "," ~ Pattern | "," ~ WS ~ Newline | ")")""",
       terminals = null,
     found = ",)"
   )
@@ -799,7 +799,7 @@ object FailureTests extends TestSuite{
     s"""
        |object X{def f(x: Int, ) = 1}
       """.stripMargin,
-    aggregate = """(Args | ")")""",
+    aggregate = """")"""",
       terminals = null,
     found = ", )"
   )
