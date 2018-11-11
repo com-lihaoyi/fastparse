@@ -608,7 +608,7 @@ object MacroImpls {
             }
 
           if (ctx1.verboseFailures) {
-            ctx1.aggregateMsg(List(() => Util.parenthize(msg) + ".?"), msg, startGroup)
+            ctx1.aggregateMsg(() => Util.parenthize(msg) + ".?", msg, startGroup)
           }
           res
         }

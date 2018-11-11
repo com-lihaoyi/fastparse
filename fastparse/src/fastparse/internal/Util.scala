@@ -95,9 +95,7 @@ object Util {
     sb.result()
   }
 }
-object Lazy{
-  implicit def make[T](calc0: () => T) = new Lazy(calc0)
-}
+
 class Lazy[T](calc0: () => T){
   lazy val force = calc0()
   def apply(): T = force

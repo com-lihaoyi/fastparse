@@ -83,7 +83,7 @@ object MacroRepImpls{
                 if ($ctx1.cut) $ctx1.asInstanceOf[_root_.fastparse.P[${c.weakTypeOf[V]}]]
                 else $endSnippet
               if ($ctx1.verboseFailures) {
-                $ctx1.aggregateMsg(_root_.scala.List(() => _root_.fastparse.internal.Util.parenthize($parsedMsg) + s".rep" + $aggregateSnippet), $parsedMsg, $startGroup)
+                $ctx1.aggregateMsg(() => _root_.fastparse.internal.Util.parenthize($parsedMsg) + s".rep" + $aggregateSnippet, $parsedMsg, $startGroup)
               }
               res
             }else {
@@ -391,7 +391,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
 
   private def aggregateMsgPostSep[V](min: Int, ctx: ParsingRun[Any], parsedMsg: List[Lazy[String]], startGroup: List[Lazy[String]]) = {
     ctx.aggregateMsg(
-      List(() => Util.parenthize(parsedMsg) + s".rep($min)"),
+      List(new Lazy(() => Util.parenthize(parsedMsg) + s".rep($min)")),
       ctx.shortParserMsg,
       startGroup
     )
@@ -402,14 +402,14 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
   private def aggregateMsgInRep[V](min: Int, ctx: ParsingRun[Any], sepMsg: List[Lazy[String]], startGroup: List[Lazy[String]], parsedMsg: List[Lazy[String]]) = {
     if (sepMsg == null) {
       ctx.aggregateMsg(
-        List(() => Util.parenthize(parsedMsg) + s".rep($min)"),
+        List(new Lazy(() => Util.parenthize(parsedMsg) + s".rep($min)")),
         parsedMsg,
         startGroup
       )
     } else {
       ctx.aggregateMsg(
-        List(() => Util.parenthize(parsedMsg) + s".rep($min)"),
-        List(() => Util.parenthize(sepMsg) + " ~ " + Util.parenthize(parsedMsg)),
+        List(new Lazy(() => Util.parenthize(parsedMsg) + s".rep($min)")),
+        List(new Lazy(() => Util.parenthize(sepMsg) + " ~ " + Util.parenthize(parsedMsg))),
         startGroup
       )
     }

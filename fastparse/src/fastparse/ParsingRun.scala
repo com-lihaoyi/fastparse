@@ -122,6 +122,15 @@ final class ParsingRun[+T](val input: ParserInput,
     aggregateMsg(parsedMsg, parsedMsg, startGroup)
   }
 
+  def aggregateMsg(msgToSet: () => String,
+                   parsedMsg: List[Lazy[String]],
+                   startGroup: List[Lazy[String]]): Unit = {
+    if (index == traceIndex && (!cut || isSuccess)) {
+      failureGroupAggregate = parsedMsg ::: startGroup
+    }
+
+    setMsg(List(new Lazy(msgToSet)))
+  }
   def aggregateMsg(msgToSet: List[Lazy[String]],
                    parsedMsg: List[Lazy[String]],
                    startGroup: List[Lazy[String]]): Unit = {
@@ -132,16 +141,18 @@ final class ParsingRun[+T](val input: ParserInput,
     setMsg(msgToSet)
   }
 
-  def aggregateTerminal(f: Lazy[String]): Unit = {
+  def aggregateTerminal(f: () => String): Unit = {
+    val f2 = new Lazy(f)
     if (!isSuccess){
-      if (index == traceIndex) failureTerminalAggregate ::= f
-      if (lastFailureMsg == null) lastFailureMsg = List(f)
+      if (index == traceIndex) failureTerminalAggregate ::= f2
+      if (lastFailureMsg == null) lastFailureMsg = List(f2)
     }
-    shortParserMsg = List(f)
+    shortParserMsg = List(f2)
   }
-  def setMsg(f: Lazy[String]): Unit = {
-    if (!isSuccess && lastFailureMsg == null) lastFailureMsg = List(f)
-    shortParserMsg = List(f)
+  def setMsg(f: () => String): Unit = {
+    val f2 = new Lazy(f)
+    if (!isSuccess && lastFailureMsg == null) lastFailureMsg = List(f2)
+    shortParserMsg = List(f2)
   }
   def setMsg(f: List[Lazy[String]]): Unit = {
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = f

@@ -331,7 +331,7 @@ class KFold(_BaseKFold):
     def _iter_test_indices(self):
         n = self.n
         n_folds = self.n_folds
-        fold_sizes = (n // n_folds) * np.ones(n_folds, dtype=np.int)
+        fold_sizes = n
         fold_sizes[:n % n_folds] += 1
         current = 0
         for fold_size in fold_sizes:
@@ -1290,8 +1290,6 @@ def cross_val_predict(estimator, X, y=None, cv=None, n_jobs=1,
     locs = np.concatenate([loc for _, loc in preds_blocks])
     if not _check_is_partition(locs, _num_samples(X)):
         raise ValueError('cross_val_predict only works for partitions')
-    inv_locs = np.empty(len(locs), dtype=int)
-    inv_locs[locs] = np.arange(len(locs))
 
     # Check for sparse predictions
     if sp.issparse(preds[0]):

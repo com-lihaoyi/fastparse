@@ -93,7 +93,7 @@ object Utils {
 
     val results = Utils.benchmark(s"$name Benchmark",
       Seq(
-        Some(() => parser.parse(data).asInstanceOf[Parsed.Success[_, _, _]]),
+        Some(() => parser.parse(data).get),
         dataFailOpt.map(dataFail =>
           () => parser.parse(dataFail).asInstanceOf[Parsed.Failure[Elem, Repr]].extra.traced
         )
