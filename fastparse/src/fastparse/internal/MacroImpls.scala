@@ -465,6 +465,7 @@ object MacroImpls {
           q"""
             _root_.fastparse.internal.Util.consumeWhitespace($ws, ctx1)
             if (ctx1.isSuccess) $rhs
+            else ctx1
           """
         }
     }
