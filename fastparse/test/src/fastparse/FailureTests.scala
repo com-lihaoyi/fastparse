@@ -1,6 +1,7 @@
 package test.fastparse
 import fastparse._, NoWhitespace._
 import utest._
+
 object FailureTests extends TestSuite{
   def tests = Tests{
     def checkSimple(parser: P[_] => P[_]) = {
@@ -104,18 +105,19 @@ object FailureTests extends TestSuite{
     }
 
     'sepCut - {
-      def parseB[_: P] = P( "a" | "b" )
-      def parseA[_: P] = P( parseB.rep(sep = ","./) ~ "c" )
-      val f1 @ Parsed.Failure(_, _, _) = parse("ad", parseA(_))
+      def parseB[_: P] = P( "a" | "b" | "c" )
+      def parseA[_: P] = P( parseB.rep(sep = ","./) ~ "d" )
+      val f1 @ Parsed.Failure(_, _, _) = parse("ax", parseA(_))
       val trace = f1.trace()
 
-      assert(trace.groupAggregateString == """("," | "c")""")
+      trace.groupAggregateString ==> """("," | "d")"""
+      f1.index ==> 1
 
-      val f2 @ Parsed.Failure(_, _, _) = parse("a,d", parseA(_))
+      val f2 @ Parsed.Failure(_, _, _) = parse("a,x", parseA(_))
       val trace2 = f2.trace()
 
-      assert(trace2.groupAggregateString == """("a" | "b")""")
-      f2.index
+      trace2.groupAggregateString ==> """("a" | "b" | "c")"""
+      f2.index ==> 2
     }
 
     'aggregateInNamedParser - {
@@ -127,12 +129,34 @@ object FailureTests extends TestSuite{
       assert(trace.groupAggregateString == """("b" | "c")""")
     }
 
+    'manualSep - {
+      def parseA[_: P] = P( "a" ~ (("." | ","./) ~ "c").rep ~ "x" )
+      val f1 @ Parsed.Failure(_, _, _) = parse("a,d", parseA(_))
+
+      val trace = f1.trace()
+
+      trace.groupAggregateString ==> """"c""""
+    }
+
     'passingNamedParsersAggregateIsShallow - {
       def parseB[_: P] = P( "a" ~ "b".? )
       def parseA[_: P] = P( (parseB ~ Fail).? ~ "c" )
       val f1 @ Parsed.Failure(_, _, _) = parse("ad", parseA(_))
       val trace = f1.trace()
       assert(trace.groupAggregateString == """(parseB ~ fail | "c")""")
+    }
+
+    'passingNamedParsersEitherAggregateIsShallow - {
+      def parseD[_: P] = P( "d" )
+      def parseC[_: P] = P( "c" )
+      def parseX[_: P] = P( "x" )
+      def parseY[_: P] = P( "y" )
+      def parseB[_: P] = P( parseC | parseD )
+      def parseZ[_: P] = P( parseX | parseY )
+      def parseA[_: P] = P( parseB | parseZ )
+      val f1 @ Parsed.Failure(_, _, _) = parse("_", parseA(_))
+      val trace = f1.trace()
+      assert(trace.groupAggregateString == """(parseB | parseZ)""")
     }
   }
 }

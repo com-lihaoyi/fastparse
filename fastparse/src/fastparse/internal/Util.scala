@@ -8,7 +8,7 @@ import scala.collection.mutable.ArrayBuffer
 object Util {
   def parenthize(fs: Seq[Lazy[String]]) = fs match{
     case Seq(x) => x()
-    case xs => xs.reverseIterator.map(_()).mkString("(", " | ", ")")
+    case xs => xs.reverseIterator.map(_()).toSeq.distinct.mkString("(", " | ", ")")
   }
 
   def consumeWhitespace[V](whitespace: ParsingRun[_] => ParsingRun[Unit], ctx: ParsingRun[Any]) = {

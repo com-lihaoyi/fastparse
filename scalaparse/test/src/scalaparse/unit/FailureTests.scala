@@ -8,7 +8,7 @@ object FailureTests extends TestSuite{
 
     * - checkNeg(
       "package package",
-      aggregate = """(Id | PkgBlock | `case` | PkgObj)""",
+      aggregate = """(Id | PkgBlock | PkgObj)""",
       terminals = """("`" | var-id | chars-while(OpCharNotSlash, 1) | "/" | operator | plain-id | id | "case" | "object")""",
       found = "package"
     )
@@ -52,7 +52,7 @@ object FailureTests extends TestSuite{
         |  if (n == 1) c + 1 else
         |}
       """.stripMargin,
-      aggregate = """(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | ParenedLambda | ExprPrefix | XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | SmallerExprOrLambda)""",
+      aggregate = """(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | SmallerExprOrLambda)""",
       terminals = null,
       found = ""
     )
@@ -81,7 +81,7 @@ object FailureTests extends TestSuite{
         |  throw 1
         |}
       """.stripMargin,
-      aggregate = """(WL ~ "." | ParenArgList | "=>" | SuperPostfixSuffix | `:` | "," | ")")""",
+      aggregate = """(WL ~ "." | ParenArgList | OneNLMax ~ BlockExpr | SuperPostfixSuffix | `:` | "," | ")")""",
       terminals = null,
       found ="}"
     )
@@ -93,7 +93,7 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      aggregate = """("=>" | "." | WL ~ "." | ParenArgList | SuperPostfixSuffix | Semi | Semis | "}")""",
+      aggregate = """("=>" | `:` | "." | WL ~ "." | ParenArgList | OneNLMax ~ BlockExpr | SuperPostfixSuffix | Semi | Semis | "}")""",
       terminals = null,
       found ="1\n"
     )
@@ -107,7 +107,7 @@ object FailureTests extends TestSuite{
         |  .
         |}
       """.stripMargin,
-      aggregate = """(`super` | `this` | "{" | `_` | Id)""",
+      aggregate = """(`super` | `this` | "{" | `_` | `type` | Id)""",
       terminals = null,
       found = "."
     )
@@ -117,7 +117,7 @@ object FailureTests extends TestSuite{
         | filename.asInstanceOf 10
         |}
       """.stripMargin,
-      aggregate = """("." | WL ~ "." | ParenArgList | "=>" | SuperPostfixSuffix | Semi | Semis | "}")""",
+      aggregate = """("." | WL ~ "." | ParenArgList | OneNLMax ~ BlockExpr | SuperPostfixSuffix | Semi | Semis | "}")""",
       terminals = null,
       found = "10"
     )
@@ -139,7 +139,7 @@ object FailureTests extends TestSuite{
         | private[this] applyMacroFull = 1
         |}
       """.stripMargin,
-      aggregate = """(LocalMod | AccessMod | Dcl | TraitDef | ClsDef | `case` | ObjDef)""",
+      aggregate = """(LocalMod | AccessMod | `override` | Dcl | TraitDef | ClsDef | ObjDef)""",
       terminals = null,
       found = "applyM"
     )
@@ -240,7 +240,7 @@ object FailureTests extends TestSuite{
         |  a.b =
         |}
       """.stripMargin,
-      aggregate = """(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | ParenedLambda | ExprPrefix | XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | SmallerExprOrLambda)""",
+      aggregate = """(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | SmallerExprOrLambda)""",
       terminals = null,
       found = "}"
     )
@@ -251,7 +251,7 @@ object FailureTests extends TestSuite{
         |  d = 1
         |
       """.stripMargin,
-      aggregate = """("=>" | SuperPostfixSuffix | Semis | "}")""",
+      aggregate = """(SuperPostfixSuffix | Semis | "}")""",
       terminals = null,
       found = ""
     )
@@ -284,7 +284,7 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      aggregate = """(`yield` | If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | ParenedLambda | ExprPrefix | XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | SmallerExprOrLambda)""",
+      aggregate = """(`yield` | If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | SmallerExprOrLambda)""",
       terminals = null,
       found = "}"
     )
@@ -294,7 +294,7 @@ object FailureTests extends TestSuite{
         |  val jarFile = catch { case _: F => G }
         |}
       """.stripMargin,
-      aggregate = """(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | ParenedLambda | ExprPrefix | XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | SmallerExprOrLambda)""",
+      aggregate = """(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | SmallerExprOrLambda)""",
       terminals = null,
       found = "catch {"
     )
@@ -361,7 +361,7 @@ object FailureTests extends TestSuite{
         |  a =:= .c
         |}
       """.stripMargin,
-      aggregate = """(TypeArgs | ExprPrefix | XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | Newline | "=>" | SuperPostfixSuffix | Semi | Semis | "}")""",
+      aggregate = """(TypeArgs | ExprPrefix | XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | Parened | Newline | SuperPostfixSuffix | Semi | Semis | "}")""",
       terminals = null,
       found = ".c"
     )
@@ -373,7 +373,7 @@ object FailureTests extends TestSuite{
         |  )
         |}
       """.stripMargin,
-      aggregate = """(_* | AscriptionType | Annot | Annot.rep(1))""",
+      aggregate = """(_* | AscriptionType | Annot.rep(1))""",
       terminals = null,
       found = ")\n}"
     )
@@ -416,7 +416,7 @@ object FailureTests extends TestSuite{
         |  val trueA = 1
         |}
       """.stripMargin,
-      aggregate = """(DefTmpl | ";" | Newline | Pkg | Import | Annot | Mod | TraitDef | ClsDef | `case` | Semis | end-of-input)""",
+      aggregate = """(DefTmpl | ";" | Newline.rep(1) | Pkg | Import | Tmpl | Semis | end-of-input)""",
       terminals = null,
       found = "val trueA"
     )
@@ -480,7 +480,7 @@ object FailureTests extends TestSuite{
         |  a!.b
         |}
       """.stripMargin,
-      aggregate = """(TypeArgs | ExprPrefix | XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | PostFix | "=>" | SuperPostfixSuffix | Semis | "}")""",
+      aggregate = """(TypeArgs | ExprPrefix | XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | Parened | PostFix | SuperPostfixSuffix | Semis | "}")""",
       terminals = null,
       found = ".b"
     )
@@ -510,7 +510,7 @@ object FailureTests extends TestSuite{
         | @mog
         |}
       """.stripMargin,
-      aggregate = """("." | TypeArgs | `#` | "(" | Mod | Dcl | TraitDef | ClsDef | `case` | ObjDef)""",
+      aggregate = """("." | TypeArgs | `#` | "(" | Mod | Dcl | TraitDef | ClsDef | ObjDef)""",
       terminals = null,
       found = "}"
     )
@@ -529,7 +529,7 @@ object FailureTests extends TestSuite{
         |  { a: L = }
         |}
       """.stripMargin,
-      aggregate = """("." | TypeArgs | `#` | `*` | "=>" | BlockLambda | BlockStat | Semis | "}")""",
+      aggregate = """("." | TypeArgs | `#` | `*` | Id | "=>" | BlockLambda | BlockStat | Semis | "}")""",
       terminals = null,
       found = "= }"
     )
@@ -559,7 +559,7 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      aggregate = """(`super` | `this` | "{" | `_` | Id)""",
+      aggregate = """(`super` | `this` | "{" | `_` | `type` | Id)""",
       terminals = null,
       found = "()"
     )
@@ -568,7 +568,7 @@ object FailureTests extends TestSuite{
           |  private O
           |}
         """.stripMargin,
-        aggregate = """(AccessQualifier | LocalMod | AccessMod | Dcl | TraitDef | ClsDef | `case` | ObjDef)""",
+        aggregate = """(AccessQualifier | LocalMod | AccessMod | `override` | Dcl | TraitDef | ClsDef | ObjDef)""",
       terminals = null,
         found = "O\n"
       )
@@ -634,7 +634,7 @@ object FailureTests extends TestSuite{
         |  } yield
         |}
       """.stripMargin,
-      aggregate = """(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | ParenedLambda | ExprPrefix | XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | SmallerExprOrLambda)""",
+      aggregate = """(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | SmallerExprOrLambda)""",
       terminals = null,
       found = "}"
     )
@@ -656,7 +656,7 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      aggregate = """(`macro` | If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | ParenedLambda | ExprPrefix | XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | SmallerExprOrLambda)""",
+      aggregate = """(`macro` | If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | SmallerExprOrLambda)""",
       terminals = null,
       found = ")\n"
 
@@ -669,7 +669,7 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      aggregate = """(WL ~ "." | "=>" | SuperPostfixSuffix | Semi | ";" | Newline | BlockLambda | BlockStat | Semis | "}")""",
+      aggregate = """(WL ~ "." | SuperPostfixSuffix | Semi | ";" | Newline.rep(1) | BlockLambda | BlockStat | Semis | "}")""",
       terminals = null,
       found = "case for"
     )
@@ -716,7 +716,7 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      aggregate = """(Escape | plain-id | AlphabetKeywords | Char | Symbol)""",
+      aggregate = """(Escape | Symbol)""",
       terminals = null,
       found = "'\n"
     )
@@ -848,7 +848,7 @@ object FailureTests extends TestSuite{
     s"""
        |object X{def f(x: Int =) = 1}
       """.stripMargin,
-    aggregate = """(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | ParenedLambda | ExprPrefix | XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | SmallerExprOrLambda)""",
+    aggregate = """(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | SmallerExprOrLambda)""",
       terminals = null,
     found = ") = 1"
   )
@@ -949,7 +949,7 @@ object FailureTests extends TestSuite{
     )
     * - checkNeg(
       s"""object Foo{; x: Int => x}""",
-      aggregate = """("." | TypeArgs | `#` | `*` | Semi | Semis | "}")""",
+      aggregate = """("." | TypeArgs | `#` | `*` | Id | Semi | Semis | "}")""",
       terminals = null,
       found = "=> x"
     )
@@ -978,7 +978,7 @@ object FailureTests extends TestSuite{
         |    val x = 1
         |    ;
         |    """.stripMargin,
-      aggregate = """(";" | Newline | Import | Prelude ~ BlockDef | If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | ParenedLambda | ExprPrefix | XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | BlockLambda | BlockStat | Semis | "}")""",
+      aggregate = """(";" | Newline.rep(1) | Import | Prelude ~ BlockDef | Expr | BlockLambda | BlockStat | Semis | "}")""",
       terminals = null,
       found = ""
     )

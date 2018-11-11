@@ -218,21 +218,16 @@ object MacroImpls {
           ctx5.index = startPos
           ctx5.setMsg(ctx5.shortParserMsg)
           ctx5.cut = false
+          val preOtherAggregate = ctx5.failureGroupAggregate
           other.splice
           val rhsMsg = ctx5.shortParserMsg
-          val res =
-            if (ctx5.isSuccess) {
-              ctx5.cut |= oldCut
-              ctx5
-            }
-            else if (ctx5.cut) ctx5
-            else {
-              val res = ctx5.freshFailure(startPos)
-              ctx5.cut |= oldCut
-              res
-            }
-          if (verboseFailures) ctx5.setMsg(rhsMsg ::: lhsMsg)
-          res.asInstanceOf[ParsingRun[V]]
+          val endCut = ctx5.cut | oldCut
+          if (!ctx5.isSuccess) {
+            if (!ctx5.cut) ctx5.freshFailure(startPos)
+            if (verboseFailures) ctx5.aggregateMsg(rhsMsg ::: preOtherAggregate, rhsMsg, preOtherAggregate)
+          }
+          ctx5.cut = endCut
+          ctx5.asInstanceOf[ParsingRun[V]]
         }
       }
 
@@ -502,15 +497,8 @@ object MacroImpls {
         else {
           val progress = index > startIndex
           if (progress && ctx1.checkForDrop()) ctx1.input.dropBuffer(index)
-          val msg = ctx1.shortParserMsg
 
-          val res =
-            ctx1.freshSuccess(
-              ctx1.successValue,
-              cut = ctx1.cut | progress
-            ).asInstanceOf[ParsingRun[T]]
-          if (ctx1.verboseFailures) ctx1.setMsg(() => Util.parenthize(msg) + "./")
-          res
+          ctx1.freshSuccess(ctx1.successValue, cut = ctx1.cut | progress).asInstanceOf[ParsingRun[T]]
         }
       }
     }
