@@ -117,5 +117,22 @@ object FailureTests extends TestSuite{
       assert(trace2.groupAggregateString == """("a" | "b")""")
       f2.index
     }
+
+    'aggregateInNamedParser - {
+      def parseB[_: P] = P( "a" ~ "b".? )
+      def parseA[_: P] = P( parseB ~ "c" )
+      val f1 @ Parsed.Failure(_, _, _) = parse("ad", parseA(_))
+      val trace = f1.trace()
+
+      assert(trace.groupAggregateString == """("b" | "c")""")
+    }
+
+    'passingNamedParsersAggregateIsShallow - {
+      def parseB[_: P] = P( "a" ~ "b".? )
+      def parseA[_: P] = P( (parseB ~ Fail).? ~ "c" )
+      val f1 @ Parsed.Failure(_, _, _) = parse("ad", parseA(_))
+      val trace = f1.trace()
+      assert(trace.groupAggregateString == """(parseB ~ fail | "c")""")
+    }
   }
 }

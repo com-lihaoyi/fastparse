@@ -50,9 +50,11 @@ object MacroImpls {
           if (instrument) {
             ctx1.instrument.afterParse(name.splice.value, ctx0.index, ctx0.isSuccess)
           }
-          if (ctx0.verboseFailures && !ctx0.isSuccess) {
+          if (ctx0.verboseFailures) {
             ctx0.setMsg(() => name.splice.value)
-            ctx0.failureStack = (name.splice.value -> startIndex) :: ctx0.failureStack
+            if (!ctx0.isSuccess){
+              ctx0.failureStack = (name.splice.value -> startIndex) :: ctx0.failureStack
+            }
           }
           ctx0
         }
