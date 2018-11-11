@@ -107,7 +107,7 @@ object FailureTests extends TestSuite{
         |  .
         |}
       """.stripMargin,
-      aggregate = """(`super` | `this` | "{" | `_` | `type` | Id)""",
+      aggregate = """(`this` | Id)""",
       terminals = null,
       found = "."
     )
@@ -220,7 +220,7 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      aggregate = """(WL ~ "." | WL ~ TypeArgs | NotNewline ~ ArgList | NotNewline ~ `_` | InfixSuffix | PostFix | "=>" | SuperPostfixSuffix | Semis | "}")""",
+      aggregate = """(WL ~ "." | WL ~ TypeArgs | NotNewline ~ ArgList | NotNewline ~ `_` | InfixSuffix | PostFix | SuperPostfixSuffix | Semis | "}")""",
       terminals = null,
       found = ")"
     )
@@ -230,7 +230,7 @@ object FailureTests extends TestSuite{
         |   A(A(A(A(A(A(A(A(A(A(A(A(A(A(A(A()))))))))))))))
         |}
       """.stripMargin,
-      aggregate = """(WL ~ "." | ParenArgList | "=>" | SuperPostfixSuffix | `:` | "," | ")")""",
+      aggregate = """(WL ~ "." | ParenArgList | OneNLMax ~ BlockExpr | SuperPostfixSuffix | `:` | "," | ")")""",
       terminals = null,
       found = "}"
     )
@@ -539,7 +539,7 @@ object FailureTests extends TestSuite{
           |}
           |
         """.stripMargin,
-        aggregate = """(`super` | `this` | "{" | `_` | Id)""",
+        aggregate = """(`this` | Id)""",
       terminals = null,
         found = "()"
       )
@@ -549,7 +549,7 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      aggregate = """(`super` | id)""",
+      aggregate = """id""",
       terminals = null,
       found = "this"
     )
@@ -559,7 +559,7 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      aggregate = """(`super` | `this` | "{" | `_` | `type` | Id)""",
+      aggregate = """(`this` | Id)""",
       terminals = null,
       found = "()"
     )

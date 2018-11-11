@@ -362,7 +362,8 @@ package object fastparse {
       val startCut = ctx.cut
       val oldNoCut = ctx.noDropBuffer
       ctx.noDropBuffer = true
-      val startAggregate = ctx.failureTerminalAggregate
+      val startTerminals= ctx.failureTerminalAggregate
+      val startAggregate = ctx.failureGroupAggregate
       parse0()
       ctx.noDropBuffer = oldNoCut
       val msg = ctx.shortParserMsg
@@ -372,7 +373,8 @@ package object fastparse {
         else ctx.freshSuccessUnit(startPos)
 
       if (ctx.verboseFailures) {
-        ctx.failureTerminalAggregate = startAggregate
+        ctx.failureTerminalAggregate = startTerminals
+        ctx.failureGroupAggregate = startAggregate
         ctx.setMsg(() => "!" + Util.parenthize(msg))
       }
       res.cut = startCut
