@@ -71,7 +71,7 @@ object fastparseParser{
     P( (CharsWhile(_ != '\'').! | "''".!.map(_ => "'")).repX ~~ "'" )
 
   def tripleBarStringLines[_: P]: P[Seq[String]] = P(
-    tripleBarStringHead.flatMap { case (pre, w, head) =>
+    tripleBarStringHead.flatMapX { case (pre, w, head) =>
       tripleBarStringBody(w).map(pre ++ Seq(head, "\n") ++ _)
     }
   )
@@ -79,10 +79,10 @@ object fastparseParser{
     "||"./ ~~ CharsWhileIn(" \t", 0) ~~ "\n" ~~ tripleBarStringLines ~~ "\n" ~~ CharsWhileIn(" \t") ~~ "|||"
   )
   def string[_: P]: P[String] = P(
-    SingleChar.flatMap{
+    SingleChar.flatMapX{
       case '\"' => doubleString
       case '\'' => singleString
-      case '@' => SingleChar./.flatMap{
+      case '@' => SingleChar./.flatMapX{
         case '\"' => literalDoubleString
         case '\'' => literalSingleString
         case _ => Fail
@@ -211,45 +211,45 @@ object fastparseParser{
   def constructString(index: Int, lines: Seq[String]) = Expr.Str(index, lines.mkString)
   // Any `expr` that isn't naively left-recursive
   def expr2[_: P]: P[Expr] = P(
-    for{
-      index <- Index
-      c <- SingleChar
-      r <- (c: @switch) match {
-        case '{' => Pass ~ obj ~ "}"
-        case '+' | '-' | '~' | '!' => Pass ~ unaryOpExpr(index, c)
-        case '[' => Pass ~ arr ~ "]"
-        case '(' => Pass ~ parened ~ ")"
-        case '\"' => doubleString.map(constructString(index, _))
-        case '\'' => singleString.map(constructString(index, _))
-        case '@' => SingleChar./.flatMap{
-          case '\"' => literalDoubleString.map(constructString(index, _))
-          case '\'' => literalSingleString.map(constructString(index, _))
+    Index.flatMapX{ index =>
+      SingleChar.flatMapX{ c =>
+        (c: @switch) match {
+          case '{' => Pass ~ obj ~ "}"
+          case '+' | '-' | '~' | '!' => Pass ~ unaryOpExpr(index, c)
+          case '[' => Pass ~ arr ~ "]"
+          case '(' => Pass ~ parened ~ ")"
+          case '\"' => doubleString.map(constructString(index, _))
+          case '\'' => singleString.map(constructString(index, _))
+          case '@' => SingleChar./.flatMapX{
+            case '\"' => literalDoubleString.map(constructString(index, _))
+            case '\'' => literalSingleString.map(constructString(index, _))
+            case _ => Fail
+          }
+          case '|' => tripleBarString.map(constructString(index, _))
+          case '$' => Pass(Expr.$(index))
+          case '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' =>
+            P.current.index = index; number
+          case x if idStartChar(x) => CharsWhileIn("_a-zA-Z0-9", 0).!.flatMapX { y =>
+            x + y match {
+              case "null"      => Pass(Expr.Null(index))
+              case "true"      => Pass(Expr.True(index))
+              case "false"     => Pass(Expr.False(index))
+              case "self"      => Pass(Expr.Self(index))
+              case "super"     => Pass(Expr.Super(index))
+              case "if"        => Pass ~ ifElse(index)
+              case "function"  => Pass ~ function(index)
+              case "importStr" => Pass ~ importStr(index)
+              case "import"    => Pass ~ `import`(index)
+              case "error"     => Pass ~ error(index)
+              case "assert"    => Pass ~ assertExpr(index)
+              case "local"     => Pass ~ local
+              case x           => Pass(Expr.Id(index, x))
+            }
+          }
           case _ => Fail
         }
-        case '|' => tripleBarString.map(constructString(index, _))
-        case '$' => Pass(Expr.$(index))
-        case '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' =>
-          P.current.index = index; number
-        case x if idStartChar(x) => CharsWhileIn("_a-zA-Z0-9", 0).!.flatMap { y =>
-          x + y match {
-            case "null"      => Pass(Expr.Null(index))
-            case "true"      => Pass(Expr.True(index))
-            case "false"     => Pass(Expr.False(index))
-            case "self"      => Pass(Expr.Self(index))
-            case "super"     => Pass(Expr.Super(index))
-            case "if"        => Pass ~ ifElse(index)
-            case "function"  => Pass ~ function(index)
-            case "importStr" => Pass ~ importStr(index)
-            case "import"    => Pass ~ `import`(index)
-            case "error"     => Pass ~ error(index)
-            case "assert"    => Pass ~ assertExpr(index)
-            case "local"     => Pass ~ local
-            case x           => Pass(Expr.Id(index, x))
-          }
-        }
-        case _ => Fail
       }
-    } yield r
+    }
   )
 
   def objinside[_: P]: P[Expr.ObjBody] = P(
