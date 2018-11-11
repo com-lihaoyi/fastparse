@@ -134,6 +134,8 @@ object Parsed{
 
     def fromParsingRun[T](p: ParsingRun[T]) = {
       assert(!p.isSuccess)
+//      println("lastFailureMsg " + Util.parenthize(p.lastFailureMsg))
+//      println("failureGroupAggregate " + Util.parenthize(p.failureGroupAggregate))
       TracedFailure(
         p.failureTerminalAggregate.reverse.map(_()).distinct,
         (p.lastFailureMsg ++ p.failureGroupAggregate).reverse.map(_()).distinct,

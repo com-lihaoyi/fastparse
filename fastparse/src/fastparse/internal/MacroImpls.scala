@@ -192,9 +192,9 @@ object MacroImpls {
   }
 
   def eitherMacro[T: c.WeakTypeTag, V >: T: c.WeakTypeTag]
-                  (c: Context)
-                  (other: c.Expr[ParsingRun[V]])
-                  (ctx: c.Expr[ParsingRun[Any]]): c.Expr[ParsingRun[V]] = {
+                 (c: Context)
+                 (other: c.Expr[ParsingRun[V]])
+                 (ctx: c.Expr[ParsingRun[Any]]): c.Expr[ParsingRun[V]] = {
     import c.universe._
 
     val lhs0 = c.prefix.asInstanceOf[c.Expr[EagerOps[T]]]
@@ -218,19 +218,24 @@ object MacroImpls {
           ctx5.index = startPos
           ctx5.setMsg(ctx5.shortParserMsg)
           ctx5.cut = false
-          val preOtherAggregate = ctx5.failureGroupAggregate
           other.splice
           val rhsMsg = ctx5.shortParserMsg
-          val endCut = ctx5.cut | oldCut
+          val rhsCut = ctx5.cut
+          val endCut = rhsCut | oldCut
           if (!ctx5.isSuccess) {
             if (!ctx5.cut) ctx5.freshFailure(startPos)
-            if (verboseFailures) ctx5.aggregateMsg(rhsMsg ::: preOtherAggregate, rhsMsg, preOtherAggregate)
+            ctx5.cut = endCut
+            if (verboseFailures) {
+              ctx5.aggregateMsg(rhsMsg ::: lhsMsg ::: startGroup, Nil, startGroup)
+            }
+          }else{
+            ctx5.cut = endCut
+            if (verboseFailures) ctx5.setMsg(rhsMsg ::: lhsMsg ::: startGroup)
           }
-          ctx5.cut = endCut
+
           ctx5.asInstanceOf[ParsingRun[V]]
         }
       }
-
     }
   }
 

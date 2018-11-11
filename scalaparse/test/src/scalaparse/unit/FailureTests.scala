@@ -978,7 +978,7 @@ object FailureTests extends TestSuite{
         |    val x = 1
         |    ;
         |    """.stripMargin,
-      aggregate = """(";" | Newline.rep(1) | Import | Prelude ~ BlockDef | Expr | BlockLambda | BlockStat | Semis | "}")""",
+      aggregate = """(BlockLambda | BlockStat | Semis | "}")""",
       terminals = null,
       found = ""
     )
