@@ -425,7 +425,7 @@ object MacroImpls {
     import c.universe._
 
     val lhs = c.prefix.asInstanceOf[Expr[EagerOps[T]]]
-    val cut1 = c.Expr[Boolean](if(cut) q"true" else q"false")
+    val cut1 = c.Expr[Boolean](if(cut) q"true" else q"ctx1.cut")
 
     val rhs = q"""
       if (!ctx1.isSuccess && ctx1.cut) ctx1
@@ -434,7 +434,7 @@ object MacroImpls {
         $other
         val postOtherIndex = ctx1.index
 
-        val rhsNewCut = $cut1 | ctx1.cut
+        val rhsNewCut = $cut1
         val msg = ctx1.shortParserMsg
         val res =
           if (!ctx1.isSuccess) ctx1.augmentFailure(
@@ -478,12 +478,11 @@ object MacroImpls {
           if (!ctx1.isSuccess) ctx1
           else {
             val lhsMsg = ctx1.shortParserMsg
-            ctx1.cut |= $cut1
-            val index = ctx1.index
-            if (index > startIndex && ctx1.checkForDrop()) input.dropBuffer(index)
+            ctx1.cut = $cut1
+            val preWsIndex = ctx1.index
+            if (preWsIndex > startIndex && ctx1.checkForDrop()) input.dropBuffer(preWsIndex)
 
             val pValue = ctx1.successValue
-            val preWsIndex = index
             $guardedRhs
           }
         }
