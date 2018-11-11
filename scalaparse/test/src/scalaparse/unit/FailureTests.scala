@@ -42,7 +42,7 @@ object FailureTests extends TestSuite{
         |  type T = (A B)
         |}
       """.stripMargin,
-      aggregate = """(Newline | WSChars.? ~ Comment | NamedType | Refinement)""",
+      aggregate = """(NamedType | Refinement)""",
       terminals = """(chars-while(IdCharacter, 1) | [_] | [ \t] | "/*" | "//" | "(" | "-" | "." | [0-9] | "0x" | "true" | "false" | "`" | char-pred(UpperChar) | char-pred(LowerChar) | var-id | chars-while(OpCharNotSlash, 1) | "/" | operator | plain-id | id | "\"\"\"" | "\"" | "'" | "null" | "this" | "super" | "_" | "{")""",
       found = ")"
     )
@@ -70,7 +70,7 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """ (FunTypeArgs | FunArgs | `:` | Body | Semis | "}")""",
       terminals = null,
       found = "](input: S"
     )
@@ -81,7 +81,7 @@ object FailureTests extends TestSuite{
         |  throw 1
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(WL ~ "." | ParenArgList | "=>" | SuperPostfixSuffix | `:` | "," | ")")""",
       terminals = null,
       found ="}"
     )
@@ -93,7 +93,7 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """("=>" | "." | WL ~ "." | ParenArgList | SuperPostfixSuffix | Semi | Semis | "}")""",
       terminals = null,
       found ="1\n"
     )
@@ -107,7 +107,7 @@ object FailureTests extends TestSuite{
         |  .
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(`super` | `this` | "{" | `_` | Id)""",
       terminals = null,
       found = "."
     )
@@ -117,7 +117,7 @@ object FailureTests extends TestSuite{
         | filename.asInstanceOf 10
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """("." | WL ~ "." | ParenArgList | "=>" | SuperPostfixSuffix | Semi | Semis | "}")""",
       terminals = null,
       found = "10"
     )
@@ -129,7 +129,7 @@ object FailureTests extends TestSuite{
         |  1
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(DefTmpl | Semi | end-of-input)""",
       terminals = null,
       found = "o w{"
     )
@@ -139,7 +139,7 @@ object FailureTests extends TestSuite{
         | private[this] applyMacroFull = 1
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(LocalMod | AccessMod | Dcl | TraitDef | ClsDef | `case` | ObjDef)""",
       terminals = null,
       found = "applyM"
     )
@@ -154,7 +154,7 @@ object FailureTests extends TestSuite{
         |                      }
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """("=>" | NamedType | Refinement)""",
       terminals = null,
       found = "= {"
     )
@@ -166,7 +166,7 @@ object FailureTests extends TestSuite{
         |  1
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """id""",
       terminals = null,
       found = "1 extends"
     )
@@ -179,7 +179,7 @@ object FailureTests extends TestSuite{
         |import org.parboiled2 _
         |
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """("." | Semi | end-of-input)""",
       terminals = null,
       found = "_"
     )
@@ -191,7 +191,7 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(XmlPattern | Thingy | PatLiteral | TupleEx | Extractor | VarId)""",
       terminals = null,
       found = "=> 0"
     )
@@ -209,7 +209,7 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """ "{" """,
       terminals = null,
       found = "case 0 =>"
     )
@@ -220,7 +220,7 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(WL ~ "." | WL ~ TypeArgs | NotNewline ~ ArgList | NotNewline ~ `_` | InfixSuffix | PostFix | "=>" | SuperPostfixSuffix | Semis | "}")""",
       terminals = null,
       found = ")"
     )
@@ -230,7 +230,7 @@ object FailureTests extends TestSuite{
         |   A(A(A(A(A(A(A(A(A(A(A(A(A(A(A(A()))))))))))))))
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(WL ~ "." | ParenArgList | "=>" | SuperPostfixSuffix | `:` | "," | ")")""",
       terminals = null,
       found = "}"
     )
@@ -240,7 +240,7 @@ object FailureTests extends TestSuite{
         |  a.b =
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | ParenedLambda | ExprPrefix | XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | SmallerExprOrLambda)""",
       terminals = null,
       found = "}"
     )
@@ -251,7 +251,7 @@ object FailureTests extends TestSuite{
         |  d = 1
         |
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """("=>" | SuperPostfixSuffix | Semis | "}")""",
       terminals = null,
       found = ""
     )
@@ -261,7 +261,7 @@ object FailureTests extends TestSuite{
         |package scala.scalajs.cli
         |
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """ "*/" """,
       terminals = null,
       found = ""
     )
@@ -271,7 +271,7 @@ object FailureTests extends TestSuite{
         |package scala.scalajs.cli
         |
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """ "*/" """,
       terminals = null,
       found = ""
     )
@@ -284,7 +284,7 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(`yield` | If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | ParenedLambda | ExprPrefix | XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | SmallerExprOrLambda)""",
       terminals = null,
       found = "}"
     )
@@ -294,7 +294,7 @@ object FailureTests extends TestSuite{
         |  val jarFile = catch { case _: F => G }
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | ParenedLambda | ExprPrefix | XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | SmallerExprOrLambda)""",
       terminals = null,
       found = "catch {"
     )
@@ -304,7 +304,7 @@ object FailureTests extends TestSuite{
         |  func{ case _: F = fail }
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """("." | TypeArgs | `#` | Guard | "=>")""",
       terminals = null,
       found = "= fail"
     )
@@ -316,7 +316,7 @@ object FailureTests extends TestSuite{
         |    val c = f
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(XmlPattern | Thingy | PatLiteral | TupleEx | Extractor | VarId)""",
       terminals = null,
       found = "val b = e"
     )
@@ -328,7 +328,7 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(TypePattern | Binding | "." | TypeArgs | TupleEx | Id | "," | ")")""",
       terminals = null,
       found = "=> z"
     )
@@ -341,7 +341,7 @@ object FailureTests extends TestSuite{
         |  1
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """("=>" | NamedType | Refinement)""",
       terminals = null,
       found = "val c"
     )
@@ -351,7 +351,7 @@ object FailureTests extends TestSuite{
         |  def run(def apply() {}) {}
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(`implicit` | Args | ")")""",
       terminals = null,
       found = "def apply"
     )
@@ -361,7 +361,7 @@ object FailureTests extends TestSuite{
         |  a =:= .c
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(TypeArgs | ExprPrefix | XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | Newline | "=>" | SuperPostfixSuffix | Semi | Semis | "}")""",
       terminals = null,
       found = ".c"
     )
@@ -373,7 +373,7 @@ object FailureTests extends TestSuite{
         |  )
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(_* | AscriptionType | Annot | Annot.rep(1))""",
       terminals = null,
       found = ")\n}"
     )
@@ -383,7 +383,7 @@ object FailureTests extends TestSuite{
         |  a[)
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(Type | "," | "]")""",
       terminals = null,
       found = ")"
     )
@@ -393,7 +393,7 @@ object FailureTests extends TestSuite{
         |  a[b)
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(id ~ TQ | "." | TypeArgs | `#` | NLAnnot | `with` | Refinement | NotNewline ~ (`*` | Id) | "=>" | ExistentialClause | `>:` | `<:` | `*` | "," | "]")""",
       terminals = null,
       found = ")"
     )
@@ -405,7 +405,7 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """ "case" """,
       terminals = null,
       found = "stats :+ e"
     )
@@ -416,7 +416,7 @@ object FailureTests extends TestSuite{
         |  val trueA = 1
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(DefTmpl | ";" | Newline | Pkg | Import | Annot | Mod | TraitDef | ClsDef | `case` | Semis | end-of-input)""",
       terminals = null,
       found = "val trueA"
     )
@@ -426,7 +426,7 @@ object FailureTests extends TestSuite{
         |  val null null cow = 1
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(Id | `:` | `=` | Semi | Semis | "}")""",
       terminals = null,
       found = "null cow"
     )
@@ -436,7 +436,7 @@ object FailureTests extends TestSuite{
         |  val omg_+_+ = 1
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(Binding | id ~ TQ | "." | TypeArgs | TupleEx | Id | "," | `:` | `=` | Semis | "}")""",
       terminals = null,
       found = "_+ = 1"
     )
@@ -447,7 +447,7 @@ object FailureTests extends TestSuite{
         |  var = 2
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(Binding | InfixPattern | VarId)""",
       terminals = null,
       found = "= 2"
     )
@@ -459,7 +459,7 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(XmlPattern | Thingy | PatLiteral | TupleEx | Extractor | VarId)""",
       terminals = null,
       found = "=> 1"
     )
@@ -471,7 +471,7 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(Binding | "." | TypeArgs | TupleEx | Id | Guard | "=>")""",
       terminals = null,
       found = "case"
     )
@@ -480,7 +480,7 @@ object FailureTests extends TestSuite{
         |  a!.b
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(TypeArgs | ExprPrefix | XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | PostFix | "=>" | SuperPostfixSuffix | Semis | "}")""",
       terminals = null,
       found = ".b"
     )
@@ -491,7 +491,7 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """("(" ~ BlockLambdaHead | Expr | "," | ")")""",
       terminals = null,
       found = "=> }"
     )
@@ -500,7 +500,7 @@ object FailureTests extends TestSuite{
         |class Parser([
         |
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(`implicit` | ClsArg | "," | ")")""",
       terminals = null,
       found = "["
     )
@@ -510,7 +510,7 @@ object FailureTests extends TestSuite{
         | @mog
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """("." | TypeArgs | `#` | "(" | Mod | Dcl | TraitDef | ClsDef | `case` | ObjDef)""",
       terminals = null,
       found = "}"
     )
@@ -519,7 +519,7 @@ object FailureTests extends TestSuite{
         |package omg
         |;
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """ "{" """,
       terminals = null,
       found = ";"
     )
@@ -529,7 +529,7 @@ object FailureTests extends TestSuite{
         |  { a: L = }
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """("." | TypeArgs | `#` | `*` | "=>" | BlockLambda | BlockStat | Semis | "}")""",
       terminals = null,
       found = "= }"
     )
@@ -539,7 +539,7 @@ object FailureTests extends TestSuite{
           |}
           |
         """.stripMargin,
-        aggregate = """""",
+        aggregate = """(`super` | `this` | "{" | `_` | Id)""",
       terminals = null,
         found = "()"
       )
@@ -549,7 +549,7 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(`super` | id)""",
       terminals = null,
       found = "this"
     )
@@ -559,7 +559,7 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(`super` | `this` | "{" | `_` | Id)""",
       terminals = null,
       found = "()"
     )
@@ -568,7 +568,7 @@ object FailureTests extends TestSuite{
           |  private O
           |}
         """.stripMargin,
-        aggregate = """""",
+        aggregate = """(AccessQualifier | LocalMod | AccessMod | Dcl | TraitDef | ClsDef | `case` | ObjDef)""",
       terminals = null,
         found = "O\n"
       )
@@ -579,7 +579,7 @@ object FailureTests extends TestSuite{
           |    false  1
           |}
         """.stripMargin,
-        aggregate = """""",
+        aggregate = """ "(" """,
       terminals = null,
         found = "eqeq"
       )
@@ -593,7 +593,7 @@ object FailureTests extends TestSuite{
           |  } yield x
           |}
         """.stripMargin,
-        aggregate = """""",
+        aggregate = """(TypePattern | Binding | "." | TypeArgs | TupleEx | Id | "," | ")")""",
       terminals = null,
         found = "=> x)"
       )
@@ -606,7 +606,7 @@ object FailureTests extends TestSuite{
         |  } yield x
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """(Id | Generator | Assign)""",
       terminals = null,
       found = "} yield"
     )
@@ -619,369 +619,369 @@ object FailureTests extends TestSuite{
         |  } yield x
         |}
       """.stripMargin,
-      aggregate = """""",
+      aggregate = """("." | WL ~ "." | "=>" | SuperPostfixSuffix | Guard | CuttingSemis ~ (GenAssign | Guard) | "}")""",
       terminals = null,
       found = "{\n"
     )
-      * - checkNeg(
-        """
-          |object O{
-          |  for{
-          |    x <- Nil
-          |    if
-          |
-          |    1 == 2
-          |  } yield
-          |}
-        """.stripMargin,
-        aggregate = """""",
-      terminals = null,
-        found = "}"
-      )
-      * - checkNeg(
-        """
-          |object ScopedVar {
-          |  def withScopedVars(ass: Seq[_, ]) = 1
-          |}
-          |
-        """.stripMargin,
-        aggregate = """""",
-      terminals = null,
-        found = ", ]"
-      )
-      * - checkNeg(
-        """
-          |abstract class JSASTTest extends DirectTest {
-          |  def show: this.type = )
-          |}
-          |
-        """.stripMargin,
-        aggregate = """""",
-      terminals = null,
-        found = ")\n"
-
-      )
-      * - checkNeg(
-        """object Traversers {
-          |  {
-          |        1
-          |        case foreach nil
-          |  }
-          |}
-        """.stripMargin,
-        aggregate = """""",
-      terminals = null,
-        found = "case for"
-      )
-      * - checkNeg(
-        """object Utils {
-          |  "\q"
-          |}
-          |
-        """.stripMargin,
-        aggregate = """""",
-      terminals = null,
-        found = "q"
-      )
-      * - checkNeg(
-        """object Utils {
-          |  "
-          |  1
-          |  "
-          |}
-          |
-        """.stripMargin,
-        aggregate = """""",
-      terminals = null,
-        found = "\n"
-      )
-      val tq = "\"\"\""
-      * - checkNeg(
-        s"""
-          |object Utils {
-          |  $tq
-          |  1
-          |  "
-          |}
-          |
-        """.stripMargin,
-        aggregate = """""",
-      terminals = null,
-        found = ""
-      )
-      * - checkNeg(
-        """
-          |object X{
-          |  ''
-          |}
-          |
-        """.stripMargin,
-        aggregate = """""",
-      terminals = null,
-        found = "'\n"
-      )
-
-      // These two guys pass in Scalac, but I'm not gonna support it
-      * - checkNeg(
-        """
-          |object X{
-          |  (1.)
-          |}
-          |
-        """.stripMargin,
-        aggregate = """""",
-      terminals = null,
-        found = ")"
-      )
-      * - checkNeg(
-        s"""
-           |object X{
-           |  1..toString
-           |}
-        """.stripMargin,
-        aggregate = """""",
-      terminals = null,
-        found = ".toString"
-      )
-      * - checkNeg(
-        s"""
-           |object X{
-           |  val x, = 1
-           |}
-        """.stripMargin,
-        aggregate = """""",
-      terminals = null,
-        found = "= 1"
-      )
     * - checkNeg(
-      s"""
-         |object X{
-         |  val (x,) = 1
-         |}
-        """.stripMargin,
-      aggregate = """""",
-      terminals = null,
-      found = ",)"
-    )
-    * - checkNeg(
-      s"""
-         |object X{ val (_:) = 1 }
-        """.stripMargin,
-      aggregate = """""",
-      terminals = null,
-      found = ") = 1"
-    )
-    * - checkNeg(
-      s"""
-         |import x.{y=>}
-        """.stripMargin,
-      aggregate = """""",
+      """
+        |object O{
+        |  for{
+        |    x <- Nil
+        |    if
+        |
+        |    1 == 2
+        |  } yield
+        |}
+      """.stripMargin,
+      aggregate = """(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | ParenedLambda | ExprPrefix | XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | SmallerExprOrLambda)""",
       terminals = null,
       found = "}"
     )
     * - checkNeg(
+      """
+        |object ScopedVar {
+        |  def withScopedVars(ass: Seq[_, ]) = 1
+        |}
+        |
+      """.stripMargin,
+      aggregate = """(TypeArgs | `#` | NLAnnot | `with` | Refinement | NotNewline ~ (`*` | Id) | "=>" | ExistentialClause | `>:` | `<:` | `*` | "," ~ Type | "," ~ WS ~ Newline | "]")""",
+      terminals = null,
+      found = ", ]"
+    )
+    * - checkNeg(
+      """
+        |abstract class JSASTTest extends DirectTest {
+        |  def show: this.type = )
+        |}
+        |
+      """.stripMargin,
+      aggregate = """(`macro` | If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | ParenedLambda | ExprPrefix | XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | SmallerExprOrLambda)""",
+      terminals = null,
+      found = ")\n"
+
+    )
+    * - checkNeg(
+      """object Traversers {
+        |  {
+        |        1
+        |        case foreach nil
+        |  }
+        |}
+      """.stripMargin,
+      aggregate = """(WL ~ "." | "=>" | SuperPostfixSuffix | Semi | ";" | Newline | BlockLambda | BlockStat | Semis | "}")""",
+      terminals = null,
+      found = "case for"
+    )
+    * - checkNeg(
+      """object Utils {
+        |  "\q"
+        |}
+        |
+      """.stripMargin,
+      aggregate = """([btnfr'\\\\\"]] | OctalEscape | UnicodeEscape)""",
+      terminals = null,
+      found = "q"
+    )
+    * - checkNeg(
+      """object Utils {
+        |  "
+        |  1
+        |  "
+        |}
+        |
+      """.stripMargin,
+      aggregate = """(StringChars | Interp | LiteralSlash | Escape | NonStringEnd | "\"")""",
+      terminals = null,
+      found = "\n"
+    )
+    val tq = "\"\"\""
+    * - checkNeg(
       s"""
-         |import x.y,
-        """.stripMargin,
-      aggregate = """""",
+        |object Utils {
+        |  $tq
+        |  1
+        |  "
+        |}
+        |
+      """.stripMargin,
+      aggregate = """(StringChars | Interp | NonTripleQuoteChar | "\"\"\"")""",
       terminals = null,
       found = ""
     )
     * - checkNeg(
+      """
+        |object X{
+        |  ''
+        |}
+        |
+      """.stripMargin,
+      aggregate = """(Escape | plain-id | AlphabetKeywords | Char | Symbol)""",
+      terminals = null,
+      found = "'\n"
+    )
+
+    // These two guys pass in Scalac, but I'm not gonna support it
+    * - checkNeg(
+      """
+        |object X{
+        |  (1.)
+        |}
+        |
+      """.stripMargin,
+      aggregate = """("." ~ Thing | id)""",
+      terminals = null,
+      found = ")"
+    )
+    * - checkNeg(
       s"""
-         |object X{type T = A with}
-        """.stripMargin,
-      aggregate = """""",
+         |object X{
+         |  1..toString
+         |}
+      """.stripMargin,
+      aggregate = """("." ~ Thing | id)""",
+      terminals = null,
+      found = ".toString"
+    )
+    * - checkNeg(
+      s"""
+         |object X{
+         |  val x, = 1
+         |}
+      """.stripMargin,
+      aggregate = """(Binding | InfixPattern | VarId)""",
+      terminals = null,
+      found = "= 1"
+    )
+  * - checkNeg(
+    s"""
+       |object X{
+       |  val (x,) = 1
+       |}
+      """.stripMargin,
+    aggregate = """(TypePattern | Binding | id ~ TQ | "." | TypeArgs | TupleEx | Id | "|" | "," ~ Pattern | "," ~ WS ~ Newline | ")")""",
+      terminals = null,
+    found = ",)"
+  )
+  * - checkNeg(
+    s"""
+       |object X{ val (_:) = 1 }
+      """.stripMargin,
+    aggregate = """(TypePattern | NamedType | Refinement)""",
+      terminals = null,
+    found = ") = 1"
+  )
+  * - checkNeg(
+    s"""
+       |import x.{y=>}
+      """.stripMargin,
+    aggregate = """(Id | `_`)""",
+      terminals = null,
+    found = "}"
+  )
+  * - checkNeg(
+    s"""
+       |import x.y,
+      """.stripMargin,
+    aggregate = """(ThisPath | IdPath)""",
+      terminals = null,
+    found = ""
+  )
+  * - checkNeg(
+    s"""
+       |object X{type T = A with}
+      """.stripMargin,
+    aggregate = """(TupleType | Literal | TypeId | `_`)""",
+      terminals = null,
+    found = "}"
+  )
+  * - checkNeg(
+    s"""
+       |object X{def f(x: Int, ) = 1}
+      """.stripMargin,
+    aggregate = """(Args | ")")""",
+      terminals = null,
+    found = ", )"
+  )
+  * - checkNeg(
+    s"""
+       |object X{val x = (1, 2,)}
+      """.stripMargin,
+    aggregate = """("." | Exp | "L" | "l" | WL ~ "." | WL ~ TypeArgs | Pass ~ ArgList | Pass ~ `_` | InfixSuffix | PostFix | "=>" | SuperPostfixSuffix | "," ~ Expr | "," ~ WS ~ Newline | ")")""",
+      terminals = null,
+    found = ",)"
+  )
+  * - checkNeg(
+    s"""
+       |object X{f[A,]}
+      """.stripMargin,
+    aggregate = """(id ~ TQ | "." | TypeArgs | `#` | NLAnnot | `with` | Refinement | NotNewline ~ (`*` | Id) | "=>" | ExistentialClause | `>:` | `<:` | `*` | "," ~ Type | "," ~ WS ~ Newline | "]")""",
+      terminals = null,
+    found = ",]"
+  )
+  * - checkNeg(
+    s"""
+       |object X{def f[T <% A <%] = 1}
+      """.stripMargin,
+    aggregate = """("=>" | NamedType | Refinement)""",
+      terminals = null,
+    found = "]"
+  )
+  * - checkNeg(
+    s"""
+       |object X{def f[T, B,] = 1}
+      """.stripMargin,
+    aggregate = """(TypeArgList | `>:` | `<:` | `<%` | `:` | "," ~ Annot.rep ~ TypeArg | "," ~ WS ~ Newline | "]")""",
+      terminals = null,
+    found = ",]"
+  )
+  * - checkNeg(
+    s"""
+       |object X{type T = F forSome }}
+      """.stripMargin,
+    aggregate = """ "{" """,
+      terminals = null,
+    found = "}}"
+  )
+
+  * - checkNeg(
+    s"""
+       |object X{def f(x: Int =) = 1}
+      """.stripMargin,
+    aggregate = """(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | ParenedLambda | ExprPrefix | XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | SmallerExprOrLambda)""",
+      terminals = null,
+    found = ") = 1"
+  )
+  * - checkNeg(
+    s"""
+       |object X{type T = Int#}
+      """.stripMargin,
+    aggregate = """id""",
+      terminals = null,
+    found = "}"
+  )
+  * - checkNeg(
+    s"""
+       |object X{type T = }
+      """.stripMargin,
+    aggregate = """("=>" | NamedType | Refinement)""",
+      terminals = null,
+    found = "}\n"
+  )
+  * - checkNeg(
+    s"""
+       |object X{type T[,] = A }
+      """.stripMargin,
+    aggregate = """(Annot | [+\\-] | Id | `_`)""",
+      terminals = null,
+    found = ",]"
+  )
+  * - checkNeg(
+    s"""
+       |object X{type T <: }
+      """.stripMargin,
+    aggregate = """("=>" | NamedType | Refinement)""",
+      terminals = null,
+    found = "}\n"
+  )
+    * - checkNeg(
+      """
+        |object System {
+        |  def a[@b T @f [@b V]] = 1
+        |}
+        |
+      """.stripMargin,
+      aggregate = """(TypeArgList | `>:` | `<:` | `<%` | `:` | "," | "]")""",
+      terminals = null,
+      found = "@f"
+    )
+    * - checkNeg(
+      """
+        |@func(} object System {
+        |
+        |}
+        |
+      """.stripMargin,
+      aggregate = """(Exprs | "," | ")")""",
       terminals = null,
       found = "}"
     )
     * - checkNeg(
-      s"""
-         |object X{def f(x: Int, ) = 1}
-        """.stripMargin,
-      aggregate = """""",
+      """
+        |object System {
+        |  def f[[a] = 1
+        |}
+        |
+      """.stripMargin,
+      aggregate = """(Annot | Id | `_`)""",
       terminals = null,
-      found = ", )"
-    )
-    * - checkNeg(
-      s"""
-         |object X{val x = (1, 2,)}
-        """.stripMargin,
-      aggregate = """""",
-      terminals = null,
-      found = ",)"
-    )
-    * - checkNeg(
-      s"""
-         |object X{f[A,]}
-        """.stripMargin,
-      aggregate = """""",
-      terminals = null,
-      found = ",]"
-    )
-    * - checkNeg(
-      s"""
-         |object X{def f[T <% A <%] = 1}
-        """.stripMargin,
-      aggregate = """""",
-      terminals = null,
-      found = "]"
-    )
-    * - checkNeg(
-      s"""
-         |object X{def f[T, B,] = 1}
-        """.stripMargin,
-      aggregate = """""",
-      terminals = null,
-      found = ",]"
-    )
-    * - checkNeg(
-      s"""
-         |object X{type T = F forSome }}
-        """.stripMargin,
-      aggregate = """""",
-      terminals = null,
-      found = "}}"
+      found = "["
     )
 
     * - checkNeg(
       s"""
-         |object X{def f(x: Int =) = 1}
-        """.stripMargin,
-      aggregate = """""",
+        |object System {
+        |  $tq """".stripMargin,
+      aggregate = """("\"" | StringChars | Interp | NonTripleQuoteChar | "\"\"\"")""",
       terminals = null,
-      found = ") = 1"
+      found = ""
     )
     * - checkNeg(
-      s"""
-         |object X{type T = Int#}
-        """.stripMargin,
-      aggregate = """""",
+      """
+        |object System {
+        |  e match { case <xml:unparsed><</xml:unparsed> => }
+        |}
+        |
+      """.stripMargin,
+      aggregate = """(CharDataP | ScalaPatterns | ElemPattern | "</")""",
       terminals = null,
-      found = "}"
+      found = "<</xml:unp"
     )
-    * - checkNeg(
-      s"""
-         |object X{type T = }
-        """.stripMargin,
-      aggregate = """""",
-      terminals = null,
-      found = "}\n"
-    )
-    * - checkNeg(
-      s"""
-         |object X{type T[,] = A }
-        """.stripMargin,
-      aggregate = """""",
-      terminals = null,
-      found = ",]"
-    )
-    * - checkNeg(
-      s"""
-         |object X{type T <: }
-        """.stripMargin,
-      aggregate = """""",
-      terminals = null,
-      found = "}\n"
-    )
-      * - checkNeg(
-        """
-          |object System {
-          |  def a[@b T @f [@b V]] = 1
-          |}
-          |
-        """.stripMargin,
-        aggregate = """""",
-      terminals = null,
-        found = "@f"
-      )
-      * - checkNeg(
-        """
-          |@func(} object System {
-          |
-          |}
-          |
-        """.stripMargin,
-        aggregate = """""",
-      terminals = null,
-        found = "}"
-      )
-      * - checkNeg(
-        """
-          |object System {
-          |  def f[[a] = 1
-          |}
-          |
-        """.stripMargin,
-        aggregate = """""",
-      terminals = null,
-        found = "["
-      )
 
-      * - checkNeg(
-        s"""
-          |object System {
-          |  $tq """".stripMargin,
-        aggregate = """""",
+    * - checkNeg(
+      s"""object Foo{
+         |  for(i <- Nil if x: Int => bar) 1
+         |}
+       """.stripMargin,
+      aggregate = """(Guard | Enumerator | ")")""",
       terminals = null,
-        found = ""
-      )
-      * - checkNeg(
-        """
-          |object System {
-          |  e match { case <xml:unparsed><</xml:unparsed> => }
-          |}
-          |
-        """.stripMargin,
-        aggregate = """""",
+      found = ": Int"
+    )
+    * - checkNeg(
+      s"""object Foo{; x: Int => x}""",
+      aggregate = """("." | TypeArgs | `#` | `*` | Semi | Semis | "}")""",
       terminals = null,
-        found = "<</xml:unp"
-      )
-
-      * - checkNeg(
-        s"""object Foo{
-           |  for(i <- Nil if x: Int => bar) 1
-           |}
-         """.stripMargin,
-        aggregate = """""",
+      found = "=> x"
+    )
+    * - checkNeg(
+      s"""object Foo{ (i: Int => +i) }""",
+      aggregate = """(NamedType | Refinement)""",
       terminals = null,
-        found = ": Int"
-      )
-      * - checkNeg(
-        s"""object Foo{; x: Int => x}""",
-        aggregate = """""",
+      found = ")"
+    )
+    * - checkNeg(
+      """
+        |object X {
+        |  for{
+        |    a <- List(1)
+        |    ;
+        |  } yield a
+        |}""".stripMargin,
+      aggregate = """(GenAssign | Guard)""",
       terminals = null,
-        found = "=> x"
-      )
-      * - checkNeg(
-        s"""object Foo{ (i: Int => +i) }""",
-        aggregate = """""",
+      found = "} yield a"
+    )
+    * - checkNeg(
+      """
+        |object X {
+        |  {
+        |    val x = 1
+        |    ;
+        |    """.stripMargin,
+      aggregate = """(";" | Newline | Import | Prelude ~ BlockDef | If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | ParenedLambda | ExprPrefix | XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | BlockLambda | BlockStat | Semis | "}")""",
       terminals = null,
-        found = ")"
-      )
-      * - checkNeg(
-        """
-          |object X {
-          |  for{
-          |    a <- List(1)
-          |    ;
-          |  } yield a
-          |}""".stripMargin,
-        aggregate = """""",
-      terminals = null,
-        found = "} yield a"
-      )
-      * - checkNeg(
-        """
-          |object X {
-          |  {
-          |    val x = 1
-          |    ;
-          |    """.stripMargin,
-        aggregate = """""",
-      terminals = null,
-        found = ""
-      )
+      found = ""
+    )
 
   }
 }

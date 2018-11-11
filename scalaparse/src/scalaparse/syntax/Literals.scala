@@ -29,7 +29,7 @@ trait Literals { l =>
   def NotNewline[_: P]: P[Unit] = P( &( WS ~ !Basic.Newline ) )
   def OneNLMax[_: P]: P[Unit] = {
     def ConsumeComments = P( (Basic.WSChars.? ~ NoTrace(Literals.Comment) ~ Basic.WSChars.? ~ Basic.Newline).rep )
-    P( NoCut( WS ~ Basic.Newline.? ~ ConsumeComments ~ NotNewline) )
+    P( NoCut(NoTrace(WS ~ Basic.Newline.? ~ ConsumeComments ~ NotNewline) ))
   }
   def TrailingComma[_: P]: P[Unit] = P( ("," ~ WS ~ Basic.Newline).? )
   def Pattern[_: P]: P[Unit]
