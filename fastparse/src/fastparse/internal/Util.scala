@@ -1,6 +1,6 @@
 package fastparse.internal
 
-import fastparse.ParserInput
+import fastparse.{ParserInput, ParsingRun}
 
 import scala.annotation.{switch, tailrec}
 import scala.collection.mutable.ArrayBuffer
@@ -9,6 +9,13 @@ object Util {
   def parenthize(fs: Seq[Lazy[String]]) = fs match{
     case Seq(x) => x()
     case xs => xs.reverseIterator.map(_()).mkString("(", " | ", ")")
+  }
+
+  def consumeWhitespace[V](whitespace: ParsingRun[_] => ParsingRun[Unit], ctx: ParsingRun[Any]) = {
+    val oldCapturing = ctx.noDropBuffer // completely disallow dropBuffer
+    ctx.noDropBuffer = true
+    whitespace(ctx)
+    ctx.noDropBuffer = oldCapturing
   }
 
   def startsWith(src: ParserInput, prefix: String, offset: Int) = {

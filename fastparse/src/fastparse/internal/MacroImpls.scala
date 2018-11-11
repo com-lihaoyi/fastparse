@@ -212,7 +212,8 @@ object MacroImpls {
         }
         else if (ctx5.cut) ctx5.asInstanceOf[ParsingRun[V]]
         else {
-          if (ctx5.verboseFailures) ctx5.aggregateMsg(lhsMsg, startGroup)
+          val verboseFailures = ctx5.verboseFailures
+          if (verboseFailures) ctx5.aggregateMsg(lhsMsg, startGroup)
 
           ctx5.index = startPos
           ctx5.setMsg(ctx5.shortParserMsg)
@@ -230,7 +231,7 @@ object MacroImpls {
               ctx5.cut |= oldCut
               res
             }
-          if (ctx5.verboseFailures) ctx5.setMsg(rhsMsg ::: lhsMsg)
+          if (verboseFailures) ctx5.setMsg(rhsMsg ::: lhsMsg)
           res.asInstanceOf[ParsingRun[V]]
         }
       }
@@ -425,74 +426,68 @@ object MacroImpls {
 
     val lhs = c.prefix.asInstanceOf[Expr[EagerOps[T]]]
     val cut1 = c.Expr[Boolean](if(cut) q"true" else q"false")
-    val consumeWhitespace = whitespace match{
-      case None => reify{(c: ParsingRun[Any]) => true}
+
+    val rhs = q"""
+      if (!ctx1.isSuccess && ctx1.cut) ctx1
+      else {
+        val preOtherIndex = ctx1.index
+        $other
+        val postOtherIndex = ctx1.index
+
+        val rhsNewCut = $cut1 | ctx1.cut
+        val msg = ctx1.shortParserMsg
+        val res =
+          if (!ctx1.isSuccess) ctx1.augmentFailure(
+            postOtherIndex,
+            cut = rhsNewCut
+          ) else {
+            val rhsMadeProgress = postOtherIndex > preOtherIndex
+            val nextIndex =
+              if (!rhsMadeProgress && input.isReachable(postOtherIndex)) preWsIndex
+              else postOtherIndex
+
+            if (rhsMadeProgress && ctx1.checkForDrop()) input.dropBuffer(postOtherIndex)
+
+            ctx1.freshSuccess(
+              s1.apply(pValue.asInstanceOf[${c.weakTypeOf[T]}], ctx1.successValue.asInstanceOf[${c.weakTypeOf[V]}]),
+              nextIndex
+            )
+          }
+        if (ctx1.verboseFailures) ctx1.setMsg(() => _root_.fastparse.internal.Util.parenthize(lhsMsg) + " ~ " + _root_.fastparse.internal.Util.parenthize(msg))
+        res
+      }
+    """
+    val guardedRhs = whitespace match{
+      case None => rhs
       case Some(ws) =>
-        if (ws.tree.tpe =:= typeOf[fastparse.NoWhitespace.noWhitespaceImplicit.type]){
-          reify{(c: ParsingRun[Any]) => true}
-        }else{
-          reify{(c: ParsingRun[Any]) =>
-            val oldCapturing = c.noDropBuffer // completely disallow dropBuffer
-            c.noDropBuffer = true
-            ws.splice(c)
-            c.noDropBuffer = oldCapturing
-            c.isSuccess
-          }
+        if (ws.tree.tpe =:= typeOf[fastparse.NoWhitespace.noWhitespaceImplicit.type]) rhs
+        else{
+          q"""
+            _root_.fastparse.internal.Util.consumeWhitespace($ws, ctx1)
+            if (ctx1.isSuccess) $rhs
+          """
         }
     }
+    c.Expr[ParsingRun[R]](q"""{
+      $ctx match{ case ctx1 =>
+        $s match{case s1 =>
+          val startIndex = ctx1.index
+          val input = ctx1.input
+          $lhs.parse0
+          if (!ctx1.isSuccess) ctx1
+          else {
+            val lhsMsg = ctx1.shortParserMsg
+            ctx1.cut |= $cut1
+            val index = ctx1.index
+            if (index > startIndex && ctx1.checkForDrop()) input.dropBuffer(index)
 
-    reify {
-      {
-        ctx.splice match{ case ctx1 =>
-          s.splice match{case s1 =>
-            val startIndex = ctx1.index
-            val input = ctx1.input
-            lhs.splice.parse0
-            if (!ctx1.isSuccess) ctx1
-            else {
-              val lhsMsg = ctx1.shortParserMsg
-              ctx1.cut |= cut1.splice
-              val index = ctx1.index
-              if (index > startIndex && ctx1.checkForDrop()) input.dropBuffer(index)
-
-              val pValue = ctx1.successValue
-              val preWsIndex = index
-              if (!consumeWhitespace.splice(ctx1)) ctx1
-              else {
-                if (!ctx1.isSuccess && ctx1.cut) ctx1
-                else {
-                  val preOtherIndex = ctx1.index
-                  other.splice
-                  val postOtherIndex = ctx1.index
-
-                  val rhsNewCut = cut1.splice | ctx1.cut
-                  val msg = ctx1.shortParserMsg
-                  val res =
-                    if (!ctx1.isSuccess) ctx1.augmentFailure(
-                      postOtherIndex,
-                      cut = rhsNewCut
-                    ) else {
-                      val rhsMadeProgress = postOtherIndex > preOtherIndex
-                      val nextIndex =
-                        if (!rhsMadeProgress && input.isReachable(postOtherIndex)) preWsIndex
-                        else postOtherIndex
-
-                      if (rhsMadeProgress && ctx1.checkForDrop()) input.dropBuffer(postOtherIndex)
-
-                      ctx1.freshSuccess(
-                        s1.apply(pValue.asInstanceOf[T], ctx1.successValue.asInstanceOf[V]),
-                        nextIndex
-                      )
-                    }
-                  if (ctx1.verboseFailures) ctx1.setMsg(() => Util.parenthize(lhsMsg) + " ~ " + Util.parenthize(msg))
-                  res
-                }
-              }
-            }
+            val pValue = ctx1.successValue
+            val preWsIndex = index
+            $guardedRhs
           }
         }
-      }.asInstanceOf[ParsingRun[R]]
-    }
+      }
+    }.asInstanceOf[_root_.fastparse.ParsingRun[${c.weakTypeOf[R]}]]""")
   }
 
   def cutMacro[T: c.WeakTypeTag](c: Context)(ctx: c.Expr[ParsingRun[_]]): c.Expr[ParsingRun[T]] = {
