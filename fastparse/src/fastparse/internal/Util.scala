@@ -10,9 +10,9 @@ object Util {
     case Seq(x) => x()
     case xs => xs.reverseIterator.map(_()).toSeq.distinct.mkString("(", " | ", ")")
   }
-  def joinBinOp(lhs: List[Lazy[String]], rhs: List[Lazy[String]]) =
-    if (lhs.isEmpty) rhs
-    else List(new Lazy(() => Util.parenthize(lhs) + " ~ " + Util.parenthize(rhs)))
+  def joinBinOp(lhs: Msgs, rhs: Msgs) =
+    if (lhs.value.isEmpty) rhs
+    else Msgs(List(new Lazy(() => lhs.render + " ~ " + rhs.render)))
 
   def consumeWhitespace[V](whitespace: ParsingRun[_] => ParsingRun[Unit], ctx: ParsingRun[Any]) = {
     val oldCapturing = ctx.noDropBuffer // completely disallow dropBuffer
@@ -144,4 +144,11 @@ final class CompactTrieNode(source: TrieNode){
 
 
   val word = source.word
+}
+
+case class Msgs(value: List[Lazy[String]]){
+  def :::(other: Msgs) = Msgs(other.value ::: value)
+  def ::(other: Lazy[String]) = Msgs(other :: value)
+  override def toString = render
+  def render = Util.parenthize(value)
 }

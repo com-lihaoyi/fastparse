@@ -1,6 +1,6 @@
 package fastparse
 
-import fastparse.internal.{Instrument, Lazy, Util}
+import fastparse.internal.{Instrument, Lazy, Msgs, Util}
 
 /**
   * Models an in-progress parsing run; contains all the mutable state that may
@@ -56,11 +56,9 @@ import fastparse.internal.{Instrument, Lazy, Util}
   *                         the string in the parser body and return store it
   *                         here, and an enclosing parser may fetch it back
   *                         out to help build its own string representation.
-  *                         Stored in a [[Lazy]] wrapper to avoid paying the
-  *                         string-construction cost unless truly necessary;
-  *                         in exchange we pay a small cost constructing the
-  *                         chain of functions that can  be invoked to create
-  *                         the string
+  *                         If the last parser started before the `traceIndex`,
+  *                         we only aggregate the portion of the parser msg
+  *                         that takes place after `traceIndex`
   * @param failureStack     The stack of named `P(...)` parsers in effect when
   *                         the failure occured; only constructed when tracing
   *                         is enabled via `traceIndex != -1`
@@ -103,10 +101,10 @@ final class ParsingRun[+T](val input: ParserInput,
                            val traceIndex: Int,
                            val instrument: Instrument,
                            // Mutable vars below:
-                           var failureTerminalAggregate: List[Lazy[String]],
-                           var failureGroupAggregate: List[Lazy[String]],
-                           var shortParserMsg: List[Lazy[String]],
-                           var lastFailureMsg: List[Lazy[String]],
+                           var failureTerminalAggregate: Msgs,
+                           var failureGroupAggregate: Msgs,
+                           var shortParserMsg: Msgs,
+                           var lastFailureMsg: Msgs,
                            var failureStack: List[(String, Int)],
                            var isSuccess: Boolean,
                            var logDepth: Int,
@@ -118,21 +116,21 @@ final class ParsingRun[+T](val input: ParserInput,
 
 
   def aggregateMsg(startIndex: Int,
-                   msgToAggregate: List[Lazy[String]],
-                   startGroup: List[Lazy[String]]): Unit = {
+                   msgToAggregate: Msgs,
+                   startGroup: Msgs): Unit = {
     aggregateMsg(startIndex, msgToAggregate, msgToAggregate, startGroup)
   }
 
   def aggregateMsg(startIndex: Int,
                    msgToSet: () => String,
-                   msgToAggregate: List[Lazy[String]],
-                   startGroup: List[Lazy[String]]): Unit = {
-    aggregateMsg(startIndex, List(new Lazy(msgToSet)), msgToAggregate, startGroup)
+                   msgToAggregate: Msgs,
+                   startGroup: Msgs): Unit = {
+    aggregateMsg(startIndex, Msgs(List(new Lazy(msgToSet))), msgToAggregate, startGroup)
   }
   def aggregateMsg(startIndex: Int,
-                   msgToSet: List[Lazy[String]],
-                   msgToAggregate: List[Lazy[String]],
-                   startGroup: List[Lazy[String]],
+                   msgToSet: Msgs,
+                   msgToAggregate: Msgs,
+                   startGroup: Msgs,
                    force: Boolean = false): Unit = {
     // We only aggregate the msg under the following conditions:
     //
@@ -162,19 +160,19 @@ final class ParsingRun[+T](val input: ParserInput,
     val f2 = new Lazy(f)
     if (!isSuccess){
       if (index == traceIndex) failureTerminalAggregate ::= f2
-      if (lastFailureMsg == null) lastFailureMsg = List(f2)
+      if (lastFailureMsg == null) lastFailureMsg = Msgs(List(f2))
     }
 
-    shortParserMsg = if (startIndex >= traceIndex) List(f2) else Nil
+    shortParserMsg = Msgs(if (startIndex >= traceIndex) List(f2) else Nil)
   }
   def setMsg(startIndex: Int, f: () => String): Unit = {
     val f2 = new Lazy(f)
-    if (!isSuccess && lastFailureMsg == null) lastFailureMsg = List(f2)
-    shortParserMsg = if (startIndex >= traceIndex) List(f2) else Nil
+    if (!isSuccess && lastFailureMsg == null) lastFailureMsg = Msgs(List(f2))
+    shortParserMsg = Msgs(if (startIndex >= traceIndex) List(f2) else Nil)
   }
-  def setMsg(startIndex: Int, f: List[Lazy[String]]): Unit = {
+  def setMsg(startIndex: Int, f: Msgs): Unit = {
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = f
-    shortParserMsg =  if (startIndex >= traceIndex) f else Nil
+    shortParserMsg =  if (startIndex >= traceIndex) f else Msgs(Nil)
   }
 
   // Use telescoping methods rather than default arguments to try and minimize
@@ -226,15 +224,19 @@ final class ParsingRun[+T](val input: ParserInput,
   }
 
   def freshFailure(): ParsingRun[Nothing] = {
-    lastFailureMsg = null
-    failureStack = Nil
+    if (verboseFailures){
+      lastFailureMsg = null
+      failureStack = Nil
+    }
     isSuccess = false
     this.asInstanceOf[ParsingRun[Nothing]]
   }
 
   def freshFailure(startPos: Int): ParsingRun[Nothing] = {
-    lastFailureMsg = null
-    failureStack = Nil
+    if (verboseFailures) {
+      lastFailureMsg = null
+      failureStack = Nil
+    }
     isSuccess = false
     index = startPos
     this.asInstanceOf[ParsingRun[Nothing]]

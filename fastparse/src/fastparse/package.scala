@@ -54,10 +54,10 @@ package object fastparse {
     originalParser = parser,
     traceIndex = traceIndex,
     instrument = instrument,
-    failureTerminalAggregate = List.empty,
-    failureGroupAggregate = List.empty,
-    shortParserMsg = Nil,
-    lastFailureMsg = Nil,
+    failureTerminalAggregate = Msgs(Nil),
+    failureGroupAggregate = Msgs(Nil),
+    shortParserMsg = Msgs(Nil),
+    lastFailureMsg = null,
     failureStack = List.empty,
     isSuccess = true,
     logDepth = if (enableLogging) 0 else -1,
@@ -376,7 +376,7 @@ package object fastparse {
       if (ctx.verboseFailures) {
         ctx.failureTerminalAggregate = startTerminals
         ctx.failureGroupAggregate = startAggregate
-        ctx.setMsg(startPos, () => "!" + Util.parenthize(msg))
+        ctx.setMsg(startPos, () => "!" + msg.render)
       }
       res.cut = startCut
       res
@@ -424,7 +424,7 @@ package object fastparse {
         } else {
           val trace = Parsed.Failure.formatStack(
             ctx.input,
-            ctx.failureStack ++ Seq(Option(ctx.lastFailureMsg).fold("")(Util.parenthize(_)) -> ctx.index)
+            ctx.failureStack ++ Seq(ctx.lastFailureMsg.render -> ctx.index)
           )
           val trailing = ctx.input match {
             case c: IndexedParserInput => Parsed.Failure.formatTrailing(ctx.input, startIndex)
@@ -482,8 +482,8 @@ package object fastparse {
       ctx.failureTerminalAggregate = startAggregate
       ctx.setMsg(startPos, () =>
         msg match{
-          case Seq(x) => s"&(${Util.parenthize(msg)})"
-          case xs => s"&${Util.parenthize(msg)}"
+          case Seq(x) => s"&(${msg.render})"
+          case xs => s"&${msg.render}"
         }
       )
     }

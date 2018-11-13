@@ -1,6 +1,6 @@
 package fastparse
 
-import fastparse.internal.Util
+import fastparse.internal.{Msgs, Util}
 
 /**
   * The outcome of a [[ParsingRun]] run, either a success (with value and index) or
@@ -20,7 +20,7 @@ object Parsed{
   def fromParsingRun[T](p: ParsingRun[T]): Parsed[T] = {
     if (p.isSuccess) Parsed.Success(p.successValue.asInstanceOf[T], p.index)
     else Parsed.Failure(
-      Option(p.lastFailureMsg).fold("")(Util.parenthize(_)),
+      Option(p.lastFailureMsg).fold("")(_.render),
       p.index,
       Parsed.Extra(p.input, p.startIndex, p.index, p.originalParser, p.failureStack)
     )
@@ -147,8 +147,8 @@ object Parsed{
 //      println("lastFailureMsg " + Util.parenthize(p.lastFailureMsg))
 //      println("failureGroupAggregate " + Util.parenthize(p.failureGroupAggregate))
       TracedFailure(
-        p.failureTerminalAggregate.reverse.map(_()).distinct,
-        (p.lastFailureMsg ++ p.failureGroupAggregate).reverse.map(_()).distinct,
+        p.failureTerminalAggregate,
+        p.lastFailureMsg ::: p.failureGroupAggregate,
         Parsed.fromParsingRun(p).asInstanceOf[Failure]
       )
     }
@@ -167,22 +167,16 @@ object Parsed{
     *               good
     * @param failure The raw failure object
     */
-  case class TracedFailure(terminals: Seq[String],
-                           groups: Seq[String],
+  case class TracedFailure(terminals: Msgs,
+                           groups: Msgs,
                            failure: Failure){
     def label = failure.label
     def index = failure.index
     def input = failure.extra.input
     def stack = failure.extra.stack
-    def terminalAggregateString = terminals match{
-      case Seq(x) => x
-      case items => items.mkString("(", " | ", ")")
-    }
+    def terminalAggregateString = terminals.render
 
-    def groupAggregateString = groups match{
-      case Seq(x) => x
-      case items => items.mkString("(", " | ", ")")
-    }
+    def groupAggregateString = groups.render
 
     @deprecated("Use .msg instead")
     def trace = aggregateMsg

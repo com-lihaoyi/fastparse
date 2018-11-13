@@ -184,7 +184,7 @@ object FailureTests extends TestSuite{
                       expected: String,
                       expectedTerminals: String = null)(parser: P[_] => P[_]) = {
         val f @ Parsed.Failure(failureString, index, extra) = parse(input, parser(_))
-        val trace = f.trace()
+        val trace = f.trace(true)
 
         val expectedTerminals1 = Option(expectedTerminals).getOrElse(expected)
         assert(
@@ -244,14 +244,33 @@ object FailureTests extends TestSuite{
         ("a" ~ "b").repX.? ~ "a" ~ "d"
       }
 
-      // What happens if the failure happens down some branch which takes place
-      // *before* traceIndex, and the final failure takes place *after* traceIndex?
-      'either4 - checkOffset("abx", """("b" ~ "c" | "d")""", """("c" | "d")""") { implicit c =>
-        "a" ~ "b" ~ "c" | "a" ~/ "d"
-      }
+      'downstream - {
+        // In the case where one branch fails further in than `traceIndex`, we
+        // collect the partial aggregation from that branch in the
+        // `failureGroupAggregate` but ignore that branch's downstream failure in
+        // `failureTerminalsAggregate`
+        'either1 - checkOffset("abx", """("b" ~ "c" | "d")""", """"d"""") { implicit c =>
+          ("a" ~ "b" ~ "c") | "a" ~/ "d"
+        }
 
-      'either5 - checkOffset("abx", """("b" ~ "c" | "d")""", """("c" | "d")""") { implicit c =>
-        "a" ~ ("b" ~ "c") | "a" ~/ "d"
+        'either2 - checkOffset("abx", """("b" ~ "c" | "d")""", """"d"""") { implicit c =>
+          "a" ~ ("b" ~ "c") | "a" ~/ "d"
+        }
+        'either3 - checkOffset("abx", """("b" ~ "c" | "d")""", """"d"""") { implicit c =>
+          ("a" ~ ("b" ~ "c") | "") ~ "a" ~/ "d"
+        }
+        'rep - checkOffset("abx", """("b" ~ "c" | "d")""", """"d"""") { implicit c =>
+          ("a" ~ ("b" ~ "c")).rep ~ "a" ~/ "d"
+        }
+        'repX - checkOffset("abx", """("b" ~ "c" | "d")""", """"d"""") { implicit c =>
+          ("a" ~ ("b" ~ "c")).repX ~ "a" ~/ "d"
+        }
+        'repSep - checkOffset("abx", """("b" ~ "c" | "d")""", """"d"""") { implicit c =>
+          ("a" ~ ("b" ~ "c")).rep(sep = Pass) ~ "a" ~/ "d"
+        }
+        'option - checkOffset("abx", """("b" ~ "c" | "d")""", """"d"""") { implicit c =>
+          ("a" ~ ("b" ~ "c")).? ~ "a" ~/ "d"
+        }
       }
     }
   }
