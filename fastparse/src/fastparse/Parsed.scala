@@ -83,7 +83,12 @@ object Parsed{
       * Re-runs the failed parse with `verboseFailures` turned on and failure
       * aggregation enabled. This allows Fastparse to provide much more
       * detailed error messages, at a cost of taking ~2x as long than the
-      * original parse
+      * original parse.
+      *
+      * By default, logging is disabled during the tracing run; this is because
+      * you typically already saw the logging output during the primary parse,
+      * and the tracing run's log output should be identical. You can pass in
+      * `enableLogging = true` to log the tracing run as well.
       */
     def trace(enableLogging: Boolean = false) = extra.trace(enableLogging)
   }
@@ -114,6 +119,11 @@ object Parsed{
       * slowest of Fastparse's error reporting mode, taking ~2x as long
       * as the original parse, but provides the greatest detail in the error
       * message
+      *
+      * By default, logging is disabled during the tracing run; this is because
+      * you typically already saw the logging output during the primary parse,
+      * and the tracing run's log output should be identical. You can pass in
+      * `enableLogging = true` to log the tracing run as well.
       */
     def trace(enableLogging: Boolean = false) = {
       input.checkTraceable()

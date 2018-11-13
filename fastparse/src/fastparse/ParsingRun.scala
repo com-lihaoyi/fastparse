@@ -117,17 +117,20 @@ final class ParsingRun[+T](val input: ParserInput,
                            var noDropBuffer: Boolean){
 
 
-  def aggregateMsg(parsedMsg: List[Lazy[String]],
-                   startGroup: List[Lazy[String]]): Unit = {
-    aggregateMsg(parsedMsg, parsedMsg, startGroup)
-  }
-
-  def aggregateMsg(msgToSet: () => String,
+  def aggregateMsg(startIndex: Int,
                    parsedMsg: List[Lazy[String]],
                    startGroup: List[Lazy[String]]): Unit = {
-    aggregateMsg(List(new Lazy(msgToSet)), parsedMsg, startGroup)
+    aggregateMsg(startIndex, parsedMsg, parsedMsg, startGroup)
   }
-  def aggregateMsg(msgToSet: List[Lazy[String]],
+
+  def aggregateMsg(startIndex: Int,
+                   msgToSet: () => String,
+                   parsedMsg: List[Lazy[String]],
+                   startGroup: List[Lazy[String]]): Unit = {
+    aggregateMsg(startIndex, List(new Lazy(msgToSet)), parsedMsg, startGroup)
+  }
+  def aggregateMsg(startIndex: Int,
+                   msgToSet: List[Lazy[String]],
                    parsedMsg: List[Lazy[String]],
                    startGroup: List[Lazy[String]],
                    force: Boolean = false): Unit = {
@@ -143,29 +146,30 @@ final class ParsingRun[+T](val input: ParserInput,
     //   - Successes we *do* log, because often aggregateMsg gets called from
     //     .rep and .? bodies, where the parse succeeds even though the last
     //     aborted inner-parse failed (and needs to be aggregated)
-    if (index == traceIndex && (!cut || isSuccess || force)) {
+    if (!cut || isSuccess || force) {
       failureGroupAggregate = parsedMsg ::: startGroup
     }
 
-    setMsg(msgToSet)
+    setMsg(startIndex, msgToSet)
   }
 
-  def aggregateTerminal(f: () => String): Unit = {
+  def aggregateTerminal(startIndex: Int, f: () => String): Unit = {
     val f2 = new Lazy(f)
     if (!isSuccess){
       if (index == traceIndex) failureTerminalAggregate ::= f2
       if (lastFailureMsg == null) lastFailureMsg = List(f2)
     }
-    shortParserMsg = List(f2)
+
+    shortParserMsg = if (startIndex >= traceIndex) List(f2) else Nil
   }
-  def setMsg(f: () => String): Unit = {
+  def setMsg(startIndex: Int, f: () => String): Unit = {
     val f2 = new Lazy(f)
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = List(f2)
-    shortParserMsg = List(f2)
+    shortParserMsg = if (startIndex >= traceIndex) List(f2) else Nil
   }
-  def setMsg(f: List[Lazy[String]]): Unit = {
+  def setMsg(startIndex: Int, f: List[Lazy[String]]): Unit = {
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = f
-    shortParserMsg = f
+    shortParserMsg =  if (startIndex >= traceIndex) f else Nil
   }
 
   // Use telescoping methods rather than default arguments to try and minimize

@@ -180,29 +180,52 @@ object FailureTests extends TestSuite{
     }
 
     'offset - {
-      'either1 - {
-        def parseA[_: P] = P("a" ~ "b" | "a" ~/ "c")
-        val f1@Parsed.Failure(_, _, _) = parse("ax", parseA(_))
-        val trace = f1.trace()
-        assert(trace.groupAggregateString == """("b" | "c")""")
+      def checkOffset(input: String, expected: String)(parser: P[_] => P[_]) = {
+        val f @ Parsed.Failure(failureString, index, extra) = parse(input, parser(_))
+        val trace = f.trace()
+
+        assert(
+          trace.groupAggregateString == expected
+        )
       }
-      'either2 - {
-        def parseA[_: P] = P(("a" ~ "b" | "a" ~ "c" | "") ~ "a" ~ "d")
-        val f1@Parsed.Failure(_, _, _) = parse("ax", parseA(_))
-        val trace = f1.trace()
-        assert(trace.groupAggregateString == """("b" | "c" | "d")""")
+      // Consider cases where the failure happens down some branch of an either,
+      // rep, or option, where the branch takes place before traceIndex but the
+      // actual failure lines up nicely.
+      'opt - checkOffset("ax", """("b" | "d")""") { implicit c =>
+        ("a" ~ "b").? ~ "a" ~ "d"
       }
-      'opt - {
-        def parseA[_: P] = P(("a" ~ "b").? ~ "a" ~ "d")
-        val f1@Parsed.Failure(_, _, _) = parse("ax", parseA(_))
-        val trace = f1.trace()
-        assert(trace.groupAggregateString == """("b" | "d")""")
+      'rep - checkOffset("ax", """("b" | "d")""") { implicit c =>
+        ("a" ~ "b").rep ~ "a" ~ "d"
       }
-      'rep - {
-        def parseA[_: P] = P(("a" ~ "b").rep ~ "a" ~ "d")
-        val f1@Parsed.Failure(_, _, _) = parse("ax", parseA(_))
-        val trace = f1.trace()
-        assert(trace.groupAggregateString == """("b" | "d")""")
+      'either1 - checkOffset("ax", """("b" | "c")""") { implicit c =>
+        "a" ~ "b" | "a" ~/ "c"
+      }
+      'either2 - checkOffset("ax", """("b" | "c" | "d")"""){implicit c =>
+        ("a" ~ "b" | "a" ~ "c" | "") ~ "a" ~ "d"
+      }
+
+      'either3 - checkOffset("ax", """("b" | "c" | "d")""") { implicit c =>
+        ("a" ~ "b" | "a" ~ "c").? ~ "a" ~ "d"
+      }
+      'either3A - checkOffset("ax", """("b" | "c" | "d")""") { implicit c =>
+        (("a" ~ "b").rep(sep = Pass) | ("a" ~ "c").?).? ~ "a" ~ "d"
+      }
+
+      'either3B - checkOffset("ax", """("b" | "d")""") { implicit c =>
+        ("a" ~ "b").?.? ~ "a" ~ "d"
+      }
+      'either3C - checkOffset("ax", """("b" | "d")""") { implicit c =>
+        ("a" ~ "b").repX.? ~ "a" ~ "d"
+      }
+
+      // What happens if the failure happens down some branch which takes place
+      // *before* traceIndex, and the final failure takes place *after* traceIndex?
+      'either4 - checkOffset("abx", """("b" ~ "c" | "d")""") { implicit c =>
+        "a" ~ "b" ~ "c" | "a" ~/ "d"
+      }
+
+      'either5 - checkOffset("abx", """("b" ~ "c" | "d")""") { implicit c =>
+        "a" ~ ("b" ~ "c") | "a" ~/ "d"
       }
     }
   }

@@ -98,10 +98,11 @@ package object fastparse {
     * Parses a string value case-insensitively
     */
   def IgnoreCase(s: String)(implicit ctx: P[Any]): P[Unit] = {
+    val startIndex = ctx.index
     val res =
       if (Util.startsWithIgnoreCase(ctx.input, s, ctx.index)) ctx.freshSuccessUnit(ctx.index + s.length)
       else ctx.freshFailure().asInstanceOf[P[Unit]]
-    if (ctx.verboseFailures) ctx.aggregateTerminal(() => Util.literalize(s))
+    if (ctx.verboseFailures) ctx.aggregateTerminal(startIndex, () => Util.literalize(s))
     res
   }
 
@@ -347,7 +348,7 @@ package object fastparse {
         if (res.isSuccess) ctx.freshSuccess(ctx.successValue)
         else ctx.freshFailure(oldIndex)
 
-      ctx.aggregateTerminal(() => msg)
+      ctx.aggregateTerminal(oldIndex, () => msg)
 
       res2.asInstanceOf[P[T]]
     }
@@ -375,7 +376,7 @@ package object fastparse {
       if (ctx.verboseFailures) {
         ctx.failureTerminalAggregate = startTerminals
         ctx.failureGroupAggregate = startAggregate
-        ctx.setMsg(() => "!" + Util.parenthize(msg))
+        ctx.setMsg(startPos, () => "!" + Util.parenthize(msg))
       }
       res.cut = startCut
       res
@@ -479,7 +480,7 @@ package object fastparse {
       else ctx.asInstanceOf[P[Unit]]
     if (ctx.verboseFailures) {
       ctx.failureTerminalAggregate = startAggregate
-      ctx.setMsg(() =>
+      ctx.setMsg(startPos, () =>
         msg match{
           case Seq(x) => s"&(${Util.parenthize(msg)})"
           case xs => s"&${Util.parenthize(msg)}"
@@ -495,10 +496,11 @@ package object fastparse {
     * your parser parses the whole file.
     */
   def End(implicit ctx: P[_]): P[Unit] = {
+    val startIndex = ctx.index
     val res =
-      if (!ctx.input.isReachable(ctx.index)) ctx.freshSuccessUnit()
+      if (!ctx.input.isReachable(startIndex)) ctx.freshSuccessUnit()
       else ctx.freshFailure().asInstanceOf[P[Unit]]
-    if (ctx.verboseFailures) ctx.aggregateTerminal(() => "end-of-input")
+    if (ctx.verboseFailures) ctx.aggregateTerminal(startIndex, () => "end-of-input")
     res
 
   }
@@ -506,10 +508,11 @@ package object fastparse {
     * Parser that is only successful at the start of the input.
     */
   def Start(implicit ctx: P[_]): P[Unit] = {
+    val startIndex = ctx.index
     val res =
-      if (ctx.index == 0) ctx.freshSuccessUnit()
+      if (startIndex == 0) ctx.freshSuccessUnit()
       else ctx.freshFailure().asInstanceOf[P[Unit]]
-    if (ctx.verboseFailures) ctx.aggregateTerminal(() => "start-of-input")
+    if (ctx.verboseFailures) ctx.aggregateTerminal(startIndex, () => "start-of-input")
     res
   }
 
@@ -535,7 +538,7 @@ package object fastparse {
     */
   def Pass(implicit ctx: P[_]): P[Unit] = {
     val res = ctx.freshSuccessUnit()
-    if (ctx.verboseFailures) ctx.setMsg(() => "Pass")
+    if (ctx.verboseFailures) ctx.setMsg(ctx.index, () => "Pass")
     res
   }
 
@@ -545,7 +548,7 @@ package object fastparse {
     */
   def Pass[T](v: T)(implicit ctx: P[_]): P[T] = {
     val res = ctx.freshSuccess(v)
-    if (ctx.verboseFailures) ctx.setMsg(() => "Pass")
+    if (ctx.verboseFailures) ctx.setMsg(ctx.index, () => "Pass")
     res
   }
 
@@ -554,7 +557,7 @@ package object fastparse {
     */
   def Fail(implicit ctx: P[_]): P[Nothing] = {
     val res = ctx.freshFailure()
-    if (ctx.verboseFailures) ctx.setMsg(() => "fail")
+    if (ctx.verboseFailures) ctx.setMsg(ctx.index, () => "fail")
     res
   }
 
@@ -566,7 +569,7 @@ package object fastparse {
     */
   def Index(implicit ctx: P[_]): P[Int] = {
     val res = ctx.freshSuccess(ctx.index)
-    if (ctx.verboseFailures) ctx.setMsg(() => "Index")
+    if (ctx.verboseFailures) ctx.setMsg(ctx.index, () => "Index")
     res
   }
 
@@ -575,10 +578,11 @@ package object fastparse {
     * one character for it to parse (i.e. the input isn't at its end)
     */
   def AnyChar(implicit ctx: P[_]): P[Unit] = {
+    val startIndex = ctx.index
     val res =
       if (!ctx.input.isReachable(ctx.index)) ctx.freshFailure().asInstanceOf[P[Unit]]
       else ctx.freshSuccessUnit(ctx.index + 1)
-    if (ctx.verboseFailures) ctx.aggregateTerminal(() => "any-character")
+    if (ctx.verboseFailures) ctx.aggregateTerminal(startIndex, () => "any-character")
     res
   }
 
@@ -590,10 +594,11 @@ package object fastparse {
     * which downstream parser you wish to invoke
     */
   def SingleChar(implicit ctx: P[_]): P[Char] = {
+    val startIndex = ctx.index
     val res =
       if (!ctx.input.isReachable(ctx.index)) ctx.freshFailure().asInstanceOf[P[Char]]
       else ctx.freshSuccess(ctx.input(ctx.index), ctx.index + 1)
-    if (ctx.verboseFailures) ctx.aggregateTerminal(() => "any-character")
+    if (ctx.verboseFailures) ctx.aggregateTerminal(startIndex, () => "any-character")
     res
   }
 
@@ -601,10 +606,11 @@ package object fastparse {
     * Parses a single character satisfying the given predicate
     */
   def CharPred(p: Char => Boolean)(implicit ctx: P[_]): P[Unit] = {
+    val startIndex = ctx.index
     val res =
       if (!(ctx.input.isReachable(ctx.index) && p(ctx.input(ctx.index)))) ctx.freshFailure().asInstanceOf[P[Unit]]
       else ctx.freshSuccessUnit(ctx.index + 1)
-    if (ctx.verboseFailures) ctx.aggregateTerminal(() => s"char-pred($p)")
+    if (ctx.verboseFailures) ctx.aggregateTerminal(startIndex, () => s"char-pred($p)")
     res
   }
   /**
@@ -640,7 +646,7 @@ package object fastparse {
     val res =
       if (index - start >= min) ctx.freshSuccessUnit(index = index)
       else ctx.freshFailure()
-    if (ctx.verboseFailures) ctx.aggregateTerminal(() => s"chars-while($p, $min)")
+    if (ctx.verboseFailures) ctx.aggregateTerminal(start, () => s"chars-while($p, $min)")
     res
   }
 

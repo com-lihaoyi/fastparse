@@ -80,6 +80,7 @@ object ScriptWhitespace{
 object JavaWhitespace{
   implicit val whitespace = {implicit ctx: ParsingRun[_] =>
     val input = ctx.input
+    val startIndex = ctx.index
     @tailrec def rec(current: Int, state: Int): ParsingRun[Unit] = {
       if (!input.isReachable(current)) {
         if (state == 0 || state == 1) ctx.freshSuccessUnit(current)
@@ -87,7 +88,7 @@ object JavaWhitespace{
         else {
           ctx.cut = true
           val res = ctx.freshFailure(current)
-          if (ctx.verboseFailures) ctx.setMsg(() => Util.literalize("*/"))
+          if (ctx.verboseFailures) ctx.setMsg(startIndex, () => Util.literalize("*/"))
           res
         }
       } else {
@@ -129,6 +130,7 @@ object JavaWhitespace{
 object JsonnetWhitespace{
   implicit val whitespace = {implicit ctx: ParsingRun[_] =>
     val input = ctx.input
+    val startIndex = ctx.index
     @tailrec def rec(current: Int, state: Int): ParsingRun[Unit] = {
       if (!input.isReachable(current)) {
         if (state == 0 || state == 1) ctx.freshSuccessUnit(current)
@@ -136,7 +138,7 @@ object JsonnetWhitespace{
         else {
           ctx.cut = true
           val res = ctx.freshFailure(current)
-          if (ctx.verboseFailures) ctx.setMsg(() => Util.literalize("*/"))
+          if (ctx.verboseFailures) ctx.setMsg(startIndex, () => Util.literalize("*/"))
           res
         }
       } else {
@@ -178,6 +180,7 @@ object JsonnetWhitespace{
 object ScalaWhitespace {
   implicit val whitespace = {implicit ctx: ParsingRun[_] =>
     val input = ctx.input
+    val startIndex = ctx.index
     @tailrec def rec(current: Int, state: Int, nesting: Int): ParsingRun[Unit] = {
       if (!input.isReachable(current)) {
         if (state == 0 || state == 1) ctx.freshSuccessUnit(current)
@@ -185,7 +188,7 @@ object ScalaWhitespace {
         else {
           ctx.cut = true
           val res = ctx.freshFailure(current)
-          if (ctx.verboseFailures) ctx.setMsg(() => Util.literalize("*/"))
+          if (ctx.verboseFailures) ctx.setMsg(startIndex, () => Util.literalize("*/"))
           res
         }
       } else {

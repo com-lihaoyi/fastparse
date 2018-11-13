@@ -22,13 +22,14 @@ object MacroImpls {
     val lhs = c.prefix.asInstanceOf[c.Expr[EagerOps[T]]]
     reify{
       ctx.splice match{ case ctx1 =>
+        val startIndex = ctx1.index
         lhs.splice
         val res =
           if (!ctx1.isSuccess) ctx1.asInstanceOf[ParsingRun[T]]
           else if (f.splice(ctx1.successValue.asInstanceOf[T])) ctx1.asInstanceOf[ParsingRun[T]]
           else ctx1.freshFailure().asInstanceOf[ParsingRun[T]]
 
-        if (ctx1.verboseFailures) ctx1.aggregateTerminal(() => "filter")
+        if (ctx1.verboseFailures) ctx1.aggregateTerminal(startIndex, () => "filter")
         res
       }
     }
@@ -51,7 +52,7 @@ object MacroImpls {
             ctx1.instrument.afterParse(name.splice.value, ctx0.index, ctx0.isSuccess)
           }
           if (ctx0.verboseFailures) {
-            ctx0.setMsg(() => name.splice.value)
+            ctx0.setMsg(startIndex, () => name.splice.value)
             if (!ctx0.isSuccess){
               ctx0.failureStack = (name.splice.value -> startIndex) :: ctx0.failureStack
             }
@@ -83,7 +84,7 @@ object MacroImpls {
                 }else{
                   ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
                 }
-              if (ctx1.verboseFailures) ctx1.aggregateTerminal(() => literalized.splice)
+              if (ctx1.verboseFailures) ctx1.aggregateTerminal(index, () => literalized.splice)
               res
             }
 
@@ -113,7 +114,7 @@ object MacroImpls {
                   ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
                 }
               if (ctx1.verboseFailures) {
-                ctx1.aggregateTerminal(() => literalized.splice)
+                ctx1.aggregateTerminal(index, () => literalized.splice)
               }
               res
 
@@ -124,10 +125,11 @@ object MacroImpls {
         reify{
           val s1 = s.splice
           ctx.splice match{ case ctx1 =>
+            val index = ctx1.index
             val res =
-              if (Util.startsWith(ctx1.input, s1, ctx1.index)) ctx1.freshSuccessUnit(ctx1.index + s1.length)
+              if (Util.startsWith(ctx1.input, s1, index)) ctx1.freshSuccessUnit(index + s1.length)
               else ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
-            if (ctx1.verboseFailures) ctx1.aggregateTerminal(() => Util.literalize(s1))
+            if (ctx1.verboseFailures) ctx1.aggregateTerminal(index, () => Util.literalize(s1))
             res
           }
         }
@@ -215,7 +217,7 @@ object MacroImpls {
           val verboseFailures = ctx5.verboseFailures
 
           ctx5.index = startPos
-          if (verboseFailures) ctx5.aggregateMsg(lhsMsg, startGroup)
+          if (verboseFailures) ctx5.aggregateMsg(Int.MaxValue, lhsMsg, startGroup)
 
           ctx5.cut = false
           other.splice
@@ -227,15 +229,15 @@ object MacroImpls {
             ctx5.cut = endCut
             if (verboseFailures) {
               if (!rhsCut) {
-                ctx5.aggregateMsg(rhsMsg ::: lhsMsg, rhsMsg ::: lhsMsg, startGroup, force = true)
+                ctx5.aggregateMsg(Int.MaxValue, rhsMsg ::: lhsMsg, rhsMsg ::: lhsMsg, startGroup, force = true)
               }
               else {
-                ctx5.aggregateMsg(rhsMsg ::: lhsMsg, rhsMsg ::: lhsMsg, startGroup)
+                ctx5.aggregateMsg(Int.MaxValue, rhsMsg ::: lhsMsg, rhsMsg ::: lhsMsg, startGroup)
               }
             }
           }else{
             ctx5.cut = endCut
-            if (verboseFailures) ctx5.setMsg(rhsMsg ::: lhsMsg)
+            if (verboseFailures) ctx5.setMsg(Int.MaxValue, rhsMsg ::: lhsMsg)
           }
 
           ctx5.asInstanceOf[ParsingRun[V]]
@@ -349,7 +351,7 @@ object MacroImpls {
         val res =
           if ($output != -1) $ctx1.freshSuccessUnit(index = $output)
           else $ctx1.freshFailure()
-        if ($ctx1.verboseFailures) $ctx1.setMsg(() => $bracketed)
+        if ($ctx1.verboseFailures) $ctx1.setMsg($index, () => $bracketed)
         res
       }
     """
@@ -415,7 +417,7 @@ object MacroImpls {
             case true => ctx1.freshSuccessUnit(index + 1)
             case false => ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
           }
-        if (ctx1.verboseFailures) ctx1.aggregateTerminal(() => bracketed.splice)
+        if (ctx1.verboseFailures) ctx1.aggregateTerminal(index, () => bracketed.splice)
         res
       }
     }
@@ -458,7 +460,10 @@ object MacroImpls {
               nextIndex
             )
           }
-        if (ctx1.verboseFailures) ctx1.setMsg(() => _root_.fastparse.internal.Util.parenthize(lhsMsg) + " ~ " + _root_.fastparse.internal.Util.parenthize(msg))
+        if (ctx1.verboseFailures) ctx1.setMsg(
+          _root_.scala.Int.MaxValue,
+          _root_.fastparse.internal.Util.joinBinOp(lhsMsg, msg)
+        )
         res
       }
     """
@@ -553,7 +558,7 @@ object MacroImpls {
             $ctx1.isSuccess = false
             $ctx1.asInstanceOf[fastparse.P[Unit]]
           }
-        if ($ctx1.verboseFailures) $ctx1.aggregateTerminal(() => $bracketed)
+        if ($ctx1.verboseFailures) $ctx1.aggregateTerminal($start, () => $bracketed)
         res
       }
     """
@@ -607,7 +612,7 @@ object MacroImpls {
 
           if (ctx1.verboseFailures) {
             if (!postSuccess){
-              ctx1.aggregateMsg(() => Util.parenthize(msg) + ".?", msg, startGroup)
+              ctx1.aggregateMsg(startPos, () => Util.parenthize(msg) + ".?", msg, startGroup)
             }
           }
           res
