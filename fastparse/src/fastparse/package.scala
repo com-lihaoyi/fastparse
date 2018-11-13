@@ -527,9 +527,12 @@ package object fastparse {
     * as part of the error message.
     */
   def NoTrace[T](p: => P[T])(implicit ctx: P[_]): P[T] = {
-    val preAggregate = ctx.failureGroupAggregate
+
     val res = p
-    if (ctx.verboseFailures) ctx.failureGroupAggregate = preAggregate
+    if (ctx.verboseFailures) {
+      ctx.failureGroupAggregate = Msgs(Nil)
+      ctx.shortParserMsg = Msgs(Nil)
+    }
     res
   }
 

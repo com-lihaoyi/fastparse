@@ -23,7 +23,7 @@ trait Literals { l =>
   def WL0[_: P]: P[Unit] = P( ScalaWhitespace.whitespace(P.current) )
   def WL[_: P]: P[Unit] = P( NoCut(WL0) )
 
-  def Semis[_: P]: P[Unit] = P( NoCut(WS) ~ Basic.Semi.rep(1, NoCut(WS)) ~ NoCut(WS) )
+  def Semis[_: P]: P[Unit] = P( NoTrace(NoCut(WS) ~ Basic.Semi.rep(1, NoCut(WS)) ~ NoCut(WS)) )
   def Newline[_: P]: P[Unit] = P( WL ~ Basic.Newline )
 
   def NotNewline[_: P]: P[Unit] = P( &( WS ~ !Basic.Newline ) )
@@ -36,9 +36,9 @@ trait Literals { l =>
   object Literals{
     import Basic._
     def Float[_: P] = {
-      def Thing = P( DecNum ~ Exp.? ~ FloatType.? )
-      def Thing2 = P( "." ~ Thing | Exp ~ FloatType.? | Exp.? ~ FloatType )
-      P( "." ~ Thing | DecNum ~ Thing2 )
+      def LeadingDotFloat = P( "." ~ DecNum ~ Exp.? ~ FloatType.? )
+      def LeadingNumFloat = P( LeadingDotFloat | Exp ~ FloatType.? | Exp.? ~ FloatType )
+      P( LeadingDotFloat | DecNum ~ LeadingNumFloat )
     }
 
     def Int[_: P] = P( (HexNum | DecNum) ~ ("L" | "l").? )
