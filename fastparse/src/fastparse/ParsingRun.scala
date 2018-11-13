@@ -114,6 +114,44 @@ final class ParsingRun[+T](val input: ParserInput,
                            var verboseFailures: Boolean,
                            var noDropBuffer: Boolean){
 
+  // HOW ERROR AGGREGATION WORKS:
+  //
+  // Fastparse provides two levels of error aggregation that get enabled when
+  // calling `.trace()`: `failureTerminalAggregate`, and `failureGroupAggregate`:
+  //
+  // - `failureTerminalAggregate` lists all low-level terminal parsers which are
+  //   tried at the given `traceIndex`. This is useful to answer the question
+  //   "what can I put at the error position to make my parse continue"
+  //
+  // - `failureGroupAggregate` lists all high-level parsers which are tried at
+  //   the given `traceIndex`. This is useful to answer the question "What was
+  //   the parser trying to do when it failed"
+  //
+  // The implementation of `failureTerminalAggregate` is straightforward: we
+  // simply call `aggregateTerminal` in every terminal parser, which collects
+  // all the messages in a big list and returns it. The implementation of
+  // `failureGroupAggregate` is more interesting, since we need to figure out
+  // what are the "high level" parsers that we need to list. We use the
+  // following algorithm:
+  //
+  // - When a parse which started at the given `traceIndex` fails without a cut
+  //
+  // - Over-write `failureGroupAggregate` with it's `shortParserMsg`
+  //
+  // - Otherwise:
+  //   - If we are a terminal parser, we set our `failureGroupAggregate` to Nil
+  //   - If we are a compound parser, we simply sum up the `failureGroupAggregate`
+  //     of all our constituent parts
+  //
+  // The point of this heuristic is to provide the highest-level parsers which
+  // failed at the `traceIndex`, but are not already part of the `failureStack`.
+  // non-highest-level parsers do successfully write their message to
+  // `failureGroupAggregate`, but they are subsequently over-written by the higher
+  // level parsers, until it reaches the point where `cut == true`, indicating
+  // that any further higher-level parsers will be in `failureStack` and using
+  // their message to stomp over the existing parse-failure-messages in
+  // `failureGroupAggregate` would be wasteful.
+  //
 
   def aggregateMsg(startIndex: Int,
                    msgToAggregate: Msgs): Unit = {
@@ -133,7 +171,7 @@ final class ParsingRun[+T](val input: ParserInput,
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = msgToSet
     shortParserMsg = msgToSet
 
-    if (!cut && !isSuccess && startIndex == traceIndex) failureGroupAggregate = msgToSet
+    if (checkAggregate(startIndex)) failureGroupAggregate = msgToSet
     else failureGroupAggregate = msgToAggregate
   }
 
@@ -145,7 +183,7 @@ final class ParsingRun[+T](val input: ParserInput,
     }
 
     shortParserMsg = Msgs(List(f2))
-    failureGroupAggregate = if (startIndex == traceIndex) shortParserMsg else Msgs(Nil)
+    failureGroupAggregate = if (checkAggregate(startIndex)) shortParserMsg else Msgs(Nil)
   }
 
   def setMsg(startIndex: Int, f: () => String): Unit = {
@@ -155,8 +193,14 @@ final class ParsingRun[+T](val input: ParserInput,
   def setMsg(startIndex: Int, f: Msgs): Unit = {
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = f
     shortParserMsg = f
-    failureGroupAggregate = if (startIndex == traceIndex) shortParserMsg else Msgs(Nil)
+    failureGroupAggregate = if (checkAggregate(startIndex)) shortParserMsg else Msgs(Nil)
   }
+
+  /**
+    * Conditions under which we want to aggregate the given parse
+    */
+  def checkAggregate(startIndex: Int) = !cut && !isSuccess && startIndex == traceIndex
+
 
   // Use telescoping methods rather than default arguments to try and minimize
   // the amount of bytecode generated at the callsite.
