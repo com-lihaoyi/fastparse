@@ -1,8 +1,5 @@
 package scalaparse
 
-
-import scalaparse.syntax.Identifiers
-import fastparse._
 import fastparse._, ScalaWhitespace._
 trait Exprs extends Core with Types with Xml{
   def AnonTmpl[_: P]: P[Unit]
@@ -71,13 +68,14 @@ trait Exprs extends Core with Types with Xml{
 
       def ImplicitLambda = P( `implicit` ~ (Id | `_`) ~ (`:` ~ InfixType).? ~ `=>` ~ LambdaRhs.? )
       def ParenedLambda = P( Parened ~~ (WL ~ `=>` ~ LambdaRhs.? | ExprSuffix ~~ PostfixSuffix ~ SuperPostfixSuffix) )
-      def PostfixLambda = P( PostfixExpr ~ (`=>` ~ LambdaRhs.? | SuperPostfixSuffix).? )
+      def PostfixLambda = P( PostfixExpr ~ (`=>` ~ LambdaRhs.? | SuperPostfixSuffix).? ).log
       def SmallerExprOrLambda = P( ParenedLambda | PostfixLambda )
       P(
         If | While | Try | DoWhile | For | Throw | Return |
         ImplicitLambda | SmallerExprOrLambda
-      )
+      ).log
     }
+
     def SuperPostfixSuffix[_: P] = P( (`=` ~/ Expr).? ~ MatchAscriptionSuffix.? )
     def AscriptionType[_: P]  = if (arrowTypeAscriptions) P( Type ) else P( InfixType )
     def Ascription[_: P] = P( `:` ~/ (`_*` |  AscriptionType | Annot.rep(1)) )
@@ -103,6 +101,7 @@ trait Exprs extends Core with Types with Xml{
     }
     def Guard[_: P] : P[Unit] = P( `if` ~/ PostfixExpr )
   }
+
   def SimplePattern[_: P]: P[Unit] = {
     def TupleEx = P( "(" ~/ Pattern.repTC() ~ ")" )
     def Extractor = P( StableId ~ TypeArgs.? ~ TupleEx.? )
@@ -126,6 +125,7 @@ trait Exprs extends Core with Types with Xml{
     def Body = P( BlockChunk.repX(sep = Semis) )
     P( Semis.? ~ BlockLambda.? ~ Body ~/ BlockEnd )
   }
+
   def Block[_: P]  = BaseBlock("}")
   def CaseBlock[_: P]  = BaseBlock("}" | `case`)
 

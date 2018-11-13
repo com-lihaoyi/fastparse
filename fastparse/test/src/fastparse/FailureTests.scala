@@ -199,6 +199,12 @@ object FailureTests extends TestSuite{
       'opt - checkOffset("ax", """("b" | "d")""") { implicit c =>
         ("a" ~ "b").? ~ "a" ~ "d"
       }
+      'opt2 - checkOffset("ax", """("b" | "d")""") { implicit c =>
+        ("a" ~ "b".rep(1)).? ~ "a" ~ "d"
+      }
+      'opt3 - checkOffset("ax", """("b" | "c" | "d")""") { implicit c =>
+        ("a" ~ "b".? ~ "c").? ~ "a" ~ "d"
+      }
       'rep - checkOffset("ax", """("b" | "d")""") { implicit c =>
         ("a" ~ "b").rep ~ "a" ~ "d"
       }

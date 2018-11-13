@@ -12,6 +12,7 @@ object Util {
   }
   def joinBinOp(lhs: Msgs, rhs: Msgs) =
     if (lhs.value.isEmpty) rhs
+    else if (rhs.value.isEmpty) lhs
     else Msgs(List(new Lazy(() => lhs.render + " ~ " + rhs.render)))
 
   def consumeWhitespace[V](whitespace: ParsingRun[_] => ParsingRun[Unit], ctx: ParsingRun[Any]) = {
