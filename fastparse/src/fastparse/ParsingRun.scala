@@ -118,20 +118,20 @@ final class ParsingRun[+T](val input: ParserInput,
 
 
   def aggregateMsg(startIndex: Int,
-                   parsedMsg: List[Lazy[String]],
+                   msgToAggregate: List[Lazy[String]],
                    startGroup: List[Lazy[String]]): Unit = {
-    aggregateMsg(startIndex, parsedMsg, parsedMsg, startGroup)
+    aggregateMsg(startIndex, msgToAggregate, msgToAggregate, startGroup)
   }
 
   def aggregateMsg(startIndex: Int,
                    msgToSet: () => String,
-                   parsedMsg: List[Lazy[String]],
+                   msgToAggregate: List[Lazy[String]],
                    startGroup: List[Lazy[String]]): Unit = {
-    aggregateMsg(startIndex, List(new Lazy(msgToSet)), parsedMsg, startGroup)
+    aggregateMsg(startIndex, List(new Lazy(msgToSet)), msgToAggregate, startGroup)
   }
   def aggregateMsg(startIndex: Int,
                    msgToSet: List[Lazy[String]],
-                   parsedMsg: List[Lazy[String]],
+                   msgToAggregate: List[Lazy[String]],
                    startGroup: List[Lazy[String]],
                    force: Boolean = false): Unit = {
     // We only aggregate the msg under the following conditions:
@@ -147,10 +147,15 @@ final class ParsingRun[+T](val input: ParserInput,
     //     .rep and .? bodies, where the parse succeeds even though the last
     //     aborted inner-parse failed (and needs to be aggregated)
     if (!cut || isSuccess || force) {
-      failureGroupAggregate = parsedMsg ::: startGroup
+      failureGroupAggregate = msgToAggregate ::: startGroup
     }
 
-    setMsg(startIndex, msgToSet)
+    // Only use the msgToSet if our start index is greater than the traceIndex.
+    // If it is less, that means the `shortParserMsg` we are setting is only used
+    // for group aggregation and not returned on it's own, so we return the
+    // possibly-truncated `msgToAggregate` to use in any surrounding aggregates
+    if (startIndex >= traceIndex) setMsg(startIndex, msgToSet)
+    else setMsg(Int.MaxValue, msgToAggregate)
   }
 
   def aggregateTerminal(startIndex: Int, f: () => String): Unit = {

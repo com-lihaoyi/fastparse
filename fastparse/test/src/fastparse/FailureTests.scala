@@ -180,12 +180,17 @@ object FailureTests extends TestSuite{
     }
 
     'offset - {
-      def checkOffset(input: String, expected: String)(parser: P[_] => P[_]) = {
+      def checkOffset(input: String,
+                      expected: String,
+                      expectedTerminals: String = null)(parser: P[_] => P[_]) = {
         val f @ Parsed.Failure(failureString, index, extra) = parse(input, parser(_))
         val trace = f.trace()
 
+        val expectedTerminals1 = Option(expectedTerminals).getOrElse(expected)
         assert(
-          trace.groupAggregateString == expected
+          trace.failure.label == "\"d\"",
+          trace.groupAggregateString == expected,
+          trace.terminalAggregateString == expectedTerminals1
         )
       }
       // Consider cases where the failure happens down some branch of an either,
@@ -197,8 +202,29 @@ object FailureTests extends TestSuite{
       'rep - checkOffset("ax", """("b" | "d")""") { implicit c =>
         ("a" ~ "b").rep ~ "a" ~ "d"
       }
-      'either1 - checkOffset("ax", """("b" | "c")""") { implicit c =>
-        "a" ~ "b" | "a" ~/ "c"
+      'repX - checkOffset("ax", """("b" | "d")""") { implicit c =>
+        ("a" ~ "b").repX ~ "a" ~ "d"
+      }
+      'repSep - checkOffset("ax", """("b" | "d")""") { implicit c =>
+        ("a" ~ "b").rep(sep = Pass) ~ "a" ~ "d"
+      }
+      'repXSep - checkOffset("ax", """("b" | "d")""") { implicit c =>
+        ("a" ~ "b").repX(sep = Pass) ~ "a" ~ "d"
+      }
+      'rep1 - checkOffset("ax", """("b" | "d")""") { implicit c =>
+        ("a" ~ "b").rep(1).? ~ "a" ~ "d"
+      }
+      'repX1 - checkOffset("ax", """("b" | "d")""") { implicit c =>
+        ("a" ~ "b").repX(1).? ~ "a" ~ "d"
+      }
+      'rep1Sep - checkOffset("ax", """("b" | "d")""") { implicit c =>
+        ("a" ~ "b").rep(1, sep = Pass).? ~ "a" ~ "d"
+      }
+      'repX1Sep - checkOffset("ax", """("b" | "d")""") { implicit c =>
+        ("a" ~ "b").repX(1, sep = Pass).? ~ "a" ~ "d"
+      }
+      'either1 - checkOffset("ax", """("b" | "d")""") { implicit c =>
+        "a" ~ "b" | "a" ~/ "d"
       }
       'either2 - checkOffset("ax", """("b" | "c" | "d")"""){implicit c =>
         ("a" ~ "b" | "a" ~ "c" | "") ~ "a" ~ "d"
@@ -208,7 +234,7 @@ object FailureTests extends TestSuite{
         ("a" ~ "b" | "a" ~ "c").? ~ "a" ~ "d"
       }
       'either3A - checkOffset("ax", """("b" | "c" | "d")""") { implicit c =>
-        (("a" ~ "b").rep(sep = Pass) | ("a" ~ "c").?).? ~ "a" ~ "d"
+        (("a" ~ "b").rep(1, sep = Pass) | ("a" ~ "c")).? ~ "a" ~ "d"
       }
 
       'either3B - checkOffset("ax", """("b" | "d")""") { implicit c =>
@@ -220,11 +246,11 @@ object FailureTests extends TestSuite{
 
       // What happens if the failure happens down some branch which takes place
       // *before* traceIndex, and the final failure takes place *after* traceIndex?
-      'either4 - checkOffset("abx", """("b" ~ "c" | "d")""") { implicit c =>
+      'either4 - checkOffset("abx", """("b" ~ "c" | "d")""", """("c" | "d")""") { implicit c =>
         "a" ~ "b" ~ "c" | "a" ~/ "d"
       }
 
-      'either5 - checkOffset("abx", """("b" ~ "c" | "d")""") { implicit c =>
+      'either5 - checkOffset("abx", """("b" ~ "c" | "d")""", """("c" | "d")""") { implicit c =>
         "a" ~ ("b" ~ "c") | "a" ~/ "d"
       }
     }
