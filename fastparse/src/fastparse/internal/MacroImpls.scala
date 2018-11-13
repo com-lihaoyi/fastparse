@@ -54,6 +54,7 @@ object MacroImpls {
           if (ctx0.verboseFailures) {
             if (!ctx0.cut) {
               ctx0.aggregateMsg(
+                startIndex,
                 () => name.splice.value,
                 Msgs(List(new Lazy(() => name.splice.value)))
               )
@@ -223,7 +224,7 @@ object MacroImpls {
           val verboseFailures = ctx5.verboseFailures
 
           ctx5.index = startPos
-          if (verboseFailures) ctx5.aggregateMsg(lhsMsg, lhsAggregate)
+          if (verboseFailures) ctx5.aggregateMsg(startPos, lhsMsg, lhsAggregate)
 
           ctx5.cut = false
           other.splice
@@ -235,11 +236,11 @@ object MacroImpls {
             if (!rhsCut) ctx5.freshFailure(startPos)
             ctx5.cut = endCut
             if (verboseFailures) {
-              ctx5.aggregateMsg(rhsMsg ::: lhsMsg, rhsAggregate ::: lhsAggregate)
+              ctx5.aggregateMsg(startPos, rhsMsg ::: lhsMsg, rhsAggregate ::: lhsAggregate)
             }
           }else{
             ctx5.cut = endCut
-            if (verboseFailures) ctx5.aggregateMsg(rhsMsg ::: lhsMsg, rhsAggregate ::: lhsAggregate)
+            if (verboseFailures) ctx5.aggregateMsg(startPos, rhsMsg ::: lhsMsg, rhsAggregate ::: lhsAggregate)
           }
 
           ctx5.asInstanceOf[ParsingRun[V]]
@@ -465,6 +466,7 @@ object MacroImpls {
           }
 
         if (ctx1.verboseFailures) ctx1.aggregateMsg(
+          startIndex,
           _root_.fastparse.internal.Util.joinBinOp(lhsMsg, msg),
           rhsAggregate ::: lhsAggregate
         )
@@ -597,7 +599,6 @@ object MacroImpls {
         optioner.splice match { case optioner1 =>
           val startPos = ctx1.index
           val startCut = ctx1.cut
-          val startGroup = ctx1.failureGroupAggregate
           ctx1.cut = false
           lhs0.splice
           val postSuccess = ctx1.isSuccess
@@ -618,7 +619,7 @@ object MacroImpls {
 
           if (ctx1.verboseFailures) {
             if (!postSuccess){
-              ctx1.aggregateMsg(() => msg.render + ".?", agg)
+              ctx1.aggregateMsg(startPos, () => msg.render + ".?", agg)
             }
           }
           res

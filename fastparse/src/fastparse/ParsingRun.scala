@@ -115,19 +115,26 @@ final class ParsingRun[+T](val input: ParserInput,
                            var noDropBuffer: Boolean){
 
 
-  def aggregateMsg(msgToAggregate: Msgs): Unit = {
-    aggregateMsg(msgToAggregate, msgToAggregate)
+  def aggregateMsg(startIndex: Int,
+                   msgToAggregate: Msgs): Unit = {
+    aggregateMsg(startIndex, msgToAggregate, msgToAggregate)
   }
 
-  def aggregateMsg(msgToSet: () => String,
+  def aggregateMsg(startIndex: Int,
+                   msgToSet: () => String,
                    msgToAggregate: Msgs): Unit = {
-    aggregateMsg(Msgs(List(new Lazy(msgToSet))), msgToAggregate)
+    aggregateMsg(startIndex, Msgs(List(new Lazy(msgToSet))), msgToAggregate)
   }
-  def aggregateMsg(msgToSet: Msgs,
+
+  def aggregateMsg(startIndex: Int,
+                   msgToSet: Msgs,
                    msgToAggregate: Msgs): Unit = {
 
-    setMsg(startIndex, msgToSet)
-    failureGroupAggregate = msgToAggregate
+    if (!isSuccess && lastFailureMsg == null) lastFailureMsg = msgToSet
+    shortParserMsg = msgToSet
+
+    if (!cut && !isSuccess && startIndex == traceIndex) failureGroupAggregate = msgToSet
+    else failureGroupAggregate = msgToAggregate
   }
 
   def aggregateTerminal(startIndex: Int, f: () => String): Unit = {
@@ -138,20 +145,17 @@ final class ParsingRun[+T](val input: ParserInput,
     }
 
     shortParserMsg = Msgs(List(f2))
-    failureGroupAggregate = if (startIndex >= traceIndex) shortParserMsg else Msgs(Nil)
+    failureGroupAggregate = if (startIndex == traceIndex) shortParserMsg else Msgs(Nil)
   }
 
   def setMsg(startIndex: Int, f: () => String): Unit = {
-    val f2 = new Lazy(f)
-    if (!isSuccess && lastFailureMsg == null) lastFailureMsg = Msgs(List(f2))
-    shortParserMsg = Msgs(List(f2))
-    failureGroupAggregate = if (startIndex >= traceIndex) shortParserMsg else Msgs(Nil)
+    setMsg(startIndex, Msgs(List(new Lazy(f))))
   }
 
   def setMsg(startIndex: Int, f: Msgs): Unit = {
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = f
     shortParserMsg = f
-    failureGroupAggregate = if (startIndex >= traceIndex) shortParserMsg else Msgs(Nil)
+    failureGroupAggregate = if (startIndex == traceIndex) shortParserMsg else Msgs(Nil)
   }
 
   // Use telescoping methods rather than default arguments to try and minimize

@@ -33,7 +33,6 @@ object MacroRepImpls{
     val rec = TermName(c.freshName("rec"))
     val originalCut = TermName(c.freshName("originalCut"))
     val parsedMsg = TermName(c.freshName("parsedMsg"))
-    val startGroup = TermName(c.freshName("startGroup"))
     val (endSnippet, aggregateSnippet) = min match{
       case None =>
         q"""
@@ -73,7 +72,6 @@ object MacroRepImpls{
                    $count: _root_.scala.Int,
                    $precut: _root_.scala.Boolean): _root_.fastparse.P[${c.weakTypeOf[V]}] = {
             $ctx1.cut = $precut
-            val $startGroup = $ctx1.failureGroupAggregate
             ${c.prefix}.parse0()
 
             val $parsedMsg = $ctx1.shortParserMsg
@@ -84,6 +82,7 @@ object MacroRepImpls{
                 else $endSnippet
               if ($ctx1.verboseFailures) {
                 $ctx1.aggregateMsg(
+                  $startIndex,
                   () => $parsedMsg.render + s".rep" + $aggregateSnippet,
                   $ctx1.failureGroupAggregate
                 )
@@ -160,7 +159,6 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
       if (count == 0 && actualMax == 0) ctx.freshSuccess(repeater.result(acc), startIndex)
       else {
         val verboseFailures = ctx.verboseFailures
-        val startGroup = ctx.failureGroupAggregate
         parse0()
         val parsedMsg = ctx.shortParserMsg
         val postCut = ctx.cut
@@ -169,7 +167,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
             if (postCut) ctx.asInstanceOf[ParsingRun[V]]
             else end(startIndex, startIndex, count, outerCut | postCut)
 
-          if (verboseFailures) aggregateMsgInRep(min, ctx, sepMsg, parsedMsg, precut)
+          if (verboseFailures) aggregateMsgInRep(startIndex, min, ctx, sepMsg, parsedMsg, precut)
           res
         }else {
           val beforeSepIndex = ctx.index
@@ -182,7 +180,6 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
           }
           else {
             ctx.cut = false
-            val startGroup = ctx.failureGroupAggregate
             val sep1 = sep
             val sepCut = ctx.cut
             val endCut = outerCut | postCut | sepCut
@@ -193,7 +190,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
                 val res =
                   if (sepCut) ctx.augmentFailure(beforeSepIndex, endCut)
                   else end(beforeSepIndex, beforeSepIndex, nextCount, endCut)
-                if (verboseFailures) aggregateMsgPostSep(min, ctx, parsedMsg)
+                if (verboseFailures) aggregateMsgPostSep(startIndex, min, ctx, parsedMsg)
                 res
               }
             }
@@ -220,7 +217,6 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
                      outerCut: Boolean,
                      sepMsg: Msgs): ParsingRun[V] = {
       ctx.cut = precut
-      val startGroup = ctx.failureGroupAggregate
       parse0()
       val parsedMsg = ctx.shortParserMsg
       val postCut = ctx.cut
@@ -229,14 +225,13 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
         val res =
           if (postCut) ctx.asInstanceOf[ParsingRun[V]]
           else end(startIndex, startIndex, count, outerCut | postCut)
-        if (verboseFailures) aggregateMsgInRep(min, ctx, sepMsg, parsedMsg, precut)
+        if (verboseFailures) aggregateMsgInRep(startIndex, min, ctx, sepMsg, parsedMsg, precut)
         res
       }else {
         val beforeSepIndex = ctx.index
         repeater.accumulate(ctx.successValue.asInstanceOf[T], acc)
         val nextCount = count + 1
         ctx.cut = false
-        val startGroup = ctx.failureGroupAggregate
         val sep1 = sep
         val sepCut = ctx.cut
         val endCut = outerCut | postCut | sepCut
@@ -247,7 +242,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
             val res =
               if (sepCut) ctx.augmentFailure(beforeSepIndex, endCut)
               else end(beforeSepIndex, beforeSepIndex, nextCount, endCut)
-            if (verboseFailures) aggregateMsgPostSep(min, ctx, parsedMsg)
+            if (verboseFailures) aggregateMsgPostSep(startIndex, min, ctx, parsedMsg)
             res
           }
         }
@@ -278,7 +273,6 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
       ctx.cut = precut
       if (count == 0 && actualMax == 0) ctx.freshSuccess(repeater.result(acc), startIndex)
       else {
-        val startGroup = ctx.failureGroupAggregate
         parse0()
         val parsedMsg = ctx.shortParserMsg
         val postCut = ctx.cut
@@ -287,7 +281,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
           val res =
             if (postCut) ctx.asInstanceOf[ParsingRun[V]]
             else end(startIndex, startIndex, count, outerCut | postCut)
-          if (verboseFailures) aggregateMsgInRep(min, ctx, sepMsg, parsedMsg, precut)
+          if (verboseFailures) aggregateMsgInRep(startIndex, min, ctx, sepMsg, parsedMsg, precut)
           res
         } else {
           val beforeSepIndex = ctx.index
@@ -305,7 +299,6 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
             if (!ctx.isSuccess && ctx.cut) ctx.asInstanceOf[ParsingRun[Nothing]]
             else {
               ctx.cut = false
-              val startGroup = ctx.failureGroupAggregate
               val sep1 = sep
               val sepCut = ctx.cut
               val endCut = outerCut | postCut | sepCut
@@ -320,7 +313,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
                   if (sepCut) ctx.augmentFailure(beforeSepIndex, endCut)
                   else end(beforeSepIndex, beforeSepIndex, nextCount, endCut)
                 if (verboseFailures) {
-                  aggregateMsgPostSep(min, ctx, parsedMsg)
+                  aggregateMsgPostSep(startIndex, min, ctx, parsedMsg)
                 }
                 res
               }
@@ -348,7 +341,6 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
                      outerCut: Boolean,
                      sepMsg: Msgs): ParsingRun[V] = {
       ctx.cut = precut
-      val startGroup = ctx.failureGroupAggregate
       parse0()
       val parsedMsg = ctx.shortParserMsg
       val postCut = ctx.cut
@@ -357,7 +349,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
         val res =
           if (postCut) ctx.asInstanceOf[ParsingRun[V]]
           else end(startIndex, startIndex, count, outerCut | postCut)
-        if (verboseFailures) aggregateMsgInRep(min, ctx, sepMsg, parsedMsg, precut)
+        if (verboseFailures) aggregateMsgInRep(startIndex, min, ctx, sepMsg, parsedMsg, precut)
         res
       }else{
         val beforeSepIndex = ctx.index
@@ -369,7 +361,6 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
         if (!ctx.isSuccess && ctx.cut) ctx.asInstanceOf[ParsingRun[Nothing]]
         else {
           ctx.cut = false
-          val startGroup = ctx.failureGroupAggregate
           val sep1 = sep
           val sepCut = ctx.cut
           val endCut = outerCut | postCut | sepCut
@@ -385,7 +376,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
               if (sepCut) ctx.augmentFailure(beforeSepIndex, endCut)
               else end(beforeSepIndex, beforeSepIndex, nextCount, endCut)
 
-            if (verboseFailures) aggregateMsgPostSep(min, ctx, parsedMsg)
+            if (verboseFailures) aggregateMsgPostSep(startIndex, min, ctx, parsedMsg)
             res
           }
         }
@@ -394,29 +385,34 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
     rec(ctx.index, 0, false, ctx.cut, null)
   }
 
-  private def aggregateMsgPostSep[V](min: Int,
+  private def aggregateMsgPostSep[V](startIndex: Int,
+                                     min: Int,
                                      ctx: ParsingRun[Any],
                                      parsedMsg: Msgs) = {
     ctx.aggregateMsg(
+      startIndex,
       Msgs(List(new Lazy(() => parsedMsg.render + s".rep($min)"))),
       ctx.failureGroupAggregate
     )
   }
 
-  private def aggregateMsgInRep[V](min: Int,
+  private def aggregateMsgInRep[V](startIndex: Int,
+                                   min: Int,
                                    ctx: ParsingRun[Any],
                                    sepMsg: Msgs,
                                    parsedMsg: Msgs,
                                    precut: Boolean) = {
     if (sepMsg == null || precut) {
       ctx.aggregateMsg(
+        startIndex,
         Msgs(List(new Lazy(() => parsedMsg.render + s".rep($min)"))),
-        ctx.failureGroupAggregate,
+        ctx.failureGroupAggregate
       )
     } else {
       ctx.aggregateMsg(
+        startIndex,
         Msgs(List(new Lazy(() => parsedMsg.render + s".rep($min)"))),
-        Util.joinBinOp(sepMsg, parsedMsg),
+        Util.joinBinOp(sepMsg, parsedMsg)
       )
     }
   }
