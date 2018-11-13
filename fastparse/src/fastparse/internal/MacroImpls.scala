@@ -52,13 +52,7 @@ object MacroImpls {
             ctx1.instrument.afterParse(name.splice.value, ctx0.index, ctx0.isSuccess)
           }
           if (ctx0.verboseFailures) {
-            if (!ctx0.cut) {
-              ctx0.aggregateMsg(
-                startIndex,
-                () => name.splice.value,
-                Msgs(List(new Lazy(() => name.splice.value)))
-              )
-            }
+            ctx0.aggregateMsg(startIndex, () => name.splice.value, ctx0.failureGroupAggregate)
             if (!ctx0.isSuccess){
               ctx0.failureStack = (name.splice.value -> startIndex) :: ctx0.failureStack
             }

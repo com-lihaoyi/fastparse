@@ -75,6 +75,12 @@ object MathTests extends TestSuite{
         """Expected expr:1:1 / addSub:1:1 / divMul:1:3 / factor:1:3 / ([0-9] | "("):1:3, found "-""""
       )
       check(
+        "(2+3x)",
+        """Expected expr:1:1 / addSub:1:1 / divMul:1:1 / factor:1:1 / parens:1:1 / ([0-9] | [*/] | [+\\-] | ")"):1:5, found "x)"""",
+        """Position 1:5, found "x)"""",
+        """Expected expr:1:1 / addSub:1:1 / divMul:1:1 / factor:1:1 / parens:1:1 / ([0-9] | [*/] | [+\\-] | ")"):1:5, found "x)""""
+      )
+      check(
         "(1+(2+3x))+4",
         """Expected expr:1:1 / addSub:1:1 / divMul:1:1 / factor:1:1 / parens:1:1 / addSub:1:2 / divMul:1:4 / factor:1:4 / parens:1:4 / ([0-9] | [*/] | [+\\-] | ")"):1:8, found "x))+4"""",
         """Position 1:8, found "x))+4"""",

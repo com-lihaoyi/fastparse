@@ -334,7 +334,7 @@ object ExampleTests extends TestSuite{
         val trace = failure.trace().longAggregateMsg
         assert(
           failure.index == 10,
-          trace == """Expected stmts:1:1 / (" " | stmt | end-of-input):1:11, found "val """"
+          trace == """Expected stmts:1:1 / (stmt | end-of-input):1:11, found "val """"
         )
       }
 

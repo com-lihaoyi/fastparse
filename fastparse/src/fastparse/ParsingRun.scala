@@ -152,6 +152,11 @@ final class ParsingRun[+T](val input: ParserInput,
   // their message to stomp over the existing parse-failure-messages in
   // `failureGroupAggregate` would be wasteful.
   //
+  // These is an edge case where there is no given failure that occurs exactly at
+  // `traceIndex` e.g. parsing "ax" with P( ("a" ~ "b") ~ "c" | "a" ~/ "d" ), the
+  // final failure `index` and thus `traceIndex` is at offset 1, but ("a" ~ "b")
+  // passes from offsets 0-2, "c" fails at offset 2 and ("a" ~ "b") ~ "c" fails
+  // from offset 0-2. In such a case, we
 
   def aggregateMsg(startIndex: Int,
                    msgToAggregate: Msgs): Unit = {

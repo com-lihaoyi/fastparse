@@ -330,7 +330,11 @@ object FailureTests extends TestSuite{
         input = "abx",
         expected = """("b" ~ "c" | "d")""",
         label = "\"d\"", "\"d\"",
-        parser = { implicit c => ("a" ~ "b" ~ "c") | "a" ~/ "d" }
+        parser = { implicit c =>
+//          (("a" ~ "b") ~ "c") | "a" ~/ "d"
+          ("a" ~ "b").log("AB").logAfter(P.current.failureGroupAggregate) ~ "c".log("C").logAfter(P.current.failureGroupAggregate) |
+            "a" ~/ "d"
+        }
       )
 
       'either2 - checkOffset(
