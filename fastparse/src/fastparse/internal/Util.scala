@@ -6,9 +6,9 @@ import scala.annotation.{switch, tailrec}
 import scala.collection.mutable.ArrayBuffer
 
 object Util {
-  def parenthize(fs: Seq[Lazy[String]]) = fs match{
-    case Seq(x) => x()
-    case xs => xs.reverseIterator.map(_()).toSeq.distinct.mkString("(", " | ", ")")
+  def parenthize(fs: Seq[Lazy[String]]) = fs.reverseIterator.map(_()).toSeq.distinct match{
+    case Seq(x) => x
+    case xs => xs.mkString("(", " | ", ")")
   }
   def joinBinOp(lhs: Msgs, rhs: Msgs) =
     if (lhs.value.isEmpty) rhs

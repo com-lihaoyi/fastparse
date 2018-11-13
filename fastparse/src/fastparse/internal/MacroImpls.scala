@@ -52,7 +52,12 @@ object MacroImpls {
             ctx1.instrument.afterParse(name.splice.value, ctx0.index, ctx0.isSuccess)
           }
           if (ctx0.verboseFailures) {
-            ctx0.setMsg(startIndex, () => name.splice.value)
+            if (!ctx0.cut) {
+              ctx0.aggregateMsg(
+                () => name.splice.value,
+                Msgs(List(new Lazy(() => name.splice.value)))
+              )
+            }
             if (!ctx0.isSuccess){
               ctx0.failureStack = (name.splice.value -> startIndex) :: ctx0.failureStack
             }
@@ -205,9 +210,10 @@ object MacroImpls {
         val oldCut = ctx5.cut
         ctx5.cut = false
         val startPos = ctx5.index
-        val startGroup = ctx5.failureGroupAggregate
+
         lhs0.splice
         val lhsMsg = ctx5.shortParserMsg
+        val lhsAggregate = ctx5.failureGroupAggregate
         if (ctx5.isSuccess) {
           ctx5.cut |= oldCut
           ctx5.asInstanceOf[ParsingRun[V]]
@@ -217,27 +223,23 @@ object MacroImpls {
           val verboseFailures = ctx5.verboseFailures
 
           ctx5.index = startPos
-          if (verboseFailures) ctx5.aggregateMsg(Int.MaxValue, lhsMsg, startGroup)
+          if (verboseFailures) ctx5.aggregateMsg(lhsMsg, lhsAggregate)
 
           ctx5.cut = false
           other.splice
           val rhsMsg = ctx5.shortParserMsg
+          val rhsAggregate = ctx5.failureGroupAggregate
           val rhsCut = ctx5.cut
           val endCut = rhsCut | oldCut
           if (!ctx5.isSuccess) {
             if (!rhsCut) ctx5.freshFailure(startPos)
             ctx5.cut = endCut
             if (verboseFailures) {
-              if (!rhsCut) {
-                ctx5.aggregateMsg(Int.MaxValue, rhsMsg ::: lhsMsg, rhsMsg ::: lhsMsg, startGroup, force = true)
-              }
-              else {
-                ctx5.aggregateMsg(Int.MaxValue, rhsMsg ::: lhsMsg, rhsMsg ::: lhsMsg, startGroup)
-              }
+              ctx5.aggregateMsg(rhsMsg ::: lhsMsg, rhsAggregate ::: lhsAggregate)
             }
           }else{
             ctx5.cut = endCut
-            if (verboseFailures) ctx5.setMsg(Int.MaxValue, rhsMsg ::: lhsMsg)
+            if (verboseFailures) ctx5.aggregateMsg(rhsMsg ::: lhsMsg, rhsAggregate ::: lhsAggregate)
           }
 
           ctx5.asInstanceOf[ParsingRun[V]]
@@ -440,15 +442,16 @@ object MacroImpls {
         val preOtherIndex = ctx1.index
         $other
         val postOtherIndex = ctx1.index
-
+        val rhsAggregate = ctx1.failureGroupAggregate
         val rhsNewCut = $cut1
         val msg = ctx1.shortParserMsg
+        val rhsMadeProgress = postOtherIndex > preOtherIndex
         val res =
           if (!ctx1.isSuccess) ctx1.augmentFailure(
             postOtherIndex,
             cut = rhsNewCut
           ) else {
-            val rhsMadeProgress = postOtherIndex > preOtherIndex
+
             val nextIndex =
               if (!rhsMadeProgress && input.isReachable(postOtherIndex)) preWsIndex
               else postOtherIndex
@@ -460,9 +463,10 @@ object MacroImpls {
               nextIndex
             )
           }
-        if (ctx1.verboseFailures) ctx1.setMsg(
-          _root_.scala.Int.MaxValue,
-          _root_.fastparse.internal.Util.joinBinOp(lhsMsg, msg)
+
+        if (ctx1.verboseFailures) ctx1.aggregateMsg(
+          _root_.fastparse.internal.Util.joinBinOp(lhsMsg, msg),
+          rhsAggregate ::: lhsAggregate
         )
         res
       }
@@ -485,6 +489,7 @@ object MacroImpls {
           val startIndex = ctx1.index
           val input = ctx1.input
           $lhs.parse0
+          val lhsAggregate = ctx1.failureGroupAggregate
           if (!ctx1.isSuccess) ctx1
           else {
             val lhsMsg = ctx1.shortParserMsg
@@ -597,6 +602,7 @@ object MacroImpls {
           lhs0.splice
           val postSuccess = ctx1.isSuccess
           val msg = ctx1.shortParserMsg
+          val agg = ctx1.failureGroupAggregate
           val res =
             if (ctx1.isSuccess) {
               val res = ctx1.freshSuccess(optioner1.some(ctx1.successValue.asInstanceOf[T]))
@@ -612,7 +618,7 @@ object MacroImpls {
 
           if (ctx1.verboseFailures) {
             if (!postSuccess){
-              ctx1.aggregateMsg(startPos, () => msg.render + ".?", msg, startGroup)
+              ctx1.aggregateMsg(() => msg.render + ".?", agg)
             }
           }
           res

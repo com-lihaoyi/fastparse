@@ -1,14 +1,13 @@
 package test.fastparse
 import fastparse._
 import NoWhitespace._
-import fastparse.internal.Util
 import utest._
 
 object FailureTests extends TestSuite{
   def tests = Tests{
     def checkSimple(parser: P[_] => P[_]) = {
       val f @ Parsed.Failure(failureString, index, extra) = parse("d", parser(_))
-      val trace = f.trace()
+      val trace = f.trace(true)
 
       assert(
         trace.terminalAggregateString == """("a" | "b" | "c")""",
@@ -92,6 +91,7 @@ object FailureTests extends TestSuite{
       def parseB[_: P] = P( "a" | "b" )
       def parseA[_: P] = P( parseB.rep(sep = ",") ~ "c" )
       val f1 @ Parsed.Failure(_, _, _) = parse("ad", parseA(_))
+
       val trace = f1.trace()
 
       assert(trace.groupAggregateString == """("," | "c")""")
@@ -193,6 +193,7 @@ object FailureTests extends TestSuite{
           trace.terminalAggregateString == expectedTerminals1
         )
       }
+
       // Consider cases where the failure happens down some branch of an either,
       // rep, or option, where the branch takes place before traceIndex but the
       // actual failure lines up nicely.

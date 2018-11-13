@@ -115,45 +115,19 @@ final class ParsingRun[+T](val input: ParserInput,
                            var noDropBuffer: Boolean){
 
 
-  def aggregateMsg(startIndex: Int,
-                   msgToAggregate: Msgs,
-                   startGroup: Msgs): Unit = {
-    aggregateMsg(startIndex, msgToAggregate, msgToAggregate, startGroup)
+  def aggregateMsg(msgToAggregate: Msgs): Unit = {
+    aggregateMsg(msgToAggregate, msgToAggregate)
   }
 
-  def aggregateMsg(startIndex: Int,
-                   msgToSet: () => String,
-                   msgToAggregate: Msgs,
-                   startGroup: Msgs): Unit = {
-    aggregateMsg(startIndex, Msgs(List(new Lazy(msgToSet))), msgToAggregate, startGroup)
+  def aggregateMsg(msgToSet: () => String,
+                   msgToAggregate: Msgs): Unit = {
+    aggregateMsg(Msgs(List(new Lazy(msgToSet))), msgToAggregate)
   }
-  def aggregateMsg(startIndex: Int,
-                   msgToSet: Msgs,
-                   msgToAggregate: Msgs,
-                   startGroup: Msgs,
-                   force: Boolean = false): Unit = {
-    // We only aggregate the msg under the following conditions:
-    //
-    // - The current index matches the traceIndex; all messages at other
-    //   indices are ignored
-    //
-    // - We are either in a backtracking (no-cut) failure, or we are in
-    //   some kind of success.
-    //   - Non-backtracking failures we do not log, because they get naturally
-    //     logged as part of lastFailureMsg
-    //   - Successes we *do* log, because often aggregateMsg gets called from
-    //     .rep and .? bodies, where the parse succeeds even though the last
-    //     aborted inner-parse failed (and needs to be aggregated)
-    if (!cut || isSuccess || force) {
-      failureGroupAggregate = msgToAggregate ::: startGroup
-    }
+  def aggregateMsg(msgToSet: Msgs,
+                   msgToAggregate: Msgs): Unit = {
 
-    // Only use the msgToSet if our start index is greater than the traceIndex.
-    // If it is less, that means the `shortParserMsg` we are setting is only used
-    // for group aggregation and not returned on it's own, so we return the
-    // possibly-truncated `msgToAggregate` to use in any surrounding aggregates
-    if (startIndex >= traceIndex) setMsg(startIndex, msgToSet)
-    else setMsg(Int.MaxValue, msgToAggregate)
+    setMsg(startIndex, msgToSet)
+    failureGroupAggregate = msgToAggregate
   }
 
   def aggregateTerminal(startIndex: Int, f: () => String): Unit = {
@@ -163,16 +137,21 @@ final class ParsingRun[+T](val input: ParserInput,
       if (lastFailureMsg == null) lastFailureMsg = Msgs(List(f2))
     }
 
-    shortParserMsg = Msgs(if (startIndex >= traceIndex) List(f2) else Nil)
+    shortParserMsg = Msgs(List(f2))
+    failureGroupAggregate = if (startIndex >= traceIndex) shortParserMsg else Msgs(Nil)
   }
+
   def setMsg(startIndex: Int, f: () => String): Unit = {
     val f2 = new Lazy(f)
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = Msgs(List(f2))
-    shortParserMsg = Msgs(if (startIndex >= traceIndex) List(f2) else Nil)
+    shortParserMsg = Msgs(List(f2))
+    failureGroupAggregate = if (startIndex >= traceIndex) shortParserMsg else Msgs(Nil)
   }
+
   def setMsg(startIndex: Int, f: Msgs): Unit = {
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = f
-    shortParserMsg =  if (startIndex >= traceIndex) f else Msgs(Nil)
+    shortParserMsg = f
+    failureGroupAggregate = if (startIndex >= traceIndex) shortParserMsg else Msgs(Nil)
   }
 
   // Use telescoping methods rather than default arguments to try and minimize
