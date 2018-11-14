@@ -8,7 +8,7 @@ object FailureTests extends TestSuite{
 
     * - checkNeg(
       "package package",
-      aggregate = """(PkgBlock | PkgObj)""",
+      aggregate = """(QualId | PkgBlock | PkgObj)""",
       terminals = """("`" | var-id | chars-while(OpCharNotSlash, 1) | "/" | operator | plain-id | id | "case" | "object")""",
       found = "package"
     )
@@ -81,7 +81,7 @@ object FailureTests extends TestSuite{
         |  throw 1
         |}
       """.stripMargin,
-      aggregate = """("." | TypeArgs | ArgList | `_` | "=>" | `=` | MatchAscriptionSuffix | "," | `:` | ")")""",
+      aggregate = """("." | TypeArgs | ArgList | `_` | Id | "=>" | `=` | MatchAscriptionSuffix | "," | `:` | ")")""",
       terminals = null,
       found ="}"
     )
@@ -93,7 +93,7 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      aggregate = """("." | TypeArgs | ArgList | `_` | "=>" | `=` | MatchAscriptionSuffix | Semis | "}")""",
+      aggregate = """("=>" | `:` | "." | TypeArgs | ArgList | `_` | Id | `=` | MatchAscriptionSuffix | Semis | "}")""",
       terminals = null,
       found ="1\n"
     )
@@ -117,7 +117,7 @@ object FailureTests extends TestSuite{
         | filename.asInstanceOf 10
         |}
       """.stripMargin,
-      aggregate = """("." | TypeArgs | ArgList | `_` | "=>" | `=` | MatchAscriptionSuffix | Semis | "}")""",
+      aggregate = """("." | TypeArgs | ArgList | `_` | Id | "=>" | `=` | MatchAscriptionSuffix | Semis | "}")""",
       terminals = null,
       found = "10"
     )
@@ -179,7 +179,7 @@ object FailureTests extends TestSuite{
         |import org.parboiled2 _
         |
       """.stripMargin,
-      aggregate = """("." | "," | end-of-input)""",
+      aggregate = """(Semis ~ `package` | "." | "," | end-of-input)""",
       terminals = null,
       found = "_"
     )
@@ -220,7 +220,7 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      aggregate = """(WL ~ "." | WL ~ TypeArgs | NotNewline ~ ArgList | NotNewline ~ `_` | InfixSuffix | PostFix | "=>" | `=` | MatchAscriptionSuffix | Semis | "}")""",
+      aggregate = """("." | TypeArgs | NotNewline ~ ArgList | NotNewline ~ `_` | InfixSuffix | PostFix | "=>" | `=` | MatchAscriptionSuffix | Semis | "}")""",
       terminals = null,
       found = ")"
     )
@@ -230,7 +230,7 @@ object FailureTests extends TestSuite{
         |   A(A(A(A(A(A(A(A(A(A(A(A(A(A(A(A()))))))))))))))
         |}
       """.stripMargin,
-      aggregate = """("." | TypeArgs | ArgList | `_` | "=>" | `=` | MatchAscriptionSuffix | "," | `:` | ")")""",
+      aggregate = """("." | TypeArgs | ArgList | `_` | Id | "=>" | `=` | MatchAscriptionSuffix | "," | `:` | ")")""",
       terminals = null,
       found = "}"
     )
@@ -304,7 +304,7 @@ object FailureTests extends TestSuite{
         |  func{ case _: F = fail }
         |}
       """.stripMargin,
-      aggregate = """("." | TypeArgs | `#` | `with` | "|" | Guard | "=>")""",
+      aggregate = """("." | TypeArgs | `#` | Annot | `with` | { | "|" | Guard | "=>")""",
       terminals = null,
       found = "= fail"
     )
@@ -328,7 +328,7 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      aggregate = """("." | TypeArgs | TupleEx | Id | "|" | "," | ")")""",
+      aggregate = """(`:` | `@` | "." | TypeArgs | TupleEx | Id | "|" | "," | ")")""",
       terminals = null,
       found = "=> z"
     )
@@ -361,7 +361,7 @@ object FailureTests extends TestSuite{
         |  a =:= .c
         |}
       """.stripMargin,
-      aggregate = """(TypeArgs | ExprPrefix | XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | Parened | Newline | SuperPostfixSuffix | Semi | Semis | "}")""",
+      aggregate = """(TypeArgs | PrefixExpr | Newline | "=>" | `=` | MatchAscriptionSuffix | Semis | "}")""",
       terminals = null,
       found = ".c"
     )
@@ -416,7 +416,7 @@ object FailureTests extends TestSuite{
         |  val trueA = 1
         |}
       """.stripMargin,
-      aggregate = """(DefTmpl | Semi | TopStat | end-of-input)""",
+      aggregate = """(DefTmpl | Semis ~ TopStat | end-of-input)""",
       terminals = null,
       found = "val trueA"
     )
@@ -471,7 +471,7 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      aggregate = """("." | TypeArgs | TupleEx | Id | "|" | Guard | "=>")""",
+      aggregate = """(`@` | "." | TypeArgs | TupleEx | Id | "|" | Guard | "=>")""",
       terminals = null,
       found = "case"
     )
@@ -480,7 +480,7 @@ object FailureTests extends TestSuite{
         |  a!.b
         |}
       """.stripMargin,
-      aggregate = """(Newline | "=>" | `=` | MatchAscriptionSuffix | Semis | "}")""",
+      aggregate = """(TypeArgs | PrefixExpr | Newline | "=>" | `=` | MatchAscriptionSuffix | Semis | "}")""",
       terminals = null,
       found = ".b"
     )
@@ -519,7 +519,7 @@ object FailureTests extends TestSuite{
         |package omg
         |;
       """.stripMargin,
-      aggregate = """("." | "{")""",
+      aggregate = """(Semis ~ TopStat | "{")""",
       terminals = null,
       found = ";"
     )
@@ -529,7 +529,7 @@ object FailureTests extends TestSuite{
         |  { a: L = }
         |}
       """.stripMargin,
-      aggregate = """("." | TypeArgs | `#` | `with` | `*` | Id | "=>" | BlockLambda | BlockStat | Semis | "}")""",
+      aggregate = """("." | TypeArgs | `#` | Annot | `with` | { | `*` | Id | "=>" | BlockLambda | BlockStat | Semis | "}")""",
       terminals = null,
       found = "= }"
     )
@@ -593,7 +593,7 @@ object FailureTests extends TestSuite{
           |  } yield x
           |}
         """.stripMargin,
-        aggregate = """("." | TypeArgs | TupleEx | Id | "|" | "," | ")")""",
+        aggregate = """(`:` | `@` | "." | TypeArgs | TupleEx | Id | "|" | "," | ")")""",
       terminals = null,
         found = "=> x)"
       )
@@ -619,7 +619,7 @@ object FailureTests extends TestSuite{
         |  } yield x
         |}
       """.stripMargin,
-      aggregate = """("." | TypeArgs | "=>" | `=` | MatchAscriptionSuffix | Guard | "}")""",
+      aggregate = """("." | TypeArgs | "=>" | `=` | MatchAscriptionSuffix | Guard | ";" | GenAssign | "}")""",
       terminals = null,
       found = "{\n"
     )
@@ -669,7 +669,7 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      aggregate = """("." | TypeArgs | "=>" | `=` | MatchAscriptionSuffix | Semis | Semi | BlockLambda | BlockStat | "}")""",
+      aggregate = """(BlockLambda | BlockStat | Semis | "}")""",
       terminals = null,
       found = "case for"
     )
@@ -729,7 +729,7 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      aggregate = """id""",
+      aggregate = """(DecNum | id)""",
       terminals = null,
       found = ")"
     )
@@ -739,7 +739,7 @@ object FailureTests extends TestSuite{
          |  1..toString
          |}
       """.stripMargin,
-      aggregate = """id""",
+      aggregate = """(DecNum | id)""",
       terminals = null,
       found = ".toString"
     )
@@ -767,7 +767,7 @@ object FailureTests extends TestSuite{
     s"""
        |object X{ val (_:) = 1 }
       """.stripMargin,
-    aggregate = """(NamedType | Refinement)""",
+    aggregate = """(TypePat | NamedType | Refinement)""",
       terminals = null,
     found = ") = 1"
   )
@@ -949,7 +949,7 @@ object FailureTests extends TestSuite{
     )
     * - checkNeg(
       s"""object Foo{; x: Int => x}""",
-      aggregate = """("." | TypeArgs | `#` | `with` | `*` | Id | Semis | "}")""",
+      aggregate = """("." | TypeArgs | `#` | Annot | `with` | { | `*` | Id | Semis | "}")""",
       terminals = null,
       found = "=> x"
     )
@@ -978,7 +978,7 @@ object FailureTests extends TestSuite{
         |    val x = 1
         |    ;
         |    """.stripMargin,
-      aggregate = """(Semi | BlockStat | BlockLambda | Semis | "}")""",
+      aggregate = """(BlockLambda | BlockStat | Semis | "}")""",
       terminals = null,
       found = ""
     )

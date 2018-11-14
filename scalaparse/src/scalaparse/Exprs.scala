@@ -112,6 +112,7 @@ trait Exprs extends Core with Types with Xml{
   def BlockExpr[_: P]: P[Unit] = P( "{" ~/ (CaseClauses | Block ~ "}") )
 
   def BlockLambdaHead[_: P]: P[Unit] = P( "(" ~ BlockLambdaHead ~ ")" | `this` | Id | `_` )
+
   def BlockLambda[_: P] = P( BlockLambdaHead  ~ (`=>` | `:` ~ InfixType ~ `=>`.?) )
 
   def BlockChunk[_: P]  = {

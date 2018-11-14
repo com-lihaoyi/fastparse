@@ -135,8 +135,7 @@ final class ParsingRun[+T](val input: ParserInput,
   // following algorithm:
   //
   // - When a parse which started at the given `traceIndex` fails without a cut
-  //
-  // - Over-write `failureGroupAggregate` with it's `shortParserMsg`
+  //   - Over-write `failureGroupAggregate` with it's `shortParserMsg`
   //
   // - Otherwise:
   //   - If we are a terminal parser, we set our `failureGroupAggregate` to Nil
@@ -156,7 +155,7 @@ final class ParsingRun[+T](val input: ParserInput,
   // `traceIndex` e.g. parsing "ax" with P( ("a" ~ "b") ~ "c" | "a" ~/ "d" ), the
   // final failure `index` and thus `traceIndex` is at offset 1, but ("a" ~ "b")
   // passes from offsets 0-2, "c" fails at offset 2 and ("a" ~ "b") ~ "c" fails
-  // from offset 0-2. In such a case, we
+  // from offset 0-2. In such a case, we currently cannot aggregate it
 
   def aggregateMsg(startIndex: Int,
                    msgToAggregate: Msgs): Unit = {
