@@ -421,84 +421,101 @@ object MacroImpls {
   }
 
   def parsedSequence0[T: c.WeakTypeTag, V: c.WeakTypeTag, R: c.WeakTypeTag]
-  (c: Context)
-  (other: c.Expr[ParsingRun[V]], cut: Boolean)
-  (s: c.Expr[Implicits.Sequencer[T, V, R]],
-   whitespace: Option[c.Expr[ParsingRun[Any] => ParsingRun[Unit]]],
-   ctx: c.Expr[ParsingRun[_]]): c.Expr[ParsingRun[R]] = {
+                     (c: Context)
+                     (rhs: c.Expr[ParsingRun[V]], cut: Boolean)
+                     (s: c.Expr[Implicits.Sequencer[T, V, R]],
+                      whitespace: Option[c.Expr[ParsingRun[Any] => ParsingRun[Unit]]],
+                      ctx: c.Expr[ParsingRun[_]]): c.Expr[ParsingRun[R]] = {
     import c.universe._
 
     val lhs = c.prefix.asInstanceOf[Expr[EagerOps[T]]]
-    val cut1 = c.Expr[Boolean](if(cut) q"true" else q"ctx1.cut")
+    val ctx1 = TermName(c.freshName("ctx1"))
+    val preLhsIndex = TermName(c.freshName("preLhsIndex"))
+    val postLhsIndex = TermName(c.freshName("postLhsIndex"))
+    val preRhsIndex = TermName(c.freshName("preRhsIndex"))
+    val postRhsIndex = TermName(c.freshName("postRhsIndex"))
+    val lhsAggregate = TermName(c.freshName("lhsAggregate"))
+    val rhsAggregate = TermName(c.freshName("rhsAggregate"))
+    val rhsNewCut = TermName(c.freshName("rhsNewCut"))
+    val rhsMsg = TermName(c.freshName("rhsMsg"))
+    val lhsMsg = TermName(c.freshName("lhsMsg"))
+    val rhsMadeProgress = TermName(c.freshName("rhsMadeProgress"))
+    val input = TermName(c.freshName("input"))
+    val lhsValue = TermName(c.freshName("lhsValue"))
+    val nextIndex = TermName(c.freshName("nextIndex"))
+    val res = TermName(c.freshName("res"))
+    val s1 = TermName(c.freshName("s1"))
 
-    val rhs = q"""
-      if (!ctx1.isSuccess && ctx1.cut) ctx1
+    val cut1 = c.Expr[Boolean](if(cut) q"true" else q"$ctx1.cut")
+    val rhsSnippet = q"""
+      if (!$ctx1.isSuccess && $ctx1.cut) $ctx1
       else {
-        val preOtherIndex = ctx1.index
-        $other
-        val postOtherIndex = ctx1.index
-        val rhsAggregate = ctx1.failureGroupAggregate
-        val rhsNewCut = $cut1
-        val msg = ctx1.shortParserMsg
-        val rhsMadeProgress = postOtherIndex > preOtherIndex
-        val res =
-          if (!ctx1.isSuccess) ctx1.augmentFailure(
-            postOtherIndex,
-            cut = rhsNewCut
+        val $preRhsIndex = $ctx1.index
+        $rhs
+        val $postRhsIndex = $ctx1.index
+        val $rhsAggregate = $ctx1.failureGroupAggregate
+        val $rhsNewCut = $cut1
+        val $rhsMsg = $ctx1.shortParserMsg
+        val $rhsMadeProgress = $postRhsIndex > $preRhsIndex
+        val $res =
+          if (!$ctx1.isSuccess) $ctx1.augmentFailure(
+            $postRhsIndex,
+            cut = $rhsNewCut
           ) else {
 
-            val nextIndex =
-              if (!rhsMadeProgress && input.isReachable(postOtherIndex)) preWsIndex
-              else postOtherIndex
+            val $nextIndex =
+              if (!$rhsMadeProgress && $input.isReachable($postRhsIndex)) $postLhsIndex
+              else $postRhsIndex
 
-            if (rhsMadeProgress && ctx1.checkForDrop()) input.dropBuffer(postOtherIndex)
+            if ($rhsMadeProgress && $ctx1.checkForDrop()) $input.dropBuffer($postRhsIndex)
 
-            ctx1.freshSuccess(
-              s1.apply(pValue.asInstanceOf[${c.weakTypeOf[T]}], ctx1.successValue.asInstanceOf[${c.weakTypeOf[V]}]),
-              nextIndex
+            $ctx1.freshSuccess(
+              $s1.apply($lhsValue.asInstanceOf[${c.weakTypeOf[T]}], $ctx1.successValue.asInstanceOf[${c.weakTypeOf[V]}]),
+              $nextIndex
             )
           }
 
-        if (ctx1.verboseFailures) ctx1.aggregateMsg(
-          startIndex,
-          _root_.fastparse.internal.Util.joinBinOp(lhsMsg, msg),
-          rhsAggregate ::: lhsAggregate,
+        if ($ctx1.verboseFailures) $ctx1.aggregateMsg(
+          $preLhsIndex,
+          _root_.fastparse.internal.Util.joinBinOp($lhsMsg, $rhsMsg),
+          $rhsAggregate ::: $lhsAggregate,
           // We override the failureGroupAggregate to avoid building an `a ~ b`
           // aggregate msg in the specific case where the LHS parser fails to
           // make any progress past `startIndex`. This finds cases like `a.? ~ b`
           // or `a.rep ~ b` and lets use flatten them out into `a | b`
-          forceAggregate = startIndex <= preOtherIndex && preOtherIndex == ctx1.traceIndex
+          forceAggregate = $preLhsIndex <= $preRhsIndex && $preRhsIndex == $ctx1.traceIndex
         )
-        res
+        $res
       }
     """
     val guardedRhs = whitespace match{
-      case None => rhs
+      case None => rhsSnippet
       case Some(ws) =>
-        if (ws.tree.tpe =:= typeOf[fastparse.NoWhitespace.noWhitespaceImplicit.type]) rhs
+        if (ws.tree.tpe =:= typeOf[fastparse.NoWhitespace.noWhitespaceImplicit.type]) rhsSnippet
         else{
           q"""
-            _root_.fastparse.internal.Util.consumeWhitespace($ws, ctx1)
-            if (ctx1.isSuccess) $rhs
-            else ctx1
+            _root_.fastparse.internal.Util.consumeWhitespace($ws, $ctx1)
+            if ($ctx1.isSuccess) $rhsSnippet
+            else $ctx1
           """
         }
     }
     c.Expr[ParsingRun[R]](q"""{
-      $ctx match{ case ctx1 =>
-        $s match{case s1 =>
-          val startIndex = ctx1.index
-          val input = ctx1.input
+      $ctx match{ case $ctx1 =>
+        $s match{case $s1 =>
+          val $preLhsIndex = $ctx1.index
+          val $input = $ctx1.input
           $lhs.parse0
-          val lhsAggregate = ctx1.failureGroupAggregate
-          if (!ctx1.isSuccess) ctx1
+          val $postLhsIndex = $ctx1.index
+          val $lhsAggregate = $ctx1.failureGroupAggregate
+          if (!$ctx1.isSuccess) $ctx1
           else {
-            val lhsMsg = ctx1.shortParserMsg
-            ctx1.cut = $cut1
-            val preWsIndex = ctx1.index
-            if (preWsIndex > startIndex && ctx1.checkForDrop()) input.dropBuffer(preWsIndex)
+            val $lhsMsg = $ctx1.shortParserMsg
+            $ctx1.cut = $cut1
 
-            val pValue = ctx1.successValue
+            if ($postLhsIndex > $preLhsIndex && $ctx1.checkForDrop()) $input.dropBuffer($postLhsIndex)
+
+            val $lhsValue = $ctx1.successValue
             $guardedRhs
           }
         }
