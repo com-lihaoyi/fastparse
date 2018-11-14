@@ -531,7 +531,27 @@ object MacroImpls {
     }
   }
 
-
+  def charPredMacro(c: Context)
+                   (p: c.Expr[Char => Boolean])
+                   (ctx: c.Expr[ParsingRun[Any]]): c.Expr[ParsingRun[Unit]] = {
+    import c.universe._
+    reify{
+      ctx.splice match{case ctx0 =>
+        p.splice match{ case p0 =>
+          val startIndex = ctx0.index
+          val res =
+            if (!(ctx0.input.isReachable(ctx0.index) && p0(ctx0.input(ctx0.index)))) {
+              ctx0.freshFailure().asInstanceOf[ParsingRun[Unit]]
+            }
+            else {
+              ctx0.freshSuccessUnit(ctx0.index + 1)
+            }
+          if (ctx0.verboseFailures) ctx0.aggregateTerminal(startIndex, () => s"char-pred(${p0})")
+          res
+        }
+      }
+    }
+  }
   def charsWhileInMacro1(c: Context)
                         (s: c.Expr[String])
                         (ctx: c.Expr[ParsingRun[Any]]): c.Expr[ParsingRun[Unit]] = {
@@ -577,7 +597,34 @@ object MacroImpls {
     """
     c.Expr[ParsingRun[Unit]](res)
   }
+  def charsWhileMacro1(c: Context)
+                      (p: c.Expr[Char => Boolean])
+                      (ctx: c.Expr[ParsingRun[Any]]): c.Expr[ParsingRun[Unit]] = {
+    import c.universe._
+    charsWhileMacro(c)(p, reify(1))(ctx)
+  }
+  def charsWhileMacro(c: Context)
+                     (p: c.Expr[Char => Boolean], min: c.Expr[Int])
+                     (ctx: c.Expr[ParsingRun[Any]]): c.Expr[ParsingRun[Unit]] = {
+    import c.universe._
 
+    reify {
+      ctx.splice match { case ctx0 =>
+        p.splice match{ case p0 =>
+          var index = ctx0.index
+          val input = ctx0.input
+          val start = index
+          val goal = min.splice + start
+          while (input.isReachable(index) && p0(input(index))) index += 1
+          val res =
+            if (index >= goal) ctx0.freshSuccessUnit(index = index)
+            else ctx0.freshFailure()
+          if (ctx0.verboseFailures) ctx0.aggregateTerminal(start, () => s"chars-while($p0, ${min.splice})")
+          res
+        }
+      }
+    }
+  }
 
   def byNameOpsStrMacro(c: Context)
                        (parse0: c.Expr[String])

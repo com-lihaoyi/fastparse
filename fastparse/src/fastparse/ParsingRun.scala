@@ -193,8 +193,8 @@ final class ParsingRun[+T](val input: ParserInput,
       if (lastFailureMsg == null) lastFailureMsg = Msgs(List(f2))
     }
 
-    shortParserMsg = if (startIndex >= traceIndex) Msgs(List(f2)) else Msgs(Nil)
-    failureGroupAggregate = if (checkAggregate(startIndex)) shortParserMsg else Msgs(Nil)
+    shortParserMsg = if (startIndex >= traceIndex) Msgs(List(f2)) else Msgs.empty
+    failureGroupAggregate = if (checkAggregate(startIndex)) shortParserMsg else Msgs.empty
   }
 
   def setMsg(startIndex: Int, f: () => String): Unit = {
@@ -203,8 +203,8 @@ final class ParsingRun[+T](val input: ParserInput,
 
   def setMsg(startIndex: Int, f: Msgs): Unit = {
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = f
-    shortParserMsg = if (startIndex >= traceIndex) f else Msgs(Nil)
-    failureGroupAggregate = if (checkAggregate(startIndex)) shortParserMsg else Msgs(Nil)
+    shortParserMsg = if (startIndex >= traceIndex) f else Msgs.empty
+    failureGroupAggregate = if (checkAggregate(startIndex)) shortParserMsg else Msgs.empty
   }
 
   /**

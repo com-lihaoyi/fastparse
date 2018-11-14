@@ -54,9 +54,9 @@ package object fastparse {
     originalParser = parser,
     traceIndex = traceIndex,
     instrument = instrument,
-    failureTerminalAggregate = Msgs(Nil),
-    failureGroupAggregate = Msgs(Nil),
-    shortParserMsg = Msgs(Nil),
+    failureTerminalAggregate = Msgs.empty,
+    failureGroupAggregate = Msgs.empty,
+    shortParserMsg = Msgs.empty,
     lastFailureMsg = null,
     failureStack = List.empty,
     isSuccess = true,
@@ -337,18 +337,14 @@ package object fastparse {
       */
     def opaque(msg: String)(implicit ctx: P[Any]): P[T] = {
       val oldIndex = ctx.index
-      val preAggregate = ctx.failureGroupAggregate
 
       val res = parse0()
 
-      if (ctx.verboseFailures) {
-        ctx.failureGroupAggregate = preAggregate
-      }
       val res2 =
         if (res.isSuccess) ctx.freshSuccess(ctx.successValue)
         else ctx.freshFailure(oldIndex)
 
-      ctx.aggregateTerminal(oldIndex, () => msg)
+      if (ctx.verboseFailures) ctx.aggregateTerminal(oldIndex, () => msg)
 
       res2.asInstanceOf[P[T]]
     }
@@ -363,8 +359,7 @@ package object fastparse {
       val startCut = ctx.cut
       val oldNoCut = ctx.noDropBuffer
       ctx.noDropBuffer = true
-      val startTerminals= ctx.failureTerminalAggregate
-      val startAggregate = ctx.failureGroupAggregate
+      val startTerminals = ctx.failureTerminalAggregate
       parse0()
       ctx.noDropBuffer = oldNoCut
       val msg = ctx.shortParserMsg
@@ -375,7 +370,7 @@ package object fastparse {
 
       if (ctx.verboseFailures) {
         ctx.failureTerminalAggregate = startTerminals
-        ctx.failureGroupAggregate = startAggregate
+        ctx.failureGroupAggregate = Msgs.empty
         ctx.setMsg(startPos, () => "!" + msg.render)
       }
       res.cut = startCut
@@ -469,7 +464,6 @@ package object fastparse {
     val startPos = ctx.index
     val startCut = ctx.cut
     val oldNoCut = ctx.noDropBuffer
-    val startAggregate = ctx.failureTerminalAggregate
     ctx.noDropBuffer = true
     parse
     ctx.noDropBuffer = oldNoCut
@@ -479,7 +473,7 @@ package object fastparse {
       if (ctx.isSuccess) ctx.freshSuccessUnit(startPos)
       else ctx.asInstanceOf[P[Unit]]
     if (ctx.verboseFailures) {
-      ctx.failureTerminalAggregate = startAggregate
+      ctx.failureGroupAggregate = Msgs.empty
       ctx.setMsg(startPos, () =>
         msg match{
           case Seq(x) => s"&(${msg.render})"
@@ -530,8 +524,8 @@ package object fastparse {
 
     val res = p
     if (ctx.verboseFailures) {
-      ctx.failureGroupAggregate = Msgs(Nil)
-      ctx.shortParserMsg = Msgs(Nil)
+      ctx.failureGroupAggregate = Msgs.empty
+      ctx.shortParserMsg = Msgs.empty
     }
     res
   }
@@ -608,21 +602,15 @@ package object fastparse {
   /**
     * Parses a single character satisfying the given predicate
     */
-  def CharPred(p: Char => Boolean)(implicit ctx: P[_]): P[Unit] = {
-    val startIndex = ctx.index
-    val res =
-      if (!(ctx.input.isReachable(ctx.index) && p(ctx.input(ctx.index)))) ctx.freshFailure().asInstanceOf[P[Unit]]
-      else ctx.freshSuccessUnit(ctx.index + 1)
-    if (ctx.verboseFailures) ctx.aggregateTerminal(startIndex, () => s"char-pred($p)")
-    res
-  }
+  def CharPred(p: Char => Boolean)(implicit ctx: P[_]): P[Unit] = macro MacroImpls.charPredMacro
+
   /**
     * Parses a single character in one of the input strings representing
     * character classes
     */
   def CharIn(s: String*)(implicit ctx: P[_]): P[Unit] = macro MacroImpls.charInMacro
   /**
-    * Parses zero or more characters as long as they are contained
+    * Parses one or more characters as long as they are contained
     * in one of the input strings representing character classes
     */
   def CharsWhileIn(s: String)
@@ -634,24 +622,20 @@ package object fastparse {
     */
   def CharsWhileIn(s: String, min: Int)
                   (implicit ctx: P[_]): P[Unit] = macro MacroImpls.charsWhileInMacro
+  /**
+    * Parses one or more characters as long as they satisfy the given
+    * predicate
+    */
+  def CharsWhile(p: Char => Boolean)
+                (implicit ctx: P[_]): P[Unit] = macro MacroImpls.charsWhileMacro1
 
   /**
     * Parses `min` or more characters as long as they satisfy the given
     * predicate
     */
-  def CharsWhile(p: Char => Boolean, min: Int = 1)(implicit ctx: P[_]): P[Unit] = {
-    var index = ctx.index
-    val input = ctx.input
+  def CharsWhile(p: Char => Boolean, min: Int)
+                (implicit ctx: P[_]): P[Unit] = macro MacroImpls.charsWhileMacro
 
-
-    val start = index
-    while(input.isReachable(index) && p(input(index))) index += 1
-    val res =
-      if (index - start >= min) ctx.freshSuccessUnit(index = index)
-      else ctx.freshFailure()
-    if (ctx.verboseFailures) ctx.aggregateTerminal(start, () => s"chars-while($p, $min)")
-    res
-  }
 
   /**
     * Allows backtracking regardless of whether cuts happen within the wrapped

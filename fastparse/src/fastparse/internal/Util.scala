@@ -146,7 +146,9 @@ final class CompactTrieNode(source: TrieNode){
 
   val word = source.word
 }
-
+object Msgs{
+  val empty = Msgs(Nil)
+}
 case class Msgs(value: List[Lazy[String]]){
   def :::(other: Msgs) = Msgs(other.value ::: value)
   def ::(other: Lazy[String]) = Msgs(other :: value)
