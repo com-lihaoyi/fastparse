@@ -223,20 +223,11 @@ object MacroImpls {
           ctx5.cut = false
           other.splice
           val rhsMsg = ctx5.shortParserMsg
-          val rhsAggregate = ctx5.failureGroupAggregate
           val rhsCut = ctx5.cut
           val endCut = rhsCut | oldCut
-          if (!ctx5.isSuccess) {
-            if (!rhsCut) ctx5.freshFailure(startPos)
-            ctx5.cut = endCut
-            if (verboseFailures) {
-              ctx5.aggregateMsg(startPos, rhsMsg ::: lhsMsg, rhsAggregate ::: lhsAggregate)
-            }
-          }else{
-            ctx5.cut = endCut
-            if (verboseFailures) ctx5.aggregateMsg(startPos, rhsMsg ::: lhsMsg, rhsAggregate ::: lhsAggregate)
-          }
-
+          if (!ctx5.isSuccess && !rhsCut) ctx5.freshFailure(startPos)
+          ctx5.cut = endCut
+          if (verboseFailures) ctx5.aggregateMsg(startPos, rhsMsg ::: lhsMsg, ctx5.failureGroupAggregate ::: lhsAggregate)
           ctx5.asInstanceOf[ParsingRun[V]]
         }
       }
@@ -436,7 +427,6 @@ object MacroImpls {
     val postRhsIndex = TermName(c.freshName("postRhsIndex"))
     val lhsAggregate = TermName(c.freshName("lhsAggregate"))
     val rhsAggregate = TermName(c.freshName("rhsAggregate"))
-    val rhsNewCut = TermName(c.freshName("rhsNewCut"))
     val rhsMsg = TermName(c.freshName("rhsMsg"))
     val lhsMsg = TermName(c.freshName("lhsMsg"))
     val rhsMadeProgress = TermName(c.freshName("rhsMadeProgress"))
@@ -564,18 +554,19 @@ object MacroImpls {
     val index = TermName(c.freshName("index"))
     val input = TermName(c.freshName("input"))
     val start = TermName(c.freshName("start"))
+    val goal = TermName(c.freshName("goal"))
     val res = q"""
       $ctx match{ case $ctx1 =>
         var $index = $ctx1.index
         val $input = $ctx1.input
-
         val $start = $index
+        val $goal = $min + $start
         while(
           $input.isReachable($index) &&
           ${parseCharCls(c)(c.Expr[Char](q"$input($index)"), Seq(literal))}
         ) $index += 1
         val res =
-          if ($index - $start >= $min) $ctx1.freshSuccessUnit(index = $index)
+          if ($index >= $goal) $ctx1.freshSuccessUnit(index = $index)
           else {
             $ctx1.isSuccess = false
             $ctx1.asInstanceOf[fastparse.P[Unit]]
@@ -617,10 +608,9 @@ object MacroImpls {
           ctx1.cut = false
           lhs0.splice
           val postSuccess = ctx1.isSuccess
-          val msg = ctx1.shortParserMsg
-          val agg = ctx1.failureGroupAggregate
+
           val res =
-            if (ctx1.isSuccess) {
+            if (postSuccess) {
               val res = ctx1.freshSuccess(optioner1.some(ctx1.successValue.asInstanceOf[T]))
               res.cut |= startCut
               res
@@ -633,6 +623,8 @@ object MacroImpls {
             }
 
           if (ctx1.verboseFailures) {
+            val msg = ctx1.shortParserMsg
+            val agg = ctx1.failureGroupAggregate
             if (!postSuccess){
               ctx1.aggregateMsg(startPos, () => msg.render + ".?", agg)
             }
