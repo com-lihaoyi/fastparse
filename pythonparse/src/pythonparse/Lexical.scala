@@ -11,7 +11,7 @@ object Lexical {
   import fastparse._
 
   def kw[_: P](s: String) = s ~ !(letter | digit | "_")
-  def comment[_: P] = P( "#" ~ CharsWhile(_ != '\n', min = 0) )
+  def comment[_: P] = P( "#" ~ CharsWhile(_ != '\n', 0) )
   def wscomment[_: P] = P( (CharsWhileIn(" \n") | Lexical.comment | "\\\n").rep )
   def nonewlinewscomment[_: P] = P( (CharsWhileIn(" ") | Lexical.comment | "\\\n").rep )
 

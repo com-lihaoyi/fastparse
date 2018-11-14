@@ -185,7 +185,7 @@ object perftests extends Module{
   }
 
 
-  object json extends PerfTestModule {
+  object compare extends PerfTestModule {
     def moduleDeps = Seq(
       fastparse.jvm("2.12.7").test,
       scalaparse.jvm("2.12.7").test,

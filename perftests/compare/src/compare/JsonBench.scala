@@ -1,4 +1,4 @@
-package json
+package compare
 import utest._
 
 object JsonBench extends TestSuite{

@@ -1,9 +1,11 @@
-package json
+package compare
 
-import org.python.core.{CompileMode, CompilerFlags}
+import scalaparse.ScalacParser
 import utest._
 
-object PythonBench extends TestSuite{
+import scala.tools.nsc.{Global, Settings}
+
+object ScalaBench extends TestSuite{
   def bench(f: => Unit) = {
     var start = System.currentTimeMillis()
     while(System.currentTimeMillis() - start < 10000) {
@@ -18,15 +20,17 @@ object PythonBench extends TestSuite{
     count
   }
   val txt = scala.io.Source
-    .fromFile("perftests/resources/cross_validation.py")
+    .fromFile("perftests/resources/GenJSCode.scala")
     .mkString
 
   val tests = Tests{
     'fastparse - bench{
-      fastparse.parse(txt, pythonparse.Statements.file_input(_))
+
+      fastparse.parse(txt, scalaparse.Scala.CompilationUnit(_))
     }
-    'jython - bench{
-      org.python.core.ParserFacade.parse(txt, CompileMode.exec, "<test>", CompilerFlags.getCompilerFlags)
+    'scalac - bench{
+      ScalacParser.checkParseFails(txt)
     }
+
   }
 }
