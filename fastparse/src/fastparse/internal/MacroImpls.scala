@@ -421,11 +421,11 @@ object MacroImpls {
   }
 
   def parsedSequence0[T: c.WeakTypeTag, V: c.WeakTypeTag, R: c.WeakTypeTag]
-                     (c: Context)
-                     (other: c.Expr[ParsingRun[V]], cut: Boolean)
-                     (s: c.Expr[Implicits.Sequencer[T, V, R]],
-                      whitespace: Option[c.Expr[ParsingRun[Any] => ParsingRun[Unit]]],
-                      ctx: c.Expr[ParsingRun[_]]): c.Expr[ParsingRun[R]] = {
+  (c: Context)
+  (other: c.Expr[ParsingRun[V]], cut: Boolean)
+  (s: c.Expr[Implicits.Sequencer[T, V, R]],
+   whitespace: Option[c.Expr[ParsingRun[Any] => ParsingRun[Unit]]],
+   ctx: c.Expr[ParsingRun[_]]): c.Expr[ParsingRun[R]] = {
     import c.universe._
 
     val lhs = c.prefix.asInstanceOf[Expr[EagerOps[T]]]
@@ -462,7 +462,12 @@ object MacroImpls {
         if (ctx1.verboseFailures) ctx1.aggregateMsg(
           startIndex,
           _root_.fastparse.internal.Util.joinBinOp(lhsMsg, msg),
-          rhsAggregate ::: lhsAggregate
+          rhsAggregate ::: lhsAggregate,
+          // We override the failureGroupAggregate to avoid building an `a ~ b`
+          // aggregate msg in the specific case where the LHS parser fails to
+          // make any progress past `startIndex`. This finds cases like `a.? ~ b`
+          // or `a.rep ~ b` and lets use flatten them out into `a | b`
+          forceAggregate = startIndex <= preOtherIndex && preOtherIndex == ctx1.traceIndex
         )
         res
       }

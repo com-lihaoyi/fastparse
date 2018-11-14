@@ -171,11 +171,18 @@ final class ParsingRun[+T](val input: ParserInput,
   def aggregateMsg(startIndex: Int,
                    msgToSet: Msgs,
                    msgToAggregate: Msgs): Unit = {
+    aggregateMsg(startIndex, msgToSet, msgToAggregate, false)
+  }
+  def aggregateMsg(startIndex: Int,
+                   msgToSet: Msgs,
+                   msgToAggregate: Msgs,
+                   forceAggregate: Boolean): Unit = {
 
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = msgToSet
+
     shortParserMsg = msgToSet
 
-    if (checkAggregate(startIndex)) failureGroupAggregate = msgToSet
+    if (checkAggregate(startIndex) && !forceAggregate) failureGroupAggregate = msgToSet
     else failureGroupAggregate = msgToAggregate
   }
 
@@ -186,7 +193,7 @@ final class ParsingRun[+T](val input: ParserInput,
       if (lastFailureMsg == null) lastFailureMsg = Msgs(List(f2))
     }
 
-    shortParserMsg = Msgs(List(f2))
+    shortParserMsg = if (startIndex >= traceIndex) Msgs(List(f2)) else Msgs(Nil)
     failureGroupAggregate = if (checkAggregate(startIndex)) shortParserMsg else Msgs(Nil)
   }
 
@@ -196,14 +203,14 @@ final class ParsingRun[+T](val input: ParserInput,
 
   def setMsg(startIndex: Int, f: Msgs): Unit = {
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = f
-    shortParserMsg = f
+    shortParserMsg = if (startIndex >= traceIndex) f else Msgs(Nil)
     failureGroupAggregate = if (checkAggregate(startIndex)) shortParserMsg else Msgs(Nil)
   }
 
   /**
     * Conditions under which we want to aggregate the given parse
     */
-  def checkAggregate(startIndex: Int) = !cut && !isSuccess && startIndex == traceIndex
+  def checkAggregate(startIndex: Int) = !cut && !isSuccess && startIndex <= traceIndex && index >= traceIndex
 
 
   // Use telescoping methods rather than default arguments to try and minimize
