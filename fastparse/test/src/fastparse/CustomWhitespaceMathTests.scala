@@ -1,4 +1,4 @@
-package fastparse
+package test.fastparse
 
 import fastparse._
 import utest._

@@ -446,23 +446,22 @@ object MacroImpls {
     val res = TermName(c.freshName("res"))
     val s1 = TermName(c.freshName("s1"))
 
-    val cut1 = c.Expr[Boolean](if(cut) q"true" else q"$ctx1.cut")
+    val setCut = c.Expr[Boolean](if(cut) q"$ctx1.cut = true" else q"()")
     val rhsSnippet = q"""
       if (!$ctx1.isSuccess && $ctx1.cut) $ctx1
       else {
         val $preRhsIndex = $ctx1.index
         $rhs
-        val $postRhsIndex = $ctx1.index
         val $rhsAggregate = $ctx1.failureGroupAggregate
-        val $rhsNewCut = $cut1
         val $rhsMsg = $ctx1.shortParserMsg
-        val $rhsMadeProgress = $postRhsIndex > $preRhsIndex
         val $res =
-          if (!$ctx1.isSuccess) $ctx1.augmentFailure(
-            $postRhsIndex,
-            cut = $rhsNewCut
-          ) else {
+          if (!$ctx1.isSuccess) {
+            $setCut
+            $ctx1
+          } else {
+            val $postRhsIndex = $ctx1.index
 
+            val $rhsMadeProgress = $postRhsIndex > $preRhsIndex
             val $nextIndex =
               if (!$rhsMadeProgress && $input.isReachable($postRhsIndex)) $postLhsIndex
               else $postRhsIndex
@@ -483,7 +482,7 @@ object MacroImpls {
           // aggregate msg in the specific case where the LHS parser fails to
           // make any progress past `startIndex`. This finds cases like `a.? ~ b`
           // or `a.rep ~ b` and lets use flatten them out into `a | b`
-          forceAggregate = $preLhsIndex <= $preRhsIndex && $preRhsIndex == $ctx1.traceIndex
+          forceAggregate = $preRhsIndex == $ctx1.traceIndex
         )
         $res
       }
@@ -506,12 +505,12 @@ object MacroImpls {
           val $preLhsIndex = $ctx1.index
           val $input = $ctx1.input
           $lhs.parse0
-          val $postLhsIndex = $ctx1.index
-          val $lhsAggregate = $ctx1.failureGroupAggregate
           if (!$ctx1.isSuccess) $ctx1
           else {
+            val $postLhsIndex = $ctx1.index
+            val $lhsAggregate = $ctx1.failureGroupAggregate
             val $lhsMsg = $ctx1.shortParserMsg
-            $ctx1.cut = $cut1
+            $setCut
 
             if ($postLhsIndex > $preLhsIndex && $ctx1.checkForDrop()) $input.dropBuffer($postLhsIndex)
 
