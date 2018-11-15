@@ -237,6 +237,13 @@ object FailureTests extends TestSuite{
 
       'opt4 - checkOffset(
         input = "ax",
+        expected = """("b" | "c" | "d" | "e" | "f")""",
+        label = "\"f\"",
+        parser = { implicit c => (("a" ~ "b".? ~ "c".?) ~ "d".? ~ "e").? ~ "a" ~ "f"}
+      )
+
+      'opt5 - checkOffset(
+        input = "ax",
         expected = """("b" | "c" | "d")""",
         label = "\"d\"",
         parser = { implicit c => ("a" ~ ("b".? ~ "c")).? ~ "a" ~ "d" }
@@ -422,3 +429,4 @@ object FailureTests extends TestSuite{
     }
   }
 }
+

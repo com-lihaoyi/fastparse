@@ -155,7 +155,10 @@ final class ParsingRun[+T](val input: ParserInput,
   // `traceIndex` e.g. parsing "ax" with P( ("a" ~ "b") ~ "c" | "a" ~/ "d" ), the
   // final failure `index` and thus `traceIndex` is at offset 1, but ("a" ~ "b")
   // passes from offsets 0-2, "c" fails at offset 2 and ("a" ~ "b") ~ "c" fails
-  // from offset 0-2. In such a case, we currently cannot aggregate it
+  // from offset 0-2. In such a case, we truncate the `shortParserMsg` at
+  // `traceIndex` to only include the portion we're interested in (which directly
+  // follows the failure). This then gets aggregated nicely to form the error
+  // message from-point-of-failure
 
   def aggregateMsg(startIndex: Int,
                    msgToAggregate: Msgs): Unit = {
