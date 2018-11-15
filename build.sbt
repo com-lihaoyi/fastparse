@@ -26,7 +26,7 @@ val shared = Seq(
   organization := "com.lihaoyi",
   version := Constants.version,
   scalaVersion := Constants.scala212,
-  crossScalaVersions := Seq(Constants.scala210, Constants.scala211, Constants.scala212),
+  crossScalaVersions := Seq(Constants.scala210, Constants.scala211, Constants.scala212, Constants.scala213),
   libraryDependencies += "com.lihaoyi" %% "acyclic" % "0.1.8" % "provided",
   addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.8"),
   autoCompilerPlugins := true,
@@ -134,7 +134,7 @@ lazy val fastparseByte = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     libraryDependencies += {
       val version =
         if (scalaBinaryVersion.value == "2.10") "1.1.5"
-        else "1.1.6"
+        else "1.1.7"
       "org.scodec" %%% "scodec-bits" % version
     }
   )
@@ -211,6 +211,7 @@ lazy val perftests = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     name := "perfomance-tests",
     parallelExecution := false
   )
+  .nativeSettings(nativeSettings)
 lazy val perftestsJVM = perftests.jvm
 lazy val perftestsJS = perftests.js
 

@@ -2,7 +2,6 @@ package fastparse.byte
 
 import utest._
 import fastparse.byte.all._
-import scala.collection.mutable.ArrayBuffer
 import LE._
 /**
   * The basic parser of BMP format https://en.wikipedia.org/wiki/BMP_file_format .
