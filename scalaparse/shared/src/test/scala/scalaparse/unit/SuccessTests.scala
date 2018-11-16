@@ -1559,5 +1559,12 @@ object SuccessTests extends TestSuite{
         |  }
         |""".stripMargin
     )
+    * - check(
+        """
+        |class Foo {
+        |  val a: - 1 = - 1
+        |}
+        |""".stripMargin
+    )
   }
 }
