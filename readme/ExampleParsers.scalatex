@@ -63,7 +63,9 @@
 
         @p
             The whitespace consumer affects the @hl.scala{~} and @hl.scala{.rep}
-            operators to consume all non-trailing whitespace and ignoring it.
+            operators to consume all non-trailing whitespace and ignoring it
+            (use @hl.scala{~~} and @hl.scala{.repX} instead if you need to access
+            non-whitespace-consuming operators in certain cases).
 
         @p
             Here it is in action:
