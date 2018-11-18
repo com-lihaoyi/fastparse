@@ -154,8 +154,8 @@ package object fastparse {
 
     /**
       * Raw sequence operator. Runs two parsers one after the other,
-      * with optional whitespace in between. If both parsers
-      * return a value, this returns a tuple.
+      * *without* whitespace in between. If both parsers return a value,
+      * this returns a tuple.
       */
     def ~~[V, R](other: P[V])
                 (implicit s: Implicits.Sequencer[T, V, R],
