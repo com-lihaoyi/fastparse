@@ -16,23 +16,32 @@ import scala.reflect.macros.blackbox.Context
   */
 object MacroImpls {
   
-  def checkByNames[T](c: Context)(p: c.Expr[T]): Unit = {
+  /** Checks a tree for subexpressions that contain references to parsers passed as parameters,
+    * and makes sure these parameters are by-name.
+    * We exclude from the check:
+    *  - implicit parameters, because they are used pervasively to pass context around, as in: `def foo[_: P] = ...`
+    *  - parsers whose type argument is an existential/wildcard, because they can be used safely (their value is not used)
+    */
+  private[fastparse] def checkByNames[T](c: Context)(p: c.Expr[T]): Unit = {
     import c.universe._
     val ParsingRunSym = typeOf[ParsingRun[_]].typeSymbol
-    
+
     // Note: it is not enough to just check the top-level tree, as sometimes it may be wrapped in EagerOps or others.
-    
-    new Traverser {
+
+    new Traverser{
       override def traverse(tree: Tree): Unit = {
-        if (tree.tpe != null && tree.tpe.baseType(ParsingRunSym) != NoType) {
-          val sym = tree.symbol
-          if (sym != null && sym.isParameter && sym.isTerm && !sym.asTerm.isByNameParam && !sym.asTerm.isImplicit)
-            c.error(tree.pos, s"Parameters passed to parsers should be by-name: $tree")
+        Option(tree.tpe).map(_.baseType(ParsingRunSym)).collect{
+          case TypeRef(_, ParsingRunSym, ty :: Nil) => // type ParsingRun[T] has one type parameter
+            if (ty.typeSymbol.isType && !ty.typeSymbol.asType.isExistential) {
+              val sym = tree.symbol
+              if (sym != null && sym.isParameter && sym.isTerm && !sym.asTerm.isByNameParam && !sym.asTerm.isImplicit)
+                c.error(tree.pos, s"Parameters passed to parsers should be by-name: $tree")
+            }
         }
         super.traverse(tree)
       }
-    } traverse p.tree
-    
+    }.traverse(p.tree)
+
   }
 
   def filterMacro[T: c.WeakTypeTag](c: Context)

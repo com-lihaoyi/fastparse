@@ -18,11 +18,16 @@ import language.experimental.macros
   * in the hot paths.
   */
 object MacroRepImpls{
+  import MacroImpls.checkByNames
+
   def repXMacro0[T: c.WeakTypeTag, V: c.WeakTypeTag](c: Context)
                                                     (whitespace: Option[c.Tree], min: Option[c.Tree])
                                                     (repeater: c.Tree,
                                                      ctx: c.Tree): c.Tree = {
     import c.universe._
+
+    checkByNames(c)(c.prefix)
+
     val repeater1 = TermName(c.freshName("repeater"))
     val ctx1 = TermName(c.freshName("repeater"))
     val acc = TermName(c.freshName("acc"))
