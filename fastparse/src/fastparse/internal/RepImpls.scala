@@ -14,15 +14,20 @@ import language.experimental.macros
   * due to https://github.com/scala/bug/issues/5920).
   *
   * Even the normal method overloads are manually-specialized to some extent
-  * for various sorts of inputs as a best-effort attempt ot minimize branching
+  * for various sorts of inputs as a best-effort attempt to minimize branching
   * in the hot paths.
   */
 object MacroRepImpls{
+  import MacroImpls.checkByNames
+
   def repXMacro0[T: c.WeakTypeTag, V: c.WeakTypeTag](c: Context)
                                                     (whitespace: Option[c.Tree], min: Option[c.Tree])
                                                     (repeater: c.Tree,
                                                      ctx: c.Tree): c.Tree = {
     import c.universe._
+
+    checkByNames(c)(c.prefix)
+
     val repeater1 = TermName(c.freshName("repeater"))
     val ctx1 = TermName(c.freshName("repeater"))
     val acc = TermName(c.freshName("acc"))

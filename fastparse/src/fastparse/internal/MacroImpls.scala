@@ -15,11 +15,41 @@ import scala.reflect.macros.blackbox.Context
   * String/Char values are known at compile time.
   */
 object MacroImpls {
+  
+  /** Checks a tree for subexpressions that contain references to parsers passed as parameters,
+    * and makes sure these parameters are by-name.
+    * We exclude from the check:
+    *  - implicit parameters, because they are used pervasively to pass context around, as in: `def foo[_: P] = ...`
+    *  - parsers whose type argument is an existential/wildcard, because they can be used safely (their value is not used)
+    */
+  private[fastparse] def checkByNames[T](c: Context)(p: c.Expr[T]): Unit = {
+    import c.universe._
+    val ParsingRunSym = typeOf[ParsingRun[_]].typeSymbol
+
+    // Note: it is not enough to just check the top-level tree, as sometimes it may be wrapped in EagerOps or others.
+
+    new Traverser{
+      override def traverse(tree: Tree): Unit = {
+        Option(tree.tpe).map(_.baseType(ParsingRunSym)).collect{
+          case TypeRef(_, ParsingRunSym, ty :: Nil) => // type ParsingRun[T] has one type parameter
+            if (ty.typeSymbol.isType && !ty.typeSymbol.asType.isExistential) {
+              val sym = tree.symbol
+              if (sym != null && sym.isParameter && sym.isTerm && !sym.asTerm.isByNameParam && !sym.asTerm.isImplicit)
+                c.error(tree.pos, s"Parameters passed to parsers should be by-name: $tree")
+            }
+        }
+        super.traverse(tree)
+      }
+    }.traverse(p.tree)
+
+  }
+
   def filterMacro[T: c.WeakTypeTag](c: Context)
                                    (f: c.Expr[T => Boolean])
                                    (ctx: c.Expr[ParsingRun[_]]) = {
     import c.universe._
     val lhs = c.prefix.asInstanceOf[c.Expr[EagerOps[T]]]
+    checkByNames(c)(lhs)
     reify{
       ctx.splice match{ case ctx1 =>
         lhs.splice
@@ -141,6 +171,7 @@ object MacroImpls {
     import c.universe._
 
     val lhs0 = c.prefix.asInstanceOf[c.Expr[EagerOps[T]]]
+    checkByNames(c)(lhs0)
     reify {
       lhs0.splice.parse0 match{ case lhs =>
         if (!lhs.isSuccess) lhs.asInstanceOf[ParsingRun[V]]
@@ -160,6 +191,7 @@ object MacroImpls {
     import c.universe._
 
     val lhs0 = c.prefix.asInstanceOf[c.Expr[EagerOps[T]]]
+    checkByNames(c)(lhs0)
     reify {
       val lhs = lhs0.splice.parse0
       if (!lhs.isSuccess) lhs.asInstanceOf[ParsingRun[V]]
@@ -174,6 +206,7 @@ object MacroImpls {
     import c.universe._
 
     val lhs0 = c.prefix.asInstanceOf[c.Expr[EagerOps[T]]]
+    checkByNames(c)(lhs0)
     reify {
       val lhs = lhs0.splice.parse0
       whitespace.splice match{ case ws =>
@@ -198,6 +231,8 @@ object MacroImpls {
     import c.universe._
 
     val lhs0 = c.prefix.asInstanceOf[c.Expr[EagerOps[T]]]
+    checkByNames(c)(lhs0)
+    checkByNames(c)(other)
     reify {
       ctx.splice match { case ctx5 =>
         val oldCut = ctx5.cut
@@ -244,6 +279,7 @@ object MacroImpls {
     import c.universe._
 
     val lhs0 = c.prefix.asInstanceOf[c.Expr[EagerOps[_]]]
+    checkByNames(c)(lhs0)
 
     reify {
       ctx.splice match{ case ctx6 =>
@@ -427,6 +463,9 @@ object MacroImpls {
     val lhs = c.prefix.asInstanceOf[Expr[EagerOps[T]]]
     val cut1 = c.Expr[Boolean](if(cut) q"true" else q"ctx1.cut")
 
+    checkByNames(c)(lhs)
+    checkByNames(c)(other)
+
     val rhs = q"""
       if (!ctx1.isSuccess && ctx1.cut) ctx1
       else {
@@ -493,6 +532,7 @@ object MacroImpls {
   def cutMacro[T: c.WeakTypeTag](c: Context)(ctx: c.Expr[ParsingRun[_]]): c.Expr[ParsingRun[T]] = {
     import c.universe._
     val lhs = c.prefix.asInstanceOf[c.Expr[EagerOps[_]]]
+    checkByNames(c)(lhs)
     reify{
       ctx.splice match { case ctx0 =>
         val startIndex = ctx0.index
@@ -584,6 +624,7 @@ object MacroImpls {
                   ctx: c.Expr[ParsingRun[Any]]): c.Expr[ParsingRun[V]] = {
     import c.universe._
     val lhs0 = c.prefix.asInstanceOf[c.Expr[EagerOps[_]]]
+    checkByNames(c)(lhs0)
     reify{
       ctx.splice match{ case ctx1 =>
         optioner.splice match { case optioner1 =>

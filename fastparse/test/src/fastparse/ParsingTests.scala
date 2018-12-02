@@ -219,6 +219,31 @@ object ParsingTests extends TestSuite{
       checkWhitespaceFlatMap()
       checkNonWhitespaceFlatMap()
     }
+    'parameterized{
+      def digit[_: P] = CharIn("0-9")
+      def letter[_: P] = CharIn("A-Z")
+
+      assert {
+        val msg = compileError("def twice[T, _: P](p: P[T]): P[(T,T)] = p ~ p").msg
+        msg == "Parameters passed to parsers should be by-name: p"
+      }
+      def twice[T, _: P](p: => P[T]): P[(T,T)] = p ~ p
+
+      def p[_: P] = P( twice(digit) ~ twice(letter) )
+      val Parsed.Success(_, _) = parse("12AB", p(_)) // Note: this would fail if 'p' was not passed by name
+
+      assert {
+        val msg = compileError("def concats[T, _: P](l: P[T], r: => P[T]): P[(T,(T,T))] = l ~ (l ~ r)").msg
+        msg == "Parameters passed to parsers should be by-name: l"
+      }
+      def concats[T, _: P](l: => P[T], r: => P[T]): P[(T,(T,T))] = l ~ (l ~ r)
+
+      def p2[_: P] = P( concats(digit,letter) ~ concats(letter,digit) )
+      val Parsed.Success(_, _) = parse("12ABC3", p2(_))
+
+      def foo[T, _: P](p: P[_]): P[_] = p ~ digit // compiles because we used a wildcard in P[_]
+
+    }
   }
 
   def checkWhitespaceFlatMap() = {
