@@ -322,9 +322,15 @@ object FailureTests extends TestSuite{
       )
       'either2 - checkOffset(
         input = "ax",
-        expected = """("b" | "c" | "d")""",
-        label = "\"d\"",
-        parser = {implicit c => ("a" ~ "b" | "a" ~ "c" | "") ~ "a" ~ "d" }
+        expected = """("b" | "c" | "d" | "e")""",
+        label = "\"e\"",
+        parser = {implicit c => (("a" ~ "b" | "a" ~ "c") | "a" ~ "d" | "") ~ "a" ~ "e" }
+      )
+      'either3 - checkOffset(
+        input = "ax",
+        expected = """("b" | "c" | "d" | "e")""",
+        label = "\"e\"",
+        parser = {implicit c => ("a" ~ "b" | ("a" ~ "c" | "a" ~ "d") | "") ~ "a" ~ "e" }
       )
 
       'opEither - checkOffset(
