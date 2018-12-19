@@ -8,6 +8,9 @@
                 parsers that failed, rather than the low-level terminals). The
                 previous Fastparse 2.0.5 behavior of showing the failed terminals
                 is now available separately under @code{trace.terminalsMsg}
+            @li
+                Fix crash when streaming parsing whitespace grammars (
+                @lnk("#208", "https://github.com/lihaoyi/fastparse/issues/208"))
     @sect{2.0.5}
         @ul
             @li

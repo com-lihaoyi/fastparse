@@ -117,7 +117,7 @@ object DemoMain {
     val outputBox = div(width:="45%", float.right, overflowX.scroll).render
 
     def recalc() = {
-      inputBox.rows = inputBox.value.lines.length
+      inputBox.rows = inputBox.value.linesIterator.length
       val details = parse(inputBox.value, parser) match{
         case s: fastparse.Parsed.Success[_] =>
           table(
