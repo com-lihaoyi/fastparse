@@ -65,7 +65,8 @@ package object fastparse {
     true,
     (),
     verboseFailures,
-    false
+    false,
+    collection.mutable.Map.empty
   ))
 
 

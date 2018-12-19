@@ -405,7 +405,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
                                      lastAgg: Msgs) = {
     ctx.aggregateMsg(
       startIndex,
-      Msgs(List(new Lazy(() => parsedMsg.render + s".rep($min)"))),
+      () => parsedMsg.render + s".rep($min)",
       // When we fail on a sep, we collect the failure aggregate of the last
       // non-sep rep body together with the failure aggregate of the sep, since
       // the last non-sep rep body continuing is one of the valid ways of
@@ -425,13 +425,13 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
     if (sepMsg == null || precut) {
       ctx.aggregateMsg(
         startIndex,
-        Msgs(List(new Lazy(() => parsedMsg.render + s".rep($min)"))),
+        () => parsedMsg.render + s".rep($min)",
         ctx.failureGroupAggregate
       )
     } else {
       ctx.aggregateMsg(
         startIndex,
-        Msgs(List(new Lazy(() => parsedMsg.render + s".rep($min)"))),
+        () => parsedMsg.render + s".rep($min)",
         // When we fail on a rep body, we collect both the concatenated
         // sep and failure aggregate  of the rep body that we tried (because
         // we backtrack past the sep on failure) as well as the failure

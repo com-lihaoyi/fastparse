@@ -94,7 +94,14 @@ import fastparse.internal.{Instrument, Lazy, Msgs, Util}
   *                         the previous value after they finish. Forgetting to
   *                         re-set it to the previous value can cause strange
   *                         behavior or crashes.
+  * @param misc             Additional key-value metadata that a user can attach
+  *                         to a parsing run, and manage however they like. Not
+  *                         as high performance as the built-in fields of
+  *                         [[ParsingRun]], but perhaps sufficient to satisfy
+  *                         ad-hoc needs e.g. keeping track of indentation or
+  *                         other contextual information
   */
+
 final class ParsingRun[+T](val input: ParserInput,
                            val startIndex: Int,
                            val originalParser: ParsingRun[_] => ParsingRun[_],
@@ -112,7 +119,8 @@ final class ParsingRun[+T](val input: ParserInput,
                            var cut: Boolean,
                            var successValue: Any,
                            var verboseFailures: Boolean,
-                           var noDropBuffer: Boolean){
+                           var noDropBuffer: Boolean,
+                           val misc: collection.mutable.Map[Any, Any]){
 
   // HOW ERROR AGGREGATION WORKS:
   //
@@ -153,17 +161,25 @@ final class ParsingRun[+T](val input: ParserInput,
   //
   // These is an edge case where there is no given failure that occurs exactly at
   // `traceIndex` e.g. parsing "ax" with P( ("a" ~ "b") ~ "c" | "a" ~/ "d" ), the
-  // final failure `index` and thus `traceIndex` is at offset 1, but ("a" ~ "b")
+  // final failure `index` and thus `traceIndex` is at offset 1, and we would like
+  // to receive the aggregation ("b" | "d"). But ("a" ~ "b")
   // passes from offsets 0-2, "c" fails at offset 2 and ("a" ~ "b") ~ "c" fails
   // from offset 0-2. In such a case, we truncate the `shortParserMsg` at
   // `traceIndex` to only include the portion we're interested in (which directly
   // follows the failure). This then gets aggregated nicely to form the error
-  // message from-point-of-failure
-
-  def aggregateMsg(startIndex: Int,
-                   msgToAggregate: Msgs): Unit = {
-    aggregateMsg(startIndex, msgToAggregate, msgToAggregate)
-  }
+  // message from-point-of-failure.
+  //
+  // A follow-on edge case is parsing "ax" with
+  //
+  // val inner = P( "a" ~ "b" )
+  // P( inner ~ "c" | "a" ~/ "d" )
+  //
+  // Here, we find that the `inner` parser starts before the `traceIndex` and
+  // fails at `traceIndex`, but we want our aggregation to continue being
+  // ("b" | "d"), rather than (inner | "d"). Thus, for opaque compound parsers
+  // like `inner` which do not expose their internals, we use the `forceAggregate`
+  // to force it to expose it's internals when it's range covers the `traceIndex`
+  // but it isn't an exact match
 
   def aggregateMsg(startIndex: Int,
                    msgToSet: () => String,
@@ -223,8 +239,12 @@ final class ParsingRun[+T](val input: ParserInput,
     !cut &&
     // Only aggregate failures
     !isSuccess &&
+    // We only stomp over the given aggregation with shortParserMsg if the range
+    // of the failed parse surrounds `traceIndex`. For parses that occur
+    // completely before or after the `traceIndex`, the actual parse doesn't
+    // contribute anything to the aggregation.
     startIndex <= traceIndex &&
-    index >= traceIndex
+    traceIndex <= index
   }
 
 
