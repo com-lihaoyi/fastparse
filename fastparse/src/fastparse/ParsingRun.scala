@@ -185,6 +185,9 @@ final class ParsingRun[+T](val input: ParserInput,
 
     shortParserMsg = msgToSet
 
+    // There are two cases when aggregating: either we stomp over the entire
+    // existing aggregation with `msgToSet`, or we preserve it (with possible
+    // additions) with `msgToAggregate`.
     if (checkAggregate(startIndex) && !forceAggregate) failureGroupAggregate = msgToSet
     else failureGroupAggregate = msgToAggregate
   }
@@ -213,7 +216,16 @@ final class ParsingRun[+T](val input: ParserInput,
   /**
     * Conditions under which we want to aggregate the given parse
     */
-  def checkAggregate(startIndex: Int) = !cut && !isSuccess && startIndex <= traceIndex && index >= traceIndex
+  def checkAggregate(startIndex: Int) = {
+    // We only aggregate if we are not currently past a cut; if we are past a
+    // cut, there is no further backtracking and so the error aggregate that has
+    // occurred will be the final aggregate shown to the user
+    !cut &&
+    // Only aggregate failures
+    !isSuccess &&
+    startIndex <= traceIndex &&
+    index >= traceIndex
+  }
 
 
   // Use telescoping methods rather than default arguments to try and minimize

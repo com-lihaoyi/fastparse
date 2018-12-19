@@ -122,6 +122,7 @@ object FailureTests extends TestSuite{
         // Make sure if the parse fails after the separator and has to backtrack,
         // we list both the separator and the post-separator parse that failed
         // since showing the separator alone (which passed) is misleading
+        println(f2.index)
         assert(trace2.groupAggregateString == """("," ~ parseB | "c")""")
         f2.index
       }
@@ -429,4 +430,3 @@ object FailureTests extends TestSuite{
     }
   }
 }
-

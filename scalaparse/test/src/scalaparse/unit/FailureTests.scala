@@ -18,7 +18,7 @@ object FailureTests extends TestSuite{
         |import a
         |import import
       """.stripMargin,
-      aggregate = """(ThisPath | IdPath)""",
+      aggregate = """(Semis ~ `package` | Semis ~ TopStat | ThisPath | IdPath)""",
       terminals = """("this" | "super" | "`" | var-id | chars-while(OpCharNotSlash, 1) | "/" | operator | plain-id | id)""",
       found = "import"
     )
@@ -43,7 +43,7 @@ object FailureTests extends TestSuite{
         |}
       """.stripMargin,
       aggregate = """(NamedType | Refinement)""",
-      terminals = """(chars-while(IdCharacter, 1) | [_] | [ \t] | "/*" | "//" | "(" | "-" | "." | [0-9] | "0x" | "true" | "false" | "`" | char-pred(UpperChar) | char-pred(LowerChar) | var-id | chars-while(OpCharNotSlash, 1) | "/" | operator | plain-id | id | "\"\"\"" | "\"" | "'" | "null" | "this" | "super" | "_" | "{")""",
+      terminals = """(chars-while(IdCharacter, 1) | [_] | [ \t] | "/*" | "//" | "(" | "-" | "." | [0-9] | "0x" | "true" | "false" | "`" | char-pred(UpperChar) | char-pred(LowerChar) | var-id | chars-while(OpCharNotSlash, 1) | "/" | operator | plain-id | id | filter | "\"\"\"" | "\"" | "'" | "null" | "this" | "super" | "_" | "{")""",
       found = ")"
     )
     * - checkNeg(
@@ -220,7 +220,7 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      aggregate = """("." | TypeArgs | NotNewline ~ ArgList | NotNewline ~ `_` | InfixSuffix | PostFix | "=>" | `=` | MatchAscriptionSuffix | Semis | "}")""",
+      aggregate = """(WL ~ "." | WL ~ TypeArgs | NotNewline ~ ArgList | `_` | InfixSuffix | PostFix | "=>" | `=` | MatchAscriptionSuffix | Semis | "}")""",
       terminals = null,
       found = ")"
     )
@@ -393,7 +393,7 @@ object FailureTests extends TestSuite{
         |  a[b)
         |}
       """.stripMargin,
-      aggregate = """("." | TypeArgs | `#` | NLAnnot | `with` | Refinement | NotNewline ~ (`*` | Id) | "=>" | ExistentialClause | `>:` | `<:` | `*` | "," | "]")""",
+      aggregate = """("." | TypeArgs | `#` | NLAnnot | `with` | Refinement | `*` | Id | "=>" | ExistentialClause | `>:` | `<:` | "," | "]")""",
       terminals = null,
       found = ")"
     )
@@ -436,7 +436,7 @@ object FailureTests extends TestSuite{
         |  val omg_+_+ = 1
         |}
       """.stripMargin,
-      aggregate = """("." | TypeArgs | TupleEx | Id | "," | `:` | `=` | Semis | "}")""",
+      aggregate = """(`@` | TQ | "\"" | "." | TypeArgs | TupleEx | Id | "," | `:` | `=` | Semis | "}")""",
       terminals = null,
       found = "_+ = 1"
     )
@@ -447,7 +447,7 @@ object FailureTests extends TestSuite{
         |  var = 2
         |}
       """.stripMargin,
-      aggregate = """(Binding | InfixPattern | VarId)""",
+      aggregate = """(Semis ~ TmplStat | Binding | InfixPattern | VarId)""",
       terminals = null,
       found = "= 2"
     )
@@ -491,7 +491,7 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      aggregate = """ (Expr | "," | ")")""",
+      aggregate = """(BlockLambdaHead | Expr | "," | ")")""",
       terminals = null,
       found = "=> }"
     )
@@ -645,7 +645,7 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      aggregate = """(TypeArgs | `#` | NLAnnot | `with` | Refinement | NotNewline ~ (`*` | Id) | "=>" | ExistentialClause | `>:` | `<:` | `*` | "," ~ Type | "," ~ WS ~ Newline | "]")""",
+      aggregate = """(TypeArgs | `#` | NLAnnot | `with` | Refinement | `*` | Id | "=>" | ExistentialClause | `>:` | `<:` | "," ~ Type | "," ~ WS ~ Newline | "]")""",
       terminals = null,
       found = ", ]"
     )
@@ -759,7 +759,7 @@ object FailureTests extends TestSuite{
        |  val (x,) = 1
        |}
       """.stripMargin,
-    aggregate = """("." | TypeArgs | TupleEx | Id | "|" | "," ~ Pattern | "," ~ WS ~ Newline | ")")""",
+    aggregate = """(`:` | `@` | TQ | "\"" | "." | TypeArgs | TupleEx | Id | "|" | "," ~ Pattern | "," ~ WS ~ Newline | ")")""",
       terminals = null,
     found = ",)"
   )
@@ -799,15 +799,15 @@ object FailureTests extends TestSuite{
     s"""
        |object X{def f(x: Int, ) = 1}
       """.stripMargin,
-    aggregate = """")"""",
+    aggregate = """("." | TypeArgs | `#` | NLAnnot | `with` | Refinement | `*` | Id | "=>" | ExistentialClause | `>:` | `<:` | `=` | "," ~ FunArg | "," ~ WS ~ Newline | ")")""",
       terminals = null,
     found = ", )"
   )
   * - checkNeg(
     s"""
-       |object X{val x = (1, 2,)}
+       |object X{(2,)}
       """.stripMargin,
-    aggregate = """("L" | "l" | WL ~ "." | WL ~ TypeArgs | Pass ~ ArgList | Pass ~ `_` | InfixSuffix | PostFix | "=>" | `=` | MatchAscriptionSuffix | "," ~ Expr | "," ~ WS ~ Newline | ")")""",
+    aggregate = """(FloatSuffix | "L" | "l" | WL ~ "." | WL ~ TypeArgs | Pass ~ ArgList | `_` | InfixSuffix | PostFix | "=>" | `=` | MatchAscriptionSuffix | "," ~ Expr | "," ~ WS ~ Newline | ")")""",
       terminals = null,
     found = ",)"
   )
@@ -815,7 +815,7 @@ object FailureTests extends TestSuite{
     s"""
        |object X{f[A,]}
       """.stripMargin,
-    aggregate = """("." | TypeArgs | `#` | NLAnnot | `with` | Refinement | NotNewline ~ (`*` | Id) | "=>" | ExistentialClause | `>:` | `<:` | `*` | "," ~ Type | "," ~ WS ~ Newline | "]")""",
+    aggregate = """("." | TypeArgs | `#` | NLAnnot | `with` | Refinement | `*` | Id | "=>" | ExistentialClause | `>:` | `<:` | "," ~ Type | "," ~ WS ~ Newline | "]")""",
       terminals = null,
     found = ",]"
   )
@@ -943,7 +943,7 @@ object FailureTests extends TestSuite{
          |  for(i <- Nil if x: Int => bar) 1
          |}
        """.stripMargin,
-      aggregate = """(Guard | Enumerator | ")")""",
+      aggregate = """(TQ | "\"" | "." | WL ~ "." | WL ~ TypeArgs | Pass ~ ArgList | `_` | InfixSuffix | PostFix | Enumerator | ")")""",
       terminals = null,
       found = ": Int"
     )

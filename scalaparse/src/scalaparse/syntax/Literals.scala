@@ -1,7 +1,6 @@
 package scalaparse.syntax
 
 import fastparse._
-import fastparse._
 
 import NoWhitespace._
 import Identifiers._
@@ -31,14 +30,16 @@ trait Literals { l =>
     def ConsumeComments = P( (Basic.WSChars.? ~ NoTrace(Literals.Comment) ~ Basic.WSChars.? ~ Basic.Newline).rep )
     P( NoCut(NoTrace(WS ~ Basic.Newline.? ~ ConsumeComments ~ NotNewline) ))
   }
+
   def TrailingComma[_: P]: P[Unit] = P( ("," ~ WS ~ Basic.Newline).? )
   def Pattern[_: P]: P[Unit]
+
   object Literals{
     import Basic._
     def Float[_: P] = {
       def LeadingDotFloat = P( "." ~ DecNum ~ Exp.? ~ FloatType.? )
-      def LeadingNumFloat = P( LeadingDotFloat | Exp ~ FloatType.? | Exp.? ~ FloatType )
-      P( LeadingDotFloat | DecNum ~ LeadingNumFloat )
+      def FloatSuffix = P( LeadingDotFloat | Exp ~ FloatType.? | Exp.? ~ FloatType )
+      P( LeadingDotFloat | DecNum ~ FloatSuffix )
     }
 
     def Int[_: P] = P( (HexNum | DecNum) ~ ("L" | "l").? )
@@ -76,7 +77,6 @@ trait Literals { l =>
         case Some(p) => P( "$" ~ Identifiers.PlainIdNoDollar | ("${" ~ p() ~ WL ~ "}") | "$$" )
       }
 
-
       def TQ[_: P] = P( "\"\"\"" )
       /**
        * Helper to quickly gobble up large chunks of un-interesting
@@ -95,10 +95,12 @@ trait Literals { l =>
       }
       def String[_: P] = {
         P {
-          (Id ~ TQ ~/ TripleChars ~ TripleTail) |
-          (Id ~ "\"" ~/ SingleChars(true)  ~ "\"") |
-          (TQ ~/ NoInterp.TripleChars ~ TripleTail) |
-          ("\"" ~/ NoInterp.SingleChars(false) ~ "\"")
+          Id.filter(_ => interp.isDefined) ~ (
+            TQ ~/ TripleChars ~ TripleTail |
+            "\"" ~/ SingleChars(true)  ~ "\""
+          ) |
+          TQ ~/ NoInterp.TripleChars ~ TripleTail |
+          "\"" ~/ NoInterp.SingleChars(false) ~ "\""
         }
       }
 
@@ -106,7 +108,6 @@ trait Literals { l =>
     def NoInterp[_: P] = new InterpCtx(None)
     def Pat[_: P] = new InterpCtx(Some(() => l.Pattern))
     def Expr[_: P] = new InterpCtx(Some(() => Block))
-
 
   }
 }
