@@ -587,10 +587,8 @@ object MacroImpls {
         ) $index += 1
         val res =
           if ($index >= $goal) $ctx1.freshSuccessUnit(index = $index)
-          else {
-            $ctx1.isSuccess = false
-            $ctx1.asInstanceOf[fastparse.P[Unit]]
-          }
+          else $ctx1.freshFailure()
+
         if ($ctx1.verboseFailures) $ctx1.aggregateTerminal($start, () => $bracketed)
         res
       }
