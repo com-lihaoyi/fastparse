@@ -119,14 +119,14 @@ package object fastparse {
   implicit class EagerOps[T](val parse0: P[T]) extends AnyVal{
     /**
       * Plain cut operator. Runs the parser, and if it succeeds, backtracking
-      * past that point is no longer prohibited
+      * past that point is now prohibited
       */
     def /(implicit ctx: P[_]): P[T] = macro MacroImpls.cutMacro[T]
 
     /**
       * Sequence-with-cut operator. Runs two parsers one after the other,
       * with optional whitespace in between. If the first parser completes
-      * successfully, backtracking is no longer prohibited. If both parsers
+      * successfully, backtracking is now prohibited. If both parsers
       * return a value, this returns a tuple.
       */
     def ~/[V, R](other: P[V])
@@ -156,8 +156,8 @@ package object fastparse {
 
     /**
       * Raw sequence operator. Runs two parsers one after the other,
-      * with optional whitespace in between. If both parsers
-      * return a value, this returns a tuple.
+      * *without* whitespace in between. If both parsers return a value,
+      * this returns a tuple.
       */
     def ~~[V, R](other: P[V])
                 (implicit s: Implicits.Sequencer[T, V, R],
