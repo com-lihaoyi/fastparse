@@ -22,10 +22,10 @@
         @p
             The @code{P(...)} lets you write mutually recursive parsers, without
             running into circular initialization problems, and gives the parser a
-            nice, human-readable name (from the @hl.scala{val}
+            nice, human-readable name (from the @hl.scala{def}
             it is being assigned to) which appears in parse error messages.
             In general, every time you assign a parser
-            to a @hl.scala{val}, you should wrap it in @code{P(...)}.
+            to a @hl.scala{def}, you should wrap it in @code{P(...)}.
 
         @sect{Failures}
             @hl.ref(tests/"ExampleTests.scala", Seq("'failures", ""))
