@@ -516,7 +516,7 @@ object ExampleTests extends TestSuite{
       def Indexed[_: P, T](p: => P[T]): P[(Int, T, Int)] = P( Index ~ p ~ Index )
 
       def Add[_: P] = P( Num ~ "+" ~ Num )
-      def Num[_: P] = I( CharsIn("0-9").rep.! )
+      def Num[_: P] = Indexed( CharsWhileIn("0-9").rep.! )
 
       val value = parse("1+2", Add(_))
 
