@@ -518,9 +518,7 @@ object ExampleTests extends TestSuite{
       def Add[_: P] = P( Num ~ "+" ~ Num )
       def Num[_: P] = Indexed( CharsWhileIn("0-9").rep.! )
 
-      val value = parse("1+2", Add(_))
-
-      assert(value == (0, "1", 1, 2, "2", 3))
+      val Parsed.Success((0, "1", 1, (2, "2", 3)), _) = parse("1+2", Add(_))
     }
 
     'folding{
