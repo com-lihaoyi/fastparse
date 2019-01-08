@@ -418,3 +418,19 @@
                 To explicitly isolate a cut to one branch of a parser, place that branch within @hl.scala{NoCut}.  Cuts within that branch will prevent backtracking inside that branch, but if that branch fails alternate branches will be tried as normal.
 
             @hl.ref(tests/"ExampleTests.scala", Seq("'composenocut", ""))
+
+    @sect{Higher Order Parsers}
+
+        @p
+            It is possible to write functions that take parsers as arguments and return other parsers. These are useful because it allows for the programmatic modification of many different parsers. This can be used to generate a large amount of parsers that only vary in minor ways.
+
+        @p
+            Parser arguments @b{must be passed by name}! Parsers are immediately evaluated, so if they aren't passed by name they will be evaluated when they are passed into a function, not within it, causing either a warning about @hl.scala{a pure expression does nothing in statement position} at compile time or a @hl.scala{ClassCastException} at runtime.
+
+        @p
+            A simple example of a higher order parser is one that adds index information to the beginning and end of the parse.
+
+        @hl.ref(tests/"ExampleTests.scala", Seq("'higherorder", ""))
+
+        @p
+            While this is a simple example, this concept to be extended to your hearts content.

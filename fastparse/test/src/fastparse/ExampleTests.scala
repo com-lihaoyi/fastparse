@@ -512,6 +512,15 @@ object ExampleTests extends TestSuite{
       }
     }
 
+    'higherorder{
+      def Indexed[_: P, T](p: => P[T]): P[(Int, T, Int)] = P( Index ~ p ~ Index )
+
+      def Add[_: P] = P( Num ~ "+" ~ Num )
+      def Num[_: P] = Indexed( CharsWhileIn("0-9").rep.! )
+
+      val Parsed.Success((0, "1", 1, (2, "2", 3)), _) = parse("1+2", Add(_))
+    }
+
     'folding{
       sealed trait AndOr
       case object And extends AndOr
