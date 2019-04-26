@@ -8,7 +8,7 @@ matrix:
   - env: CMD="mill __.jvm[2.12.7].test"
     jdk: oraclejdk9
 
-  - env: CMD="mill __.jvm[2.13.0-M5].test"
+  - env: CMD="mill __.jvm[2.13.0-RC1].test"
     jdk: openjdk10
 
   - env: CMD="mill __.js[2.11.12].test"
@@ -17,7 +17,7 @@ matrix:
   - env: CMD="mill __.js[2.12.7].test"
     jdk: openjdk10
 
-  - env: CMD="mill __.js[2.13.0-M5].test"
+  - env: CMD="mill __.js[2.13.0-RC1].test"
     jdk: openjdk10
 
   - env: CMD="mill all demo.fastOpt perftests.__.compile"
@@ -27,5 +27,5 @@ matrix:
     jdk: oraclejdk8
 
 script:
-- curl -L -o ~/bin/mill https://github.com/lihaoyi/mill/releases/download/0.3.4/0.3.4 && chmod +x ~/bin/mill
+- curl -L -o ~/bin/mill https://github.com/lihaoyi/mill/releases/download/0.3.6/0.3.6-85-38fce6 && chmod +x ~/bin/mill
 - $CMD

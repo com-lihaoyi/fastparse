@@ -3,7 +3,7 @@ import scalalib._
 import scalajslib._
 import publish._
 
-val crossVersions = Seq("2.11.12", "2.12.7", "2.13.0-M5")
+val crossVersions = Seq("2.11.12", "2.12.7", "2.13.0-RC1")
 object fastparse extends Module{
   object jvm extends Cross[fastparseJvmModule](crossVersions:_*)
   class fastparseJvmModule(val crossScalaVersion: String) extends FastparseModule{
@@ -27,7 +27,7 @@ object fastparse extends Module{
   object js extends Cross[fastparseJsModule](crossVersions:_*)
   class fastparseJsModule(val crossScalaVersion: String) extends FastparseModule with ScalaJSModule {
     def platformSegment = "js"
-    def scalaJSVersion = "0.6.25"
+    def scalaJSVersion = "0.6.27"
     object test extends Tests with CommonTestModule{
       def platformSegment = "js"
     }
@@ -35,7 +35,7 @@ object fastparse extends Module{
 }
 trait FastparseModule extends CommonCrossModule{
   def ivyDeps = Agg(
-    ivy"com.lihaoyi::sourcecode::0.1.5",
+    ivy"com.lihaoyi::sourcecode::0.1.6",
   )
   def compileIvyDeps = Agg(
     ivy"org.scala-lang:scala-reflect:${scalaVersion()}"
@@ -69,6 +69,7 @@ trait FastparseModule extends CommonCrossModule{
         implicit def Sequencer1[T1, T2]: Sequencer[T1, T2, (T1, T2)] = Sequencer0{case (t1, t2) => (t1, t2)}
       }
     """.stripMargin
+    file.toIO.getParentFile.mkdirs()
     ammonite.ops.write(file, output)
     Seq(PathRef(file))
   }
@@ -100,7 +101,7 @@ object pythonparse extends Module{
 
 trait ExampleParseJsModule extends CommonCrossModule with ScalaJSModule{
   def moduleDeps = Seq(fastparse.js())
-  def scalaJSVersion = "0.6.25"
+  def scalaJSVersion = "0.6.27"
   def platformSegment = "js"
   object test extends Tests with CommonTestModule{
     def platformSegment = "js"
@@ -120,7 +121,35 @@ trait ExampleParseJvmModule extends CommonCrossModule{
   }
 }
 
+
+// Remove once mill has proper support for 2.13.0-RC1
+object CustomZincWorker extends mill.scalalib.ZincWorkerModule {
+  def scalaCompilerBridgeSourceJar(scalaVersion: String, scalaOrganization: String) = {
+    val (scalaVersion0, scalaBinaryVersion0, bridgeVersion) = scalaVersion match {
+      case s if s.startsWith("2.13.") => ("2.13.0-M2", "2.13.0-M2", "1.2.5")
+      case _ => (scalaVersion, mill.scalalib.api.Util.scalaBinaryVersion(scalaVersion), Versions.zinc)
+    }
+
+    val (bridgeDep, bridgeName) = {
+      val org = "org.scala-sbt"
+      val name = "compiler-bridge"
+      (ivy"$org::$name:$bridgeVersion", s"${name}_$scalaBinaryVersion0")
+    }
+
+    mill.scalalib.Lib.resolveDependencies(
+      repositories,
+      Lib.depToDependency(_, scalaVersion0, ""),
+      Seq(bridgeDep),
+      sources = true
+    ).map(deps =>
+      mill.scalalib.api.Util.grepJar(deps.map(_.path), bridgeName, bridgeVersion, sources = true)
+    )
+  }
+}
+
 trait CommonCrossModule extends CrossScalaModule with PublishModule{
+  def zincWorker: ZincWorkerModule =
+    CustomZincWorker
 
   def publishVersion = "2.1.0"
   def artifactName = millModuleSegments.parts.dropRight(2).mkString("-")
@@ -151,9 +180,12 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule{
 
 }
 trait CommonTestModule extends ScalaModule with TestModule{
+  def zincWorker: ZincWorkerModule =
+    CustomZincWorker
+
   def platformSegment: String
   def ivyDeps = Agg(
-    ivy"com.lihaoyi::utest::0.6.6",
+    ivy"com.lihaoyi::utest::0.6.7",
   )
 
 //  def scalacOptions = T{ if (scalaVersion() == "2.12.7") Seq("-opt:l:method") else Nil }
@@ -214,14 +246,14 @@ object perftests extends Module{
     }
     def testFrameworks = Seq("utest.runner.Framework")
     def ivyDeps = Agg(
-      ivy"com.lihaoyi::utest::0.6.6",
+      ivy"com.lihaoyi::utest::0.6.7",
       ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
     )
   }
 }
 
 object demo extends ScalaJSModule{
-  def scalaJSVersion = "0.6.25"
+  def scalaJSVersion = "0.6.27"
   def scalaVersion = "2.12.7"
   def moduleDeps = Seq(
     scalaparse.js("2.12.7"),
