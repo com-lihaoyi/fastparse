@@ -487,7 +487,7 @@ object ExampleTests extends TestSuite{
 
         parse("(1+(2+3x))+4", Foo.expr(_))
 
-        val expected = """
+        val expected = Predef.augmentString("""
           +expr:1:1, cut
             +side:1:1, cut
               +expr:1:2, cut
@@ -504,7 +504,7 @@ object ExampleTests extends TestSuite{
               -expr:1:2:Failure(expr:1:2 / side:1:4 / ")":1:8 ..."1+(2+3x))+", cut)
             -side:1:1:Failure(side:1:1 / expr:1:2 / side:1:4 / ")":1:8 ..."(1+(2+3x))", cut)
           -expr:1:1:Failure(expr:1:1 / side:1:1 / expr:1:2 / side:1:4 / ")":1:8 ..."(1+(2+3x))", cut)
-        """.linesIterator.filter(_.trim != "").toSeq
+        """).lines.filter(_.trim != "").toSeq
         val minIndent = expected.map(_.takeWhile(_ == ' ').length).min
         val expectedString = expected.map(_.drop(minIndent)).mkString("\n")
         val capturedString = captured.mkString("\n")
