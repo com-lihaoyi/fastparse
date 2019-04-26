@@ -1,6 +1,10 @@
 sudo: false
 language: scala
-matrix:
+stages:
+  - name: test
+  - name: release
+    if: (branch = master AND type = push) OR (tag IS present)
+jobs:
   include:
   - env: CMD="mill __.jvm[2.11.12].test"
     jdk: oraclejdk8
@@ -26,6 +30,12 @@ matrix:
   - env: CMD="mill demo.fullOpt && sbt readme/run"
     jdk: oraclejdk8
 
-script:
+  - stage: release
+    script:
+      - echo "$PGP_SECRET" | base64 --decode | gpg --import
+      - mill __.publish --sonatypeCreds "$SONATYPE_USERNAME:$SONATYPE_PASSWORD" --release true --gpgPassphrase "$PGP_PASSPHRASE"
+
+before_install:
 - curl -L -o ~/bin/mill https://github.com/lihaoyi/mill/releases/download/0.3.6/0.3.6-85-38fce6 && chmod +x ~/bin/mill
+script:
 - $CMD
