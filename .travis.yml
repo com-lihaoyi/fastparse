@@ -23,7 +23,7 @@ matrix:
   - env: CMD="mill all demo.fastOpt perftests.__.compile"
     jdk: openjdk10
 
-  - env: CMD="sbt readme/run"
+  - env: CMD="mill demo.fullOpt && sbt readme/run"
     jdk: oraclejdk8
 
 script:
