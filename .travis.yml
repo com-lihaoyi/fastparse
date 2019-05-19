@@ -1,6 +1,10 @@
 sudo: false
 language: scala
-matrix:
+stages:
+  - name: test
+  - name: release
+    if: (branch = master AND type = push) OR (tag IS present)
+jobs:
   include:
   - env: CMD="mill __.jvm[2.11.12].test"
     jdk: oraclejdk8
@@ -8,7 +12,7 @@ matrix:
   - env: CMD="mill __.jvm[2.12.7].test"
     jdk: oraclejdk9
 
-  - env: CMD="mill __.jvm[2.13.0-M5].test"
+  - env: CMD="mill __.jvm[2.13.0-RC1].test"
     jdk: openjdk10
 
   - env: CMD="mill __.js[2.11.12].test"
@@ -17,15 +21,30 @@ matrix:
   - env: CMD="mill __.js[2.12.7].test"
     jdk: openjdk10
 
-  - env: CMD="mill __.js[2.13.0-M5].test"
+  - env: CMD="mill __.js[2.13.0-RC1].test"
     jdk: openjdk10
 
   - env: CMD="mill all demo.fastOpt perftests.__.compile"
     jdk: openjdk10
 
-  - env: CMD="sbt readme/run"
+  - env: CMD="mill demo.fullOpt && sbt readme/run"
     jdk: oraclejdk8
 
-script:
+  - stage: release
+    script:
+      - echo "$PGP_SECRET" | base64 --decode | gpg --import
+      - mill __[2.12.7].publish --sonatypeCreds "$SONATYPE_USERNAME:$SONATYPE_PASSWORD" --release true --gpgPassphrase "$PGP_PASSPHRASE"
+
+  - stage: release
+    script:
+      - echo "$PGP_SECRET" | base64 --decode | gpg --import
+      - mill __[2.11.12].publish --sonatypeCreds "$SONATYPE_USERNAME:$SONATYPE_PASSWORD" --release true --gpgPassphrase "$PGP_PASSPHRASE"
+
+  - stage: release
+    script:
+      - echo "$PGP_SECRET" | base64 --decode | gpg --import
+      - mill __[2.13.0-RC1].publish --sonatypeCreds "$SONATYPE_USERNAME:$SONATYPE_PASSWORD" --release true --gpgPassphrase "$PGP_PASSPHRASE"
+
+before_install:
 - curl -L -o ~/bin/mill https://github.com/lihaoyi/mill/releases/download/0.3.6/0.3.6-92-68505a && chmod +x ~/bin/mill
 - $CMD

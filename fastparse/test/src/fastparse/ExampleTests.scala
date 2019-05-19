@@ -487,7 +487,7 @@ object ExampleTests extends TestSuite{
 
         parse("(1+(2+3x))+4", Foo.expr(_))
 
-        val expected = """
+        val expected = Predef.augmentString("""
           +expr:1:1, cut
             +side:1:1, cut
               +expr:1:2, cut
@@ -504,12 +504,21 @@ object ExampleTests extends TestSuite{
               -expr:1:2:Failure(expr:1:2 / side:1:4 / ")":1:8 ..."1+(2+3x))+", cut)
             -side:1:1:Failure(side:1:1 / expr:1:2 / side:1:4 / ")":1:8 ..."(1+(2+3x))", cut)
           -expr:1:1:Failure(expr:1:1 / side:1:1 / expr:1:2 / side:1:4 / ")":1:8 ..."(1+(2+3x))", cut)
-        """.linesIterator.filter(_.trim != "").toSeq
+        """).lines.filter(_.trim != "").toSeq
         val minIndent = expected.map(_.takeWhile(_ == ' ').length).min
         val expectedString = expected.map(_.drop(minIndent)).mkString("\n")
         val capturedString = captured.mkString("\n")
         assert(capturedString == expectedString)
       }
+    }
+
+    'higherorder{
+      def Indexed[_: P, T](p: => P[T]): P[(Int, T, Int)] = P( Index ~ p ~ Index )
+
+      def Add[_: P] = P( Num ~ "+" ~ Num )
+      def Num[_: P] = Indexed( CharsWhileIn("0-9").rep.! )
+
+      val Parsed.Success((0, "1", 1, (2, "2", 3)), _) = parse("1+2", Add(_))
     }
 
     'folding{
