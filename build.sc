@@ -69,7 +69,7 @@ trait FastparseModule extends CommonCrossModule{
         implicit def Sequencer1[T1, T2]: Sequencer[T1, T2, (T1, T2)] = Sequencer0{case (t1, t2) => (t1, t2)}
       }
     """.stripMargin
-    ammonite.ops.write(file, output)
+    os.write(file, output, createFolders = true)
     Seq(PathRef(file))
   }
 }

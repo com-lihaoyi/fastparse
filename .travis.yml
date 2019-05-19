@@ -27,5 +27,5 @@ matrix:
     jdk: oraclejdk8
 
 script:
-- curl -L -o ~/bin/mill https://github.com/lihaoyi/mill/releases/download/0.3.4/0.3.4 && chmod +x ~/bin/mill
+- curl -L -o ~/bin/mill https://github.com/lihaoyi/mill/releases/download/0.3.6/0.3.6-92-68505a && chmod +x ~/bin/mill
 - $CMD
