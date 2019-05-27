@@ -3,7 +3,7 @@ import scalalib._
 import scalajslib._
 import publish._
 
-val crossVersions = Seq("2.11.12", "2.12.7", "2.13.0-RC1")
+val crossVersions = Seq("2.11.12", "2.12.7", "2.13.0-RC2")
 object fastparse extends Module{
   object jvm extends Cross[fastparseJvmModule](crossVersions:_*)
   class fastparseJvmModule(val crossScalaVersion: String) extends FastparseModule{
@@ -121,35 +121,7 @@ trait ExampleParseJvmModule extends CommonCrossModule{
 }
 
 
-// Remove once mill has proper support for 2.13.0-RC1
-object CustomZincWorker extends mill.scalalib.ZincWorkerModule {
-  def scalaCompilerBridgeSourceJar(scalaVersion: String, scalaOrganization: String) = {
-    val (scalaVersion0, scalaBinaryVersion0, bridgeVersion) = scalaVersion match {
-      case s if s.startsWith("2.13.") => ("2.13.0-M2", "2.13.0-M2", "1.2.5")
-      case _ => (scalaVersion, mill.scalalib.api.Util.scalaBinaryVersion(scalaVersion), Versions.zinc)
-    }
-
-    val (bridgeDep, bridgeName) = {
-      val org = "org.scala-sbt"
-      val name = "compiler-bridge"
-      (ivy"$org::$name:$bridgeVersion", s"${name}_$scalaBinaryVersion0")
-    }
-
-    mill.scalalib.Lib.resolveDependencies(
-      repositories,
-      Lib.depToDependency(_, scalaVersion0, ""),
-      Seq(bridgeDep),
-      sources = true
-    ).map(deps =>
-      mill.scalalib.api.Util.grepJar(deps.map(_.path), bridgeName, bridgeVersion, sources = true)
-    )
-  }
-}
-
 trait CommonCrossModule extends CrossScalaModule with PublishModule{
-  def zincWorker: ZincWorkerModule =
-    CustomZincWorker
-
   def publishVersion = T{
     import sys.process._
     val desc = Seq("git", "describe", "--tags").!!.trim.replace("-g", "+")
@@ -186,9 +158,6 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule{
 
 }
 trait CommonTestModule extends ScalaModule with TestModule{
-  def zincWorker: ZincWorkerModule =
-    CustomZincWorker
-
   def platformSegment: String
   def ivyDeps = Agg(
     ivy"com.lihaoyi::utest::0.6.7",
