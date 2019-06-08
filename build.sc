@@ -3,7 +3,7 @@ import scalalib._
 import scalajslib._
 import publish._
 
-val crossVersions = Seq("2.11.12", "2.12.7", "2.13.0-RC1")
+val crossVersions = Seq("2.12.7", "2.13.0")
 object fastparse extends Module{
   object jvm extends Cross[fastparseJvmModule](crossVersions:_*)
   class fastparseJvmModule(val crossScalaVersion: String) extends FastparseModule{
@@ -27,7 +27,7 @@ object fastparse extends Module{
   object js extends Cross[fastparseJsModule](crossVersions:_*)
   class fastparseJsModule(val crossScalaVersion: String) extends FastparseModule with ScalaJSModule {
     def platformSegment = "js"
-    def scalaJSVersion = "0.6.27"
+    def scalaJSVersion = "0.6.28"
     object test extends Tests with CommonTestModule{
       def platformSegment = "js"
     }
@@ -35,7 +35,7 @@ object fastparse extends Module{
 }
 trait FastparseModule extends CommonCrossModule{
   def ivyDeps = Agg(
-    ivy"com.lihaoyi::sourcecode::0.1.6",
+    ivy"com.lihaoyi::sourcecode::0.1.7",
   )
   def compileIvyDeps = Agg(
     ivy"org.scala-lang:scala-reflect:${scalaVersion()}"
@@ -100,7 +100,7 @@ object pythonparse extends Module{
 
 trait ExampleParseJsModule extends CommonCrossModule with ScalaJSModule{
   def moduleDeps = Seq(fastparse.js())
-  def scalaJSVersion = "0.6.27"
+  def scalaJSVersion = "0.6.28"
   def platformSegment = "js"
   object test extends Tests with CommonTestModule{
     def platformSegment = "js"
@@ -191,7 +191,7 @@ trait CommonTestModule extends ScalaModule with TestModule{
 
   def platformSegment: String
   def ivyDeps = Agg(
-    ivy"com.lihaoyi::utest::0.6.7",
+    ivy"com.lihaoyi::utest::0.6.9",
   )
 
 //  def scalacOptions = T{ if (scalaVersion() == "2.12.7") Seq("-opt:l:method") else Nil }
@@ -252,14 +252,14 @@ object perftests extends Module{
     }
     def testFrameworks = Seq("utest.runner.Framework")
     def ivyDeps = Agg(
-      ivy"com.lihaoyi::utest::0.6.7",
+      ivy"com.lihaoyi::utest::0.6.9",
       ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
     )
   }
 }
 
 object demo extends ScalaJSModule{
-  def scalaJSVersion = "0.6.27"
+  def scalaJSVersion = "0.6.28"
   def scalaVersion = "2.12.7"
   def moduleDeps = Seq(
     scalaparse.js("2.12.7"),
