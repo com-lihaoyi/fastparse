@@ -260,15 +260,15 @@ object perftests extends Module{
 
 object demo extends ScalaJSModule{
   def scalaJSVersion = "0.6.28"
-  def scalaVersion = "2.12.7"
+  def scalaVersion = "2.13.0"
   def moduleDeps = Seq(
-    scalaparse.js("2.12.7"),
-    cssparse.js("2.12.7"),
-    pythonparse.js("2.12.7"),
-    fastparse.js("2.12.7").test,
+    scalaparse.js("2.13.0"),
+    cssparse.js("2.13.0"),
+    pythonparse.js("2.13.0"),
+    fastparse.js("2.13.0").test,
   )
   def ivyDeps = Agg(
-    ivy"org.scala-js::scalajs-dom::0.9.2",
-    ivy"com.lihaoyi::scalatags::0.6.5"
+    ivy"org.scala-js::scalajs-dom::0.9.7",
+    ivy"com.lihaoyi::scalatags::0.7.0"
   )
 }
