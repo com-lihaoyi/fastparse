@@ -69,7 +69,7 @@ object JsonParse extends TestSuite {
   def crossValidationIterator(size: Int) = crossValidationSource.grouped(size)
 
   val tests = Tests {
-    'CrossValidation - {
+    test("CrossValidation"){
       Utils.benchmarkAll(
         "JsonParse",
         jsonExpr ~ End,

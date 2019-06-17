@@ -25,7 +25,7 @@ object JsonnetParse extends TestSuite {
   val parser = new FastParseParser()
 
   val tests = Tests {
-    'CrossValidation - {
+    test("CrossValidation"){
       Utils.benchmarkAll(
         "JsonnetParse",
         parser.document,

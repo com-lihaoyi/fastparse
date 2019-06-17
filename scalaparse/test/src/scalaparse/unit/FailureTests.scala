@@ -6,14 +6,14 @@ import TestUtil._
 object FailureTests extends TestSuite{
   val tests = Tests {
 
-    * - checkNeg(
+    test - checkNeg(
       "package package",
       aggregate = """(QualId | PkgBlock | PkgObj)""",
       terminals = """("`" | var-id | chars-while(OpCharNotSlash, 1) | "/" | operator | plain-id | id | "case" | "object")""",
       found = "package"
     )
 
-    * - checkNeg(
+    test - checkNeg(
       """package torimatomeru
         |import a
         |import import
@@ -23,7 +23,7 @@ object FailureTests extends TestSuite{
       found = "import"
     )
 
-    * - checkNeg(
+    test - checkNeg(
       """object O{
         |  for{
         |    x <- Nil
@@ -37,7 +37,7 @@ object FailureTests extends TestSuite{
       terminals = """("`" | char-pred(UpperChar) | char-pred(LowerChar) | var-id | chars-while(OpCharNotSlash, 1) | "/" | operator | plain-id | id | "<-" | "←" | "=")""",
       found = "} yield x"
     )
-    * - checkNeg(
+    test - checkNeg(
       """object O{
         |  type T = (A B)
         |}
@@ -46,7 +46,7 @@ object FailureTests extends TestSuite{
       terminals = """(chars-while(IdCharacter, 1) | [_] | [ \t] | "/*" | "//" | "(" | "-" | "." | [0-9] | "0x" | "true" | "false" | "`" | char-pred(UpperChar) | char-pred(LowerChar) | var-id | chars-while(OpCharNotSlash, 1) | "/" | operator | plain-id | id | filter | "\"\"\"" | "\"" | "'" | "null" | "this" | "super" | "_" | "{")""",
       found = ")"
     )
-    * - checkNeg(
+    test - checkNeg(
       """object O{
         | def from(n: Long, c: Int = 0): Int =
         |  if (n == 1) c + 1 else
@@ -56,13 +56,13 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = ""
     )
-    * - checkNeg(
+    test - checkNeg(
       "import scala.util.{Failure, Success + 1}",
       aggregate = """("=>" | "," | "}")""",
       terminals = null,
       found = "+ 1}"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object SyntaxTest extends TestSuite{
         |  def check[T]](input: String) = {
@@ -74,7 +74,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "](input: S"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object SyntaxTest{
         |  a(
@@ -85,7 +85,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found ="}"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object SyntaxTest {
         |  {
@@ -97,7 +97,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found ="1\n"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object Moo{
         |  a
@@ -111,7 +111,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "."
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object Moo{
         | filename.asInstanceOf 10
@@ -121,7 +121,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "10"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object C o w{
         |  ().mkString
@@ -133,7 +133,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "o w{"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object O{
         | private[this] applyMacroFull = 1
@@ -143,7 +143,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "applyM"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object O{
         | private[this] def applyMacroFull(c: Context)
@@ -158,7 +158,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "= {"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object O{
         |  class 1 extends Exception
@@ -170,7 +170,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "1 extends"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |package torimatomeru
         |
@@ -183,7 +183,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "_"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object Foo{
         |  0 match {
@@ -195,7 +195,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "=> 0"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object Compiler{
         |
@@ -213,7 +213,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "case 0 =>"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object O {
         |    A A(A(A(A(A(A(A())))))))
@@ -224,7 +224,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = ")"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object O{
         |   A(A(A(A(A(A(A(A(A(A(A(A(A(A(A(A()))))))))))))))
@@ -234,7 +234,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "}"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object L{
         |  a.b =
@@ -244,7 +244,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "}"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object L{
         |  a b c
@@ -255,7 +255,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = ""
     )
-    * - checkNeg(
+    test - checkNeg(
       """/*
         |
         |package scala.scalajs.cli
@@ -265,7 +265,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = ""
     )
-    * - checkNeg(
+    test - checkNeg(
       """/*/*
         |*/
         |package scala.scalajs.cli
@@ -275,7 +275,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = ""
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object O{
         |  for {
@@ -288,7 +288,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "}"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object O{
         |  val jarFile = catch { case _: F => G }
@@ -298,7 +298,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "catch {"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object F{
         |  func{ case _: F = fail }
@@ -308,7 +308,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "= fail"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object Foo{
         |    val a d // g
@@ -320,7 +320,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "val b = e"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object L{
         |  x match{
@@ -332,7 +332,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "=> z"
     )
-    * - checkNeg(
+    test - checkNeg(
       """object K{
         |  val a:
         |    val c: D
@@ -345,7 +345,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "val c"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object LOLS{
         |  def run(def apply() {}) {}
@@ -355,7 +355,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "def apply"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object O{
         |  a =:= .c
@@ -365,7 +365,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = ".c"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object K{
         |  a(
@@ -377,7 +377,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = ")\n}"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object K{
         |  a[)
@@ -387,7 +387,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = ")"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object K{
         |  a[b)
@@ -397,7 +397,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = ")"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object P{
         |  tree match {
@@ -410,7 +410,7 @@ object FailureTests extends TestSuite{
       found = "stats :+ e"
     )
 
-    * - checkNeg(
+    test - checkNeg(
       """
         |object K
         |  val trueA = 1
@@ -420,7 +420,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "val trueA"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object K{
         |  val null null cow = 1
@@ -430,7 +430,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "null cow"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object K{
         |  val omg_+_+ = 1
@@ -440,7 +440,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "_+ = 1"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object K{
         |  val + = 1
@@ -451,7 +451,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "= 2"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object O{
         |   {
@@ -463,7 +463,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "=> 1"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |trait Basic {
         |  b match {
@@ -475,7 +475,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "case"
     )
-    * - checkNeg(
+    test - checkNeg(
       """trait Basic{
         |  a!.b
         |}
@@ -484,7 +484,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = ".b"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |class Parser {
         |  {( => }
@@ -495,7 +495,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "=> }"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |class Parser([
         |
@@ -504,7 +504,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "["
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |class Parser{
         | @mog
@@ -514,7 +514,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "}"
     )
-    * - checkNeg(
+    test - checkNeg(
       """class C
         |package omg
         |;
@@ -524,7 +524,7 @@ object FailureTests extends TestSuite{
       found = ";"
     )
 
-    * - checkNeg(
+    test - checkNeg(
       """object B {
         |  { a: L = }
         |}
@@ -533,7 +533,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "= }"
     )
-      * - checkNeg(
+      test - checkNeg(
         """object GenJSCode{
           |  a.b.()
           |}
@@ -543,7 +543,7 @@ object FailureTests extends TestSuite{
       terminals = null,
         found = "()"
       )
-    * - checkNeg(
+    test - checkNeg(
       """object GenJSCode{
         |  this.this.()
         |}
@@ -553,7 +553,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "this"
     )
-    * - checkNeg(
+    test - checkNeg(
       """object GenJSCode{
         |  null: b.()
         |}
@@ -563,7 +563,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "()"
     )
-      * - checkNeg(
+      test - checkNeg(
         """object K{
           |  private O
           |}
@@ -572,7 +572,7 @@ object FailureTests extends TestSuite{
       terminals = null,
         found = "O\n"
       )
-      * - checkNeg(
+      test - checkNeg(
         """object O{
           |  if eqeq &&
           |
@@ -583,7 +583,7 @@ object FailureTests extends TestSuite{
       terminals = null,
         found = "eqeq"
       )
-      * - checkNeg(
+      test - checkNeg(
         """
           |object O{
           |  for{
@@ -597,7 +597,7 @@ object FailureTests extends TestSuite{
       terminals = null,
         found = "=> x)"
       )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object O{
         |  for{
@@ -610,7 +610,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "} yield"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object O{
         |  for{
@@ -623,7 +623,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "{\n"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object O{
         |  for{
@@ -638,7 +638,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "}"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object ScopedVar {
         |  def withScopedVars(ass: Seq[_, ]) = 1
@@ -649,7 +649,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = ", ]"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |abstract class JSASTTest extends DirectTest {
         |  def show: this.type = )
@@ -661,7 +661,7 @@ object FailureTests extends TestSuite{
       found = ")\n"
 
     )
-    * - checkNeg(
+    test - checkNeg(
       """object Traversers {
         |  {
         |        1
@@ -673,7 +673,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "case for"
     )
-    * - checkNeg(
+    test - checkNeg(
       """object Utils {
         |  "\q"
         |}
@@ -683,7 +683,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "q"
     )
-    * - checkNeg(
+    test - checkNeg(
       """object Utils {
         |  "
         |  1
@@ -696,7 +696,7 @@ object FailureTests extends TestSuite{
       found = "\n"
     )
     val tq = "\"\"\""
-    * - checkNeg(
+    test - checkNeg(
       s"""
         |object Utils {
         |  $tq
@@ -709,7 +709,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = ""
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object X{
         |  ''
@@ -722,7 +722,7 @@ object FailureTests extends TestSuite{
     )
 
     // These two guys pass in Scalac, but I'm not gonna support it
-    * - checkNeg(
+    test - checkNeg(
       """
         |object X{
         |  (1.)
@@ -733,7 +733,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = ")"
     )
-    * - checkNeg(
+    test - checkNeg(
       s"""
          |object X{
          |  1..toString
@@ -743,7 +743,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = ".toString"
     )
-    * - checkNeg(
+    test - checkNeg(
       s"""
          |object X{
          |  val x, = 1
@@ -753,7 +753,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "= 1"
     )
-  * - checkNeg(
+  test - checkNeg(
     s"""
        |object X{
        |  val (x,) = 1
@@ -763,7 +763,7 @@ object FailureTests extends TestSuite{
       terminals = null,
     found = ",)"
   )
-  * - checkNeg(
+  test - checkNeg(
     s"""
        |object X{ val (_:) = 1 }
       """.stripMargin,
@@ -771,7 +771,7 @@ object FailureTests extends TestSuite{
       terminals = null,
     found = ") = 1"
   )
-  * - checkNeg(
+  test - checkNeg(
     s"""
        |import x.{y=>}
       """.stripMargin,
@@ -779,7 +779,7 @@ object FailureTests extends TestSuite{
       terminals = null,
     found = "}"
   )
-  * - checkNeg(
+  test - checkNeg(
     s"""
        |import x.y,
       """.stripMargin,
@@ -787,7 +787,7 @@ object FailureTests extends TestSuite{
       terminals = null,
     found = ""
   )
-  * - checkNeg(
+  test - checkNeg(
     s"""
        |object X{type T = A with}
       """.stripMargin,
@@ -795,7 +795,7 @@ object FailureTests extends TestSuite{
       terminals = null,
     found = "}"
   )
-  * - checkNeg(
+  test - checkNeg(
     s"""
        |object X{def f(x: Int, ) = 1}
       """.stripMargin,
@@ -803,7 +803,7 @@ object FailureTests extends TestSuite{
       terminals = null,
     found = ", )"
   )
-  * - checkNeg(
+  test - checkNeg(
     s"""
        |object X{(2,)}
       """.stripMargin,
@@ -811,7 +811,7 @@ object FailureTests extends TestSuite{
       terminals = null,
     found = ",)"
   )
-  * - checkNeg(
+  test - checkNeg(
     s"""
        |object X{f[A,]}
       """.stripMargin,
@@ -819,7 +819,7 @@ object FailureTests extends TestSuite{
       terminals = null,
     found = ",]"
   )
-  * - checkNeg(
+  test - checkNeg(
     s"""
        |object X{def f[T <% A <%] = 1}
       """.stripMargin,
@@ -827,7 +827,7 @@ object FailureTests extends TestSuite{
       terminals = null,
     found = "]"
   )
-  * - checkNeg(
+  test - checkNeg(
     s"""
        |object X{def f[T, B,] = 1}
       """.stripMargin,
@@ -835,7 +835,7 @@ object FailureTests extends TestSuite{
       terminals = null,
     found = ",]"
   )
-  * - checkNeg(
+  test - checkNeg(
     s"""
        |object X{type T = F forSome }}
       """.stripMargin,
@@ -844,7 +844,7 @@ object FailureTests extends TestSuite{
     found = "}}"
   )
 
-  * - checkNeg(
+  test - checkNeg(
     s"""
        |object X{def f(x: Int =) = 1}
       """.stripMargin,
@@ -852,7 +852,7 @@ object FailureTests extends TestSuite{
       terminals = null,
     found = ") = 1"
   )
-  * - checkNeg(
+  test - checkNeg(
     s"""
        |object X{type T = Int#}
       """.stripMargin,
@@ -860,7 +860,7 @@ object FailureTests extends TestSuite{
       terminals = null,
     found = "}"
   )
-  * - checkNeg(
+  test - checkNeg(
     s"""
        |object X{type T = }
       """.stripMargin,
@@ -868,7 +868,7 @@ object FailureTests extends TestSuite{
       terminals = null,
     found = "}\n"
   )
-  * - checkNeg(
+  test - checkNeg(
     s"""
        |object X{type T[,] = A }
       """.stripMargin,
@@ -876,7 +876,7 @@ object FailureTests extends TestSuite{
       terminals = null,
     found = ",]"
   )
-  * - checkNeg(
+  test - checkNeg(
     s"""
        |object X{type T <: }
       """.stripMargin,
@@ -884,7 +884,7 @@ object FailureTests extends TestSuite{
       terminals = null,
     found = "}\n"
   )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object System {
         |  def a[@b T @f [@b V]] = 1
@@ -895,7 +895,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "@f"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |@func(} object System {
         |
@@ -906,7 +906,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "}"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object System {
         |  def f[[a] = 1
@@ -918,7 +918,7 @@ object FailureTests extends TestSuite{
       found = "["
     )
 
-    * - checkNeg(
+    test - checkNeg(
       s"""
         |object System {
         |  $tq """".stripMargin,
@@ -926,7 +926,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = ""
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object System {
         |  e match { case <xml:unparsed><</xml:unparsed> => }
@@ -938,7 +938,7 @@ object FailureTests extends TestSuite{
       found = "<</xml:unp"
     )
 
-    * - checkNeg(
+    test - checkNeg(
       s"""object Foo{
          |  for(i <- Nil if x: Int => bar) 1
          |}
@@ -947,19 +947,19 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = ": Int"
     )
-    * - checkNeg(
+    test - checkNeg(
       s"""object Foo{; x: Int => x}""",
       aggregate = """("." | TypeArgs | `#` | Annot | `with` | { | `*` | Id | Semis | "}")""",
       terminals = null,
       found = "=> x"
     )
-    * - checkNeg(
+    test - checkNeg(
       s"""object Foo{ (i: Int => +i) }""",
       aggregate = """(NamedType | Refinement)""",
       terminals = null,
       found = ")"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object X {
         |  for{
@@ -971,7 +971,7 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "} yield a"
     )
-    * - checkNeg(
+    test - checkNeg(
       """
         |object X {
         |  {

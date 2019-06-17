@@ -12,7 +12,7 @@ object ScalaParse extends TestSuite{
   def genJsCodeIterator(size: Int) = genJsCodeSource.grouped(size)
 
   val tests = Tests {
-    'GenJSCode - {
+    test("GenJSCode"){
 //      var current = Thread.currentThread().getContextClassLoader
 //      val files = collection.mutable.Buffer.empty[java.io.File]
 //      files.appendAll(

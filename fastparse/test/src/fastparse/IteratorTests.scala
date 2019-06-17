@@ -23,7 +23,7 @@ object IteratorTests extends TestSuite {
   }
 
   val tests = Tests {
-    'basic - {
+    test("basic"){
       import NoWhitespace._
       def p[_: P] = P( "ab" ~/ "cd".rep().! ~ "ef" | "z" )
 
@@ -32,7 +32,7 @@ object IteratorTests extends TestSuite {
       assert(res == "cdcdcd")
     }
 
-    'immediateCutDrop - {
+    test("immediateCutDrop"){
       import NoWhitespace._
       def p[_: P] = P( "ab" ~/ "cd" | "z" ).log
 
@@ -43,7 +43,7 @@ object IteratorTests extends TestSuite {
       assert(input.drops == Set(2, 4))
     }
 
-    'whitespaceImmediateCutDrop - {
+    test("whitespaceImmediateCutDrop"){
       import NoWhitespace._
       implicit def whitespace{implicit ctx: P[_] =>
         " ".? ~ " ".rep
@@ -58,7 +58,7 @@ object IteratorTests extends TestSuite {
       assert(input.drops == Set(2, 4))
     }
 
-    'topLevelNoCuts - {
+    test("topLevelNoCuts"){
       import NoWhitespace._
       // Top-level sequences, which are not inside any `|`s or `.rep`s or `.?`s,
       // should dropBuffer immediately after every `~`, even without any cuts
@@ -71,8 +71,8 @@ object IteratorTests extends TestSuite {
       assert(input.drops == Set(1, 2, 3, 4, 5, 6, 7, 8, 9))
     }
 
-    'cuts - {
-      'capturing - {
+    test("cuts"){
+      test("capturing"){
         import NoWhitespace._
 
         def p[_: P] = P( "a" ~/ "b" ~/ "c")
@@ -86,7 +86,7 @@ object IteratorTests extends TestSuite {
         )
       }
 
-      'nocut - {
+      test("nocut"){
         import NoWhitespace._
 
         def p[_: P] = P( "a" ~/ "b" ~/ "c")
@@ -107,7 +107,7 @@ object IteratorTests extends TestSuite {
         )
       }
 
-      'either - {
+      test("either"){
         import NoWhitespace._
         def p[_: P] = P( "a" ~ "b" ~ "c")
         def either[_: P] = P( (p ~ End) | ("abc" ~ p ~ End) | ("abcabc" ~ p ~ End))
@@ -147,7 +147,7 @@ object IteratorTests extends TestSuite {
         )
       }
 
-      'rep - {
+      test("rep"){
         import NoWhitespace._
         def p[_: P] = P( "a" ~ "b" ~ "c")
         def rep[_: P] = P( (p.rep ~ "d") | (p.rep ~ "e") )
@@ -177,7 +177,7 @@ object IteratorTests extends TestSuite {
         )
       }
 
-      'all - {
+      test("all"){
         import NoWhitespace._
         def p[_: P] = P( "a" ~ "b" ~ "c" ~/ "d")
         def np[_: P] = NoCut(p)
@@ -193,7 +193,7 @@ object IteratorTests extends TestSuite {
         )
       }
 
-      'whitespaceApi - {
+      test("whitespaceApi"){
 
         implicit def whitespace = { implicit ctx: P[_] =>
           " ".? ~~/ " ".repX
@@ -225,7 +225,7 @@ object IteratorTests extends TestSuite {
         assert(parse(input3, ab(_)).isInstanceOf[Parsed.Failure])
       }
 
-      'zeroDrops - {
+      test("zeroDrops"){
         import NoWhitespace._
         def p[_: P] = P(
           (("big, " ~ ("another, " ~ ("X".? ~/ "Y".?)) | "small, ") ~ "end") | "other"
@@ -244,7 +244,7 @@ object IteratorTests extends TestSuite {
       }
     }
 
-    'traceFailure - {
+    test("traceFailure"){
       import NoWhitespace._
       def p[_: P] = P("[" ~ "]")
 

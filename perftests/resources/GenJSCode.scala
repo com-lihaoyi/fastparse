@@ -731,9 +731,9 @@ with Compat210Component {
      * Scala.js backend uses the following rules for selection (which will
      * also cause runtime failures):
      *
-     * - If a proxy with the same signature (method name and parameters)
+     test - If a proxy with the same signature (method name and parameters)
      *   exists in the superclass, no proxy is generated (proxy is inherited)
-     * - If no proxy exists in the superclass, a proxy is generated for the
+     test - If no proxy exists in the superclass, a proxy is generated for the
      *   first method with matching signatures.
      */
     def genReflCallProxies(sym: Symbol): List[js.MethodDef] = {

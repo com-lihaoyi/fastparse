@@ -23,7 +23,7 @@ object FailureTests extends TestSuite{
       )
     }
 
-    'simple - {
+    test("simple"){
       import NoWhitespace._
       def check(parser: P[_] => P[_]) = {
         val f @ Parsed.Failure(failureString, index, extra) = parse("d", parser(_))
@@ -35,68 +35,68 @@ object FailureTests extends TestSuite{
         )
       }
 
-      'either - check{
+      test("either") - check{
         def parseB[_: P] = P( "a" | "b" )
         def parseA[_: P] = P( (parseB | "") ~ "c" )
         parseA(_)
       }
-      'option - check{
+      test("option") - check{
         def parseB[_: P] = P( "a" | "b" )
         def parseA[_: P] = P( parseB.? ~ "c" )
         parseA(_)
       }
-      'rep - check{
+      test("rep") - check{
         def parseB[_: P] = P( "a" | "b" )
         def parseA[_: P] = P( parseB.rep ~ "c" )
         parseA(_)
       }
-      'repApply - check{
+      test("repApply") - check{
         def parseB[_: P] = P( "a" | "b" )
         def parseA[_: P] = P( parseB.rep() ~ "c" )
         parseA(_)
       }
-      'repX - check{
+      test("repX") - check{
         def parseB[_: P] = P( "a" | "b" )
         def parseA[_: P] = P( parseB.repX ~ "c" )
         parseA(_)
       }
-      'repXApply - check{
+      test("repXApply") - check{
         def parseB[_: P] = P( "a" | "b" )
         def parseA[_: P] = P( parseB.repX() ~ "c" )
         parseA(_)
       }
-      'deep - {
-        'option - check{
+      test("deep"){
+        test("option") - check{
           def parseC[_: P] = P( "a" | "b" )
           def parseB[_: P] = P( parseC.rep(1) )
           def parseA[_: P] = P( parseB.? ~ "c" )
           parseA(_)
         }
-        'either - check{
+        test("either") - check{
           def parseC[_: P] = P( "a" | "b" )
           def parseB[_: P] = P( parseC.rep(1) )
           def parseA[_: P] = P( (parseB | "") ~ "c" )
           parseA(_)
         }
-        'rep - check{
+        test("rep") - check{
           def parseC[_: P] = P( "a" | "b" )
           def parseB[_: P] = P( parseC.rep(1) )
           def parseA[_: P] = P( parseB.rep ~ "c" )
           parseA(_)
         }
-        'repApply - check{
+        test("repApply") - check{
           def parseC[_: P] = P( "a" | "b" )
           def parseB[_: P] = P( parseC.rep(1) )
           def parseA[_: P] = P( parseB.rep() ~ "c" )
           parseA(_)
         }
-        'repX - check{
+        test("repX") - check{
           def parseC[_: P] = P( "a" | "b" )
           def parseB[_: P] = P( parseC.repX(1) )
           def parseA[_: P] = P( parseB.repX ~ "c" )
           parseA(_)
         }
-        'repXApply - check{
+        test("repXApply") - check{
           def parseC[_: P] = P( "a" | "b" )
           def parseB[_: P] = P( parseC.repX(1) )
           def parseA[_: P] = P( parseB.repX() ~ "c" )
@@ -105,9 +105,9 @@ object FailureTests extends TestSuite{
       }
     }
 
-    'misc - {
+    test("misc"){
       import NoWhitespace._
-      'sep - {
+      test("sep"){
         def parseB[_: P] = P( "a" | "b" )
         def parseA[_: P] = P( parseB.rep(sep = ",") ~ "c" )
         val f1 @ Parsed.Failure(_, _, _) = parse("ad", parseA(_))
@@ -127,7 +127,7 @@ object FailureTests extends TestSuite{
         f2.index
       }
 
-      'sepCut - {
+      test("sepCut"){
         def parseB[_: P] = P( "a" | "b" | "c" )
         def parseA[_: P] = P( parseB.rep(sep = ","./) ~ "d" )
         val f1 @ Parsed.Failure(_, _, _) = parse("ax", parseA(_))
@@ -143,7 +143,7 @@ object FailureTests extends TestSuite{
         f2.index ==> 2
       }
 
-      'aggregateInNamedParser - checkOffset(
+      test("aggregateInNamedParser") - checkOffset(
         input = "ad",
         expected = """("b" | "c")""",
         label = "\"c\"",
@@ -154,7 +154,7 @@ object FailureTests extends TestSuite{
         }
       )
 
-      'manualSep - checkOffset(
+      test("manualSep") - checkOffset(
         input = "a,d",
         expected = "\"c\"",
         label = "\"c\"",
@@ -164,7 +164,7 @@ object FailureTests extends TestSuite{
         }
       )
 
-      'sequentialEithers - checkOffset(
+      test("sequentialEithers") - checkOffset(
         input = "z",
         expected = """("a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "x")""",
         label = "\"x\"",
@@ -181,7 +181,7 @@ object FailureTests extends TestSuite{
           parseA(_)
         }
       )
-      'passingNamedParsersAggregateIsShallow - checkOffset(
+      test("passingNamedParsersAggregateIsShallow") - checkOffset(
         input = "ad",
         expected = """(parseB ~ fail | "c")""",
         label = "\"c\"",
@@ -193,7 +193,7 @@ object FailureTests extends TestSuite{
         }
       )
 
-      'passingNamedParsersEitherAggregateIsShallow - checkOffset(
+      test("passingNamedParsersEitherAggregateIsShallow") - checkOffset(
         input = "_",
         expected = """(parseB | parseZ)""",
         label = "(parseB | parseZ)",
@@ -211,96 +211,96 @@ object FailureTests extends TestSuite{
       )
     }
 
-    'offset - {
+    test("offset"){
       import NoWhitespace._
       // Consider cases where the failure happens down some branch of an either,
       // rep, or option, where the branch takes place before traceIndex but the
       // actual failure lines up nicely.
-      'opt - checkOffset(
+      test("opt") - checkOffset(
         input = "ax",
         expected = """("b" | "d")""",
         label = "\"d\"",
         parser = { implicit c => ("a" ~ "b").? ~ "a" ~ "d" }
       )
-      'optRep - checkOffset(
+      test("optRep") - checkOffset(
         input = "ax",
         expected = """("b".rep(1) | "d")""",
         label = "\"d\"",
         terminals = """("b" | "d")""",
         parser = { implicit c => ("a" ~ "b".rep(1)).? ~ "a" ~ "d" }
       )
-      'opt3 - checkOffset(
+      test("opt3") - checkOffset(
         input = "ax",
         expected = """("b" | "c" | "d")""",
         label = "\"d\"",
         parser = { implicit c => (("a" ~ "b".?) ~ "c").? ~ "a" ~ "d"}
       )
 
-      'opt4 - checkOffset(
+      test("opt4") - checkOffset(
         input = "ax",
         expected = """("b" | "c" | "d" | "e" | "f")""",
         label = "\"f\"",
         parser = { implicit c => (("a" ~ "b".? ~ "c".?) ~ "d".? ~ "e").? ~ "a" ~ "f"}
       )
 
-      'opt5 - checkOffset(
+      test("opt5") - checkOffset(
         input = "ax",
         expected = """("b" | "c" | "d")""",
         label = "\"d\"",
         parser = { implicit c => ("a" ~ ("b".? ~ "c")).? ~ "a" ~ "d" }
       )
 
-      'rep - checkOffset(
+      test("rep") - checkOffset(
         input = "ax",
         expected = """("b" | "d")""",
         label = "\"d\"",
         parser = { implicit c => ("a" ~ "b").rep ~ "a" ~ "d" }
       )
-      'rep_3 - checkOffset(
+      test("rep_3") - checkOffset(
         input = "ax",
         expected = """("b" | "c" | "d")""",
         label = "\"d\"",
         parser = { implicit c => (("a" ~ "b".rep) ~ "c").rep ~ "a" ~ "d"}
       )
 
-      'rep_4 - checkOffset(
+      test("rep_4") - checkOffset(
         input = "ax",
         expected = """("b" | "c" | "d")""",
         label = "\"d\"",
         parser = { implicit c => ("a" ~ ("b".rep ~ "c")).rep ~ "a" ~ "d" }
       )
 
-      'repX - checkOffset(
+      test("repX") - checkOffset(
         input = "ax",
         expected = """("b" | "d")""",
         label = "\"d\"",
         parser = { implicit c => ("a" ~ "b").repX ~ "a" ~ "d" }
       )
-      'repSep - checkOffset(
+      test("repSep") - checkOffset(
         input = "ax",
         expected = """("b" | "d")""",
         label = "\"d\"",
         parser = { implicit c => ("a" ~ "b").rep(sep = Pass) ~ "a" ~ "d" }
       )
-      'repXSep - checkOffset(
+      test("repXSep") - checkOffset(
         input = "ax",
         expected = """("b" | "d")""",
         label = "\"d\"",
         parser = { implicit c => ("a" ~ "b").repX(sep = Pass) ~ "a" ~ "d" }
       )
-      'rep1 - checkOffset(
+      test("rep1") - checkOffset(
         input = "ax",
         expected = """("b" | "d")""",
         label = "\"d\"",
         parser = { implicit c => ("a" ~ "b").rep(1).? ~ "a" ~ "d" }
       )
-      'repX1 - checkOffset(
+      test("repX1") - checkOffset(
         input = "ax",
         expected = """("b" | "d")""",
         label = "\"d\"",
         parser = { implicit c => ("a" ~ "b").repX(1).? ~ "a" ~ "d" }
       )
-      'rep1Sep - checkOffset(
+      test("rep1Sep") - checkOffset(
         input = "ax",
         expected = """("b" | "d")""",
         label = "\"d\"",
@@ -308,51 +308,51 @@ object FailureTests extends TestSuite{
           ("a" ~ "b").rep(1, sep = Pass).? ~ "a" ~ "d"
         }
       )
-      'repX1Sep - checkOffset(
+      test("repX1Sep") - checkOffset(
         input = "ax",
         expected = """("b" | "d")""",
         label = "\"d\"",
         parser = { implicit c => ("a" ~ "b").repX(1, sep = Pass).? ~ "a" ~ "d" }
       )
-      'either1 - checkOffset(
+      test("either1") - checkOffset(
         input = "ax",
         expected = """("b" | "d")""",
         label = "\"d\"",
         parser = { implicit c => "a" ~ "b" | "a" ~/ "d" }
       )
-      'either2 - checkOffset(
+      test("either2") - checkOffset(
         input = "ax",
         expected = """("b" | "c" | "d" | "e")""",
         label = "\"e\"",
         parser = {implicit c => (("a" ~ "b" | "a" ~ "c") | "a" ~ "d" | "") ~ "a" ~ "e" }
       )
-      'either3 - checkOffset(
+      test("either3") - checkOffset(
         input = "ax",
         expected = """("b" | "c" | "d" | "e")""",
         label = "\"e\"",
         parser = {implicit c => ("a" ~ "b" | ("a" ~ "c" | "a" ~ "d") | "") ~ "a" ~ "e" }
       )
 
-      'opEither - checkOffset(
+      test("opEither") - checkOffset(
         input = "ax",
         expected = """("b" | "c" | "d")""",
         label = "\"d\"",
         parser = { implicit c => ("a" ~ "b" | "a" ~ "c").? ~ "a" ~ "d" }
       )
-      'optEitherRep1 - checkOffset(
+      test("optEitherRep1") - checkOffset(
         input = "ax",
         expected = """("b" | "c" | "d")""",
         label = "\"d\"",
         parser = { implicit c => (("a" ~ "b").rep(1, sep = Pass) | ("a" ~ "c")).? ~ "a" ~ "d" }
       )
 
-      'optOpt - checkOffset(
+      test("optOpt") - checkOffset(
         input = "ax",
         expected = """("b" | "d")""",
         label = "\"d\"",
         parser = { implicit c => ("a" ~ "b").?.? ~ "a" ~ "d" }
       )
-      'optRepX - checkOffset(
+      test("optRepX") - checkOffset(
         input = "ax",
         expected = """("b" | "d")""",
         label = "\"d\"",
@@ -360,7 +360,7 @@ object FailureTests extends TestSuite{
       )
     }
 
-    'downstream - {
+    test("downstream"){
       import NoWhitespace._
       // In the case where one branch fails further in than `traceIndex`, we
       // collect the partial aggregation from that branch in the
@@ -392,33 +392,33 @@ object FailureTests extends TestSuite{
       'repX -       check{ implicit c => ("a" ~ ("b" ~ "c")).repX ~ "a" ~/ "d" }
       'repXLeft -   check{ implicit c => (("a" ~ "b") ~ "c").repX ~ "a" ~/ "d" }
       'repSep -     check{ implicit c => ("a" ~ ("b" ~ "c")).rep(sep = Pass) ~ "a" ~/ "d" }
-      'repSepLeft - check{ implicit c => (("a" ~ "b") ~ "c").rep(sep = Pass) ~ "a" ~/ "d" }
+      test("repSepLeft") - check{ implicit c => (("a" ~ "b") ~ "c").rep(sep = Pass) ~ "a" ~/ "d" }
     }
 
-    'whitespace - {
+    test("whitespace"){
       import SingleLineWhitespace._
-      'opt3 - checkOffset(
+      test("opt3") - checkOffset(
         input = "a x",
         expected = """("b" | "c" | "d")""",
         label = "\"d\"",
         parser = { implicit c => (("a" ~ "b".?) ~ "c").? ~ "a" ~ "d"}
       )
 
-      'opt4 - checkOffset(
+      test("opt4") - checkOffset(
         input = "a  x",
         expected = """("b" | "c" | "d")""",
         label = "\"d\"",
         parser = { implicit c => ("a" ~ ("b".? ~ "c")).? ~ "a" ~ "d" }
       )
 
-      'optEitherRep1 - checkOffset(
+      test("optEitherRep1") - checkOffset(
         input = "a   x",
         expected = """("b" | "c" | "d")""",
         label = "\"d\"",
         parser = { implicit c => (("a" ~ "b").rep(1, sep = Pass) | ("a" ~ "c")).? ~ "a" ~ "d" }
       )
 
-      'opt2 - checkOffset(
+      test("opt2") - checkOffset(
         input = "a  b   x",
         expected = """("b" ~ "c" | "d")""",
         label = "\"d\"",
@@ -426,7 +426,7 @@ object FailureTests extends TestSuite{
         parser = {implicit c => ("a".! ~ ("b".! ~ "c".!)).? ~ "a".! ~/ "d".!}
       )
 
-      'optLeft2 - checkOffset(
+      test("optLeft2") - checkOffset(
         input = "a   b  x",
         expected = """("b" ~ "c" | "d")""",
         label = "\"d\"",

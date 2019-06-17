@@ -11,17 +11,6 @@ object fastparse extends Module{
     object test extends Tests with CommonTestModule{
       def platformSegment = "jvm"
     }
-    object bench extends ScalaModule{
-      def scalaVersion = crossScalaVersion
-
-      def moduleDeps = super.moduleDeps ++ Seq(fastparseJvmModule.this)
-      def ivyDeps = Agg(
-        ivy"com.lihaoyi::fastparse:1.0.0",
-        ivy"com.lihaoyi::ammonite-ops:1.1.2",
-        ivy"org.scala-lang:scala-reflect:${scalaVersion()}",
-      )
-    }
-
   }
 
   object js extends Cross[fastparseJsModule](crossVersions:_*)
@@ -191,7 +180,7 @@ trait CommonTestModule extends ScalaModule with TestModule{
 
   def platformSegment: String
   def ivyDeps = Agg(
-    ivy"com.lihaoyi::utest::0.6.9",
+    ivy"com.lihaoyi::utest::0.7.0",
   )
 
 //  def scalacOptions = T{ if (scalaVersion() == "2.12.7") Seq("-opt:l:method") else Nil }
@@ -252,7 +241,7 @@ object perftests extends Module{
     }
     def testFrameworks = Seq("utest.runner.Framework")
     def ivyDeps = Agg(
-      ivy"com.lihaoyi::utest::0.6.9",
+      ivy"com.lihaoyi::utest::0.7.1",
       ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
     )
   }

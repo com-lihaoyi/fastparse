@@ -6,8 +6,8 @@ import Ast._
 
 object CssTests extends TestSuite {
   val tests = this {
-    'basic - {
-      'test1 {
+    test("basic"){
+      test("test1"){
         val Parsed.Success(value1, index1) = parse(
           """
             |
@@ -38,7 +38,7 @@ object CssTests extends TestSuite {
         )
       }
 
-      'test2 {
+      test("test2"){
         val Parsed.Success(value2, index2) = parse(
           """
             |
@@ -69,7 +69,7 @@ object CssTests extends TestSuite {
         )
       }
 
-      'test3 {
+      test("test3"){
         val Parsed.Success(value3, index3) = parse(
           """
             |
@@ -98,7 +98,7 @@ object CssTests extends TestSuite {
         )
       }
 
-      'test4 {
+      test("test4"){
 
         val Parsed.Success(value4, index4) = parse(
           """
@@ -127,7 +127,7 @@ object CssTests extends TestSuite {
         )
       }
 
-      'test5 {
+      test("test5"){
         val Parsed.Success(value5, index5) = parse(
           """
             |
@@ -147,7 +147,7 @@ object CssTests extends TestSuite {
               Left(Declaration("display", Seq(IdentToken("none")), false))))))))
       }
 
-      'test6 {
+      test("test6"){
         val Parsed.Success(value6, index6) = parse(
           """
             |
@@ -169,7 +169,7 @@ object CssTests extends TestSuite {
                   Declaration("font-size", Seq(DimensionToken("21", "px")), false)))))))))))))
       }
 
-      'test7 {
+      test("test7"){
         val Parsed.Success(value7, index7) = parse(
           """|
              |@rule {

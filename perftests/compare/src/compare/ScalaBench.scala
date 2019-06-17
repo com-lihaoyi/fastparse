@@ -24,11 +24,11 @@ object ScalaBench extends TestSuite{
     .mkString
 
   val tests = Tests{
-    'fastparse - bench{
+    test("fastparse") - bench{
 
       fastparse.parse(txt, scalaparse.Scala.CompilationUnit(_))
     }
-    'scalac - bench{
+    test("scalac") - bench{
       ScalacParser.checkParseFails(txt)
     }
 

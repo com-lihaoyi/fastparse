@@ -75,11 +75,11 @@ object ProjectTests extends TestSuite{
     "ansible/ansible"- check("02cd88169764232fd63c776456178fe61d3a214a")
     "kennethreitz/requests" - check("9713289e741960249c94fcb1686746f80e2f20b5")
 
-//    'test - {
+//    test("test"){
 //      val txt = new String(Files.readAllBytes(Paths.get("out/repos/ansible/lib/ansible/modules/cloud/cloudstack/cs_instance.py")))
 //      parse(txt).read(pythonparse.Statements.file_input(_))
 //    }
-//    'bench - {
+//    test("bench"){
 //      val path = "pythonparse/jvm/src/test/resources/pythonparse/bench.py"
 //      val data = Files.readAllBytes(Paths.get(path))
 //      val code = new String(data)

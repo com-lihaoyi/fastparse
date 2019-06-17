@@ -41,7 +41,7 @@ object ProjectTests extends TestSuite{
       println()
     }
 
-    'test - {
+    test("test"){
       val testSource = scala.io.Source.fromInputStream(
         getClass.getResourceAsStream("/scalaparse/Test.scala")
       ).mkString
@@ -148,7 +148,7 @@ object ProjectTests extends TestSuite{
     "macroid/macroid" - checkRepo("7ec047317190d8f0a2a22df69f4c015b0181a4f2")
     // annoyingly uses trailing .s all over the place, needing dozens of
     // skipped files. Probably only run this after we can properly parse those
-//    'delite- checkRepo("https://github.com/stanford-ppl/Delite",
+//    test("delite") - checkRepo("https://github.com/stanford-ppl/Delite",
 //      x => !Seq(
 //        // trailing . after number
 //        "target/repos/Delite/apps/multi-dsl/src/ppl/apps/interop/CustomerPricing.scala",

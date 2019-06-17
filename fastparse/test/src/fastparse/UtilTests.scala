@@ -2,7 +2,7 @@ package fastparse
 import utest._
 object UtilTests extends TestSuite {
   val tests = Tests{
-    'hello1 - {
+    test("hello1"){
       val shortTxt =
         """'
           |""".stripMargin
@@ -18,7 +18,7 @@ object UtilTests extends TestSuite {
       )
       assert(pretties == expected)
     }
-    'hello2 - {
+    test("hello2"){
       val txt =
         """a
           |bc

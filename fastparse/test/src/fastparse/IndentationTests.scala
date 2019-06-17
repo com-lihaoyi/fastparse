@@ -37,7 +37,7 @@ object IndentationTests extends TestSuite{
   def expr[_: P] = new Parser(indent = 0).expr
 
   val tests = Tests {
-    'pass - {
+    test("pass"){
       def check(str: String, num: Int) = {
         val Parsed.Success(value, _) = parse(str, expr(_))
         assert(value == num)
@@ -123,24 +123,24 @@ object IndentationTests extends TestSuite{
         21
       )
     }
-    'fail - {
+    test("fail"){
       def check(input: String, expectedTrace: String): Unit = {
         val failure = parse(input, expr(_)).asInstanceOf[Parsed.Failure]
         val actualTrace = failure.trace(enableLogging = true).longAggregateMsg
         assert(expectedTrace.trim == actualTrace.trim)
       }
-      * - check(
+      test - check(
         "+",
         """ Expected expr:1:1 / block:1:1 / "\n":1:2, found "" """
       )
-      * - check(
+      test - check(
         """+
           |  1
           |1
         """.stripMargin.trim,
         """ Expected expr:1:1 / ([0-9] | "\n  " | end-of-input):2:4, found "\n1" """
       )
-      * - check(
+      test - check(
         """+
           |  1
           |   1
