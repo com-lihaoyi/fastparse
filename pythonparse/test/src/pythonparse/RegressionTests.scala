@@ -13,7 +13,7 @@ object RegressionTests extends TestSuite{
   implicit def strName(s: Symbol) = Name(identifier(s.name), Load)
   implicit def strIdent(s: Symbol) = identifier(s.name)
   val tests = Tests {
-    'multiple_comments - TestUtils.check(
+    test("multiple_comments") - TestUtils.check(
       Statements.file_input(_),
       Seq(Ast.stmt.Pass),
       """# a
@@ -21,7 +21,7 @@ object RegressionTests extends TestSuite{
         |pass""".stripMargin
     )
 
-    'multiple_newlines - TestUtils.check(
+    test("multiple_newlines") - TestUtils.check(
       Statements.file_input(_),
       Seq(Expr('a), Expr('b)),
       """a
@@ -29,7 +29,7 @@ object RegressionTests extends TestSuite{
         |b""".stripMargin
     )
 
-    'multi_line_function - TestUtils.check(
+    test("multi_line_function") - TestUtils.check(
       Statements.file_input(_),
       Seq(FunctionDef('session_config, arguments(Nil, None, None, Nil), Seq(Expr('a), Expr('b)), Nil)),
       """def session_config():
@@ -38,14 +38,14 @@ object RegressionTests extends TestSuite{
         |    b""".stripMargin
     )
 
-    'backslash_breaks - TestUtils.check(
+    test("backslash_breaks") - TestUtils.check(
       Statements.file_input(_),
       Seq(Expr(Attribute('a, 'b, Load))),
       """a\
         |.b
         |""".stripMargin
     )
-    'multiline_string - TestUtils.check(
+    test("multiline_string") - TestUtils.check(
       Statements.file_input(_),
       Seq(Expr(Str("\n"))),
       """'''
@@ -53,7 +53,7 @@ object RegressionTests extends TestSuite{
         |""".stripMargin
     )
 
-    'try_finally_no_except - TestUtils.check(
+    test("try_finally_no_except") - TestUtils.check(
       Statements.file_input(_),
       Seq(TryFinally(Seq(Expr('a)), Seq(Expr('b)))),
       """try:
@@ -63,7 +63,7 @@ object RegressionTests extends TestSuite{
         |
         |""".stripMargin
     )
-    'indented_try_except_with_space - TestUtils.check(
+    test("indented_try_except_with_space") - TestUtils.check(
       Statements.file_input(_),
       Seq(FunctionDef('f, arguments(Nil, None, None, Nil), Seq(
         TryExcept(
@@ -81,7 +81,7 @@ object RegressionTests extends TestSuite{
         |
         |""".stripMargin
     )
-    'indented_block_with_spaces_and_offset_comments - TestUtils.check(
+    test("indented_block_with_spaces_and_offset_comments") - TestUtils.check(
       Statements.file_input(_),
       Seq(FunctionDef(
         'post,
@@ -96,7 +96,7 @@ object RegressionTests extends TestSuite{
         |        a
         |""".stripMargin
     )
-    'indented_block_with_spaces_and_offset_comments - TestUtils.check(
+    test("indented_block_with_spaces_and_offset_comments") - TestUtils.check(
       Statements.file_input(_),
       Seq(While(
         'a,
@@ -119,7 +119,7 @@ object RegressionTests extends TestSuite{
         |""".stripMargin
     )
 
-    'weird_comments - TestUtils.check(
+    test("weird_comments") - TestUtils.check(
       Statements.file_input(_),
       Seq(While(
         Num(1),
@@ -131,7 +131,7 @@ object RegressionTests extends TestSuite{
         |    a
         |""".stripMargin
     )
-    'ident_looking_string - TestUtils.check(
+    test("ident_looking_string") - TestUtils.check(
       Statements.file_input(_),
       Seq(If(
         Call('match, Seq(Str("^[a-zA-Z0-9]")), Nil, None, None),
@@ -144,7 +144,7 @@ object RegressionTests extends TestSuite{
         |
         |""".stripMargin
     )
-    'same_line_comment - TestUtils.check(
+    test("same_line_comment") - TestUtils.check(
       Statements.file_input(_),
       Seq(If(
         'b,
@@ -160,7 +160,7 @@ object RegressionTests extends TestSuite{
         |        pass
         |""".stripMargin
     )
-    'chained_elifs - TestUtils.check(
+    test("chained_elifs") - TestUtils.check(
       Statements.file_input(_),
       Seq(While(Num(1),
         Seq(
@@ -186,19 +186,19 @@ object RegressionTests extends TestSuite{
         |        c
         |""".stripMargin
     )
-    'bitand - TestUtils.check(
+    test("bitand") - TestUtils.check(
       Statements.file_input(_),
       Seq(Expr(BinOp('a, BitAnd, 'a))),
       """a & a
         |""".stripMargin
     )
-    'octal - TestUtils.check(
+    test("octal") - TestUtils.check(
       Statements.file_input(_),
       Seq(Expr(Num(0))),
       """0x0
         |""".stripMargin
     )
-    'comment_after_decorator - TestUtils.check(
+    test("comment_after_decorator") - TestUtils.check(
       Statements.file_input(_),
       Seq(ClassDef('GenericForeignKeyTests, Nil, Seq(Pass), Seq('override_settings))),
       """@override_settings # ForeignKey(unique=True)
@@ -206,7 +206,7 @@ object RegressionTests extends TestSuite{
         |    pass
         |""".stripMargin
     )
-    'while_block - TestUtils.check(
+    test("while_block") - TestUtils.check(
       Statements.file_input(_),
       Seq(While(Num(1), Seq(Expr(Num(2)), Expr(Num(3))), Nil)),
       """while 1:
@@ -215,7 +215,7 @@ object RegressionTests extends TestSuite{
         |    3
         |""".stripMargin
     )
-    'while_in_if - TestUtils.check(
+    test("while_in_if") - TestUtils.check(
       Statements.file_input(_),
       Seq(If(Num(1), Seq(While(Num(0), Seq(Pass), Nil)), Seq(Pass))),
       """if 1:
@@ -226,18 +226,18 @@ object RegressionTests extends TestSuite{
         |""".stripMargin
     )
 
-    'tab_indent - TestUtils.check(
+    test("tab_indent") - TestUtils.check(
       Statements.file_input(_),
       Seq(While(Num(1), Seq(Pass), Nil)),
       "while 1:\n\tpass"
     )
 
-    'negative_integer - TestUtils.check(
+    test("negative_integer") - TestUtils.check(
       Statements.file_input(_),
       Seq(Expr(Num(-1))),
       "-1"
     )
-    'unary_subtraction - TestUtils.check(
+    test("unary_subtraction") - TestUtils.check(
       Statements.file_input(_),
       Seq(Expr(UnaryOp(USub, Name(identifier("foo"), Load)))),
       "-foo"

@@ -10,7 +10,7 @@ object PythonParse extends TestSuite {
   val parser = pythonparse.Statements.file_input ~ End
 
   val tests = Tests {
-    'CrossValidation - {
+    test("CrossValidation"){
       Utils.benchmarkAll(
         "PythonParse",
         parser,

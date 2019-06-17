@@ -22,19 +22,19 @@ object WhitespaceTests extends TestSuite{
       val Parsed.Success((), 9) = parse("/** * **/", p)
       val Parsed.Success((), 15) = parse("/** // * // **/", p)
     }
-    'scala - {
+    test("scala"){
       checkCommon(ScalaWhitespace.whitespace)
       // allow nested comments
       val Parsed.Failure(_, 11, _) = parse("/** /* /**/", ScalaWhitespace.whitespace)
       val Parsed.Success((), 8) = parse("/*/**/*/", ScalaWhitespace.whitespace)
     }
-    'java - {
+    test("java"){
       checkCommon(JavaWhitespace.whitespace)
       // no nested comments
       val Parsed.Success((), 11) = parse("/** /* /**/", JavaWhitespace.whitespace)
       val Parsed.Success((), 6) = parse("/*/**/*/", JavaWhitespace.whitespace)
     }
-    'jsonnet - {
+    test("jsonnet"){
       checkCommon(JsonnetWhitespace.whitespace)
       // no nested comments
       val Parsed.Success((), 11) = parse("/** /* /**/", JsonnetWhitespace.whitespace)

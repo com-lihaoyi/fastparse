@@ -9,7 +9,7 @@ object PythonParse extends TestSuite {
   def crossValidationIterator(size: Int) = crossValidationSource.grouped(size)
   def parser[_: P] = pythonparse.Statements.file_input ~ End
   val tests = Tests {
-    'CrossValidation - {
+    test("CrossValidation"){
       Utils.benchmarkAll(
         "PythonParse",
         parser(_),

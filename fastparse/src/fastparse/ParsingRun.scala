@@ -11,12 +11,12 @@ import fastparse.internal.{Instrument, Lazy, Msgs, Util}
   * There are a few patterns that let us program with these mutable variables
   * in a sort-of-pure-functional way:
   *
-  * - If a parser that wishes to ignore changes to a field within their child
+  test - If a parser that wishes to ignore changes to a field within their child
   *   parsers, a common pattern is to save the value of the field before the
   *   wrapped parser runs, and then re-set the field. e.g. this can be used to
   *   backtrack [[index]] after a lookahead parser finishes
   *
-  * - If a parser wants to read the value of the field "returned" by multiple
+  test - If a parser wants to read the value of the field "returned" by multiple
   *   child parsers, make sure to read the field into a local variable after
   *   each child parser is complete to make sure the value you want from an
   *   earlier child isn't stomped over by a later child

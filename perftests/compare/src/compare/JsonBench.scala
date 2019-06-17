@@ -20,25 +20,25 @@ object JsonBench extends TestSuite{
     .mkString
 
   val tests = Tests{
-    'fastparse - bench{
-      fastparse.parse(txt, test.fastparse.Json.jsonExpr(_))
+    test("fastparse") - bench{
+      fastparse.parse(txt, _root_.test.fastparse.Json.jsonExpr(_))
     }
-    'circe - bench{
+    test("circe") - bench{
       io.circe.parser.parse(txt).asInstanceOf[Right[_, _]]
     }
-    'argonaut - bench{
+    test("argonaut") - bench{
       argonaut.Parse.parse(txt).asInstanceOf[Right[_, _]]
     }
-    'ujson - bench{
+    test("ujson") - bench{
       ujson.read(txt)
     }
-    'json4s - bench{
+    test("json4s") - bench{
       org.json4s.native.JsonMethods.parse(txt)
     }
-    'play - bench{
+    test("play") - bench{
       play.api.libs.json.Json.parse(txt)
     }
-    'combinators - bench{
+    test("combinators") - bench{
       scala.util.parsing.json.JSON.parseRaw(txt).get
     }
   }

@@ -79,27 +79,27 @@ object Json{
 object JsonTests extends TestSuite{
   import Json._
   val tests = Tests{
-    'pass {
-      def test(p: P[_] => P[Any], s: String) = parse(s, p) match{
+    test("pass"){
+      def check(p: P[_] => P[Any], s: String) = parse(s, p) match{
         case Parsed.Success(v, i) =>
           val expectedIndex = s.length
           assert(i == expectedIndex)
         case f: Parsed.Failure => throw new Exception(f.index.toString)
       }
 
-      'parts {
-        * - test(number(_), "12031.33123E-2")
-        * - test(string(_), "\"i am a cow lol omfg\"")
-        * - test(array(_), """[1, 2, "omg", ["wtf", "bbq", 42]]""")
-        * - test(obj(_), """{"omg": "123", "wtf": 456, "bbq": "789"}""")
+      test("parts"){
+        test - check(number(_), "12031.33123E-2")
+        test - check(string(_), "\"i am a cow lol omfg\"")
+        test - check(array(_), """[1, 2, "omg", ["wtf", "bbq", 42]]""")
+        test - check(obj(_), """{"omg": "123", "wtf": 456, "bbq": "789"}""")
       }
-      'jsonExpr - {
+      test("jsonExpr"){
         val Parsed.Success(value, _) =
           parse("""{"omg": "123", "wtf": 12.4123}""", jsonExpr(_))
 
         assert(value == Js.Obj("omg" -> Js.Str("123"), "wtf" -> Js.Num(12.4123)))
       }
-      'bigJsonExpr - test(jsonExpr(_), """
+      test("bigJsonExpr") - check(jsonExpr(_), """
             {
                 "firstName": "John",
                 "lastName": "Smith",
@@ -123,7 +123,7 @@ object JsonTests extends TestSuite{
             }
       """)
     }
-//    'perf{
+//    test("perf"){
 //      val input = getClass.getResourceAsStream("/fastparse/test.json")
 //
 //      val buffer = new java.io.BufferedReader(new java.io.InputStreamReader(input))
@@ -138,7 +138,7 @@ object JsonTests extends TestSuite{
 //      println(txt)
 //      count
 //    }
-    'fail{
+    test("fail"){
       def check(s: String, expectedError: String, expectedShortError: String) = {
         parse(s, jsonExpr(_)) match{
           case s: Parsed.Success[_] => throw new Exception("Parsing should have failed:")
@@ -148,7 +148,7 @@ object JsonTests extends TestSuite{
 //            assert(error == expected)
         }
       }
-      * - check(
+      test - check(
         """
         }
             "firstName": "John",
@@ -179,7 +179,7 @@ object JsonTests extends TestSuite{
           (obj | array | string | true | false | null | number):9 ..."}\n        "
         """
       )
-      * - check(
+      test - check(
         """
         {
             firstName": "John",
@@ -210,7 +210,7 @@ object JsonTests extends TestSuite{
           "}":23 ..."firstName\""
         """
       )
-      * - check(
+      test - check(
         """
         {
             "firstName" "John",
@@ -241,7 +241,7 @@ object JsonTests extends TestSuite{
           ":":34 ..." \"John\",\n "
         """
       )
-      * - check(
+      test - check(
         """
         {
             "firstName": "John,
@@ -272,7 +272,7 @@ object JsonTests extends TestSuite{
           "}":56 ..."lastName\":"
         """
       )
-      * - check(
+      test - check(
         """
         {
             "firstName": "John",
@@ -303,7 +303,7 @@ object JsonTests extends TestSuite{
           "}":154 ...": \"21 2nd "
         """
       )
-      * - check(
+      test - check(
         """
         {
             "firstName": "John",
@@ -334,7 +334,7 @@ object JsonTests extends TestSuite{
           "\"":455 ..."{\n        "
         """
       )
-      * - check(
+      test - check(
         """
         {
             "firstName": "John",
@@ -365,7 +365,7 @@ object JsonTests extends TestSuite{
           ":":365 ..." \"home\",\n "
         """
       )
-      * - check(
+      test - check(
         """
         {
             "firstName": "John",
@@ -396,7 +396,7 @@ object JsonTests extends TestSuite{
           "}":411 ..."555-1234\n "
         """
       )
-      * - check(
+      test - check(
         """
         {
             "firstName": "John",
@@ -427,7 +427,7 @@ object JsonTests extends TestSuite{
           "}":528 ..."555-4567\n "
         """
       )
-      * - check(
+      test - check(
         """
         {
             "firstName": "John",

@@ -22,10 +22,10 @@ object PythonBench extends TestSuite{
     .mkString
 
   val tests = Tests{
-    'fastparse - bench{
+    test("fastparse") - bench{
       fastparse.parse(txt, pythonparse.Statements.file_input(_))
     }
-    'jython - bench{
+    test("jython") - bench{
       org.python.core.ParserFacade.parse(txt, CompileMode.exec, "<test>", CompilerFlags.getCompilerFlags)
     }
   }
