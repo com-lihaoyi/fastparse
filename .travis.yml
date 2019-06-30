@@ -32,11 +32,6 @@ jobs:
   - stage: release
     script:
       - echo "$PGP_SECRET" | base64 --decode | gpg --import
-      - ./mill __[2.11.12].publish --sonatypeCreds "$SONATYPE_USERNAME:$SONATYPE_PASSWORD" --release true --gpgPassphrase "$PGP_PASSPHRASE"
-
-  - stage: release
-    script:
-      - echo "$PGP_SECRET" | base64 --decode | gpg --import
-      - ./mill __[2.13.0-RC1].publish --sonatypeCreds "$SONATYPE_USERNAME:$SONATYPE_PASSWORD" --release true --gpgPassphrase "$PGP_PASSPHRASE"
+      - ./mill __[2.13.0].publish --sonatypeCreds "$SONATYPE_USERNAME:$SONATYPE_PASSWORD" --release true --gpgPassphrase "$PGP_PASSPHRASE"
 
 
