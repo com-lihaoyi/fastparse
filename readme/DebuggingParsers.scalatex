@@ -29,7 +29,7 @@
     @p
         Let's take an example Parser:
 
-    @hl.ref(tests/"ExampleTests.scala", Seq("'debugging", "object Foo"), "check")
+    @hl.ref(tests/"ExampleTests.scala", Seq("\"debugging\"", "object Foo"), "check")
 
     @p
         This is a simple parser that parses some basic arithmetic expressions:
@@ -43,7 +43,7 @@
         If we run the parser on a bad input, though, we get this:
 
 
-    @hl.ref(tests/"ExampleTests.scala", Seq("'debugging", "original", "object Foo", "check", ""))
+    @hl.ref(tests/"ExampleTests.scala", Seq("\"debugging\"", "original", "object Foo", "check", ""))
 
     @p
         As you can see, the error message is pretty generic: "i had a syntax
@@ -67,7 +67,7 @@
             trying that side of the @hl.scala{|}. We can tell FastParse this
             fact by adding @sect.ref{Cuts} @hl.scala{~/} after @hl.scala{"("}
 
-        @hl.ref(tests/"ExampleTests.scala", Seq("'debugging", "cuts", "object Foo"), "check")
+        @hl.ref(tests/"ExampleTests.scala", Seq("\"debugging\"", "cuts", "object Foo"), "check")
 
         @p
             Now, once FastParse sees a @hl.scala{"("}, it can no longer
@@ -76,7 +76,7 @@
             because @hl.scala{num} failed. Then the error message becomes much
             more precise and useful:
 
-        @hl.ref(tests/"ExampleTests.scala", Seq("'debugging", "cut", "object Foo", "check", ""))
+        @hl.ref(tests/"ExampleTests.scala", Seq("\"debugging\"", "cut", "object Foo", "check", ""))
 
 
     @sect{Using Log}
@@ -87,7 +87,7 @@
             attempted, we can add @hl.scala{.log()} to those to parsers to
             find out:
 
-        @hl.ref(tests/"ExampleTests.scala", Seq("'debugging", "log", "object Foo"), "Foo.expr(_)")
+        @hl.ref(tests/"ExampleTests.scala", Seq("\"debugging\"", "log", "object Foo"), "Foo.expr(_)")
 
         @p
             Note that @hl.scala{.log} by default prints out the name of the
@@ -99,12 +99,12 @@
         @p
             Then when you run it on an invalid input:
 
-        @hl.ref(tests/"ExampleTests.scala", Seq("'debugging", "log", "object Foo", "Foo.expr(_)"), "")
+        @hl.ref(tests/"ExampleTests.scala", Seq("\"debugging\"", "log", "object Foo", "Foo.expr(_)"), "")
 
         @p
             You get a dump of everything the logged parsers are trying to do
 
-        @hl.ref(tests/"ExampleTests.scala", Seq("'debugging", "log", "val expected", ""), "\"\"\"")
+        @hl.ref(tests/"ExampleTests.scala", Seq("\"debugging\"", "log", "val expected", ""), "\"\"\"")
 
         @p
             @hl.scala{+} is when a parser is started, @hl.scala{-} is when it
@@ -191,7 +191,7 @@
             to count how many times each parser in the example @sect.ref{Math}
             parser gets called when you parse a simple arithmetic expression:
 
-        @hl.ref(tests/"MathTests.scala", Seq("'instrument", "simple", ""))
+        @hl.ref(tests/"MathTests.scala", Seq("\"instrument\"", "simple", ""))
 
         @p
             This is useful for ad-hoc investigation of what your parser is doing:
@@ -202,7 +202,7 @@
             parser is run. You can also run code @i{after} the parser is
             run:
 
-        @hl.ref(tests/"MathTests.scala", Seq("'instrument", "'continuation", ""), "// Good Parse")
+        @hl.ref(tests/"MathTests.scala", Seq("\"instrument\"", "\"continuation\"", ""), "// Good Parse")
 
         @p
             In this case, we are using it to count not just how many times each
@@ -210,13 +210,13 @@
             succeeds and fails. We can parse a "good" input and see that
             most of the attempts by named parser succeed:
 
-        @hl.ref(tests/"MathTests.scala", Seq("'instrument", "'continuation", "", "// Good Parse"), "// Bad Parse")
+        @hl.ref(tests/"MathTests.scala", Seq("\"instrument\"", "\"continuation\"", "", "// Good Parse"), "// Bad Parse")
 
         @p
             And we can parse invalid input, and see that it results in many of
             the named parsers failing repeatedly in the course of the parse:
 
-        @hl.ref(tests/"MathTests.scala", Seq("'instrument", "'continuation", "", "// Bad Parse"))
+        @hl.ref(tests/"MathTests.scala", Seq("\"instrument\"", "\"continuation\"", "", "// Bad Parse"))
 
         @p
             Which is what you would expect, since the parse overall failed!

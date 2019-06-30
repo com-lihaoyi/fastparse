@@ -39,7 +39,7 @@
         @p
             This is a small example, but it works. We check it to verify that every parse results in the expected integer:
 
-        @hl.ref(tests/"MathTests.scala", Seq("'pass", ""))
+        @hl.ref(tests/"MathTests.scala", Seq("\"pass\"", ""))
 
         @p
             Try it out yourself! Remember that it does not handle whitespace:
@@ -144,12 +144,12 @@
         @p
             We can verify that this parser builds the JSON tree that we expect:
 
-        @hl.ref(tests/"JsonTests.scala", Seq("'jsonExpr", ""))
+        @hl.ref(tests/"JsonTests.scala", Seq("\"jsonExpr\"", ""))
 
         @p
             And that it provides good error messages in the case of mal-formed JSON, even for moderately-sized fragemnts
 
-        @val failPath = Seq("'fail", "* -", "* -", "* -", "* -", "* -", "* -", "\"\"\"", "")
+        @val failPath = Seq("\"fail\"", "test -", "test -", "test -", "test -", "test -", "test -", "\"\"\"", "")
         @hl.ref(tests/"JsonTests.scala", failPath, "\"\"\"")
 
         @hl.ref(tests/"JsonTests.scala", failPath ++ Seq("\"\"\"", "\"\"\"", ""), "\"\"\"")

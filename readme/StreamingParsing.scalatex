@@ -9,7 +9,7 @@
         @hl.scala{Iterator[String]} instead of a @code{String} to the
         @hl.scala{fastparse.parse} method.
 
-    @hl.ref(tests/"IteratorTests.scala", Seq("'basic", ""))
+    @hl.ref(tests/"IteratorTests.scala", Seq("\"basic\"", ""))
 
     @p
         Note that fastparse does not parse @hl.scala{Iterator[Char]} or

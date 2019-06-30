@@ -4,7 +4,7 @@
 @val main = wd/'fastparse/'src/'fastparse
 
 @hl.ref(tests/"MathTests.scala", "import fastparse._", "val tests")
-@hl.ref(tests/"MathTests.scala", Seq("'pass", ""))
+@hl.ref(tests/"MathTests.scala", Seq("\"pass\"", ""))
 @div(id := "splashdiv")
 @script(raw("""demo.DemoMain.math(document.getElementById("splashdiv"))"""))
 @p
