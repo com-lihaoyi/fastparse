@@ -30,6 +30,14 @@
         Compatible with both Scala-JVM and Scala.js
 
 @p
+    This documentation serves as a thorough reference on how to use this library.
+    For a more hands-on introduction, take a look at the following blog post:
+
+@ul
+    @li
+        @lnk("Easy Parsing with Parser Combinators", "http://www.lihaoyi.com/post/EasyParsingwithParserCombinators.html")
+
+@p
     FastParse is a project by @lnk("Li Haoyi", "http://www.lihaoyi.com/"). If
     you use FastParse and enjoyed it, please chip in to support our development
     at @lnk("https://www.patreon.com/lihaoyi", "https://www.patreon.com/lihaoyi").
