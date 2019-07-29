@@ -6,6 +6,11 @@ to use Fastparse, you probably will want to check out the documentation:
 
 - [Documentation](http://lihaoyi.github.io/fastparse)
 
+For a good hands-on tutorial working through the basics of how to use this
+library, check out the following blog post:
+
+- [Easy Parsing with Parser Combinators](http://www.lihaoyi.com/post/EasyParsingwithParserCombinators.html)
+
 This readme contains some developer docs, if you intend on working on the
 fastparse repo, not just using it as a library.
 
