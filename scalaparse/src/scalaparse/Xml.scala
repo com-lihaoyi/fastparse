@@ -8,71 +8,71 @@ import scala.language.implicitConversions
 import NoWhitespace._
 
 trait Xml {
-  def WL[_: P]: P0
-  def WS[_: P]: P0
-  def Block[_: P]: P0
-  def Patterns[_: P]: P[Unit]
-  def XmlExpr[_: P] = P( WL ~ Xml.XmlContent.rep(min = 1, sep = WL.?) )
-  def XmlPattern[_: P] = P( WL ~ Xml.ElemPattern )
+  def WL[$: P]: P0
+  def WS[$: P]: P0
+  def Block[$: P]: P0
+  def Patterns[$: P]: P[Unit]
+  def XmlExpr[$: P] = P( WL ~ Xml.XmlContent.rep(min = 1, sep = WL.?) )
+  def XmlPattern[$: P] = P( WL ~ Xml.ElemPattern )
 
   private[this] object Xml {
-    def Element[_: P] = P( TagHeader ~/ ("/>" | ">" ~/ Content ~/ ETag ) )
-    def TagHeader[_: P] = P( "<" ~ Name ~/ (WL ~ Attribute).rep ~ WL.? )
-    def ETag[_: P] = P( "</" ~ Name ~ WL.? ~ ">" )
+    def Element[$: P] = P( TagHeader ~/ ("/>" | ">" ~/ Content ~/ ETag ) )
+    def TagHeader[$: P] = P( "<" ~ Name ~/ (WL ~ Attribute).rep ~ WL.? )
+    def ETag[$: P] = P( "</" ~ Name ~ WL.? ~ ">" )
 
-    def Attribute[_: P] = P( Name ~ Eq ~/ AttValue )
-    def Eq[_: P] = P( WL.? ~ "=" ~ WL.? )
-    def AttValue[_: P] = P(
+    def Attribute[$: P] = P( Name ~ Eq ~/ AttValue )
+    def Eq[$: P] = P( WL.? ~ "=" ~ WL.? )
+    def AttValue[$: P] = P(
       "\"" ~/ (CharQ | Reference).rep ~ "\"" |
         "'" ~/ (CharA | Reference).rep ~ "'" |
         ScalaExpr
     )
 
-    def Content[_: P]        = P( (CharData | Reference | ScalaExpr | XmlContent).rep )
-    def XmlContent[_: P]: P[Unit] = P( Unparsed | CDSect | PI | Comment | Element )
+    def Content[$: P]        = P( (CharData | Reference | ScalaExpr | XmlContent).rep )
+    def XmlContent[$: P]: P[Unit] = P( Unparsed | CDSect | PI | Comment | Element )
 
-    def ScalaExpr[_: P] = P( "{" ~ WS ~ Block ~ WL ~ "}" )
+    def ScalaExpr[$: P] = P( "{" ~ WS ~ Block ~ WL ~ "}" )
 
-    def Unparsed[_: P] = P( UnpStart ~/ UnpData ~ UnpEnd )
-    def UnpStart[_: P] = P( "<xml:unparsed" ~/ (WL ~ Attribute).rep ~ WL.? ~ ">" )
-    def UnpEnd[_: P] = P( "</xml:unparsed>" )
-    def UnpData[_: P] = P( (!UnpEnd ~ AnyChar).rep )
+    def Unparsed[$: P] = P( UnpStart ~/ UnpData ~ UnpEnd )
+    def UnpStart[$: P] = P( "<xml:unparsed" ~/ (WL ~ Attribute).rep ~ WL.? ~ ">" )
+    def UnpEnd[$: P] = P( "</xml:unparsed>" )
+    def UnpData[$: P] = P( (!UnpEnd ~ AnyChar).rep )
 
-    def CDSect[_: P] = P( CDStart ~/ CData ~ CDEnd )
-    def CDStart[_: P] = P( "<![CDATA[" )
-    def CData[_: P] = P( (!"]]>" ~ Char).rep )
-    def CDEnd[_: P] = P( "]]>" )
+    def CDSect[$: P] = P( CDStart ~/ CData ~ CDEnd )
+    def CDStart[$: P] = P( "<![CDATA[" )
+    def CData[$: P] = P( (!"]]>" ~ Char).rep )
+    def CDEnd[$: P] = P( "]]>" )
 
-    def Comment[_: P] = P( "<!--" ~/ ComText ~ "-->" )
-    def ComText[_: P] = P( (!"--" ~ Char).rep ~ ("-" ~ &("--")).? )
+    def Comment[$: P] = P( "<!--" ~/ ComText ~ "-->" )
+    def ComText[$: P] = P( (!"--" ~ Char).rep ~ ("-" ~ &("--")).? )
 
-    def PI[_: P] = P( "<?" ~ PITarget ~ PIProcText.? ~ "?>" )
-    def PITarget[_: P] = P( !(("X" | "x") ~ ("M" | "m") ~ ("L" | "l")) ~ Name )
-    def PIProcText[_: P] = P( WL ~ (!"?>" ~ Char).rep )
+    def PI[$: P] = P( "<?" ~ PITarget ~ PIProcText.? ~ "?>" )
+    def PITarget[$: P] = P( !(("X" | "x") ~ ("M" | "m") ~ ("L" | "l")) ~ Name )
+    def PIProcText[$: P] = P( WL ~ (!"?>" ~ Char).rep )
 
-    def Reference[_: P] = P( EntityRef | CharRef )
-    def EntityRef[_: P] = P( "&" ~ Name ~/ ";" )
-    def CharRef[_: P] = P( "&#" ~ Num ~/ ";" | "&#x" ~ HexNum ~/ ";" )
-    def Num[_: P] = P( CharIn("0-9").rep )
-    def HexNum[_: P] = P( CharIn("0-9a-fA-F").rep )
+    def Reference[$: P] = P( EntityRef | CharRef )
+    def EntityRef[$: P] = P( "&" ~ Name ~/ ";" )
+    def CharRef[$: P] = P( "&#" ~ Num ~/ ";" | "&#x" ~ HexNum ~/ ";" )
+    def Num[$: P] = P( CharIn("0-9").rep )
+    def HexNum[$: P] = P( CharIn("0-9a-fA-F").rep )
 
-    def CharData[_: P] = P( (!"{" ~ Char1 | "{{").rep(1) )
+    def CharData[$: P] = P( (!"{" ~ Char1 | "{{").rep(1) )
 
-    def Char[_: P] = P( AnyChar )
-    def Char1[_: P] = P( !("<" | "&") ~ Char )
-    def CharQ[_: P] = P( !"\"" ~ Char1 )
-    def CharA[_: P] = P( !"'" ~ Char1 )
+    def Char[$: P] = P( AnyChar )
+    def Char1[$: P] = P( !("<" | "&") ~ Char )
+    def CharQ[$: P] = P( !"\"" ~ Char1 )
+    def CharA[$: P] = P( !"'" ~ Char1 )
 
-    def Name[_: P] = P( NameStart ~ NameChar.rep )
-    def NameStart[_: P] = P( CharPred(isNameStart) ).opaque("NameStart")
-    def NameChar[_: P] = P( CharPred(isNameChar) ).opaque("NameChar")
+    def Name[$: P] = P( NameStart ~ NameChar.rep )
+    def NameStart[$: P] = P( CharPred(isNameStart) ).`opaque`("NameStart")
+    def NameChar[$: P] = P( CharPred(isNameChar) ).`opaque`("NameChar")
 
-    def ElemPattern[_: P]: P[Unit] = P( TagPHeader ~/ ("/>" | ">" ~/ ContentP ~/ ETag ) )
-    def TagPHeader[_: P] = P( "<" ~ Name ~ WL.?  )
+    def ElemPattern[$: P]: P[Unit] = P( TagPHeader ~/ ("/>" | ">" ~/ ContentP ~/ ETag ) )
+    def TagPHeader[$: P] = P( "<" ~ Name ~ WL.?  )
 
-    def ContentP[_: P]: P[Unit]  = P( ( CharDataP | ScalaPatterns | ElemPattern ).rep )
-    def ScalaPatterns[_: P] = P( "{" ~ Patterns ~ WL ~ "}" )
-    def CharDataP[_: P] = P( "&" ~ CharData.? | CharData ) // matches weirdness of scalac parser on xml reference.
+    def ContentP[$: P]: P[Unit]  = P( ( CharDataP | ScalaPatterns | ElemPattern ).rep )
+    def ScalaPatterns[$: P] = P( "{" ~ Patterns ~ WL ~ "}" )
+    def CharDataP[$: P] = P( "&" ~ CharData.? | CharData ) // matches weirdness of scalac parser on xml reference.
 
     //================================================================================
     // From `scala.xml.parsing.TokenTests`

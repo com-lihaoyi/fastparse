@@ -10,8 +10,8 @@ object RegressionTests extends TestSuite{
   import Ast.operator._
   import Ast.unaryop._
   import Ast._
-  implicit def strName(s: Symbol) = Name(identifier(s.name), Load)
-  implicit def strIdent(s: Symbol) = identifier(s.name)
+  implicit def strName(s: Symbol): Name = Name(identifier(s.name), Load)
+  implicit def strIdent(s: Symbol): identifier = identifier(s.name)
   val tests = Tests {
     test("multiple_comments") - TestUtils.check(
       Statements.file_input(_),

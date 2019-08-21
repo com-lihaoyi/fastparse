@@ -112,7 +112,7 @@ class FastParseParser{
       "|||".~/ ~~ CharsWhileIn(" \t", 0) ~~ "\n" ~~ tripleBarStringHead.flatMap { case (pre, w, head) =>
         tripleBarCache.getOrElseUpdate(w, tripleBarStringBody(w)).map(pre ++ Seq(head, "\n") ++ _)
       } ~~ "\n" ~~ CharsWhileIn(" \t", min=0) ~~ "|||"
-  ).map(_.mkString).opaque()
+  ).map(_.mkString).`opaque`()
 
   val tripleBarStringHead = P(
     (CharsWhileIn(" \t", min=0) ~~ "\n".!).repX ~~
@@ -266,7 +266,7 @@ class FastParseParser{
   val bind = P( Index ~ id ~ ("(" ~/ params.? ~ ")").?.map(_.flatten) ~ "=" ~ expr ).map(Expr.Bind.tupled)
   val args = P( ((id ~ "=").? ~ expr).rep(sep = ",") ~ ",".? ).flatMap{x =>
     if (x.sliding(2).exists{case Seq(l, r) => l._1.isDefined && r._1.isEmpty case _ => false}) {
-      Fail.opaque("no positional params after named params")
+      Fail.`opaque`("no positional params after named params")
     } else Pass.map(_ => Expr.Args(x))
 
 
@@ -280,7 +280,7 @@ class FastParseParser{
       else seen.add(k)
     }
     if (overlap == null) Pass.map(_ => Expr.Params(x))
-    else Fail.opaque("no duplicate parameter: " + overlap)
+    else Fail.`opaque`("no duplicate parameter: " + overlap)
 
   }
 

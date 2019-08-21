@@ -59,13 +59,13 @@ object ParsingTests extends TestSuite{
       check(implicit c => "Hello".!.rep, ("HelloHello!", 2), Success(Seq(), 2))
       check(implicit c => "Hello".!.rep, ("HelloHello!", 5), Success(Seq("Hello"), 10))
       check(implicit c => "Hello".!.rep(1), ("HelloHello!", 0), Success(Seq("Hello", "Hello"), 10))
-      check(implicit c => "Hello".!.rep(1, max = 1), ("HelloHello!", 0), Success(Seq("Hello"), 5))
-      check(implicit c => "Hello".!.rep(1, max = 2), ("HelloHello!", 0), Success(Seq("Hello", "Hello"), 10))
-      check(implicit c => "Hello".!.rep(1, max = 2), ("HelloHelloHello!", 0), Success(Seq("Hello", "Hello"), 10))
+      check(implicit c => "Hello".!.rep(0, null, 1, -1), ("HelloHello!", 0), Success(Seq("Hello"), 5))
+      check(implicit c => "Hello".!.rep(0, null, 2, -1), ("HelloHello!", 0), Success(Seq("Hello", "Hello"), 10))
+      check(implicit c => "Hello".!.rep(0, null, 2, -1), ("HelloHelloHello!", 0), Success(Seq("Hello", "Hello"), 10))
 
-      check(implicit c => "Hello".!.rep(0, max=0), ("HelloHello!", 0), Success(Seq(), 0))
+      check(implicit c => "Hello".!.rep(0, null, 0, -1), ("HelloHello!", 0), Success(Seq(), 0))
       // identical :  check( ("Hello" | Pass).!, ("HelloHello!", 0), Success("Hello", 5))
-      check(implicit c => "Hello".!.rep(0, max=1), ("HelloHello!", 0), Success(Seq("Hello"), 5))
+      check(implicit c => "Hello".!.rep(0, null, 1, -1), ("HelloHello!", 0), Success(Seq("Hello"), 5))
 
       checkFail(implicit c => "Hello".rep(1), ("HelloHello!", 2), 2)
       checkFail(implicit c => "Hello".rep ~ "bye" ~ End, ("HelloHello!", 0), 10)
@@ -78,7 +78,7 @@ object ParsingTests extends TestSuite{
       check(implicit c => ("Hello" | "Bye").rep.!, ("HelloBye", 0), Success("HelloBye", 8))
     }
     test("sequence"){
-      def p[_: P] = "Hello".! ~ "Bye".!
+      def p[$: P] = "Hello".! ~ "Bye".!
       check(implicit c => p, ("HelloBye", 0), Success(("Hello", "Bye"), 8))
       check(implicit c => "Hello".! ~ "Bye".! ~ "!", ("HelloBye!", 0), Success(("Hello", "Bye"), 9))
       check(implicit c => "Hello".! ~ "Bye".! ~ "!".!, ("HelloBye!", 0), Success(("Hello", "Bye", "!"), 9))
@@ -92,7 +92,7 @@ object ParsingTests extends TestSuite{
       test("local"){
         // Make sure that cuts only apply to enclosing
         test("either"){
-          def parser[_: P] = P("hello" | "world" ~ "x" ~/ ("i" | "am" ~ "a") ~ "cow" | "moo")
+          def parser[$: P] = P("hello" | "world" ~ "x" ~/ ("i" | "am" ~ "a") ~ "cow" | "moo")
 
           // Failing before the cut backtracks all the way out
           val Parsed.Failure(_,0,_) = parse("worldlols", parser(_))
@@ -104,7 +104,7 @@ object ParsingTests extends TestSuite{
           // Failing *after* the nested `|` block again prevents backtracking
           val Parsed.Failure(_,9,_) = parse("worldxama", parser(_))
 
-          def parser2[_: P] = P("hello" | "world" ~ "x" ~ ("i" | "am" ~/ "a" ~ "b") ~ "a" ~ "cow" | "moo")
+          def parser2[$: P] = P("hello" | "world" ~ "x" ~ ("i" | "am" ~/ "a" ~ "b") ~ "a" ~ "cow" | "moo")
 
           // Failing before the cut backtracks all the way out
           val Parsed.Failure(_,0,_) = parse("worldlols", parser2(_))
@@ -117,7 +117,7 @@ object ParsingTests extends TestSuite{
           val Parsed.Failure(_,11,_) = parse("worldxamaba", parser2(_))
         }
         test("optional"){
-          def parser[_: P] = P("world" ~ "x" ~/ ("am" ~ "a").? ~ "cow").?
+          def parser[$: P] = P("world" ~ "x" ~/ ("am" ~ "a").? ~ "cow").?
 
           // Failing before the cut backtracks all the way out
           val Parsed.Success((), 0) = parse("worldlols", parser(_))
@@ -129,7 +129,7 @@ object ParsingTests extends TestSuite{
           // Failing *after* the nested `|` block again prevents backtracking
           val Parsed.Failure(_,9,_) = parse("worldxama", parser(_))
 
-          def parser2[_: P] = P("world" ~ "x" ~ ("am" ~/ "a" ~ "b").? ~ "a" ~ "cow").?
+          def parser2[$: P] = P("world" ~ "x" ~ ("am" ~/ "a" ~ "b").? ~ "a" ~ "cow").?
 
           // Failing before the cut backtracks all the way out
           val Parsed.Success((), 0) = parse("worldlols", parser2(_))
@@ -142,7 +142,7 @@ object ParsingTests extends TestSuite{
           val Parsed.Failure(_,11,_) = parse("worldxamaba", parser2(_))
         }
         test("rep"){
-          def parser[_: P] = P("world" ~ "x" ~/ ("am" ~ "a").rep ~ "cow").rep
+          def parser[$: P] = P("world" ~ "x" ~/ ("am" ~ "a").rep ~ "cow").rep
 
           // Failing before the cut backtracks all the way out
           val Parsed.Success((), 0) = parse("worldlols", parser(_))
@@ -154,7 +154,7 @@ object ParsingTests extends TestSuite{
           // Failing *after* the nested `|` block again prevents backtracking
           val Parsed.Failure(_,9,_) = parse("worldxama", parser(_))
 
-          def parser2[_: P] = P("world" ~ "x" ~ ("am" ~/ "a" ~ "b").rep ~ "a" ~ "cow").rep
+          def parser2[$: P] = P("world" ~ "x" ~ ("am" ~/ "a" ~ "b").rep ~ "a" ~ "cow").rep
 
           // Failing before the cut backtracks all the way out
           val Parsed.Success((), 0) = parse("worldlols", parser2(_))
@@ -178,8 +178,8 @@ object ParsingTests extends TestSuite{
         check(implicit c => ("Hello" ~ "Bye").rep, ("HelloByeHello", 0), Success((), 8))
         checkFail(implicit c => ("Hello" ~/ "Bye").rep, ("HelloByeHello", 0), 13)
         check(implicit c => ("Hello" ~ "Bye").rep, ("HelloByeHello", 0), Success((), 8))
-        checkFail(implicit c => "Hello".rep(sep = "Bye" ~/ Pass), ("HelloBye", 0), 8)
-        checkFail(implicit c => "Hello".rep(sep = "Bye"./), ("HelloBye", 0), 8)
+        checkFail(implicit c => "Hello".rep(0, "Bye" ~/ Pass, 1, -1), ("HelloBye", 0), 8)
+        checkFail(implicit c => "Hello".rep(0, "Bye"./, 1, -1), ("HelloBye", 0), 8)
       }
       test("optional"){
         check(implicit c => ("Hello" ~ "Bye").?, ("HelloBoo", 0), Success((), 0))
@@ -199,7 +199,7 @@ object ParsingTests extends TestSuite{
         // &() disables cuts: whether it succeeds or fails, the whole point
         // of &() is to backtrack and re-parse things
         check(implicit c => &("Hello" ~/ "Bye") ~ "lol" | "", ("HelloBoo", 0), Success((), 0))
-        def p[_: P] = P(  &("Hello" ~/ "Boo") ~ "lol" | "".log("<empty>") )
+        def p[$: P] = P(  &("Hello" ~/ "Boo") ~ "lol" | "".log("<empty>") )
         check(implicit c => p, ("HelloBoo", 0), Success((), 0))
       }
     }
@@ -209,7 +209,7 @@ object ParsingTests extends TestSuite{
       checkFail(implicit c => StringInIgnoreCase("abc","def","ghi"), ("bcde", 0), 0)
     }
     test("failureMsg"){
-      def parser[_: P] = P( "hello" | "world" )
+      def parser[$: P] = P( "hello" | "world" )
       val f = parse("cow", parser(_)).asInstanceOf[Parsed.Failure]
       val msg = f.trace().msg
       msg ==> """Expected ("hello" | "world"):1:1, found "cow" """.trim
@@ -223,7 +223,7 @@ object ParsingTests extends TestSuite{
 
   def checkWhitespaceFlatMap() = {
     import fastparse._, SingleLineWhitespace._
-    def parser[_: P] = P( CharsWhileIn("a").!.flatMap{n => "b" * n.length} ~ End )
+    def parser[$: P] = P( CharsWhileIn("a").!.flatMap{n => "b" * n.length} ~ End )
     val Parsed.Success(_, _) = parse("aaa bbb", parser(_))
     val Parsed.Success(_, _) = parse("aa    bb", parser(_))
     val Parsed.Failure(_, _, _) = parse("aaa bb", parser(_))
@@ -232,7 +232,7 @@ object ParsingTests extends TestSuite{
 
   def checkNonWhitespaceFlatMap() = {
     import fastparse._, SingleLineWhitespace._
-    def parser[_: P] = P( CharsWhileIn("a").!.flatMapX{n => "b" * n.length} ~ End )
+    def parser[$: P] = P( CharsWhileIn("a").!.flatMapX{n => "b" * n.length} ~ End )
     val Parsed.Success(_, _) = parse("aaabbb", parser(_))
     val Parsed.Success(_, _) = parse("aabb", parser(_))
     val Parsed.Failure(_, _, _) = parse("aaa bbb", parser(_))

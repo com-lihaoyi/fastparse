@@ -16,8 +16,8 @@ object UnitTests extends TestSuite{
     import Ast.operator._
     import Ast.unaryop._
     import Ast._
-    implicit def strName(s: Symbol) = Name(identifier(s.name), Load)
-    implicit def strIdent(s: Symbol) = identifier(s.name)
+    implicit def strName(s: Symbol): Name = Name(identifier(s.name), Load)
+    implicit def strIdent(s: Symbol): identifier = identifier(s.name)
     test("exprs"){
       def expr(expected: Ast.expr, s: String*) = s.map(TestUtils.check(Expressions.test(_), expected, _)).head
 

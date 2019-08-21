@@ -81,7 +81,7 @@ object FailureTests extends TestSuite{
         |  throw 1
         |}
       """.stripMargin,
-      aggregate = """("." | TypeArgs | ArgList | `_` | Id | "=>" | `=` | MatchAscriptionSuffix | "," | `:` | ")")""",
+      aggregate = """("." | TypeArgs | ArgList | _wildcard | Id | "=>" | `=` | MatchAscriptionSuffix | "," | `:` | ")")""",
       terminals = null,
       found ="}"
     )
@@ -93,7 +93,7 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      aggregate = """("=>" | `:` | "." | TypeArgs | ArgList | `_` | Id | `=` | MatchAscriptionSuffix | Semis | "}")""",
+      aggregate = """("=>" | `:` | "." | TypeArgs | ArgList | _wildcard | Id | `=` | MatchAscriptionSuffix | Semis | "}")""",
       terminals = null,
       found ="1\n"
     )
@@ -117,7 +117,7 @@ object FailureTests extends TestSuite{
         | filename.asInstanceOf 10
         |}
       """.stripMargin,
-      aggregate = """("." | TypeArgs | ArgList | `_` | Id | "=>" | `=` | MatchAscriptionSuffix | Semis | "}")""",
+      aggregate = """("." | TypeArgs | ArgList | _wildcard | Id | "=>" | `=` | MatchAscriptionSuffix | Semis | "}")""",
       terminals = null,
       found = "10"
     )
@@ -220,7 +220,7 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      aggregate = """(WL ~ "." | WL ~ TypeArgs | NotNewline ~ ArgList | `_` | InfixSuffix | PostFix | "=>" | `=` | MatchAscriptionSuffix | Semis | "}")""",
+      aggregate = """(WL ~ "." | WL ~ TypeArgs | NotNewline ~ ArgList | _wildcard | InfixSuffix | PostFix | "=>" | `=` | MatchAscriptionSuffix | Semis | "}")""",
       terminals = null,
       found = ")"
     )
@@ -230,7 +230,7 @@ object FailureTests extends TestSuite{
         |   A(A(A(A(A(A(A(A(A(A(A(A(A(A(A(A()))))))))))))))
         |}
       """.stripMargin,
-      aggregate = """("." | TypeArgs | ArgList | `_` | Id | "=>" | `=` | MatchAscriptionSuffix | "," | `:` | ")")""",
+      aggregate = """("." | TypeArgs | ArgList | _wildcard | Id | "=>" | `=` | MatchAscriptionSuffix | "," | `:` | ")")""",
       terminals = null,
       found = "}"
     )
@@ -775,7 +775,7 @@ object FailureTests extends TestSuite{
     s"""
        |import x.{y=>}
       """.stripMargin,
-    aggregate = """(Id | `_`)""",
+    aggregate = """(Id | _wildcard)""",
       terminals = null,
     found = "}"
   )
@@ -791,7 +791,7 @@ object FailureTests extends TestSuite{
     s"""
        |object X{type T = A with}
       """.stripMargin,
-    aggregate = """(TupleType | Literal | TypeId | `_`)""",
+    aggregate = """(TupleType | Literal | TypeId | _wildcard)""",
       terminals = null,
     found = "}"
   )
@@ -807,7 +807,7 @@ object FailureTests extends TestSuite{
     s"""
        |object X{(2,)}
       """.stripMargin,
-    aggregate = """(FloatSuffix | "L" | "l" | WL ~ "." | WL ~ TypeArgs | Pass ~ ArgList | `_` | InfixSuffix | PostFix | "=>" | `=` | MatchAscriptionSuffix | "," ~ Expr | "," ~ WS ~ Newline | ")")""",
+    aggregate = """(FloatSuffix | "L" | "l" | WL ~ "." | WL ~ TypeArgs | Pass ~ ArgList | _wildcard | InfixSuffix | PostFix | "=>" | `=` | MatchAscriptionSuffix | "," ~ Expr | "," ~ WS ~ Newline | ")")""",
       terminals = null,
     found = ",)"
   )
@@ -872,7 +872,7 @@ object FailureTests extends TestSuite{
     s"""
        |object X{type T[,] = A }
       """.stripMargin,
-    aggregate = """(Annot | [+\\-] | Id | `_`)""",
+    aggregate = """(Annot | [+\\-] | Id | _wildcard)""",
       terminals = null,
     found = ",]"
   )
@@ -913,7 +913,7 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      aggregate = """(Annot | Id | `_`)""",
+      aggregate = """(Annot | Id | _wildcard)""",
       terminals = null,
       found = "["
     )
@@ -943,7 +943,7 @@ object FailureTests extends TestSuite{
          |  for(i <- Nil if x: Int => bar) 1
          |}
        """.stripMargin,
-      aggregate = """(TQ | "\"" | "." | WL ~ "." | WL ~ TypeArgs | Pass ~ ArgList | `_` | InfixSuffix | PostFix | Enumerator | ")")""",
+      aggregate = """(TQ | "\"" | "." | WL ~ "." | WL ~ TypeArgs | Pass ~ ArgList | _wildcard | InfixSuffix | PostFix | Enumerator | ")")""",
       terminals = null,
       found = ": Int"
     )

@@ -1,37 +1,7 @@
-sudo: false
+
 language: scala
-stages:
-  - name: test
-  - name: release
-    if: (branch = master AND type = push) OR (tag IS present)
-jobs:
-  include:
-  - script: "./mill __.jvm[2.12.7].test"
-    jdk: oraclejdk9
 
-  - script: "./mill __.jvm[2.13.0].test"
-    jdk: openjdk10
-
-  - script: "./mill __.js[2.12.7].test"
-    jdk: openjdk10
-
-  - script: "./mill __.js[2.13.0].test"
-    jdk: openjdk10
-
-  - script: "./mill all demo.fastOpt perftests.__.compile"
-    jdk: openjdk10
-
-  - script: "./mill demo.fullOpt && sbt readme/run"
-    jdk: oraclejdk8
-
-  - stage: release
-    script:
-      - echo "$PGP_SECRET" | base64 --decode | gpg --import
-      - ./mill __[2.12.7].publish --sonatypeCreds "$SONATYPE_USERNAME:$SONATYPE_PASSWORD" --release true --gpgPassphrase "$PGP_PASSPHRASE"
-
-  - stage: release
-    script:
-      - echo "$PGP_SECRET" | base64 --decode | gpg --import
-      - ./mill __[2.13.0].publish --sonatypeCreds "$SONATYPE_USERNAME:$SONATYPE_PASSWORD" --release true --gpgPassphrase "$PGP_PASSPHRASE"
-
-
+script:
+  - sbt fastparseJVM/compile
+jdk:
+  - oraclejdk8

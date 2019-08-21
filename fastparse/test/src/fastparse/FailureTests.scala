@@ -36,70 +36,70 @@ object FailureTests extends TestSuite{
       }
 
       test("either") - check{
-        def parseB[_: P] = P( "a" | "b" )
-        def parseA[_: P] = P( (parseB | "") ~ "c" )
+        def parseB[$: P] = P( "a" | "b" )
+        def parseA[$: P] = P( (parseB | "") ~ "c" )
         parseA(_)
       }
       test("option") - check{
-        def parseB[_: P] = P( "a" | "b" )
-        def parseA[_: P] = P( parseB.? ~ "c" )
+        def parseB[$: P] = P( "a" | "b" )
+        def parseA[$: P] = P( parseB.? ~ "c" )
         parseA(_)
       }
       test("rep") - check{
-        def parseB[_: P] = P( "a" | "b" )
-        def parseA[_: P] = P( parseB.rep ~ "c" )
+        def parseB[$: P] = P( "a" | "b" )
+        def parseA[$: P] = P( parseB.rep ~ "c" )
         parseA(_)
       }
       test("repApply") - check{
-        def parseB[_: P] = P( "a" | "b" )
-        def parseA[_: P] = P( parseB.rep() ~ "c" )
+        def parseB[$: P] = P( "a" | "b" )
+        def parseA[$: P] = P( parseB.rep(0, null, Int.MaxValue, -1) ~ "c" )
         parseA(_)
       }
       test("repX") - check{
-        def parseB[_: P] = P( "a" | "b" )
-        def parseA[_: P] = P( parseB.repX ~ "c" )
+        def parseB[$: P] = P( "a" | "b" )
+        def parseA[$: P] = P( parseB.repX ~ "c" )
         parseA(_)
       }
       test("repXApply") - check{
-        def parseB[_: P] = P( "a" | "b" )
-        def parseA[_: P] = P( parseB.repX() ~ "c" )
+        def parseB[$: P] = P( "a" | "b" )
+        def parseA[$: P] = P( parseB.repX(0, null, Int.MaxValue, -1) ~ "c" )
         parseA(_)
       }
       test("deep"){
         test("option") - check{
-          def parseC[_: P] = P( "a" | "b" )
-          def parseB[_: P] = P( parseC.rep(1) )
-          def parseA[_: P] = P( parseB.? ~ "c" )
+          def parseC[$: P] = P( "a" | "b" )
+          def parseB[$: P] = P( parseC.rep(1) )
+          def parseA[$: P] = P( parseB.? ~ "c" )
           parseA(_)
         }
         test("either") - check{
-          def parseC[_: P] = P( "a" | "b" )
-          def parseB[_: P] = P( parseC.rep(1) )
-          def parseA[_: P] = P( (parseB | "") ~ "c" )
+          def parseC[$: P] = P( "a" | "b" )
+          def parseB[$: P] = P( parseC.rep(1) )
+          def parseA[$: P] = P( (parseB | "") ~ "c" )
           parseA(_)
         }
         test("rep") - check{
-          def parseC[_: P] = P( "a" | "b" )
-          def parseB[_: P] = P( parseC.rep(1) )
-          def parseA[_: P] = P( parseB.rep ~ "c" )
+          def parseC[$: P] = P( "a" | "b" )
+          def parseB[$: P] = P( parseC.rep(1) )
+          def parseA[$: P] = P( parseB.rep ~ "c" )
           parseA(_)
         }
         test("repApply") - check{
-          def parseC[_: P] = P( "a" | "b" )
-          def parseB[_: P] = P( parseC.rep(1) )
-          def parseA[_: P] = P( parseB.rep() ~ "c" )
+          def parseC[$: P] = P( "a" | "b" )
+          def parseB[$: P] = P( parseC.rep(1) )
+          def parseA[$: P] = P( parseB.rep(0, null, Int.MaxValue, -1) ~ "c" )
           parseA(_)
         }
         test("repX") - check{
-          def parseC[_: P] = P( "a" | "b" )
-          def parseB[_: P] = P( parseC.repX(1) )
-          def parseA[_: P] = P( parseB.repX ~ "c" )
+          def parseC[$: P] = P( "a" | "b" )
+          def parseB[$: P] = P( parseC.repX(1) )
+          def parseA[$: P] = P( parseB.repX ~ "c" )
           parseA(_)
         }
         test("repXApply") - check{
-          def parseC[_: P] = P( "a" | "b" )
-          def parseB[_: P] = P( parseC.repX(1) )
-          def parseA[_: P] = P( parseB.repX() ~ "c" )
+          def parseC[$: P] = P( "a" | "b" )
+          def parseB[$: P] = P( parseC.repX(1) )
+          def parseA[$: P] = P( parseB.repX(0, null, Int.MaxValue, -1) ~ "c" )
           parseA(_)
         }
       }
@@ -108,8 +108,8 @@ object FailureTests extends TestSuite{
     test("misc"){
       import NoWhitespace._
       test("sep"){
-        def parseB[_: P] = P( "a" | "b" )
-        def parseA[_: P] = P( parseB.rep(sep = ",") ~ "c" )
+        def parseB[$: P] = P( "a" | "b" )
+        def parseA[$: P] = P( parseB.rep(0, ",", Int.MaxValue, -1) ~ "c" )
         val f1 @ Parsed.Failure(_, _, _) = parse("ad", parseA(_))
 
         val trace = f1.trace()
@@ -128,8 +128,8 @@ object FailureTests extends TestSuite{
       }
 
       test("sepCut"){
-        def parseB[_: P] = P( "a" | "b" | "c" )
-        def parseA[_: P] = P( parseB.rep(sep = ","./) ~ "d" )
+        def parseB[$: P] = P( "a" | "b" | "c" )
+        def parseA[$: P] = P( parseB.rep(0, ","./, Int.MaxValue, -1) ~ "d" )
         val f1 @ Parsed.Failure(_, _, _) = parse("ax", parseA(_))
         val trace = f1.trace()
 
@@ -148,8 +148,8 @@ object FailureTests extends TestSuite{
         expected = """("b" | "c")""",
         label = "\"c\"",
         parser = {
-          def parseB[_: P] = P("a" ~ "b".?)
-          def parseA[_: P] = P(parseB ~ "c")
+          def parseB[$: P] = P("a" ~ "b".?)
+          def parseA[$: P] = P(parseB ~ "c")
           parseA(_)
         }
       )
@@ -159,7 +159,7 @@ object FailureTests extends TestSuite{
         expected = "\"c\"",
         label = "\"c\"",
         parser = {
-          def parseA[_: P] = P( "a" ~ (("." | ","./) ~ "c").rep ~ "x" )
+          def parseA[$: P] = P( "a" ~ (("." | ","./) ~ "c").rep ~ "x" )
           parseA(_)
         }
       )
@@ -169,10 +169,10 @@ object FailureTests extends TestSuite{
         expected = """("a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "x")""",
         label = "\"x\"",
         parser = {
-          def parseD[_: P] = P( (("m" | "n") | "o").rep )
-          def parseC[_: P] = P( (("g" | "h") | "i").? )
-          def parseB[_: P] = P( ("a" | "b") | "c" | "" )
-          def parseA[_: P] = P(
+          def parseD[$: P] = P( (("m" | "n") | "o").rep )
+          def parseC[$: P] = P( (("g" | "h") | "i").? )
+          def parseB[$: P] = P( ("a" | "b") | "c" | "" )
+          def parseA[$: P] = P(
             parseB ~ ("d" | ("e" | "f") | "") ~
               parseC ~ ("j" | ("k" | "l")).? ~
               parseD ~ ("p" | ("q" | "r")).rep ~
@@ -187,8 +187,8 @@ object FailureTests extends TestSuite{
         label = "\"c\"",
         terminals = "\"c\"",
         parser = {
-          def parseB[_: P] = P( "a" ~ "b".? )
-          def parseA[_: P] = P( (parseB ~ Fail).? ~ "c" )
+          def parseB[$: P] = P( "a" ~ "b".? )
+          def parseA[$: P] = P( (parseB ~ Fail).? ~ "c" )
           parseA(_)
         }
       )
@@ -199,13 +199,13 @@ object FailureTests extends TestSuite{
         label = "(parseB | parseZ)",
         terminals = """("c" | "d" | "x" | "y")""",
         parser = {
-          def parseD[_: P] = P("d")
-          def parseC[_: P] = P("c")
-          def parseX[_: P] = P("x")
-          def parseY[_: P] = P("y")
-          def parseB[_: P] = P(parseC | parseD)
-          def parseZ[_: P] = P(parseX | parseY)
-          def parseA[_: P] = P(parseB | parseZ)
+          def parseD[$: P] = P("d")
+          def parseC[$: P] = P("c")
+          def parseX[$: P] = P("x")
+          def parseY[$: P] = P("y")
+          def parseB[$: P] = P(parseC | parseD)
+          def parseZ[$: P] = P(parseX | parseY)
+          def parseA[$: P] = P(parseB | parseZ)
           parseA(_)
         }
       )
@@ -280,13 +280,13 @@ object FailureTests extends TestSuite{
         input = "ax",
         expected = """("b" | "d")""",
         label = "\"d\"",
-        parser = { implicit c => ("a" ~ "b").rep(sep = Pass) ~ "a" ~ "d" }
+        parser = { implicit c => ("a" ~ "b").rep(0, Pass, Int.MaxValue, -1) ~ "a" ~ "d" }
       )
       test("repXSep") - checkOffset(
         input = "ax",
         expected = """("b" | "d")""",
         label = "\"d\"",
-        parser = { implicit c => ("a" ~ "b").repX(sep = Pass) ~ "a" ~ "d" }
+        parser = { implicit c => ("a" ~ "b").repX(0, Pass, Int.MaxValue, -1) ~ "a" ~ "d" }
       )
       test("rep1") - checkOffset(
         input = "ax",
@@ -387,12 +387,12 @@ object FailureTests extends TestSuite{
 
       'rep -        check{ implicit c => ("a" ~ ("b" ~ "c")).rep ~ "a" ~/ "d" }
 
-      'repApply -   check{ implicit c => ("a" ~ ("b" ~ "c")).rep() ~ "a" ~/ "d" }
+      'repApply -   check{ implicit c => ("a" ~ ("b" ~ "c")).rep(0, null, Int.MaxValue, -1) ~ "a" ~/ "d" }
       'repLeft -    check{ implicit c => (("a" ~ "b") ~ "c").rep ~ "a" ~/ "d" }
       'repX -       check{ implicit c => ("a" ~ ("b" ~ "c")).repX ~ "a" ~/ "d" }
       'repXLeft -   check{ implicit c => (("a" ~ "b") ~ "c").repX ~ "a" ~/ "d" }
-      'repSep -     check{ implicit c => ("a" ~ ("b" ~ "c")).rep(sep = Pass) ~ "a" ~/ "d" }
-      test("repSepLeft") - check{ implicit c => (("a" ~ "b") ~ "c").rep(sep = Pass) ~ "a" ~/ "d" }
+      'repSep -     check{ implicit c => ("a" ~ ("b" ~ "c")).rep(0, Pass, Int.MaxValue, -1) ~ "a" ~/ "d" }
+      test("repSepLeft") - check{ implicit c => (("a" ~ "b") ~ "c").rep(0, Pass, Int.MaxValue, -1) ~ "a" ~/ "d" }
     }
 
     test("whitespace"){

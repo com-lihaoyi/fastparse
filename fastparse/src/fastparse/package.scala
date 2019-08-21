@@ -88,12 +88,12 @@ package object fastparse {
     * messages and stack traces, and by default is taken from the name of the
     * enclosing method.
     */
-  def P[T](t: P[T])(implicit name: sourcecode.Name, ctx: P[_]): P[T] = macro MacroImpls.pMacro[T]
+  def P[T](t: P[T])(implicit name: sourcecode.Name, ctx: P[_]): P[T] = ??? // macro MacroImpls.pMacro[T]
 
   /**
     * Parses an exact string value.
     */
-  implicit def LiteralStr(s: String)(implicit ctx: P[Any]): P[Unit] = macro MacroImpls.literalStrMacro
+  implicit def LiteralStr(s: String)(implicit ctx: P[Any]): P[Unit] = ??? // macro MacroImpls.literalStrMacro
 
   /**
     * Parses a string value case-insensitively
@@ -110,7 +110,7 @@ package object fastparse {
   /**
     * Provides [[EagerOps]] extension methods on [[String]]
     */
-  implicit def EagerOpsStr(parse0: String)(implicit ctx: P[Any]): fastparse.EagerOps[Unit] = macro MacroImpls.eagerOpsStrMacro
+  implicit def EagerOpsStr(parse0: String)(implicit ctx: P[Any]): fastparse.EagerOps[Unit] = ??? // macro MacroImpls.eagerOpsStrMacro
 
 
   /**
@@ -121,7 +121,7 @@ package object fastparse {
       * Plain cut operator. Runs the parser, and if it succeeds, backtracking
       * past that point is now prohibited
       */
-    def /(implicit ctx: P[_]): P[T] = macro MacroImpls.cutMacro[T]
+    def /(implicit ctx: P[_]): P[T] = ??? // macro MacroImpls.cutMacro[T]
 
     /**
       * Sequence-with-cut operator. Runs two parsers one after the other,
@@ -132,7 +132,7 @@ package object fastparse {
     def ~/[V, R](other: P[V])
                 (implicit s: Implicits.Sequencer[T, V, R],
                  whitespace: P[Any] => P[Unit],
-                 ctx: P[_]): P[R] = macro MacroImpls.parsedSequenceCut[T, V, R]
+                 ctx: P[_]): P[R] = ??? // macro MacroImpls.parsedSequenceCut[T, V, R]
 
     /**
       * Sequence operator. Runs two parsers one after the other,
@@ -142,7 +142,7 @@ package object fastparse {
     def ~[V, R](other:  P[V])
                (implicit s: Implicits.Sequencer[T, V, R],
                 whitespace: P[Any] => P[Unit],
-                ctx: P[_]): P[R] = macro MacroImpls.parsedSequence[T, V, R]
+                ctx: P[_]): P[R] = ??? // macro MacroImpls.parsedSequence[T, V, R]
 
     /**
       * Raw sequence-with-cut operator. Runs two parsers one after the other,
@@ -152,7 +152,7 @@ package object fastparse {
       */
     def ~~/[V, R](other: P[V])
                  (implicit s: Implicits.Sequencer[T, V, R],
-                  ctx: P[_]): P[R] = macro MacroImpls.parsedSequenceCut1[T, V, R]
+                  ctx: P[_]): P[R] = ??? // macro MacroImpls.parsedSequenceCut1[T, V, R]
 
     /**
       * Raw sequence operator. Runs two parsers one after the other,
@@ -161,14 +161,14 @@ package object fastparse {
       */
     def ~~[V, R](other: P[V])
                 (implicit s: Implicits.Sequencer[T, V, R],
-                 ctx: P[_]): P[R] = macro MacroImpls.parsedSequence1[T, V, R]
+                 ctx: P[_]): P[R] = ??? // macro MacroImpls.parsedSequence1[T, V, R]
 
     /**
       * Transforms the result of this parser using the given function. Useful
       * for turning the [[String]]s captured by [[!]] and the tuples built
       * by [[~]] into your own case classes or data structure
       */
-    def map[V](f: T => V): P[V] = macro MacroImpls.mapMacro[T, V]
+    def map[V](f: T => V): P[V] = ??? // macro MacroImpls.mapMacro[T, V]
 
     /**
       * Tests the output of the parser with a given predicate, failing the
@@ -176,7 +176,7 @@ package object fastparse {
       * on bits and pieces of your parsed output
       */
     def filter(f: T => Boolean)
-              (implicit ctx: P[Any]): P[T] = macro MacroImpls.filterMacro[T]
+              (implicit ctx: P[Any]): P[T] = ??? // macro MacroImpls.filterMacro[T]
     /**
       * Transforms the result of this parser using the given function into a
       * new parser which is applied (after whitespace). Useful for doing
@@ -185,7 +185,7 @@ package object fastparse {
       * you next want to parse an array, dictionary or string.
       */
     def flatMap[V](f: T => P[V])
-                  (implicit whitespace: P[Any] => P[Unit]): P[V] = macro MacroImpls.flatMapMacro[T, V]
+                  (implicit whitespace: P[Any] => P[Unit]): P[V] = ??? // macro MacroImpls.flatMapMacro[T, V]
     /**
       * Transforms the result of this parser using the given function into a
       * new parser which is applied (without consuming whitespace). Useful for
@@ -193,7 +193,7 @@ package object fastparse {
       * character to see if it's a `[`, `{`, or `"`, and then deciding whether
       * you next want to parse an array, dictionary or string.
       */
-    def flatMapX[V](f: T => P[V]): P[V] = macro MacroImpls.flatMapXMacro[T, V]
+    def flatMapX[V](f: T => P[V]): P[V] = ??? // macro MacroImpls.flatMapXMacro[T, V]
 
     /**
       * Either-or operator: tries to parse the left-hand-side, and if that
@@ -201,33 +201,33 @@ package object fastparse {
       * chained more than once to parse larger numbers of alternatives.
       */
     def |[V >: T](other: P[V])
-                 (implicit ctx: P[Any]): P[V] = macro MacroImpls.eitherMacro[T, V]
+                 (implicit ctx: P[Any]): P[V] = ??? // macro MacroImpls.eitherMacro[T, V]
 
     /**
       * Capture operator; makes the parser return the span of input it parsed
       * as a [[String]], which can then be processed further using [[~]],
       * [[map]] or [[flatMapX]]
       */
-    def !(implicit ctx: P[Any]): P[String] = macro MacroImpls.captureMacro
+    def !(implicit ctx: P[Any]): P[String] = ??? // macro MacroImpls.captureMacro
 
     /**
       * Optional operator. Parses the given input to wrap it in a `Some`, but
       * if parsing fails backtracks and returns `None`
       */
     def ?[V](implicit optioner: Implicits.Optioner[T, V],
-             ctx: P[Any]): P[V] = macro MacroImpls.optionMacro[T, V]
+             ctx: P[Any]): P[V] = ??? // macro MacroImpls.optionMacro[T, V]
   }
 
   /**
     * Provides [[ByNameOps]] extension methods on [[String]]s
     */
   implicit def ByNameOpsStr(parse0: String)(implicit ctx: P[Any]): fastparse.ByNameOps[Unit] =
-  macro MacroImpls.byNameOpsStrMacro
+  ??? // macro MacroImpls.byNameOpsStrMacro
   /**
     * Provides [[ByNameOps]] extension methods on [[P]]s
     */
-  implicit def ByNameOps[T](parse0: => P[T]) = new ByNameOps(() => parse0)
-  class ByNameOps[T](val parse0: () => P[T]) extends AnyVal{
+  implicit def ByNameOps[T](parse0: => P[T]): ByNameOps[T] = new ByNameOps(() => parse0)
+  class ByNameOps[T](val parse0: () => P[T]) extends AnyVal {
     /**
       * Repeat operator; runs the LHS parser 0 or more times separated by the
       * given whitespace (in implicit scope), and returns
@@ -236,7 +236,7 @@ package object fastparse {
       */
     def rep[V](implicit repeater: Implicits.Repeater[T, V],
                whitespace: P[_] => P[Unit],
-               ctx: P[Any]): P[V] = macro MacroRepImpls.repXMacro1ws[T, V]
+               ctx: P[Any]): P[V] = ??? // macro MacroRepImpls.repXMacro1ws[T, V]
     /**
       * Repeat operator; runs the LHS parser at least `min` to at most `max`
       * times separated by the given whitespace (in implicit scope) and
@@ -246,10 +246,10 @@ package object fastparse {
       * The convenience parameter `exactly` is provided to set both `min` and
       * `max` to the same value.
       */
-    def rep[V](min: Int = 0,
-               sep: => P[_] = null,
-               max: Int = Int.MaxValue,
-               exactly: Int = -1)
+    def rep[V](min: Int,// = 0,
+               sep: => P[_],// = null,
+               max: Int,// = Int.MaxValue,
+               exactly: Int)// = -1)
               (implicit repeater: Implicits.Repeater[T, V],
                whitespace: P[_] => P[Unit],
                ctx: P[Any]): P[V] =
@@ -278,7 +278,7 @@ package object fastparse {
               (implicit repeater: Implicits.Repeater[T, V],
                whitespace: P[_] => P[Unit],
                ctx: P[Any]): P[V] =
-    macro MacroRepImpls.repXMacro2ws[T, V]
+    ??? // macro MacroRepImpls.repXMacro2ws[T, V]
 
     /**
       * Raw repeat operator; runs the LHS parser 0 or more times *without*
@@ -288,7 +288,7 @@ package object fastparse {
       */
     def repX[V](implicit repeater: Implicits.Repeater[T, V],
                 ctx: P[Any]): P[V] =
-    macro MacroRepImpls.repXMacro1[T, V]
+    ??? // macro MacroRepImpls.repXMacro1[T, V]
 
     /**
       * Raw repeat operator; runs the LHS parser at least `min` to at most `max`
@@ -299,10 +299,10 @@ package object fastparse {
       * The convenience parameter `exactly` is provided to set both `min` and
       * `max` to the same value.
       */
-    def repX[V](min: Int = 0,
-                sep: => P[_] = null,
-                max: Int = Int.MaxValue,
-                exactly: Int = -1)
+    def repX[V](min: Int,// = 0,
+                sep: => P[_],// = null,
+                max: Int,// = Int.MaxValue,
+                exactly: Int)// = -1)
                (implicit repeater: Implicits.Repeater[T, V],
                 ctx: P[Any]): P[V] =
       new RepImpls[T](parse0).repX[V](min, sep, max, exactly)
@@ -328,7 +328,7 @@ package object fastparse {
     def repX[V](min: Int)
                (implicit repeater: Implicits.Repeater[T, V],
                 ctx: P[Any]): P[V] =
-    macro MacroRepImpls.repXMacro2[T, V]
+    ??? // macro MacroRepImpls.repXMacro2[T, V]
 
     /**
       * Hides the internals of the given parser when it fails, such that it
@@ -336,7 +336,7 @@ package object fastparse {
       * parsers end up in the failure traces or failure stack to be displayed
       * to the user.
       */
-    def opaque(msg: String)(implicit ctx: P[Any]): P[T] = {
+    def `opaque`(msg: String)(implicit ctx: P[Any]): P[T] = {
       val oldIndex = ctx.index
 
       val res = parse0()
@@ -385,7 +385,7 @@ package object fastparse {
     */
   implicit def LogOpsStr(parse0: String)
                         (implicit ctx: P[Any]): fastparse.LogByNameOps[Unit] =
-    macro MacroImpls.logOpsStrMacro
+    ??? // macro MacroImpls.logOpsStrMacro
   /**
     * Separated out from [[ByNameOps]] because `.log` isn't easy to make an
     * [[AnyVal]] extension method, but it doesn't matter since `.log` calls
@@ -603,39 +603,39 @@ package object fastparse {
   /**
     * Parses a single character satisfying the given predicate
     */
-  def CharPred(p: Char => Boolean)(implicit ctx: P[_]): P[Unit] = macro MacroImpls.charPredMacro
+  def CharPred(p: Char => Boolean)(implicit ctx: P[_]): P[Unit] = ??? // macro MacroImpls.charPredMacro
 
   /**
     * Parses a single character in one of the input strings representing
     * character classes
     */
-  def CharIn(s: String*)(implicit ctx: P[_]): P[Unit] = macro MacroImpls.charInMacro
+  def CharIn(s: String*)(implicit ctx: P[_]): P[Unit] = ??? // macro MacroImpls.charInMacro
   /**
     * Parses one or more characters as long as they are contained
     * in one of the input strings representing character classes
     */
   def CharsWhileIn(s: String)
-                  (implicit ctx: P[_]): P[Unit] = macro MacroImpls.charsWhileInMacro1
+                  (implicit ctx: P[_]): P[Unit] = ??? // macro MacroImpls.charsWhileInMacro1
 
   /**
     * Parses `min` or more characters as long as they are contained
     * in one of the input strings representing character classes
     */
   def CharsWhileIn(s: String, min: Int)
-                  (implicit ctx: P[_]): P[Unit] = macro MacroImpls.charsWhileInMacro
+                  (implicit ctx: P[_]): P[Unit] = ??? // macro MacroImpls.charsWhileInMacro
   /**
     * Parses one or more characters as long as they satisfy the given
     * predicate
     */
   def CharsWhile(p: Char => Boolean)
-                (implicit ctx: P[_]): P[Unit] = macro MacroImpls.charsWhileMacro1
+                (implicit ctx: P[_]): P[Unit] = ??? // macro MacroImpls.charsWhileMacro1
 
   /**
     * Parses `min` or more characters as long as they satisfy the given
     * predicate
     */
   def CharsWhile(p: Char => Boolean, min: Int)
-                (implicit ctx: P[_]): P[Unit] = macro MacroImpls.charsWhileMacro
+                (implicit ctx: P[_]): P[Unit] = ??? // macro MacroImpls.charsWhileMacro
 
 
   /**
@@ -660,12 +660,12 @@ package object fastparse {
     * Efficiently parses any one of the given [[String]]s; more efficient than
     * chaining [[EagerOps.|]] together
     */
-  def StringIn(s: String*)(implicit ctx: P[_]): P[Unit] = macro MacroImpls.stringInMacro
+  def StringIn(s: String*)(implicit ctx: P[_]): P[Unit] = ??? // macro MacroImpls.stringInMacro
 
   /**
     * Efficiently parses any one of the given [[String]]s, case-insensitively;
     * more efficient than chaining [[EagerOps.|]] together with [[IgnoreCase]]
     */
-  def StringInIgnoreCase(s: String*)(implicit ctx: P[_]): P[Unit] = macro MacroImpls.stringInIgnoreCaseMacro
+  def StringInIgnoreCase(s: String*)(implicit ctx: P[_]): P[Unit] = ??? // macro MacroImpls.stringInIgnoreCaseMacro
 
 }
