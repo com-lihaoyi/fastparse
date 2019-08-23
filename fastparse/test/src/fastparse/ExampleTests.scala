@@ -171,7 +171,8 @@ object ExampleTests extends TestSuite{
         def keyword[_: P] = P( ("hello" ~ &(" ")).!.rep )
 
         val Parsed.Success(Seq("hello"), _) = parse("hello ", keyword(_))
-        val Parsed.Success(Seq(), __) = parse("helloX", keyword(_))
+        val Parsed.Success(Seq(), _) = parse("hello", keyword(_))        
+        val Parsed.Success(Seq(), _) = parse("helloX", keyword(_))
       }
 
       test("neglookahead"){
