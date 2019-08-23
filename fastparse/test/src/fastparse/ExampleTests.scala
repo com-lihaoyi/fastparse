@@ -93,7 +93,7 @@ object ExampleTests extends TestSuite{
         def option[_: P] = P( "c".? ~ "a".rep(sep="b").! ~ End)
 
         val Parsed.Success("aba", 3) = parse("aba", option(_))
-        val Parsed.Success("aba", 3) = parse("aba", option(_))
+        val Parsed.Success("aba", 4) = parse("caba", option(_))
       }
 
       test("either"){
