@@ -114,9 +114,7 @@ object fastparseParser{
     Index ~~ expr ~ (compSuffix | "," ~ (compSuffix | (expr.rep(0, sep = ",") ~ ",".?).map(Right(_)))).?
   ).map{
     case (offset, first, None) => Expr.Arr(offset, Seq(first))
-    //case (offset, first, Some(Left(comp))) => Expr.Comp(offset, first, comp._1, comp._2)
-      // previous line gives an error after #7130:
-      //   _1 is not a member of Any (with errors ^^^^ under comp._1)
+    case (offset, first, Some(Left(comp))) => Expr.Comp(offset, first, comp._1, comp._2)
     case (offset, first, Some(Right(rest))) => Expr.Arr(offset, Seq(first) ++ rest)
   }
 
