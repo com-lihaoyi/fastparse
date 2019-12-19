@@ -19,10 +19,10 @@ sealed abstract class Parsed[+T](val isSuccess: Boolean){
 object Parsed{
   def fromParsingRun[T](p: ParsingRun[T]): Parsed[T] = {
     if (p.isSuccess) Parsed.Success(p.successValue.asInstanceOf[T], p.index)
-    else Parsed.Failure(
+    else new Parsed.Failure(
       Option(p.lastFailureMsg).fold("")(_.render),
       p.index,
-      Parsed.Extra(p.input, p.startIndex, p.index, p.originalParser, p.failureStack)
+      new Parsed.Extra(p.input, p.startIndex, p.index, p.originalParser, p.failureStack)
     )
   }
 
@@ -48,9 +48,9 @@ object Parsed{
     * @param extra Metadata about the parse; useful for re-running the parse
     *              to trace out a more detailed error report
     */
-  final case class Failure(label: String,
-                           index: Int,
-                           extra: Extra) extends Parsed[Nothing](false){
+  final class Failure(val label: String,
+                      val index: Int,
+                      val extra: Extra) extends Parsed[Nothing](false){
     def get = throw new Exception("Parse Error, " + msg)
     def fold[V](onFailure: (String, Int, Extra) => V, onSuccess: (Nothing, Int) => V) = onFailure(label, index, extra)
     override def toString() = s"Parsed.Failure($msg)"
@@ -94,6 +94,10 @@ object Parsed{
   }
 
   object Failure{
+    def unapply(x: Failure): Option[(String, Int, Extra)] = x match{
+      case f: Failure => Some((f.label, f.index, f.extra))
+      case _ => None
+    }
     def formatMsg(input: ParserInput, stack: List[(String, Int)], index: Int) = {
       "Expected " + Failure.formatStack(input, stack) +
       ", found " + Failure.formatTrailing(input, index)
@@ -106,11 +110,11 @@ object Parsed{
     }
   }
 
-  case class Extra(input: ParserInput,
-                   startIndex: Int,
-                   index: Int,
-                   originalParser: ParsingRun[_] => ParsingRun[_],
-                   stack: List[(String, Int)]) {
+  class Extra(val input: ParserInput,
+              val startIndex: Int,
+              val index: Int,
+              val originalParser: ParsingRun[_] => ParsingRun[_],
+              val stack: List[(String, Int)]) {
     @deprecated("Use .trace instead")
     def traced = trace()
 
@@ -144,8 +148,6 @@ object Parsed{
 
     def fromParsingRun[T](p: ParsingRun[T]) = {
       assert(!p.isSuccess)
-//      println("lastFailureMsg " + Util.parenthize(p.lastFailureMsg))
-//      println("failureGroupAggregate " + Util.parenthize(p.failureGroupAggregate))
       TracedFailure(
         p.failureTerminalAggregate,
         p.lastFailureMsg ::: p.failureGroupAggregate,
