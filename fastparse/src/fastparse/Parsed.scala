@@ -19,7 +19,7 @@ sealed abstract class Parsed[+T](val isSuccess: Boolean){
 object Parsed{
   def fromParsingRun[T](p: ParsingRun[T]): Parsed[T] = {
     if (p.isSuccess) Parsed.Success(p.successValue.asInstanceOf[T], p.index)
-    else new Parsed.Failure(
+    else Parsed.Failure(
       Option(p.lastFailureMsg).fold("")(_.render),
       p.index,
       new Parsed.Extra(p.input, p.startIndex, p.index, p.originalParser, p.failureStack)
@@ -94,6 +94,7 @@ object Parsed{
   }
 
   object Failure{
+    def apply(label: String, index: Int, extra: Extra) = new Failure(label, index, extra)
     def unapply(x: Failure): Option[(String, Int, Extra)] = x match{
       case f: Failure => Some((f.label, f.index, f.extra))
       case _ => None
