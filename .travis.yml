@@ -22,7 +22,7 @@ jobs:
     jdk: openjdk10
 
   - script: "./mill demo.fullOpt && sbt readme/run"
-    jdk: oraclejdk8
+    jdk: oraclejdk9
 
   - stage: release
     script:

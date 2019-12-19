@@ -1,5 +1,11 @@
 @import Main._
 @sect{Change Log}
+
+    @sect{2.2.0}
+        @ul
+            @li
+                @code{fastparse.Parsed.Failure} is no longer a case class, to improve
+                the pprinting in a the Ammonite REPL
     @sect{2.1.3}
         @ul
             @li
