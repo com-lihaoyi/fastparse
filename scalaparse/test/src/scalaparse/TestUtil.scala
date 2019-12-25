@@ -67,27 +67,34 @@ object TestUtil {
   }
 
   def check[T](input: String, tag: String = "", skipIterator: Boolean = false) = {
-//    println("Checking...\n" )
-//    println(input)
-    val normalRes = parse(input, Scala.CompilationUnit(_))
-    val iteratorRes =
-      if (skipIterator) Nil
-      else
-        for(chunkSize <- Seq(1, 4, 16, 64, 256, 1024))
-        yield parse(input.grouped(chunkSize), Scala.CompilationUnit(_))
-
-    for(res <- normalRes +: iteratorRes){
-      res match{
-        case f: Parsed.Failure =>
-          //        println(f.formatExpectedAsString)
-          //        println(f.formatTraces)
-          println("TRACING")
-          throw new Exception(tag + "\n" + input + "\n" + f.trace().msg)
-        case s: Parsed.Success[_] =>
-          //        println(parsed)
-          val inputLength = input.length
-          assert(s.index == inputLength)
+    println("Checking...\n" )
+    println(input)
+    check0(input, input.length, tag)
+    if (!skipIterator) {
+      for(chunkSize <- Seq(1, 5, 18, 67, 260, 1029)) {
+        println(chunkSize)
+        check0(input.grouped(chunkSize), input.length, tag)
       }
+    }
+
+    if (!skipIterator) {
+      for(chunkSize <- Seq(1, 3, 14, 61, 252, 1019)) {
+        check0(ParserInputSource.FromReadable(input, chunkSize), input.length, tag)
+      }
+    }
+  }
+  def check0(input: ParserInputSource, inputLength: Int, tag: String) = {
+    val res = parse(input, Scala.CompilationUnit(_))
+    res match{
+      case f: Parsed.Failure =>
+        //        println(f.formatExpectedAsString)
+        //        println(f.formatTraces)
+        println("TRACING")
+        println(f)
+        throw new Exception(tag + "\n" + input + "\n" + f.trace().msg)
+      case s: Parsed.Success[_] =>
+        //        println(parsed)
+        assert(s.index == inputLength)
     }
   }
 }

@@ -32,6 +32,20 @@ object IteratorTests extends TestSuite {
       assert(res == "cdcdcd")
     }
 
+    test("readable"){
+      for(bufferSize <- Range(1, 15)){
+        import NoWhitespace._
+        def p[_: P] = P("ab" ~/ "cd".rep().! ~ "ef" | "z")
+
+        val Parsed.Success(res, i) = parse(
+          ParserInputSource.FromReadable("abcdcdcdef", bufferSize),
+          p(_)
+        )
+
+        assert(res == "cdcdcd")
+      }
+    }
+
     test("immediateCutDrop"){
       import NoWhitespace._
       def p[_: P] = P( "ab" ~/ "cd" | "z" ).log

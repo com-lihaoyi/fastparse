@@ -27,19 +27,19 @@ package object fastparse {
     *
     *
     */
-  def parse[T](input: ParserInput,
+  def parse[T](input: ParserInputSource,
                parser: P[_] => P[T],
                verboseFailures: Boolean = false,
                startIndex: Int = 0,
                instrument: Instrument = null): Parsed[T] = {
-    Parsed.fromParsingRun(parseInputRaw[T](
-      input,
+    Parsed.fromParsingRun(input.parseThrough(parseInputRaw[T](
+      _,
       parser,
       verboseFailures,
       startIndex,
       -1,
       instrument
-    ))
+    )))
   }
 
   def parseInputRaw[T](input: ParserInput,

@@ -65,15 +65,18 @@ class UberBuffer(initSize: Int = 32){ self =>
     data = newData
   }
 
-  def write(in: Array[Char], offset: Int = 0, length0: Int = -1) = {
-    while (writeAvailable < in.length) expand()
+  def write(in: Array[Char], length0: Int) = {
+    while (writeAvailable < length0) expand()
 
-    val (left, right) = in.splitAt(data.length - writePos)
+    if (writePos + length0 <= data.length){
+      System.arraycopy(in, 0, data, writePos, length0)
+    }else{
+      val firstHalfLength = data.length - writePos
+      System.arraycopy(in, 0, data, writePos, firstHalfLength)
+      System.arraycopy(in, firstHalfLength, data, 0, length0 - firstHalfLength)
+    }
 
-    left.copyToArray(data, writePos)
-    right.copyToArray(data, 0)
-
-    writePos = incr(writePos, in.length)
+    writePos = incr(writePos, length0)
   }
 
 

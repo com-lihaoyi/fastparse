@@ -1,5 +1,7 @@
 package fastparse
 
+import java.io.InputStreamReader
+
 import fastparse.internal.{UberBuffer, Util}
 
 
@@ -14,9 +16,24 @@ trait IsReachable {
   def isReachable(index: Int): Boolean
 }
 
+trait ParserInputSource{
+  def parseThrough[T](f: ParserInput => T): T
+}
+object ParserInputSource{
+  implicit class fromParserInput[T](t: T)(implicit conv: T => ParserInput) extends ParserInputSource{
+    def parseThrough[T](f: ParserInput => T) = f(conv(t))
+  }
+  implicit def fromReadable(s: geny.Readable) = FromReadable(s, 4096)
+  case class FromReadable(s: geny.Readable, bufferSize: Int) extends ParserInputSource {
+    def parseThrough[T](f: ParserInput => T): T = {
+      s.readBytesThrough(is => f(ReaderParserInput(new InputStreamReader(is), bufferSize)))
+    }
+  }
+}
+
 object ParserInput{
-  implicit def fromString(s: String): ParserInput = new IndexedParserInput(s)
-  implicit def fromIterator(s: Iterator[String]): ParserInput = new IteratorParserInput(s)
+  implicit def fromString(s: String) = IndexedParserInput(s)
+  implicit def FromIterator(s: Iterator[String]) = IteratorParserInput(s)
 }
 /**
   * ParserInput class represents data that is needed to parse.
@@ -92,29 +109,11 @@ case class IndexedParserInput(data: String) extends ParserInput {
   }
 }
 
-/**
-  * Contains buffer - queue of elements that extends from given iterator when particular elements are requested;
-  * and shrinks by calling `dropBuffer` method.
-  *
-  * Generally, at any specific time this buffer contains "suffix" of given iterator,
-  * e.g. some piece of data from past calls of `next`, which extends by requesting new batches from iterator.
-  * Therefore we can denote the same notation of indices as for regular `Array` or more abstract `IndexedSeq`.
-  * The only difference is when index doesn't fit into the bounds of current buffer
-  * either the new batches are requested to extend the buffer, either it's inaccessible at all,
-  * so calling of `dropBuffer` should guarantee that there won't be any attempts to access to the elements in dropped part of input.
-  */
-case class IteratorParserInput(data: Iterator[String]) extends ParserInput{
-  private val buffer: UberBuffer = new UberBuffer(16)
-  private var firstIdx: Int = 0 // index in the data corresponding to the 0th element in the buffer
+trait BufferedParserInput extends ParserInput{
+  protected val buffer: UberBuffer = new UberBuffer(16)
+  protected var firstIdx: Int = 0 // index in the data corresponding to the 0th element in the buffer
 
-  private def requestUntil(until: Int): Boolean = {
-    while (this.length <= until && data.hasNext) {
-      val chunk = data.next()
-      buffer.write(chunk.toCharArray)
-    }
-    this.length > until
-  }
-
+  protected def requestUntil(until: Int): Boolean
   /**
     * Requests batches until given `index` and in case of success returns needed element.
     */
@@ -163,12 +162,53 @@ case class IteratorParserInput(data: Iterator[String]) extends ParserInput{
   }
 
   def checkTraceable() = throw new RuntimeException(
-    "Cannot perform `.traced` on an `IteratorParserInput`, as it needs to parse " +
+    s"Cannot perform `.traced` on an `${getClass.getName}`, as it needs to parse " +
       "the input a second time to collect traces, which is impossible after an " +
       "`IteratorParserInput` is used once and the underlying Iterator exhausted."
   )
 
   def prettyIndex(index: Int): String = {
     String.valueOf(index)
+  }
+
+}
+/**
+  * Contains buffer - queue of elements that extends from given iterator when particular elements are requested;
+  * and shrinks by calling `dropBuffer` method.
+  *
+  * Generally, at any specific time this buffer contains "suffix" of given iterator,
+  * e.g. some piece of data from past calls of `next`, which extends by requesting new batches from iterator.
+  * Therefore we can denote the same notation of indices as for regular `Array` or more abstract `IndexedSeq`.
+  * The only difference is when index doesn't fit into the bounds of current buffer
+  * either the new batches are requested to extend the buffer, either it's inaccessible at all,
+  * so calling of `dropBuffer` should guarantee that there won't be any attempts to access to the elements in dropped part of input.
+  */
+case class IteratorParserInput(data: Iterator[String]) extends BufferedParserInput{
+  protected def requestUntil(until: Int): Boolean = {
+    while (this.length <= until && data.hasNext) {
+      val chunk = data.next()
+      val chars = chunk.toCharArray
+      buffer.write(chars, chars.length)
+    }
+    this.length > until
+  }
+}
+
+/**
+  * A [[ParserInput]] that pulls data from a given `java.io.Reader`. Typically
+  * not used alone, and instead is used as part of a [[ParserInputSource.FromReadable]]
+  */
+case class ReaderParserInput(data: java.io.Reader, bufferSize: Int) extends BufferedParserInput{
+
+  private val streamBuffer = new Array[Char](bufferSize)
+  protected def requestUntil(until: Int): Boolean = {
+    var empty = false
+    while (this.length <= until && !empty) {
+      data.read(streamBuffer) match{
+        case -1 => empty = true
+        case n => buffer.write(streamBuffer, n)
+      }
+    }
+    this.length > until
   }
 }
