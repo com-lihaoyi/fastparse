@@ -23,7 +23,24 @@ object ParserInputSource{
   implicit class fromParserInput[T](t: T)(implicit conv: T => ParserInput) extends ParserInputSource{
     def parseThrough[T](f: ParserInput => T) = f(conv(t))
   }
-  implicit def fromReadable(s: geny.Readable) = FromReadable(s, 4096)
+  
+  implicit def fromReadable(s: geny.Readable) = FromReadable(
+    s,
+    // Default bufferSize of 4096. Somewhat arbitrary, but doesn't seem to matter 
+    // much in benchmarks, e.g. on parsing `GenJSCode.scala`:
+    //
+    // Input \ Iterations        1   2   3   4   5
+    // Indexed String            360 455 458 460 461
+    // Streaming String 2048     208 291 294 293 291
+    // Streaming String 4096     206 282 287 289 279
+    // Streaming String 8192     234 303 302 305 298
+    // Streaming String 16384    232 301 307 306 308
+    // Streaming File 2048       222 293 295 294 293
+    // Streaming File 4096       223 296 302 303 303
+    // Streaming File 8192       219 290 298 298 297
+    // Streaming File 16384      225 301 303 304 304
+    bufferSize = 4096
+  )
   case class FromReadable(s: geny.Readable, bufferSize: Int) extends ParserInputSource {
     def parseThrough[T](f: ParserInput => T): T = {
       s.readBytesThrough(is => f(ReaderParserInput(new InputStreamReader(is), bufferSize)))

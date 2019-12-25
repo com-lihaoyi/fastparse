@@ -82,7 +82,7 @@ object Utils {
 
   def benchmarkAll(name: String,
                    parser: P[_] => P[Any],
-                   data: String, dataFailOpt: Option[String],
+                   data: ParserInputSource, dataFailOpt: Option[String],
                    iteratorFactory: Int => Iterator[String]): Unit = {
 
     val results = Utils.benchmark(s"$name Benchmark",
