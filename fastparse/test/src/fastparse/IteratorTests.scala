@@ -266,7 +266,7 @@ object IteratorTests extends TestSuite {
       val e = intercept[RuntimeException] {
         parse(Iterator("[", " ", "]"), p(_)).asInstanceOf[Parsed.Failure].extra.traced
       }
-      assert(e.getMessage.contains("Cannot perform `.traced` on an `IteratorParserInput`"))
+      assert(e.getMessage.contains("Cannot perform `.traced` on an `fastparse.IteratorParserInput`"))
     }
   }
 }
