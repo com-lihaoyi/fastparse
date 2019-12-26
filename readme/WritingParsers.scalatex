@@ -26,6 +26,11 @@
             it is being assigned to) which appears in parse error messages.
             In general, every time you assign a parser
             to a @hl.scala{def}, you should wrap it in @code{P(...)}.
+        @p
+            You can also call @code{fastparse.parse} on any
+            @lnk("geny.Readable", "https://github.com/lihaoyi/geny#readable") value,
+            such as @code{Array[Byte]}s to parse binary data, or @code{java.io.InputStream}s
+            for streaming parsing.
 
         @sect{Failures}
             @hl.ref(tests/"ExampleTests.scala", Seq("\"failures\"", ""))

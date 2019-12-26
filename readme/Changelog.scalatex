@@ -1,6 +1,14 @@
 @import Main._
 @sect{Change Log}
 
+    @sect{2.2.1}
+        @ul
+            @li
+                You can now call @code{fastparse.parse} on any
+                @lnk("geny.Readable", "https://github.com/lihaoyi/geny#readable") value,
+                such as @code{Array[Byte]}s to parse binary data, or @code{java.io.InputStream}s
+                for streaming parsing
+
     @sect{2.2.0}
         @ul
             @li

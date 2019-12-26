@@ -6,18 +6,11 @@
     @p
         In addition to the parsing strings, you can also parse "streaming"
         data from @hl.scala{Iterator}s. To do so, simply pass in an
-        @hl.scala{Iterator[String]} instead of a @code{String} to the
-        @hl.scala{fastparse.parse} method.
+        @hl.scala{Iterator[String]} or @hl.scala{java.io.InputStream} instead
+        of a @code{String} to the @hl.scala{fastparse.parse} method.
 
     @hl.ref(tests/"IteratorTests.scala", Seq("\"basic\"", ""))
 
-    @p
-        Note that fastparse does not parse @hl.scala{Iterator[Char]} or
-        @hl.scala{Iterator[Byte]}s for performance reasons: most input
-        sources make data available in chunks, such as network packets or
-        lines from file on the disk.
-        By parsing chunks, FastParse better matches any underlying
-        data source, and itself has better performance parsing larger chunks.
     @p
         Streaming parsing still needs to buffer input in-memory: in particular,
         parsers like @sect.ref{Optional}, @sect.ref{Repeat} or
@@ -68,7 +61,11 @@
             reduces the granularity of the chunks that get buffered,
             reducing the buffer size. However, this comes at a performance
             cost, as you can see below...
-
+        @p
+            When parsing @code{Iterator[String]}s, the chunks-size is the size of
+            each @code{String}. When parsing @code{java.io.InputStream}, the chunk
+            size defaults to 4096 bytes, and can be configured by instatiating your own
+            @code{fastparse.ParserInputSource.FromReadable}.
 
     @sect{Streaming Parsing Performance}
         @p
