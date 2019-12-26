@@ -31,6 +31,21 @@ object ParsingTests extends TestSuite{
       val failureIndex = parsed.asInstanceOf[Parsed.Failure].index
       assert(failureIndex == expectedFailureIndex)
     }
+
+    // Test byte array parsing
+    {
+      val parsed = parse(str.getBytes, parser(_), startIndex = index)
+      val failureIndex = parsed.asInstanceOf[Parsed.Failure].index
+      assert(failureIndex == expectedFailureIndex)
+    }
+
+    // Test inputStream parsing
+
+    {
+      val parsed = parse(new java.io.ByteArrayInputStream(str.getBytes), parser(_), startIndex = index)
+      val failureIndex = parsed.asInstanceOf[Parsed.Failure].index
+      assert(failureIndex == expectedFailureIndex)
+    }
   }
 
   val tests = Tests {
