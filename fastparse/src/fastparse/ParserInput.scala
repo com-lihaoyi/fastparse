@@ -19,13 +19,17 @@ trait IsReachable {
 trait ParserInputSource{
   def parseThrough[T](f: ParserInput => T): T
 }
-object ParserInputSource{
-  implicit class fromParserInput[T](t: T)(implicit conv: T => ParserInput) extends ParserInputSource{
+object ParserInputSource extends ParserInputSourceLowPri {
+
+  implicit class fromParserInput[T](t: T)(implicit conv: T => ParserInput) extends ParserInputSource {
     def parseThrough[T](f: ParserInput => T) = f(conv(t))
   }
-  
-  implicit def fromReadable(s: geny.Readable) = FromReadable(
-    s,
+
+}
+trait ParserInputSourceLowPri{
+
+  implicit def fromReadable[T](s: T)(implicit f: T => geny.Readable) = FromReadable(
+    f(s),
     // Default bufferSize of 4096. Somewhat arbitrary, but doesn't seem to matter 
     // much in benchmarks, e.g. on parsing `GenJSCode.scala`:
     //
