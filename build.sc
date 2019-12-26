@@ -140,7 +140,7 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule{
   def zincWorker: ZincWorkerModule =
     CustomZincWorker
 
-  def publishVersion = "2.2.0"
+  def publishVersion = "2.2.1"
   def artifactName = millModuleSegments.parts.dropRight(2).mkString("-")
   def pomSettings = PomSettings(
     description = artifactName(),
