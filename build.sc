@@ -4,6 +4,10 @@ import scalajslib._
 import publish._
 
 val crossVersions = Seq("2.12.7", "2.13.0")
+val crossJsVersions = Seq(
+  "2.12.7" -> "0.6.31", "2.13.0" -> "0.6.31",
+  "2.12.7" -> "1.0.0-RC2", "2.13.0" -> "1.0.0-RC2"
+)
 object fastparse extends Module{
   object jvm extends Cross[fastparseJvmModule](crossVersions:_*)
   class fastparseJvmModule(val crossScalaVersion: String) extends FastparseModule{
@@ -13,10 +17,11 @@ object fastparse extends Module{
     }
   }
 
-  object js extends Cross[fastparseJsModule](crossVersions:_*)
-  class fastparseJsModule(val crossScalaVersion: String) extends FastparseModule with ScalaJSModule {
+  object js extends Cross[fastparseJsModule](crossJsVersions:_*)
+  class fastparseJsModule(val crossScalaVersion: String, crossScalaJsVersion: String) extends FastparseModule with ScalaJSModule {
     def platformSegment = "js"
-    def scalaJSVersion = "0.6.28"
+    def millSourcePath = super.millSourcePath / ammonite.ops.up
+    def scalaJSVersion = crossScalaJsVersion
     object test extends Tests with CommonTestModule{
       def platformSegment = "js"
     }
@@ -24,8 +29,8 @@ object fastparse extends Module{
 }
 trait FastparseModule extends CommonCrossModule{
   def ivyDeps = Agg(
-    ivy"com.lihaoyi::sourcecode::0.1.7",
-    ivy"com.lihaoyi::geny::0.4.2"
+    ivy"com.lihaoyi::sourcecode::0.2.0",
+    ivy"com.lihaoyi::geny::0.5.0"
   )
   def compileIvyDeps = Agg(
     ivy"org.scala-lang:scala-reflect:${scalaVersion()}"
@@ -65,8 +70,8 @@ trait FastparseModule extends CommonCrossModule{
 }
 
 object scalaparse extends Module{
-  object js extends Cross[ScalaParseJsModule](crossVersions:_*)
-  class ScalaParseJsModule(val crossScalaVersion: String) extends ExampleParseJsModule
+  object js extends Cross[ScalaParseJsModule](crossJsVersions:_*)
+  class ScalaParseJsModule(val crossScalaVersion: String, val crossScalaJsVersion: String) extends ExampleParseJsModule
 
   object jvm extends Cross[ScalaParseJvmModule](crossVersions:_*)
   class ScalaParseJvmModule(val crossScalaVersion: String) extends ExampleParseJvmModule
@@ -74,24 +79,26 @@ object scalaparse extends Module{
 
 
 object cssparse extends Module{
-  object js extends Cross[CssParseJsModule](crossVersions:_*)
-  class CssParseJsModule(val crossScalaVersion: String) extends ExampleParseJsModule
+  object js extends Cross[CssParseJsModule](crossJsVersions:_*)
+  class CssParseJsModule(val crossScalaVersion: String, val crossScalaJsVersion: String) extends ExampleParseJsModule
 
   object jvm extends Cross[CssParseJvmModule](crossVersions:_*)
   class CssParseJvmModule(val crossScalaVersion: String) extends ExampleParseJvmModule
 }
 object pythonparse extends Module{
-  object js extends Cross[PythonParseJsModule](crossVersions:_*)
-  class PythonParseJsModule(val crossScalaVersion: String) extends ExampleParseJsModule
+  object js extends Cross[PythonParseJsModule](crossJsVersions:_*)
+  class PythonParseJsModule(val crossScalaVersion: String, val crossScalaJsVersion: String) extends ExampleParseJsModule
 
   object jvm extends Cross[PythonParseJvmModule](crossVersions:_*)
   class PythonParseJvmModule(val crossScalaVersion: String) extends ExampleParseJvmModule
 }
 
 trait ExampleParseJsModule extends CommonCrossModule with ScalaJSModule{
-  def moduleDeps = Seq(fastparse.js())
-  def scalaJSVersion = "0.6.28"
+  def moduleDeps = Seq(fastparse.js(crossScalaVersion, crossScalaJsVersion))
+  def crossScalaJsVersion: String
+  def scalaJSVersion = crossScalaJsVersion
   def platformSegment = "js"
+  def millSourcePath = super.millSourcePath / ammonite.ops.up
   object test extends Tests with CommonTestModule{
     def platformSegment = "js"
   }
@@ -140,8 +147,8 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule{
   def zincWorker: ZincWorkerModule =
     CustomZincWorker
 
-  def publishVersion = "2.2.2"
-  def artifactName = millModuleSegments.parts.dropRight(2).mkString("-")
+  def publishVersion = "2.2.3"
+  def artifactName = millModuleSegments.parts.dropRight(2).mkString("-").stripSuffix("-js")
   def pomSettings = PomSettings(
     description = artifactName(),
     organization = "com.lihaoyi",
@@ -174,7 +181,7 @@ trait CommonTestModule extends ScalaModule with TestModule{
 
   def platformSegment: String
   def ivyDeps = Agg(
-    ivy"com.lihaoyi::utest::0.7.0",
+    ivy"com.lihaoyi::utest::0.7.3",
   )
 
 //  def scalacOptions = T{ if (scalaVersion() == "2.12.7") Seq("-opt:l:method") else Nil }
@@ -235,20 +242,20 @@ object perftests extends Module{
     }
     def testFrameworks = Seq("utest.runner.Framework")
     def ivyDeps = Agg(
-      ivy"com.lihaoyi::utest::0.7.1",
+      ivy"com.lihaoyi::utest::0.7.3",
       ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
     )
   }
 }
 
 object demo extends ScalaJSModule{
-  def scalaJSVersion = "0.6.28"
+  def scalaJSVersion = "0.6.31"
   def scalaVersion = "2.13.0"
   def moduleDeps = Seq(
-    scalaparse.js("2.13.0"),
-    cssparse.js("2.13.0"),
-    pythonparse.js("2.13.0"),
-    fastparse.js("2.13.0").test,
+    scalaparse.js("2.13.0", "0.6.31"),
+    cssparse.js("2.13.0", "0.6.31"),
+    pythonparse.js("2.13.0", "0.6.31"),
+    fastparse.js("2.13.0", "0.6.31").test,
   )
   def ivyDeps = Agg(
     ivy"org.scala-js::scalajs-dom::0.9.7",
