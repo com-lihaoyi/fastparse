@@ -6,7 +6,7 @@ import publish._
 val crossVersions = Seq("2.12.7", "2.13.0")
 val crossJsVersions = Seq(
   "2.12.7" -> "0.6.31", "2.13.0" -> "0.6.31",
-  "2.12.7" -> "1.0.0-RC2", "2.13.0" -> "1.0.0-RC2"
+  "2.12.7" -> "1.0.0", "2.13.0" -> "1.0.0"
 )
 object fastparse extends Module{
   object jvm extends Cross[fastparseJvmModule](crossVersions:_*)
@@ -29,8 +29,8 @@ object fastparse extends Module{
 }
 trait FastparseModule extends CommonCrossModule{
   def ivyDeps = Agg(
-    ivy"com.lihaoyi::sourcecode::0.2.0",
-    ivy"com.lihaoyi::geny::0.5.0"
+    ivy"com.lihaoyi::sourcecode::0.2.1",
+    ivy"com.lihaoyi::geny::0.5.1"
   )
   def compileIvyDeps = Agg(
     ivy"org.scala-lang:scala-reflect:${scalaVersion()}"
@@ -147,7 +147,7 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule{
   def zincWorker: ZincWorkerModule =
     CustomZincWorker
 
-  def publishVersion = "2.2.3"
+  def publishVersion = "2.2.4"
   def artifactName = millModuleSegments.parts.dropRight(2).mkString("-").stripSuffix("-js")
   def pomSettings = PomSettings(
     description = artifactName(),
@@ -181,7 +181,7 @@ trait CommonTestModule extends ScalaModule with TestModule{
 
   def platformSegment: String
   def ivyDeps = Agg(
-    ivy"com.lihaoyi::utest::0.7.3",
+    ivy"com.lihaoyi::utest::0.7.4",
   )
 
 //  def scalacOptions = T{ if (scalaVersion() == "2.12.7") Seq("-opt:l:method") else Nil }
@@ -242,7 +242,7 @@ object perftests extends Module{
     }
     def testFrameworks = Seq("utest.runner.Framework")
     def ivyDeps = Agg(
-      ivy"com.lihaoyi::utest::0.7.3",
+      ivy"com.lihaoyi::utest::0.7.4",
       ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
     )
   }
