@@ -4,10 +4,10 @@ import scalajslib._
 import scalanativelib._
 import publish._
 
-val crossVersions = Seq("2.12.7", "2.13.0")
+val crossVersions = Seq("2.12.10", "2.13.1")
 val crossJsVersions = Seq(
-  "2.12.7" -> "0.6.31", "2.13.0" -> "0.6.31",
-  "2.12.7" -> "1.0.0", "2.13.0" -> "1.0.0"
+  "2.12.10" -> "0.6.32", "2.13.1" -> "0.6.32",
+  "2.12.10" -> "1.0.0", "2.13.1" -> "1.0.0"
 )
 val crossNativeVersions = Seq(
   "2.11.12" -> "0.3.9",
@@ -46,12 +46,8 @@ object fastparse extends Module{
   object native extends Cross[fastparseNativeModule](crossNativeVersions:_*)
   class fastparseNativeModule(val crossScalaVersion: String, crossScalaNativeVersion: String) extends FastparseModule with ScalaNativeModule {
     def platformSegment = "native"
+    def millSourcePath = super.millSourcePath / ammonite.ops.up
     def scalaNativeVersion = crossScalaNativeVersion
-    def sources = T.sources(
-      millSourcePath / "src",
-      millSourcePath / s"src-$platformSegment",
-      millSourcePath / s"src-jvm",  // we are taking JVM's implementation of CharPredicates.
-    )
     object test extends Tests with CommonTestModule{
       def platformSegment = "native"
     }
@@ -213,7 +209,7 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule{
   )
 
   def scalaDocPluginClasspath = T{ Agg[PathRef]() }
-//  def scalacOptions = T{ if (scalaVersion() == "2.12.7") Seq("-opt:l:method") else Nil }
+//  def scalacOptions = T{ if (scalaVersion() == "2.12.10") Seq("-opt:l:method") else Nil }
 
   def platformSegment: String
   def millSourcePath = super.millSourcePath / ammonite.ops.up
@@ -233,7 +229,7 @@ trait CommonTestModule extends ScalaModule with TestModule{
     ivy"com.lihaoyi::utest::0.7.4",
   )
 
-//  def scalacOptions = T{ if (scalaVersion() == "2.12.7") Seq("-opt:l:method") else Nil }
+//  def scalacOptions = T{ if (scalaVersion() == "2.12.10") Seq("-opt:l:method") else Nil }
 
   def sources = T.sources(
     millSourcePath / "src",
@@ -253,10 +249,10 @@ object perftests extends Module{
 
   object bench2 extends PerfTestModule {
     def moduleDeps = Seq(
-      scalaparse.jvm("2.12.7").test,
-      pythonparse.jvm("2.12.7").test,
-      cssparse.jvm("2.12.7").test,
-      fastparse.jvm("2.12.7").test,
+      scalaparse.jvm("2.12.10").test,
+      pythonparse.jvm("2.12.10").test,
+      cssparse.jvm("2.12.10").test,
+      fastparse.jvm("2.12.10").test,
     )
 
   }
@@ -264,9 +260,9 @@ object perftests extends Module{
 
   object compare extends PerfTestModule {
     def moduleDeps = Seq(
-      fastparse.jvm("2.12.7").test,
-      scalaparse.jvm("2.12.7").test,
-      pythonparse.jvm("2.12.7").test
+      fastparse.jvm("2.12.10").test,
+      scalaparse.jvm("2.12.10").test,
+      pythonparse.jvm("2.12.10").test
     )
     def ivyDeps = super.ivyDeps() ++ Agg(
       ivy"org.json4s::json4s-ast:3.6.0",
@@ -283,11 +279,11 @@ object perftests extends Module{
   }
 
   trait PerfTestModule extends ScalaModule with TestModule{
-    def scalaVersion = "2.12.7"
+    def scalaVersion = "2.12.10"
     def scalacOptions = Seq("-opt:l:method")
     def resources = T.sources{
       Seq(PathRef(perftests.millSourcePath / "resources")) ++
-        fastparse.jvm("2.12.7").test.resources()
+        fastparse.jvm("2.12.10").test.resources()
     }
     def testFrameworks = Seq("utest.runner.Framework")
     def ivyDeps = Agg(
@@ -298,13 +294,13 @@ object perftests extends Module{
 }
 
 object demo extends ScalaJSModule{
-  def scalaJSVersion = "0.6.31"
-  def scalaVersion = "2.13.0"
+  def scalaJSVersion = "0.6.32"
+  def scalaVersion = "2.13.1"
   def moduleDeps = Seq(
-    scalaparse.js("2.13.0", "0.6.31"),
-    cssparse.js("2.13.0", "0.6.31"),
-    pythonparse.js("2.13.0", "0.6.31"),
-    fastparse.js("2.13.0", "0.6.31").test,
+    scalaparse.js("2.13.1", "0.6.32"),
+    cssparse.js("2.13.1", "0.6.32"),
+    pythonparse.js("2.13.1", "0.6.32"),
+    fastparse.js("2.13.1", "0.6.32").test,
   )
   def ivyDeps = Agg(
     ivy"org.scala-js::scalajs-dom::0.9.7",
