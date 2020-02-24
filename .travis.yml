@@ -18,7 +18,7 @@ jobs:
   - script: "./mill __.js[2.13.1].test"
     jdk: openjdk10
 
-  - script: "mill __.native[__].test"
+  - script: "./mill __.native[__].test"
     jdk: openjdk10
     before_install:
       - curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
