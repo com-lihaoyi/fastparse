@@ -1,4 +1,4 @@
-sudo: false
+os: linux
 language: scala
 stages:
   - name: test
@@ -12,14 +12,14 @@ jobs:
   - script: "./mill __.jvm[2.13.1].test"
     jdk: openjdk10
 
-  - script: "./mill __.js[2.12.10].test"
+  - script: "./mill __.js[2.12.10,_].test"
     jdk: openjdk10
 
-  - script: "./mill __.js[2.13.1].test"
+  - script: "./mill __.js[2.13.1,_].test"
     jdk: openjdk10
 
   - script: "./mill __.native[__].test"
-    jdk: openjdk10
+    jdk: openjdk8
     before_install:
       - curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
 
@@ -41,4 +41,4 @@ jobs:
   - stage: release
     script:
       - echo "$PGP_SECRET" | base64 --decode | gpg --import
-      - ./mill __.native[2.11.12,_].publish --sonatypeCreds "$SONATYPE_USERNAME:$SONATYPE_PASSWORD" --release true --gpgPassphrase "$PGP_PASSPHRASE"
+      - ./mill __.native[2.11.12].publish --sonatypeCreds "$SONATYPE_USERNAME:$SONATYPE_PASSWORD" --release true --gpgPassphrase "$PGP_PASSPHRASE"
