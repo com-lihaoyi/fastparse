@@ -31,14 +31,14 @@ jobs:
   - stage: release
     script:
       - echo "$PGP_SECRET" | base64 --decode | gpg --import
-      - ./mill __[2.12.10].publish --sonatypeCreds "$SONATYPE_USERNAME:$SONATYPE_PASSWORD" --release true --gpgPassphrase "$PGP_PASSPHRASE"
+      - ./mill __.jvm[__].publish --sonatypeCreds "$SONATYPE_USERNAME:$SONATYPE_PASSWORD" --release true --gpgPassphrase "$PGP_PASSPHRASE"
 
   - stage: release
     script:
       - echo "$PGP_SECRET" | base64 --decode | gpg --import
-      - ./mill __[2.13.1].publish --sonatypeCreds "$SONATYPE_USERNAME:$SONATYPE_PASSWORD" --release true --gpgPassphrase "$PGP_PASSPHRASE"
+      - ./mill __.js[__].publish --sonatypeCreds "$SONATYPE_USERNAME:$SONATYPE_PASSWORD" --release true --gpgPassphrase "$PGP_PASSPHRASE"
 
   - stage: release
     script:
       - echo "$PGP_SECRET" | base64 --decode | gpg --import
-      - ./mill __.native[2.11.12].publish --sonatypeCreds "$SONATYPE_USERNAME:$SONATYPE_PASSWORD" --release true --gpgPassphrase "$PGP_PASSPHRASE"
+      - ./mill __.native[__].publish --sonatypeCreds "$SONATYPE_USERNAME:$SONATYPE_PASSWORD" --release true --gpgPassphrase "$PGP_PASSPHRASE"
