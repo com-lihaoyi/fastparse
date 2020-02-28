@@ -50,11 +50,11 @@ object fastparse extends Module{
     def platformSegment = "native"
     def millSourcePath = super.millSourcePath / ammonite.ops.up
     def scalaNativeVersion = crossScalaNativeVersion
-    override def docJar = T {
+    override def docJar = if(crossScalaNativeVersion == "0.3.9") T {
       val outDir = T.dest
       os.makeDir.all(outDir / 'javadoc)
       createJar(Agg(outDir / 'javadoc))(outDir)
-    }
+    } else super.docJar()
     object test extends Tests with CommonTestModule{
       def platformSegment = "native"
     }
