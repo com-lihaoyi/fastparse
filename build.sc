@@ -3,6 +3,8 @@ import scalalib._
 import scalajslib._
 import scalanativelib._
 import publish._
+import mill.eval.Result
+import mill.modules.Jvm.createJar
 
 val crossVersions = Seq("2.12.10", "2.13.1")
 val crossJsVersions = Seq(
@@ -48,6 +50,11 @@ object fastparse extends Module{
     def platformSegment = "native"
     def millSourcePath = super.millSourcePath / ammonite.ops.up
     def scalaNativeVersion = crossScalaNativeVersion
+    override def docJar = T {
+      val outDir = T.dest
+      os.makeDir.all(outDir / 'javadoc)
+      createJar(Agg(outDir / 'javadoc))(outDir)
+    }
     object test extends Tests with CommonTestModule{
       def platformSegment = "native"
     }
