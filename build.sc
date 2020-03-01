@@ -200,7 +200,7 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule{
     CustomZincWorker
 
   def publishVersion = "2.2.4"
-  def artifactName = millModuleSegments.parts.dropRight(2).mkString("-").stripSuffix("-js")
+  def artifactName = millModuleSegments.parts.dropRight(2).mkString("-").stripSuffix(s"-$platformSegment")
   def pomSettings = PomSettings(
     description = artifactName(),
     organization = "com.lihaoyi",
