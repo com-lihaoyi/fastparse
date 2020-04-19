@@ -64,7 +64,7 @@ object fastparse extends Module{
 trait FastparseModule extends CommonCrossModule{
   def ivyDeps = Agg(
     ivy"com.lihaoyi::sourcecode::0.2.1",
-    ivy"com.lihaoyi::geny::0.5.1"
+    ivy"com.lihaoyi::geny::0.6.0"
   )
   def compileIvyDeps = Agg(
     ivy"org.scala-lang:scala-reflect:${scalaVersion()}"
@@ -199,7 +199,7 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule{
   def zincWorker: ZincWorkerModule =
     CustomZincWorker
 
-  def publishVersion = "2.2.4"
+  def publishVersion = "2.3.0"
   def artifactName = millModuleSegments.parts.dropRight(2).mkString("-").stripSuffix(s"-$platformSegment")
   def pomSettings = PomSettings(
     description = artifactName(),
@@ -279,7 +279,7 @@ object perftests extends Module{
       ivy"io.argonaut::argonaut:6.2",
       ivy"com.typesafe.play::play-json:2.6.9",
       ivy"com.fasterxml.jackson.core:jackson-databind:2.9.4",
-      ivy"com.lihaoyi::ujson:0.6.7",
+      ivy"com.lihaoyi::ujson:1.1.0",
       ivy"org.scala-lang.modules::scala-parser-combinators:1.1.1",
       ivy"org.python:jython:2.7.1b3"
     )
