@@ -6,6 +6,16 @@ to use Fastparse, you probably will want to check out the documentation:
 
 - [Documentation](http://lihaoyi.github.io/fastparse)
 
+If you use FastParse and like it, you will probably enjoy the following book by the Author:
+
+- [*Hands-on Scala Programming*](https://www.handsonscala.com/)
+
+*Hands-on Scala* has uses FastParse extensively throughout the book, with
+the entirety of *Chapter 19: Parsing Structured Text* dedicated to 
+the library and *Chapter 20: Implementing a Programming Language* making heavy
+use of it. *Hands-on Scala* is a great way to level up your skills in Scala
+in general and FastParse in particular.
+
 For a good hands-on tutorial working through the basics of how to use this
 library, check out the following blog post:
 
