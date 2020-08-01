@@ -4,3 +4,7 @@ out/
 .DS_STORE
 *.iml
 .idea
+.coursier
+.bloop/
+.metals/
+project/metals.sbt
