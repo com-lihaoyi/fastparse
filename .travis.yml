@@ -1,4 +1,5 @@
 os: linux
+dist: bionic
 language: scala
 stages:
   - name: test
@@ -6,22 +7,20 @@ stages:
     if: (branch = master AND type = push) OR (tag IS present)
 jobs:
   include:
-  - script: "./mill __.jvm[2.12.10].test"
+  - script: "./mill __.jvm[2.12.13].test"
     jdk: oraclejdk9
 
-  - script: "./mill __.jvm[2.13.1].test"
+  - script: "./mill __.jvm[2.13.4].test"
     jdk: openjdk10
 
-  - script: "./mill __.js[2.12.10,_].test"
+  - script: "./mill __.js[2.12.13,_].test"
     jdk: openjdk10
 
-  - script: "./mill __.js[2.13.1,_].test"
+  - script: "./mill __.js[2.13.4,_].test"
     jdk: openjdk10
 
   - script: "./mill __.native[__].test"
     jdk: openjdk8
-    before_install:
-      - curl https://raw.githubusercontent.com/scala-native/scala-native/master/scripts/travis_setup.sh | bash -x
 
   - script: "./mill all demo.fastOpt perftests.__.compile"
 
