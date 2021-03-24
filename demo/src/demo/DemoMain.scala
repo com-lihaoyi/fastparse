@@ -10,7 +10,7 @@ import scala.scalajs.js
 import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
 import scala.scalajs.js.typedarray.{ArrayBuffer, Uint8Array}
 
-@JSExportTopLevel("demo.DemoMain")
+@JSExportTopLevel("DemoMain")
 object DemoMain {
   @JSExport
   def scalaparser(container: html.Div) = {
