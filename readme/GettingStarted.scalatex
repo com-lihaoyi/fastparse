@@ -6,7 +6,7 @@
 @hl.ref(tests/"MathTests.scala", "import fastparse._", "val tests")
 @hl.ref(tests/"MathTests.scala", Seq("\"pass\"", ""))
 @div(id := "splashdiv")
-@script(raw("""demo.DemoMain.math(document.getElementById("splashdiv"))"""))
+@script(raw("""DemoMain.math(document.getElementById("splashdiv"))"""))
 @p
     FastParse is a Scala library for parsing strings and bytes into structured
     data. This lets you easily write a parser for any arbitrary textual data

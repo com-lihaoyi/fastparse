@@ -5,10 +5,12 @@ import scalanativelib._
 import publish._
 import mill.eval.Result
 import mill.modules.Jvm.createJar
+import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version_mill0.9:0.1.1`
+import de.tobiasroeser.mill.vcs.version.VcsVersion
 
-val crossVersions = Seq("2.12.13", "2.13.4")
-val crossJsVersions = Seq("2.12.13" -> "1.4.0", "2.13.4" -> "1.4.0")
-val crossNativeVersions = Seq("2.12.13" -> "0.4.0", "2.13.4" -> "0.4.0")
+val crossVersions = Seq("2.13.4", "2.12.13", "2.11.12")
+val crossJsVersions = Seq("2.13.4" -> "1.4.0", "2.12.13" -> "1.4.0", "2.11.12" -> "1.4.0")
+val crossNativeVersions = Seq("2.13.4" -> "0.4.0", "2.12.13" -> "0.4.0", "2.11.12" -> "0.4.0")
 
 object fastparse extends Module{
   object jvm extends Cross[fastparseJvmModule](crossVersions:_*)
@@ -16,16 +18,6 @@ object fastparse extends Module{
     def platformSegment = "jvm"
     object test extends Tests with CommonTestModule{
       def platformSegment = "jvm"
-    }
-    object bench extends ScalaModule{
-      def scalaVersion = crossScalaVersion
-
-      def moduleDeps = super.moduleDeps ++ Seq(fastparseJvmModule.this)
-      def ivyDeps = Agg(
-        ivy"com.lihaoyi::fastparse:1.0.0",
-        ivy"com.lihaoyi::ammonite-ops:1.1.2",
-        ivy"org.scala-lang:scala-reflect:${scalaVersion()}",
-      )
     }
   }
 
@@ -54,7 +46,7 @@ object fastparse extends Module{
 trait FastparseModule extends CommonCrossModule{
   def ivyDeps = Agg(
     ivy"com.lihaoyi::sourcecode::0.2.3",
-    ivy"com.lihaoyi::geny::0.6.5"
+    ivy"com.lihaoyi::geny::0.6.7"
   )
   def compileIvyDeps = Agg(
     ivy"org.scala-lang:scala-reflect:${scalaVersion()}"
@@ -163,7 +155,7 @@ trait ExampleParseNativeModule extends CommonCrossModule with ScalaNativeModule{
 
 trait CommonCrossModule extends CrossScalaModule with PublishModule{
 
-  def publishVersion = "2.3.1"
+  def publishVersion = VcsVersion.vcsState().format()
   def artifactName = millModuleSegments.parts.dropRight(2).mkString("-").stripSuffix(s"-$platformSegment")
   def pomSettings = PomSettings(
     description = artifactName(),
@@ -272,7 +264,7 @@ object demo extends ScalaJSModule{
     fastparse.js("2.13.4", "1.4.0").test,
   )
   def ivyDeps = Agg(
-    ivy"org.scala-js::scalajs-dom::0.9.7",
+    ivy"org.scala-js::scalajs-dom::0.9.8",
     ivy"com.lihaoyi::scalatags::0.9.3"
   )
 }

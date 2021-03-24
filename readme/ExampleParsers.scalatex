@@ -45,7 +45,7 @@
             Try it out yourself! Remember that it does not handle whitespace:
 
         @div(id := "mathdiv")
-        @script(raw("""demo.DemoMain.math(document.getElementById("mathdiv"))"""))
+        @script(raw("""DemoMain.math(document.getElementById("mathdiv"))"""))
 
     @sect{Whitespace Handling}
         @hl.ref(tests/"WhitespaceMathTests.scala", "import SingleLineWhitespace._", "val tests")
@@ -84,7 +84,7 @@
             Or try it yourself:
 
         @div(id := "wsmathdiv")
-        @script(raw("""demo.DemoMain.whitespaceMath(document.getElementById("wsmathdiv"))"""))
+        @script(raw("""DemoMain.whitespaceMath(document.getElementById("wsmathdiv"))"""))
 
     @sect{Indentation Grammars}
         @hl.ref(tests/"IndentationTests.scala", "def eval", "val tests")
@@ -116,7 +116,7 @@
         @p
             Try it out!
         @div(id := "indentdiv")
-        @script(raw("""demo.DemoMain.indentation(document.getElementById("indentdiv"))"""))
+        @script(raw("""DemoMain.indentation(document.getElementById("indentdiv"))"""))
 
     @sect{Json}
         @hl.ref(tests/"JsonTests.scala", Seq("object Js {", ""))
@@ -161,12 +161,12 @@
             Try it out!
 
         @div(id := "jsondiv")
-        @script(raw("""demo.DemoMain.json(document.getElementById("jsondiv"))"""))
+        @script(raw("""DemoMain.json(document.getElementById("jsondiv"))"""))
 
     @sect{ScalaParse}
 
         @div(id := "scaladiv")
-        @script(raw("""demo.DemoMain.scalaparser(document.getElementById("scaladiv"))"""))
+        @script(raw("""DemoMain.scalaparser(document.getElementById("scaladiv"))"""))
 
         @p
             ScalaParse is a parser for the entire Scala programming language, written using FastParse. This is notable for a few reasons:
@@ -205,7 +205,7 @@
 
     @sect{PythonParse}
         @div(id := "pythondiv")
-        @script(raw("""demo.DemoMain.python(document.getElementById("pythondiv"))"""))
+        @script(raw("""DemoMain.python(document.getElementById("pythondiv"))"""))
         @p
             There is now an @a("example Python parser", href:="https://github.com/lihaoyi/fastparse/tree/master/pythonparse/shared/src/main/scala/pythonparse") available under a subproject in the repo. This is a good example of a real-world parser: parsing knotty syntax (including indentation-delimited blocks!), building an AST, and with heavy unit tests.
 
@@ -236,7 +236,7 @@
             the file readable and good-looking.
 
         @div(id := "cssdiv")
-        @script(raw("""demo.DemoMain.css(document.getElementById("cssdiv"))"""))
+        @script(raw("""DemoMain.css(document.getElementById("cssdiv"))"""))
 
         @p
             As mentioned above, CssParse builds and AST that stores
