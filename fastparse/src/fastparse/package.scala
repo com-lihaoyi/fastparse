@@ -553,9 +553,14 @@ package object fastparse {
   /**
     * No-op parser that always fails, consuming zero characters
     */
-  def Fail(implicit ctx: P[_]): P[Nothing] = {
+  def Fail(implicit ctx: P[_]): P[Nothing] = Fail("fail", ctx.verboseFailures)
+
+  /**
+    * No-op parser with a custom error message that always fails, consuming zero characters
+    */
+  def Fail(msg: String, verboseFailure: Boolean = true)(implicit ctx: P[_]): P[Nothing] = {
     val res = ctx.freshFailure()
-    if (ctx.verboseFailures) ctx.setMsg(ctx.index, () => "fail")
+    if (verboseFailure) ctx.setMsg(ctx.index, () => msg)
     res
   }
 

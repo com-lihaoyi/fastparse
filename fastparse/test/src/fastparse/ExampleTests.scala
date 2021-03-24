@@ -128,6 +128,7 @@ object ExampleTests extends TestSuite{
       test("passfail"){
         val Parsed.Success((), 0) = parse("asdad", Pass(_))
         val Parsed.Failure(_, 0, _) = parse("asdad", Fail(_))
+        val Parsed.Failure("custom fail msg", 0, _) = parse("asdad", Fail("custom fail msg")(_))
       }
 
       test("index"){
