@@ -160,6 +160,25 @@ object MacroImpls {
     }
   }
 
+  def collectMacro[T: c.WeakTypeTag, V: c.WeakTypeTag]
+                  (c: Context)
+                  (f: c.Expr[PartialFunction[T, V]]): c.Expr[ParsingRun[V]] = {
+    import c.universe._
+
+    val lhs0 = c.prefix.asInstanceOf[c.Expr[EagerOps[T]]]
+    reify {
+      lhs0.splice.parse0 match {
+        case lhs =>
+          if (!lhs.isSuccess) lhs.asInstanceOf[ParsingRun[V]]
+          else {
+            val this2 = lhs.asInstanceOf[ParsingRun[V]]
+            val f2 = f.splice.andThen(v => this2.successValue = v)
+            f2.applyOrElse(this2.successValue.asInstanceOf[T], {_: T => this2.freshFailure()})
+            this2
+          }
+      }
+    }
+  }
 
   def flatMapXMacro[T: c.WeakTypeTag, V: c.WeakTypeTag]
                   (c: Context)
