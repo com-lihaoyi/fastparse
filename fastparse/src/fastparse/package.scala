@@ -177,6 +177,15 @@ package object fastparse {
       */
     def filter(f: T => Boolean)
               (implicit ctx: P[Any]): P[T] = macro MacroImpls.filterMacro[T]
+
+    /**
+      * Transforms the result of this parser using the given partial function,
+      * failing the parse if the partial function is not defined on the result
+      * of the current parser. This is eqivalent to 
+      * `.filter(f.isDefinedAt).map(f.apply)`
+      */
+    def collect[V](f: PartialFunction[T, V]): P[V] = macro MacroImpls.collectMacro[T, V]
+
     /**
       * Transforms the result of this parser using the given function into a
       * new parser which is applied (after whitespace). Useful for doing
