@@ -18,7 +18,7 @@ object NoWhitespace {
   * characters.
   */
 object SingleLineWhitespace {
-  implicit val whitespace = {implicit ctx: ParsingRun[_] =>
+  implicit val whitespace: ParsingRun[_] => ParsingRun[Unit] = {implicit ctx: ParsingRun[_] =>
     var index = ctx.index
     val input = ctx.input
     
@@ -34,7 +34,7 @@ object SingleLineWhitespace {
   * "\r" and "\n" whitespace characters.
   */
 object MultiLineWhitespace {
-  implicit val whitespace = {implicit ctx: ParsingRun[_] =>
+  implicit val whitespace: ParsingRun[_] => ParsingRun[Unit] = {implicit ctx: ParsingRun[_] =>
     var index = ctx.index
     val input = ctx.input
 
@@ -51,7 +51,7 @@ object MultiLineWhitespace {
   * programming languages such as Bash, Ruby, or Python
   */
 object ScriptWhitespace{
-  implicit val whitespace = {implicit ctx: ParsingRun[_] =>
+  implicit val whitespace: ParsingRun[_] => ParsingRun[Unit] = {implicit ctx: ParsingRun[_] =>
     val input = ctx.input
     @tailrec def rec(current: Int, state: Int): ParsingRun[Unit] = {
       if (!input.isReachable(current)) ctx.freshSuccessUnit(current)
@@ -78,7 +78,7 @@ object ScriptWhitespace{
   * in the Java programming language
   */
 object JavaWhitespace{
-  implicit val whitespace = {implicit ctx: ParsingRun[_] =>
+  implicit val whitespace: ParsingRun[_] => ParsingRun[Unit] = {implicit ctx: ParsingRun[_] =>
     val input = ctx.input
     val startIndex = ctx.index
     @tailrec def rec(current: Int, state: Int): ParsingRun[Unit] = {
@@ -128,7 +128,7 @@ object JavaWhitespace{
   * case in the Jsonnet programming language
   */
 object JsonnetWhitespace{
-  implicit val whitespace = {implicit ctx: ParsingRun[_] =>
+  implicit val whitespace: ParsingRun[_] => ParsingRun[Unit] = {implicit ctx: ParsingRun[_] =>
     val input = ctx.input
     val startIndex = ctx.index
     @tailrec def rec(current: Int, state: Int): ParsingRun[Unit] = {
@@ -178,7 +178,7 @@ object JsonnetWhitespace{
   * in the Scala programming language
   */
 object ScalaWhitespace {
-  implicit val whitespace = {implicit ctx: ParsingRun[_] =>
+  implicit val whitespace: ParsingRun[_] => ParsingRun[Unit] = {implicit ctx: ParsingRun[_] =>
     val input = ctx.input
     val startIndex = ctx.index
     @tailrec def rec(current: Int, state: Int, nesting: Int): ParsingRun[Unit] = {

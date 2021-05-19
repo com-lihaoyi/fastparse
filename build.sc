@@ -5,6 +5,7 @@ import scalanativelib._
 import publish._
 import mill.eval.Result
 import mill.modules.Jvm.createJar
+import mill.scalalib.api.Util.isScala3
 import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version_mill0.9:0.1.1`
 import de.tobiasroeser.mill.vcs.version.VcsVersion
 import $ivy.`com.github.lolgab::mill-mima_mill0.9:0.0.6`
@@ -47,12 +48,13 @@ object fastparse extends Module{
 
 trait FastparseModule extends CommonCrossModule{
   def ivyDeps = Agg(
-    ivy"com.lihaoyi::sourcecode::0.2.3",
+    ivy"com.lihaoyi::sourcecode::0.2.7",
     ivy"com.lihaoyi::geny::0.6.10"
   )
-  def compileIvyDeps = Agg(
-    ivy"org.scala-lang:scala-reflect:${scalaVersion()}"
-  )
+  def compileIvyDeps =
+    if(isScala3(crossScalaVersion)) Agg.empty[Dep]
+    else Agg(ivy"org.scala-lang:scala-reflect:$crossScalaVersion")
+
   def generatedSources = T{
     val dir = T.ctx().dest
     val file = dir/"fastparse"/"SequencerGen.scala"
@@ -186,12 +188,11 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule with Mima{
 
   def platformSegment: String
   def millSourcePath = super.millSourcePath / os.up
-  def sources = T.sources(
-    millSourcePath / "src",
-    millSourcePath / s"src-$platformSegment"
-  )
-
-
+  def sources = T.sources { super.sources() ++
+    Seq(
+      millSourcePath / s"src-$platformSegment"
+    ).map(PathRef(_))
+  }
 }
 trait CommonTestModule extends ScalaModule with TestModule.Utest{
 
@@ -199,8 +200,6 @@ trait CommonTestModule extends ScalaModule with TestModule.Utest{
   def ivyDeps = Agg(
     ivy"com.lihaoyi::utest::0.7.10",
   )
-
-//  def scalacOptions = T{ if (scalaVersion() == "2.12.10") Seq("-opt:l:method") else Nil }
 
   def sources = T.sources(
     millSourcePath / "src",
