@@ -28,7 +28,7 @@ object ParserInputSource extends ParserInputSourceLowPri {
 }
 trait ParserInputSourceLowPri{
 
-  implicit def fromReadable[T](s: T)(implicit f: T => geny.Readable) = FromReadable(
+  implicit def fromReadable[T](s: T)(implicit f: T => geny.Readable): FromReadable = FromReadable(
     f(s),
     // Default bufferSize of 4096. Somewhat arbitrary, but doesn't seem to matter 
     // much in benchmarks, e.g. on parsing `GenJSCode.scala`:
@@ -53,8 +53,8 @@ trait ParserInputSourceLowPri{
 }
 
 object ParserInput{
-  implicit def fromString(s: String) = IndexedParserInput(s)
-  implicit def FromIterator(s: Iterator[String]) = IteratorParserInput(s)
+  implicit def fromString(s: String): IndexedParserInput = IndexedParserInput(s)
+  implicit def FromIterator(s: Iterator[String]): IteratorParserInput = IteratorParserInput(s)
 }
 /**
   * ParserInput class represents data that is needed to parse.
