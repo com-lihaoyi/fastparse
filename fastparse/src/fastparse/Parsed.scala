@@ -95,10 +95,8 @@ object Parsed{
 
   object Failure{
     def apply(label: String, index: Int, extra: Extra) = new Failure(label, index, extra)
-    def unapply(x: Failure): Option[(String, Int, Extra)] = x match{
-      case f: Failure => Some((f.label, f.index, f.extra))
-      case _ => None
-    }
+    def unapply(f: Failure): Some[(String, Int, Extra)] =
+      Some((f.label, f.index, f.extra))
     def formatMsg(input: ParserInput, stack: List[(String, Int)], index: Int) = {
       "Expected " + Failure.formatStack(input, stack) +
       ", found " + Failure.formatTrailing(input, index)
