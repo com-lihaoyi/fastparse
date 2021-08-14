@@ -191,6 +191,30 @@ object CssTests extends TestSuite {
                 UnicodeRangeToken("0025", "00FF"), DelimToken(","), UnicodeRangeToken("4??", "4??")), false))))))))))
 
       }
+
+      // https://github.com/com-lihaoyi/fastparse/issues/255
+      test("issue-#255: comments at the end of a block"){
+        val Parsed.Success(value2, index2) = parse(
+          """
+            |p {
+            |  font-family: sans-serif;
+            |  color: red;
+            |  /* test comment */
+            |}
+            |
+          """.stripMargin, CssRulesParser.ruleList(_))
+
+        assert(
+          value2 ==
+            RuleList(Seq(
+              QualifiedRule(
+                Left(ElementSelector("p")),
+                DeclarationList(Seq(
+                  Left(Declaration("font-family", Seq(IdentToken("sans-serif")), false)),
+                  Left(Declaration("color", Seq(IdentToken("red")), false))))))),
+          index2 == 80
+        )
+      }
     }
   }
 }
