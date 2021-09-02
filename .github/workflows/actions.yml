@@ -15,7 +15,9 @@ jobs:
         with:
           java-version: 8
       - name: Run tests
-        run: ./mill -i __.publishArtifacts __.compile __.fastOpt __.test
+        run: |
+          ./mill -i __.resolvedIvyDeps
+          ./mill -i -j $(nproc) all __.publishArtifacts __.compile __.fastOpt __.test
 
   publish-sonatype:
     if: github.repository == 'com-lihaoyi/fastparse' && contains(github.ref, 'refs/tags/')
