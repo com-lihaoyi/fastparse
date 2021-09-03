@@ -7,7 +7,7 @@ on:
       - master
 
 jobs:
-  test:
+  test-js:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -16,12 +16,37 @@ jobs:
           java-version: 8
       - name: Run tests
         run: |
-          ./mill -i __.resolvedIvyDeps
-          ./mill -i -j $(nproc) all __.publishArtifacts __.compile __.fastOpt __.test
+          ./mill -i __.js.__.resolvedIvyDeps
+          ./mill -i -j $(nproc) all __.js.__.publishArtifacts __.js.__.compile __.js.__.fastOpt __.js.__.test
+  test-native:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v1
+        with:
+          java-version: 8
+      - name: Run tests
+        run: |
+          ./mill -i __.native.__.resolvedIvyDeps
+          ./mill -i -j $(nproc) all __.native.__.publishArtifacts __.native.__.compile __.native.__.test
+  test-jvm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-java@v1
+        with:
+          java-version: 8
+      - name: Run tests
+        run: |
+          ./mill -i __.jvm.__.resolvedIvyDeps
+          ./mill -i -j $(nproc) all __.jvm.__.publishArtifacts __.jvm.__.compile __.jvm.__.test
 
   publish-sonatype:
     if: github.repository == 'com-lihaoyi/fastparse' && contains(github.ref, 'refs/tags/')
-    needs: test
+    needs:
+      - test-jvm
+      - test-js
+      - test-native
     runs-on: ubuntu-latest
     env:
       SONATYPE_PGP_PRIVATE_KEY: ${{ secrets.SONATYPE_PGP_PRIVATE_KEY }}
