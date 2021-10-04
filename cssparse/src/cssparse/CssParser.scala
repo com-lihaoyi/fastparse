@@ -8,7 +8,7 @@ import fastparse.NoWhitespace._
 
 object CssTokensParser {
 
-  def comment[_: P] = P( "/*" ~/ (!"*/" ~ AnyChar).rep ~/ "*/")
+  def comment[_: P] = P( "/*" ~ (!"*/" ~ AnyChar).rep ~ "*/")
 
   def newline[_: P] = P( "\n" | "\r\n" | "\r" | "\f")
 

@@ -195,6 +195,14 @@ object ExampleTests extends TestSuite{
         val Parsed.Success(12, _) = parse("1100", binaryNum(_))
       }
 
+      test("collect"){
+        def binary[_: P] = P( ("0" | "1" ).rep.! )
+        def binaryNum[_: P] = P( binary.collect { case v if v.size % 2 == 0 => Integer.parseInt(v, 2)} )
+
+        val Parsed.Success("1100", _) = parse("1100", binary(_))
+        val Parsed.Failure(_, _, _) = parse("11001", binaryNum(_))
+      }
+
       test("flatMap"){
         def leftTag[_: P] = P( "<" ~ (!">" ~ AnyChar).rep(1).! ~ ">")
         def rightTag[_: P](s: String) = P( "</" ~ s.! ~ ">" )

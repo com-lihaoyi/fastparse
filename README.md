@@ -4,7 +4,7 @@ FastParse [![Build Status](https://travis-ci.org/lihaoyi/fastparse.svg?branch=ma
 This is where the code for the FastParse parsing library lives! If you want
 to use Fastparse, you probably will want to check out the documentation:
 
-- [Documentation](http://lihaoyi.github.io/fastparse)
+- [Documentation](https://com-lihaoyi.github.io/fastparse)
 
 If you use FastParse and like it, you will probably enjoy the following book by the Author:
 
