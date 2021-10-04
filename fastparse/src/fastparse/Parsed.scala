@@ -221,4 +221,3 @@ object Parsed{
     def longAggregateMsg = Failure.formatMsg(input, stack ++ Seq(groupAggregateString -> index), index)
   }
 }
-
