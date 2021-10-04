@@ -3,4 +3,7 @@ target/
 out/
 .DS_STORE
 *.iml
-.idea
+.idea/
+.bloop/
+.metals/
+.vscode/
