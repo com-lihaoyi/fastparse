@@ -735,5 +735,4 @@ object MacroImpls {
                          ctx: c.Expr[ParsingRun[_]]): c.Expr[ParsingRun[R]] = {
     MacroImpls.parsedSequence0[T, V, R](c)(other, true)(s, None, ctx)
   }
-
 }
