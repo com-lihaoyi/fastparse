@@ -7,6 +7,8 @@ import mill.eval.Result
 import mill.modules.Jvm.createJar
 import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version_mill0.9:0.1.1`
 import de.tobiasroeser.mill.vcs.version.VcsVersion
+import $ivy.`com.github.lolgab::mill-mima_mill0.9:0.0.6`
+import com.github.lolgab.mill.mima._
 
 val crossVersions = Seq("2.13.4", "2.12.13", "2.11.12")
 val crossJsVersions = Seq("2.13.4" -> "1.5.1", "2.12.13" -> "1.5.1", "2.11.12" -> "1.5.1")
@@ -155,9 +157,15 @@ trait ExampleParseNativeModule extends CommonCrossModule with ScalaNativeModule{
 
 
 
-trait CommonCrossModule extends CrossScalaModule with PublishModule{
+trait CommonCrossModule extends CrossScalaModule with PublishModule with Mima{
 
   def publishVersion = VcsVersion.vcsState().format()
+  def mimaPreviousVersions = Seq(
+    VcsVersion
+      .vcsState()
+      .lastTag
+      .getOrElse(throw new Exception("Missing last tag"))
+  )
   def artifactName = millModuleSegments.parts.dropRight(2).mkString("-").stripSuffix(s"-$platformSegment")
   def pomSettings = PomSettings(
     description = artifactName(),
