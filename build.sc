@@ -11,8 +11,8 @@ import de.tobiasroeser.mill.vcs.version.VcsVersion
 import $ivy.`com.github.lolgab::mill-mima_mill0.9:0.0.6`
 import com.github.lolgab.mill.mima._
 
-val crossVersions = Seq("2.13.4", "2.12.13", "2.11.12")
-val crossJsVersions = Seq("2.13.4" -> "1.5.1", "2.12.13" -> "1.5.1", "2.11.12" -> "1.5.1")
+val crossVersions = Seq("3.1.2", "2.13.4", "2.12.13", "2.11.12")
+val crossJsVersions = Seq("3.1.2" -> "1.10.0", "2.13.4" -> "1.5.1", "2.12.13" -> "1.5.1", "2.11.12" -> "1.5.1")
 val crossNativeVersions = Seq("2.13.4" -> "0.4.0", "2.12.13" -> "0.4.0", "2.11.12" -> "0.4.0")
 
 object fastparse extends Module{
@@ -48,8 +48,8 @@ object fastparse extends Module{
 
 trait FastparseModule extends CommonCrossModule{
   def ivyDeps = Agg(
-    ivy"com.lihaoyi::sourcecode::0.2.7",
-    ivy"com.lihaoyi::geny::0.6.10"
+    ivy"com.lihaoyi::sourcecode::0.2.8",
+    ivy"com.lihaoyi::geny::0.7.1"
   )
   def compileIvyDeps =
     if(isScala3(crossScalaVersion)) Agg.empty[Dep]
