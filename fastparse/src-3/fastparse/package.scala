@@ -93,7 +93,7 @@ package object fastparse {
   /**
     * Parses an exact string value.
     */
-  implicit def LiteralStr(s: String)(implicit ctx: P[Any]): P[Unit] = ??? // macro MacroImpls.literalStrMacro
+  implicit def LiteralStr(s: String)(implicit ctx: P[Any]): P[Unit] = NonMarcroImpls.literalStrNonMacro(s)(ctx)
 
   /**
     * Parses a string value case-insensitively
@@ -110,13 +110,13 @@ package object fastparse {
   /**
     * Provides [[EagerOps]] extension methods on [[String]]
     */
-  implicit def EagerOpsStr(parse0: String)(implicit ctx: P[Any]): fastparse.EagerOps[Unit] = ??? // macro MacroImpls.eagerOpsStrMacro
+  implicit def EagerOpsStr(parse0: String)(implicit ctx: P[Any]): fastparse.EagerOps[Unit] = EagerOps(parse0)
 
 
   /**
     * Provides [[EagerOps]] extension methods on [[P]]]
     */
-  implicit class EagerOps[T](val parse0: P[T]) extends AnyVal{
+  implicit class EagerOps[T](val parse0: P[T]) {
     /**
       * Plain cut operator. Runs the parser, and if it succeeds, backtracking
       * past that point is now prohibited
@@ -230,21 +230,21 @@ package object fastparse {
   /**
     * Provides [[ByNameOps]] extension methods on [[String]]s
     */
-  implicit def ByNameOpsStr(parse0: String)(implicit ctx: P[Any]): fastparse.ByNameOps[Unit] = ??? //macro MacroImpls.byNameOpsStrMacro
+  implicit def ByNameOpsStr(parse0: String)(implicit ctx: P[Any]): fastparse.ByNameOps[Unit] = ByNameOps(LiteralStr(parse0)) //macro MacroImpls.byNameOpsStrMacro
   /**
     * Provides [[ByNameOps]] extension methods on [[P]]s
     */
   implicit def ByNameOps[T](parse0: => P[T]): ByNameOps[T] = new ByNameOps(() => parse0)
-  class ByNameOps[T](val parse0: () => P[T]) extends AnyVal{
-    /**
-      * Repeat operator; runs the LHS parser 0 or more times separated by the
-      * given whitespace (in implicit scope), and returns
-      * a `Seq[T]` of the parsed values. On failure, backtracks to the starting
-      * index of the last run.
-      */
-    def rep[V](implicit repeater: Implicits.Repeater[T, V],
-               whitespace: P[_] => P[Unit],
-               ctx: P[Any]): P[V] = ??? // macro MacroRepImpls.repXMacro1ws[T, V]
+  class ByNameOps[T](val parse0: () => P[T]) {
+    ///**
+    //  * Repeat operator; runs the LHS parser 0 or more times separated by the
+    //  * given whitespace (in implicit scope), and returns
+    //  * a `Seq[T]` of the parsed values. On failure, backtracks to the starting
+    //  * index of the last run.
+    //  */
+    //def rep[V](implicit repeater: Implicits.Repeater[T, V],
+    //           whitespace: P[_] => P[Unit],
+    //           ctx: P[Any]): P[V] = ??? // macro MacroRepImpls.repXMacro1ws[T, V]
     /**
       * Repeat operator; runs the LHS parser at least `min` to at most `max`
       * times separated by the given whitespace (in implicit scope) and
@@ -276,27 +276,27 @@ package object fastparse {
                ctx: P[Any]): P[V] =
       new RepImpls[T](parse0).rep[V](min, sep)
 
-    /**
-      * Repeat operator; runs the LHS parser at least `min`
-      * times separated by the given whitespace (in implicit scope),
-      * and returns a `Seq[T]` of the parsed values. On
-      * failure, backtracks to the starting index of the last run.
-      */
-    def rep[V](min: Int)
-              (implicit repeater: Implicits.Repeater[T, V],
-               whitespace: P[_] => P[Unit],
-               ctx: P[Any]): P[V] =
-      ??? //macro MacroRepImpls.repXMacro2ws[T, V]
+    ///**
+    //  * Repeat operator; runs the LHS parser at least `min`
+    //  * times separated by the given whitespace (in implicit scope),
+    //  * and returns a `Seq[T]` of the parsed values. On
+    //  * failure, backtracks to the starting index of the last run.
+    //  */
+    //def rep[V](min: Int)
+    //          (implicit repeater: Implicits.Repeater[T, V],
+    //           whitespace: P[_] => P[Unit],
+    //           ctx: P[Any]): P[V] =
+    //  ??? //macro MacroRepImpls.repXMacro2ws[T, V]
 
-    /**
-      * Raw repeat operator; runs the LHS parser 0 or more times *without*
-      * any whitespace in between, and returns
-      * a `Seq[T]` of the parsed values. On failure, backtracks to the starting
-      * index of the last run.
-      */
-    def repX[V](implicit repeater: Implicits.Repeater[T, V],
-                ctx: P[Any]): P[V] =
-      ??? //macro MacroRepImpls.repXMacro1[T, V]
+    ///**
+    //  * Raw repeat operator; runs the LHS parser 0 or more times *without*
+    //  * any whitespace in between, and returns
+    //  * a `Seq[T]` of the parsed values. On failure, backtracks to the starting
+    //  * index of the last run.
+    //  */
+    //def repX[V](implicit repeater: Implicits.Repeater[T, V],
+    //            ctx: P[Any]): P[V] =
+    //  ??? //macro MacroRepImpls.repXMacro1[T, V]
 
     /**
       * Raw repeat operator; runs the LHS parser at least `min` to at most `max`
@@ -327,16 +327,16 @@ package object fastparse {
                 ctx: P[Any]): P[V] =
       new RepImpls[T](parse0).repX[V](min, sep)
 
-    /**
-      * Raw repeat operator; runs the LHS parser at least `min`
-      * times *without* any whitespace in between,
-      * and returns a `Seq[T]` of the parsed values. On
-      * failure, backtracks to the starting index of the last run.
-      */
-    def repX[V](min: Int)
-               (implicit repeater: Implicits.Repeater[T, V],
-                ctx: P[Any]): P[V] =
-      ??? //macro MacroRepImpls.repXMacro2[T, V]
+    ///**
+    //  * Raw repeat operator; runs the LHS parser at least `min`
+    //  * times *without* any whitespace in between,
+    //  * and returns a `Seq[T]` of the parsed values. On
+    //  * failure, backtracks to the starting index of the last run.
+    //  */
+    //def repX[V](min: Int)
+    //           (implicit repeater: Implicits.Repeater[T, V],
+    //            ctx: P[Any]): P[V] =
+    //  ??? //macro MacroRepImpls.repXMacro2[T, V]
 
     /**
       * Hides the internals of the given parser when it fails, such that it

@@ -5,20 +5,20 @@ import utest._
 import scala.collection.mutable
 object IteratorTests extends TestSuite {
 
-  def toInput(string: String) = {
+  class LoggedDropsParserInput(data: Iterator[String])
+    extends IteratorParserInput(data) {
 
-    class LoggedDropsParserInput(data: Iterator[String])
-      extends IteratorParserInput(data) {
+    val drops = mutable.SortedSet.empty[Int]
 
-      val drops = mutable.SortedSet.empty[Int]
-
-      override def dropBuffer(index: Int): Unit = {
-        drops.add(index)
-        super.dropBuffer(index)
-      }
-
-      override def toString = s"LoggedDropsParserInput($drops)"
+    override def dropBuffer(index: Int): Unit = {
+      drops.add(index)
+      super.dropBuffer(index)
     }
+
+    override def toString = s"LoggedDropsParserInput($drops)"
+  }
+
+  def toInput(string: String): LoggedDropsParserInput = {
     new LoggedDropsParserInput(string.grouped(1))
   }
 
@@ -58,9 +58,9 @@ object IteratorTests extends TestSuite {
     }
 
     test("whitespaceImmediateCutDrop"){
-      import NoWhitespace._
+      import NoWhitespace.{noWhitespaceImplicit => _, _}
       implicit def whitespace: P[_] => P[Unit] = { implicit ctx: P[_] =>
-        " ".? ~ " ".rep
+        " ".? ~ " ".rep()
       }
 
       def p[_p: P] = P( "ab" ~/ "cd" | "z" )
@@ -164,8 +164,8 @@ object IteratorTests extends TestSuite {
       test("rep"){
         import NoWhitespace._
         def p[_p: P] = P( "a" ~ "b" ~ "c")
-        def rep[_p: P] = P( (p.rep ~ "d") | (p.rep ~ "e") )
-        def repCutted[_p: P] = P( (p.rep ~ "d") | (p.rep ~/ "e") )
+        def rep[_p: P] = P( (p.rep() ~ "d") | (p.rep() ~ "e") )
+        def repCutted[_p: P] = P( (p.rep() ~ "d") | (p.rep() ~/ "e") )
 
         val input1 = toInput("abcabcabcd")
         val Parsed.Success(_, i1) = parse(input1, rep(_))
@@ -209,8 +209,8 @@ object IteratorTests extends TestSuite {
 
       test("whitespaceApi"){
 
-        implicit def whitespace = { implicit ctx: P[_] =>
-          " ".? ~~/ " ".repX
+        implicit def whitespace: P[_] => P[Unit] = { implicit ctx: P[_] =>
+          " ".? ~~/ " ".repX()
         }
 
         def a[_p: P] = P( "aaa" )

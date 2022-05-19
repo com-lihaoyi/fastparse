@@ -235,7 +235,7 @@ package object fastparse {
   /**
     * Provides [[ByNameOps]] extension methods on [[P]]s
     */
-  implicit def ByNameOps[T](parse0: => P[T]) = new ByNameOps(() => parse0)
+  implicit def ByNameOps[T](parse0: => P[T]): ByNameOps[T] = new ByNameOps(() => parse0)
   class ByNameOps[T](val parse0: () => P[T]) extends AnyVal{
     /**
       * Repeat operator; runs the LHS parser 0 or more times separated by the
