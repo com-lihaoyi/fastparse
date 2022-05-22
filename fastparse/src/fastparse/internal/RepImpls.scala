@@ -1,9 +1,9 @@
 package fastparse.internal
 
+
 import fastparse.{Implicits, NoWhitespace, ParsingRun}
 
 import scala.annotation.tailrec
-
 
 class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
   def repX[V](min: Int = 0,
