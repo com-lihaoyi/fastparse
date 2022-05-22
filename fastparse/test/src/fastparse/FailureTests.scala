@@ -47,7 +47,7 @@ object FailureTests extends TestSuite{
       }
       test("rep") - check{
         def parseB[_p: P] = P( "a" | "b" )
-        def parseA[_p: P] = P( parseB.rep() ~ "c" )
+        def parseA[_p: P] = P( parseB.rep ~ "c" )
         parseA(_)
       }
       test("repApply") - check{

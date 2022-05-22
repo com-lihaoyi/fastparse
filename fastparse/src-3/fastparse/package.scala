@@ -211,15 +211,15 @@ package object fastparse {
     def ?[V](implicit optioner: Implicits.Optioner[T, V], ctx: P[Any]): P[V] =
       NonMarcroImpls.optionNonMacro[T, V](parse0)(optioner, ctx)
 
-    /// **
-    //  * Repeat operator; runs the LHS parser 0 or more times separated by the
-    //  * given whitespace (in implicit scope), and returns
-    //  * a `Seq[T]` of the parsed values. On failure, backtracks to the starting
-    //  * index of the last run.
-    //  */
-    // def rep[V](implicit repeater: Implicits.Repeater[T, V],
-    //           whitespace: P[_] => P[Unit],
-    //           ctx: P[Any]): P[V] = ??? // macro MacroRepImpls.repXMacro1ws[T, V]
+    /**
+      * Repeat operator; runs the LHS parser 0 or more times separated by the
+      * given whitespace (in implicit scope), and returns
+      * a `Seq[T]` of the parsed values. On failure, backtracks to the starting
+      * index of the last run.
+      */
+    def rep[V](using repeater: Implicits.Repeater[T, V],
+               whitespace: P[_] => P[Unit],
+               ctx: P[Any]): P[V] = rep()
     /** Repeat operator; runs the LHS parser at least `min` to at most `max`
       * times separated by the given whitespace (in implicit scope) and
       * separator `sep`, and returns a `Seq[T]` of the parsed values. On
@@ -259,15 +259,14 @@ package object fastparse {
     //           ctx: P[Any]): P[V] =
     //  ??? //macro MacroRepImpls.repXMacro2ws[T, V]
 
-    /// **
-    //  * Raw repeat operator; runs the LHS parser 0 or more times *without*
-    //  * any whitespace in between, and returns
-    //  * a `Seq[T]` of the parsed values. On failure, backtracks to the starting
-    //  * index of the last run.
-    //  */
-    // def repX[V](implicit repeater: Implicits.Repeater[T, V],
-    //            ctx: P[Any]): P[V] =
-    //  ??? //macro MacroRepImpls.repXMacro1[T, V]
+     /**
+      * Raw repeat operator; runs the LHS parser 0 or more times *without*
+      * any whitespace in between, and returns
+      * a `Seq[T]` of the parsed values. On failure, backtracks to the starting
+      * index of the last run.
+      */
+     def repX[V](using repeater: Implicits.Repeater[T, V],
+                ctx: P[Any]): P[V] = repX()
 
     /** Raw repeat operator; runs the LHS parser at least `min` to at most `max`
       * times separated by the

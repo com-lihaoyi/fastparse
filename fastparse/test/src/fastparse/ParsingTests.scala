@@ -70,9 +70,9 @@ object ParsingTests extends TestSuite{
       check(implicit c => IgnoreCase("`~@!3#$4%^&*()-_=+[{]}|\\,.? Hello World"), ("`~@!3#$4%^&*()-_=+[{]}|\\,.? hElLo wOrLd", 0), Success((), 39))
     }
     test("repeat"){
-      check(implicit c => "Hello".!.rep(), ("HelloHello!", 0), Success(Seq("Hello", "Hello"), 10))
-      check(implicit c => "Hello".!.rep(), ("HelloHello!", 2), Success(Seq(), 2))
-      check(implicit c => "Hello".!.rep(), ("HelloHello!", 5), Success(Seq("Hello"), 10))
+      check(implicit c => "Hello".!.rep, ("HelloHello!", 0), Success(Seq("Hello", "Hello"), 10))
+      check(implicit c => "Hello".!.rep, ("HelloHello!", 2), Success(Seq(), 2))
+      check(implicit c => "Hello".!.rep, ("HelloHello!", 5), Success(Seq("Hello"), 10))
       check(implicit c => "Hello".!.rep(1), ("HelloHello!", 0), Success(Seq("Hello", "Hello"), 10))
       check(implicit c => "Hello".!.rep(1, max = 1), ("HelloHello!", 0), Success(Seq("Hello"), 5))
       check(implicit c => "Hello".!.rep(1, max = 2), ("HelloHello!", 0), Success(Seq("Hello", "Hello"), 10))
@@ -83,14 +83,14 @@ object ParsingTests extends TestSuite{
       check(implicit c => "Hello".!.rep(0, max=1), ("HelloHello!", 0), Success(Seq("Hello"), 5))
 
       checkFail(implicit c => "Hello".rep(1), ("HelloHello!", 2), 2)
-      checkFail(implicit c => "Hello".rep() ~ "bye" ~ End, ("HelloHello!", 0), 10)
+      checkFail(implicit c => "Hello".rep ~ "bye" ~ End, ("HelloHello!", 0), 10)
     }
     test("either"){
       check(implicit c => "Hello".! | "Bye".!, ("HelloBye", 0), Success("Hello", 5))
       check(implicit c => ("Hello" | "Bye").!, ("HelloBye", 5), Success("Bye", 8))
       checkFail(implicit c => "Hello" | "Bye", ("HelloBye", 2), 2)
-      check(implicit c => ("Hello" | "Bye").!.rep(), ("HelloBye", 0), Success(Seq("Hello", "Bye"), 8))
-      check(implicit c => ("Hello" | "Bye").rep().!, ("HelloBye", 0), Success("HelloBye", 8))
+      check(implicit c => ("Hello" | "Bye").!.rep, ("HelloBye", 0), Success(Seq("Hello", "Bye"), 8))
+      check(implicit c => ("Hello" | "Bye").rep.!, ("HelloBye", 0), Success("HelloBye", 8))
     }
     test("sequence"){
       def p[_p: P] = "Hello".! ~ "Bye".!
@@ -157,7 +157,7 @@ object ParsingTests extends TestSuite{
           val Parsed.Failure(_,11,_) = parse("worldxamaba", parser2(_))
         }
         test("rep"){
-          def parser[_p: P] = P("world" ~ "x" ~/ ("am" ~ "a").rep() ~ "cow").rep()
+          def parser[_p: P] = P("world" ~ "x" ~/ ("am" ~ "a").rep ~ "cow").rep
 
           // Failing before the cut backtracks all the way out
           val Parsed.Success((), 0) = parse("worldlols", parser(_))
@@ -169,7 +169,7 @@ object ParsingTests extends TestSuite{
           // Failing *after* the nested `|` block again prevents backtracking
           val Parsed.Failure(_,9,_) = parse("worldxama", parser(_))
 
-          def parser2[_p: P]: P[Unit] = P("world" ~ "x" ~ ("am" ~/ "a" ~ "b").rep() ~ "a" ~ "cow").rep()
+          def parser2[_p: P] = P("world" ~ "x" ~ ("am" ~/ "a" ~ "b").rep ~ "a" ~ "cow").rep
 
           // Failing before the cut backtracks all the way out
           val Parsed.Success((), 0) = parse("worldlols", parser2(_))
@@ -190,9 +190,9 @@ object ParsingTests extends TestSuite{
         checkFail(implicit c => "Hello" ~ ("wtf" ~/ "omg" ~ "bbq" | "wtfom"), ("Hellowtfomgbbe", 0), 11)
       }
       test("rep"){
-        check(implicit c => ("Hello" ~ "Bye").rep(), ("HelloByeHello", 0), Success((), 8))
-        checkFail(implicit c => ("Hello" ~/ "Bye").rep(), ("HelloByeHello", 0), 13)
-        check(implicit c => ("Hello" ~ "Bye").rep(), ("HelloByeHello", 0), Success((), 8))
+        check(implicit c => ("Hello" ~ "Bye").rep, ("HelloByeHello", 0), Success((), 8))
+        checkFail(implicit c => ("Hello" ~/ "Bye").rep, ("HelloByeHello", 0), 13)
+        check(implicit c => ("Hello" ~ "Bye").rep, ("HelloByeHello", 0), Success((), 8))
         checkFail(implicit c => "Hello".rep(sep = "Bye" ~/ Pass), ("HelloBye", 0), 8)
         checkFail(implicit c => "Hello".rep(sep = "Bye"./), ("HelloBye", 0), 8)
       }

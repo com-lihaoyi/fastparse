@@ -68,11 +68,11 @@ object ExampleTests extends TestSuite{
       }
 
       test("repeat"){
-        def ab[_p: P] = P( "a".rep() ~ "b" )
+        def ab[_p: P] = P( "a".rep ~ "b" )
         val Parsed.Success(_, 8) = parse("aaaaaaab", ab(_))
         val Parsed.Success(_, 4) = parse("aaaba", ab(_))
 
-        def abc[_p: P] = P( "a".rep(sep=LiteralStr("b")) ~ "c")
+        def abc[_p: P] = P( "a".rep(sep="b") ~ "c")
         val Parsed.Success(_, 8) = parse("abababac", abc(_))
         val Parsed.Failure(_, 3, _) = parse("abaabac", abc(_))
 
@@ -97,7 +97,7 @@ object ExampleTests extends TestSuite{
       }
 
       test("either"){
-        def either[_p: P] = P( "a".rep() ~ ("b" | "c" | "d") ~ End)
+        def either[_p: P] = P( "a".rep ~ ("b" | "c" | "d") ~ End)
 
         val Parsed.Success(_, 6) = parse("aaaaab", either(_))
         val f @ Parsed.Failure(_, 5, _) = parse("aaaaae", either(_))
@@ -109,15 +109,15 @@ object ExampleTests extends TestSuite{
       }
 
       test("end"){
-        def noEnd[_p: P] = P( "a".rep() ~ "b")
-        def withEnd[_p: P] = P( "a".rep() ~ "b" ~ End)
+        def noEnd[_p: P] = P( "a".rep ~ "b")
+        def withEnd[_p: P] = P( "a".rep ~ "b" ~ End)
 
         val Parsed.Success(_, 4) = parse("aaaba", noEnd(_))
         val Parsed.Failure(_, 4, _) = parse("aaaba", withEnd(_))
       }
 
       test("start"){
-        def ab[_p: P] = P( (("a" | Start) ~ "b").rep() ~ End).!
+        def ab[_p: P] = P( (("a" | Start) ~ "b").rep ~ End).!
 
         val Parsed.Success("abab", 4) = parse("abab", ab(_))
         val Parsed.Success("babab", 5) = parse("babab", ab(_))
@@ -131,29 +131,29 @@ object ExampleTests extends TestSuite{
       }
 
       test("index"){
-        def finder[_p: P] = P( "hay".rep() ~ Index ~ "needle" ~ "hay".rep() )
+        def finder[_p: P] = P( "hay".rep ~ Index ~ "needle" ~ "hay".rep )
 
         val Parsed.Success(9, _) = parse("hayhayhayneedlehay", finder(_))
       }
 
       test("capturing"){
-        def capture1[_p: P] = P( "a".rep().! ~ "b" ~ End)
+        def capture1[_p: P] = P( "a".rep.! ~ "b" ~ End)
 
         val Parsed.Success("aaa", 4) = parse("aaab", capture1(_))
 
-        def capture2[_p: P] = P( "a".rep().! ~ "b".! ~ End)
+        def capture2[_p: P] = P( "a".rep.! ~ "b".! ~ End)
 
         val Parsed.Success(("aaa", "b"), 4) = parse("aaab", capture2(_))
 
-        def capture3[_p: P] = P( "a".rep().! ~ "b".! ~ "c".! ~ End)
+        def capture3[_p: P] = P( "a".rep.! ~ "b".! ~ "c".! ~ End)
 
         val Parsed.Success(("aaa", "b", "c"), 5) = parse("aaabc", capture3(_))
 
-        def captureRep[_p: P] = P( "a".!.rep() ~ "b" ~ End)
+        def captureRep[_p: P] = P( "a".!.rep ~ "b" ~ End)
 
         val Parsed.Success(Seq("a", "a", "a"), 4) = parse("aaab", captureRep(_))
 
-        def captureOpt[_p: P] = P( "a".rep() ~ "b".!.? ~ End)
+        def captureOpt[_p: P] = P( "a".rep ~ "b".!.? ~ End)
 
         val Parsed.Success(Some("b"), 4) = parse("aaab", captureOpt(_))
       }
@@ -168,7 +168,7 @@ object ExampleTests extends TestSuite{
 
 
       test("lookahead"){
-        def keyword[_p: P] = P( ("hello" ~ &(" ")).!.rep() )
+        def keyword[_p: P] = P( ("hello" ~ &(" ")).!.rep )
 
         val Parsed.Success(Seq("hello"), _) = parse("hello ", keyword(_))
         val Parsed.Success(Seq(), _) = parse("hello", keyword(_))        
@@ -186,7 +186,7 @@ object ExampleTests extends TestSuite{
       }
 
       test("map"){
-        def binary[_p: P] = P( ("0" | "1" ).rep().! )
+        def binary[_p: P] = P( ("0" | "1" ).rep.! )
         def binaryNum[_p: P] = P( binary.map(Integer.parseInt(_, 2)) )
 
         val Parsed.Success("1100", _) = parse("1100", binary(_))
@@ -194,7 +194,7 @@ object ExampleTests extends TestSuite{
       }
 
       test("collect"){
-        def binary[_p: P] = P( ("0" | "1" ).rep().! )
+        def binary[_p: P] = P( ("0" | "1" ).rep.! )
         def binaryNum[_p: P] = P( binary.collect { case v if v.size % 2 == 0 => Integer.parseInt(v, 2)} )
 
         val Parsed.Success("1100", _) = parse("1100", binary(_))
@@ -261,20 +261,20 @@ object ExampleTests extends TestSuite{
 
     test("charX"){
       test("charPred"){
-        def cp[_p: P] = P( CharPred(_.isUpper).rep().! ~ "." ~ End )
+        def cp[_p: P] = P( CharPred(_.isUpper).rep.! ~ "." ~ End )
 
         val Parsed.Success("ABC", _) = parse("ABC.", cp(_))
         val Parsed.Failure(_, 2, _) = parse("ABc.", cp(_))
       }
 
       test("charIn"){
-        def ci[_p: P] = P( CharIn("abc", "xyz").rep().! ~ End )
+        def ci[_p: P] = P( CharIn("abc", "xyz").rep.! ~ End )
 
         val Parsed.Success("aaabbccxyz", _) = parse("aaabbccxyz", ci(_))
         val Parsed.Failure(_, 7, _) = parse("aaabbccdxyz.", ci(_))
 
 
-        def digits[_p: P] = P( CharIn("0-9").rep().! )
+        def digits[_p: P] = P( CharIn("0-9").rep.! )
 
         val Parsed.Success("12345", _) = parse("12345abcde", digits(_))
         val Parsed.Success("123", _) = parse("123abcde45", digits(_))
@@ -333,7 +333,7 @@ object ExampleTests extends TestSuite{
 
       test("repnocut"){
         def alpha[_p: P] = P( CharIn("a-z") )
-        def stmt[_p: P] = P( "val " ~ alpha.rep(1).! ~ ";" ~ " ".rep() )
+        def stmt[_p: P] = P( "val " ~ alpha.rep(1).! ~ ";" ~ " ".rep )
         def stmts[_p: P] = P( stmt.rep(1) ~ End )
 
         val Parsed.Success(Seq("abcd"), _) = parse("val abcd;", stmts(_))
@@ -349,7 +349,7 @@ object ExampleTests extends TestSuite{
 
       test("repcut"){
         def alpha[_p: P] = P( CharIn("a-z") )
-        def stmt[_p: P] = P( "val " ~/ alpha.rep(1).! ~ ";" ~ " ".rep() )
+        def stmt[_p: P] = P( "val " ~/ alpha.rep(1).! ~ ";" ~ " ".rep )
         def stmts[_p: P] = P( stmt.rep(1) ~ End )
 
         val Parsed.Success(Seq("abcd"), _) = parse("val abcd;", stmts(_))
@@ -525,7 +525,7 @@ object ExampleTests extends TestSuite{
       def Indexed[_p: P, T](p: => P[T]): P[(Int, T, Int)] = P( Index ~ p ~ Index )
 
       def Add[_p: P] = P( Num ~ "+" ~ Num )
-      def Num[_p: P] = Indexed( CharsWhileIn("0-9").rep().! )
+      def Num[_p: P] = Indexed( CharsWhileIn("0-9").rep.! )
 
       val Parsed.Success((0, "1", 1, (2, "2", 3)), _) = parse("1+2", Add(_))
     }
