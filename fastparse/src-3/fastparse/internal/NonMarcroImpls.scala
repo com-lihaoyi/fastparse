@@ -2,7 +2,83 @@ package fastparse.internal
 
 import fastparse.{EagerOps, Implicits, ParserInput, ParsingRun}
 
+import scala.quoted.*
+
 object NonMarcroImpls {
+
+  def literalStrMacro(s: Expr[String])(ctx: Expr[ParsingRun[Any]])(using quotes: Quotes): Expr[ParsingRun[Unit]] = {
+    import quotes.reflect.*
+
+    s.value match {
+      case Some(x) =>
+        val literalized = Expr[String](Util.literalize(x))
+        if (x.length == 0) '{ $ctx.freshSuccessUnit() }
+        else if (x.length == 1) {
+          val charLiteral = Expr[Char](x.charAt(0))
+          '{
+
+            $ctx match {
+              case ctx1 =>
+                val input = ctx1.input
+                val index = ctx1.index
+                val res =
+                  if (input.isReachable(index) && input(index) == $charLiteral) {
+                    ctx1.freshSuccessUnit(index + 1)
+                  } else {
+                    ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
+                  }
+                if (ctx1.verboseFailures) ctx1.aggregateTerminal(index, () => $literalized)
+                res
+            }
+
+          }
+        } else {
+          val xLength = Expr[Int](x.length)
+          val checker =
+            '{ (string: _root_.fastparse.ParserInput, offset: _root_.scala.Int) =>
+              ${
+                x.zipWithIndex
+                  .map { case (char, i) => '{ string.apply(offset + ${ Expr(i) }) == ${ Expr(char) } } }
+                  .reduce[Expr[Boolean]] { case (l, r) => '{ $l && $r } }
+              }
+            }
+          '{
+
+            $ctx match {
+              case ctx1 =>
+                val index = ctx1.index
+                val end   = index + $xLength
+                val input = ctx1.input
+                val res =
+                  if (input.isReachable(end - 1) && ${ checker }(input, index)) {
+                    ctx1.freshSuccessUnit(end)
+                  } else {
+                    ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
+                  }
+                if (ctx1.verboseFailures) {
+                  ctx1.aggregateTerminal(index, () => $literalized)
+                }
+                res
+
+            }
+          }
+        }
+      case None =>
+        '{
+          val s1 = $s
+          $ctx match {
+            case ctx1 =>
+              val index = ctx1.index
+              val res =
+                if (Util.startsWith(ctx1.input, s1, index)) ctx1.freshSuccessUnit(index + s1.length)
+                else ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
+              if (ctx1.verboseFailures) ctx1.aggregateTerminal(index, () => Util.literalize(s1))
+              res
+          }
+        }
+    }
+
+  }
 
   def filterNonMacro[T](lhs: () => ParsingRun[_])(f: T => Boolean)(ctx1: ParsingRun[_]) = {
     val startIndex = ctx1.index

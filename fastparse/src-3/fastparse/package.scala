@@ -88,7 +88,7 @@ package object fastparse {
   def P[T](t: => P[T])(implicit name: sourcecode.Name, ctx: P[_]): P[T] = NonMarcroImpls.pNonMacro(() => t)(name, ctx)
 
   /** Parses an exact string value. */
-  implicit def LiteralStr(s: String)(implicit ctx: P[Any]): P[Unit] = NonMarcroImpls.literalStrNonMacro(s)(ctx)
+  implicit inline def LiteralStr(s: String)(implicit ctx: P[Any]): P[Unit] = ${NonMarcroImpls.literalStrMacro('{s})('{ctx})}
 
   /** Parses a string value case-insensitively */
   def IgnoreCase(s: String)(implicit ctx: P[Any]): P[Unit] = {
