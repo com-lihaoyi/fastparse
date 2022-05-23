@@ -100,6 +100,21 @@ package object fastparse {
     res
   }
 
+
+  extension [T] (inline parse0: P[T])
+    /** Tests the output of the parser with a given predicate, failing the
+      * parse if the predicate returns false. Useful for doing local validation
+      * on bits and pieces of your parsed output
+      */
+    inline def filter(f: T => Boolean)(implicit ctx: P[Any]): P[T] =
+      NonMarcroImpls.filterNonMacro[T](parse0)(f)(ctx)
+
+    /** Either-or operator: tries to parse the left-hand-side, and if that
+      * fails it backtracks and tries to pass the right-hand-side. Can be
+      * chained more than once to parse larger numbers of alternatives.
+      */
+    inline def |[V >: T](inline other: => P[V])(implicit ctx: P[Any]): P[V] = NonMarcroImpls.eitherNonMacro(() => parse0)(() => other)(ctx)
+
   /** Provides [[EagerOps]] extension methods on [[String]] */
   implicit def EagerOpsStr(parse0: String)(implicit ctx: P[Any]): fastparse.EagerOps[Unit] = EagerOps(parse0)
 
@@ -185,19 +200,6 @@ package object fastparse {
       */
     def ~~[V, R](other: => P[V])(implicit s: Implicits.Sequencer[T, V, R], ctx: P[_]): P[R] =
       NonMarcroImpls.parsedSequence0[T, V, R](parse0)(() => other, false)(s, None, ctx)
-
-    /** Tests the output of the parser with a given predicate, failing the
-      * parse if the predicate returns false. Useful for doing local validation
-      * on bits and pieces of your parsed output
-      */
-    def filter(f: T => Boolean)(implicit ctx: P[Any]): P[T] =
-      NonMarcroImpls.filterNonMacro(parse0)(f)(ctx) // macro MacroImpls.filterMacro[T]
-
-    /** Either-or operator: tries to parse the left-hand-side, and if that
-      * fails it backtracks and tries to pass the right-hand-side. Can be
-      * chained more than once to parse larger numbers of alternatives.
-      */
-    def |[V >: T](other: => P[V])(implicit ctx: P[Any]): P[V] = NonMarcroImpls.eitherNonMacro(parse0)(() => other)(ctx)
 
     /** Capture operator; makes the parser return the span of input it parsed
       * as a [[String]], which can then be processed further using [[~]],

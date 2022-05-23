@@ -80,10 +80,10 @@ object NonMarcroImpls {
 
   }
 
-  def filterNonMacro[T](lhs: () => ParsingRun[_])(f: T => Boolean)(ctx1: ParsingRun[_]) = {
+  inline def filterNonMacro[T](inline lhs: ParsingRun[_])(f: T => Boolean)(ctx1: ParsingRun[_]): ParsingRun[T] = {
     val startIndex = ctx1.index
-    lhs()
-    val res =
+    lhs
+    val res: ParsingRun[T] =
       if (!ctx1.isSuccess) ctx1.asInstanceOf[ParsingRun[T]]
       else if (f(ctx1.successValue.asInstanceOf[T])) ctx1.asInstanceOf[ParsingRun[T]]
       else ctx1.freshFailure().asInstanceOf[ParsingRun[T]]
@@ -315,7 +315,7 @@ object NonMarcroImpls {
     }
   }
 
-  def eitherNonMacro[T, V >: T](lhs0: () => ParsingRun[T])(other: () => ParsingRun[V])(ctx5: ParsingRun[Any])
+  def eitherNonMacro[T, V >: T](lhs0: () => ParsingRun[T])(other: () =>ParsingRun[V])(ctx5: ParsingRun[Any])
       : ParsingRun[V] = {
 
     val oldCut = ctx5.cut
