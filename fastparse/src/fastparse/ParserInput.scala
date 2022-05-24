@@ -94,7 +94,7 @@ abstract class ParserInput extends IsReachable {
 }
 
 case class IndexedParserInput(data: String) extends ParserInput {
-  override def apply(index: Int) = data.charAt(index)
+  override def apply(index: Int): Char = data.charAt(index)
 
   /**
     * As for `IndexedSeq` mode `dropBuffer` does nothing.

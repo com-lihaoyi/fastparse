@@ -529,15 +529,11 @@ package object fastparse {
     */
   def CharIn(s: String*)(implicit ctx: P[_]): P[Unit] =
     MacroInlineImpls.charInNonMacro(s: _*)(ctx) // macro MacroImpls.charInMacro
-  /** Parses one or more characters as long as they are contained
-    * in one of the input strings representing character classes
-    */
-  def CharsWhileIn(s: String)(implicit ctx: P[_]): P[Unit] = MacroInlineImpls.charsWhileInMacro(s, 1)(ctx)
 
   /** Parses `min` or more characters as long as they are contained
     * in one of the input strings representing character classes
     */
-  def CharsWhileIn(s: String, min: Int)(implicit ctx: P[_]): P[Unit] = MacroInlineImpls.charsWhileInMacro(s, min)(ctx)
+  inline def CharsWhileIn(inline s: String, min: Int = 1)(implicit ctx: P[_]): P[Unit] = ${MacroInlineImpls.charsWhileInMacro('s, 'min)('ctx)}
 
   /** Parses `min` or more characters as long as they satisfy the given
     * predicate

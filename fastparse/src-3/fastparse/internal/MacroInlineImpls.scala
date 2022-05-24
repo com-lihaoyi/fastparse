@@ -350,7 +350,57 @@ object MacroInlineImpls {
     else ctx6.freshSuccess(ctx6.input.slice(startPos, ctx6.index))
   }
 
-  def parseCharCls(ss: Seq[String]): Char => Boolean = {
+  def parseCharCls(char: Expr[Char], ss: Seq[String])(using quotes: Quotes): Expr[Boolean] = {
+    import quotes.reflect.*
+
+    val snippets = for (s <- ss) yield {
+      val output = collection.mutable.Buffer.empty[Either[Char, (Char, Char)]]
+      var i      = 0
+      while (i < s.length) {
+        s(i) match {
+          case '\\' =>
+            i += 1
+            output.append(Left(s(i)))
+          case '-' =>
+            i += 1
+            val Left(last) = output.remove(output.length - 1)
+            output.append(Right((last, s(i))))
+          case c => output.append(Left(c))
+        }
+        i += 1
+      }
+
+      (
+        output.collect { case Left(char) => CaseDef(Expr(char).asTerm, None, Expr(true).asTerm) },
+        output.collect { case Right((l, h)) => (l, h) }
+      )
+    }
+
+    val (literals, ranges) = snippets.unzip
+
+    '{
+      val charIn = $char
+      ${
+        Match(
+          '{ charIn }.asTerm,
+          literals.flatten.toList :+ CaseDef(
+            Wildcard(),
+            None,
+            '{
+              ${
+                ranges.flatten.map { (l, h) => '{ ${ Expr(l) } <= charIn && charIn <= ${ Expr(h) } } }.reduceOption {
+                  (l, r) =>
+                    '{ $l || $r }
+                }.getOrElse(Expr(false))
+              }
+            }.asTerm
+          )
+        ).asExprOf[Boolean]
+      }
+    }
+  }
+
+  def parseCharClsNonMacro(ss: Seq[String]): Char => Boolean = {
 
     val snippets = for (s <- ss) yield {
       val output = collection.mutable.Buffer.empty[Either[Char, (Char, Char)]]
@@ -385,7 +435,7 @@ object MacroInlineImpls {
 
   def charInNonMacro(literals: String*)(ctx1: ParsingRun[Any]): ParsingRun[Unit] = {
 
-    val charPred  = parseCharCls(literals)
+    val charPred  = parseCharClsNonMacro(literals)
     def char      = ctx1.input(ctx1.index)
     val bracketed = literals.map(l => "[" + Util.literalize(l).drop(1).dropRight(1) + "]").mkString
     val index     = ctx1.index
@@ -413,25 +463,34 @@ object MacroInlineImpls {
     res
   }
 
-  def charsWhileInMacro(literal: String, min: Int)(ctx1: ParsingRun[Any]): ParsingRun[Unit] = {
+  def charsWhileInMacro(s: Expr[String], min: Expr[Int])(ctx: Expr[ParsingRun[Any]])(using
+      quotes: Quotes
+  ): Expr[ParsingRun[Unit]] = {
+    import quotes.reflect.*
 
-    val bracketed = "[" + Util.literalize(literal).drop(1).dropRight(1) + "]"
+    val literal = s.value.getOrElse(report.errorAndAbort("Function can only accept constant singleton type", s))
 
-    var index   = ctx1.index
-    val input   = ctx1.input
-    val start   = index
-    val goal    = min + start
-    val matcher = parseCharCls(Seq(literal))
-    while (
-      input.isReachable(index) &&
-      matcher(input(index))
-    ) index += 1
-    val res =
-      if (index >= goal) ctx1.freshSuccessUnit(index = index)
-      else ctx1.freshFailure()
+    val bracketed = Expr[String]("[" + Util.literalize(literal).drop(1).dropRight(1) + "]")
 
-    if (ctx1.verboseFailures) ctx1.aggregateTerminal(start, () => bracketed)
-    res
+    '{
+      $ctx match {
+        case ctx1 =>
+          var index = ctx1.index
+          val input = ctx1.input
+          val start = index
+          val goal  = $min + start
+          while (
+            input.isReachable(index) &&
+            ${ parseCharCls('{ input(index) }, Seq(literal)) }
+          ) index += 1
+          val res =
+            if (index >= goal) ctx1.freshSuccessUnit(index = index)
+            else ctx1.freshFailure()
+
+          if (ctx1.verboseFailures) ctx1.aggregateTerminal(start, () => $bracketed)
+          res
+      }
+    }
   }
 
   inline def charsWhileInline(inline p0: Char => Boolean, min: Int)(ctx0: ParsingRun[Any]): ParsingRun[Unit] = {
