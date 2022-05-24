@@ -201,15 +201,24 @@ package object fastparse {
     inline def ~~[V, R](inline other: P[V])(using s: Implicits.Sequencer[T, V, R], ctx: P[_]): P[R] =
       ${ MacroInlineImpls.parsedSequence0[T, V, R]('parse0, 'other, false)('s, null, 'ctx) }
 
-  end extension
-
-  extension [T](parse0: => P[T])
     /** Repeat operator; runs the LHS parser 0 or more times separated by the
       * given whitespace (in implicit scope), and returns
       * a `Seq[T]` of the parsed values. On failure, backtracks to the starting
       * index of the last run.
       */
-    def rep[V](using repeater: Implicits.Repeater[T, V], whitespace: P[_] => P[Unit], ctx: P[Any]): P[V] = rep()
+    inline def rep[V](using repeater: Implicits.Repeater[T, V], whitespace: P[_] => P[Unit], ctx: P[Any]): P[V] =
+      ${ MacroRepImpls.repXMacro0[T, V]('parse0, 'whitespace, null)('repeater, 'ctx) }
+
+    ///** Repeat operator; runs the LHS parser at least `min`
+    //  * times separated by the given whitespace (in implicit scope),
+    //  * and returns a `Seq[T]` of the parsed values. On
+    //  * failure, backtracks to the starting index of the last run.
+    //  */
+    //inline def rep[V](inline min: Int)(using repeater: Implicits.Repeater[T, V], whitespace: P[_] => P[Unit], ctx: P[Any]): P[V] =
+    //  ${ MacroRepImpls.repXMacro0[T, V]('parse0, 'whitespace, 'min)('repeater, 'ctx) }
+  end extension
+
+  extension [T](parse0: => P[T])
 
     /** Repeat operator; runs the LHS parser at least `min` to at most `max`
       * times separated by the given whitespace (in implicit scope) and
@@ -219,14 +228,14 @@ package object fastparse {
       * The convenience parameter `exactly` is provided to set both `min` and
       * `max` to the same value.
       */
-    def rep[V](min: Int = 0, sep: => P[_] = null, max: Int = Int.MaxValue, exactly: Int = -1)(using
+    inline def rep[V](min: Int = 0, sep: => P[_] = null, inline max: Int = Int.MaxValue, inline exactly: Int = -1)(using
         repeater: Implicits.Repeater[T, V],
         whitespace: P[_] => P[Unit],
         ctx: P[Any]
     ): P[V] =
-      if (max == Int.MaxValue && exactly == -1)
-      then new RepImpls[T](() => parse0).rep[V](min, sep)
-      else new RepImpls[T](() => parse0).rep[V](min, sep, max, exactly)
+      inline (max, exactly) match
+        case (Int.MaxValue, -1) => new RepImpls[T](() => parse0).rep[V](min, sep)
+        case _                  => new RepImpls[T](() => parse0).rep[V](min, sep, max, exactly)
 
     /// **
     //  * Repeat operator; runs the LHS parser at least `min`
