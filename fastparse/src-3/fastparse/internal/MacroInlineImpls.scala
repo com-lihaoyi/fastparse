@@ -386,50 +386,12 @@ object MacroInlineImpls {
           literals.flatten.toList :+ CaseDef(
             Wildcard(),
             None,
-            '{
-              ${
-                ranges.flatten.map { (l, h) => '{ ${ Expr(l) } <= charIn && charIn <= ${ Expr(h) } } }.reduceOption {
-                  (l, r) =>
-                    '{ $l || $r }
-                }.getOrElse(Expr(false))
-              }
-            }.asTerm
+            ranges.flatten.map { (l, h) => '{ ${ Expr(l) } <= charIn && charIn <= ${ Expr(h) } } }.reduceOption {
+              (l, r) => '{ $l || $r }
+            }.getOrElse(Expr(false)).asTerm
           )
         ).asExprOf[Boolean]
       }
-    }
-  }
-
-  def parseCharClsNonMacro(ss: Seq[String]): Char => Boolean = {
-
-    val snippets = for (s <- ss) yield {
-      val output = collection.mutable.Buffer.empty[Either[Char, (Char, Char)]]
-      var i      = 0
-      while (i < s.length) {
-        s(i) match {
-          case '\\' =>
-            i += 1
-            output.append(Left(s(i)))
-          case '-' =>
-            i += 1
-            val Left(last) = output.remove(output.length - 1)
-            output.append(Right((last, s(i))))
-          case c => output.append(Left(c))
-        }
-        i += 1
-      }
-
-      (
-        output.collect { case Left(char) => char },
-        output.collect { case Right((l, h)) => Range.inclusive(l, h) }
-      )
-    }
-
-    val (literals, ranges) = snippets.unzip
-    val literalSet         = literals.flatten.toSet
-    val flatRange          = ranges.flatten.toList
-    (char: Char) => {
-      literalSet.contains(char) || flatRange.exists(_.contains(char))
     }
   }
 
@@ -465,6 +427,7 @@ object MacroInlineImpls {
         report.errorAndAbort("Function can only accept constant singleton type", s)
     }
   }
+
   inline def charPredInline(inline p0: Char => Boolean)(ctx0: ParsingRun[Any]): ParsingRun[Unit] = {
     val startIndex = ctx0.index
     val res =
