@@ -306,7 +306,7 @@ object NonMarcroImpls {
     }
   }
 
-  def eitherNonMacro[T, V >: T](lhs0: () => ParsingRun[T])(other: () =>ParsingRun[V])(ctx5: ParsingRun[Any])
+  def eitherNonMacro[T, V >: T](lhs0: () => ParsingRun[T])(other: () => ParsingRun[V])(ctx5: ParsingRun[Any])
       : ParsingRun[V] = {
 
     val oldCut = ctx5.cut
@@ -447,55 +447,92 @@ object NonMarcroImpls {
     res
   }
 
-  def stringInMacro0(ignoreCase: Boolean, literals: String*)(ctx1: ParsingRun[Any]): ParsingRun[Unit] = {
+  def stringInMacro0(
+      ignoreCaseExpr: Expr[Boolean],
+      s: Expr[Seq[String]]
+  )(ctx: Expr[ParsingRun[Any]])(using quotes: Quotes): Expr[ParsingRun[Unit]] = {
 
+    import quotes.reflect.*
+
+    val ignoreCase = ignoreCaseExpr.valueOrAbort
+
+    val literals = s match {
+      case Varargs(args @ Exprs(argValues)) =>
+        argValues
+      case _ =>
+        report.errorAndAbort("Function can only accept constant singleton type", s)
+    }
     val trie = new CompactTrieNode(
       new TrieNode(if (ignoreCase) literals.map(_.toLowerCase) else literals)
     )
 
-    val $ctx1  = ctx1
-    def $index = $ctx1.index
-    val $input = $ctx1.input
+    '{
+      $ctx match {
+        case ctx1 =>
+          val index = ctx1.index
+          val input = ctx1.input
 
-    var $output: Int = -1
+          var output: Int       = -1
+          def setOutput(x: Int) = output = x
 
-    def charAtN(n: Int) = if (ignoreCase) $input.apply(n).toLower else $input.apply(n)
+          ${
 
-    def rec(depth: Int, t: CompactTrieNode): Unit = {
-      def $n = $index + depth
-
-      if (t.word) $output = $n
-      if ($input.isReachable($n)) {
-        if (t.children.isEmpty) ()
-        else {
-          val $charAt = charAtN($n)
-          t.children.collectFirst {
-            case (`$charAt`, tup) => tup
-          } match {
-            case Some(("", v)) => rec(depth + 1, v)
-            case Some((s, v)) =>
-              def $checks = s
-                .zipWithIndex
-                .forall { case (char, i) => charAtN($index + depth + i + 1) == char }
-
-              if ($input.isReachable($index + depth + s.length) && $checks) {
-                rec(depth + s.length + 1, v)
+            def charAtN(n: Expr[Int]): Expr[Char] =
+              if (ignoreCase) '{ input.apply($n).toLower }
+              else '{ input.apply($n) }
+            def rec(depth: Int, t: CompactTrieNode): Expr[Unit] = '{
+              val n = index + ${ Expr(depth) }
+              ${
+                if t.word
+                then '{ setOutput(n) }
+                else '{}
               }
-            case _ =>
+              if (input.isReachable(n)) ${
+                if (t.children.isEmpty) '{ () }
+                else {
+                  val casedefs = t.children.map {
+                    case (k, ("", v)) => CaseDef(Expr(k).asTerm, None, rec(depth + 1, v).asTerm)
+                    case (k, (s, v)) =>
+                      val checks = s
+                        .zipWithIndex
+                        .map { case (char, i) =>
+                          '{ ${ charAtN('{ index + ${ Expr(depth + i + 1) } }) } == ${ Expr(char) } }
+                        }
+                        .reduce[Expr[Boolean]] { case (l, r) => '{ $l && $r } }
+                      CaseDef(
+                        Expr(k).asTerm,
+                        None,
+                        '{
+                          if (input.isReachable(index + ${ Expr(depth + s.length) }) && $checks) {
+                            ${ rec(depth + s.length + 1, v) }
+                          }
+                        }.asTerm
+                      )
+                  }
+
+                  Match(charAtN('{ n }).asTerm, casedefs.toList :+ CaseDef(Wildcard(), None, '{}.asTerm))
+                    .asExprOf[Unit]
+                }
+              }
+            }
+
+            rec(0, trie)
+
           }
-        }
+
+          val res =
+            if (output != -1) ctx1.freshSuccessUnit(output)
+            else ctx1.freshFailure()
+          if (ctx1.verboseFailures) ctx1.setMsg(
+            index,
+            () =>
+              ${
+                Expr("StringIn(" + literals.map(Util.literalize(_)).mkString(", ") + ")")
+              }
+          )
+          res
       }
     }
-
-    val $bracketed = "StringIn(" + literals.map(Util.literalize(_)).mkString(", ") + ")"
-
-    rec(0, trie)
-    val res =
-      if ($output != -1) $ctx1.freshSuccessUnit(index = $output)
-      else $ctx1.freshFailure()
-    if ($ctx1.verboseFailures) $ctx1.setMsg($index, () => $bracketed)
-    res
-
   }
 
 }

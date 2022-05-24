@@ -585,11 +585,12 @@ package object fastparse {
   /** Efficiently parses any one of the given [[String]]s; more efficient than
     * chaining [[EagerOps.|]] together
     */
-  def StringIn(s: String*)(implicit ctx: P[_]): P[Unit] = NonMarcroImpls.stringInMacro0(false, s: _*)(ctx)
+  inline def StringIn(inline s: String*)(implicit ctx: P[_]): P[Unit] = ${NonMarcroImpls.stringInMacro0('false, 's)('ctx)}
 
   /** Efficiently parses any one of the given [[String]]s, case-insensitively;
     * more efficient than chaining [[EagerOps.|]] together with [[IgnoreCase]]
     */
-  def StringInIgnoreCase(s: String*)(implicit ctx: P[_]): P[Unit] = NonMarcroImpls.stringInMacro0(true, s: _*)(ctx)
+  inline def StringInIgnoreCase(inline s: String*)(implicit ctx: P[_]): P[Unit] =
+    ${NonMarcroImpls.stringInMacro0('true, 's)('ctx)}
 
 }
