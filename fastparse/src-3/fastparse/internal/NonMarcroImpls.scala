@@ -1,6 +1,6 @@
 package fastparse.internal
 
-import fastparse.{EagerOps, Implicits, ParserInput, ParsingRun}
+import fastparse.{Implicits, ParserInput, ParsingRun}
 
 import scala.quoted.*
 
@@ -80,7 +80,7 @@ object NonMarcroImpls {
 
   }
 
-  inline def filterNonMacro[T](inline lhs: ParsingRun[_])(f: T => Boolean)(ctx1: ParsingRun[_]): ParsingRun[T] = {
+  inline def filterInline[T](inline lhs: ParsingRun[_])(f: T => Boolean)(ctx1: ParsingRun[_]): ParsingRun[T] = {
     val startIndex = ctx1.index
     lhs
     val res: ParsingRun[T] =
@@ -92,14 +92,14 @@ object NonMarcroImpls {
     res
   }
 
-  def pNonMacro[T](t: () => ParsingRun[T])(
+  inline def pInline[T](inline t: ParsingRun[T])(
       name: sourcecode.Name,
       ctx1: ParsingRun[_]
   ): ParsingRun[T] = {
 
     val startIndex = ctx1.index
     val instrument = ctx1.instrument != null
-    val ctx0       = t()
+    val ctx0       = t
     if (instrument) {
       ctx1.instrument.beforeParse(name.value, startIndex)
     }
@@ -120,9 +120,9 @@ object NonMarcroImpls {
     ctx0
   }
 
-  def cutNonMacro[T](lhs: () => ParsingRun[_])(ctx0: ParsingRun[_]): ParsingRun[T] = {
+  inline def cutInline[T](inline lhs: ParsingRun[_])(ctx0: ParsingRun[_]): ParsingRun[T] = {
     val startIndex = ctx0.index
-    val ctx1       = lhs()
+    val ctx1       = lhs
     val index      = ctx1.index
     if (!ctx1.isSuccess) ctx1.augmentFailure(index)
     else {
@@ -235,14 +235,14 @@ object NonMarcroImpls {
     }.asInstanceOf[_root_.fastparse.ParsingRun[R]]
   }
 
-  def optionNonMacro[T, V](lhs0: () => ParsingRun[T])(
+  inline def optionInline[T, V](inline lhs0: ParsingRun[T])(
       optioner1: Implicits.Optioner[T, V],
       ctx1: ParsingRun[Any]
   ): ParsingRun[V] = {
     val startPos = ctx1.index
     val startCut = ctx1.cut
     ctx1.cut = false
-    lhs0()
+    lhs0
     val postSuccess = ctx1.isSuccess
 
     val res =
@@ -267,7 +267,7 @@ object NonMarcroImpls {
     res
   }
 
-  def mapNonMacro[T, V](lhs: ParsingRun[T])(f: T => V): ParsingRun[V] = {
+  inline def mapInline[T, V](lhs: ParsingRun[T])(inline f: T => V): ParsingRun[V] = {
     if (!lhs.isSuccess) lhs.asInstanceOf[ParsingRun[V]]
     else {
       val this2 = lhs.asInstanceOf[ParsingRun[V]]
@@ -276,7 +276,7 @@ object NonMarcroImpls {
     }
   }
 
-  def collectNonMacro[T, V](lhs: ParsingRun[T])(f: PartialFunction[T, V]): ParsingRun[V] = {
+  inline def collectInline[T, V](lhs: ParsingRun[T])(inline f: PartialFunction[T, V]): ParsingRun[V] = {
     if (!lhs.isSuccess) lhs.asInstanceOf[ParsingRun[V]]
     else {
       val this2 = lhs.asInstanceOf[ParsingRun[V]]
@@ -286,14 +286,14 @@ object NonMarcroImpls {
     }
   }
 
-  def flatMapXNonMacro[T, V](lhs: ParsingRun[T])(f: T => ParsingRun[V]): ParsingRun[V] = {
+  inline def flatMapXInline[T, V](lhs: ParsingRun[T])(inline f: T => ParsingRun[V]): ParsingRun[V] = {
     if (!lhs.isSuccess) lhs.asInstanceOf[ParsingRun[V]]
     else f(lhs.successValue.asInstanceOf[T])
   }
 
-  def flatMapNonMacro[T, V](
+  inline def flatMapInline[T, V](
       lhs: ParsingRun[T]
-  )(f: T => ParsingRun[V])(ws: ParsingRun[Any] => ParsingRun[Unit]): ParsingRun[V] = {
+  )(inline f: T => ParsingRun[V])(ws: ParsingRun[Any] => ParsingRun[Unit]): ParsingRun[V] = {
     if (!lhs.isSuccess) lhs.asInstanceOf[ParsingRun[V]]
     else {
       val oldCapturing = lhs.noDropBuffer
@@ -306,14 +306,14 @@ object NonMarcroImpls {
     }
   }
 
-  def eitherNonMacro[T, V >: T](lhs0: () => ParsingRun[T])(other: () => ParsingRun[V])(ctx5: ParsingRun[Any])
+  inline def eitherInline[T, V >: T](inline lhs0: ParsingRun[T])(inline other: ParsingRun[V])(ctx5: ParsingRun[Any])
       : ParsingRun[V] = {
 
     val oldCut = ctx5.cut
     ctx5.cut = false
     val startPos = ctx5.index
 
-    lhs0()
+    lhs0
     val lhsMsg       = ctx5.shortParserMsg
     val lhsAggregate = ctx5.failureGroupAggregate
     if (ctx5.isSuccess) {
@@ -327,7 +327,7 @@ object NonMarcroImpls {
       if (verboseFailures) ctx5.aggregateMsg(startPos, lhsMsg, lhsAggregate)
 
       ctx5.cut = false
-      other()
+      other
       val rhsMsg = ctx5.shortParserMsg
       val rhsCut = ctx5.cut
       val endCut = rhsCut | oldCut
@@ -339,11 +339,11 @@ object NonMarcroImpls {
     }
   }
 
-  def captureNonMacro(lhs0: () => ParsingRun[Any])(ctx6: ParsingRun[Any]): ParsingRun[String] = {
+  inline def captureInline(inline lhs0: ParsingRun[Any])(ctx6: ParsingRun[Any]): ParsingRun[String] = {
     val startPos     = ctx6.index
     val oldCapturing = ctx6.noDropBuffer
     ctx6.noDropBuffer = true
-    lhs0()
+    lhs0
     ctx6.noDropBuffer = oldCapturing
 
     if (!ctx6.isSuccess) ctx6.asInstanceOf[ParsingRun[String]]
@@ -401,7 +401,7 @@ object NonMarcroImpls {
     res
   }
 
-  def charPredNonMacro(p0: Char => Boolean)(ctx0: ParsingRun[Any]): ParsingRun[Unit] = {
+  inline def charPredInline(inline p0: Char => Boolean)(ctx0: ParsingRun[Any]): ParsingRun[Unit] = {
     val startIndex = ctx0.index
     val res =
       if (!(ctx0.input.isReachable(ctx0.index) && p0(ctx0.input(ctx0.index)))) {
@@ -434,7 +434,7 @@ object NonMarcroImpls {
     res
   }
 
-  def charsWhileMacro(p0: Char => Boolean, min: Int)(ctx0: ParsingRun[Any]): ParsingRun[Unit] = {
+  inline def charsWhileInline(inline p0: Char => Boolean, min: Int)(ctx0: ParsingRun[Any]): ParsingRun[Unit] = {
     var index = ctx0.index
     val input = ctx0.input
     val start = index
@@ -447,7 +447,7 @@ object NonMarcroImpls {
     res
   }
 
-  def stringInMacro0(
+  def stringInNonMacro0(
       ignoreCaseExpr: Expr[Boolean],
       s: Expr[Seq[String]]
   )(ctx: Expr[ParsingRun[Any]])(using quotes: Quotes): Expr[ParsingRun[Unit]] = {
