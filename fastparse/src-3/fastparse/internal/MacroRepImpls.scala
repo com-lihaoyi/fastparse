@@ -106,32 +106,4 @@ object MacroRepImpls {
     }
 
   }
-
-  // def repXMacro1[T: c.WeakTypeTag, V: c.WeakTypeTag](c: Context)(repeater: c.Tree, ctx: c.Tree): c.Tree = {
-  //  import c.universe._
-  //  MacroRepImpls.repXMacro0[T, V](c)(None, None)(repeater, ctx)
-  // }
-  //
-  // def repXMacro2[T: c.WeakTypeTag, V: c.WeakTypeTag](c: Context)(min: c.Tree)(repeater: c.Tree, ctx: c.Tree): c.Tree = {
-  //  import c.universe._
-  //  MacroRepImpls.repXMacro0[T, V](c)(None, Some(min))(repeater, ctx)
-  // }
-  //
-  // def repXMacro1ws[T: c.WeakTypeTag, V: c.WeakTypeTag](c: Context)(
-  //    repeater: c.Tree,
-  //    whitespace: c.Tree,
-  //    ctx: c.Tree
-  // ): c.Tree = {
-  //  import c.universe._
-  //  MacroRepImpls.repXMacro0[T, V](c)(Some(whitespace), None)(repeater, ctx)
-  // }
-  //
-  // def repXMacro2ws[T: c.WeakTypeTag, V: c.WeakTypeTag](c: Context)(min: c.Tree)(
-  //    repeater: c.Tree,
-  //    whitespace: c.Tree,
-  //    ctx: c.Tree
-  // ): c.Tree = {
-  //  import c.universe._
-  //  MacroRepImpls.repXMacro0[T, V](c)(Some(whitespace), Some(min))(repeater, ctx)
-  // }
 }
