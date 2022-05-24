@@ -527,8 +527,8 @@ package object fastparse {
   /** Parses a single character in one of the input strings representing
     * character classes
     */
-  def CharIn(s: String*)(implicit ctx: P[_]): P[Unit] =
-    MacroInlineImpls.charInNonMacro(s: _*)(ctx) // macro MacroImpls.charInMacro
+  inline def CharIn(inline s: String*)(using ctx: P[_]): P[Unit] =
+    ${ MacroInlineImpls.charInMacro('s)('ctx) }
 
   /** Parses `min` or more characters as long as they are contained
     * in one of the input strings representing character classes

@@ -433,24 +433,38 @@ object MacroInlineImpls {
     }
   }
 
-  def charInNonMacro(literals: String*)(ctx1: ParsingRun[Any]): ParsingRun[Unit] = {
+  def charInMacro(s: Expr[Seq[String]])(ctx: Expr[ParsingRun[Any]])(using quotes: Quotes): Expr[ParsingRun[Unit]] = {
+    import quotes.reflect.*
 
-    val charPred  = parseCharClsNonMacro(literals)
-    def char      = ctx1.input(ctx1.index)
-    val bracketed = literals.map(l => "[" + Util.literalize(l).drop(1).dropRight(1) + "]").mkString
-    val index     = ctx1.index
-    val res =
-      if (!ctx1.input.isReachable(index)) {
-        ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
-      } else if (charPred(char)) {
-        ctx1.freshSuccessUnit(index + 1)
-      } else {
-        ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
+    val literals: Seq[String] = getLiteralStrings(s)
+
+    val parsed    = parseCharCls('{ $ctx.input($ctx.index) }, literals)
+    val bracketed = Expr[String](literals.map(l => "[" + Util.literalize(l).drop(1).dropRight(1) + "]").mkString)
+    '{
+      $ctx match {
+        case ctx1 =>
+          val index = ctx1.index
+          val res =
+            if (!ctx1.input.isReachable(index)) {
+              ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
+            } else $parsed match {
+              case true  => ctx1.freshSuccessUnit(index + 1)
+              case false => ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
+            }
+          if (ctx1.verboseFailures) ctx1.aggregateTerminal(index, () => $bracketed)
+          res
       }
-    if (ctx1.verboseFailures) ctx1.aggregateTerminal(index, () => bracketed)
-    res
+    }
   }
 
+  private def getLiteralStrings(s: Expr[Seq[String]])(using quotes: Quotes): Seq[String] = {
+    import quotes.reflect.*
+    s match {
+      case Varargs(args @ Exprs(argValues)) => argValues
+      case _ =>
+        report.errorAndAbort("Function can only accept constant singleton type", s)
+    }
+  }
   inline def charPredInline(inline p0: Char => Boolean)(ctx0: ParsingRun[Any]): ParsingRun[Unit] = {
     val startIndex = ctx0.index
     val res =
@@ -515,12 +529,7 @@ object MacroInlineImpls {
 
     val ignoreCase = ignoreCaseExpr.valueOrAbort
 
-    val literals = s match {
-      case Varargs(args @ Exprs(argValues)) =>
-        argValues
-      case _ =>
-        report.errorAndAbort("Function can only accept constant singleton type", s)
-    }
+    val literals = getLiteralStrings(s)
     val trie = new CompactTrieNode(
       new TrieNode(if (ignoreCase) literals.map(_.toLowerCase) else literals)
     )
