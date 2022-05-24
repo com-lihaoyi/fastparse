@@ -4,7 +4,7 @@ import fastparse.{Implicits, ParserInput, ParsingRun}
 
 import scala.quoted.*
 
-object NonMarcroImpls {
+object MacroInlineImpls {
 
   def literalStrMacro(s: Expr[String])(ctx: Expr[ParsingRun[Any]])(using quotes: Quotes): Expr[ParsingRun[Unit]] = {
     import quotes.reflect.*
@@ -447,7 +447,7 @@ object NonMarcroImpls {
     res
   }
 
-  def stringInNonMacro0(
+  def stringInMacro0(
       ignoreCaseExpr: Expr[Boolean],
       s: Expr[Seq[String]]
   )(ctx: Expr[ParsingRun[Any]])(using quotes: Quotes): Expr[ParsingRun[Unit]] = {
