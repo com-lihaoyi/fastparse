@@ -133,106 +133,99 @@ object MacroInlineImpls {
     }
   }
 
-  def parsedSequence0[T, V, R](lhs: () => ParsingRun[_])(
-      rhs: () => ParsingRun[V],
-      cut: Boolean
-  )(
-      s: Implicits.Sequencer[T, V, R],
-      whitespace: Option[ParsingRun[Any] => ParsingRun[Unit]],
-      ctx: ParsingRun[_]
-  ): ParsingRun[R] = {
+  def parsedSequence0[T: Type, V: Type, R: Type](lhs: Expr[ParsingRun[T]], rhs: Expr[ParsingRun[V]], cut: Boolean)(
+      s: Expr[Implicits.Sequencer[T, V, R]],
+      whitespace: Null | Expr[ParsingRun[Any] => ParsingRun[Unit]],
+      ctx: Expr[ParsingRun[_]]
+  )(using quotes: Quotes): Expr[ParsingRun[R]] = {
+    import quotes.reflect.*
 
-    def setCut(ctx1: ParsingRun[_]): Unit = if (cut) ctx1.cut = true else ()
-    def rhsSnippet(
-        ctx1: ParsingRun[_],
-        s1: Implicits.Sequencer[T, V, R],
-        lhsValue: T,
-        preLhsIndex: Int,
-        lhsAggregate: Msgs,
-        postLhsIndex: Int,
-        input: ParserInput,
-        lhsMsg: Msgs
-    ) = {
-      if (!ctx1.isSuccess && ctx1.cut) ctx1
-      else {
-        val preRhsIndex = ctx1.index
-        rhs()
-        val rhsAggregate = ctx1.failureGroupAggregate
-        val rhsMsg       = ctx1.shortParserMsg
-        val res =
-          if (!ctx1.isSuccess) {
-            setCut(ctx1)
-            ctx1
-          } else {
-            val postRhsIndex = ctx1.index
+    def setCut(ctx1: Expr[ParsingRun[Any]]): Expr[Unit] = if cut then '{$ctx1.cut = true} else '{}
 
-            val rhsMadeProgress = postRhsIndex > preRhsIndex
-            val nextIndex =
-              if (!rhsMadeProgress && input.isReachable(postRhsIndex)) postLhsIndex
-              else postRhsIndex
+    '{
+      {
+        $ctx match {
+          case ctx1 =>
+            $s match {
+              case s1 =>
+                val preLhsIndex = ctx1.index
+                val input       = ctx1.input
+                $lhs
+                if (!ctx1.isSuccess) ctx1
+                else {
+                  val postLhsIndex = ctx1.index
+                  val lhsAggregate = ctx1.failureGroupAggregate
+                  val lhsMsg       = ctx1.shortParserMsg
+                  ${setCut('{ctx1})}
 
-            if (rhsMadeProgress && ctx1.checkForDrop()) input.dropBuffer(postRhsIndex)
+                  if (postLhsIndex > preLhsIndex && ctx1.checkForDrop()) input.dropBuffer(postLhsIndex)
 
-            ctx1.freshSuccess(
-              s1.apply(lhsValue, ctx1.successValue.asInstanceOf[V]),
-              nextIndex
-            )
-          }
+                  val lhsValue = ctx1.successValue
+                  ${
 
-        if (ctx1.verboseFailures) ctx1.aggregateMsg(
-          preLhsIndex,
-          _root_.fastparse.internal.Util.joinBinOp(lhsMsg, rhsMsg),
-          rhsAggregate ::: lhsAggregate,
-          // We override the failureGroupAggregate to avoid building an `a ~ b`
-          // aggregate msg in the specific case where the LHS parser fails to
-          // make any progress past `startIndex`. This finds cases like `a.? ~ b`
-          // or `a.rep ~ b` and lets use flatten them out into `a | b`
-          forceAggregate = preRhsIndex == ctx1.traceIndex
-        )
-        res
-      }
-    }
+                    val rhsSnippet = '{
+                      if (!ctx1.isSuccess && ctx1.cut) ctx1
+                      else {
+                        val preRhsIndex = ctx1.index
+                        $rhs
+                        val rhsAggregate = ctx1.failureGroupAggregate
+                        val rhsMsg       = ctx1.shortParserMsg
+                        val res =
+                          if (!ctx1.isSuccess) {
+                            ${setCut('{ctx1})}
+                            ctx1
+                          } else {
+                            val postRhsIndex = ctx1.index
 
-    def guardedRhs(
-        ctx1: ParsingRun[_],
-        s1: Implicits.Sequencer[T, V, R],
-        lhsValue: T,
-        preLhsIndex: Int,
-        lhsAggregate: Msgs,
-        postLhsIndex: Int,
-        input: ParserInput,
-        lhsMsg: Msgs
-    ) = whitespace match {
-      case None => rhsSnippet(ctx1, s1, lhsValue, preLhsIndex, lhsAggregate, postLhsIndex, input, lhsMsg)
-      case Some(ws) =>
-        if (ws.isInstanceOf[fastparse.NoWhitespace.noWhitespaceImplicit.type])
-          rhsSnippet(ctx1, s1, lhsValue, preLhsIndex, lhsAggregate, postLhsIndex, input, lhsMsg)
-        else {
-          fastparse.internal.Util.consumeWhitespace(ws, ctx1)
-          if (ctx1.isSuccess) rhsSnippet(ctx1, s1, lhsValue, preLhsIndex, lhsAggregate, postLhsIndex, input, lhsMsg)
-          else ctx1
+                            val rhsMadeProgress = postRhsIndex > preRhsIndex
+                            val nextIndex =
+                              if (! rhsMadeProgress && input.isReachable(postRhsIndex)) postLhsIndex
+                              else postRhsIndex
+
+                            if (rhsMadeProgress && ctx1.checkForDrop()) input.dropBuffer(postRhsIndex)
+
+                            ctx1.freshSuccess(
+                              s1.apply(
+                                lhsValue.asInstanceOf[T],
+                                ctx1.successValue.asInstanceOf[V]
+                              ),
+                              nextIndex
+                            )
+                          }
+
+                        if (ctx1.verboseFailures) ctx1.aggregateMsg(
+                          preLhsIndex,
+                          _root_.fastparse.internal.Util.joinBinOp(lhsMsg, rhsMsg),
+                          rhsAggregate ::: lhsAggregate,
+                          // We override the failureGroupAggregate to avoid building an `a ~ b`
+                          // aggregate msg in the specific case where the LHS parser fails to
+                          // make any progress past `startIndex`. This finds cases like `a.? ~ b`
+                          // or `a.rep ~ b` and lets use flatten them out into `a | b`
+                          forceAggregate = preRhsIndex == ctx1.traceIndex
+                        )
+                        res
+                      }
+                    }
+
+                    val guardedRhs = whitespace match {
+                      case null => rhsSnippet
+                      case ws =>
+                        if (ws.asTerm.tpe =:= TypeRepr.of[fastparse.NoWhitespace.noWhitespaceImplicit.type]) rhsSnippet
+                        else {
+                          '{
+                            _root_.fastparse.internal.Util.consumeWhitespace($ws, ctx1)
+                            if (ctx1.isSuccess) $rhsSnippet
+                            else ctx1
+                          }
+                        }
+                    }
+                    guardedRhs
+                  }
+                }
+            }
         }
+      }.asInstanceOf[_root_.fastparse.ParsingRun[R]]
     }
-
-    {
-      val ctx1        = ctx
-      val s1          = s
-      val preLhsIndex = ctx1.index
-      val input       = ctx1.input
-      lhs()
-      if (!ctx1.isSuccess) ctx1
-      else {
-        val postLhsIndex = ctx1.index
-        val lhsAggregate = ctx1.failureGroupAggregate
-        val lhsMsg       = ctx1.shortParserMsg
-        setCut(ctx1)
-
-        if (postLhsIndex > preLhsIndex && ctx1.checkForDrop()) input.dropBuffer(postLhsIndex)
-
-        val lhsValue = ctx1.successValue
-        guardedRhs(ctx1, s1, lhsValue.asInstanceOf[T], preLhsIndex, lhsAggregate, postLhsIndex, input, lhsMsg)
-      }
-    }.asInstanceOf[_root_.fastparse.ParsingRun[R]]
   }
 
   inline def optionInline[T, V](inline lhs0: ParsingRun[T])(

@@ -163,6 +163,44 @@ package object fastparse {
       * [[map]] or [[flatMapX]]
       */
     inline def !(using ctx: P[Any]): P[String] = MacroInlineImpls.captureInline(parse0)(ctx)
+
+    /** Sequence-with-cut operator. Runs two parsers one after the other,
+      * with optional whitespace in between. If the first parser completes
+      * successfully, backtracking is now prohibited. If both parsers
+      * return a value, this returns a tuple.
+      */
+    inline def ~/[V, R](inline other: P[V])(using
+        s: Implicits.Sequencer[T, V, R],
+        whitespace: P[Any] => P[Unit],
+        ctx: P[_]
+    ): P[R] = ${ MacroInlineImpls.parsedSequence0[T, V, R]('parse0, 'other, true)('s, 'whitespace, 'ctx) }
+
+    /** Sequence operator. Runs two parsers one after the other,
+      * with optional whitespace in between.If both parsers
+      * return a value, this returns a tuple.
+      */
+    inline def ~[V, R](inline other: P[V])(using
+        s: Implicits.Sequencer[T, V, R],
+        whitespace: P[Any] => P[Unit],
+        ctx: P[_]
+    ): P[R] =
+      ${ MacroInlineImpls.parsedSequence0[T, V, R]('parse0, 'other, false)('s, 'whitespace, 'ctx) }
+
+    /** Raw sequence-with-cut operator. Runs two parsers one after the other,
+      * *without* whitespace in between. If the first parser completes
+      * successfully, backtracking is no longer prohibited. If both parsers
+      * return a value, this returns a tuple.
+      */
+    inline def ~~/[V, R](inline other: P[V])(using s: Implicits.Sequencer[T, V, R], ctx: P[_]): P[R] =
+      ${ MacroInlineImpls.parsedSequence0[T, V, R]('parse0, 'other, true)('s, null, 'ctx) }
+
+    /** Raw sequence operator. Runs two parsers one after the other,
+      * *without* whitespace in between. If both parsers return a value,
+      * this returns a tuple.
+      */
+    inline def ~~[V, R](inline other: P[V])(using s: Implicits.Sequencer[T, V, R], ctx: P[_]): P[R] =
+      ${ MacroInlineImpls.parsedSequence0[T, V, R]('parse0, 'other, false)('s, null, 'ctx) }
+
   end extension
 
   extension [T](parse0: => P[T])
@@ -189,42 +227,6 @@ package object fastparse {
       if (max == Int.MaxValue && exactly == -1)
       then new RepImpls[T](() => parse0).rep[V](min, sep)
       else new RepImpls[T](() => parse0).rep[V](min, sep, max, exactly)
-
-    /** Sequence-with-cut operator. Runs two parsers one after the other,
-      * with optional whitespace in between. If the first parser completes
-      * successfully, backtracking is now prohibited. If both parsers
-      * return a value, this returns a tuple.
-      */
-    def ~/[V, R](other: => P[V])(implicit
-        s: Implicits.Sequencer[T, V, R],
-        whitespace: P[Any] => P[Unit],
-        ctx: P[_]
-    ): P[R] = MacroInlineImpls.parsedSequence0[T, V, R](() => parse0)(() => other, true)(s, Some(whitespace), ctx)
-
-    /** Sequence operator. Runs two parsers one after the other,
-      * with optional whitespace in between.If both parsers
-      * return a value, this returns a tuple.
-      */
-    def ~[V, R](other: => P[V])(implicit
-        s: Implicits.Sequencer[T, V, R],
-        whitespace: P[Any] => P[Unit],
-        ctx: P[_]
-    ): P[R] = MacroInlineImpls.parsedSequence0[T, V, R](() => parse0)(() => other, false)(s, Some(whitespace), ctx)
-
-    /** Raw sequence-with-cut operator. Runs two parsers one after the other,
-      * *without* whitespace in between. If the first parser completes
-      * successfully, backtracking is no longer prohibited. If both parsers
-      * return a value, this returns a tuple.
-      */
-    def ~~/[V, R](other: => P[V])(implicit s: Implicits.Sequencer[T, V, R], ctx: P[_]): P[R] =
-      MacroInlineImpls.parsedSequence0[T, V, R](() => parse0)(() => other, true)(s, None, ctx)
-
-    /** Raw sequence operator. Runs two parsers one after the other,
-      * *without* whitespace in between. If both parsers return a value,
-      * this returns a tuple.
-      */
-    def ~~[V, R](other: => P[V])(implicit s: Implicits.Sequencer[T, V, R], ctx: P[_]): P[R] =
-      MacroInlineImpls.parsedSequence0[T, V, R](() => parse0)(() => other, false)(s, None, ctx)
 
     /// **
     //  * Repeat operator; runs the LHS parser at least `min`
