@@ -5,9 +5,9 @@ import scalanativelib._
 import publish._
 import mill.eval.Result
 import mill.modules.Jvm.createJar
-import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version_mill0.9:0.1.1`
+import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.1.4`
 import de.tobiasroeser.mill.vcs.version.VcsVersion
-import $ivy.`com.github.lolgab::mill-mima_mill0.9:0.0.6`
+import $ivy.`com.github.lolgab::mill-mima::0.0.11`
 import com.github.lolgab.mill.mima._
 
 val crossVersions = Seq("2.13.4", "2.12.13", "2.11.12")
@@ -170,11 +170,11 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule with Mima{
   def pomSettings = PomSettings(
     description = artifactName(),
     organization = "com.lihaoyi",
-    url = "https://github.com/lihaoyi/fastparse",
+    url = "https://github.com/com-lihaoyi/fastparse",
     licenses = Seq(License.MIT),
-    scm = SCM(
-      "git://github.com/lihaoyi/fastparse.git",
-      "scm:git://github.com/lihaoyi/fastparse.git"
+    versionControl = VersionControl.github(
+      "com-lihaoyi",
+      "fastparse"
     ),
     developers = Seq(
       Developer("lihaoyi", "Li Haoyi","https://github.com/lihaoyi")
