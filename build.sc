@@ -7,7 +7,7 @@ import mill.eval.Result
 import mill.modules.Jvm.createJar
 import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version_mill0.9:0.1.1`
 import de.tobiasroeser.mill.vcs.version.VcsVersion
-import $ivy.`com.github.lolgab::mill-mima_mill0.9:0.0.6`
+import $ivy.`com.github.lolgab::mill-mima_mill0.9:0.0.13`
 import com.github.lolgab.mill.mima._
 
 val crossVersions = Seq("2.13.10", "2.12.13", "2.11.12")
