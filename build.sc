@@ -11,7 +11,7 @@ import $ivy.`com.github.lolgab::mill-mima_mill0.9:0.0.6`
 import com.github.lolgab.mill.mima._
 
 val crossVersions = Seq("2.13.10", "2.12.13", "2.11.12")
-val crossJsVersions = Seq("2.13.10" -> "1.5.1", "2.12.13" -> "1.5.1", "2.11.12" -> "1.5.1")
+val crossJsVersions = Seq("2.13.10" -> "1.7.1", "2.12.13" -> "1.7.1", "2.11.12" -> "1.7.1")
 val crossNativeVersions = Seq("2.13.10" -> "0.4.0", "2.12.13" -> "0.4.0", "2.11.12" -> "0.4.0")
 
 object fastparse extends Module{
@@ -264,13 +264,13 @@ object perftests extends Module{
 }
 
 object demo extends ScalaJSModule{
-  def scalaJSVersion = "1.5.1"
+  def scalaJSVersion = "1.7.1"
   def scalaVersion = "2.13.10"
   def moduleDeps = Seq(
-    scalaparse.js("2.13.10", "1.5.1"),
-    cssparse.js("2.13.10", "1.5.1"),
-    pythonparse.js("2.13.10", "1.5.1"),
-    fastparse.js("2.13.10", "1.5.1").test,
+    scalaparse.js("2.13.10", "1.7.1"),
+    cssparse.js("2.13.10", "1.7.1"),
+    pythonparse.js("2.13.10", "1.7.1"),
+    fastparse.js("2.13.10", "1.7.1").test,
   )
   def ivyDeps = Agg(
     ivy"org.scala-js::scalajs-dom::0.9.8",
