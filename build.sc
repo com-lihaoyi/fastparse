@@ -172,6 +172,9 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule with Mima{
       .lastTag
       .getOrElse(throw new Exception("Missing last tag"))
   )
+  def mimaBinaryIssueFilters = super.mimaBinaryIssueFilters() ++ Seq(
+    ProblemFilter.exclude[IncompatibleResultTypeProblem]("fastparse.Parsed#Failure.unapply")
+  )
   def artifactName = millModuleSegments.parts.dropRight(2).mkString("-").stripSuffix(s"-$platformSegment")
   def pomSettings = PomSettings(
     description = artifactName(),
