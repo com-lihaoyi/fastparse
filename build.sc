@@ -10,9 +10,15 @@ import de.tobiasroeser.mill.vcs.version.VcsVersion
 import $ivy.`com.github.lolgab::mill-mima_mill0.9:0.0.13`
 import com.github.lolgab.mill.mima._
 
-val crossVersions = Seq("2.13.6", "2.12.13", "2.11.12")
-val crossJsVersions = Seq("2.13.10" -> "1.7.1", "2.12.13" -> "1.7.1", "2.11.12" -> "1.7.1")
-val crossNativeVersions = Seq("2.13.10" -> "0.4.3", "2.12.13" -> "0.4.3", "2.11.12" -> "0.4.3")
+val scala211 = "2.11.12"
+val scala212 = "2.12.13"
+val scala213 = "2.13.6"
+val scalaJS1 = "1.7.1"
+val scalaNative04 = "0.4.3"
+
+val crossVersions = Seq(scala213, scala212, scala211)
+val crossJsVersions = Seq(scala213 -> scalaJS1, scala212 -> scalaJS1, scala211 -> scalaJS1)
+val crossNativeVersions = Seq(scala213 -> scalaNative04, scala212 -> scalaNative04, scala211 -> scalaNative04)
 
 object fastparse extends Module{
   object jvm extends Cross[fastparseJvmModule](crossVersions:_*)
@@ -219,10 +225,10 @@ object perftests extends Module{
 
   object bench2 extends PerfTestModule {
     def moduleDeps = Seq(
-      scalaparse.jvm("2.12.13").test,
-      pythonparse.jvm("2.12.13").test,
-      cssparse.jvm("2.12.13").test,
-      fastparse.jvm("2.12.13").test,
+      scalaparse.jvm(scala212).test,
+      pythonparse.jvm(scala212).test,
+      cssparse.jvm(scala212).test,
+      fastparse.jvm(scala212).test,
     )
 
   }
@@ -230,9 +236,9 @@ object perftests extends Module{
 
   object compare extends PerfTestModule {
     def moduleDeps = Seq(
-      fastparse.jvm("2.12.13").test,
-      scalaparse.jvm("2.12.13").test,
-      pythonparse.jvm("2.12.13").test
+      fastparse.jvm(scala212).test,
+      scalaparse.jvm(scala212).test,
+      pythonparse.jvm(scala212).test
     )
     def ivyDeps = super.ivyDeps() ++ Agg(
       ivy"org.json4s::json4s-ast:3.6.0",
@@ -249,11 +255,11 @@ object perftests extends Module{
   }
 
   trait PerfTestModule extends ScalaModule with TestModule{
-    def scalaVersion = "2.12.13"
+    def scalaVersion = scala212
     def scalacOptions = Seq("-opt:l:method")
     def resources = T.sources{
       Seq(PathRef(perftests.millSourcePath / "resources")) ++
-        fastparse.jvm("2.12.13").test.resources()
+        fastparse.jvm(scala212).test.resources()
     }
     def testFrameworks = Seq("utest.runner.Framework")
     def ivyDeps = Agg(
@@ -264,13 +270,13 @@ object perftests extends Module{
 }
 
 object demo extends ScalaJSModule{
-  def scalaJSVersion = "1.7.1"
-  def scalaVersion = "2.13.10"
+  def scalaJSVersion = scalaJS1
+  def scalaVersion = scala213
   def moduleDeps = Seq(
-    scalaparse.js("2.13.10", "1.7.1"),
-    cssparse.js("2.13.10", "1.7.1"),
-    pythonparse.js("2.13.10", "1.7.1"),
-    fastparse.js("2.13.10", "1.7.1").test,
+    scalaparse.js(scala213, scalaJS1),
+    cssparse.js(scala213, scalaJS1),
+    pythonparse.js(scala213, scalaJS1),
+    fastparse.js(scala213, scalaJS1).test,
   )
   def ivyDeps = Agg(
     ivy"org.scala-js::scalajs-dom::0.9.8",
