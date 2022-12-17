@@ -206,7 +206,7 @@ trait CommonTestModule extends ScalaModule with TestModule.Utest{
 
   def platformSegment: String
   def ivyDeps = Agg(
-    ivy"com.lihaoyi::utest::0.8.1",
+    ivy"com.lihaoyi::utest::0.7.11",
   )
 
 //  def scalacOptions = T{ if (scalaVersion() == "2.12.10") Seq("-opt:l:method") else Nil }
@@ -265,7 +265,7 @@ object perftests extends Module{
         fastparse.jvm(scala212).test.resources()
     }
     def ivyDeps = Agg(
-      ivy"com.lihaoyi::utest::0.8.1",
+      ivy"com.lihaoyi::utest::0.7.11",
       ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
     )
   }
