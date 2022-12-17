@@ -10,7 +10,7 @@ import de.tobiasroeser.mill.vcs.version.VcsVersion
 import $ivy.`com.github.lolgab::mill-mima_mill0.9:0.0.13`
 import com.github.lolgab.mill.mima._
 
-val crossVersions = Seq("2.13.10", "2.12.13", "2.11.12")
+val crossVersions = Seq("2.13.6", "2.12.13", "2.11.12")
 val crossJsVersions = Seq("2.13.10" -> "1.7.1", "2.12.13" -> "1.7.1", "2.11.12" -> "1.7.1")
 val crossNativeVersions = Seq("2.13.10" -> "0.4.3", "2.12.13" -> "0.4.3", "2.11.12" -> "0.4.3")
 
