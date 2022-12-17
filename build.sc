@@ -5,14 +5,20 @@ import scalanativelib._
 import publish._
 import mill.eval.Result
 import mill.modules.Jvm.createJar
-import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version_mill0.9:0.1.1`
+import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.1.4`
 import de.tobiasroeser.mill.vcs.version.VcsVersion
-import $ivy.`com.github.lolgab::mill-mima_mill0.9:0.0.6`
+import $ivy.`com.github.lolgab::mill-mima::0.0.13`
 import com.github.lolgab.mill.mima._
 
-val crossVersions = Seq("2.13.4", "2.12.13", "2.11.12")
-val crossJsVersions = Seq("2.13.4" -> "1.5.1", "2.12.13" -> "1.5.1", "2.11.12" -> "1.5.1")
-val crossNativeVersions = Seq("2.13.4" -> "0.4.0", "2.12.13" -> "0.4.0", "2.11.12" -> "0.4.0")
+val scala211 = "2.11.12"
+val scala212 = "2.12.13"
+val scala213 = "2.13.6"
+val scalaJS1 = "1.7.1"
+val scalaNative04 = "0.4.9"
+
+val crossVersions = Seq(scala213, scala212, scala211)
+val crossJsVersions = Seq(scala213 -> scalaJS1, scala212 -> scalaJS1, scala211 -> scalaJS1)
+val crossNativeVersions = Seq(scala213 -> scalaNative04, scala212 -> scalaNative04, scala211 -> scalaNative04)
 
 object fastparse extends Module{
   object jvm extends Cross[fastparseJvmModule](crossVersions:_*)
@@ -166,15 +172,18 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule with Mima{
       .lastTag
       .getOrElse(throw new Exception("Missing last tag"))
   )
+  def mimaBinaryIssueFilters = super.mimaBinaryIssueFilters() ++ Seq(
+    ProblemFilter.exclude[IncompatibleResultTypeProblem]("fastparse.Parsed#Failure.unapply")
+  )
   def artifactName = millModuleSegments.parts.dropRight(2).mkString("-").stripSuffix(s"-$platformSegment")
   def pomSettings = PomSettings(
     description = artifactName(),
     organization = "com.lihaoyi",
     url = "https://github.com/lihaoyi/fastparse",
     licenses = Seq(License.MIT),
-    scm = SCM(
-      "git://github.com/lihaoyi/fastparse.git",
-      "scm:git://github.com/lihaoyi/fastparse.git"
+    versionControl = VersionControl.github(
+      "com-lihaoyi",
+      "fastparse"
     ),
     developers = Seq(
       Developer("lihaoyi", "Li Haoyi","https://github.com/lihaoyi")
@@ -197,7 +206,7 @@ trait CommonTestModule extends ScalaModule with TestModule.Utest{
 
   def platformSegment: String
   def ivyDeps = Agg(
-    ivy"com.lihaoyi::utest::0.7.10",
+    ivy"com.lihaoyi::utest::0.7.11",
   )
 
 //  def scalacOptions = T{ if (scalaVersion() == "2.12.10") Seq("-opt:l:method") else Nil }
@@ -219,10 +228,10 @@ object perftests extends Module{
 
   object bench2 extends PerfTestModule {
     def moduleDeps = Seq(
-      scalaparse.jvm("2.12.13").test,
-      pythonparse.jvm("2.12.13").test,
-      cssparse.jvm("2.12.13").test,
-      fastparse.jvm("2.12.13").test,
+      scalaparse.jvm(scala212).test,
+      pythonparse.jvm(scala212).test,
+      cssparse.jvm(scala212).test,
+      fastparse.jvm(scala212).test,
     )
 
   }
@@ -230,9 +239,9 @@ object perftests extends Module{
 
   object compare extends PerfTestModule {
     def moduleDeps = Seq(
-      fastparse.jvm("2.12.13").test,
-      scalaparse.jvm("2.12.13").test,
-      pythonparse.jvm("2.12.13").test
+      fastparse.jvm(scala212).test,
+      scalaparse.jvm(scala212).test,
+      pythonparse.jvm(scala212).test
     )
     def ivyDeps = super.ivyDeps() ++ Agg(
       ivy"org.json4s::json4s-ast:3.6.0",
@@ -248,29 +257,28 @@ object perftests extends Module{
     )
   }
 
-  trait PerfTestModule extends ScalaModule with TestModule{
-    def scalaVersion = "2.12.13"
+  trait PerfTestModule extends ScalaModule with TestModule.Utest{
+    def scalaVersion = scala212
     def scalacOptions = Seq("-opt:l:method")
     def resources = T.sources{
       Seq(PathRef(perftests.millSourcePath / "resources")) ++
-        fastparse.jvm("2.12.13").test.resources()
+        fastparse.jvm(scala212).test.resources()
     }
-    def testFrameworks = Seq("utest.runner.Framework")
     def ivyDeps = Agg(
-      ivy"com.lihaoyi::utest::0.7.10",
+      ivy"com.lihaoyi::utest::0.7.11",
       ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
     )
   }
 }
 
 object demo extends ScalaJSModule{
-  def scalaJSVersion = "1.5.1"
-  def scalaVersion = "2.13.1"
+  def scalaJSVersion = scalaJS1
+  def scalaVersion = scala213
   def moduleDeps = Seq(
-    scalaparse.js("2.13.4", "1.5.1"),
-    cssparse.js("2.13.4", "1.5.1"),
-    pythonparse.js("2.13.4", "1.5.1"),
-    fastparse.js("2.13.4", "1.5.1").test,
+    scalaparse.js(scala213, scalaJS1),
+    cssparse.js(scala213, scalaJS1),
+    pythonparse.js(scala213, scalaJS1),
+    fastparse.js(scala213, scalaJS1).test,
   )
   def ivyDeps = Agg(
     ivy"org.scala-js::scalajs-dom::0.9.8",
