@@ -18,6 +18,7 @@ jobs:
           distribution: "temurin"
       - name: Run tests
         run: |
+          echo '-XX:MaxRAMPercentage=95.0' >> .mill-jvm-opts
           ./mill -i --disable-ticker __.js.__.resolvedIvyDeps
           ./mill -i --disable-ticker -j 0 all __.js.__.publishArtifacts __.js.__.compile __.js.__.fastOpt __.js.__.test
   test-native:
@@ -31,6 +32,7 @@ jobs:
           distribution: "temurin"
       - name: Run tests
         run: |
+          echo '-XX:MaxRAMPercentage=95.0' >> .mill-jvm-opts
           ./mill -i --disable-ticker __.native.__.resolvedIvyDeps
           ./mill -i --disable-ticker -j 0 all __.native.__.publishArtifacts __.native.__.compile __.native.__.test
   test-jvm:
@@ -47,6 +49,7 @@ jobs:
           python-version: '2.7'
       - name: Run tests
         run: |
+          echo '-XX:MaxRAMPercentage=95.0' >> .mill-jvm-opts
           ./mill -i --disable-ticker __.jvm.__.resolvedIvyDeps
           ./mill -i --disable-ticker -j 0 all __.jvm.__.publishArtifacts __.jvm.__.compile __.jvm.__.test
   check-binary-compatibility:
