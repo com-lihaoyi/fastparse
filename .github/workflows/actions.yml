@@ -8,50 +8,58 @@ on:
 
 jobs:
   test-js:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-java@v1
+      - uses: actions/checkout@v3
+      - uses: coursier/cache-action@v6
+      - uses: actions/setup-java@v3
         with:
-          java-version: 8
+          java-version: "8"
+          distribution: "temurin"
       - name: Run tests
         run: |
           ./mill -i --disable-ticker __.js.__.resolvedIvyDeps
           ./mill -i --disable-ticker -j 0 all __.js.__.publishArtifacts __.js.__.compile __.js.__.fastOpt __.js.__.test
   test-native:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-java@v1
+      - uses: actions/checkout@v3
+      - uses: coursier/cache-action@v6
+      - uses: actions/setup-java@v3
         with:
-          java-version: 8
+          java-version: "8"
+          distribution: "temurin"
       - name: Run tests
         run: |
           ./mill -i --disable-ticker __.native.__.resolvedIvyDeps
           ./mill -i --disable-ticker -j 0 all __.native.__.publishArtifacts __.native.__.compile __.native.__.test
   test-jvm:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+      - uses: coursier/cache-action@v6
+      - uses: actions/setup-java@v3
+        with:
+          java-version: "8"
+          distribution: "temurin"
       - uses: actions/setup-python@v2
         with:
           python-version: '2.7'
-      - uses: actions/setup-java@v1
-        with:
-          java-version: 8
       - name: Run tests
         run: |
           ./mill -i --disable-ticker __.jvm.__.resolvedIvyDeps
           ./mill -i --disable-ticker -j 0 all __.jvm.__.publishArtifacts __.jvm.__.compile __.jvm.__.test
   check-binary-compatibility:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
+          with:
+            fetch-depth: 0
+      - uses: coursier/cache-action@v6
+      - uses: actions/setup-java@v3
         with:
-          fetch-depth: 0
-      - uses: actions/setup-java@v1
-        with:
-          java-version: 8
+          java-version: "8"
+          distribution: "temurin"
       - name: Check Binary Compatibility
         run: ./mill -i --disable-ticker __.mimaReportBinaryIssues
 
@@ -61,7 +69,7 @@ jobs:
       - test-jvm
       - test-js
       - test-native
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       SONATYPE_PGP_PRIVATE_KEY: ${{ secrets.SONATYPE_PGP_PRIVATE_KEY }}
       SONATYPE_PGP_PRIVATE_KEY_PASSWORD: ${{ secrets.SONATYPE_PGP_PRIVATE_KEY_PASSWORD }}
@@ -71,10 +79,14 @@ jobs:
       LC_MESSAGES: "en_US.UTF-8"
       LC_ALL: "en_US.UTF-8"
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-java@v1
+      - uses: actions/checkout@v3
+          with:
+            fetch-depth: 0
+      - uses: coursier/cache-action@v6
+      - uses: actions/setup-java@v3
         with:
-          java-version: 8
+          java-version: "8"
+          distribution: "temurin"
       - name: Publish to Maven Central
         run: |
           if [[ $(git tag --points-at HEAD) != '' ]]; then
