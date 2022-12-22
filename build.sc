@@ -9,6 +9,8 @@ import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.1.4`
 import de.tobiasroeser.mill.vcs.version.VcsVersion
 import $ivy.`com.github.lolgab::mill-mima::0.0.13`
 import com.github.lolgab.mill.mima._
+import $ivy.`com.github.lolgab::mill-crossplatform::0.1.1`
+import com.github.lolgab.mill.crossplatform._
 
 val scala211 = "2.11.12"
 val scala212 = "2.12.13"
@@ -16,68 +18,43 @@ val scala213 = "2.13.6"
 val scalaJS1 = "1.7.1"
 val scalaNative04 = "0.4.9"
 
-val crossVersions = Seq(scala213, scala212, scala211)
-val crossJsVersions = Seq(scala213 -> scalaJS1, scala212 -> scalaJS1, scala211 -> scalaJS1)
-val crossNativeVersions = Seq(scala213 -> scalaNative04, scala212 -> scalaNative04, scala211 -> scalaNative04)
+val crossScalaVersions = Seq(scala213, scala212, scala211)
+val crossScalaJsVersions = Seq(scalaJS1)
+val crossNativeVersions = Seq(scalaNative04)
 
-object fastparse extends Module{
-  object jvm extends Cross[fastparseJvmModule](crossVersions:_*)
-  class fastparseJvmModule(val crossScalaVersion: String) extends FastparseModule{
-    def platformSegment = "jvm"
-    object test extends Tests with CommonTestModule{
-      def platformSegment = "jvm"
-    }
-  }
-
-  object js extends Cross[fastparseJsModule](crossJsVersions:_*)
-  class fastparseJsModule(val crossScalaVersion: String, crossScalaJsVersion: String) extends FastparseModule with ScalaJSModule {
-    def platformSegment = "js"
-    def millSourcePath = super.millSourcePath / os.up
-    def scalaJSVersion = crossScalaJsVersion
-    object test extends Tests with CommonTestModule{
-      def platformSegment = "js"
-    }
-  }
-
-  object native extends Cross[fastparseNativeModule](crossNativeVersions:_*)
-  class fastparseNativeModule(val crossScalaVersion: String, crossScalaNativeVersion: String) extends FastparseModule with ScalaNativeModule {
-    def platformSegment = "native"
-    def millSourcePath = super.millSourcePath / os.up
-    def scalaNativeVersion = crossScalaNativeVersion
-
-    object test extends Tests with CommonTestModule{
-      def platformSegment = "native"
-    }
-  }
-}
-
-trait FastparseModule extends CommonCrossModule{
-  def ivyDeps = Agg(
-    ivy"com.lihaoyi::sourcecode::0.2.3",
-    ivy"com.lihaoyi::geny::0.6.10"
-  )
-  def compileIvyDeps = Agg(
-    ivy"org.scala-lang:scala-reflect:${scalaVersion()}"
-  )
-  def generatedSources = T{
-    val dir = T.ctx().dest
-    val file = dir/"fastparse"/"SequencerGen.scala"
-    // Only go up to 21, because adding the last element makes it 22
-    val tuples = (2 to 21).map{ i =>
-      val ts = (1 to i) map ("T" + _)
-      val chunks = (1 to i) map { n =>
-        s"t._$n"
-      }
-      val tsD = (ts :+ "D").mkString(",")
-      val anys = ts.map(_ => "Any").mkString(", ")
-      s"""
+object fastparse extends Cross[fastparseModule](crossScalaVersions: _*)
+class fastparseModule(val crossScalaVersion: String) extends CrossPlatform {
+  trait Shared extends CrossPlatformCrossScalaModule with CommonCrossModule {
+    def ivyDeps = super.ivyDeps() ++ Agg(
+      ivy"com.lihaoyi::sourcecode::0.2.3",
+      ivy"com.lihaoyi::geny::0.6.10"
+    )
+    def compileIvyDeps = super.ivyDeps() ++ Agg(
+      ivy"org.scala-lang:scala-reflect:${scalaVersion()}"
+    )
+    def generatedSources = T {
+      val dir = T.ctx().dest
+      val file = dir / "fastparse" / "SequencerGen.scala"
+      // Only go up to 21, because adding the last element makes it 22
+      val tuples = (2 to 21).map { i =>
+        val ts = (1 to i) map ("T" + _)
+        val chunks = (1 to i) map { n =>
+          s"t._$n"
+        }
+        val tsD = (ts :+ "D").mkString(",")
+        val anys = ts.map(_ => "Any").mkString(", ")
+        s"""
           val BaseSequencer$i: Sequencer[($anys), Any, ($anys, Any)] =
             Sequencer0((t, d) => (${chunks.mkString(", ")}, d))
-          implicit def Sequencer$i[$tsD]: Sequencer[(${ts.mkString(", ")}), D, ($tsD)] =
-            BaseSequencer$i.asInstanceOf[Sequencer[(${ts.mkString(", ")}), D, ($tsD)]]
+          implicit def Sequencer$i[$tsD]: Sequencer[(${ts.mkString(
+            ", "
+          )}), D, ($tsD)] =
+            BaseSequencer$i.asInstanceOf[Sequencer[(${ts.mkString(
+            ", "
+          )}), D, ($tsD)]]
           """
-    }
-    val output = s"""
+      }
+      val output = s"""
       package fastparse
       trait SequencerGen[Sequencer[_, _, _]] extends LowestPriSequencer[Sequencer]{
         protected[this] def Sequencer0[A, B, C](f: (A, B) => C): Sequencer[A, B, C]
@@ -88,83 +65,63 @@ trait FastparseModule extends CommonCrossModule{
         implicit def Sequencer1[T1, T2]: Sequencer[T1, T2, (T1, T2)] = Sequencer0{case (t1, t2) => (t1, t2)}
       }
     """.stripMargin
-    os.write(file, output, createFolders = true)
-    Seq(PathRef(file))
+      os.write(file, output, createFolders = true)
+      Seq(PathRef(file))
+    }
+  }
+  object jvm extends Shared {
+    object test extends CommonTestModule with Tests
+  }
+
+  object js extends Cross[jsModule](crossScalaJsVersions: _*)
+  class jsModule(val crossScalaJSVersion: String)
+      extends Shared
+      with CrossScalaJSModule {
+    object test extends CommonTestModule with Tests
+  }
+
+  object native extends Cross[nativeModule](crossNativeVersions: _*)
+  class nativeModule(val crossScalaNativeVersion: String)
+      extends Shared
+      with CrossScalaNativeModule {
+    object test extends CommonTestModule with Tests
   }
 }
 
-object scalaparse extends Module{
-  object js extends Cross[ScalaParseJsModule](crossJsVersions:_*)
-  class ScalaParseJsModule(val crossScalaVersion: String, val crossScalaJsVersion: String) extends ExampleParseJsModule
+object scalaparse extends Cross[ExampleParseModule](crossScalaVersions: _*)
+object cssparse extends Cross[ExampleParseModule](crossScalaVersions: _*)
+object pythonparse extends Cross[ExampleParseModule](crossScalaVersions: _*)
 
-  object jvm extends Cross[ScalaParseJvmModule](crossVersions:_*)
-  class ScalaParseJvmModule(val crossScalaVersion: String) extends ExampleParseJvmModule
+class ExampleParseModule(val crossScalaVersion: String) extends CrossPlatform {
+  override def moduleDeps =
+    super.moduleDeps ++ Seq(fastparse(crossScalaVersion))
+  trait Shared extends CrossPlatformCrossScalaModule with CommonCrossModule
 
-  object native extends Cross[ScalaParseNativeModule](crossNativeVersions:_*)
-  class ScalaParseNativeModule(val crossScalaVersion: String, val crossScalaNativeVersion: String) extends ExampleParseNativeModule
-}
+  object js extends Cross[jsModule](crossScalaJsVersions: _*)
+  class jsModule(val crossScalaJSVersion: String)
+      extends Shared
+      with CrossScalaJSModule {
+    object test extends Tests with CommonTestModule
+  }
 
-object cssparse extends Module{
-  object js extends Cross[CssParseJsModule](crossJsVersions:_*)
-  class CssParseJsModule(val crossScalaVersion: String, val crossScalaJsVersion: String) extends ExampleParseJsModule
+  object jvm extends Shared {
+    object test extends Tests with CommonTestModule with CrossPlatformSources {
+      def ivyDeps = super.ivyDeps() ++ Agg(
+        ivy"net.sourceforge.cssparser:cssparser:0.9.18",
+        ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
+      )
+    }
+  }
 
-  object jvm extends Cross[CssParseJvmModule](crossVersions:_*)
-  class CssParseJvmModule(val crossScalaVersion: String) extends ExampleParseJvmModule
-
-  object native extends Cross[CssParseNativeModule](crossNativeVersions:_*)
-  class CssParseNativeModule(val crossScalaVersion: String, val crossScalaNativeVersion: String) extends ExampleParseNativeModule
-}
-
-object pythonparse extends Module{
-  object js extends Cross[PythonParseJsModule](crossJsVersions:_*)
-  class PythonParseJsModule(val crossScalaVersion: String, val crossScalaJsVersion: String) extends ExampleParseJsModule
-
-  object jvm extends Cross[PythonParseJvmModule](crossVersions:_*)
-  class PythonParseJvmModule(val crossScalaVersion: String) extends ExampleParseJvmModule
-
-  object native extends Cross[PythonParseNativeModule](crossNativeVersions:_*)
-  class PythonParseNativeModule(val crossScalaVersion: String, val crossScalaNativeVersion: String) extends ExampleParseNativeModule
-}
-
-trait ExampleParseJsModule extends CommonCrossModule with ScalaJSModule{
-  def moduleDeps = Seq(fastparse.js(crossScalaVersion, crossScalaJsVersion))
-  def crossScalaJsVersion: String
-  def scalaJSVersion = crossScalaJsVersion
-  def platformSegment = "js"
-  def millSourcePath = super.millSourcePath / os.up
-  object test extends Tests with CommonTestModule{
-    def platformSegment = "js"
+  object native extends Cross[nativeModule](crossNativeVersions: _*)
+  class nativeModule(val crossScalaNativeVersion: String)
+      extends Shared
+      with CrossScalaNativeModule {
+    object test extends Tests with CommonTestModule
   }
 }
 
-
-trait ExampleParseJvmModule extends CommonCrossModule{
-  def moduleDeps = Seq(fastparse.jvm())
-  def platformSegment = "jvm"
-  object test extends Tests with CommonTestModule{
-    def platformSegment = "jvm"
-    def ivyDeps = super.ivyDeps() ++ Agg(
-      ivy"net.sourceforge.cssparser:cssparser:0.9.18",
-      ivy"org.scala-lang:scala-compiler:${scalaVersion()}"
-    )
-  }
-}
-
-trait ExampleParseNativeModule extends CommonCrossModule with ScalaNativeModule{
-  def platformSegment = "native"
-  def crossScalaNativeVersion: String
-  def scalaNativeVersion = crossScalaNativeVersion
-  def millSourcePath = super.millSourcePath / os.up
-  def moduleDeps = Seq(fastparse.native(crossScalaVersion, crossScalaNativeVersion))
-  object test extends Tests with CommonTestModule{
-    def platformSegment = "native"
-  }
-}
-
-
-
-trait CommonCrossModule extends CrossScalaModule with PublishModule with Mima{
-
+trait CommonCrossModule extends CrossScalaModule with PublishModule with Mima {
   def publishVersion = VcsVersion.vcsState().format()
   def mimaPreviousVersions = Seq(
     VcsVersion
@@ -173,9 +130,10 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule with Mima{
       .getOrElse(throw new Exception("Missing last tag"))
   )
   def mimaBinaryIssueFilters = super.mimaBinaryIssueFilters() ++ Seq(
-    ProblemFilter.exclude[IncompatibleResultTypeProblem]("fastparse.Parsed#Failure.unapply")
+    ProblemFilter.exclude[IncompatibleResultTypeProblem](
+      "fastparse.Parsed#Failure.unapply"
+    )
   )
-  def artifactName = millModuleSegments.parts.dropRight(2).mkString("-").stripSuffix(s"-$platformSegment")
   def pomSettings = PomSettings(
     description = artifactName(),
     organization = "com.lihaoyi",
@@ -186,62 +144,45 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule with Mima{
       "fastparse"
     ),
     developers = Seq(
-      Developer("lihaoyi", "Li Haoyi","https://github.com/lihaoyi")
+      Developer("lihaoyi", "Li Haoyi", "https://github.com/lihaoyi")
     )
   )
 
-  def scalaDocPluginClasspath = T{ Agg[PathRef]() }
+  def scalaDocPluginClasspath = T { Agg[PathRef]() }
 //  def scalacOptions = T{ if (scalaVersion() == "2.12.10") Seq("-opt:l:method") else Nil }
 
-  def platformSegment: String
-  def millSourcePath = super.millSourcePath / os.up
-  def sources = T.sources(
-    millSourcePath / "src",
-    millSourcePath / s"src-$platformSegment"
-  )
-
-
 }
-trait CommonTestModule extends ScalaModule with TestModule.Utest{
-
-  def platformSegment: String
+trait CommonTestModule extends ScalaModule with TestModule.Utest {
   def ivyDeps = Agg(
-    ivy"com.lihaoyi::utest::0.7.11",
+    ivy"com.lihaoyi::utest::0.7.11"
   )
 
 //  def scalacOptions = T{ if (scalaVersion() == "2.12.10") Seq("-opt:l:method") else Nil }
-
-  def sources = T.sources(
-    millSourcePath / "src",
-    millSourcePath / s"src-$platformSegment"
-  )
 }
 
-object perftests extends Module{
+object perftests extends Module {
   object bench1 extends PerfTestModule {
     def ivyDeps = super.ivyDeps() ++ Agg(
       ivy"com.lihaoyi::scalaparse:1.0.0",
       ivy"com.lihaoyi::pythonparse:1.0.0",
-      ivy"com.lihaoyi::cssparse:1.0.0",
+      ivy"com.lihaoyi::cssparse:1.0.0"
     )
   }
 
   object bench2 extends PerfTestModule {
     def moduleDeps = Seq(
-      scalaparse.jvm(scala212).test,
-      pythonparse.jvm(scala212).test,
-      cssparse.jvm(scala212).test,
-      fastparse.jvm(scala212).test,
+      scalaparse(scala212).jvm.test,
+      pythonparse(scala212).jvm.test,
+      cssparse(scala212).jvm.test,
+      fastparse(scala212).jvm.test
     )
-
   }
-
 
   object compare extends PerfTestModule {
     def moduleDeps = Seq(
-      fastparse.jvm(scala212).test,
-      scalaparse.jvm(scala212).test,
-      pythonparse.jvm(scala212).test
+      fastparse(scala212).jvm.test,
+      scalaparse(scala212).jvm.test,
+      pythonparse(scala212).jvm.test
     )
     def ivyDeps = super.ivyDeps() ++ Agg(
       ivy"org.json4s::json4s-ast:3.6.0",
@@ -257,12 +198,12 @@ object perftests extends Module{
     )
   }
 
-  trait PerfTestModule extends ScalaModule with TestModule.Utest{
+  trait PerfTestModule extends ScalaModule with TestModule.Utest {
     def scalaVersion = scala212
     def scalacOptions = Seq("-opt:l:method")
-    def resources = T.sources{
+    def resources = T.sources {
       Seq(PathRef(perftests.millSourcePath / "resources")) ++
-        fastparse.jvm(scala212).test.resources()
+        fastparse(scala212).jvm.test.resources()
     }
     def ivyDeps = Agg(
       ivy"com.lihaoyi::utest::0.7.11",
@@ -271,14 +212,14 @@ object perftests extends Module{
   }
 }
 
-object demo extends ScalaJSModule{
+object demo extends ScalaJSModule {
   def scalaJSVersion = scalaJS1
   def scalaVersion = scala213
   def moduleDeps = Seq(
-    scalaparse.js(scala213, scalaJS1),
-    cssparse.js(scala213, scalaJS1),
-    pythonparse.js(scala213, scalaJS1),
-    fastparse.js(scala213, scalaJS1).test,
+    scalaparse(scala213).js(scalaJS1),
+    cssparse(scala213).js(scalaJS1),
+    pythonparse(scala213).js(scalaJS1),
+    fastparse(scala213).js(scalaJS1).test
   )
   def ivyDeps = Agg(
     ivy"org.scala-js::scalajs-dom::0.9.8",
