@@ -195,12 +195,11 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule with Mima{
 
   def platformSegment: String
   def millSourcePath = super.millSourcePath / os.up
-  def sources = T.sources(
-    millSourcePath / "src",
-    millSourcePath / s"src-$platformSegment"
-  )
-
-
+  def sources = T.sources { super.sources() ++
+    Seq(
+      millSourcePath / s"src-$platformSegment"
+    ).map(PathRef(_))
+  }
 }
 trait CommonTestModule extends ScalaModule with TestModule.Utest{
 
