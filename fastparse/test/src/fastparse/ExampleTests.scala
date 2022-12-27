@@ -341,10 +341,10 @@ object ExampleTests extends TestSuite{
 
         val failure = parse("val abcd; val ", stmts(_)).asInstanceOf[Parsed.Failure]
         val trace = failure.trace().longAggregateMsg
-        assert(
-          failure.index == 10,
-          trace == """Expected stmts:1:1 / (" " | stmt | end-of-input):1:11, found "val """"
-        )
+        assert(failure.index == 10)
+        TestUtil.skipScala3 {
+          assert(trace == """Expected stmts:1:1 / (" " | stmt | end-of-input):1:11, found "val """")
+        }
       }
 
       test("repcut"){

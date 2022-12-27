@@ -6,6 +6,8 @@ import publish._
 import mill.eval.Result
 import mill.modules.Jvm.createJar
 import mill.scalalib.api.Util.isScala3
+import $ivy.`com.lihaoyi::mill-contrib-buildinfo:`
+import mill.contrib.buildinfo.BuildInfo
 import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.1.4`
 import de.tobiasroeser.mill.vcs.version.VcsVersion
 import $ivy.`com.github.lolgab::mill-mima::0.0.13`
@@ -14,7 +16,7 @@ import com.github.lolgab.mill.mima._
 val scala211 = "2.11.12"
 val scala212 = "2.12.13"
 val scala213 = "2.13.6"
-val scala3 = "3.1.2"
+val scala3 = "3.1.3"
 val scalaJS1 = "1.7.1"
 val scalaNative04 = "0.4.9"
 
@@ -203,7 +205,7 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule with Mima{
     ).map(PathRef(_))
   }
 }
-trait CommonTestModule extends ScalaModule with TestModule.Utest{
+trait CommonTestModule extends ScalaModule with TestModule.Utest with BuildInfo{
 
   def platformSegment: String
   def ivyDeps = Agg(
@@ -215,6 +217,8 @@ trait CommonTestModule extends ScalaModule with TestModule.Utest{
     millSourcePath / s"src-$platformSegment",
     millSourcePath / s"src-${scalaVersion().takeWhile(_ != '.')}-$platformSegment",
   )
+  def buildInfoMembers = Map("scalaVersion" -> scalaVersion())
+  def buildInfoPackageName = Some("test.fastparse")
 }
 
 object perftests extends Module{

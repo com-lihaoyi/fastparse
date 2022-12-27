@@ -51,9 +51,11 @@ object MathTests extends TestSuite{
         val longAggMsg = trace.longAggregateMsg
         assert(
           expectedTrace.trim == longAggMsg.trim,
-          expectedTerminalTrace.trim == longAggMsg.trim,
           expectedShortTrace.trim == failure.msg
         )
+        TestUtil.skipScala3 {
+          assert(expectedTerminalTrace.trim == longAggMsg.trim)
+        }
 
         // Check iterator parsing results in a failure in the right place. Note
         // that we aren't checking the `.traced.trace` because that requires a
