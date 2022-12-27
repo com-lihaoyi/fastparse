@@ -59,7 +59,7 @@ object IteratorTests extends TestSuite {
 
     test("whitespaceImmediateCutDrop"){
       import NoWhitespace._
-      implicit def whitespace{implicit ctx: P[_] =>
+      implicit def whitespace = {implicit ctx: P[_] =>
         " ".? ~ " ".rep
       }
 
@@ -236,7 +236,7 @@ object IteratorTests extends TestSuite {
         val input3 = toInput("aaa  ccc")
         // this shows behavior of whitespaceApi which requires quite tricky dropBuffer calls
         // it totally ignores first ~ and produces error in the second ~~
-        assert(parse(input3, ab(_)).isInstanceOf[Parsed.Failure])
+        assert(parse(input3, ab[Unit](_)).isInstanceOf[Parsed.Failure])
       }
 
       test("zeroDrops"){
@@ -264,7 +264,7 @@ object IteratorTests extends TestSuite {
 
       parse("[ ]", p(_)).asInstanceOf[Parsed.Failure].extra.traced
       val e = intercept[RuntimeException] {
-        parse(Iterator("[", " ", "]"), p(_)).asInstanceOf[Parsed.Failure].extra.traced
+        parse(Iterator("[", " ", "]"), p[Unit](_)).asInstanceOf[Parsed.Failure].extra.traced
       }
       assert(e.getMessage.contains("Cannot perform `.traced` on an `fastparse.IteratorParserInput`"))
     }
