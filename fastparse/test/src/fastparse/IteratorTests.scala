@@ -264,11 +264,13 @@ object IteratorTests extends TestSuite {
       import NoWhitespace._
       def p[_p: P] = P("[" ~ "]")
 
-      parse("[ ]", p(_)).asInstanceOf[Parsed.Failure].extra.traced
-      val e = intercept[RuntimeException] {
-        parse(Iterator("[", " ", "]"), p(_)).asInstanceOf[Parsed.Failure].extra.traced
+      try {
+        parse(Iterator("[ ]"), p(_)).asInstanceOf[Parsed.Failure].extra.traced
+        ???
+      } catch {
+        case e: RuntimeException =>
+          assert(e.getMessage.contains("Cannot perform `.traced` on an `fastparse.IteratorParserInput`"))
       }
-      assert(e.getMessage.contains("Cannot perform `.traced` on an `fastparse.IteratorParserInput`"))
     }
   }
 }
