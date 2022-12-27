@@ -81,7 +81,7 @@ object FailureTests extends TestSuite{
         |  throw 1
         |}
       """.stripMargin,
-      aggregate = """("." | TypeArgs | ArgList | `_` | Id | "=>" | `=` | MatchAscriptionSuffix | "," | `:` | ")")""",
+      aggregate = """("." | TypeArgs | ArgList | `__` | Id | "=>" | `=` | MatchAscriptionSuffix | "," | `:` | ")")""",
       terminals = null,
       found ="}"
     )
@@ -93,7 +93,7 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      aggregate = """("=>" | `:` | "." | TypeArgs | ArgList | `_` | Id | `=` | MatchAscriptionSuffix | Semis | "}")""",
+      aggregate = """("=>" | `:` | "." | TypeArgs | ArgList | `__` | Id | `=` | MatchAscriptionSuffix | Semis | "}")""",
       terminals = null,
       found ="1\n"
     )
@@ -117,7 +117,7 @@ object FailureTests extends TestSuite{
         | filename.asInstanceOf 10
         |}
       """.stripMargin,
-      aggregate = """("." | TypeArgs | ArgList | `_` | Id | "=>" | `=` | MatchAscriptionSuffix | Semis | "}")""",
+      aggregate = """("." | TypeArgs | ArgList | `__` | Id | "=>" | `=` | MatchAscriptionSuffix | Semis | "}")""",
       terminals = null,
       found = "10"
     )
@@ -220,7 +220,7 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      aggregate = """(WL ~ "." | WL ~ TypeArgs | NotNewline ~ ArgList | `_` | InfixSuffix | PostFix | "=>" | `=` | MatchAscriptionSuffix | Semis | "}")""",
+      aggregate = """(WL ~ "." | WL ~ TypeArgs | NotNewline ~ ArgList | `__` | InfixSuffix | PostFix | "=>" | `=` | MatchAscriptionSuffix | Semis | "}")""",
       terminals = null,
       found = ")"
     )
@@ -230,7 +230,7 @@ object FailureTests extends TestSuite{
         |   A(A(A(A(A(A(A(A(A(A(A(A(A(A(A(A()))))))))))))))
         |}
       """.stripMargin,
-      aggregate = """("." | TypeArgs | ArgList | `_` | Id | "=>" | `=` | MatchAscriptionSuffix | "," | `:` | ")")""",
+      aggregate = """("." | TypeArgs | ArgList | `__` | Id | "=>" | `=` | MatchAscriptionSuffix | "," | `:` | ")")""",
       terminals = null,
       found = "}"
     )
@@ -753,137 +753,137 @@ object FailureTests extends TestSuite{
       terminals = null,
       found = "= 1"
     )
-  test - checkNeg(
-    s"""
-       |object X{
-       |  val (x,) = 1
-       |}
-      """.stripMargin,
-    aggregate = """(`:` | `@` | TQ | "\"" | "." | TypeArgs | TupleEx | Id | "|" | "," ~ Pattern | "," ~ WS ~ Newline | ")")""",
-      terminals = null,
-    found = ",)"
-  )
-  test - checkNeg(
-    s"""
-       |object X{ val (_:) = 1 }
-      """.stripMargin,
-    aggregate = """(TypePat | NamedType | Refinement)""",
-      terminals = null,
-    found = ") = 1"
-  )
-  test - checkNeg(
-    s"""
-       |import x.{y=>}
-      """.stripMargin,
-    aggregate = """(Id | `_`)""",
-      terminals = null,
-    found = "}"
-  )
-  test - checkNeg(
-    s"""
-       |import x.y,
-      """.stripMargin,
-    aggregate = """(ThisPath | IdPath)""",
-      terminals = null,
-    found = ""
-  )
-  test - checkNeg(
-    s"""
-       |object X{type T = A with}
-      """.stripMargin,
-    aggregate = """(TupleType | Literal | TypeId | `_`)""",
-      terminals = null,
-    found = "}"
-  )
-  test - checkNeg(
-    s"""
-       |object X{def f(x: Int, ) = 1}
-      """.stripMargin,
-    aggregate = """("." | TypeArgs | `#` | NLAnnot | `with` | Refinement | `*` | Id | "=>" | ExistentialClause | `>:` | `<:` | `=` | "," ~ FunArg | "," ~ WS ~ Newline | ")")""",
-      terminals = null,
-    found = ", )"
-  )
-  test - checkNeg(
-    s"""
-       |object X{(2,)}
-      """.stripMargin,
-    aggregate = """(FloatSuffix | "L" | "l" | WL ~ "." | WL ~ TypeArgs | Pass ~ ArgList | `_` | InfixSuffix | PostFix | "=>" | `=` | MatchAscriptionSuffix | "," ~ Expr | "," ~ WS ~ Newline | ")")""",
-      terminals = null,
-    found = ",)"
-  )
-  test - checkNeg(
-    s"""
-       |object X{f[A,]}
-      """.stripMargin,
-    aggregate = """("." | TypeArgs | `#` | NLAnnot | `with` | Refinement | `*` | Id | "=>" | ExistentialClause | `>:` | `<:` | "," ~ Type | "," ~ WS ~ Newline | "]")""",
-      terminals = null,
-    found = ",]"
-  )
-  test - checkNeg(
-    s"""
-       |object X{def f[T <% A <%] = 1}
-      """.stripMargin,
-    aggregate = """("=>" | NamedType | Refinement)""",
-      terminals = null,
-    found = "]"
-  )
-  test - checkNeg(
-    s"""
-       |object X{def f[T, B,] = 1}
-      """.stripMargin,
-    aggregate = """(TypeArgList | `>:` | `<:` | `<%` | `:` | "," ~ Annot.rep ~ TypeArg | "," ~ WS ~ Newline | "]")""",
-      terminals = null,
-    found = ",]"
-  )
-  test - checkNeg(
-    s"""
-       |object X{type T = F forSome }}
-      """.stripMargin,
-    aggregate = """ "{" """,
-      terminals = null,
-    found = "}}"
-  )
+    test - checkNeg(
+      s"""
+        |object X{
+        |  val (x,) = 1
+        |}
+        """.stripMargin,
+      aggregate = """(`:` | `@` | TQ | "\"" | "." | TypeArgs | TupleEx | Id | "|" | "," ~ Pattern | "," ~ WS ~ Newline | ")")""",
+        terminals = null,
+      found = ",)"
+    )
+    test - checkNeg(
+      s"""
+        |object X{ val (_:) = 1 }
+        """.stripMargin,
+      aggregate = """(TypePat | NamedType | Refinement)""",
+        terminals = null,
+      found = ") = 1"
+    )
+    test - checkNeg(
+      s"""
+        |import x.{y=>}
+        """.stripMargin,
+      aggregate = """(Id | `__`)""",
+        terminals = null,
+      found = "}"
+    )
+    test - checkNeg(
+      s"""
+        |import x.y,
+        """.stripMargin,
+      aggregate = """(ThisPath | IdPath)""",
+        terminals = null,
+      found = ""
+    )
+    test - checkNeg(
+      s"""
+        |object X{type T = A with}
+        """.stripMargin,
+      aggregate = """(TupleType | Literal | TypeId | `__`)""",
+        terminals = null,
+      found = "}"
+    )
+    test - checkNeg(
+      s"""
+        |object X{def f(x: Int, ) = 1}
+        """.stripMargin,
+      aggregate = """("." | TypeArgs | `#` | NLAnnot | `with` | Refinement | `*` | Id | "=>" | ExistentialClause | `>:` | `<:` | `=` | "," ~ FunArg | "," ~ WS ~ Newline | ")")""",
+        terminals = null,
+      found = ", )"
+    )
+    test - checkNeg(
+      s"""
+        |object X{(2,)}
+        """.stripMargin,
+      aggregate = """(FloatSuffix | "L" | "l" | WL ~ "." | WL ~ TypeArgs | Pass ~ ArgList | `__` | InfixSuffix | PostFix | "=>" | `=` | MatchAscriptionSuffix | "," ~ Expr | "," ~ WS ~ Newline | ")")""",
+        terminals = null,
+      found = ",)"
+    )
+    test - checkNeg(
+      s"""
+        |object X{f[A,]}
+        """.stripMargin,
+      aggregate = """("." | TypeArgs | `#` | NLAnnot | `with` | Refinement | `*` | Id | "=>" | ExistentialClause | `>:` | `<:` | "," ~ Type | "," ~ WS ~ Newline | "]")""",
+        terminals = null,
+      found = ",]"
+    )
+    test - checkNeg(
+      s"""
+        |object X{def f[T <% A <%] = 1}
+        """.stripMargin,
+      aggregate = """("=>" | NamedType | Refinement)""",
+        terminals = null,
+      found = "]"
+    )
+    test - checkNeg(
+      s"""
+        |object X{def f[T, B,] = 1}
+        """.stripMargin,
+      aggregate = """(TypeArgList | `>:` | `<:` | `<%` | `:` | "," ~ Annot.rep ~ TypeArg | "," ~ WS ~ Newline | "]")""",
+        terminals = null,
+      found = ",]"
+    )
+    test - checkNeg(
+      s"""
+        |object X{type T = F forSome }}
+        """.stripMargin,
+      aggregate = """ "{" """,
+        terminals = null,
+      found = "}}"
+    )
 
-  test - checkNeg(
-    s"""
-       |object X{def f(x: Int =) = 1}
-      """.stripMargin,
-    aggregate = """(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | SmallerExprOrLambda)""",
-      terminals = null,
-    found = ") = 1"
-  )
-  test - checkNeg(
-    s"""
-       |object X{type T = Int#}
-      """.stripMargin,
-    aggregate = """id""",
-      terminals = null,
-    found = "}"
-  )
-  test - checkNeg(
-    s"""
-       |object X{type T = }
-      """.stripMargin,
-    aggregate = """("=>" | NamedType | Refinement)""",
-      terminals = null,
-    found = "}\n"
-  )
-  test - checkNeg(
-    s"""
-       |object X{type T[,] = A }
-      """.stripMargin,
-    aggregate = """(Annot | [+\\-] | Id | `_`)""",
-      terminals = null,
-    found = ",]"
-  )
-  test - checkNeg(
-    s"""
-       |object X{type T <: }
-      """.stripMargin,
-    aggregate = """("=>" | NamedType | Refinement)""",
-      terminals = null,
-    found = "}\n"
-  )
+    test - checkNeg(
+      s"""
+        |object X{def f(x: Int =) = 1}
+        """.stripMargin,
+      aggregate = """(If | While | Try | DoWhile | For | Throw | Return | ImplicitLambda | SmallerExprOrLambda)""",
+        terminals = null,
+      found = ") = 1"
+    )
+    test - checkNeg(
+      s"""
+        |object X{type T = Int#}
+        """.stripMargin,
+      aggregate = """id""",
+        terminals = null,
+      found = "}"
+    )
+    test - checkNeg(
+      s"""
+        |object X{type T = }
+        """.stripMargin,
+      aggregate = """("=>" | NamedType | Refinement)""",
+        terminals = null,
+      found = "}\n"
+    )
+    test - checkNeg(
+      s"""
+        |object X{type T[,] = A }
+        """.stripMargin,
+      aggregate = """(Annot | [+\\-] | Id | `__`)""",
+        terminals = null,
+      found = ",]"
+    )
+    test - checkNeg(
+      s"""
+        |object X{type T <: }
+        """.stripMargin,
+      aggregate = """("=>" | NamedType | Refinement)""",
+        terminals = null,
+      found = "}\n"
+    )
     test - checkNeg(
       """
         |object System {
@@ -913,7 +913,7 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      aggregate = """(Annot | Id | `_`)""",
+      aggregate = """(Annot | Id | `__`)""",
       terminals = null,
       found = "["
     )
@@ -943,7 +943,7 @@ object FailureTests extends TestSuite{
          |  for(i <- Nil if x: Int => bar) 1
          |}
        """.stripMargin,
-      aggregate = """(TQ | "\"" | "." | WL ~ "." | WL ~ TypeArgs | Pass ~ ArgList | `_` | InfixSuffix | PostFix | Enumerator | ")")""",
+      aggregate = """(TQ | "\"" | "." | WL ~ "." | WL ~ TypeArgs | Pass ~ ArgList | `__` | InfixSuffix | PostFix | Enumerator | ")")""",
       terminals = null,
       found = ": Int"
     )

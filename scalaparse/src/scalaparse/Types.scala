@@ -27,9 +27,10 @@ trait Types extends Core{
   // the `*`-postfix rather than an infix type
   def InfixType[_p: P] = P( CompoundType ~~ (NotNewline ~ (`*` | Id./) ~~ OneNLMax ~ CompoundType).repX )
 
-  def CompoundType[_p: P]  = {
+  def CompoundType[_p: P] = {
     def Refinement = P( OneNLMax ~ `{` ~/ Dcl.repX(sep=Semis) ~ `}` )
-    def NamedType = P( (Pass ~ AnnotType).rep(1, `with`./) )
+    def NamedType = P( (/* Pass ~ */AnnotType).rep(1, `with`./) )
+    //                     ^^^^^^ This doesn't compile on Scala 3
     P( NamedType ~~ Refinement.? | Refinement )
   }
   def NLAnnot[_p: P] = P( NotNewline ~ Annot )
@@ -40,7 +41,7 @@ trait Types extends Core{
     // Can't `cut` after the opening paren, because we might be trying to parse `()`
     // or `() => T`! only cut after parsing one type
     def TupleType = P( "(" ~/ Type.repTC() ~ ")" )
-    def BasicType = P( TupleType | Literals.NoInterp.Literal | TypeId ~ ("." ~ `type`).?  | `_` )
+    def BasicType = P( TupleType | Literals.NoInterp.Literal | TypeId ~ ("." ~ `type`).?  | `__` )
     P( BasicType ~ (TypeArgs | `#` ~/ Id).rep )
   }
 
@@ -58,7 +59,7 @@ trait Types extends Core{
   def TypeBounds[_p: P]: P[Unit] = P( (`>:` ~/ Type).? ~ (`<:` ~/ Type).? )
   def TypeArg[_p: P]: P[Unit] = {
     def CtxBounds = P((`<%` ~/ Type).rep ~ (`:` ~/ Type).rep)
-    P((Id | `_`) ~ TypeArgList.? ~ TypeBounds ~ CtxBounds)
+    P((Id | `__`) ~ TypeArgList.? ~ TypeBounds ~ CtxBounds)
   }
 
   def Annot[_p: P]: P[Unit] = P( `@` ~/ SimpleType ~  ("(" ~/ (Exprs ~ (`:` ~/ `_*`).?).? ~ TrailingComma ~ ")").rep )

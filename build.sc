@@ -212,7 +212,8 @@ trait CommonTestModule extends ScalaModule with TestModule.Utest{
 
   def sources = T.sources(
     millSourcePath / "src",
-    millSourcePath / s"src-$platformSegment"
+    millSourcePath / s"src-$platformSegment",
+    millSourcePath / s"src-${scalaVersion().takeWhile(_ != '.')}-$platformSegment",
   )
 }
 

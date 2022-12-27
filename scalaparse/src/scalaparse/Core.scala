@@ -15,7 +15,7 @@ trait Core extends syntax.Literals{
     def repTC[R](min: Int = 0, max: Int = Int.MaxValue, exactly: Int = -1)
                 (implicit ev: fastparse.Implicits.Repeater[T, R],
                  ctx: P[_]): P[R] =
-      p0.rep[R](min = min, sep = ",", max = max, exactly = exactly) ~ TrailingComma
+      p0.rep[R, Int, Int](min = min, sep = ",", max = max, exactly = exactly) ~ TrailingComma
   }
   // Aliases for common things. These things are used in almost every parser
   // in the file, so it makes sense to keep them short.
@@ -27,7 +27,8 @@ trait Core extends syntax.Literals{
   def `:`[_p: P] = O(":")
   def `=`[_p: P] = O("=")
   def `@`[_p: P] = O("@")
-  def `_`[_p: P] = W("_")
+  // `_` is not a valid Scala 3 identifier
+  def `__`[_p: P] = W("_")
   def `this`[_p: P] = W("this")
   def `type`[_p: P] = W("type")
   def `val`[_p: P] = W("val")
@@ -74,7 +75,7 @@ trait Core extends syntax.Literals{
   // kinda-sorta keywords that are common patterns even if not
   // really-truly keywords
   def `*`[_p: P] = O("*")
-  def `_*`[_p: P] = P( `_` ~ `*` )
+  def `_*`[_p: P] = P( `__` ~ `*` )
   def `}`[_p: P] = P( Semis.? ~ "}" )
   def `{`[_p: P] = P( "{" ~ Semis.? )
   /**
@@ -94,7 +95,7 @@ trait Core extends syntax.Literals{
    * Sketchy way to whitelist a few suffixes that come after a . select;
    * apart from these and IDs, everything else is illegal
    */
-  def PostDotCheck[_p: P]: P[Unit] = P( WL ~ !(`super` | `this` | "{" | `_` | `type`) )
+  def PostDotCheck[_p: P]: P[Unit] = P( WL ~ !(`super` | `this` | "{" | `__` | `type`) )
   def ClassQualifier[_p: P] = P( "[" ~ Id ~ "]" )
   def ThisSuper[_p: P] = P( `this` | `super` ~ ClassQualifier.? )
   def ThisPath[_p: P]: P[Unit] = P( ThisSuper ~ ("." ~ PostDotCheck ~/ Id).rep )

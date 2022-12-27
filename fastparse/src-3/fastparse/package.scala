@@ -248,14 +248,14 @@ package object fastparse {
     inline def rep[V, Max <: Int, Exact <: Int](
         min: Int = 0,
         sep: => P[_] = null,
-        inline max: Max = Int.MaxValue,
-        inline exactly: Exact = -1
+        max: Max = Int.MaxValue,
+        exactly: Exact = -1
     )(using
         repeater: Implicits.Repeater[T, V],
         whitespace: P[_] => P[Unit],
         ctx: P[Any]
     ): P[V] =
-      inline if max == Int.MaxValue && exactly == -1
+      if max == Int.MaxValue && exactly == -1
       then new RepImpls[T](() => parse0).rep[V](min, sep)
       else new RepImpls[T](() => parse0).rep[V](min, sep, max, exactly)
 
@@ -270,13 +270,13 @@ package object fastparse {
     inline def repX[V, Max <: Int, Exact <: Int](
         min: Int = 0,
         sep: => P[_] = null,
-        inline max: Max = Int.MaxValue,
-        inline exactly: Exact = -1
+        max: Max = Int.MaxValue,
+        exactly: Exact = -1
     )(implicit
         repeater: Implicits.Repeater[T, V],
         ctx: P[Any]
     ): P[V] =
-      inline if max == Int.MaxValue && exactly == -1
+      if max == Int.MaxValue && exactly == -1
       then new RepImpls[T](() => parse0).repX[V](min, sep)
       else new RepImpls[T](() => parse0).repX[V](min, sep, max, exactly)
 

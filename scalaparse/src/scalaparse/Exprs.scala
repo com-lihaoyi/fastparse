@@ -6,9 +6,9 @@ trait Exprs extends Core with Types with Xml{
   def BlockDef[_p: P]: P[Unit]
 
   def Import[_p: P]: P[Unit] = {
-    def Selector: P[Unit] = P( (Id | `_`) ~ (`=>` ~/ (Id | `_`)).? )
+    def Selector: P[Unit] = P( (Id | `__`) ~ (`=>` ~/ (Id | `__`)).? )
     def Selectors: P[Unit] = P( "{" ~/ Selector.repTC() ~ "}" )
-    def ImportExpr: P[Unit] = P( StableId ~ ("." ~/ (`_` | Selectors)).? )
+    def ImportExpr: P[Unit] = P( StableId ~ ("." ~/ (`__` | Selectors)).? )
     P( `import` ~/ ImportExpr.rep(1, sep = ","./) )
   }
 
@@ -66,7 +66,7 @@ trait Exprs extends Core with Types with Xml{
       def LambdaRhs = if (semiInference) P( BlockChunk ) else P( Expr )
 
 
-      def ImplicitLambda = P( `implicit` ~ (Id | `_`) ~ (`:` ~ InfixType).? ~ `=>` ~ LambdaRhs.? )
+      def ImplicitLambda = P( `implicit` ~ (Id | `__`) ~ (`:` ~ InfixType).? ~ `=>` ~ LambdaRhs.? )
       def ParenedLambda = P( Parened ~~ (WL ~ `=>` ~ LambdaRhs.? | ExprSuffix ~~ PostfixSuffix ~ SuperPostfixSuffix) )
       def PostfixLambda = P( PostfixExpr ~ (`=>` ~ LambdaRhs.? | SuperPostfixSuffix).? )
       def SmallerExprOrLambda = P( ParenedLambda | PostfixLambda )
@@ -81,7 +81,7 @@ trait Exprs extends Core with Types with Xml{
     def Ascription[_p: P] = P( `:` ~/ (`_*` |  AscriptionType | Annot.rep(1)) )
     def MatchAscriptionSuffix[_p: P] = P(`match` ~/ "{" ~ CaseClauses | Ascription)
     def ExprPrefix[_p: P] = P( WL ~ CharIn("\\-+!~") ~~ !syntax.Basic.OpChar ~ WS)
-    def ExprSuffix[_p: P] = P( (WL ~ "." ~/ Id | WL ~ TypeArgs | NoSemis ~ ArgList).repX ~~ (NoSemis  ~ `_`).? )
+    def ExprSuffix[_p: P] = P( (WL ~ "." ~/ Id | WL ~ TypeArgs | NoSemis ~ ArgList).repX ~~ (NoSemis  ~ `__`).? )
     def PrefixExpr[_p: P] = P( ExprPrefix.? ~ SimpleExpr )
 
     // Intermediate `WL` needs to always be non-cutting, because you need to
@@ -97,7 +97,7 @@ trait Exprs extends Core with Types with Xml{
     def SimpleExpr[_p: P]: P[Unit] = {
       def New = P( `new` ~/ AnonTmpl )
 
-      P( XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | Parened )
+      P( XmlExpr | New | BlockExpr | ExprLiteral | StableId | `__` | Parened )
     }
     def Guard[_p: P] : P[Unit] = P( `if` ~/ PostfixExpr )
   }
@@ -105,13 +105,13 @@ trait Exprs extends Core with Types with Xml{
   def SimplePattern[_p: P]: P[Unit] = {
     def TupleEx = P( "(" ~/ Pattern.repTC() ~ ")" )
     def Extractor = P( StableId ~ TypeArgs.? ~ TupleEx.? )
-    def Thingy = P( `_` ~ (`:` ~/ TypePat).? ~ !("*" ~~ !syntax.Basic.OpChar) )
+    def Thingy = P( `__` ~ (`:` ~/ TypePat).? ~ !("*" ~~ !syntax.Basic.OpChar) )
     P( XmlPattern | Thingy | PatLiteral | TupleEx | Extractor | VarId )
   }
 
   def BlockExpr[_p: P]: P[Unit] = P( "{" ~/ (CaseClauses | Block ~ "}") )
 
-  def BlockLambdaHead[_p: P]: P[Unit] = P( "(" ~ BlockLambdaHead ~ ")" | `this` | Id | `_` )
+  def BlockLambdaHead[_p: P]: P[Unit] = P( "(" ~ BlockLambdaHead ~ ")" | `this` | Id | `__` )
 
   def BlockLambda[_p: P] = P( BlockLambdaHead  ~ (`=>` | `:` ~ InfixType ~ `=>`.?) )
 
@@ -132,11 +132,11 @@ trait Exprs extends Core with Types with Xml{
 
   def Patterns[_p: P]: P[Unit] = P( Pattern.rep(1, sep = ","./) )
   def Pattern[_p: P]: P[Unit] = P( (WL ~ TypeOrBindPattern).rep(1, sep = "|"./) )
-  def TypePattern[_p: P] = P( (`_` | BacktickId | VarId) ~ `:` ~ TypePat )
+  def TypePattern[_p: P] = P( (`__` | BacktickId | VarId) ~ `:` ~ TypePat )
   def TypeOrBindPattern[_p: P]: P[Unit] = P( TypePattern | BindPattern )
   def BindPattern[_p: P]: P[Unit] = {
     def InfixPattern = P( SimplePattern ~ (Id ~/ SimplePattern).rep | `_*` )
-    def Binding = P( (Id | `_`) ~ `@` )
+    def Binding = P( (Id | `__`) ~ `@` )
     P( Binding ~ InfixPattern | InfixPattern | VarId )
   }
 

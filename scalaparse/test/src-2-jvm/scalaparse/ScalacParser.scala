@@ -3,8 +3,8 @@ package scalaparse
 import scala.tools.nsc.{Global, Settings}
 
 object ScalacParser{
-  var current = Thread.currentThread().getContextClassLoader
-  val files = collection.mutable.Buffer.empty[java.io.File]
+  private var current = Thread.currentThread().getContextClassLoader
+  private val files = collection.mutable.Buffer.empty[java.io.File]
   files.appendAll(
     System.getProperty("sun.boot.class.path")
       .split(":")
@@ -19,12 +19,12 @@ object ScalacParser{
     current = current.getParent
   }
 
-  val settings = new Settings()
+  private val settings = new Settings()
   settings.usejavacp.value = true
   settings.embeddedDefaults[ScalacParser.type]
   settings.classpath.append(files.mkString(":"))
 
-  val global = new Global(settings)
+  private val global = new Global(settings)
 
   def checkParseFails(input: String) = this.synchronized{
     val run = new global.Run()
