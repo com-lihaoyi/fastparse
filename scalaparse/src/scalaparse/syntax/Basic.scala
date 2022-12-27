@@ -8,21 +8,21 @@ import CharPredicates._
 import scalaparse.syntax.Identifiers.NamedFunction
 object Basic {
 
-  def UnicodeEscape[_: P] = P( "u" ~ HexDigit ~ HexDigit ~ HexDigit ~ HexDigit )
+  def UnicodeEscape[_p: P] = P( "u" ~ HexDigit ~ HexDigit ~ HexDigit ~ HexDigit )
 
   //Numbers and digits
-  def Digit[_: P] = P( CharIn("0-9") )
+  def Digit[_p: P] = P( CharIn("0-9") )
 
-  def HexDigit[_: P] = P( CharIn("0-9a-fA-F") )
-  def HexNum[_: P] = P( "0x" ~ CharsWhileIn("0-9a-fA-F") )
-  def DecNum[_: P] = P( CharsWhileIn("0-9") )
-  def Exp[_: P] = P( CharIn("Ee") ~ CharIn("+\\-").? ~ DecNum )
-  def FloatType[_: P] = P( CharIn("fFdD") )
+  def HexDigit[_p: P] = P( CharIn("0-9a-fA-F") )
+  def HexNum[_p: P] = P( "0x" ~ CharsWhileIn("0-9a-fA-F") )
+  def DecNum[_p: P] = P( CharsWhileIn("0-9") )
+  def Exp[_p: P] = P( CharIn("Ee") ~ CharIn("+\\-").? ~ DecNum )
+  def FloatType[_p: P] = P( CharIn("fFdD") )
 
-  def WSChars[_: P] = P( NoTrace(CharsWhileIn("\u0020\u0009")) )
-  def Newline[_: P] = P( NoTrace(StringIn("\r\n", "\n")) )
-  def Semi[_: P] = P( ";" | Newline.rep(1) )
-  def OpChar[_: P] = P ( CharPred(isOpChar) )
+  def WSChars[_p: P] = P( NoTrace(CharsWhileIn("\u0020\u0009")) )
+  def Newline[_p: P] = P( NoTrace(StringIn("\r\n", "\n")) )
+  def Semi[_p: P] = P( ";" | Newline.rep(1) )
+  def OpChar[_p: P] = P ( CharPred(isOpChar) )
 
   val isOpChar = NamedFunction{
     case '!' | '#' | '%' | '&' | '*' | '+' | '-' | '/' |
@@ -38,8 +38,8 @@ object Basic {
   )
   val UpperChar = NamedFunction(isUpper)
 
-  def Lower[_: P] = P( CharPred(LowerChar) )
-  def Upper[_: P] = P( CharPred(UpperChar) )
+  def Lower[_p: P] = P( CharPred(LowerChar) )
+  def Upper[_p: P] = P( CharPred(UpperChar) )
 }
 /**
  * Most keywords don't just require the correct characters to match,
@@ -48,7 +48,7 @@ object Basic {
  * (W) and key-operators (O) which have different non-match criteria.
  */
 object Key {
-  def W[_: P](s: String) = P( s ~ !CharPred(Basic.LetterDigitDollarUnderscore) )(s"`$s`", implicitly)
+  def W[_p: P](s: String) = P( s ~ !CharPred(Basic.LetterDigitDollarUnderscore) )(s"`$s`", implicitly)
   // If the operator is followed by a comment, stop early so we can parse the comment
-  def O[_: P](s: String) = P( s ~ (!Basic.OpChar | &(NoTrace(StringIn("/*", "//")))) )(s"`$s`", implicitly)
+  def O[_p: P](s: String) = P( s ~ (!Basic.OpChar | &(NoTrace(StringIn("/*", "//")))) )(s"`$s`", implicitly)
 }

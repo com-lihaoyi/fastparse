@@ -16,17 +16,17 @@ object GnipSubSyntaxTest extends TestSuite {
   object GnipRuleParser {
     import SingleLineWhitespace._
 
-    def keyword[_: P] = P(CharIn("a-z")!)
-    def maybeNegatedKeyword[_: P] = P((("-"?) ~~ keyword)!)
+    def keyword[_p: P] = P(CharIn("a-z")!)
+    def maybeNegatedKeyword[_p: P] = P((("-"?) ~~ keyword)!)
 
-    def keywordGroupWithoutOrClause[_: P] = P((maybeNegatedKeyword | (("-"?) ~~ keywordsInParentheses))!)
-    def keywordGroup[_: P] = P(orClause | keywordGroupWithoutOrClause)
+    def keywordGroupWithoutOrClause[_p: P] = P((maybeNegatedKeyword | (("-"?) ~~ keywordsInParentheses))!)
+    def keywordGroup[_p: P] = P(orClause | keywordGroupWithoutOrClause)
 
-    def keywordsInParentheses[_: P] = P("(" ~ gnipKeywordPhrase ~ ")")
-    def orClause[_: P] = P(!(("-" ~~ keywordGroupWithoutOrClause.rep(1)) ~ "OR") ~ keywordGroupWithoutOrClause ~ ("OR"!) ~ gnipKeywordPhrase)
-    def gnipKeywordPhrase[_: P]: P[String] = P(keywordGroup.rep(1))!
+    def keywordsInParentheses[_p: P] = P("(" ~ gnipKeywordPhrase ~ ")")
+    def orClause[_p: P] = P(!(("-" ~~ keywordGroupWithoutOrClause.rep(1)) ~ "OR") ~ keywordGroupWithoutOrClause ~ ("OR"!) ~ gnipKeywordPhrase)
+    def gnipKeywordPhrase[_p: P]: P[String] = P(keywordGroup.rep(1))!
 
-    def parse[_: P] = P(Start ~ gnipKeywordPhrase ~ End)
+    def parse[_p: P] = P(Start ~ gnipKeywordPhrase ~ End)
   }
 
   object GnipRuleValidator {

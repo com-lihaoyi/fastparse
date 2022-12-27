@@ -25,7 +25,7 @@ object IteratorTests extends TestSuite {
   val tests = Tests {
     test("basic"){
       import NoWhitespace._
-      def p[_: P] = P( "ab" ~/ "cd".rep().! ~ "ef" | "z" )
+      def p[_p: P] = P( "ab" ~/ "cd".rep().! ~ "ef" | "z" )
 
       val Parsed.Success(res, i) = parse(Iterator("ab", "cd", "cd", "cd", "ef"), p(_))
 
@@ -35,7 +35,7 @@ object IteratorTests extends TestSuite {
     test("readable"){
       for(bufferSize <- Range(1, 15)){
         import NoWhitespace._
-        def p[_: P] = P("ab" ~/ "cd".rep().! ~ "ef" | "z")
+        def p[_p: P] = P("ab" ~/ "cd".rep().! ~ "ef" | "z")
 
         val Parsed.Success(res, i) = parse(
           ParserInputSource.FromReadable("abcdcdcdef", bufferSize),
@@ -48,7 +48,7 @@ object IteratorTests extends TestSuite {
 
     test("immediateCutDrop"){
       import NoWhitespace._
-      def p[_: P] = P( "ab" ~/ "cd" | "z" ).log
+      def p[_p: P] = P( "ab" ~/ "cd" | "z" ).log
 
       val input = toInput("abcdef")
       val Parsed.Success(res, i) = parse(input, p(_))
@@ -59,11 +59,11 @@ object IteratorTests extends TestSuite {
 
     test("whitespaceImmediateCutDrop"){
       import NoWhitespace._
-      implicit def whitespace{implicit ctx: P[_] =>
+      implicit def whitespace = {implicit ctx: P[_] =>
         " ".? ~ " ".rep
       }
 
-      def p[_: P] = P( "ab" ~/ "cd" | "z" )
+      def p[_p: P] = P( "ab" ~/ "cd" | "z" )
 
       val input = toInput("abcdef")
       val Parsed.Success(res, i) = parse(input, p(_))
@@ -77,7 +77,7 @@ object IteratorTests extends TestSuite {
       // Top-level sequences, which are not inside any `|`s or `.rep`s or `.?`s,
       // should dropBuffer immediately after every `~`, even without any cuts
 
-      def p[_: P] = P( "a" ~ "b" ~ "c")
+      def p[_p: P] = P( "a" ~ "b" ~ "c")
       def capt[_ : P] = P( p ~ p ~ p)
       val input = toInput("abcabcabc")
       val Parsed.Success(res, i) = parse(input, capt(_))
@@ -89,8 +89,8 @@ object IteratorTests extends TestSuite {
       test("capturing"){
         import NoWhitespace._
 
-        def p[_: P] = P( "a" ~/ "b" ~/ "c")
-        def capt[_: P] = P( p.! ~ p.! ~ p.!)
+        def p[_p: P] = P( "a" ~/ "b" ~/ "c")
+        def capt[_p: P] = P( p.! ~ p.! ~ p.!)
         val input = toInput("abcabcabc")
         val Parsed.Success(res, i) = parse(input, capt(_))
         assert(
@@ -103,8 +103,8 @@ object IteratorTests extends TestSuite {
       test("nocut"){
         import NoWhitespace._
 
-        def p[_: P] = P( "a" ~/ "b" ~/ "c")
-        def nocut[_: P] = P((NoCut(p) ~ NoCut(p) ~/ NoCut(p)) | "abcd")
+        def p[_p: P] = P( "a" ~/ "b" ~/ "c")
+        def nocut[_p: P] = P((NoCut(p) ~ NoCut(p) ~/ NoCut(p)) | "abcd")
 
         val input1 = toInput("abcabcabc")
         val Parsed.Success(_, i1) = parse(input1, nocut(_))
@@ -123,9 +123,9 @@ object IteratorTests extends TestSuite {
 
       test("either"){
         import NoWhitespace._
-        def p[_: P] = P( "a" ~ "b" ~ "c")
-        def either[_: P] = P( (p ~ End) | ("abc" ~ p ~ End) | ("abcabc" ~ p ~ End))
-        def eitherCutted[_: P] = P( (p ~ End) | ("abc" ~ p ~ End) | ("abcabc" ~/ p ~ End))
+        def p[_p: P] = P( "a" ~ "b" ~ "c")
+        def either[_p: P] = P( (p ~ End) | ("abc" ~ p ~ End) | ("abcabc" ~ p ~ End))
+        def eitherCutted[_p: P] = P( (p ~ End) | ("abc" ~ p ~ End) | ("abcabc" ~/ p ~ End))
 
         val input1 = toInput("abcabcabc")
         val Parsed.Success(_, i1) = parse(input1, either(_))
@@ -163,9 +163,9 @@ object IteratorTests extends TestSuite {
 
       test("rep"){
         import NoWhitespace._
-        def p[_: P] = P( "a" ~ "b" ~ "c")
-        def rep[_: P] = P( (p.rep ~ "d") | (p.rep ~ "e") )
-        def repCutted[_: P] = P( (p.rep ~ "d") | (p.rep ~/ "e") )
+        def p[_p: P] = P( "a" ~ "b" ~ "c")
+        def rep[_p: P] = P( (p.rep ~ "d") | (p.rep ~ "e") )
+        def repCutted[_p: P] = P( (p.rep ~ "d") | (p.rep ~/ "e") )
 
         val input1 = toInput("abcabcabcd")
         val Parsed.Success(_, i1) = parse(input1, rep(_))
@@ -193,10 +193,10 @@ object IteratorTests extends TestSuite {
 
       test("all"){
         import NoWhitespace._
-        def p[_: P] = P( "a" ~ "b" ~ "c" ~/ "d")
-        def np[_: P] = NoCut(p)
-        def pp[_: P] = P( "a" ~ "b" ~ "c" ~ End)
-        def all[_: P] = P( pp | (np ~/ np) | p ~ "e" | "abded".! )
+        def p[_p: P] = P( "a" ~ "b" ~ "c" ~/ "d")
+        def np[_p: P] = NoCut(p)
+        def pp[_p: P] = P( "a" ~ "b" ~ "c" ~ End)
+        def all[_p: P] = P( pp | (np ~/ np) | p ~ "e" | "abded".! )
 
         val input = toInput("abded")
 
@@ -213,9 +213,9 @@ object IteratorTests extends TestSuite {
           " ".? ~~/ " ".repX
         }
 
-        def a[_: P] = P( "aaa" )
-        def b[_: P] = P( "bbb" )
-        def ab[_: P] = P( a ~ b.? ~~ " " ~~ "ccc" )
+        def a[_p: P] = P( "aaa" )
+        def b[_p: P] = P( "bbb" )
+        def ab[_p: P] = P( a ~ b.? ~~ " " ~~ "ccc" )
 
         val input1 = toInput("aaa   bbb ccc")
         val Parsed.Success(_, i1) = parse(input1, ab(_))
@@ -236,12 +236,12 @@ object IteratorTests extends TestSuite {
         val input3 = toInput("aaa  ccc")
         // this shows behavior of whitespaceApi which requires quite tricky dropBuffer calls
         // it totally ignores first ~ and produces error in the second ~~
-        assert(parse(input3, ab(_)).isInstanceOf[Parsed.Failure])
+        assert(parse(input3, ab[Unit](_)).isInstanceOf[Parsed.Failure])
       }
 
       test("zeroDrops"){
         import NoWhitespace._
-        def p[_: P] = P(
+        def p[_p: P] = P(
           (("big, " ~ ("another, " ~ ("X".? ~/ "Y".?)) | "small, ") ~ "end") | "other"
         )
         val input = toInput("big, another, end")
@@ -260,11 +260,11 @@ object IteratorTests extends TestSuite {
 
     test("traceFailure"){
       import NoWhitespace._
-      def p[_: P] = P("[" ~ "]")
+      def p[_p: P] = P("[" ~ "]")
 
       parse("[ ]", p(_)).asInstanceOf[Parsed.Failure].extra.traced
       val e = intercept[RuntimeException] {
-        parse(Iterator("[", " ", "]"), p(_)).asInstanceOf[Parsed.Failure].extra.traced
+        parse(Iterator("[", " ", "]"), p[Unit](_)).asInstanceOf[Parsed.Failure].extra.traced
       }
       assert(e.getMessage.contains("Cannot perform `.traced` on an `fastparse.IteratorParserInput`"))
     }

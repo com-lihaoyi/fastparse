@@ -10,7 +10,7 @@
         may want to return, etc.. By defining your parsers as:
 
     @hl.scala
-        def myParser[_: P]: P[T] = P( ... )
+        def myParser[_p: P]: P[T] = P( ... )
 
     @p
         We ensure that a @code{ParsingRun} object is required to start the
@@ -35,7 +35,7 @@
     @sect{Opacity}
         @p
             Fastparse parsers are opaque: as plain methods
-            @hl.scala{def myParser[_: P]: P[T]}, the only thing you can do is
+            @hl.scala{def myParser[_p: P]: P[T]}, the only thing you can do is
             invoke them. You cannot programmatically inspect the body of a
             parser, see what other parsers it depends on, or perform any
             transformations on it. This in turn allows us to perform additional
