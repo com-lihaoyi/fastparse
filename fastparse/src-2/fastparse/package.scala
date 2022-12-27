@@ -571,7 +571,7 @@ package object fastparse {
   /**
     * Parser that always succeeds and returns the current index into the parsed
     * input. Useful for e.g. capturing source locations so when downstream
-    * valiation raises errors you can tell the user where in the input the
+    * validation raises errors you can tell the user where in the input the
     * error originated from
     */
   def Index(implicit ctx: P[_]): P[Int] = {
