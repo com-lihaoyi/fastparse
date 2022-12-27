@@ -176,6 +176,7 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule with Mima{
       .lastTag
       .getOrElse(throw new Exception("Missing last tag"))
   )
+  def mimaPreviousArtifacts = if(isScala3(crossScalaVersion)) Agg.empty[Dep] else super.mimaPreviousArtifacts()
   def mimaBinaryIssueFilters = super.mimaBinaryIssueFilters() ++ Seq(
     ProblemFilter.exclude[IncompatibleResultTypeProblem]("fastparse.Parsed#Failure.unapply")
   )
