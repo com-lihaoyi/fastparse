@@ -237,7 +237,8 @@ object IteratorTests extends TestSuite {
         val input3 = toInput("aaa  ccc")
         // this shows behavior of whitespaceApi which requires quite tricky dropBuffer calls
         // it totally ignores first ~ and produces error in the second ~~
-        assert(parse(input3, ab(_)).isInstanceOf[Parsed.Failure])
+        val parsed3 = parse(input3, ab(_))
+        assert(parsed3.isInstanceOf[Parsed.Failure])
       }
 
       test("zeroDrops"){
@@ -263,9 +264,10 @@ object IteratorTests extends TestSuite {
       import NoWhitespace._
       def p[_p: P] = P("[" ~ "]")
 
-      parse("[ ]", p(_)).asInstanceOf[Parsed.Failure].extra.traced
+      // fails under native if run inside the intercept - utest bug?
+      val t = scala.util.Try{ parse(Iterator("[", " ", "]"), p(_)).asInstanceOf[Parsed.Failure].extra.traced }
       val e = intercept[RuntimeException] {
-        parse(Iterator("[", " ", "]"), p(_)).asInstanceOf[Parsed.Failure].extra.traced
+        t.get
       }
       assert(e.getMessage.contains("Cannot perform `.traced` on an `fastparse.IteratorParserInput`"))
     }

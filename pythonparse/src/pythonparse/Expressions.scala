@@ -124,10 +124,10 @@ object Expressions {
   def tuple_contents[_p: P] = P( test ~ "," ~ list_contents.?).map { case (head, rest)  => head +: rest.getOrElse(Seq.empty) }
   def tuple[_p: P] = P( tuple_contents).map(Ast.expr.Tuple(_, Ast.expr_context.Load))
   def list_comp_contents[_p: P] = P( test ~ comp_for.rep(1) )
-  def list_comp[_p: P] = P( list_comp_contents ).map(Ast.expr.ListComp.apply.tupled)
-  def generator[_p: P] = P( list_comp_contents ).map(Ast.expr.GeneratorExp.apply.tupled)
+  def list_comp[_p: P] = P( list_comp_contents ).map((Ast.expr.ListComp.apply _).tupled)
+  def generator[_p: P] = P( list_comp_contents ).map((Ast.expr.GeneratorExp.apply _).tupled)
 
-  def lambdef[_p: P]: P[Ast.expr.Lambda] = P( kw("lambda") ~ varargslist ~ ":" ~ test ).map(Ast.expr.Lambda.apply.tupled)
+  def lambdef[_p: P]: P[Ast.expr.Lambda] = P( kw("lambda") ~ varargslist ~ ":" ~ test ).map((Ast.expr.Lambda.apply _).tupled)
   def trailer[_p: P]: P[Ast.expr => Ast.expr] = {
     def call = P("(" ~ arglist ~ ")").map{ case (args, (keywords, starargs, kwargs)) => (lhs: Ast.expr) => Ast.expr.Call(lhs, args, keywords, starargs, kwargs)}
     def slice = P("[" ~ subscriptlist ~ "]").map(args => (lhs: Ast.expr) => Ast.expr.Subscript(lhs, args, Ast.expr_context.Load))
@@ -163,10 +163,10 @@ object Expressions {
       }
     )
     def dict_comp = P(
-      (dict_item ~ comp_for.rep(1)).map(Ast.expr.DictComp.apply.tupled)
+      (dict_item ~ comp_for.rep(1)).map((Ast.expr.DictComp.apply _).tupled)
     )
     def set: P[Ast.expr.Set] = P( test.rep(1, ",") ~ ",".? ).map(Ast.expr.Set.apply)
-    def set_comp = P( test ~ comp_for.rep(1) ).map(Ast.expr.SetComp.apply.tupled)
+    def set_comp = P( test ~ comp_for.rep(1) ).map((Ast.expr.SetComp.apply _).tupled)
     P( dict_comp | dict | set_comp | set)
   }
 
@@ -182,7 +182,7 @@ object Expressions {
     case (x, Nil) => x
     case (x, gens) => Ast.expr.GeneratorExp(x, gens)
   }
-  def named_argument[_p: P] = P( NAME ~ "=" ~ test  ).map(Ast.keyword.apply.tupled)
+  def named_argument[_p: P] = P( NAME ~ "=" ~ test  ).map((Ast.keyword.apply _).tupled)
 
   def comp_for[_p: P]: P[Ast.comprehension] = P( kw("for") ~ exprlist ~ kw("in") ~ or_test ~ comp_if.rep ).map{
     case (targets, test, ifs) => Ast.comprehension(tuplize(targets), test, ifs)
