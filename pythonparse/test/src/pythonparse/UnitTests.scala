@@ -3,7 +3,7 @@ package pythonparse
 import utest._
 import fastparse._
 /**
- * Tests to cover most basic syntactic constructs. ItSymbol("s") likely there are
+ * Tests to cover most basic syntactic constructs. It's likely there are
  * interactions between the constructs that will cause problems, but these
  * are just to make sure that at a basic level each construct is supported.
  */
