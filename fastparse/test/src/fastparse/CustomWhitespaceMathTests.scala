@@ -23,7 +23,7 @@ object CustomWhitespaceMathTests extends TestSuite{
 
   def divMul[_p: P]: P[Int] = P( factor ~ (CharIn("*/").! ~/ factor).rep() ).map(eval)
   def addSub[_p: P]: P[Int] = P( divMul ~ (CharIn("+\\-").! ~/ divMul).rep() ).map(eval)
-  def expr[_p: P]: P[Int]   = P( " ".rep() ~ addSub ~ " ".rep() ~ End )
+  def expr[_p: P]: P[Int]   = P( " ".rep ~ addSub ~ " ".rep() ~ End )
 
   val tests = Tests {
     test("pass"){

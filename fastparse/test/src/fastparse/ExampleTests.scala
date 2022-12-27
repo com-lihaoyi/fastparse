@@ -204,7 +204,7 @@ object ExampleTests extends TestSuite{
       test("flatMap"){
         def leftTag[_p: P] = P( "<" ~ (!">" ~ AnyChar).rep(1).! ~ ">")
         def rightTag[_p: P](s: String) = P( "</" ~ s.! ~ ">" )
-        def xml[_p: P] = P( leftTag.flatMap(rightTag) )
+        def xml[_p: P] = P( leftTag.flatMap(rightTag(_)) )
 
         val Parsed.Success("a", _) = parse("<a></a>", xml(_))
         val Parsed.Success("abcde", _) = parse("<abcde></abcde>", xml(_))

@@ -103,7 +103,7 @@ class Statements(indent: Int){
   def return_stmt[_p: P] = P( kw("return") ~~ " ".rep ~~ testlist.map(tuplize).? ).map(Ast.stmt.Return.apply)
 
   def yield_stmt[_p: P] = P( yield_expr ).map(Ast.stmt.Expr.apply)
-  def raise_stmt[_p: P]: P[Ast.stmt.Raise] = P( kw("raise") ~~ " ".rep ~~test.? ~ ("," ~ test).? ~ ("," ~ test).? ).map(Ast.stmt.Raise.apply.tupled)
+  def raise_stmt[_p: P]: P[Ast.stmt.Raise] = P( kw("raise") ~~ " ".rep ~~test.? ~ ("," ~ test).? ~ ("," ~ test).? ).map { case (a, b, c) => Ast.stmt.Raise(a, b, c) }
   def import_stmt[_p: P]: P[Ast.stmt] = P( import_name | import_from )
   def import_name[_p: P]: P[Ast.stmt.Import] = P( kw("import") ~ dotted_as_names ).map(Ast.stmt.Import.apply)
   def import_from[_p: P]: P[Ast.stmt.ImportFrom] = {
@@ -114,8 +114,8 @@ class Statements(indent: Int){
       case (dots, module, names) => Ast.stmt.ImportFrom(module.map(Ast.identifier.apply), names, dots.map(_.length))
     }
   }
-  def import_as_name[_p: P]: P[Ast.alias] = P( NAME ~ (kw("as") ~ NAME).? ).map(Ast.alias.apply.tupled)
-  def dotted_as_name[_p: P]: P[Ast.alias] = P( dotted_name.map(x => Ast.identifier(x.map(_.name).mkString("."))) ~ (kw("as") ~ NAME).? ).map(Ast.alias.apply.tupled)
+  def import_as_name[_p: P]: P[Ast.alias] = P( NAME ~ (kw("as") ~ NAME).? ).map{ case (a, b) => Ast.alias(a, b) }
+  def dotted_as_name[_p: P]: P[Ast.alias] = P( dotted_name.map(x => Ast.identifier(x.map(_.name).mkString("."))) ~ (kw("as") ~ NAME).? ).map{ case (a, b) => Ast.alias(a, b) }
   def import_as_names[_p: P] = P( import_as_name.rep(1, ",") ~ (",").? )
   def dotted_as_names[_p: P] = P( dotted_as_name.rep(1, ",") )
   def dotted_name[_p: P] = P( NAME.rep(1, ".") )
@@ -125,7 +125,7 @@ class Statements(indent: Int){
     case (expr, Some((globals, None))) => Ast.stmt.Exec(expr, Some(globals), None)
     case (expr, Some((globals, Some(locals)))) => Ast.stmt.Exec(expr, Some(globals), Some(locals))
   }
-  def assert_stmt[_p: P]: P[Ast.stmt.Assert] = P( kw("assert") ~ test ~ ("," ~ test).? ).map(Ast.stmt.Assert.apply.tupled)
+  def assert_stmt[_p: P]: P[Ast.stmt.Assert] = P( kw("assert") ~ test ~ ("," ~ test).? ).map { case (a, b) => Ast.stmt.Assert(a, b) }
 
   def compound_stmt[_p: P]: P[Ast.stmt] = P( if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | decorated )
   def if_stmt[_p: P]: P[Ast.stmt.If] = {
@@ -142,7 +142,7 @@ class Statements(indent: Int){
     }
   }
   def space_indents[_p: P] = P( spaces.repX ~~ " ".repX(indent) )
-  def while_stmt[_p: P] = P( kw("while") ~/ test ~ ":" ~~ suite ~~ (space_indents ~~ kw("else") ~/ ":" ~~ suite).?.map(_.toSeq.flatten) ).map(Ast.stmt.While.apply.tupled)
+  def while_stmt[_p: P] = P( kw("while") ~/ test ~ ":" ~~ suite ~~ (space_indents ~~ kw("else") ~/ ":" ~~ suite).?.map(_.toSeq.flatten) ).map { case (a, b, c) => Ast.stmt.While(a, b, c) }
   def for_stmt[_p: P]: P[Ast.stmt.For] = P( kw("for") ~/ exprlist ~ kw("in") ~ testlist ~ ":" ~~ suite ~~ (space_indents ~ kw("else") ~/ ":" ~~ suite).? ).map {
     case (itervars, generator, body, orelse) =>
       Ast.stmt.For(tuplize(itervars), tuplize(generator), body, orelse.toSeq.flatten)
