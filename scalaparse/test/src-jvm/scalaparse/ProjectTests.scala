@@ -117,7 +117,6 @@ object ProjectTests extends TestSuite{
     "mesosphere/marathon" - checkRepo("6d5c5b53ddd63aa2ee2a4e504d1dfd4159dde31c")
     "scalatra/scalatra" - checkRepo("d997d15cc791a1043d60969c27d468ea1a2ea1c3")
     "slick/slick" - checkRepo("dcd5bcfa1f52192339c6eb9b264673b1eb893560")
-    "ensime/ensime-server" - checkRepo("3db871f41b30572225cdce5a33ffa779721f915b")
     "GravityLabs/goose" - checkRepo("462f04a0b3d79508266770fd2462b1d4b43f6c54")
     "ornicar/lila" - checkRepo(
       "3f093d56e5000560a5db83e9d26db8e5143f2a80",
