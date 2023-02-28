@@ -247,4 +247,103 @@ trait SharedPackageDefs {
     res.cut = cut
     res
   }
+
+
+}
+
+object SharedPackageDefs{
+
+  def opaque[T](parse0: () => P[T], msg: String)(implicit ctx: P[Any]): P[T] = {
+    val oldIndex = ctx.index
+
+    val res = parse0()
+
+    val res2 =
+      if (res.isSuccess) ctx.freshSuccess(ctx.successValue)
+      else ctx.freshFailure(oldIndex)
+
+    if (ctx.verboseFailures) ctx.aggregateTerminal(oldIndex, () => msg)
+
+    res2.asInstanceOf[P[T]]
+  }
+
+  def unary_!(parse0: () => P[_])(implicit ctx: P[Any]): P[Unit] = {
+    val startPos = ctx.index
+    val startCut = ctx.cut
+    val oldNoCut = ctx.noDropBuffer
+    ctx.noDropBuffer = true
+    val startTerminals = ctx.failureTerminalAggregate
+    parse0()
+    ctx.noDropBuffer = oldNoCut
+    val msg = ctx.shortParserMsg
+
+    val res =
+      if (ctx.isSuccess) ctx.freshFailure(startPos)
+      else ctx.freshSuccessUnit(startPos)
+
+    if (ctx.verboseFailures) {
+      ctx.failureTerminalAggregate = startTerminals
+      ctx.failureGroupAggregate = Msgs.empty
+      ctx.setMsg(startPos, () => "!" + msg.render)
+    }
+    res.cut = startCut
+    res
+  }
+
+
+  /** Wraps a parser to log when it succeeds and fails, and at what index.
+   * Useful for seeing what is going on within your parser. Nicely indents
+   * the logs for easy reading
+   */
+  def log[T](parse0: () => P[T])(implicit  ctx: P[_], name: sourcecode.Name, logger: Logger = Logger.stdout): P[T] = {
+    if (ctx.logDepth == -1) parse0()
+    else {
+      val msg = name.value
+      val output = logger.f
+      val indent = "  " * ctx.logDepth
+
+      output(s"$indent+$msg:${ctx.input.prettyIndex(ctx.index)}${if (ctx.cut) ", cut" else ""}")
+      val depth = ctx.logDepth
+      ctx.logDepth += 1
+      val startIndex = ctx.index
+      val oldverboseFailures = ctx.verboseFailures
+      ctx.verboseFailures = true
+      parse0()
+      ctx.verboseFailures = oldverboseFailures
+      ctx.logDepth = depth
+      val prettyIndex = ctx.input.prettyIndex(ctx.index)
+      val strRes = if (ctx.isSuccess) {
+        s"Success($prettyIndex${if (ctx.cut) ", cut" else ""})"
+      } else {
+        val trace = Parsed.Failure.formatStack(
+          ctx.input,
+          ctx.failureStack ++ Seq(ctx.lastFailureMsg.render -> ctx.index)
+        )
+        val trailing = ctx.input match {
+          case c: IndexedParserInput => Parsed.Failure.formatTrailing(ctx.input, startIndex)
+          case _ => ""
+        }
+        s"Failure($trace ...$trailing${if (ctx.cut) ", cut" else ""})"
+      }
+      output(s"$indent-$msg:${ctx.input.prettyIndex(startIndex)}:$strRes")
+      //        output(s"$indent-$msg:${repr.prettyIndex(cfg.input, index)}:$strRes")
+      ctx.asInstanceOf[P[T]]
+    }
+  }
+
+  /** Prints the given message, nicely indented, after the wrapped parser finishes */
+  def logAfter[T](parse0: () => P[T], msg: => Any)(implicit  ctx: P[_], logger: Logger = Logger.stdout): P[T] = {
+    val indent = "  " * ctx.logDepth
+    val res = parse0()
+    if (ctx.logDepth != -1) logger.f(indent + msg)
+    res
+  }
+
+  /** Prints the given message, nicely indented, before the wrapped parser starts */
+  def logBefore[T](parse0: () => P[T], msg: => Any)(implicit  ctx: P[_], logger: Logger = Logger.stdout): P[T] = {
+    val indent = "  " * ctx.logDepth
+    if (ctx.logDepth != -1) logger.f(indent + msg)
+    val res = parse0()
+    res
+  }
 }
