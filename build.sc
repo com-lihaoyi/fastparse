@@ -190,10 +190,8 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule with Mima{
 
   def platformSegment: String
   def millSourcePath = super.millSourcePath / os.up
-  def sources = T.sources { super.sources() ++
-    Seq(
-      millSourcePath / s"src-$platformSegment"
-    ).map(PathRef(_))
+  def sources = T.sources {
+    super.sources().flatMap{p => Seq(p, PathRef(p.path / os.up / s"${p.path.last}-$platformSegment")) }
   }
 }
 trait CommonTestModule extends ScalaModule with TestModule.Utest{
@@ -203,10 +201,9 @@ trait CommonTestModule extends ScalaModule with TestModule.Utest{
     ivy"com.lihaoyi::utest::0.8.1",
   )
 
-  def sources = T.sources(
-    millSourcePath / "src",
-    millSourcePath / s"src-$platformSegment"
-  )
+  def sources = T.sources {
+    super.sources().flatMap { p => Seq(p, PathRef(p.path / os.up / s"${p.path.last}-$platformSegment")) }
+  }
 }
 
 object perftests extends Module{

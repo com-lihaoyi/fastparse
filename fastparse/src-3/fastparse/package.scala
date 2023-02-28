@@ -245,17 +245,17 @@ package object fastparse {
       * The convenience parameter `exactly` is provided to set both `min` and
       * `max` to the same value.
       */
-    inline def rep[V, Max <: Int, Exact <: Int](
+    def rep[V](
         min: Int = 0,
         sep: => P[_] = null,
-        inline max: Max = Int.MaxValue,
-        inline exactly: Exact = -1
+        max: Int = Int.MaxValue,
+        exactly: Int = -1
     )(using
         repeater: Implicits.Repeater[T, V],
         whitespace: P[_] => P[Unit],
         ctx: P[Any]
     ): P[V] =
-      inline if max == Int.MaxValue && exactly == -1
+      if max == Int.MaxValue && exactly == -1
       then new RepImpls[T](() => parse0).rep[V](min, sep)
       else new RepImpls[T](() => parse0).rep[V](min, sep, max, exactly)
 
