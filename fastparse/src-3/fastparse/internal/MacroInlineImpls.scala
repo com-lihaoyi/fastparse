@@ -469,7 +469,7 @@ object MacroInlineImpls {
     val res =
       if (index >= goal) ctx0.freshSuccessUnit(index = index)
       else ctx0.freshFailure()
-    if (ctx0.verboseFailures) ctx0.aggregateTerminal(start, () => s"chars-while($p0, $min")
+    if (ctx0.verboseFailures) ctx0.aggregateTerminal(start, () => s"chars-while($p0, $min)")
     res
   }
 

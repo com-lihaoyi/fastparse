@@ -373,7 +373,7 @@ object FailureTests extends TestSuite{
         |  )
         |}
       """.stripMargin,
-      aggregate = """(_* | AscriptionType | Annot.rep(1))""",
+      aggregate = """(Underscore* | AscriptionType | Annot.rep(1))""",
       terminals = null,
       found = ")\n}"
     )
