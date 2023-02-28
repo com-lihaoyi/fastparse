@@ -7,7 +7,7 @@ object CssParse extends TestSuite {
   val bootstrapSource = scala.io.Source.fromInputStream(bootstrapStream).mkString
   def bootstrapIterator(size: Int) = bootstrapSource.grouped(size)
 
-  def parser[_p: P] = cssparse.CssRulesParser.ruleList ~ End
+  def parser[_: P] = cssparse.CssRulesParser.ruleList ~ End
   val tests = Tests {
     test("Bootstrap"){
       Utils.benchmarkAll(

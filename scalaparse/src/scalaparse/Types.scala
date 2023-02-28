@@ -3,40 +3,40 @@ package scalaparse
 import fastparse._
 import fastparse._, ScalaWhitespace._
 trait Types extends Core{
-  def TypeExpr[_p: P]: P[Unit]
-  def ValVarDef[_p: P]: P[Unit]
-  def FunDef[_p: P]: P[Unit]
+  def TypeExpr[_: P]: P[Unit]
+  def ValVarDef[_: P]: P[Unit]
+  def FunDef[_: P]: P[Unit]
 
-  def LocalMod[_p: P]: P[Unit] = P( `abstract` | `final` | `sealed` | `implicit` | `lazy` )
-  def AccessMod[_p: P]: P[Unit] = {
+  def LocalMod[_: P]: P[Unit] = P( `abstract` | `final` | `sealed` | `implicit` | `lazy` )
+  def AccessMod[_: P]: P[Unit] = {
     def AccessQualifier = P( "[" ~/ (`this` | Id) ~ "]" )
     P( (`private` | `protected`) ~ AccessQualifier.? )
   }
-  def Dcl[_p: P]: P[Unit] = {
+  def Dcl[_: P]: P[Unit] = {
     P( (`val` | `var`) ~/ ValVarDef | `def` ~/ FunDef | `type` ~/ TypeDef )
   }
 
-  def Mod[_p: P]: P[Unit] = P( LocalMod | AccessMod | `override` )
+  def Mod[_: P]: P[Unit] = P( LocalMod | AccessMod | `override` )
 
-  def ExistentialClause[_p: P] = P( `forSome` ~/ `{` ~ Dcl.repX(1, Semis) ~ `}` )
-  def PostfixType[_p: P] = P( InfixType ~ (`=>` ~/ Type | ExistentialClause).? )
-  def Type[_p: P]: P[Unit] = P( `=>`.? ~~ PostfixType ~ TypeBounds ~ `*`.? )
+  def ExistentialClause[_: P] = P( `forSome` ~/ `{` ~ Dcl.repX(1, Semis) ~ `}` )
+  def PostfixType[_: P] = P( InfixType ~ (`=>` ~/ Type | ExistentialClause).? )
+  def Type[_: P]: P[Unit] = P( `=>`.? ~~ PostfixType ~ TypeBounds ~ `*`.? )
 
 
   // Can't cut after `*` because we may need to backtrack and settle for
   // the `*`-postfix rather than an infix type
-  def InfixType[_p: P] = P( CompoundType ~~ (NotNewline ~ (`*` | Id./) ~~ OneNLMax ~ CompoundType).repX )
+  def InfixType[_: P] = P( CompoundType ~~ (NotNewline ~ (`*` | Id./) ~~ OneNLMax ~ CompoundType).repX )
 
-  def CompoundType[_p: P]  = {
+  def CompoundType[_: P]  = {
     def Refinement = P( OneNLMax ~ `{` ~/ Dcl.repX(sep=Semis) ~ `}` )
     def NamedType = P( (Pass ~ AnnotType).rep(1, `with`./) )
     P( NamedType ~~ Refinement.? | Refinement )
   }
-  def NLAnnot[_p: P] = P( NotNewline ~ Annot )
-  def AnnotType[_p: P] = P(SimpleType ~~ NLAnnot.repX )
+  def NLAnnot[_: P] = P( NotNewline ~ Annot )
+  def AnnotType[_: P] = P(SimpleType ~~ NLAnnot.repX )
 
-  def TypeId[_p: P] = P( StableId )
-  def SimpleType[_p: P]: P[Unit] = {
+  def TypeId[_: P] = P( StableId )
+  def SimpleType[_: P]: P[Unit] = {
     // Can't `cut` after the opening paren, because we might be trying to parse `()`
     // or `() => T`! only cut after parsing one type
     def TupleType = P( "(" ~/ Type.repTC() ~ ")" )
@@ -44,10 +44,10 @@ trait Types extends Core{
     P( BasicType ~ (TypeArgs | `#` ~/ Id).rep )
   }
 
-  def TypeArgs[_p: P] = P( "[" ~/ Type.repTC() ~ "]" )
+  def TypeArgs[_: P] = P( "[" ~/ Type.repTC() ~ "]" )
 
 
-  def FunSig[_p: P]: P[Unit] = {
+  def FunSig[_: P]: P[Unit] = {
     def FunArg = P( Annot.rep ~ Id ~ (`:` ~/ Type).? ~ (`=` ~/ TypeExpr).? )
     def Args = P( FunArg.repTC(1) )
     def FunArgs = P( OneNLMax ~ "(" ~/ `implicit`.? ~ Args.? ~ ")" )
@@ -55,18 +55,18 @@ trait Types extends Core{
     P( (Id | `this`) ~ FunTypeArgs.? ~~ FunArgs.rep )
   }
 
-  def TypeBounds[_p: P]: P[Unit] = P( (`>:` ~/ Type).? ~ (`<:` ~/ Type).? )
-  def TypeArg[_p: P]: P[Unit] = {
+  def TypeBounds[_: P]: P[Unit] = P( (`>:` ~/ Type).? ~ (`<:` ~/ Type).? )
+  def TypeArg[_: P]: P[Unit] = {
     def CtxBounds = P((`<%` ~/ Type).rep ~ (`:` ~/ Type).rep)
     P((Id | `_`) ~ TypeArgList.? ~ TypeBounds ~ CtxBounds)
   }
 
-  def Annot[_p: P]: P[Unit] = P( `@` ~/ SimpleType ~  ("(" ~/ (Exprs ~ (`:` ~/ `_*`).?).? ~ TrailingComma ~ ")").rep )
+  def Annot[_: P]: P[Unit] = P( `@` ~/ SimpleType ~  ("(" ~/ (Exprs ~ (`:` ~/ `_*`).?).? ~ TrailingComma ~ ")").rep )
 
-  def TypeArgList[_p: P]: P[Unit] = {
+  def TypeArgList[_: P]: P[Unit] = {
     def Variant: P[Unit] = P( Annot.rep ~ CharIn("+\\-").? ~ TypeArg )
     P( "[" ~/ Variant.repTC(1) ~ "]" )
   }
-  def Exprs[_p: P]: P[Unit] = P( TypeExpr.rep(1, ",") )
-  def TypeDef[_p: P]: P[Unit] = P( Id ~ TypeArgList.? ~ (`=` ~/ Type | TypeBounds) )
+  def Exprs[_: P]: P[Unit] = P( TypeExpr.rep(1, ",") )
+  def TypeDef[_: P]: P[Unit] = P( Id ~ TypeArgList.? ~ (`=` ~/ Type | TypeBounds) )
 }
