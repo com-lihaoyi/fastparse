@@ -48,10 +48,10 @@ object MathTests extends TestSuite{
         val failure = parse(input, expr(_)).asInstanceOf[Parsed.Failure]
         val trace = failure.trace()
         val index = failure.index
-        val longAggMsg = trace.longAggregateMsg
+
         assert(
-          expectedTrace.trim == longAggMsg.trim,
-          expectedTerminalTrace.trim == longAggMsg.trim,
+          expectedTrace.trim == trace.longAggregateMsg.trim,
+          expectedTerminalTrace.trim == trace.longTerminalsMsg.trim,
           expectedShortTrace.trim == failure.msg
         )
 
