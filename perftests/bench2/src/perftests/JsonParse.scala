@@ -5,7 +5,7 @@ object JsonParse extends TestSuite {
   val crossValidationSource = scala.io.Source.fromInputStream(crossValidationStream).mkString
   def crossValidationIterator(size: Int) = crossValidationSource.grouped(size)
   import fastparse._, NoWhitespace._
-  def jsonDoc[_p: P] = P( _root_.test.fastparse.Json.jsonExpr ~ End )
+  def jsonDoc[$: P] = P( _root_.test.fastparse.Json.jsonExpr ~ End )
   val tests = Tests {
     test("CrossValidation"){
       Utils.benchmarkAll(

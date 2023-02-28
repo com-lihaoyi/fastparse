@@ -17,13 +17,13 @@ object CustomWhitespaceMathTests extends TestSuite{
       case "*" => left * right case "/" => left / right
     }}
   }
-  def number[_p: P]: P[Int] = P( CharIn("0-9").rep(1).!.map(_.toInt) )
-  def parens[_p: P]: P[Int] = P( "(" ~/ addSub ~ ")" )
-  def factor[_p: P]: P[Int] = P( number | parens )
+  def number[$: P]: P[Int] = P( CharIn("0-9").rep(1).!.map(_.toInt) )
+  def parens[$: P]: P[Int] = P( "(" ~/ addSub ~ ")" )
+  def factor[$: P]: P[Int] = P( number | parens )
 
-  def divMul[_p: P]: P[Int] = P( factor ~ (CharIn("*/").! ~/ factor).rep ).map(eval)
-  def addSub[_p: P]: P[Int] = P( divMul ~ (CharIn("+\\-").! ~/ divMul).rep ).map(eval)
-  def expr[_p: P]: P[Int]   = P( " ".rep ~ addSub ~ " ".rep ~ End )
+  def divMul[$: P]: P[Int] = P( factor ~ (CharIn("*/").! ~/ factor).rep ).map(eval)
+  def addSub[$: P]: P[Int] = P( divMul ~ (CharIn("+\\-").! ~/ divMul).rep ).map(eval)
+  def expr[$: P]: P[Int]   = P( " ".rep ~ addSub ~ " ".rep ~ End )
 
   val tests = Tests {
     test("pass"){

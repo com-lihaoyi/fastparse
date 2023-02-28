@@ -36,37 +36,37 @@ object Json{
   import fastparse._, NoWhitespace._
   def stringChars(c: Char) = c != '\"' && c != '\\'
 
-  def space[_p: P]         = P( CharsWhileIn(" \r\n", 0) )
-  def digits[_p: P]        = P( CharsWhileIn("0-9") )
-  def exponent[_p: P]      = P( CharIn("eE") ~ CharIn("+\\-").? ~ digits )
-  def fractional[_p: P]    = P( "." ~ digits )
-  def integral[_p: P]      = P( "0" | CharIn("1-9")  ~ digits.? )
+  def space[$: P]         = P( CharsWhileIn(" \r\n", 0) )
+  def digits[$: P]        = P( CharsWhileIn("0-9") )
+  def exponent[$: P]      = P( CharIn("eE") ~ CharIn("+\\-").? ~ digits )
+  def fractional[$: P]    = P( "." ~ digits )
+  def integral[$: P]      = P( "0" | CharIn("1-9")  ~ digits.? )
 
-  def number[_p: P] = P(  CharIn("+\\-").? ~ integral ~ fractional.? ~ exponent.? ).!.map(
+  def number[$: P] = P(  CharIn("+\\-").? ~ integral ~ fractional.? ~ exponent.? ).!.map(
     x => Js.Num(x.toDouble)
   )
 
-  def `null`[_p: P]        = P( "null" ).map(_ => Js.Null)
-  def `false`[_p: P]       = P( "false" ).map(_ => Js.False)
-  def `true`[_p: P]        = P( "true" ).map(_ => Js.True)
+  def `null`[$: P]        = P( "null" ).map(_ => Js.Null)
+  def `false`[$: P]       = P( "false" ).map(_ => Js.False)
+  def `true`[$: P]        = P( "true" ).map(_ => Js.True)
 
-  def hexDigit[_p: P]      = P( CharIn("0-9a-fA-F") )
-  def unicodeEscape[_p: P] = P( "u" ~ hexDigit ~ hexDigit ~ hexDigit ~ hexDigit )
-  def escape[_p: P]        = P( "\\" ~ (CharIn("\"/\\\\bfnrt") | unicodeEscape) )
+  def hexDigit[$: P]      = P( CharIn("0-9a-fA-F") )
+  def unicodeEscape[$: P] = P( "u" ~ hexDigit ~ hexDigit ~ hexDigit ~ hexDigit )
+  def escape[$: P]        = P( "\\" ~ (CharIn("\"/\\\\bfnrt") | unicodeEscape) )
 
-  def strChars[_p: P] = P( CharsWhile(stringChars) )
-  def string[_p: P] =
+  def strChars[$: P] = P( CharsWhile(stringChars) )
+  def string[$: P] =
     P( space ~ "\"" ~/ (strChars | escape).rep.! ~ "\"").map(Js.Str)
 
-  def array[_p: P] =
+  def array[$: P] =
     P( "[" ~/ jsonExpr.rep(sep=","./) ~ space ~ "]").map(Js.Arr(_:_*))
 
-  def pair[_p: P] = P( string.map(_.value) ~/ ":" ~/ jsonExpr )
+  def pair[$: P] = P( string.map(_.value) ~/ ":" ~/ jsonExpr )
 
-  def obj[_p: P] =
+  def obj[$: P] =
     P( "{" ~/ pair.rep(sep=","./) ~ space ~ "}").map(Js.Obj(_:_*))
 
-  def jsonExpr[_p: P]: P[Js.Val] = P(
+  def jsonExpr[$: P]: P[Js.Val] = P(
     space ~ (obj | array | string | `true` | `false` | `null` | number) ~ space
   )
 }
