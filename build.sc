@@ -55,7 +55,7 @@ object fastparse extends Module{
   }
 }
 
-trait FastparseModule extends CommonCrossModule{
+trait FastparseModule extends CommonCrossModule with Mima{
   def ivyDeps = Agg(
     ivy"com.lihaoyi::sourcecode::0.3.0",
     ivy"com.lihaoyi::geny::1.0.0"
@@ -96,6 +96,19 @@ trait FastparseModule extends CommonCrossModule{
     os.write(file, output, createFolders = true)
     Seq(PathRef(file))
   }
+
+  def mimaPreviousVersions = Seq(
+    VcsVersion
+      .vcsState()
+      .lastTag
+      .getOrElse(throw new Exception("Missing last tag"))
+  )
+
+  def mimaPreviousArtifacts = if (isScala3(crossScalaVersion)) Agg.empty[Dep] else super.mimaPreviousArtifacts()
+
+  def mimaBinaryIssueFilters = super.mimaBinaryIssueFilters() ++ Seq(
+    ProblemFilter.exclude[IncompatibleResultTypeProblem]("fastparse.Parsed#Failure.unapply")
+  )
 }
 
 object scalaparse extends Module{
@@ -167,18 +180,10 @@ trait ExampleParseNativeModule extends CommonCrossModule with ScalaNativeModule{
 
 
 
-trait CommonCrossModule extends CrossScalaModule with PublishModule with Mima{
+trait CommonCrossModule extends CrossScalaModule with PublishModule {
 
   def publishVersion = VcsVersion.vcsState().format()
-  def mimaPreviousVersions = Seq(
-    VcsVersion
-      .vcsState()
-      .lastTag
-      .getOrElse(throw new Exception("Missing last tag"))
-  )
-  def mimaBinaryIssueFilters = super.mimaBinaryIssueFilters() ++ Seq(
-    ProblemFilter.exclude[IncompatibleResultTypeProblem]("fastparse.Parsed#Failure.unapply")
-  )
+
   def artifactName = millModuleSegments.parts.dropRight(2).mkString("-").stripSuffix(s"-$platformSegment")
   def pomSettings = PomSettings(
     description = artifactName(),
