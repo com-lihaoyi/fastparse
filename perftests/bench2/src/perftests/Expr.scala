@@ -96,7 +96,7 @@ object Expr{
                    end: Option[Expr],
                    stride: Option[Expr]) extends Expr
   case class Function(offset: Int, params: Params, body: Expr) extends Expr
-  case class IfElse(offset: Int, cond: Expr, then: Expr, `else`: Option[Expr]) extends Expr
+  case class IfElse(offset: Int, cond: Expr, `then`: Expr, `else`: Option[Expr]) extends Expr
 
   sealed trait CompSpec extends Expr
   case class IfSpec(offset: Int, cond: Expr) extends CompSpec
