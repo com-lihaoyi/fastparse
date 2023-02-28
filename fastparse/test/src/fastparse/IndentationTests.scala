@@ -22,19 +22,19 @@ object IndentationTests extends TestSuite{
     * depth of indentation
     */
   class Parser(indent: Int){
-    def number[_p: P]: P[Int] = P( CharIn("0-9").rep(1).!.map(_.toInt) )
+    def number[$: P]: P[Int] = P( CharIn("0-9").rep(1).!.map(_.toInt) )
 
-    def deeper[_p: P]: P[Int] = P( " ".rep(indent + 1).!.map(_.length) )
-    def blockBody[_p: P]: P[Seq[Int]] = "\n" ~ deeper.flatMapX(i =>
+    def deeper[$: P]: P[Int] = P( " ".rep(indent + 1).!.map(_.length) )
+    def blockBody[$: P]: P[Seq[Int]] = "\n" ~ deeper.flatMapX(i =>
       new Parser(indent = i).factor.rep(1, sep = ("\n" + " " * i)./)
     )
-    def block[_p: P]: P[Int] = P( CharIn("+\\-*/").! ~/ blockBody).map(eval)
+    def block[$: P]: P[Int] = P( CharIn("+\\-*/").! ~/ blockBody).map(eval)
 
-    def factor[_p: P]: P[Int] = P( number | block )
+    def factor[$: P]: P[Int] = P( number | block )
 
-    def expr[_p: P]: P[Int]   = P( block ~ End )
+    def expr[$: P]: P[Int]   = P( block ~ End )
   }
-  def expr[_p: P] = new Parser(indent = 0).expr
+  def expr[$: P] = new Parser(indent = 0).expr
 
   val tests = Tests {
     test("pass"){
