@@ -292,7 +292,8 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
       ctx.aggregateMsg(
         startIndex,
         () => parsedMsg.render + s".rep($min)",
-        ctx.failureGroupAggregate
+        if (lastAgg == null) ctx.failureGroupAggregate
+        else ctx.failureGroupAggregate ::: lastAgg
       )
     } else {
       ctx.aggregateMsg(
@@ -303,7 +304,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
         // we backtrack past the sep on failure) as well as the failure
         // aggregate of the previous rep, which we could have continued
         if (lastAgg == null) Util.joinBinOp(sepMsg, parsedMsg)
-        else Util.joinBinOp(sepMsg, parsedMsg)  ::: lastAgg
+        else Util.joinBinOp(sepMsg, parsedMsg) ::: lastAgg
       )
     }
   }
