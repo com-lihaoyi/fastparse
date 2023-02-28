@@ -3,7 +3,7 @@ import fastparse.internal.{Instrument, Logger}
 
 import language.experimental.macros
 
-package object fastparse {
+package object fastparse extends fastparse.SharedPackageDefs{
   /**
     * Parses the given input [[ParserInput]] using the given parser and returns
     * a [[Parsed]] result containing the success value or failure metadata.
