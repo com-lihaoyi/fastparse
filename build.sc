@@ -13,14 +13,14 @@ import de.tobiasroeser.mill.vcs.version.VcsVersion
 import $ivy.`com.github.lolgab::mill-mima::0.0.13`
 import com.github.lolgab.mill.mima._
 
-val scala31Version = "3.1.3"
+val scala31 = "3.1.3"
 val scala213 = "2.13.10"
 val scala212 = "2.12.17"
 val scala211 = "2.11.12"
 val scalaJS1 = "1.12.0"
 val scalaNative04 = "0.4.9"
-val crossVersions = Seq(scala31Version, scala213, scala212, scala211)
-val crossJsVersions = Seq(scala31Version -> scalaJS1, scala213 -> scalaJS1, scala212 -> scalaJS1, scala211 -> scalaJS1)
+val crossVersions = Seq(scala31, scala213, scala212, scala211)
+val crossJsVersions = Seq(scala31 -> scalaJS1, scala213 -> scalaJS1, scala212 -> scalaJS1, scala211 -> scalaJS1)
 val crossNativeVersions = Seq(scala213 -> scalaNative04, scala212 -> scalaNative04, scala211 -> scalaNative04)
 
 
@@ -242,12 +242,12 @@ object perftests extends Module{
   }
 
   object benchScala3 extends PerfTestModule {
-    def scalaVersion = scala31Version
+    def scalaVersion = scala31
     def moduleDeps = Seq(
-      scalaparse.jvm(scala31Version).test,
-      pythonparse.jvm(scala31Version).test,
-      cssparse.jvm(scala31Version).test,
-      fastparse.jvm(scala31Version).test,
+      scalaparse.jvm(scala31).test,
+      pythonparse.jvm(scala31).test,
+      cssparse.jvm(scala31).test,
+      fastparse.jvm(scala31).test,
     )
 
   }
