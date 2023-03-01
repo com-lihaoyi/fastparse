@@ -387,7 +387,7 @@ object FailureTests extends TestSuite{
 
       test("rep") -        check{ implicit c => ("a" ~ ("b" ~ "c")).rep ~ "a" ~/ "d" }
 
-      test("repApply") -   check{ implicit c => ("a" ~ ("b" ~ "c")).rep ~ "a" ~/ "d" }
+      test("repApply") -   check{ implicit c => ("a" ~ ("b" ~ "c")).rep() ~ "a" ~/ "d" }
       test("repLeft") -    check{ implicit c => (("a" ~ "b") ~ "c").rep ~ "a" ~/ "d" }
       test("repX") -       check{ implicit c => ("a" ~ ("b" ~ "c")).repX ~ "a" ~/ "d" }
       test("repXLeft") -   check{ implicit c => (("a" ~ "b") ~ "c").repX ~ "a" ~/ "d" }
