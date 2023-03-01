@@ -222,7 +222,7 @@ trait CommonTestModule extends ScalaModule with TestModule.Utest{
 
 object perftests extends Module{
   object bench1 extends PerfTestModule {
-    def scalaVersion = scala213
+    def scalaVersion0 = scala213
     def ivyDeps = super.ivyDeps() ++ Agg(
       ivy"com.lihaoyi::scalaparse:1.0.0",
       ivy"com.lihaoyi::pythonparse:1.0.0",
@@ -231,7 +231,7 @@ object perftests extends Module{
   }
 
   object bench2 extends PerfTestModule {
-    def scalaVersion = scala213
+    def scalaVersion0 = scala213
     def moduleDeps = Seq(
       scalaparse.jvm(scala212).test,
       pythonparse.jvm(scala212).test,
@@ -242,7 +242,7 @@ object perftests extends Module{
   }
 
   object benchScala3 extends PerfTestModule {
-    def scalaVersion = scala31
+    def scalaVersion0 = scala31
     def moduleDeps = Seq(
       scalaparse.jvm(scala31).test,
       pythonparse.jvm(scala31).test,
@@ -254,7 +254,7 @@ object perftests extends Module{
 
 
   object compare extends PerfTestModule {
-    def scalaVersion = scala213
+    def scalaVersion0 = scala213
     def moduleDeps = Seq(
       fastparse.jvm(scala212).test,
       scalaparse.jvm(scala212).test,
@@ -275,10 +275,12 @@ object perftests extends Module{
   }
 
   trait PerfTestModule extends ScalaModule with TestModule.Utest{
+    def scalaVersion0: String
+    def scalaVersion = scalaVersion0
     def scalacOptions = Seq("-opt:l:method")
     def resources = T.sources{
       Seq(PathRef(perftests.millSourcePath / "resources")) ++
-        fastparse.jvm(scalaVersion()).test.resources()
+        fastparse.jvm(scalaVersion0).test.resources()
     }
     def ivyDeps = Agg(
       ivy"com.lihaoyi::utest::0.8.1",
