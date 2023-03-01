@@ -222,6 +222,7 @@ trait CommonTestModule extends ScalaModule with TestModule.Utest{
 
 object perftests extends Module{
   object bench1 extends PerfTestModule {
+    def scalaVersion = scala213
     def ivyDeps = super.ivyDeps() ++ Agg(
       ivy"com.lihaoyi::scalaparse:1.0.0",
       ivy"com.lihaoyi::pythonparse:1.0.0",
@@ -253,6 +254,7 @@ object perftests extends Module{
 
 
   object compare extends PerfTestModule {
+    def scalaVersion = scala213
     def moduleDeps = Seq(
       fastparse.jvm(scala212).test,
       scalaparse.jvm(scala212).test,
