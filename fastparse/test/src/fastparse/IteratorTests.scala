@@ -61,7 +61,7 @@ object IteratorTests extends TestSuite {
       import NoWhitespace.{noWhitespaceImplicit => _, _}
       implicit val whitespace: P[_] => P[Unit] = { implicit ctx: P[_] =>
         import NoWhitespace.noWhitespaceImplicit
-        " ".? ~ " ".rep()
+        " ".? ~ " ".rep
       }
 
       def p[$: P] = P( "ab" ~/ "cd" | "z" )
@@ -165,8 +165,8 @@ object IteratorTests extends TestSuite {
       test("rep"){
         import NoWhitespace._
         def p[$: P] = P( "a" ~ "b" ~ "c")
-        def rep[$: P] = P( (p.rep() ~ "d") | (p.rep() ~ "e") )
-        def repCutted[$: P] = P( (p.rep() ~ "d") | (p.rep() ~/ "e") )
+        def rep[$: P] = P( (p.rep ~ "d") | (p.rep ~ "e") )
+        def repCutted[$: P] = P( (p.rep ~ "d") | (p.rep ~/ "e") )
 
         val input1 = toInput("abcabcabcd")
         val Parsed.Success(_, i1) = parse(input1, rep(_))
@@ -211,7 +211,7 @@ object IteratorTests extends TestSuite {
       test("whitespaceApi"){
 
         implicit def whitespace: P[_] => P[Unit] = { implicit ctx: P[_] =>
-          " ".? ~~/ " ".repX()
+          " ".? ~~/ " ".repX
         }
 
         def a[$: P] = P( "aaa" )

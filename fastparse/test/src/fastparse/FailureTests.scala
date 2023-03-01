@@ -57,7 +57,7 @@ object FailureTests extends TestSuite{
       }
       test("repX") - check{
         def parseB[$: P] = P( "a" | "b" )
-        def parseA[$: P] = P( parseB.repX() ~ "c" )
+        def parseA[$: P] = P( parseB.repX ~ "c" )
         parseA(_)
       }
       test("repXApply") - check{
@@ -81,7 +81,7 @@ object FailureTests extends TestSuite{
         test("rep") - check{
           def parseC[$: P] = P( "a" | "b" )
           def parseB[$: P] = P( parseC.rep(1) )
-          def parseA[$: P] = P( parseB.rep() ~ "c" )
+          def parseA[$: P] = P( parseB.rep ~ "c" )
           parseA(_)
         }
         test("repApply") - check{
@@ -93,7 +93,7 @@ object FailureTests extends TestSuite{
         test("repX") - check{
           def parseC[$: P] = P( "a" | "b" )
           def parseB[$: P] = P( parseC.repX(1) )
-          def parseA[$: P] = P( parseB.repX() ~ "c" )
+          def parseA[$: P] = P( parseB.repX ~ "c" )
           parseA(_)
         }
         test("repXApply") - check{
@@ -159,7 +159,7 @@ object FailureTests extends TestSuite{
         expected = "\"c\"",
         label = "\"c\"",
         parser = {
-          def parseA[$: P] = P( "a" ~ (("." | ","./) ~ "c").rep() ~ "x" )
+          def parseA[$: P] = P( "a" ~ (("." | ","./) ~ "c").rep ~ "x" )
           parseA(_)
         }
       )
@@ -169,13 +169,13 @@ object FailureTests extends TestSuite{
         expected = """("a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" | "r" | "x")""",
         label = "\"x\"",
         parser = {
-          def parseD[$: P] = P( (("m" | "n") | "o").rep() )
+          def parseD[$: P] = P( (("m" | "n") | "o").rep )
           def parseC[$: P] = P( (("g" | "h") | "i").? )
           def parseB[$: P] = P( ("a" | "b") | "c" | "" )
           def parseA[$: P] = P(
             parseB ~ ("d" | ("e" | "f") | "") ~
               parseC ~ ("j" | ("k" | "l")).? ~
-              parseD ~ ("p" | ("q" | "r")).rep() ~
+              parseD ~ ("p" | ("q" | "r")).rep ~
               "x"
           )
           parseA(_)
@@ -254,27 +254,27 @@ object FailureTests extends TestSuite{
         input = "ax",
         expected = """("b" | "d")""",
         label = "\"d\"",
-        parser = { implicit c => ("a" ~ "b").rep() ~ "a" ~ "d" }
+        parser = { implicit c => ("a" ~ "b").rep ~ "a" ~ "d" }
       )
       test("rep_3") - checkOffset(
         input = "ax",
         expected = """("b" | "c" | "d")""",
         label = "\"d\"",
-        parser = { implicit c => (("a" ~ "b".rep()) ~ "c").rep() ~ "a" ~ "d"}
+        parser = { implicit c => (("a" ~ "b".rep) ~ "c").rep ~ "a" ~ "d"}
       )
 
       test("rep_4") - checkOffset(
         input = "ax",
         expected = """("b" | "c" | "d")""",
         label = "\"d\"",
-        parser = { implicit c => ("a" ~ ("b".rep() ~ "c")).rep() ~ "a" ~ "d" }
+        parser = { implicit c => ("a" ~ ("b".rep ~ "c")).rep ~ "a" ~ "d" }
       )
 
       test("repX") - checkOffset(
         input = "ax",
         expected = """("b" | "d")""",
         label = "\"d\"",
-        parser = { implicit c => ("a" ~ "b").repX() ~ "a" ~ "d" }
+        parser = { implicit c => ("a" ~ "b").repX ~ "a" ~ "d" }
       )
       test("repSep") - checkOffset(
         input = "ax",
@@ -356,7 +356,7 @@ object FailureTests extends TestSuite{
         input = "ax",
         expected = """("b" | "d")""",
         label = "\"d\"",
-        parser = { implicit c => ("a" ~ "b").repX().? ~ "a" ~ "d" }
+        parser = { implicit c => ("a" ~ "b").repX.? ~ "a" ~ "d" }
       )
     }
 
@@ -385,12 +385,12 @@ object FailureTests extends TestSuite{
 
       test("either3") -    check{ implicit c => ("a" ~ ("b" ~ "c") | "") ~ "a" ~/ "d" }
 
-      test("rep") -        check{ implicit c => ("a" ~ ("b" ~ "c")).rep() ~ "a" ~/ "d" }
+      test("rep") -        check{ implicit c => ("a" ~ ("b" ~ "c")).rep ~ "a" ~/ "d" }
 
-      test("repApply") -   check{ implicit c => ("a" ~ ("b" ~ "c")).rep() ~ "a" ~/ "d" }
-      test("repLeft") -    check{ implicit c => (("a" ~ "b") ~ "c").rep() ~ "a" ~/ "d" }
-      test("repX") -       check{ implicit c => ("a" ~ ("b" ~ "c")).repX() ~ "a" ~/ "d" }
-      test("repXLeft") -   check{ implicit c => (("a" ~ "b") ~ "c").repX() ~ "a" ~/ "d" }
+      test("repApply") -   check{ implicit c => ("a" ~ ("b" ~ "c")).rep ~ "a" ~/ "d" }
+      test("repLeft") -    check{ implicit c => (("a" ~ "b") ~ "c").rep ~ "a" ~/ "d" }
+      test("repX") -       check{ implicit c => ("a" ~ ("b" ~ "c")).repX ~ "a" ~/ "d" }
+      test("repXLeft") -   check{ implicit c => (("a" ~ "b") ~ "c").repX ~ "a" ~/ "d" }
       test("repSep") -     check{ implicit c => ("a" ~ ("b" ~ "c")).rep(sep = Pass) ~ "a" ~/ "d" }
       test("repSepLeft") - check{ implicit c => (("a" ~ "b") ~ "c").rep(sep = Pass) ~ "a" ~/ "d" }
     }
