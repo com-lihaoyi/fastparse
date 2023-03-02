@@ -205,7 +205,11 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule {
   def platformSegment: String
   def millSourcePath = super.millSourcePath / os.up
   def sources = T.sources {
-    super.sources().flatMap{p => Seq(p, PathRef(p.path / os.up / s"${p.path.last}-$platformSegment")) }
+    super.sources()
+      .flatMap{p => Seq(p, PathRef(p.path / os.up / s"${p.path.last}-$platformSegment")) } ++
+      (if (scalaVersion() != scala211) {
+        Seq(PathRef(millSourcePath / "src-2.12+"))
+      } else Seq())
   }
 }
 trait CommonTestModule extends ScalaModule with TestModule.Utest{

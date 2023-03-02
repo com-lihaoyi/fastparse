@@ -21,6 +21,11 @@ package object fastparse extends fastparse.SharedPackageDefs {
 
   val P = ParsingRun
 
+  implicit def DiscardParserValue(p: P[_]): P[Unit] = {
+    p.successValue = ()
+    p.asInstanceOf[P[Unit]]
+  }
+
   /**
     * Parses an exact string value.
     */
@@ -50,7 +55,7 @@ package object fastparse extends fastparse.SharedPackageDefs {
       */
     def ~/[V, R](other: P[V])
                 (implicit s: Implicits.Sequencer[T, V, R],
-                 whitespace: P[Any] => P[Unit],
+                 whitespace: Whitespace,
                  ctx: P[_]): P[R] = macro MacroImpls.parsedSequenceCut[T, V, R]
 
     /**
@@ -60,7 +65,7 @@ package object fastparse extends fastparse.SharedPackageDefs {
       */
     def ~[V, R](other:  P[V])
                (implicit s: Implicits.Sequencer[T, V, R],
-                whitespace: P[Any] => P[Unit],
+                whitespace: Whitespace,
                 ctx: P[_]): P[R] = macro MacroImpls.parsedSequence[T, V, R]
 
     /**
@@ -113,7 +118,7 @@ package object fastparse extends fastparse.SharedPackageDefs {
       * you next want to parse an array, dictionary or string.
       */
     def flatMap[V](f: T => P[V])
-                  (implicit whitespace: P[Any] => P[Unit]): P[V] = macro MacroImpls.flatMapMacro[T, V]
+                  (implicit whitespace: Whitespace): P[V] = macro MacroImpls.flatMapMacro[T, V]
     /**
       * Transforms the result of this parser using the given function into a
       * new parser which is applied (without consuming whitespace). Useful for
@@ -163,7 +168,7 @@ package object fastparse extends fastparse.SharedPackageDefs {
       * index of the last run.
       */
     def rep[V](implicit repeater: Implicits.Repeater[T, V],
-               whitespace: P[_] => P[Unit],
+               whitespace: Whitespace,
                ctx: P[Any]): P[V] = macro MacroRepImpls.repXMacro1ws[T, V]
     /**
       * Repeat operator; runs the LHS parser at least `min` to at most `max`
@@ -179,7 +184,7 @@ package object fastparse extends fastparse.SharedPackageDefs {
                max: Int = Int.MaxValue,
                exactly: Int = -1)
               (implicit repeater: Implicits.Repeater[T, V],
-               whitespace: P[_] => P[Unit],
+               whitespace: Whitespace,
                ctx: P[Any]): P[V] =
       new RepImpls[T](parse0).rep[V](min, sep, max, exactly)
 
@@ -192,7 +197,7 @@ package object fastparse extends fastparse.SharedPackageDefs {
     def rep[V](min: Int,
                sep: => P[_])
               (implicit repeater: Implicits.Repeater[T, V],
-               whitespace: P[_] => P[Unit],
+               whitespace: Whitespace,
                ctx: P[Any]): P[V] =
       new RepImpls[T](parse0).rep[V](min, sep)
 
@@ -204,7 +209,7 @@ package object fastparse extends fastparse.SharedPackageDefs {
       */
     def rep[V](min: Int)
               (implicit repeater: Implicits.Repeater[T, V],
-               whitespace: P[_] => P[Unit],
+               whitespace: Whitespace,
                ctx: P[Any]): P[V] =
     macro MacroRepImpls.repXMacro2ws[T, V]
 

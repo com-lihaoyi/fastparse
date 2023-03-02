@@ -135,7 +135,7 @@ object MacroInlineImpls {
 
   def parsedSequence0[T: Type, V: Type, R: Type](lhs: Expr[ParsingRun[T]], rhs: Expr[ParsingRun[V]], cut: Boolean)(
       s: Expr[Implicits.Sequencer[T, V, R]],
-      whitespace: Null | Expr[ParsingRun[Any] => ParsingRun[Unit]],
+      whitespace: Null | Expr[fastparse.Whitespace],
       ctx: Expr[ParsingRun[_]]
   )(using quotes: Quotes): Expr[ParsingRun[R]] = {
     import quotes.reflect.*
@@ -283,7 +283,7 @@ object MacroInlineImpls {
 
   inline def flatMapInline[T, V](
       lhs: ParsingRun[T]
-  )(inline f: T => ParsingRun[V])(ws: ParsingRun[Any] => ParsingRun[Unit]): ParsingRun[V] = {
+  )(inline f: T => ParsingRun[V])(ws: fastparse.Whitespace): ParsingRun[V] = {
     if (!lhs.isSuccess) lhs.asInstanceOf[ParsingRun[V]]
     else {
       val oldCapturing = lhs.noDropBuffer

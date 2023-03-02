@@ -103,6 +103,15 @@ object ParsingTests extends TestSuite{
       checkFail(implicit c => "Hello" ~ ("omg" | "bbq"), ("Hellookk", 0), 5)
       checkFail(implicit c => "Hello" ~ ("omg" | "bbq"), ("ellookk", 0), 0)
     }
+    test("fail"){
+      import fastparse._
+      import NoWhitespace._
+      def fail1[T: P] = Fail.!
+      val wat = "Shouldn't success"
+      val Parsed.Failure(_, _, _) = parse(wat, fail1(_))
+      def fail2[T: P]: P[Unit] = Fail.!
+      val Parsed.Failure(_, _, _) = parse(wat, fail2(_))
+    }
     test("cut"){
       test("local"){
         // Make sure that cuts only apply to enclosing

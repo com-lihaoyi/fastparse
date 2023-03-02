@@ -14,6 +14,11 @@ package object fastparse extends fastparse.SharedPackageDefs {
 
   val P = ParsingRun
 
+  implicit def DiscardParserValue(p: P[_]): P[Unit] = {
+    p.successValue = ()
+    p.asInstanceOf[P[Unit]]
+  }
+
   /** Delimits a named parser. This name will appear in the parser failure
     * messages and stack traces, and by default is taken from the name of the
     * enclosing method.
@@ -78,7 +83,7 @@ package object fastparse extends fastparse.SharedPackageDefs {
       * character to see if it's a `[`, `{`, or `"`, and then deciding whether
       * you next want to parse an array, dictionary or string.
       */
-    inline def flatMap[V](f: T => P[V])(using whitespace: P[Any] => P[Unit]): P[V] =
+    inline def flatMap[V](f: T => P[V])(using whitespace: Whitespace): P[V] =
       MacroInlineImpls.flatMapInline[T, V](parse0)(f)(whitespace)
 
     /** Capture operator; makes the parser return the span of input it parsed
@@ -94,7 +99,7 @@ package object fastparse extends fastparse.SharedPackageDefs {
       */
     inline def ~/[V, R](inline other: P[V])(using
         s: Implicits.Sequencer[T, V, R],
-        whitespace: P[Any] => P[Unit],
+        whitespace: Whitespace,
         ctx: P[_]
     ): P[R] = ${ MacroInlineImpls.parsedSequence0[T, V, R]('parse0, 'other, true)('s, 'whitespace, 'ctx) }
 
@@ -104,7 +109,7 @@ package object fastparse extends fastparse.SharedPackageDefs {
       */
     inline def ~[V, R](inline other: P[V])(using
         s: Implicits.Sequencer[T, V, R],
-        whitespace: P[Any] => P[Unit],
+        whitespace: Whitespace,
         ctx: P[_]
     ): P[R] =
       ${ MacroInlineImpls.parsedSequence0[T, V, R]('parse0, 'other, false)('s, 'whitespace, 'ctx) }
@@ -129,7 +134,7 @@ package object fastparse extends fastparse.SharedPackageDefs {
       * a `Seq[T]` of the parsed values. On failure, backtracks to the starting
       * index of the last run.
       */
-    inline def rep[V](using repeater: Implicits.Repeater[T, V], whitespace: P[_] => P[Unit], ctx: P[Any]): P[V] =
+    inline def rep[V](using repeater: Implicits.Repeater[T, V], whitespace: Whitespace, ctx: P[Any]): P[V] =
       ${ MacroRepImpls.repXMacro0[T, V]('parse0, 'whitespace, null)('repeater, 'ctx) }
 
     /** Raw repeat operator; runs the LHS parser 0 or more times *without*
@@ -145,7 +150,7 @@ package object fastparse extends fastparse.SharedPackageDefs {
     //  * and returns a `Seq[T]` of the parsed values. On
     //  * failure, backtracks to the starting index of the last run.
     //  */
-    // inline def rep[V](inline min: Int)(using repeater: Implicits.Repeater[T, V], whitespace: P[_] => P[Unit], ctx: P[Any]): P[V] =
+    // inline def rep[V](inline min: Int)(using repeater: Implicits.Repeater[T, V], whitespace: Whitespace, ctx: P[Any]): P[V] =
     //  ${ MacroRepImpls.repXMacro0[T, V]('parse0, 'whitespace, 'min)('repeater, 'ctx) }
 
     /// ** Raw repeat operator; runs the LHS parser at least `min`
@@ -175,7 +180,7 @@ package object fastparse extends fastparse.SharedPackageDefs {
         exactly: Int = -1
     )(using
         repeater: Implicits.Repeater[T, V],
-        whitespace: P[_] => P[Unit],
+        whitespace: Whitespace,
         ctx: P[Any]
     ): P[V] =
       if max == Int.MaxValue && exactly == -1

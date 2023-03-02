@@ -15,7 +15,7 @@ object Util {
     else if (rhs.value.isEmpty) lhs
     else Msgs(List(new Lazy(() => lhs.render + " ~ " + rhs.render)))
 
-  def consumeWhitespace[V](whitespace: ParsingRun[_] => ParsingRun[Unit], ctx: ParsingRun[Any]) = {
+  def consumeWhitespace[V](whitespace: fastparse.Whitespace, ctx: ParsingRun[Any]) = {
     val oldCapturing = ctx.noDropBuffer // completely disallow dropBuffer
     ctx.noDropBuffer = true
     whitespace(ctx)
