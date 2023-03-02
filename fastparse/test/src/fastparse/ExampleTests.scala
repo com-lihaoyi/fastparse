@@ -171,7 +171,7 @@ object ExampleTests extends TestSuite{
         def keyword[$: P] = P( ("hello" ~ &(" ")).!.rep )
 
         val Parsed.Success(Seq("hello"), _) = parse("hello ", keyword(_))
-        val Parsed.Success(Seq(), _) = parse("hello", keyword(_))        
+        val Parsed.Success(Seq(), _) = parse("hello", keyword(_))
         val Parsed.Success(Seq(), _) = parse("helloX", keyword(_))
       }
 
@@ -241,7 +241,7 @@ object ExampleTests extends TestSuite{
       test("opaque"){
         def digit[$: P] = CharIn("0-9")
         def letter[$: P] = CharIn("A-Z")
-        def twice[T, _: P](p: => P[T]) = p ~ p
+        def twice[T, $: P](p: => P[T]) = p ~ p
         def errorMessage[T](p: P[_] => P[T], str: String) =
           parse(str, p).asInstanceOf[Parsed.Failure].trace().longAggregateMsg
 
@@ -522,7 +522,7 @@ object ExampleTests extends TestSuite{
     }
 
     test("higherorder"){
-      def Indexed[_: P, T](p: => P[T]): P[(Int, T, Int)] = P( Index ~ p ~ Index )
+      def Indexed[$: P, T](p: => P[T]): P[(Int, T, Int)] = P( Index ~ p ~ Index )
 
       def Add[$: P] = P( Num ~ "+" ~ Num )
       def Num[$: P] = Indexed( CharsWhileIn("0-9").rep.! )

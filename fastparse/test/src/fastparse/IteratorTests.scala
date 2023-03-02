@@ -5,20 +5,20 @@ import utest._
 import scala.collection.mutable
 object IteratorTests extends TestSuite {
 
-  def toInput(string: String) = {
+  class LoggedDropsParserInput(data: Iterator[String])
+    extends IteratorParserInput(data) {
 
-    class LoggedDropsParserInput(data: Iterator[String])
-      extends IteratorParserInput(data) {
+    val drops = mutable.SortedSet.empty[Int]
 
-      val drops = mutable.SortedSet.empty[Int]
-
-      override def dropBuffer(index: Int): Unit = {
-        drops.add(index)
-        super.dropBuffer(index)
-      }
-
-      override def toString = s"LoggedDropsParserInput($drops)"
+    override def dropBuffer(index: Int): Unit = {
+      drops.add(index)
+      super.dropBuffer(index)
     }
+
+    override def toString = s"LoggedDropsParserInput($drops)"
+  }
+
+  def toInput(string: String): LoggedDropsParserInput = {
     new LoggedDropsParserInput(string.grouped(1))
   }
 
@@ -58,8 +58,9 @@ object IteratorTests extends TestSuite {
     }
 
     test("whitespaceImmediateCutDrop"){
-      import NoWhitespace._
-      implicit def whitespace = {implicit ctx: P[_] =>
+      import NoWhitespace.{noWhitespaceImplicit => _, _}
+      implicit val whitespace: P[_] => P[Unit] = { implicit ctx: P[_] =>
+        import NoWhitespace.noWhitespaceImplicit
         " ".? ~ " ".rep
       }
 
@@ -78,7 +79,7 @@ object IteratorTests extends TestSuite {
       // should dropBuffer immediately after every `~`, even without any cuts
 
       def p[$: P] = P( "a" ~ "b" ~ "c")
-      def capt[_ : P] = P( p ~ p ~ p)
+      def capt[$: P] = P( p ~ p ~ p)
       val input = toInput("abcabcabc")
       val Parsed.Success(res, i) = parse(input, capt(_))
       println(i)
@@ -209,7 +210,7 @@ object IteratorTests extends TestSuite {
 
       test("whitespaceApi"){
 
-        implicit def whitespace = { implicit ctx: P[_] =>
+        implicit def whitespace: P[_] => P[Unit] = { implicit ctx: P[_] =>
           " ".? ~~/ " ".repX
         }
 
@@ -236,7 +237,8 @@ object IteratorTests extends TestSuite {
         val input3 = toInput("aaa  ccc")
         // this shows behavior of whitespaceApi which requires quite tricky dropBuffer calls
         // it totally ignores first ~ and produces error in the second ~~
-        assert(parse(input3, ab[Unit](_)).isInstanceOf[Parsed.Failure])
+        val parsed3 = parse(input3, ab(_))
+        assert(parsed3.isInstanceOf[Parsed.Failure])
       }
 
       test("zeroDrops"){
@@ -262,9 +264,10 @@ object IteratorTests extends TestSuite {
       import NoWhitespace._
       def p[$: P] = P("[" ~ "]")
 
-      parse("[ ]", p(_)).asInstanceOf[Parsed.Failure].extra.traced
+      // fails under native if run inside the intercept - utest bug?
+      val t = scala.util.Try{ parse(Iterator("[", " ", "]"), p(_)).asInstanceOf[Parsed.Failure].extra.traced }
       val e = intercept[RuntimeException] {
-        parse(Iterator("[", " ", "]"), p[Unit](_)).asInstanceOf[Parsed.Failure].extra.traced
+        t.get
       }
       assert(e.getMessage.contains("Cannot perform `.traced` on an `fastparse.IteratorParserInput`"))
     }

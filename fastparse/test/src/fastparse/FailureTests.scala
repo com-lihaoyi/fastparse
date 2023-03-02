@@ -375,23 +375,23 @@ object FailureTests extends TestSuite{
         parser = parser
       )
 
-      'opt -        check{ implicit c => ("a" ~ ("b" ~ "c")).? ~ "a" ~/ "d" }
-      'optLeft -    check{ implicit c => (("a" ~ "b") ~ "c").? ~ "a" ~ "d" }
-      'opt2 -        check{ implicit c => ("a".! ~ ("b".! ~ "c".!)).? ~ "a".! ~/ "d".! }
-      'optLeft2 -    check{ implicit c => (("a".! ~ "b".!) ~ "c".!).? ~ "a".! ~ "d".! }
+      test("opt") -        check{ implicit c => ("a" ~ ("b" ~ "c")).? ~ "a" ~/ "d" }
+      test("optLeft") -    check{ implicit c => (("a" ~ "b") ~ "c").? ~ "a" ~ "d" }
+      test("opt2") -        check{ implicit c => ("a".! ~ ("b".! ~ "c".!)).? ~ "a".! ~/ "d".! }
+      test("optLeft2") -    check{ implicit c => (("a".! ~ "b".!) ~ "c".!).? ~ "a".! ~ "d".! }
 
-      'either1 -    check{ implicit c => (("a" ~ "b") ~ "c") | "a" ~/ "d" }
-      'either2 -    check{ implicit c => "a" ~ ("b" ~ "c") | "a" ~/ "d" }
+      test("either1") -    check{ implicit c => (("a" ~ "b") ~ "c") | "a" ~/ "d" }
+      test("either2") -    check{ implicit c => "a" ~ ("b" ~ "c") | "a" ~/ "d" }
 
-      'either3 -    check{ implicit c => ("a" ~ ("b" ~ "c") | "") ~ "a" ~/ "d" }
+      test("either3") -    check{ implicit c => ("a" ~ ("b" ~ "c") | "") ~ "a" ~/ "d" }
 
-      'rep -        check{ implicit c => ("a" ~ ("b" ~ "c")).rep ~ "a" ~/ "d" }
+      test("rep") -        check{ implicit c => ("a" ~ ("b" ~ "c")).rep ~ "a" ~/ "d" }
 
-      'repApply -   check{ implicit c => ("a" ~ ("b" ~ "c")).rep() ~ "a" ~/ "d" }
-      'repLeft -    check{ implicit c => (("a" ~ "b") ~ "c").rep ~ "a" ~/ "d" }
-      'repX -       check{ implicit c => ("a" ~ ("b" ~ "c")).repX ~ "a" ~/ "d" }
-      'repXLeft -   check{ implicit c => (("a" ~ "b") ~ "c").repX ~ "a" ~/ "d" }
-      'repSep -     check{ implicit c => ("a" ~ ("b" ~ "c")).rep(sep = Pass) ~ "a" ~/ "d" }
+      test("repApply") -   check{ implicit c => ("a" ~ ("b" ~ "c")).rep() ~ "a" ~/ "d" }
+      test("repLeft") -    check{ implicit c => (("a" ~ "b") ~ "c").rep ~ "a" ~/ "d" }
+      test("repX") -       check{ implicit c => ("a" ~ ("b" ~ "c")).repX ~ "a" ~/ "d" }
+      test("repXLeft") -   check{ implicit c => (("a" ~ "b") ~ "c").repX ~ "a" ~/ "d" }
+      test("repSep") -     check{ implicit c => ("a" ~ ("b" ~ "c")).rep(sep = Pass) ~ "a" ~/ "d" }
       test("repSepLeft") - check{ implicit c => (("a" ~ "b") ~ "c").rep(sep = Pass) ~ "a" ~/ "d" }
     }
 

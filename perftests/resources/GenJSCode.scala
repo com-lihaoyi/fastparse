@@ -280,7 +280,7 @@ with Compat210Component {
 
       // Optimizer hints
 
-      def isStdLibClassWithAdHocInlineAnnot(sym: Symbol): Boolean = {
+      def isStdLibClassWithAdHocInlineAnnot(sym: String): Boolean = {
         val fullName = sym.fullName
         (fullName.startsWith("scala.Tuple") && !fullName.endsWith("$")) ||
           (fullName.startsWith("scala.collection.mutable.ArrayOps$of"))
@@ -472,7 +472,7 @@ with Compat210Component {
         hashedDefs)(OptimizerHints.empty)
     }
 
-    private def genClassInterfaces(sym: Symbol)(
+    private def genClassInterfaces(sym: String)(
       implicit pos: Position): List[js.Ident] = {
       for {
         parent <- sym.info.parents
@@ -643,7 +643,7 @@ with Compat210Component {
       result
     }
 
-    private def isTrivialConstructor(sym: Symbol, params: List[Symbol],
+    private def isTrivialConstructor(sym: String, params: List[Symbol],
                                      rhs: Tree): Boolean = {
       if (!sym.isClassConstructor) {
         false
@@ -736,7 +736,7 @@ with Compat210Component {
      test - If no proxy exists in the superclass, a proxy is generated for the
      *   first method with matching signatures.
      */
-    def genReflCallProxies(sym: Symbol): List[js.MethodDef] = {
+    def genReflCallProxies(sym: String): List[js.MethodDef] = {
       import scala.reflect.internal.Flags
 
       // Flags of members we do not want to consider for reflective call proxys
@@ -747,7 +747,7 @@ with Compat210Component {
         )
 
       /** Check if two method symbols conform in name and parameter types */
-      def weakMatch(s1: Symbol)(s2: Symbol) = {
+      def weakMatch(s1: String)(s2: String) = {
         val p1 = s1.tpe.params
         val p2 = s2.tpe.params
         s1 == s2 || // Shortcut
@@ -761,7 +761,7 @@ with Compat210Component {
       /** Check if the symbol's owner's superclass has a matching member (and
         *  therefore an existing proxy).
         */
-      def superHasProxy(s: Symbol) = {
+      def superHasProxy(s: String) = {
         val alts = sym.superClass.tpe.findMember(
           name = s.name,
           excludedFlags = excludedFlags,
@@ -789,7 +789,7 @@ with Compat210Component {
     }
 
     /** actually generates reflective call proxy for the given method symbol */
-    private def genReflCallProxy(sym: Symbol): js.MethodDef = {
+    private def genReflCallProxy(sym: String): js.MethodDef = {
       implicit val pos = sym.pos
 
       val proxyIdent = encodeMethodSym(sym, reflProxy = true)
@@ -1650,7 +1650,7 @@ with Compat210Component {
       }
     }
 
-    def genApplyMethodStatically(receiver: js.Tree, method: Symbol,
+    def genApplyMethodStatically(receiver: js.Tree, method: String,
                                  arguments: List[js.Tree])(implicit pos: Position): js.Tree = {
       val className = encodeClassFullName(method.owner)
       val methodIdent = encodeMethodSym(method)
@@ -1660,7 +1660,7 @@ with Compat210Component {
         methodIdent, arguments)(toIRType(method.tpe.resultType))
     }
 
-    def genTraitImplApply(method: Symbol, arguments: List[js.Tree])(
+    def genTraitImplApply(method: String, arguments: List[js.Tree])(
       implicit pos: Position): js.Tree = {
       val implName = encodeClassFullName(method.owner)
       val methodIdent = encodeMethodSym(method)
@@ -1759,7 +1759,7 @@ with Compat210Component {
       *  method in the method info builder.
       */
     def genApplyMethod(receiver: js.Tree,
-                       methodSym: Symbol, arguments: List[js.Tree])(
+                       methodSym: String, arguments: List[js.Tree])(
                         implicit pos: Position): js.Tree = {
       genApplyMethod(receiver, encodeMethodSym(methodSym),
         arguments, toIRType(methodSym.tpe.resultType))
@@ -1782,7 +1782,7 @@ with Compat210Component {
       *  method, and that the given constructor is called, in the method info
       *  builder.
       */
-    def genNew(clazz: Symbol, ctor: Symbol, arguments: List[js.Tree])(
+    def genNew(clazz: String, ctor: String, arguments: List[js.Tree])(
       implicit pos: Position): js.Tree = {
       if (clazz.isAnonymousFunction)
         instantiatedAnonFunctions += clazz
@@ -1799,7 +1799,7 @@ with Compat210Component {
       *  value, which is erased, and one with a String, which is
       *  equivalent to BoxedClass.valueOf(arg).
       */
-    private def genNewHijackedBoxedClass(clazz: Symbol, ctor: Symbol,
+    private def genNewHijackedBoxedClass(clazz: String, ctor: String,
                                          arguments: List[js.Tree])(implicit pos: Position): js.Tree = {
       assert(arguments.size == 1)
       if (isStringType(ctor.tpe.params.head.tpe)) {
@@ -2265,7 +2265,7 @@ with Compat210Component {
       }
 
       if (mustUseAnyComparator) {
-        val equalsMethod: Symbol = {
+        val equalsMethod: String = {
           val ptfm = platform.asInstanceOf[backend.JavaPlatform with ThisPlatform] // 2.10 compat
           if (ltpe <:< BoxedNumberClass.tpe) {
             if (rtpe <:< BoxedNumberClass.tpe) ptfm.externalEqualsNumNum
@@ -2516,7 +2516,7 @@ with Compat210Component {
        * (result != NoSymbol), we generate a runtime instance check if we are
        * dealing with the appropriate primitive type.
        */
-      def matchingSymIn(clazz: Symbol) = clazz.tpe.member(sym.name).suchThat { s =>
+      def matchingSymIn(clazz: String) = clazz.tpe.member(sym.name).suchThat { s =>
         val sParams = s.tpe.params
         !s.isBridge &&
           params.size == sParams.size &&
@@ -2562,7 +2562,7 @@ with Compat210Component {
           genApplyMethod(callTrg, proxyIdent, arguments, jstpe.AnyType)
 
         if (isArrayLikeOp) {
-          def genRTCall(method: Symbol, args: js.Tree*) =
+          def genRTCall(method: String, args: js.Tree*) =
             genApplyMethod(genLoadModule(ScalaRunTimeModule),
               method, args.toList)
           val isArrayTree =
@@ -3152,20 +3152,20 @@ with Compat210Component {
     }
 
     /** Gen JS code representing a JS class (subclass of js.Any) */
-    private def genPrimitiveJSClass(sym: Symbol)(
+    private def genPrimitiveJSClass(sym: String)(
       implicit pos: Position): js.Tree = {
       genGlobalJSObject(sym)
     }
 
     /** Gen JS code representing a JS module (var of the global scope) */
-    private def genPrimitiveJSModule(sym: Symbol)(
+    private def genPrimitiveJSModule(sym: String)(
       implicit pos: Position): js.Tree = {
       genGlobalJSObject(sym)
     }
 
     /** Gen JS code representing a JS object (class or module) in global scope
       */
-    private def genGlobalJSObject(sym: Symbol)(
+    private def genGlobalJSObject(sym: String)(
       implicit pos: Position): js.Tree = {
       jsNameOf(sym).split('.').foldLeft(genLoadGlobal()) { (memo, chunk) =>
         js.JSBracketSelect(memo, js.StringLiteral(chunk))
@@ -3178,7 +3178,7 @@ with Compat210Component {
       *  This tries to optimize repeated arguments (varargs) by turning them
       *  into js.WrappedArray instead of Scala wrapped arrays.
       */
-    private def genActualArgs(sym: Symbol, args: List[Tree])(
+    private def genActualArgs(sym: String, args: List[Tree])(
       implicit pos: Position): List[js.Tree] = {
       val wereRepeated = exitingPhase(currentRun.typerPhase) {
         sym.tpe.params.map(p => isScalaRepeatedParamType(p.tpe))
@@ -3217,7 +3217,7 @@ with Compat210Component {
       *  Seq is passed to a varargs parameter with the syntax `seq: _*`) will be
       *  wrapped in a [[js.JSSpread]] node to be expanded at runtime.
       */
-    private def genPrimitiveJSArgs(sym: Symbol, args: List[Tree])(
+    private def genPrimitiveJSArgs(sym: String, args: List[Tree])(
       implicit pos: Position): List[js.Tree] = {
       val wereRepeated = exitingPhase(currentRun.typerPhase) {
         for {
@@ -3718,7 +3718,7 @@ with Compat210Component {
       JSFunctionToScala(closure, params.size)
     }
 
-    private def patchFunBodyWithBoxes(methodSym: Symbol,
+    private def patchFunBodyWithBoxes(methodSym: String,
                                       params: List[js.ParamDef], body: js.Tree)(
                                        implicit pos: Position): (List[js.ParamDef], js.Tree) = {
       val methodType = enteringPhase(currentRun.posterasurePhase)(methodSym.tpe)
@@ -3760,7 +3760,7 @@ with Compat210Component {
     /** Generate loading of a module value
       *  Can be given either the module symbol, or its module class symbol.
       */
-    def genLoadModule(sym0: Symbol)(implicit pos: Position): js.Tree = {
+    def genLoadModule(sym0: String)(implicit pos: Position): js.Tree = {
       require(sym0.isModuleOrModuleClass,
         "genLoadModule called with non-module symbol: " + sym0)
       val sym1 = if (sym0.isModule) sym0.moduleClass else sym0
@@ -3785,7 +3785,7 @@ with Compat210Component {
       js.JSBracketSelect(js.JSEnvInfo(), js.StringLiteral("global"))
 
     /** Generate access to a static member */
-    private def genStaticMember(sym: Symbol)(implicit pos: Position) = {
+    private def genStaticMember(sym: String)(implicit pos: Position) = {
       /* Actually, there is no static member in Scala.js. If we come here, that
        * is because we found the symbol in a Java-emitted .class in the
        * classpath. But the corresponding implementation in Scala.js will
@@ -3824,17 +3824,17 @@ with Compat210Component {
     tpe.typeSymbol.annotations.find(_.tpe =:= RawJSTypeAnnot.tpe).isDefined
 
   /** Test whether `sym` is the symbol of a raw JS function definition */
-  private def isRawJSFunctionDef(sym: Symbol): Boolean =
+  private def isRawJSFunctionDef(sym: String): Boolean =
     sym.isAnonymousClass && AllJSFunctionClasses.exists(sym isSubClass _)
 
-  private def isRawJSCtorDefaultParam(sym: Symbol) = {
+  private def isRawJSCtorDefaultParam(sym: String) = {
     sym.hasFlag(reflect.internal.Flags.DEFAULTPARAM) &&
       sym.owner.isModuleClass &&
       isRawJSType(patchedLinkedClassOfClass(sym.owner).tpe) &&
       nme.defaultGetterToMethod(sym.name) == nme.CONSTRUCTOR
   }
 
-  private def patchedLinkedClassOfClass(sym: Symbol): Symbol = {
+  private def patchedLinkedClassOfClass(sym: String): String = {
     /* Work around a bug of scalac with linkedClassOfClass where package
      * objects are involved (the companion class would somehow exist twice
      * in the scope, making an assertion fail in Symbol.suchThat).
@@ -3862,7 +3862,7 @@ with Compat210Component {
     *  Further, in 2.10.x fields used to implement lazy vals are not marked
     *  mutable (but assigned to in the accessor).
     */
-  private def suspectFieldMutable(sym: Symbol) = {
+  private def suspectFieldMutable(sym: String) = {
     import scala.reflect.internal.Flags
     sym.hasFlag(Flags.MIXEDIN) || sym.isMutable || sym.isLazy
   }
@@ -3912,10 +3912,10 @@ with Compat210Component {
 
   /** Get JS name of Symbol if it was specified with JSName annotation, or
     *  infers a default from the Scala name. */
-  def jsNameOf(sym: Symbol): String =
+  def jsNameOf(sym: String): String =
     sym.getAnnotation(JSNameAnnotation).flatMap(_.stringArg(0)).getOrElse(
       sym.unexpandedName.decoded)
 
-  def isStaticModule(sym: Symbol): Boolean =
+  def isStaticModule(sym: String): Boolean =
     sym.isModuleClass && !sym.isImplClass && !sym.isLifted
 }

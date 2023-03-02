@@ -56,7 +56,7 @@ object Json{
 
   def strChars[$: P] = P( CharsWhile(stringChars) )
   def string[$: P] =
-    P( space ~ "\"" ~/ (strChars | escape).rep.! ~ "\"").map(Js.Str)
+    P( space ~ "\"" ~/ (strChars | escape).rep.! ~ "\"").map(Js.Str.apply)
 
   def array[$: P] =
     P( "[" ~/ jsonExpr.rep(sep=","./) ~ space ~ "]").map(Js.Arr(_:_*))

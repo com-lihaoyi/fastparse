@@ -3,8 +3,7 @@ package perftests.string
 import perftests.Utils
 import utest._
 
-import scala.tools.nsc.{Global, Settings}
-import scalaparse.{Scala, ScalacParser}
+import scalaparse.{Scala}
 object ScalaParse extends TestSuite{
   val genJsCodeStream = getClass.getResourceAsStream("/GenJSCode.scala")
   val genJsCodeSource = scala.io.Source.fromInputStream(genJsCodeStream).mkString

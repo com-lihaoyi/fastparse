@@ -40,7 +40,7 @@ trait Types extends Core{
     // Can't `cut` after the opening paren, because we might be trying to parse `()`
     // or `() => T`! only cut after parsing one type
     def TupleType = P( "(" ~/ Type.repTC() ~ ")" )
-    def BasicType = P( TupleType | Literals.NoInterp.Literal | TypeId ~ ("." ~ `type`).?  | `_` )
+    def BasicType = P( TupleType | Literals.NoInterp.Literal | TypeId ~ ("." ~ `type`).?  | Underscore )
     P( BasicType ~ (TypeArgs | `#` ~/ Id).rep )
   }
 
@@ -58,10 +58,10 @@ trait Types extends Core{
   def TypeBounds[$: P]: P[Unit] = P( (`>:` ~/ Type).? ~ (`<:` ~/ Type).? )
   def TypeArg[$: P]: P[Unit] = {
     def CtxBounds = P((`<%` ~/ Type).rep ~ (`:` ~/ Type).rep)
-    P((Id | `_`) ~ TypeArgList.? ~ TypeBounds ~ CtxBounds)
+    P((Id | Underscore) ~ TypeArgList.? ~ TypeBounds ~ CtxBounds)
   }
 
-  def Annot[$: P]: P[Unit] = P( `@` ~/ SimpleType ~  ("(" ~/ (Exprs ~ (`:` ~/ `_*`).?).? ~ TrailingComma ~ ")").rep )
+  def Annot[$: P]: P[Unit] = P( `@` ~/ SimpleType ~  ("(" ~/ (Exprs ~ (`:` ~/ `Underscore*`).?).? ~ TrailingComma ~ ")").rep )
 
   def TypeArgList[$: P]: P[Unit] = {
     def Variant: P[Unit] = P( Annot.rep ~ CharIn("+\\-").? ~ TypeArg )

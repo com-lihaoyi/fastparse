@@ -15,7 +15,7 @@ trait Core extends syntax.Literals{
     def repTC[R](min: Int = 0, max: Int = Int.MaxValue, exactly: Int = -1)
                 (implicit ev: fastparse.Implicits.Repeater[T, R],
                  ctx: P[_]): P[R] =
-      p0.rep[R](min = min, sep = ",", max = max, exactly = exactly) ~ TrailingComma
+      p0.rep(min = min, sep = ",", max = max, exactly = exactly) ~ TrailingComma
   }
   // Aliases for common things. These things are used in almost every parser
   // in the file, so it makes sense to keep them short.
@@ -27,7 +27,8 @@ trait Core extends syntax.Literals{
   def `:`[$: P] = O(":")
   def `=`[$: P] = O("=")
   def `@`[$: P] = O("@")
-  def `_`[$: P] = W("_")
+  //def `_`[$: P] = W("_")
+  def Underscore[$: P] = W("_")
   def `this`[$: P] = W("this")
   def `type`[$: P] = W("type")
   def `val`[$: P] = W("val")
@@ -74,7 +75,8 @@ trait Core extends syntax.Literals{
   // kinda-sorta keywords that are common patterns even if not
   // really-truly keywords
   def `*`[$: P] = O("*")
-  def `_*`[$: P] = P( `_` ~ `*` )
+  // def `_*`[$: P] = P( `_` ~ `*` )
+  def `Underscore*`[$: P] = P( Underscore ~ `*` )
   def `}`[$: P] = P( Semis.? ~ "}" )
   def `{`[$: P] = P( "{" ~ Semis.? )
   /**
@@ -94,7 +96,7 @@ trait Core extends syntax.Literals{
    * Sketchy way to whitelist a few suffixes that come after a . select;
    * apart from these and IDs, everything else is illegal
    */
-  def PostDotCheck[$: P]: P[Unit] = P( WL ~ !(`super` | `this` | "{" | `_` | `type`) )
+  def PostDotCheck[$: P]: P[Unit] = P( WL ~ !(`super` | `this` | "{" | Underscore | `type`) )
   def ClassQualifier[$: P] = P( "[" ~ Id ~ "]" )
   def ThisSuper[$: P] = P( `this` | `super` ~ ClassQualifier.? )
   def ThisPath[$: P]: P[Unit] = P( ThisSuper ~ ("." ~ PostDotCheck ~/ Id).rep )

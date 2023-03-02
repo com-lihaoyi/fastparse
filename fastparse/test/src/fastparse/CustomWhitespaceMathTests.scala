@@ -7,7 +7,7 @@ import utest._
   * Same as MathTests, but demonstrating the use of whitespace
   */
 object CustomWhitespaceMathTests extends TestSuite{
-  implicit val whitespace = { implicit ctx: ParsingRun[_] =>
+  implicit val whitespace: ParsingRun[_] => P[Unit] = { implicit ctx: ParsingRun[_] =>
     CharsWhileIn(" \t", 0)
   }
   def eval(tree: (Int, Seq[(String, Int)])): Int = {

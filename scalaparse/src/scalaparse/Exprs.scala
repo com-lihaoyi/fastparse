@@ -6,9 +6,9 @@ trait Exprs extends Core with Types with Xml{
   def BlockDef[$: P]: P[Unit]
 
   def Import[$: P]: P[Unit] = {
-    def Selector: P[Unit] = P( (Id | `_`) ~ (`=>` ~/ (Id | `_`)).? )
+    def Selector: P[Unit] = P( (Id | Underscore) ~ (`=>` ~/ (Id | Underscore)).? )
     def Selectors: P[Unit] = P( "{" ~/ Selector.repTC() ~ "}" )
-    def ImportExpr: P[Unit] = P( StableId ~ ("." ~/ (`_` | Selectors)).? )
+    def ImportExpr: P[Unit] = P( StableId ~ ("." ~/ (Underscore | Selectors)).? )
     P( `import` ~/ ImportExpr.rep(1, sep = ","./) )
   }
 
@@ -66,7 +66,7 @@ trait Exprs extends Core with Types with Xml{
       def LambdaRhs = if (semiInference) P( BlockChunk ) else P( Expr )
 
 
-      def ImplicitLambda = P( `implicit` ~ (Id | `_`) ~ (`:` ~ InfixType).? ~ `=>` ~ LambdaRhs.? )
+      def ImplicitLambda = P( `implicit` ~ (Id | Underscore) ~ (`:` ~ InfixType).? ~ `=>` ~ LambdaRhs.? )
       def ParenedLambda = P( Parened ~~ (WL ~ `=>` ~ LambdaRhs.? | ExprSuffix ~~ PostfixSuffix ~ SuperPostfixSuffix) )
       def PostfixLambda = P( PostfixExpr ~ (`=>` ~ LambdaRhs.? | SuperPostfixSuffix).? )
       def SmallerExprOrLambda = P( ParenedLambda | PostfixLambda )
@@ -78,10 +78,10 @@ trait Exprs extends Core with Types with Xml{
 
     def SuperPostfixSuffix[$: P] = P( (`=` ~/ Expr).? ~ MatchAscriptionSuffix.? )
     def AscriptionType[$: P]  = if (arrowTypeAscriptions) P( Type ) else P( InfixType )
-    def Ascription[$: P] = P( `:` ~/ (`_*` |  AscriptionType | Annot.rep(1)) )
+    def Ascription[$: P] = P( `:` ~/ (`Underscore*` |  AscriptionType | Annot.rep(1)) )
     def MatchAscriptionSuffix[$: P] = P(`match` ~/ "{" ~ CaseClauses | Ascription)
     def ExprPrefix[$: P] = P( WL ~ CharIn("\\-+!~") ~~ !syntax.Basic.OpChar ~ WS)
-    def ExprSuffix[$: P] = P( (WL ~ "." ~/ Id | WL ~ TypeArgs | NoSemis ~ ArgList).repX ~~ (NoSemis  ~ `_`).? )
+    def ExprSuffix[$: P] = P( (WL ~ "." ~/ Id | WL ~ TypeArgs | NoSemis ~ ArgList).repX ~~ (NoSemis  ~ Underscore).? )
     def PrefixExpr[$: P] = P( ExprPrefix.? ~ SimpleExpr )
 
     // Intermediate `WL` needs to always be non-cutting, because you need to
@@ -97,7 +97,7 @@ trait Exprs extends Core with Types with Xml{
     def SimpleExpr[$: P]: P[Unit] = {
       def New = P( `new` ~/ AnonTmpl )
 
-      P( XmlExpr | New | BlockExpr | ExprLiteral | StableId | `_` | Parened )
+      P( XmlExpr | New | BlockExpr | ExprLiteral | StableId | Underscore | Parened )
     }
     def Guard[$: P] : P[Unit] = P( `if` ~/ PostfixExpr )
   }
@@ -105,13 +105,13 @@ trait Exprs extends Core with Types with Xml{
   def SimplePattern[$: P]: P[Unit] = {
     def TupleEx = P( "(" ~/ Pattern.repTC() ~ ")" )
     def Extractor = P( StableId ~ TypeArgs.? ~ TupleEx.? )
-    def Thingy = P( `_` ~ (`:` ~/ TypePat).? ~ !("*" ~~ !syntax.Basic.OpChar) )
+    def Thingy = P( Underscore ~ (`:` ~/ TypePat).? ~ !("*" ~~ !syntax.Basic.OpChar) )
     P( XmlPattern | Thingy | PatLiteral | TupleEx | Extractor | VarId )
   }
 
   def BlockExpr[$: P]: P[Unit] = P( "{" ~/ (CaseClauses | Block ~ "}") )
 
-  def BlockLambdaHead[$: P]: P[Unit] = P( "(" ~ BlockLambdaHead ~ ")" | `this` | Id | `_` )
+  def BlockLambdaHead[$: P]: P[Unit] = P( "(" ~ BlockLambdaHead ~ ")" | `this` | Id | Underscore )
 
   def BlockLambda[$: P] = P( BlockLambdaHead  ~ (`=>` | `:` ~ InfixType ~ `=>`.?) )
 
@@ -132,16 +132,16 @@ trait Exprs extends Core with Types with Xml{
 
   def Patterns[$: P]: P[Unit] = P( Pattern.rep(1, sep = ","./) )
   def Pattern[$: P]: P[Unit] = P( (WL ~ TypeOrBindPattern).rep(1, sep = "|"./) )
-  def TypePattern[$: P] = P( (`_` | BacktickId | VarId) ~ `:` ~ TypePat )
+  def TypePattern[$: P] = P( (Underscore | BacktickId | VarId) ~ `:` ~ TypePat )
   def TypeOrBindPattern[$: P]: P[Unit] = P( TypePattern | BindPattern )
   def BindPattern[$: P]: P[Unit] = {
-    def InfixPattern = P( SimplePattern ~ (Id ~/ SimplePattern).rep | `_*` )
-    def Binding = P( (Id | `_`) ~ `@` )
+    def InfixPattern = P( SimplePattern ~ (Id ~/ SimplePattern).rep | `Underscore*` )
+    def Binding = P( (Id | Underscore) ~ `@` )
     P( Binding ~ InfixPattern | InfixPattern | VarId )
   }
 
   def TypePat[$: P] = P( CompoundType )
-  def ParenArgList[$: P] = P( "(" ~/ (Exprs ~ (`:` ~/ `_*`).?).? ~ TrailingComma ~ ")" )
+  def ParenArgList[$: P] = P( "(" ~/ (Exprs ~ (`:` ~/ `Underscore*`).?).? ~ TrailingComma ~ ")" )
   def ArgList[$: P]: P[Unit] = P( ParenArgList | OneNLMax ~ BlockExpr )
 
   def CaseClauses[$: P]: P[Unit] = {

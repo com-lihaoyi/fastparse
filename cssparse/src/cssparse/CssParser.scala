@@ -26,15 +26,15 @@ object CssTokensParser {
     def firstLetter = P( "-".? ~ (CharIn("a-zA-Z_") | escape) )
     def rest = P( (CharIn("a-zA-Z0-9\\-_") | escape).rep )
 
-    P( (firstLetter ~ rest).! ).map(Ast.IdentToken)
+    P( (firstLetter ~ rest).! ).map(Ast.IdentToken.apply)
   }
 
-  def functionToken[$: P] = P( identToken.! ~ "(" ).map(Ast.FunctionToken)
+  def functionToken[$: P] = P( identToken.! ~ "(" ).map(Ast.FunctionToken.apply)
 
-  def atWordToken[$: P] = P( "@" ~ identToken.! ).map(Ast.AtWordToken)
+  def atWordToken[$: P] = P( "@" ~ identToken.! ).map(Ast.AtWordToken.apply)
 
   def hashToken[$: P] = P( "#" ~
-    (CharIn("a-zA-Z0-9\\-_") | escape).rep(1).! ).map(Ast.HashWordToken)
+    (CharIn("a-zA-Z0-9\\-_") | escape).rep(1).! ).map(Ast.HashWordToken.apply)
 
   def stringTokenChar[$: P] = P( (!("\"" | "'" | "\\" | newline ) ~ AnyChar) | escape | ("\\" ~ newline) )
 
@@ -42,12 +42,12 @@ object CssTokensParser {
     def stringQuotes1 = P( "\"" ~ stringTokenChar.rep.! ~ "\"" )
     def stringQuotes2 = P( "'" ~ stringTokenChar.rep.! ~ "'" )
 
-    P( stringQuotes1 | stringQuotes2 ).map(Ast.StringToken)
+    P( stringQuotes1 | stringQuotes2 ).map(Ast.StringToken.apply)
   }
 
   def urlUnquoted[$: P] = P( ((!(CharIn("\"\'()\\\\") | whitespace) ~ AnyChar) | escape).rep(1) )
 
-  def urlToken[$: P] = P( "url(" ~ (ws ~ (urlUnquoted.! | stringToken.!) ~ ws).?.! ~ ")" ).map(Ast.UrlToken)
+  def urlToken[$: P] = P( "url(" ~ (ws ~ (urlUnquoted.! | stringToken.!) ~ ws).?.! ~ ")" ).map(Ast.UrlToken.apply)
 
   def digit[$: P] = P( CharIn("0-9") )
 
@@ -55,13 +55,13 @@ object CssTokensParser {
     def withPoint = P( digit.rep(1) ~ "." ~ digit.rep(1) )
     def withoutPoint = P( digit.rep(1) )
     def withE = P( "." ~ digit.rep(1) ~ (CharIn("eE") ~ CharIn("+\\-").? ~ digit.rep(1)).? )
-    P( (CharIn("+\\-").? ~ (withPoint | withoutPoint | withE)).! ).map(Ast.NumberToken)
+    P( (CharIn("+\\-").? ~ (withPoint | withoutPoint | withE)).! ).map(Ast.NumberToken.apply)
   }
 
   def dimensionToken[$: P] = P( numberToken.! ~ identToken.! ) map
     {case (number, ident) => Ast.DimensionToken(number, ident)}
 
-  def percentageToken[$: P] = P( numberToken.! ~ "%" ).map(Ast.PercentageToken)
+  def percentageToken[$: P] = P( numberToken.! ~ "%" ).map(Ast.PercentageToken.apply)
 
   def unicodeRangeToken[$: P] = {
     def questionMarks = P( (hexDigit.rep(min=1, max=6) ~ "?".rep(min=1, max=5)).! )
@@ -91,7 +91,7 @@ object CssTokensParser {
   def CDOToken[$: P] =             P( "<!--" ).map{_ => Ast.CdoToken()}
   def CDCToken[$: P] =             P( "-->" ).map{_ => Ast.CdcToken()}
 
-  def delimToken[$: P] = P( ("::" | CharIn("#$*+,\\-./:<>^~=!")).! ).map(Ast.DelimToken)
+  def delimToken[$: P] = P( ("::" | CharIn("#$*+,\\-./:<>^~=!")).! ).map(Ast.DelimToken.apply)
 
   // any token except functionToken
   def simpleToken[$: P]: P[Option[Ast.SimpleToken]] = P(
@@ -129,9 +129,9 @@ object CssRulesParser {
 
   def allSelector[$: P] = P( "*" ).map{_ => Ast.AllSelector()}
 
-  def elementSelector[$: P] = P( identToken.! ).map(Ast.ElementSelector)
+  def elementSelector[$: P] = P( identToken.! ).map(Ast.ElementSelector.apply)
 
-  def idSelector[$: P] = P( "#" ~ identToken.! ).map(Ast.IdSelector)
+  def idSelector[$: P] = P( "#" ~ identToken.! ).map(Ast.IdSelector.apply)
 
   def attributeSelector[$: P] = {
     def bracket = P( "[" ~ identToken.! ~ (( "=" | matchToken).! ~ (stringToken | identToken)).? ~ "]" )
@@ -147,7 +147,7 @@ object CssRulesParser {
 
   def partSelector[$: P] = P( allSelector | attributeSelector | elementSelector )
 
-  def classSelectorPart[$: P] = P( "." ~  partSelector ).map(Ast.ClassSelectorPart)
+  def classSelectorPart[$: P] = P( "." ~  partSelector ).map(Ast.ClassSelectorPart.apply)
 
   def pseudoSelectorPart[$: P] = P( (("::" | ":") ~ identToken).! ~ ("(" ~ componentValue.rep(1) ~ ")").? ).map{
     case (name, optValues) =>

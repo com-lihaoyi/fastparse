@@ -107,7 +107,7 @@ object fastparseParser{
   )
 
 
-  def obj[$: P]: P[Expr] = P( (Index ~~ objinside).map(Expr.Obj.tupled) )
+  def obj[$: P]: P[Expr] = P( (Index ~~ objinside).map((Expr.Obj.apply _).tupled) )
   def arr[$: P]: P[Expr] = P( (Index ~~ &("]")).map(Expr.Arr(_, Nil)) | arrBody )
   def compSuffix[$: P] = P( forspec ~ compspec ).map(Left(_))
   def arrBody[$: P]: P[Expr] = P(
@@ -120,8 +120,8 @@ object fastparseParser{
 
   def assertExpr[$: P](index: Int): P[Expr] = P( assertStmt ~ ";" ~ expr ).map(t => Expr.AssertExpr(index, t._1, t._2))
   def function[$: P](index: Int): P[Expr] = P( "(" ~/ params ~ ")" ~ expr ).map(t => Expr.Function(index, t._1, t._2))
-  def ifElse[$: P](index: Int): P[Expr] = P( Index ~~ expr ~ "then" ~~ break ~ expr ~ ("else" ~~ break ~ expr).? ).map(Expr.IfElse.tupled)
-  def localExpr[$: P]: P[Expr] = P( Index ~~ bind.rep(min=1, sep = ","./) ~ ";" ~ expr ).map(Expr.LocalExpr.tupled)
+  def ifElse[$: P](index: Int): P[Expr] = P( Index ~~ expr ~ "then" ~~ break ~ expr ~ ("else" ~~ break ~ expr).? ).map((Expr.IfElse.apply _).tupled)
+  def localExpr[$: P]: P[Expr] = P( Index ~~ bind.rep(min=1, sep = ","./) ~ ";" ~ expr ).map((Expr.LocalExpr.apply _).tupled)
 
   def expr[$: P]: P[Expr] = P("" ~ expr1 ~ (Index ~~ binaryop ~/ expr1).rep ~ "").map{ case (pre, fs) =>
     var remaining = fs
@@ -190,12 +190,12 @@ object fastparseParser{
   )
 
   def local[$: P] = P( localExpr )
-  def parened[$: P] = P( (Index ~~ expr).map(Expr.Parened.tupled) )
+  def parened[$: P] = P( (Index ~~ expr).map((Expr.Parened.apply _).tupled) )
   def importStr[$: P](index: Int) = P( string.map(Expr.ImportStr(index, _)) )
   def `import`[$: P](index: Int) = P( string.map(Expr.Import(index, _)) )
   def error[$: P](index: Int) = P(expr.map(Expr.Error(index, _)) )
-  def strExpr[$: P] = P((Index ~~ string).map(Expr.Str.tupled))
-  def idExpr[$: P] = P( (Index ~~ id).map(Expr.Id.tupled) )
+  def strExpr[$: P] = P((Index ~~ string).map((Expr.Str.apply _).tupled))
+  def idExpr[$: P] = P( (Index ~~ id).map((Expr.Id.apply _).tupled) )
   def unaryOpExpr[$: P](index: Int, op: Char) = P(
     expr1.map{ e =>
       def k2 = op match{
@@ -279,11 +279,11 @@ object fastparseParser{
   }
   def objlocal[$: P] = P( "local" ~~ break ~/ bind ).map(Expr.Member.BindStmt)
   def compspec[$: P]: P[Seq[Expr.CompSpec]] = P( (forspec | ifspec).rep )
-  def forspec[$: P] = P( Index ~~ "for" ~~ break ~/ id ~ "in" ~~ break ~ expr ).map(Expr.ForSpec.tupled)
-  def ifspec[$: P] = P( Index ~~ "if" ~~ break  ~/ expr ).map(Expr.IfSpec.tupled)
+  def forspec[$: P] = P( Index ~~ "for" ~~ break ~/ id ~ "in" ~~ break ~ expr ).map((Expr.ForSpec.apply _).tupled)
+  def ifspec[$: P] = P( Index ~~ "if" ~~ break  ~/ expr ).map((Expr.IfSpec.apply _).tupled)
   def fieldname[$: P] = P( id.map(Expr.FieldName.Fixed) | string.map(Expr.FieldName.Fixed) | "[" ~ expr.map(Expr.FieldName.Dyn) ~ "]" )
-  def assertStmt[$: P] = P( "assert" ~~ break  ~/ expr ~ (":" ~ expr).? ).map(Expr.Member.AssertStmt.tupled)
-  def bind[$: P] = P( Index ~~ id ~ ("(" ~/ params.? ~ ")").?.map(_.flatten) ~ "=" ~ expr ).map(Expr.Bind.tupled)
+  def assertStmt[$: P] = P( "assert" ~~ break  ~/ expr ~ (":" ~ expr).? ).map((Expr.Member.AssertStmt.apply _).tupled)
+  def bind[$: P] = P( Index ~~ id ~ ("(" ~/ params.? ~ ")").?.map(_.flatten) ~ "=" ~ expr ).map((Expr.Bind.apply _).tupled)
   def args[$: P] = P( ((id ~ "=").? ~ expr).rep(sep = ",") ~ ",".? ).flatMap{ x =>
     if (x.sliding(2).exists{case Seq(l, r) => l._1.isDefined && r._1.isEmpty case _ => false}) {
       Fail

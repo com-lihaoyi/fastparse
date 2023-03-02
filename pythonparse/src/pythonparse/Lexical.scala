@@ -16,7 +16,7 @@ object Lexical {
   def nonewlinewscomment[$: P] = P( (CharsWhileIn(" ") | Lexical.comment | "\\\n").rep )
 
   def identifier[$: P]: P[Ast.identifier] =
-    P( (letter|"_") ~ (letter | digit | "_").rep ).!.filter(!keywordList.contains(_)).map(Ast.identifier)
+    P( (letter|"_") ~ (letter | digit | "_").rep ).!.filter(!keywordList.contains(_)).map(Ast.identifier.apply)
   def letter[$: P]     = P( lowercase | uppercase )
   def lowercase[$: P]  = P( CharIn("a-z") )
   def uppercase[$: P]  = P( CharIn("A-Z") )
@@ -48,7 +48,7 @@ object Lexical {
 
   def escapeseq[$: P]: P[Unit] = P( "\\" ~ AnyChar )
 
-  def negatable[T, _: P](p: => P[T])(implicit ev: Numeric[T]) = (("+" | "-").?.! ~ p).map {
+  def negatable[T, $: P](p: => P[T])(implicit ev: Numeric[T]) = (("+" | "-").?.! ~ p).map {
     case ("-", i) => ev.negate(i)
     case (_, i) => i
   }

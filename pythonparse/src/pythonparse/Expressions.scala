@@ -18,7 +18,7 @@ object Expressions {
   }
 
   def NAME[$: P]: P[Ast.identifier] = Lexical.identifier
-  def NUMBER[$: P]: P[Ast.expr.Num] = P( Lexical.floatnumber | Lexical.longinteger | Lexical.integer | Lexical.imagnumber ).map(Ast.expr.Num)
+  def NUMBER[$: P]: P[Ast.expr.Num] = P( Lexical.floatnumber | Lexical.longinteger | Lexical.integer | Lexical.imagnumber ).map(Ast.expr.Num.apply)
   def STRING[$: P]: P[Ast.string] = Lexical.stringliteral
 
   def test[$: P]: P[Ast.expr] = {
@@ -46,7 +46,7 @@ object Expressions {
 
   // Common operators, mapped from their
   // strings to their type-safe representations
-  def op[T, _: P](s: => P[Unit], rhs: T) = s.!.map(_ => rhs)
+  def op[T, $: P](s: => P[Unit], rhs: T) = s.!.map(_ => rhs)
   def LShift[$: P] = op("<<", Ast.operator.LShift)
   def RShift[$: P] = op(">>", Ast.operator.RShift)
   def Lt[$: P] = op("<", Ast.cmpop.Lt)
@@ -114,7 +114,7 @@ object Expressions {
       "[" ~ (list_comp | list) ~ "]" |
       "{" ~ dictorsetmaker ~ "}" |
       "`" ~ testlist1.map(x => Ast.expr.Repr(Ast.expr.Tuple(x, Ast.expr_context.Load))) ~ "`" |
-      STRING.rep(1).map(_.mkString).map(Ast.expr.Str) |
+      STRING.rep(1).map(_.mkString).map(Ast.expr.Str.apply) |
       NAME.map(Ast.expr.Name(_, Ast.expr_context.Load)) |
       NUMBER
     )
@@ -124,10 +124,10 @@ object Expressions {
   def tuple_contents[$: P] = P( test ~ "," ~ list_contents.?).map { case (head, rest)  => head +: rest.getOrElse(Seq.empty) }
   def tuple[$: P] = P( tuple_contents).map(Ast.expr.Tuple(_, Ast.expr_context.Load))
   def list_comp_contents[$: P] = P( test ~ comp_for.rep(1) )
-  def list_comp[$: P] = P( list_comp_contents ).map(Ast.expr.ListComp.tupled)
-  def generator[$: P] = P( list_comp_contents ).map(Ast.expr.GeneratorExp.tupled)
+  def list_comp[$: P] = P( list_comp_contents ).map((Ast.expr.ListComp.apply _).tupled)
+  def generator[$: P] = P( list_comp_contents ).map((Ast.expr.GeneratorExp.apply _).tupled)
 
-  def lambdef[$: P]: P[Ast.expr.Lambda] = P( kw("lambda") ~ varargslist ~ ":" ~ test ).map(Ast.expr.Lambda.tupled)
+  def lambdef[$: P]: P[Ast.expr.Lambda] = P( kw("lambda") ~ varargslist ~ ":" ~ test ).map((Ast.expr.Lambda.apply _).tupled)
   def trailer[$: P]: P[Ast.expr => Ast.expr] = {
     def call = P("(" ~ arglist ~ ")").map{ case (args, (keywords, starargs, kwargs)) => (lhs: Ast.expr) => Ast.expr.Call(lhs, args, keywords, starargs, kwargs)}
     def slice = P("[" ~ subscriptlist ~ "]").map(args => (lhs: Ast.expr) => Ast.expr.Subscript(lhs, args, Ast.expr_context.Load))
@@ -140,7 +140,7 @@ object Expressions {
   }
   def subscript[$: P]: P[Ast.slice] = {
     def ellipses = P( ("." ~ "." ~ ".").map(_ => Ast.slice.Ellipsis) )
-    def single = P( test.map(Ast.slice.Index) )
+    def single = P( test.map(Ast.slice.Index.apply) )
     def multi = P(test.? ~ ":" ~ test.? ~ sliceop.?).map { case (lower, upper, step) =>
       Ast.slice.Slice(
         lower,
@@ -163,10 +163,10 @@ object Expressions {
       }
     )
     def dict_comp = P(
-      (dict_item ~ comp_for.rep(1)).map(Ast.expr.DictComp.tupled)
+      (dict_item ~ comp_for.rep(1)).map((Ast.expr.DictComp.apply _).tupled)
     )
-    def set: P[Ast.expr.Set] = P( test.rep(1, ",") ~ ",".? ).map(Ast.expr.Set)
-    def set_comp = P( test ~ comp_for.rep(1) ).map(Ast.expr.SetComp.tupled)
+    def set: P[Ast.expr.Set] = P( test.rep(1, ",") ~ ",".? ).map(Ast.expr.Set.apply)
+    def set_comp = P( test ~ comp_for.rep(1) ).map((Ast.expr.SetComp.apply _).tupled)
     P( dict_comp | dict | set_comp | set)
   }
 
@@ -182,7 +182,7 @@ object Expressions {
     case (x, Nil) => x
     case (x, gens) => Ast.expr.GeneratorExp(x, gens)
   }
-  def named_argument[$: P] = P( NAME ~ "=" ~ test  ).map(Ast.keyword.tupled)
+  def named_argument[$: P] = P( NAME ~ "=" ~ test  ).map((Ast.keyword.apply _).tupled)
 
   def comp_for[$: P]: P[Ast.comprehension] = P( kw("for") ~ exprlist ~ kw("in") ~ or_test ~ comp_if.rep ).map{
     case (targets, test, ifs) => Ast.comprehension(tuplize(targets), test, ifs)
@@ -194,7 +194,7 @@ object Expressions {
   // not used in grammar, but may appear in "node" passed from Parser to Compiler
   //  def encoding_decl[$: P]: P0 = P( NAME )
 
-  def yield_expr[$: P]: P[Ast.expr.Yield] = P( kw("yield") ~ testlist.map(tuplize).? ).map(Ast.expr.Yield)
+  def yield_expr[$: P]: P[Ast.expr.Yield] = P( kw("yield") ~ testlist.map(tuplize).? ).map(Ast.expr.Yield.apply)
 
   def varargslist[$: P]: P[Ast.arguments] = {
     def named_arg = P( fpdef ~ ("=" ~ test).? )
