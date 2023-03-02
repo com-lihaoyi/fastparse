@@ -131,7 +131,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
              max: Int = Int.MaxValue,
              exactly: Int = -1)
             (implicit repeater: Implicits.Repeater[T, V],
-             whitespace: ParsingRun[_] => ParsingRun[Unit],
+             whitespace: fastparse.Whitespace,
              ctx: ParsingRun[Any]): ParsingRun[V] = {
 
     val acc = repeater.initial
@@ -204,7 +204,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
   def rep[V](min: Int,
              sep: => ParsingRun[_])
             (implicit repeater: Implicits.Repeater[T, V],
-             whitespace: ParsingRun[_] => ParsingRun[Unit],
+             whitespace: fastparse.Whitespace,
              ctx: ParsingRun[Any]): ParsingRun[V] = {
 
     val acc = repeater.initial

@@ -18,7 +18,7 @@ import scala.quoted.*
 object MacroRepImpls {
   def repXMacro0[T: Type, V: Type](
       lhs: Expr[ParsingRun[T]],
-      whitespace: Null | Expr[ParsingRun[_] => ParsingRun[Unit]],
+      whitespace: Null | Expr[fastparse.Whitespace],
       min: Null | Expr[Int],
   )(repeater: Expr[Implicits.Repeater[T, V]], ctx: Expr[ParsingRun[_]])(using quotes: Quotes): Expr[ParsingRun[V]] = {
     import quotes.reflect.*

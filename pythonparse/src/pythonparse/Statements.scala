@@ -11,7 +11,9 @@ object Statements extends Statements(0)
  * Manually transcribed from https://docs.python.org/2/reference/grammar.html
  */
 class Statements(indent: Int){
-  implicit def whitespace(cfg: P[_]): P[Unit] = Lexical.wscomment(cfg)
+  implicit object whitespace extends fastparse.Whitespace {
+    def apply(ctx: P[_]): P[Unit] = Lexical.wscomment(ctx)
+  }
   def space[$: P] = P( CharIn(" \n") )
   def NEWLINE[$: P]: P0 = P( "\n" | End )
   def ENDMARKER[$: P]: P0 = P( End )

@@ -4,11 +4,13 @@ import fastparse._
 import utest._
 
 /**
-  * Same as MathTests, but demonstrating the use of whitespace
-  */
+ * Same as MathTests, but demonstrating the use of whitespace
+ */
 object CustomWhitespaceMathTests extends TestSuite{
-  implicit val whitespace: ParsingRun[_] => P[Unit] = { implicit ctx: ParsingRun[_] =>
-    CharsWhileIn(" \t", 0)
+  implicit object whitespace extends Whitespace{
+    def apply(implicit ctx: P[_]): P[Unit] = {
+      CharsWhileIn(" \t", 0)
+    }
   }
   def eval(tree: (Int, Seq[(String, Int)])): Int = {
     val (base, ops) = tree

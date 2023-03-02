@@ -11,7 +11,9 @@ import Lexical.kw
  * Manually transcribed from https://docs.python.org/2/reference/grammar.html
  */
 object Expressions {
-  implicit def whitespace(cfg: P[_]): P[Unit] = Lexical.wscomment(cfg)
+  implicit object whitespace extends fastparse.Whitespace {
+    def apply(ctx: P[_]): P[Unit] = Lexical.wscomment(ctx)
+  }
   def tuplize(xs: Seq[Ast.expr]) = xs match{
     case Seq(x) => x
     case xs => Ast.expr.Tuple(xs, Ast.expr_context.Load)
