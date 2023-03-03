@@ -439,7 +439,7 @@ object FailureTests extends TestSuite{
       checkOffset(
         input = "a a /* */  a  a /* a a a",
         expected = """"*/"""",
-        terminals = "()",
+        terminals = "\"*/\"",
         label = "\"*/\"",
         parser = { implicit c => "a".rep }
       )
