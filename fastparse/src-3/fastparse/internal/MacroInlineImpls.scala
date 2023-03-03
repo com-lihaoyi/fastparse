@@ -109,7 +109,7 @@ object MacroInlineImpls {
     if (ctx0.verboseFailures) {
       ctx0.aggregateMsg(
         startIndex,
-        Msgs(List(new Lazy(() => name.value))),
+        Msgs(new Lazy(() => name.value) :: Nil),
         ctx0.failureGroupAggregate,
         startIndex < ctx0.traceIndex
       )

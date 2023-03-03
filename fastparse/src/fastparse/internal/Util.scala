@@ -13,7 +13,7 @@ object Util {
   def joinBinOp(lhs: Msgs, rhs: Msgs) =
     if (lhs.value.isEmpty) rhs
     else if (rhs.value.isEmpty) lhs
-    else Msgs(List(new Lazy(() => lhs.render + " ~ " + rhs.render)))
+    else Msgs(new Lazy(() => lhs.render + " ~ " + rhs.render) :: Nil)
 
   def consumeWhitespace[V](whitespace: fastparse.Whitespace, ctx: ParsingRun[Any]) = {
     val oldCapturing = ctx.noDropBuffer // completely disallow dropBuffer

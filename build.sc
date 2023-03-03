@@ -237,16 +237,17 @@ object perftests extends Module{
   object bench2 extends PerfTestModule {
     def scalaVersion0 = scala213
     def moduleDeps = Seq(
-      scalaparse.jvm(scala212).test,
-      pythonparse.jvm(scala212).test,
-      cssparse.jvm(scala212).test,
-      fastparse.jvm(scala212).test,
+      scalaparse.jvm(scala213).test,
+      pythonparse.jvm(scala213).test,
+      cssparse.jvm(scala213).test,
+      fastparse.jvm(scala213).test,
     )
 
   }
 
   object benchScala3 extends PerfTestModule {
     def scalaVersion0 = scala31
+    def sources = T.sources{ bench2.sources() }
     def moduleDeps = Seq(
       scalaparse.jvm(scala31).test,
       pythonparse.jvm(scala31).test,

@@ -54,7 +54,7 @@ object MacroImpls {
           if (ctx0.verboseFailures) {
             ctx0.aggregateMsg(
               startIndex,
-              Msgs(List(new Lazy(() => name.splice.value))),
+              Msgs(new Lazy(() => name.splice.value) :: Nil),
               ctx0.failureGroupAggregate,
               startIndex < ctx0.traceIndex
             )
