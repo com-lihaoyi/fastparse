@@ -101,13 +101,13 @@ object Util {
 
 
   def aggregateMsgPostSep[V](startIndex: Int,
-                                     min: Int,
-                                     ctx: ParsingRun[Any],
-                                     parsedMsg: Msgs,
-                                     lastAgg: Msgs) = {
+                             min: Int,
+                             ctx: ParsingRun[Any],
+                             parsedMsg: Msgs,
+                             lastAgg: Msgs) = {
     ctx.aggregateMsg(
       startIndex,
-      () => parsedMsg.render + s".rep($min)",
+      () => parsedMsg.render + ".rep" + (if (min == 0) "" else s"(${min})"),
       // When we fail on a sep, we collect the failure aggregate of the last
       // non-sep rep body together with the failure aggregate of the sep, since
       // the last non-sep rep body continuing is one of the valid ways of
@@ -118,23 +118,23 @@ object Util {
   }
 
   def aggregateMsgInRep[V](startIndex: Int,
-                                   min: Int,
-                                   ctx: ParsingRun[Any],
-                                   sepMsg: Msgs,
-                                   parsedMsg: Msgs,
-                                   lastAgg: Msgs,
-                                   precut: Boolean) = {
+                           min: Int,
+                           ctx: ParsingRun[Any],
+                           sepMsg: Msgs,
+                           parsedMsg: Msgs,
+                           lastAgg: Msgs,
+                           precut: Boolean) = {
     if (sepMsg == null || precut) {
       ctx.aggregateMsg(
         startIndex,
-        () => parsedMsg.render + s".rep($min)",
+        () => parsedMsg.render + ".rep" + (if (min == 0) "" else s"(${min})"),
         if (lastAgg == null) ctx.failureGroupAggregate
         else ctx.failureGroupAggregate ::: lastAgg
       )
     } else {
       ctx.aggregateMsg(
         startIndex,
-        () => parsedMsg.render + s".rep($min)",
+        () => parsedMsg.render + ".rep" + (if (min == 0) "" else s"(${min})"),
         // When we fail on a rep body, we collect both the concatenated
         // sep and failure aggregate  of the rep body that we tried (because
         // we backtrack past the sep on failure) as well as the failure

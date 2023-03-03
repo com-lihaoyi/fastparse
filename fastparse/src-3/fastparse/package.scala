@@ -135,7 +135,7 @@ package object fastparse extends fastparse.SharedPackageDefs {
       * index of the last run.
       */
     inline def rep[V](using repeater: Implicits.Repeater[T, V], whitespace: Whitespace, ctx: P[Any]): P[V] =
-      ${ MacroRepImpls.repMacro0[T, V]('parse0, '{null}, 'whitespace, '{-1}, '{Int.MaxValue}, '{-1})('repeater, 'ctx) }
+      ${ MacroRepImpls.repMacro0[T, V]('parse0, '{null}, 'whitespace, '{0}, '{Int.MaxValue}, '{-1})('repeater, 'ctx) }
 
     /** Raw repeat operator; runs the LHS parser 0 or more times *without*
       * any whitespace in between, and returns
@@ -143,7 +143,7 @@ package object fastparse extends fastparse.SharedPackageDefs {
       * index of the last run.
       */
     inline def repX[V](using repeater: Implicits.Repeater[T, V], ctx: P[Any]): P[V] =
-      ${ MacroRepImpls.repMacro0[T, V]('parse0, '{null}, '{fastparse.NoWhitespace.noWhitespaceImplicit}, '{-1}, '{Int.MaxValue}, '{-1})('repeater, 'ctx) }
+      ${ MacroRepImpls.repMacro0[T, V]('parse0, '{null}, '{fastparse.NoWhitespace.noWhitespaceImplicit}, '{0}, '{Int.MaxValue}, '{-1})('repeater, 'ctx) }
 
     /// ** Repeat operator; runs the LHS parser at least `min`
     //  * times separated by the given whitespace (in implicit scope),
