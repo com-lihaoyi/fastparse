@@ -26,7 +26,6 @@ object ExampleTests extends TestSuite{
         )
       }
 
-
       test("failures"){
         import fastparse._, NoWhitespace._
         def parseEither[$: P] = P( "a" | "b" )
@@ -41,7 +40,6 @@ object ExampleTests extends TestSuite{
 
         // .trace() collects additional metadata to use for error reporting
         val trace = f.trace()
-
 
         // `.msg` records the last parser that failed, which is "c", and
         // `.longMsg` also shows the parsing stack at point of failure
@@ -70,7 +68,6 @@ object ExampleTests extends TestSuite{
         val Parsed.Failure(_, 1, _) = parse("aa", ab(_))
       }
 
-
       test("repeat"){
         def ab[$: P] = P( "a".rep ~ "b" )
         val Parsed.Success(_, 8) = parse("aaaaaaab", ab(_))
@@ -80,7 +77,7 @@ object ExampleTests extends TestSuite{
         val Parsed.Success(_, 8) = parse("abababac", abc(_))
         val Parsed.Failure(_, 3, _) = parse("abaabac", abc(_))
 
-        def ab4[$: P] = P( "a".rep(min=2, max=4, sep="b", exactly = -1) )
+        def ab4[$: P] = P( "a".rep(min=2, max=4, sep="b") )
         val Parsed.Success(_, 7) = parse("ababababababa", ab4(_))
 
         def ab2exactly[$: P] = P( "ab".rep(exactly=2) )

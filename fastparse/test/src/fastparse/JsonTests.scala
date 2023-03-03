@@ -31,7 +31,6 @@ case class NamedFunction[T, V](f: T => V, name: String) extends (T => V){
   def apply(t: T) = f(t)
   override def toString() = name
 }
-
 object Json{
   import fastparse._, NoWhitespace._
   def stringChars(c: Char) = c != '\"' && c != '\\'
