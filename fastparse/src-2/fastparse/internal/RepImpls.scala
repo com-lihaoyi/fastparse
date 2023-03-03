@@ -149,7 +149,9 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
                      outerCut: Boolean,
                      sepMsg: Msgs,
                      lastAgg: Msgs): ParsingRun[V] = {
+
       ctx.cut = precut | (count < min && outerCut)
+
       if (count == 0 && actualMax == 0) ctx.freshSuccess(repeater.result(acc), startIndex)
       else {
         parse0()
@@ -172,17 +174,18 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
             if (verboseFailures) ctx.setMsg(startIndex, () => parsedMsg.render + ".rep" + (if(min == 0) "" else s"($min)"))
             res
           }
+          else if (!consumeWhitespace(whitespace, ctx, false)) ctx.asInstanceOf[ParsingRun[Nothing]]
           else {
-            if (whitespace ne NoWhitespace.noWhitespaceImplicit) Util.consumeWhitespace(whitespace, ctx)
-
             ctx.cut = false
             val sep1 = sep
             val sepCut = ctx.cut
             val endCut = outerCut | postCut | sepCut
             if (sep1 == null) rec(beforeSepIndex, nextCount, false, endCut, null, parsedAgg)
             else if (ctx.isSuccess) {
-              if (whitespace ne NoWhitespace.noWhitespaceImplicit) Util.consumeWhitespace(whitespace, ctx)
-              rec(beforeSepIndex, nextCount, sepCut, endCut, ctx.shortParserMsg, parsedAgg)
+              if (!consumeWhitespace(whitespace, ctx, sepCut)) ctx.asInstanceOf[ParsingRun[Nothing]]
+              else {
+                rec(beforeSepIndex, nextCount, sepCut, endCut, ctx.shortParserMsg, parsedAgg)
+              }
             }
             else {
               val res =
@@ -192,13 +195,13 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
               if (verboseFailures) aggregateMsgPostSep(startIndex, min, ctx, parsedMsg, parsedAgg)
               res
             }
-
           }
         }
       }
     }
     rec(ctx.index, 0, false, ctx.cut, null, null)
   }
+
   def rep[V](min: Int,
              sep: => ParsingRun[_])
             (implicit repeater: Implicits.Repeater[T, V],
@@ -234,30 +237,39 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
         val beforeSepIndex = ctx.index
         repeater.accumulate(ctx.successValue.asInstanceOf[T], acc)
         val nextCount = count + 1
-        if (whitespace ne NoWhitespace.noWhitespaceImplicit) Util.consumeWhitespace(whitespace, ctx)
-
-        ctx.cut = false
-        val sep1 = sep
-        val sepCut = ctx.cut
-        val endCut = outerCut | postCut | sepCut
-        if (sep1 == null) rec(beforeSepIndex, nextCount, false, endCut, null, parsedAgg)
-        else if (ctx.isSuccess) {
-          if (whitespace ne NoWhitespace.noWhitespaceImplicit) Util.consumeWhitespace(whitespace, ctx)
-
-          rec(beforeSepIndex, nextCount, sepCut, endCut, ctx.shortParserMsg, parsedAgg)
-        }
+        if (!consumeWhitespace(whitespace, ctx, false)) ctx.asInstanceOf[ParsingRun[Nothing]]
         else {
-          val res =
-            if (sepCut) ctx.augmentFailure(beforeSepIndex, endCut)
-            else end(beforeSepIndex, beforeSepIndex, nextCount, endCut)
+          ctx.cut = false
+          val sep1 = sep
+          val sepCut = ctx.cut
+          val endCut = outerCut | postCut | sepCut
+          if (sep1 == null) rec(beforeSepIndex, nextCount, false, endCut, null, parsedAgg)
+          else if (ctx.isSuccess) {
+            if (!consumeWhitespace(whitespace, ctx, sepCut)) ctx.asInstanceOf[ParsingRun[Nothing]]
+            else {
+              rec(beforeSepIndex, nextCount, sepCut, endCut, ctx.shortParserMsg, parsedAgg)
+            }
+          }
+          else {
+            val res =
+              if (sepCut) ctx.augmentFailure(beforeSepIndex, endCut)
+              else end(beforeSepIndex, beforeSepIndex, nextCount, endCut)
 
-          if (verboseFailures) aggregateMsgPostSep(startIndex, min, ctx, parsedMsg, parsedAgg)
-          res
+            if (verboseFailures) aggregateMsgPostSep(startIndex, min, ctx, parsedMsg, parsedAgg)
+            res
+          }
         }
-
       }
     }
     rec(ctx.index, 0, false, ctx.cut, null, null)
   }
 
+  private def consumeWhitespace(whitespace: fastparse.Whitespace, ctx: ParsingRun[_], extraCut: Boolean) = {
+    if (whitespace eq NoWhitespace.noWhitespaceImplicit) true
+    else {
+      Util.consumeWhitespace(whitespace, ctx)
+      if (!ctx.isSuccess && (extraCut || ctx.cut)) false
+      else true
+    }
+  }
 }

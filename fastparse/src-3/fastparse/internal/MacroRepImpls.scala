@@ -66,10 +66,14 @@ object MacroRepImpls {
                        sepMsg: Msgs,
                        lastAgg: Msgs): ParsingRun[V] = ${
 
-        val consumeWhitespace =
+        def consumeWhitespace(extraCut: Expr[Boolean])(x: Expr[ParsingRun[V]]) =
           if whitespace.asTerm.tpe =:= TypeRepr.of[fastparse.NoWhitespace.noWhitespaceImplicit.type]
-          then '{}
-          else '{ Util.consumeWhitespace($whitespace, ctx) }
+          then x
+          else '{
+            Util.consumeWhitespace($whitespace, ctx)
+            if (!ctx.isSuccess && ($extraCut || ctx.cut)) ctx.asInstanceOf[ParsingRun[Nothing]]
+            else { $x }
+          }
 
         val ctxCut = staticActualMin match{
           case Some(-1) => '{ precut }
@@ -80,7 +84,6 @@ object MacroRepImpls {
           case Some(v) if v != 0 => '{false}
           case _ => '{ count == 0 && actualMax == 0 }
         }
-
 
         '{
           ctx.cut = $ctxCut
@@ -113,38 +116,42 @@ object MacroRepImpls {
                     res
                   }
                   else {
-                    $consumeWhitespace
-
-                    ctx.cut = false
                     ${
-                      sep match {
-                        case '{ null } =>
-                          '{
-                            rec(beforeSepIndex, nextCount, false, outerCut | postCut, null, parsedAgg)
-                          }
-                        case _ =>
-                          '{
-                            val sep1 = $sep
-                            val sepCut = ctx.cut
-                            val endCut = outerCut | postCut | sepCut
-                            if (sep1 == null) rec(beforeSepIndex, nextCount, false, endCut, null, parsedAgg)
-                            else if (ctx.isSuccess) {
-                              $consumeWhitespace
-                              rec(beforeSepIndex, nextCount, sepCut, endCut, ctx.shortParserMsg, parsedAgg)
-                            }
-                            else {
-                              val res =
-                                if (sepCut) ctx.augmentFailure(beforeSepIndex, endCut)
-                                else end(beforeSepIndex, beforeSepIndex, nextCount, endCut)
+                      consumeWhitespace('{false})('{
+                        ctx.cut = false
+                        ${
+                          sep match {
+                            case '{ null } =>
+                              '{
+                                rec(beforeSepIndex, nextCount, false, outerCut | postCut, null, parsedAgg)
+                              }
+                            case _ =>
+                              '{
+                                val sep1 = $sep
+                                val sepCut = ctx.cut
+                                val endCut = outerCut | postCut | sepCut
+                                if (sep1 == null) rec(beforeSepIndex, nextCount, false, endCut, null, parsedAgg)
+                                else if (ctx.isSuccess) {
+                                  ${
+                                    consumeWhitespace('{sepCut})('{
+                                      rec(beforeSepIndex, nextCount, sepCut, endCut, ctx.shortParserMsg, parsedAgg)
+                                    })
+                                  }
+                                }
+                                else {
+                                  val res =
+                                    if (sepCut) ctx.augmentFailure(beforeSepIndex, endCut)
+                                    else end(beforeSepIndex, beforeSepIndex, nextCount, endCut)
 
-                              if (verboseFailures) Util.aggregateMsgPostSep(startIndex, actualMin, ctx, parsedMsg, parsedAgg)
-                              res
-                            }
+                                  if (verboseFailures) Util.aggregateMsgPostSep(startIndex, actualMin, ctx, parsedMsg, parsedAgg)
+                                  res
+                                }
+                              }
                           }
-                      }
+                        }
+                      })
                     }
                   }
-
                 }
               }
             }

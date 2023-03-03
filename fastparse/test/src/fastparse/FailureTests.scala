@@ -436,12 +436,47 @@ object FailureTests extends TestSuite{
     }
     test("whitespaceFail"){
       import ScalaWhitespace._
-      checkOffset(
+      test("noSeparator1") - checkOffset(
         input = "a a /* */  a  a /* a a a",
         expected = """"*/"""",
         terminals = "\"*/\"",
         label = "\"*/\"",
         parser = { implicit c => "a".rep }
+      )
+      test("noSeparator2") - checkOffset(
+        input = "a a /* */  a  a /* a a a",
+        expected = """"*/"""",
+        terminals = "\"*/\"",
+        label = "\"*/\"",
+        parser = { implicit c => "a".rep(1) }
+      )
+      test("afterSeparator1") - checkOffset(
+        input = "a b a b /* */ a b a b   a  b/* a a a",
+        expected = """"*/"""",
+        terminals = "\"*/\"",
+        label = "\"*/\"",
+        parser = { implicit c => "a".rep(1, sep = "b") }
+      )
+      test("afterSeparator2") - checkOffset(
+        input = "a b a b /* */ a b a b   a  b/* a a a",
+        expected = """"*/"""",
+        terminals = "\"*/\"",
+        label = "\"*/\"",
+        parser = { implicit c => "a".rep(sep = "b") }
+      )
+      test("beforeSeparator1") - checkOffset(
+        input = "a b a b /* */ a b a b   a  /* a a a",
+        expected = """"*/"""",
+        terminals = "\"*/\"",
+        label = "\"*/\"",
+        parser = { implicit c => "a".rep(1, sep = "b") }
+      )
+      test("beforeSeparator2") - checkOffset(
+        input = "a b a b /* */ a b a b   a  /* a a a",
+        expected = """"*/"""",
+        terminals = "\"*/\"",
+        label = "\"*/\"",
+        parser = { implicit c => "a".rep(sep = "b") }
       )
     }
   }
