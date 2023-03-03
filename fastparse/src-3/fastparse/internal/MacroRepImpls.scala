@@ -115,39 +115,36 @@ object MacroRepImpls {
                   else {
                     $consumeWhitespace
 
-                    if (!ctx.isSuccess && ctx.cut) ctx.asInstanceOf[ParsingRun[Nothing]]
-                    else {
-                      ctx.cut = false
-                      ${
-                        sep match {
-                          case '{ null } =>
-                            '{
-                              rec(beforeSepIndex, nextCount, false, outerCut | postCut, null, parsedAgg)
+                    ctx.cut = false
+                    ${
+                      sep match {
+                        case '{ null } =>
+                          '{
+                            rec(beforeSepIndex, nextCount, false, outerCut | postCut, null, parsedAgg)
+                          }
+                        case _ =>
+                          '{
+                            val sep1 = $sep
+                            val sepCut = ctx.cut
+                            val endCut = outerCut | postCut | sepCut
+                            if (sep1 == null) rec(beforeSepIndex, nextCount, false, endCut, null, parsedAgg)
+                            else if (ctx.isSuccess) {
+                              $consumeWhitespace
+                              rec(beforeSepIndex, nextCount, sepCut, endCut, ctx.shortParserMsg, parsedAgg)
                             }
-                          case _ =>
-                            '{
-                              val sep1 = $sep
-                              val sepCut = ctx.cut
-                              val endCut = outerCut | postCut | sepCut
-                              if (sep1 == null) rec(beforeSepIndex, nextCount, false, endCut, null, parsedAgg)
-                              else if (ctx.isSuccess) {
-                                $consumeWhitespace
-                                if (!ctx.isSuccess && sepCut) ctx.asInstanceOf[ParsingRun[Nothing]]
-                                else rec(beforeSepIndex, nextCount, sepCut, endCut, ctx.shortParserMsg, parsedAgg)
-                              }
-                              else {
-                                val res =
-                                  if (sepCut) ctx.augmentFailure(beforeSepIndex, endCut)
-                                  else end(beforeSepIndex, beforeSepIndex, nextCount, endCut)
+                            else {
+                              val res =
+                                if (sepCut) ctx.augmentFailure(beforeSepIndex, endCut)
+                                else end(beforeSepIndex, beforeSepIndex, nextCount, endCut)
 
-                                if (verboseFailures) Util.aggregateMsgPostSep(startIndex, actualMin, ctx, parsedMsg, parsedAgg)
-                                res
-                              }
+                              if (verboseFailures) Util.aggregateMsgPostSep(startIndex, actualMin, ctx, parsedMsg, parsedAgg)
+                              res
                             }
-                        }
+                          }
                       }
                     }
                   }
+
                 }
               }
             }

@@ -983,5 +983,14 @@ object FailureTests extends TestSuite{
       found = ""
     )
 
+    test - checkNeg(
+      """object foo
+        |/*
+        |    """.stripMargin,
+      aggregate = """"*/"""",
+      terminals = null,
+      found = ""
+    )
+
   }
 }
