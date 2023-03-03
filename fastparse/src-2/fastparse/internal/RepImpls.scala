@@ -2,8 +2,9 @@ package fastparse.internal
 
 
 import fastparse.{Implicits, NoWhitespace, ParsingRun}
-
+import Util.{aggregateMsgInRep, aggregateMsgPostSep}
 import scala.annotation.tailrec
+
 
 class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
   def repX[V](min: Int = 0,
@@ -262,51 +263,6 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
       }
     }
     rec(ctx.index, 0, false, ctx.cut, null, null)
-  }
-
-  private def aggregateMsgPostSep[V](startIndex: Int,
-                                     min: Int,
-                                     ctx: ParsingRun[Any],
-                                     parsedMsg: Msgs,
-                                     lastAgg: Msgs) = {
-    ctx.aggregateMsg(
-      startIndex,
-      () => parsedMsg.render + s".rep($min)",
-      // When we fail on a sep, we collect the failure aggregate of the last
-      // non-sep rep body together with the failure aggregate of the sep, since
-      // the last non-sep rep body continuing is one of the valid ways of
-      // continuing the parse
-      ctx.failureGroupAggregate ::: lastAgg
-
-    )
-  }
-
-  private def aggregateMsgInRep[V](startIndex: Int,
-                                   min: Int,
-                                   ctx: ParsingRun[Any],
-                                   sepMsg: Msgs,
-                                   parsedMsg: Msgs,
-                                   lastAgg: Msgs,
-                                   precut: Boolean) = {
-    if (sepMsg == null || precut) {
-      ctx.aggregateMsg(
-        startIndex,
-        () => parsedMsg.render + s".rep($min)",
-        if (lastAgg == null) ctx.failureGroupAggregate
-        else ctx.failureGroupAggregate ::: lastAgg
-      )
-    } else {
-      ctx.aggregateMsg(
-        startIndex,
-        () => parsedMsg.render + s".rep($min)",
-        // When we fail on a rep body, we collect both the concatenated
-        // sep and failure aggregate  of the rep body that we tried (because
-        // we backtrack past the sep on failure) as well as the failure
-        // aggregate of the previous rep, which we could have continued
-        if (lastAgg == null) Util.joinBinOp(sepMsg, parsedMsg)
-        else Util.joinBinOp(sepMsg, parsedMsg) ::: lastAgg
-      )
-    }
   }
 
 }

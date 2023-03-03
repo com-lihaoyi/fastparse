@@ -16,94 +16,102 @@ import scala.quoted.*
   * in the hot paths.
   */
 object MacroRepImpls {
-  def repXMacro0[T: Type, V: Type](
-      lhs: Expr[ParsingRun[T]],
-      whitespace: Null | Expr[fastparse.Whitespace],
-      min: Null | Expr[Int],
-  )(repeater: Expr[Implicits.Repeater[T, V]], ctx: Expr[ParsingRun[_]])(using quotes: Quotes): Expr[ParsingRun[V]] = {
+  def repMacro0[T: Type, V: Type](
+      parse0: Expr[ParsingRun[T]],
+      sep: Expr[ParsingRun[_]],
+      whitespace: Expr[fastparse.Whitespace],
+      min: Expr[Int],
+      max: Expr[Int],
+      exactly: Expr[Int],
+  )(repeater0: Expr[Implicits.Repeater[T, V]],
+    ctx0: Expr[ParsingRun[_]])(using quotes: Quotes): Expr[ParsingRun[V]] = {
     import quotes.reflect.*
-
     '{
 
-      val ctx1        = $ctx
-      val repeater1   = $repeater
-      var originalCut = ctx1.cut
-      val acc         = repeater1.initial
-      @ _root_.scala.annotation.tailrec
-      def rec(
-          startIndex: _root_.scala.Int,
-          count: _root_.scala.Int,
-          lastAgg: _root_.fastparse.internal.Msgs
-      ): _root_.fastparse.P[V] = {
-        ${
-          val (endSnippet, aggregateSnippet, minCut) = min match {
-            case null =>
-              (
-                '{
-                  ctx1.freshSuccess(repeater1.result(acc), startIndex, originalCut)
-                },
-                '{ "" },
-                '{ false }
-              )
-            case min1 =>
-              (
-                '{
-                  if (count < $min1) ctx1.augmentFailure(startIndex, originalCut)
-                  else ctx1.freshSuccess(repeater1.result(acc), startIndex, originalCut)
-                },
-                '{ if ($min1 == 0) "" else "(" + $min1 + ")" },
-                '{ originalCut && (count < $min1) }
-              )
-          }
 
-          '{
+      val ctx = $ctx0
+      val repeater = $repeater0
+      val acc = repeater.initial
+      val actualMin = if ($exactly == -1) $min else $exactly
+      val actualMax = if ($exactly == -1) $max else $exactly
 
-            ctx1.cut = $minCut
-            $lhs
+      def end(successIndex: Int, index: Int, count: Int, endCut: Boolean) = {
+        if (count < actualMin) ctx.augmentFailure(index, endCut)
+        else ctx.freshSuccess(repeater.result(acc), successIndex, endCut)
+      }
 
-            val parsedMsg = ctx1.shortParserMsg
-            val parsedAgg = ctx1.failureGroupAggregate
-            originalCut |= ctx1.cut
-            if (!ctx1.isSuccess) {
-              val res =
-                if (ctx1.cut) ctx1.asInstanceOf[_root_.fastparse.P[V]]
-                else $endSnippet
-              if (ctx1.verboseFailures) {
-                ctx1.aggregateMsg(
-                  startIndex,
-                  () => parsedMsg.render + s".rep" + $aggregateSnippet,
-                  if (lastAgg == null) ctx1.failureGroupAggregate
-                  else ctx1.failureGroupAggregate ::: lastAgg
-                )
-              }
+      @tailrec def rec(startIndex: Int,
+                       count: Int,
+                       precut: Boolean,
+                       outerCut: Boolean,
+                       sepMsg: Msgs,
+                       lastAgg: Msgs): ParsingRun[V] = {
+
+        ctx.cut = precut | (count < actualMin && outerCut)
+        if (count == 0 && actualMax == 0) ctx.freshSuccess(repeater.result(acc), startIndex)
+        else {
+          $parse0
+          val parsedMsg = ctx.shortParserMsg
+          val parsedAgg = ctx.failureGroupAggregate
+          val postCut = ctx.cut
+          val verboseFailures = ctx.verboseFailures
+          if (!ctx.isSuccess) {
+            val res =
+              if (postCut) ctx.asInstanceOf[ParsingRun[V]]
+              else end(startIndex, startIndex, count, outerCut | postCut)
+            if (verboseFailures) fastparse.internal.Util.aggregateMsgInRep(startIndex, actualMin, ctx, sepMsg, parsedMsg, lastAgg, precut)
+            res
+          } else {
+            val beforeSepIndex = ctx.index
+            repeater.accumulate(ctx.successValue.asInstanceOf[T], acc)
+            val nextCount = count + 1
+            if (nextCount == actualMax) {
+              val res = end(beforeSepIndex, beforeSepIndex, nextCount, outerCut | postCut)
+              if (verboseFailures) ctx.setMsg(startIndex, () => parsedMsg.render + ".rep" + (if (actualMin == 0) "" else s"(${actualMin})"))
               res
-            } else {
-              val beforeSepIndex = ctx1.index
-              repeater1.accumulate(ctx1.successValue.asInstanceOf[T], acc)
-              ctx1.cut = false
-              ${
-                whitespace match {
-                  case null => '{ rec(beforeSepIndex, count + 1, parsedAgg) }
-                  case ws =>
-                    if (ws.asTerm.tpe =:= TypeRepr.of[fastparse.NoWhitespace.noWhitespaceImplicit.type]){
-                      '{ rec(beforeSepIndex, count + 1, parsedAgg) }
-                    } else {
+            }
+            else {
+              if ($whitespace ne NoWhitespace.noWhitespaceImplicit) Util.consumeWhitespace($whitespace, ctx)
+
+              if (!ctx.isSuccess && ctx.cut) ctx.asInstanceOf[ParsingRun[Nothing]]
+              else {
+                ctx.cut = false
+                ${
+                  sep match{
+                    case '{null} =>
                       '{
-                        _root_.fastparse.internal.Util.consumeWhitespace($ws, ctx1)
-                        if (!ctx1.isSuccess && ctx1.cut) ctx1.asInstanceOf[_root_.fastparse.ParsingRun[scala.Nothing]]
+                        rec(beforeSepIndex, nextCount, false, outerCut | postCut, null, parsedAgg)
+                      }
+                    case _ =>
+                      '{
+                        val sep1 = $sep
+                        val sepCut = ctx.cut
+                        val endCut = outerCut | postCut | sepCut
+                        if (sep1 == null) rec(beforeSepIndex, nextCount, false, endCut, null, parsedAgg)
+                        else if (ctx.isSuccess) {
+                          if ($whitespace ne NoWhitespace.noWhitespaceImplicit) Util.consumeWhitespace($whitespace, ctx)
+                          if (!ctx.isSuccess && sepCut) ctx.asInstanceOf[ParsingRun[Nothing]]
+                          else rec(beforeSepIndex, nextCount, sepCut, endCut, ctx.shortParserMsg, parsedAgg)
+                        }
                         else {
-                          ctx1.cut = false
-                          rec(beforeSepIndex, count + 1, parsedAgg)
+                          val res =
+                            if (sepCut) ctx.augmentFailure(beforeSepIndex, endCut)
+                            else end(beforeSepIndex, beforeSepIndex, nextCount, endCut)
+
+                          if (verboseFailures) fastparse.internal.Util.aggregateMsgPostSep(startIndex, actualMin, ctx, parsedMsg, parsedAgg)
+                          res
                         }
                       }
-                    }
+                  }
                 }
+
               }
             }
           }
         }
       }
-      rec(ctx1.index, 0, null)
+
+      rec(ctx.index, 0, false, ctx.cut, null, null)
     }
   }
 }
