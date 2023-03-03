@@ -104,6 +104,5 @@ object MacroRepImpls {
       }
       rec(ctx1.index, 0, null)
     }
-
   }
 }
