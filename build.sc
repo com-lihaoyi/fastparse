@@ -13,7 +13,7 @@ import de.tobiasroeser.mill.vcs.version.VcsVersion
 import $ivy.`com.github.lolgab::mill-mima::0.0.13`
 import com.github.lolgab.mill.mima._
 
-val scala31 = "3.1.3"
+val scala31 = "3.2.2"
 val scala213 = "2.13.10"
 val scala212 = "2.12.17"
 val scala211 = "2.11.12"

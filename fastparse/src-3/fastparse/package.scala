@@ -243,7 +243,7 @@ package object fastparse extends fastparse.SharedPackageDefs {
      * consuming zero characters.
      */
     def unary_!(implicit ctx: P[Any]): P[Unit] = SharedPackageDefs.unary_!(() => parse0)
-  end extension
+
 
   /** Provides logging-related [[LogByNameOps]] implicits on [[String]]. */
   implicit def LogOpsStr(parse0: String)(implicit ctx: P[Any]): fastparse.LogByNameOps[Unit] = LogByNameOps(parse0)

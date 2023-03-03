@@ -50,8 +50,8 @@ object MacroRepImpls {
 
         val consumeWhitespace =
           if whitespace.asTerm.tpe =:= TypeRepr.of[fastparse.NoWhitespace.noWhitespaceImplicit.type]
-          then '{ Util.consumeWhitespace($whitespace, ctx) }
-          else '{}
+          then '{}
+          else '{ Util.consumeWhitespace($whitespace, ctx) }
 
         '{
           ctx.cut = precut | (count < actualMin && outerCut)
@@ -85,7 +85,7 @@ object MacroRepImpls {
                   ctx.cut = false
                   ${
                     sep match {
-                      case '{ null } if false =>
+                      case '{ null } =>
                         '{
                           rec(beforeSepIndex, nextCount, false, outerCut | postCut, null, parsedAgg)
                         }
