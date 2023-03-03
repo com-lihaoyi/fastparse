@@ -184,7 +184,7 @@ final class ParsingRun[+T](val input: ParserInput,
   def aggregateMsg(startIndex: Int,
                    msgToSet: () => String,
                    msgToAggregate: Msgs): Unit = {
-    aggregateMsg(startIndex, Msgs(List(new Lazy(msgToSet))), msgToAggregate)
+    aggregateMsg(startIndex, Msgs(new Lazy(msgToSet) :: Nil), msgToAggregate)
   }
 
   def aggregateMsg(startIndex: Int,
@@ -212,15 +212,15 @@ final class ParsingRun[+T](val input: ParserInput,
     val f2 = new Lazy(f)
     if (!isSuccess){
       if (index == traceIndex) failureTerminalAggregate ::= f2
-      if (lastFailureMsg == null) lastFailureMsg = Msgs(List(f2))
+      if (lastFailureMsg == null) lastFailureMsg = Msgs(f2 :: Nil)
     }
 
-    shortParserMsg = if (startIndex >= traceIndex) Msgs(List(f2)) else Msgs.empty
+    shortParserMsg = if (startIndex >= traceIndex) Msgs(f2 :: Nil) else Msgs.empty
     failureGroupAggregate = if (checkAggregate(startIndex)) shortParserMsg else Msgs.empty
   }
 
   def setMsg(startIndex: Int, f: () => String): Unit = {
-    setMsg(startIndex, Msgs(List(new Lazy(f))))
+    setMsg(startIndex, Msgs(new Lazy(f) :: Nil))
   }
 
   def setMsg(startIndex: Int, f: Msgs): Unit = {

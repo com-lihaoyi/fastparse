@@ -100,7 +100,7 @@ object JavaWhitespace{
           else {
             ctx.cut = true
             val res = ctx.freshFailure(current)
-            if (ctx.verboseFailures) ctx.setMsg(startIndex, () => Util.literalize("*/"))
+            if (ctx.verboseFailures) ctx.aggregateTerminal(startIndex, () => Util.literalize("*/"))
             res
           }
         } else {
@@ -152,7 +152,8 @@ object JsonnetWhitespace{
           else {
             ctx.cut = true
             val res = ctx.freshFailure(current)
-            if (ctx.verboseFailures) ctx.setMsg(startIndex, () => Util.literalize("*/"))
+
+            if (ctx.verboseFailures) ctx.aggregateTerminal(startIndex, () => Util.literalize("*/"))
             res
           }
         } else {
@@ -204,7 +205,7 @@ object ScalaWhitespace {
           else {
             ctx.cut = true
             val res = ctx.freshFailure(current)
-            if (ctx.verboseFailures) ctx.setMsg(startIndex, () => Util.literalize("*/"))
+            if (ctx.verboseFailures) ctx.aggregateTerminal(startIndex, () => Util.literalize("*/"))
             res
           }
         } else {

@@ -135,7 +135,7 @@ package object fastparse extends fastparse.SharedPackageDefs {
       * index of the last run.
       */
     inline def rep[V](using repeater: Implicits.Repeater[T, V], whitespace: Whitespace, ctx: P[Any]): P[V] =
-      ${ MacroRepImpls.repXMacro0[T, V]('parse0, 'whitespace, null)('repeater, 'ctx) }
+      ${ MacroRepImpls.repMacro0[T, V]('parse0, '{null}, 'whitespace, '{0}, '{Int.MaxValue}, '{-1})('repeater, 'ctx) }
 
     /** Raw repeat operator; runs the LHS parser 0 or more times *without*
       * any whitespace in between, and returns
@@ -143,7 +143,7 @@ package object fastparse extends fastparse.SharedPackageDefs {
       * index of the last run.
       */
     inline def repX[V](using repeater: Implicits.Repeater[T, V], ctx: P[Any]): P[V] =
-      ${ MacroRepImpls.repXMacro0[T, V]('parse0, null, null)('repeater, 'ctx) }
+      ${ MacroRepImpls.repMacro0[T, V]('parse0, '{null}, '{fastparse.NoWhitespace.noWhitespaceImplicit}, '{0}, '{Int.MaxValue}, '{-1})('repeater, 'ctx) }
 
     /// ** Repeat operator; runs the LHS parser at least `min`
     //  * times separated by the given whitespace (in implicit scope),
@@ -173,19 +173,29 @@ package object fastparse extends fastparse.SharedPackageDefs {
       * The convenience parameter `exactly` is provided to set both `min` and
       * `max` to the same value.
       */
-    def rep[V](
-        min: Int = 0,
-        sep: => P[_] = null,
-        max: Int = Int.MaxValue,
-        exactly: Int = -1
+    inline def rep[V](
+        inline min: Int = 0,
+        inline sep: => P[_] = null,
+        inline max: Int = Int.MaxValue,
+        inline exactly: Int = -1
     )(using
         repeater: Implicits.Repeater[T, V],
         whitespace: Whitespace,
         ctx: P[Any]
-    ): P[V] =
-      if max == Int.MaxValue && exactly == -1
-      then new RepImpls[T](() => parse0).rep[V](min, sep)
-      else new RepImpls[T](() => parse0).rep[V](min, sep, max, exactly)
+    ): P[V] = ${
+      MacroRepImpls.repMacro0[T, V](
+        'parse0,
+        'sep,
+        'whitespace,
+        'min,
+        'max,
+        'exactly
+      )(
+        'repeater,
+        'ctx
+      )
+    }
+
 
     /** Raw repeat operator; runs the LHS parser at least `min` to at most `max`
       * times separated by the
@@ -195,18 +205,28 @@ package object fastparse extends fastparse.SharedPackageDefs {
       * The convenience parameter `exactly` is provided to set both `min` and
       * `max` to the same value.
       */
-    inline def repX[V, Max <: Int, Exact <: Int](
-        min: Int = 0,
-        sep: => P[_] = null,
-        inline max: Max = Int.MaxValue,
-        inline exactly: Exact = -1
+    inline def repX[V](
+        inline min: Int = 0,
+        inline sep: => P[_] = null,
+        inline max: Int = Int.MaxValue,
+        inline exactly: Int = -1
     )(implicit
         repeater: Implicits.Repeater[T, V],
         ctx: P[Any]
-    ): P[V] =
-      inline if max == Int.MaxValue && exactly == -1
-      then new RepImpls[T](() => parse0).repX[V](min, sep)
-      else new RepImpls[T](() => parse0).repX[V](min, sep, max, exactly)
+    ): P[V] = ${
+      MacroRepImpls.repMacro0[T, V](
+        'parse0,
+        'sep,
+        '{fastparse.NoWhitespace.noWhitespaceImplicit},
+        'min,
+        'max,
+        'exactly
+      )(
+        'repeater,
+        'ctx
+      )
+    }
+
 
 
     /**
@@ -223,7 +243,7 @@ package object fastparse extends fastparse.SharedPackageDefs {
      * consuming zero characters.
      */
     def unary_!(implicit ctx: P[Any]): P[Unit] = SharedPackageDefs.unary_!(() => parse0)
-  end extension
+
 
   /** Provides logging-related [[LogByNameOps]] implicits on [[String]]. */
   implicit def LogOpsStr(parse0: String)(implicit ctx: P[Any]): fastparse.LogByNameOps[Unit] = LogByNameOps(parse0)

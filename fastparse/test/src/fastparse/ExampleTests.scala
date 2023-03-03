@@ -53,6 +53,7 @@ object ExampleTests extends TestSuite{
         // aggregateMsg and longAggregateMsg record all parsers
         // failing at the position, "a" | "b" | "c",
 
+
         assert(
           trace.aggregateMsg == """Expected (parseEither | "c"):1:1, found "d"""",
           trace.longAggregateMsg == """Expected parseA:1:1 / (parseEither | "c"):1:1, found "d""""
