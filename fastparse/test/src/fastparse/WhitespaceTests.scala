@@ -7,7 +7,8 @@ import utest._
   */
 object WhitespaceTests extends TestSuite{
   val tests = Tests {
-    def checkCommon(p: P[Any] => P[Unit]) = {
+    def checkCommon(p0: Whitespace) = {
+      val p = p0.apply(_)
       val Parsed.Success((), 0) = parse("", p)
       val Parsed.Success((), 0) = parse("/", p)
       val Parsed.Success((), 1) = parse(" /", p)
@@ -25,20 +26,20 @@ object WhitespaceTests extends TestSuite{
     test("scala"){
       checkCommon(ScalaWhitespace.whitespace)
       // allow nested comments
-      val Parsed.Failure(_, 11, _) = parse("/** /* /**/", ScalaWhitespace.whitespace)
-      val Parsed.Success((), 8) = parse("/*/**/*/", ScalaWhitespace.whitespace)
+      val Parsed.Failure(_, 11, _) = parse("/** /* /**/", ScalaWhitespace.whitespace.apply(_))
+      val Parsed.Success((), 8) = parse("/*/**/*/", ScalaWhitespace.whitespace.apply(_))
     }
     test("java"){
       checkCommon(JavaWhitespace.whitespace)
       // no nested comments
-      val Parsed.Success((), 11) = parse("/** /* /**/", JavaWhitespace.whitespace)
-      val Parsed.Success((), 6) = parse("/*/**/*/", JavaWhitespace.whitespace)
+      val Parsed.Success((), 11) = parse("/** /* /**/", JavaWhitespace.whitespace.apply(_))
+      val Parsed.Success((), 6) = parse("/*/**/*/", JavaWhitespace.whitespace.apply(_))
     }
     test("jsonnet"){
       checkCommon(JsonnetWhitespace.whitespace)
       // no nested comments
-      val Parsed.Success((), 11) = parse("/** /* /**/", JsonnetWhitespace.whitespace)
-      val Parsed.Success((), 6) = parse("/*/**/*/", JsonnetWhitespace.whitespace)
+      val Parsed.Success((), 11) = parse("/** /* /**/", JsonnetWhitespace.whitespace.apply(_))
+      val Parsed.Success((), 6) = parse("/*/**/*/", JsonnetWhitespace.whitespace.apply(_))
     }
   }
 

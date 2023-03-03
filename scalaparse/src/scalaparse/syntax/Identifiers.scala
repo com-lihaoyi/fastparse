@@ -15,24 +15,24 @@ object Identifiers{
   val OpCharNotSlash = NamedFunction(x => isOpChar(x) && x != '/')
   val NotBackTick = NamedFunction(_ != '`')
 
-  def Operator[_: P] = P(
+  def Operator[$: P] = P(
     !SymbolicKeywords ~ (!StringIn("/*", "//") ~ (CharsWhile(OpCharNotSlash) | "/")).rep(1)
   ).opaque("operator")
 
-  def VarId[_: P] = P( VarId0(true) ).opaque("var-id")
+  def VarId[$: P] = P( VarId0(true) ).opaque("var-id")
 
-  def VarId0[_: P](dollar: Boolean) = P( !Keywords ~ Lower ~ IdRest(dollar) )
+  def VarId0[$: P](dollar: Boolean) = P( !Keywords ~ Lower ~ IdRest(dollar) )
 
-  def UppercaseId[_: P](dollar: Boolean) = P( !Keywords ~ Upper ~ IdRest(dollar) )
-  def PlainId[_: P] = P( UppercaseId(true) | VarId | Operator ~ (!OpChar | &(StringIn("/*", "//"))) )
+  def UppercaseId[$: P](dollar: Boolean) = P( !Keywords ~ Upper ~ IdRest(dollar) )
+  def PlainId[$: P] = P( UppercaseId(true) | VarId | Operator ~ (!OpChar | &(StringIn("/*", "//"))) )
     .opaque("plain-id")
 
-  def PlainIdNoDollar[_: P] = P( UppercaseId(false) | VarId0(false) | Operator ).opaque("plain-id")
+  def PlainIdNoDollar[$: P] = P( UppercaseId(false) | VarId0(false) | Operator ).opaque("plain-id")
 
-  def BacktickId[_: P] = P( "`" ~ CharsWhile(NotBackTick) ~ "`" )
-  def Id[_: P]: P[Unit] = P( BacktickId | PlainId ).opaque("id")
+  def BacktickId[$: P] = P( "`" ~ CharsWhile(NotBackTick) ~ "`" )
+  def Id[$: P]: P[Unit] = P( BacktickId | PlainId ).opaque("id")
 
-  def IdRest[_: P](allowDollar: Boolean) = {
+  def IdRest[$: P](allowDollar: Boolean) = {
 
     val IdCharacter =
       if(allowDollar) NamedFunction(c => c == '$' || isLetter(c) || isDigit(c))
@@ -42,7 +42,7 @@ object Identifiers{
     P( IdUnderscoreChunk.rep ~ (CharsWhileIn("_") ~ CharsWhile(isOpChar, 0)).? )
   }
 
-  def AlphabetKeywords[_: P] = P {
+  def AlphabetKeywords[$: P] = P {
     StringIn("abstract", "case", "catch", "class", "def", "do", "else",
       "extends", "false", "finally", "final", "finally", "forSome",
       "for", "if", "implicit", "import", "lazy", "match", "new",
@@ -52,9 +52,9 @@ object Identifiers{
       !CharPred(Basic.LetterDigitDollarUnderscore)
   }.opaque("AlphabetKeywords")
 
-  def SymbolicKeywords[_: P] = P{
+  def SymbolicKeywords[$: P] = P{
     StringIn(":", ";", "=>", "=", "<-", "<:", "<%", ">:", "#", "@", "\u21d2", "\u2190") ~ !OpChar
   }.opaque("SymbolicKeywords")
 
-  def Keywords[_: P] = P( AlphabetKeywords | SymbolicKeywords )
+  def Keywords[$: P] = P( AlphabetKeywords | SymbolicKeywords )
 }

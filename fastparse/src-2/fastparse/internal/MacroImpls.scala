@@ -54,7 +54,7 @@ object MacroImpls {
           if (ctx0.verboseFailures) {
             ctx0.aggregateMsg(
               startIndex,
-              Msgs(List(new Lazy(() => name.splice.value))),
+              Msgs(new Lazy(() => name.splice.value) :: Nil),
               ctx0.failureGroupAggregate,
               startIndex < ctx0.traceIndex
             )
@@ -196,7 +196,7 @@ object MacroImpls {
   def flatMapMacro[T: c.WeakTypeTag, V: c.WeakTypeTag]
                   (c: Context)
                   (f: c.Expr[T => ParsingRun[V]])
-                  (whitespace: c.Expr[ParsingRun[Any] => ParsingRun[Unit]]): c.Expr[ParsingRun[V]] = {
+                  (whitespace: c.Expr[fastparse.Whitespace]): c.Expr[ParsingRun[V]] = {
     import c.universe._
 
     val lhs0 = c.prefix.asInstanceOf[c.Expr[EagerOps[T]]]
@@ -439,7 +439,7 @@ object MacroImpls {
                      (c: Context)
                      (rhs: c.Expr[ParsingRun[V]], cut: Boolean)
                      (s: c.Expr[Implicits.Sequencer[T, V, R]],
-                      whitespace: Option[c.Expr[ParsingRun[Any] => ParsingRun[Unit]]],
+                      whitespace: Option[c.Expr[fastparse.Whitespace]],
                       ctx: c.Expr[ParsingRun[_]]): c.Expr[ParsingRun[R]] = {
     import c.universe._
 
@@ -708,7 +708,7 @@ object MacroImpls {
                     (c: Context)
                     (other: c.Expr[ParsingRun[V]])
                     (s: c.Expr[Implicits.Sequencer[T, V, R]],
-                     whitespace: c.Expr[ParsingRun[Any] => ParsingRun[Unit]],
+                     whitespace: c.Expr[fastparse.Whitespace],
                      ctx: c.Expr[ParsingRun[_]]): c.Expr[ParsingRun[R]] = {
     MacroImpls.parsedSequence0[T, V, R](c)(other, false)(s, Some(whitespace), ctx)
   }
@@ -717,7 +717,7 @@ object MacroImpls {
                        (c: Context)
                        (other: c.Expr[ParsingRun[V]])
                        (s: c.Expr[Implicits.Sequencer[T, V, R]],
-                        whitespace: c.Expr[ParsingRun[Any] => ParsingRun[Unit]],
+                        whitespace: c.Expr[fastparse.Whitespace],
                         ctx: c.Expr[ParsingRun[_]]): c.Expr[ParsingRun[R]] = {
     MacroImpls.parsedSequence0[T, V, R](c)(other, true)(s, Some(whitespace), ctx)
   }

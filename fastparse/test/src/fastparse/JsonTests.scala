@@ -30,43 +30,42 @@ object Js {
 case class NamedFunction[T, V](f: T => V, name: String) extends (T => V){
   def apply(t: T) = f(t)
   override def toString() = name
-
 }
 object Json{
   import fastparse._, NoWhitespace._
   def stringChars(c: Char) = c != '\"' && c != '\\'
 
-  def space[_: P]         = P( CharsWhileIn(" \r\n", 0) )
-  def digits[_: P]        = P( CharsWhileIn("0-9") )
-  def exponent[_: P]      = P( CharIn("eE") ~ CharIn("+\\-").? ~ digits )
-  def fractional[_: P]    = P( "." ~ digits )
-  def integral[_: P]      = P( "0" | CharIn("1-9")  ~ digits.? )
+  def space[$: P]         = P( CharsWhileIn(" \r\n", 0) )
+  def digits[$: P]        = P( CharsWhileIn("0-9") )
+  def exponent[$: P]      = P( CharIn("eE") ~ CharIn("+\\-").? ~ digits )
+  def fractional[$: P]    = P( "." ~ digits )
+  def integral[$: P]      = P( "0" | CharIn("1-9")  ~ digits.? )
 
-  def number[_: P] = P(  CharIn("+\\-").? ~ integral ~ fractional.? ~ exponent.? ).!.map(
+  def number[$: P] = P(  CharIn("+\\-").? ~ integral ~ fractional.? ~ exponent.? ).!.map(
     x => Js.Num(x.toDouble)
   )
 
-  def `null`[_: P]        = P( "null" ).map(_ => Js.Null)
-  def `false`[_: P]       = P( "false" ).map(_ => Js.False)
-  def `true`[_: P]        = P( "true" ).map(_ => Js.True)
+  def `null`[$: P]        = P( "null" ).map(_ => Js.Null)
+  def `false`[$: P]       = P( "false" ).map(_ => Js.False)
+  def `true`[$: P]        = P( "true" ).map(_ => Js.True)
 
-  def hexDigit[_: P]      = P( CharIn("0-9a-fA-F") )
-  def unicodeEscape[_: P] = P( "u" ~ hexDigit ~ hexDigit ~ hexDigit ~ hexDigit )
-  def escape[_: P]        = P( "\\" ~ (CharIn("\"/\\\\bfnrt") | unicodeEscape) )
+  def hexDigit[$: P]      = P( CharIn("0-9a-fA-F") )
+  def unicodeEscape[$: P] = P( "u" ~ hexDigit ~ hexDigit ~ hexDigit ~ hexDigit )
+  def escape[$: P]        = P( "\\" ~ (CharIn("\"/\\\\bfnrt") | unicodeEscape) )
 
-  def strChars[_: P] = P( CharsWhile(stringChars) )
-  def string[_: P] =
-    P( space ~ "\"" ~/ (strChars | escape).rep.! ~ "\"").map(Js.Str)
+  def strChars[$: P] = P( CharsWhile(stringChars) )
+  def string[$: P] =
+    P( space ~ "\"" ~/ (strChars | escape).rep.! ~ "\"").map(Js.Str.apply)
 
-  def array[_: P] =
+  def array[$: P] =
     P( "[" ~/ jsonExpr.rep(sep=","./) ~ space ~ "]").map(Js.Arr(_:_*))
 
-  def pair[_: P] = P( string.map(_.value) ~/ ":" ~/ jsonExpr )
+  def pair[$: P] = P( string.map(_.value) ~/ ":" ~/ jsonExpr )
 
-  def obj[_: P] =
+  def obj[$: P] =
     P( "{" ~/ pair.rep(sep=","./) ~ space ~ "}").map(Js.Obj(_:_*))
 
-  def jsonExpr[_: P]: P[Js.Val] = P(
+  def jsonExpr[$: P]: P[Js.Val] = P(
     space ~ (obj | array | string | `true` | `false` | `null` | number) ~ space
   )
 }

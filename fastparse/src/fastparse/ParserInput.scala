@@ -28,7 +28,7 @@ object ParserInputSource extends ParserInputSourceLowPri {
 }
 trait ParserInputSourceLowPri{
 
-  implicit def fromReadable[T](s: T)(implicit f: T => geny.Readable) = FromReadable(
+  implicit def fromReadable[T](s: T)(implicit f: T => geny.Readable): FromReadable = FromReadable(
     f(s),
     // Default bufferSize of 4096. Somewhat arbitrary, but doesn't seem to matter 
     // much in benchmarks, e.g. on parsing `GenJSCode.scala`:
@@ -53,8 +53,8 @@ trait ParserInputSourceLowPri{
 }
 
 object ParserInput{
-  implicit def fromString(s: String) = IndexedParserInput(s)
-  implicit def FromIterator(s: Iterator[String]) = IteratorParserInput(s)
+  implicit def fromString(s: String): IndexedParserInput = IndexedParserInput(s)
+  implicit def FromIterator(s: Iterator[String]): IteratorParserInput = IteratorParserInput(s)
 }
 /**
   * ParserInput class represents data that is needed to parse.
@@ -94,7 +94,7 @@ abstract class ParserInput extends IsReachable {
 }
 
 case class IndexedParserInput(data: String) extends ParserInput {
-  override def apply(index: Int) = data.charAt(index)
+  override def apply(index: Int): Char = data.charAt(index)
 
   /**
     * As for `IndexedSeq` mode `dropBuffer` does nothing.
