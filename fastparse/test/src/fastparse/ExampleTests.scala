@@ -68,6 +68,7 @@ object ExampleTests extends TestSuite{
 //        val Parsed.Failure(_, 1, _) = parse("aa", ab(_))
 //      }
 
+
       test("repeat"){
 //        def ab[$: P] = P( "a".rep ~ "b" )
 //        val Parsed.Success(_, 8) = parse("aaaaaaab", ab(_))
