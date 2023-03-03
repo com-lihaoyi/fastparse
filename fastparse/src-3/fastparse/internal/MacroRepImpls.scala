@@ -27,18 +27,36 @@ object MacroRepImpls {
     ctx0: Expr[ParsingRun[_]])(using quotes: Quotes): Expr[ParsingRun[V]] = {
     import quotes.reflect.*
 
+    def getInlineExpansionValue(t: Term): Option[Int] = {
+      t match{
+        case Inlined(a, b, c) => getInlineExpansionValue(c)
+        case _ => t.asExprOf[Int].value
+      }
+    }
+
+    val staticMin0 = getInlineExpansionValue(min.asTerm)
+    val staticMax0 = getInlineExpansionValue(max.asTerm)
+    val staticExactly0 = getInlineExpansionValue(exactly.asTerm)
+
+    val staticActualMin = staticMin0.zip(staticExactly0).map{(m, e) => if (e == -1) m else e}
+    val staticActualMax = staticMax0.zip(staticExactly0).map{(m, e) => if (e == -1) m else e}
+
     '{
-
-
       val ctx = $ctx0
       val repeater = $repeater0
       val acc = repeater.initial
       val actualMin = if ($exactly == -1) $min else $exactly
       val actualMax = if ($exactly == -1) $max else $exactly
 
-      def end(successIndex: Int, index: Int, count: Int, endCut: Boolean) = {
-        if (count < actualMin) ctx.augmentFailure(index, endCut)
-        else ctx.freshSuccess(repeater.result(acc), successIndex, endCut)
+      def end(successIndex: Int, index: Int, count: Int, endCut: Boolean) = ${
+        staticActualMin match{
+          case Some(-1) => '{ ctx.freshSuccess(repeater.result(acc), successIndex, endCut) }
+          case _ =>
+            '{
+              if (count < actualMin) ctx.augmentFailure(index, endCut)
+              else ctx.freshSuccess(repeater.result(acc), successIndex, endCut)
+            }
+        }
       }
 
       @tailrec def rec(startIndex: Int,
@@ -53,9 +71,20 @@ object MacroRepImpls {
           then '{}
           else '{ Util.consumeWhitespace($whitespace, ctx) }
 
+        val ctxCut = staticActualMin match{
+          case Some(-1) => '{ precut }
+          case _ => '{ precut | (count < actualMin && outerCut) }
+        }
+
+        val checkMax0 = staticActualMax match{
+          case Some(v) if v != 0 => '{false}
+          case _ => '{ count == 0 && actualMax == 0 }
+        }
+
+
         '{
-          ctx.cut = precut | (count < actualMin && outerCut)
-          if (count == 0 && actualMax == 0) ctx.freshSuccess(repeater.result(acc), startIndex)
+          ctx.cut = $ctxCut
+          if ($checkMax0) ctx.freshSuccess(repeater.result(acc), startIndex)
           else {
             $parse0
             val parsedMsg = ctx.shortParserMsg
@@ -72,46 +101,53 @@ object MacroRepImpls {
               val beforeSepIndex = ctx.index
               repeater.accumulate(ctx.successValue.asInstanceOf[T], acc)
               val nextCount = count + 1
-              if (nextCount == actualMax) {
-                val res = end(beforeSepIndex, beforeSepIndex, nextCount, outerCut | postCut)
-                if (verboseFailures) ctx.setMsg(startIndex, () => parsedMsg.render + ".rep" + (if (actualMin == 0) "" else s"(${actualMin})"))
-                res
-              }
-              else {
-                $consumeWhitespace
+              ${
+                val checkMax2 = staticActualMax match {
+                  case Some(Int.MaxValue) => '{ false }
+                  case _ => '{ nextCount == actualMax }
+                }
+                '{
+                  if ($checkMax2) {
+                    val res = end(beforeSepIndex, beforeSepIndex, nextCount, outerCut | postCut)
+                    if (verboseFailures) ctx.setMsg(startIndex, () => parsedMsg.render + ".rep" + (if (actualMin == 0) "" else s"(${actualMin})"))
+                    res
+                  }
+                  else {
+                    $consumeWhitespace
 
-                if (!ctx.isSuccess && ctx.cut) ctx.asInstanceOf[ParsingRun[Nothing]]
-                else {
-                  ctx.cut = false
-                  ${
-                    sep match {
-                      case '{ null } =>
-                        '{
-                          rec(beforeSepIndex, nextCount, false, outerCut | postCut, null, parsedAgg)
-                        }
-                      case _ =>
-                        '{
-                          val sep1 = $sep
-                          val sepCut = ctx.cut
-                          val endCut = outerCut | postCut | sepCut
-                          if (sep1 == null) rec(beforeSepIndex, nextCount, false, endCut, null, parsedAgg)
-                          else if (ctx.isSuccess) {
-                            $consumeWhitespace
-                            if (!ctx.isSuccess && sepCut) ctx.asInstanceOf[ParsingRun[Nothing]]
-                            else rec(beforeSepIndex, nextCount, sepCut, endCut, ctx.shortParserMsg, parsedAgg)
-                          }
-                          else {
-                            val res =
-                              if (sepCut) ctx.augmentFailure(beforeSepIndex, endCut)
-                              else end(beforeSepIndex, beforeSepIndex, nextCount, endCut)
+                    if (!ctx.isSuccess && ctx.cut) ctx.asInstanceOf[ParsingRun[Nothing]]
+                    else {
+                      ctx.cut = false
+                      ${
+                        sep match {
+                          case '{ null } =>
+                            '{
+                              rec(beforeSepIndex, nextCount, false, outerCut | postCut, null, parsedAgg)
+                            }
+                          case _ =>
+                            '{
+                              val sep1 = $sep
+                              val sepCut = ctx.cut
+                              val endCut = outerCut | postCut | sepCut
+                              if (sep1 == null) rec(beforeSepIndex, nextCount, false, endCut, null, parsedAgg)
+                              else if (ctx.isSuccess) {
+                                $consumeWhitespace
+                                if (!ctx.isSuccess && sepCut) ctx.asInstanceOf[ParsingRun[Nothing]]
+                                else rec(beforeSepIndex, nextCount, sepCut, endCut, ctx.shortParserMsg, parsedAgg)
+                              }
+                              else {
+                                val res =
+                                  if (sepCut) ctx.augmentFailure(beforeSepIndex, endCut)
+                                  else end(beforeSepIndex, beforeSepIndex, nextCount, endCut)
 
-                            if (verboseFailures) Util.aggregateMsgPostSep(startIndex, actualMin, ctx, parsedMsg, parsedAgg)
-                            res
-                          }
+                                if (verboseFailures) Util.aggregateMsgPostSep(startIndex, actualMin, ctx, parsedMsg, parsedAgg)
+                                res
+                              }
+                            }
                         }
+                      }
                     }
                   }
-
                 }
               }
             }

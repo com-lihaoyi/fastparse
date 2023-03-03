@@ -26,6 +26,7 @@ object ExampleTests extends TestSuite{
         )
       }
 
+
       test("failures"){
         import fastparse._, NoWhitespace._
         def parseEither[$: P] = P( "a" | "b" )
@@ -53,6 +54,7 @@ object ExampleTests extends TestSuite{
 
         // aggregateMsg and longAggregateMsg record all parsers
         // failing at the position, "a" | "b" | "c",
+
 
         assert(
           trace.aggregateMsg == """Expected (parseEither | "c"):1:1, found "d"""",
