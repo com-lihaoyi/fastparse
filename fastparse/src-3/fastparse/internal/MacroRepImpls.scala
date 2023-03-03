@@ -82,21 +82,22 @@ object MacroRepImpls {
               repeater1.accumulate(ctx1.successValue.asInstanceOf[T], acc)
               ctx1.cut = false
               ${
-                val wsSnippet = whitespace match {
+                whitespace match {
                   case null => '{ rec(beforeSepIndex, count + 1, parsedAgg) }
                   case ws =>
-                    '{
-                      if ($ws ne _root_.fastparse.NoWhitespace.noWhitespaceImplicit) {
+                    if (ws.asTerm.tpe =:= TypeRepr.of[fastparse.NoWhitespace.noWhitespaceImplicit.type]){
+                      '{ rec(beforeSepIndex, count + 1, parsedAgg) }
+                    } else {
+                      '{
                         _root_.fastparse.internal.Util.consumeWhitespace($ws, ctx1)
-                      }
-                      if (!ctx1.isSuccess && ctx1.cut) ctx1.asInstanceOf[_root_.fastparse.ParsingRun[scala.Nothing]]
-                      else {
-                        ctx1.cut = false
-                        rec(beforeSepIndex, count + 1, parsedAgg)
+                        if (!ctx1.isSuccess && ctx1.cut) ctx1.asInstanceOf[_root_.fastparse.ParsingRun[scala.Nothing]]
+                        else {
+                          ctx1.cut = false
+                          rec(beforeSepIndex, count + 1, parsedAgg)
+                        }
                       }
                     }
                 }
-                wsSnippet
               }
             }
           }
