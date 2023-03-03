@@ -34,23 +34,18 @@ object MacroInlineImpls {
           }
         } else {
           val xLength = Expr[Int](x.length)
-          val checker =
-            '{ (string: _root_.fastparse.ParserInput, offset: _root_.scala.Int) =>
-              ${
-                x.zipWithIndex
-                  .map { case (char, i) => '{ string.apply(offset + ${ Expr(i) }) == ${ Expr(char) } } }
-                  .reduce[Expr[Boolean]] { case (l, r) => '{ $l && $r } }
-              }
-            }
           '{
-
             $ctx match {
               case ctx1 =>
                 val index = ctx1.index
                 val end   = index + $xLength
                 val input = ctx1.input
                 val res =
-                  if (input.isReachable(end - 1) && ${ checker }(input, index)) {
+                  if (input.isReachable(end - 1) && ${
+                    x.zipWithIndex
+                      .map { case (char, i) => '{ input.apply(index + ${ Expr(i) }) == ${ Expr(char) } } }
+                      .reduce[Expr[Boolean]] { case (l, r) => '{ $l && $r } }
+                  }) {
                     ctx1.freshSuccessUnit(end)
                   } else {
                     ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
@@ -99,10 +94,11 @@ object MacroInlineImpls {
 
     val startIndex = ctx1.index
     val instrument = ctx1.instrument != null
-    val ctx0       = t
     if (instrument) {
       ctx1.instrument.beforeParse(name.value, startIndex)
     }
+    val ctx0       = t
+
     if (instrument) {
       ctx1.instrument.afterParse(name.value, ctx0.index, ctx0.isSuccess)
     }
