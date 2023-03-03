@@ -434,5 +434,15 @@ object FailureTests extends TestSuite{
         parser = { implicit c => (("a".! ~ "b".!) ~ "c".!).? ~ "a".! ~ "d".! }
       )
     }
+    test("whitespaceFail"){
+      import ScalaWhitespace._
+      checkOffset(
+        input = "a a /* */  a  a /* a a a",
+        expected = """"*/"""",
+        terminals = "()",
+        label = "\"*/\"",
+        parser = { implicit c => "a".rep }
+      )
+    }
   }
 }
