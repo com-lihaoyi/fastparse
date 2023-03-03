@@ -1,6 +1,25 @@
 @import Main._
 @sect{Change Log}
 
+    @sect{3.0.0}
+        @ul
+            @li
+                Scala 3.x support, starting from 3.2.2 @lnk("#271", "https://github.com/lihaoyi/fastparse/issues/271"))
+            @li
+                Make whitespace handling a proper @code{fastparse.Whitespace} trait,
+                rather than a function type (@lnk("#272", "https://github.com/lihaoyi/fastparse/issues/272"))),
+                to avoid problems with parse failures being silently discarded
+                (@lnk("#261", "https://github.com/lihaoyi/fastparse/issues/261")))
+            @li
+                Dependency bumps: @code{com.lihaoyi::geny:1.0.0}, @code{com.lihaoyi::sourcecode:0.3.0}
+            @li
+                Note that this is a binary incompatible change from Fastparse 2.x.
+
+
+    @sect{2.3.1}
+        @ul
+            @li
+                Support for Scala-Native 0.4.0
     @sect{2.2.2}
         @ul
             @li
