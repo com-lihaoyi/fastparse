@@ -54,8 +54,8 @@ trait SharedPackageDefs {
     originalParser = parser,
     traceIndex = traceIndex,
     instrument = instrument,
-    failureTerminalAggregate = Msgs.empty,
-    failureGroupAggregate = Msgs.empty,
+    failureTerminals = Msgs.empty,
+    failureGroups = Msgs.empty,
     shortParserMsg = Msgs.empty,
     lastFailureMsg = null,
     failureStack = List.empty,
@@ -105,7 +105,7 @@ trait SharedPackageDefs {
       if (ctx.isSuccess) ctx.freshSuccessUnit(startPos)
       else ctx.asInstanceOf[P[Unit]]
     if (ctx.verboseFailures) {
-      ctx.failureGroupAggregate = Msgs.empty
+      ctx.failureGroups = Msgs.empty
       ctx.reportTerminalParseMsg(startPos, () =>
         msg match{
           case Seq(x) => s"&(${msg.render})"
@@ -144,7 +144,7 @@ trait SharedPackageDefs {
 
   /**
     * Wraps a parser and ensures that none of the parsers within it leave
-    * failure traces in failureTerminalAggregate, though unlike [[ByNameOps.opaque]]
+    * failure traces in failureTerminals, though unlike [[ByNameOps.opaque]]
     * if there is a failure *within* the wrapped parser the failure's location
     * and error message will still be shown
     *
@@ -156,7 +156,7 @@ trait SharedPackageDefs {
 
     val res = p
     if (ctx.verboseFailures) {
-      ctx.failureGroupAggregate = Msgs.empty
+      ctx.failureGroups = Msgs.empty
       ctx.shortParserMsg = Msgs.empty
     }
     res
@@ -272,7 +272,7 @@ object SharedPackageDefs{
     val startCut = ctx.cut
     val oldNoCut = ctx.noDropBuffer
     ctx.noDropBuffer = true
-    val startTerminals = ctx.failureTerminalAggregate
+    val startTerminals = ctx.failureTerminals
     parse0()
     ctx.noDropBuffer = oldNoCut
     val msg = ctx.shortParserMsg
@@ -282,8 +282,8 @@ object SharedPackageDefs{
       else ctx.freshSuccessUnit(startPos)
 
     if (ctx.verboseFailures) {
-      ctx.failureTerminalAggregate = startTerminals
-      ctx.failureGroupAggregate = Msgs.empty
+      ctx.failureTerminals = startTerminals
+      ctx.failureGroups = Msgs.empty
       ctx.reportParseMsg(startPos, () => "!" + msg.render, Msgs.empty)
     }
     res.cut = startCut

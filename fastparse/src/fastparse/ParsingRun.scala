@@ -35,10 +35,10 @@ import fastparse.internal.{Instrument, Lazy, Msgs, Util}
   *                         it with tracing enabled.
   * @param traceIndex       The index we wish to trace if tracing is enabled, else
   *                         -1. Used to find failure messages to aggregate into
-  *                         `failureTerminalAggregate`
+  *                         `failureTerminals`
   * @param instrument       Callbacks that can be injected before/after every
   *                         `P(...)` parser.
-  * @param failureTerminalAggregate When tracing is enabled, this collects up all the
+  * @param failureTerminals When tracing is enabled, this collects up all the
   *                         upper-most failures that happen at [[traceIndex]]
   *                         (in [[Lazy]] wrappers) so they can be shown to the
   *                         user at end-of-parse as suggestions for what could
@@ -108,8 +108,8 @@ final class ParsingRun[+T](val input: ParserInput,
                            val traceIndex: Int,
                            val instrument: Instrument,
                            // Mutable vars below:
-                           var failureTerminalAggregate: Msgs,
-                           var failureGroupAggregate: Msgs,
+                           var failureTerminals: Msgs,
+                           var failureGroups: Msgs,
                            var shortParserMsg: Msgs,
                            var lastFailureMsg: Msgs,
                            var failureStack: List[(String, Int)],
@@ -125,39 +125,39 @@ final class ParsingRun[+T](val input: ParserInput,
   // HOW ERROR AGGREGATION WORKS:
   //
   // Fastparse provides two levels of error aggregation that get enabled when
-  // calling `.trace()`: `failureTerminalAggregate`, and `failureGroupAggregate`:
+  // calling `.trace()`: `failureTerminals`, and `failureGroups`:
   //
-  // - `failureTerminalAggregate` lists all low-level terminal parsers which are
+  // - `failureTerminals` lists all low-level terminal parsers which are
   //   tried at the given `traceIndex`. This is useful to answer the question
   //   "what can I put at the error position to make my parse continue"
   //
-  // - `failureGroupAggregate` lists all high-level parsers which are tried at
+  // - `failureGroups` lists all high-level parsers which are tried at
   //   the given `traceIndex`. This is useful to answer the question "What was
   //   the parser trying to do when it failed"
   //
-  // The implementation of `failureTerminalAggregate` is straightforward: we
+  // The implementation of `failureTerminals` is straightforward: we
   // simply call `reportTerminalParseMsg` in every terminal parser, which collects
   // all the messages in a big list and returns it. The implementation of
-  // `failureGroupAggregate` is more interesting, since we need to figure out
+  // `failureGroups` is more interesting, since we need to figure out
   // what are the "high level" parsers that we need to list. We use the
   // following algorithm:
   //
   // - When a parse which started at the given `traceIndex` fails without a cut
-  //   - Over-write `failureGroupAggregate` with it's `shortParserMsg`
+  //   - Over-write `failureGroups` with it's `shortParserMsg`
   //
   // - Otherwise:
-  //   - If we are a terminal parser, we set our `failureGroupAggregate` to Nil
-  //   - If we are a compound parser, we simply sum up the `failureGroupAggregate`
+  //   - If we are a terminal parser, we set our `failureGroups` to Nil
+  //   - If we are a compound parser, we simply sum up the `failureGroups`
   //     of all our constituent parts
   //
   // The point of this heuristic is to provide the highest-level parsers which
   // failed at the `traceIndex`, but are not already part of the `failureStack`.
   // non-highest-level parsers do successfully write their message to
-  // `failureGroupAggregate`, but they are subsequently over-written by the higher
+  // `failureGroups`, but they are subsequently over-written by the higher
   // level parsers, until it reaches the point where `cut == true`, indicating
   // that any further higher-level parsers will be in `failureStack` and using
   // their message to stomp over the existing parse-failure-messages in
-  // `failureGroupAggregate` would be wasteful.
+  // `failureGroups` would be wasteful.
   //
   // These is an edge case where there is no given failure that occurs exactly at
   // `traceIndex` e.g.
@@ -215,10 +215,10 @@ final class ParsingRun[+T](val input: ParserInput,
   }
 
   def reportParseMsg0(startIndex: Int,
-                     msgToSet: Msgs,
-                     msgToAggregate: Msgs,
-                     forceAggregate: Boolean,
-                     setShortMsg: Boolean): Unit = {
+                      msgToSet: Msgs,
+                      msgToAggregate: Msgs,
+                      forceAggregate: Boolean,
+                      setShortMsg: Boolean): Unit = {
 
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = msgToSet
 
@@ -227,7 +227,7 @@ final class ParsingRun[+T](val input: ParserInput,
     // There are two cases when aggregating: either we stomp over the entire
     // existing aggregation with `msgToSet`, or we preserve it (with possible
     // additions) with `msgToAggregate`.
-    failureGroupAggregate =
+    failureGroups =
       if (checkAggregate(startIndex) && !forceAggregate) shortParserMsg
       else msgToAggregate
   }
@@ -235,13 +235,13 @@ final class ParsingRun[+T](val input: ParserInput,
   /**
    * Called by any terminal parser; these are the smallest parsers that a user
    * may care about, e.g. individual strings or characters, and will be stored
-   * in the `failureTerminalAggregate` in case a user wants to know what could
+   * in the `failureTerminals` in case a user wants to know what could
    * have been placed at the failure point to let the parse progress
    */
   def reportTerminalParseMsg(startIndex: Int,
                              msgToSet: Msgs): Unit = {
     // We only care about terminal parsers which failed exactly at the traceIndex
-    if (!isSuccess && index == traceIndex) failureTerminalAggregate :::= msgToSet
+    if (!isSuccess && index == traceIndex) failureTerminals :::= msgToSet
 
     reportParseMsg0(
       startIndex,

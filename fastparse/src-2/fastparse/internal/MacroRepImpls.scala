@@ -75,7 +75,7 @@ object MacroRepImpls{
             ${c.prefix}.parse0()
 
             val $parsedMsg = $ctx1.shortParserMsg
-            val $parsedAgg = $ctx1.failureGroupAggregate
+            val $parsedAgg = $ctx1.failureGroups
             $originalCut |= $ctx1.cut
             if (!$ctx1.isSuccess) {
               val res =

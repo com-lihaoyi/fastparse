@@ -364,7 +364,7 @@ object FailureTests extends TestSuite{
       import NoWhitespace._
       // In the case where one branch fails further in than `traceIndex`, we
       // collect the partial aggregation from that branch in the
-      // `failureGroupAggregate` but ignore that branch's downstream failure in
+      // `failureGroups` but ignore that branch's downstream failure in
       // `failureTerminalsAggregate`
 
       def check(parser: P[_] => P[_]) = checkOffset(
