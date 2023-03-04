@@ -16,9 +16,10 @@ object FailureTests extends TestSuite{
       val trace = f.trace(true)
 
       val terminals1 = Option(terminals).getOrElse(expected)
+      val groupAggregateString = trace.groupAggregateString
       assert(
         trace.failure.label == label,
-        trace.groupAggregateString == expected,
+        groupAggregateString == expected,
         trace.terminalAggregateString == terminals1
       )
     }
@@ -219,6 +220,31 @@ object FailureTests extends TestSuite{
           parseA(_)
         }
       )
+      test("repSeparatorIsNotIncludedInFailureMsgWhenCut") - checkOffset(
+        input = "ab aa",
+        expected = "\"b\"",
+        label = "\"b\"",
+        terminals = "\"b\"",
+        parser = {
+          def space[$: P] = P(" ")
+          def token[$: P] = P("a" ~/ "b")
+          def multiple[$: P] = P(token.rep(1, space))
+          multiple(_)
+        }
+      )
+      test("repSeparatorIsNotIncludedInFailureMsgWhenCutX") - checkOffset(
+        input = "ab aa",
+        expected = "\"b\"",
+        label = "\"b\"",
+        terminals = "\"b\"",
+        parser = {
+          def space[$: P] = P(" ")
+          def token[$: P] = P("a" ~/ "b")
+          def multiple[$: P] = P(token.repX(1, space))
+          multiple(_)
+        }
+      )
+
     }
 
     test("offset"){
@@ -403,6 +429,7 @@ object FailureTests extends TestSuite{
       test("repXLeft") -   check{ implicit c => (("a" ~ "b") ~ "c").repX ~ "a" ~/ "d" }
       test("repSep") -     check{ implicit c => ("a" ~ ("b" ~ "c")).rep(sep = Pass) ~ "a" ~/ "d" }
       test("repSepLeft") - check{ implicit c => (("a" ~ "b") ~ "c").rep(sep = Pass) ~ "a" ~/ "d" }
+
     }
 
     test("whitespace"){

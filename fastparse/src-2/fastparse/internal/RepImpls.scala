@@ -41,7 +41,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
             if (postCut) ctx.asInstanceOf[ParsingRun[V]]
             else end(startIndex, startIndex, count, outerCut | postCut)
 
-          if (verboseFailures) reportParseMsgInRep(startIndex, min, ctx, sepMsg, parsedMsg, lastAgg, precut)
+          if (verboseFailures) reportParseMsgInRep(startIndex, min, ctx, sepMsg, parsedMsg, lastAgg, precut || postCut)
           res
         }else {
           val beforeSepIndex = ctx.index
@@ -102,7 +102,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
         val res =
           if (postCut) ctx.asInstanceOf[ParsingRun[V]]
           else end(startIndex, startIndex, count, outerCut | postCut)
-        if (verboseFailures) reportParseMsgInRep(startIndex, min, ctx, sepMsg, parsedMsg, lastAgg, precut)
+        if (verboseFailures) reportParseMsgInRep(startIndex, min, ctx, sepMsg, parsedMsg, lastAgg, precut || postCut)
         res
       }else {
         val beforeSepIndex = ctx.index
@@ -163,7 +163,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
           val res =
             if (postCut) ctx.asInstanceOf[ParsingRun[V]]
             else end(startIndex, startIndex, count, outerCut | postCut)
-          if (verboseFailures) reportParseMsgInRep(startIndex, min, ctx, sepMsg, parsedMsg, lastAgg, precut)
+          if (verboseFailures) reportParseMsgInRep(startIndex, min, ctx, sepMsg, parsedMsg, lastAgg, precut || postCut)
           res
         } else {
           val beforeSepIndex = ctx.index
@@ -231,7 +231,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
         val res =
           if (postCut) ctx.asInstanceOf[ParsingRun[V]]
           else end(startIndex, startIndex, count, outerCut | postCut)
-        if (verboseFailures) reportParseMsgInRep(startIndex, min, ctx, sepMsg, parsedMsg, lastAgg, precut)
+        if (verboseFailures) reportParseMsgInRep(startIndex, min, ctx, sepMsg, parsedMsg, lastAgg, precut || postCut)
         res
       }else{
         val beforeSepIndex = ctx.index

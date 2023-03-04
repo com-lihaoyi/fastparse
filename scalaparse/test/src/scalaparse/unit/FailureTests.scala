@@ -18,7 +18,7 @@ object FailureTests extends TestSuite{
         |import a
         |import import
       """.stripMargin,
-      aggregate = """(Semis ~ `package` | Semis ~ TopStat | ThisPath | IdPath)""",
+      aggregate = """(ThisPath | IdPath)""",
       terminals = """("this" | "super" | "`" | var-id | chars-while(OpCharNotSlash, 1) | "/" | operator | plain-id | id)""",
       found = "import"
     )

@@ -105,7 +105,7 @@ object MacroRepImpls {
               val res =
                 if (postCut) ctx.asInstanceOf[ParsingRun[V]]
                 else end(startIndex, startIndex, count, outerCut | postCut)
-              if (verboseFailures) Util.reportParseMsgInRep(startIndex, actualMin, ctx, sepMsg, parsedMsg, lastAgg, precut)
+              if (verboseFailures) Util.reportParseMsgInRep(startIndex, actualMin, ctx, sepMsg, parsedMsg, lastAgg, precut || postCut)
               res
             } else {
               val beforeSepIndex = ctx.index

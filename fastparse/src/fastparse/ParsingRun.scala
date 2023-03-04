@@ -230,10 +230,18 @@ final class ParsingRun[+T](val input: ParserInput,
   }
 
   /**
-   * Called by any terminal parser; these are the smallest parsers that a user
-   * may care about, e.g. individual strings or characters, and will be stored
-   * in the `failureTerminals` in case a user wants to know what could
-   * have been placed at the failure point to let the parse progress
+   * Called by any terminal parser; these are parsers for which displaying
+   * sub-failures does not make sense these include:
+   *
+   * - Individual strings or characters
+   * - Parsers like negation `!p` or `.filter` where the entire parser failing
+   *   is not caused by sub-failure
+   * - Parsers like `.opaque`, where sub-failures are intentionally hidden and
+   *   not shown to the user
+   *
+   * These "terminal" failures will be stored in the `failureTerminals` in case
+   * a user wants to know what could have been placed at the failure point to
+   * let the parse progress
    */
   def reportTerminalParseMsg(startIndex: Int,
                              newShortParserMsg: Msgs): Unit = {
@@ -254,7 +262,15 @@ final class ParsingRun[+T](val input: ParserInput,
                       newFailureGroups: Msgs,
                       forceAggregate: Boolean,
                       setShortMsg: Boolean): Unit = {
-
+//    println()
+//    println("  " * logDepth + "reportParseMsg0 " + startIndex)
+//    println("  " * logDepth + "newShortParserMsg " + newShortParserMsg)
+//    println("  " * logDepth + "newFailureGroups " + newFailureGroups)
+//    println("  " * logDepth + "forceAggregate " + forceAggregate)
+//    println("  " * logDepth + "setShortMsg " + setShortMsg)
+//    println("  " * logDepth + "shortParserMsg " + shortParserMsg)
+//    println("  " * logDepth + "failureGroups " + failureGroups)
+//    println()
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = newShortParserMsg
 
     shortParserMsg = if (setShortMsg) newShortParserMsg else Msgs.empty

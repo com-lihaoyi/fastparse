@@ -104,25 +104,29 @@ object Util {
   }
 
 
-  def reportParseMsgPostSep[V](startIndex: Int,
-                             min: Int,
-                             ctx: ParsingRun[Any],
-                             parsedMsg: Msgs,
-                             lastAgg: Msgs) = {
+  def reportParseMsgPostSep(startIndex: Int,
+                            min: Int,
+                            ctx: ParsingRun[Any],
+                            parsedMsg: Msgs,
+                            lastAgg: Msgs) = {
     reportParseMsgInRep(startIndex, min, ctx, null, parsedMsg, lastAgg, true)
   }
 
-  def reportParseMsgInRep[V](startIndex: Int,
-                           min: Int,
-                           ctx: ParsingRun[Any],
-                           sepMsg: Msgs,
-                           parsedMsg: Msgs,
-                           lastAgg: Msgs,
-                           precut: Boolean) = {
+  def reportParseMsgInRep(startIndex: Int,
+                          min: Int,
+                          ctx: ParsingRun[Any],
+                          sepMsg: Msgs,
+                          parsedMsg: Msgs,
+                          lastAgg: Msgs,
+                          precut: Boolean) = {
     // When we fail on a rep body, we collect both the concatenated
     // sep and failure aggregate  of the rep body that we tried (because
     // we backtrack past the sep on failure) as well as the failure
     // aggregate of the previous rep, which we could have continued
+    println("reportParseMsgInRep")
+    println("sepMsg " + sepMsg)
+    println("precut " + precut)
+    println("parsedMsg " + parsedMsg)
     val newAgg =
       if (sepMsg == null || precut) ctx.failureGroups
       else Util.joinBinOp(sepMsg, parsedMsg)
