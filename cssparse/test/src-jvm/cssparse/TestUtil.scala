@@ -9,7 +9,7 @@ object TestUtil {
     def checkParsed(input: String, res: Parsed[Ast.RuleList]) = {
       res match {
         case f: Parsed.Failure =>
-          throw new Exception(tag + "\n" + input + "\n" + f.trace().longreportParseMsg)
+          throw new Exception(tag + "\n" + input + "\n" + f.trace().longAggregateMsg)
         case s: Parsed.Success[Ast.RuleList] =>
           val inputLength = input.length
           val index = s.index

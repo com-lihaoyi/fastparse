@@ -126,7 +126,7 @@ object IndentationTests extends TestSuite{
     test("fail"){
       def check(input: String, expectedTrace: String): Unit = {
         val failure = parse(input, expr(_)).asInstanceOf[Parsed.Failure]
-        val actualTrace = failure.trace(enableLogging = true).longreportParseMsg
+        val actualTrace = failure.trace(enableLogging = true).longAggregateMsg
         assert(expectedTrace.trim == actualTrace.trim)
       }
       test - check(

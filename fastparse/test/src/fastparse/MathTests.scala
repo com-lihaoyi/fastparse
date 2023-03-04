@@ -33,7 +33,7 @@ object MathTests extends TestSuite{
       val Parsed.Success(15, _) = parse("(1+1*2)+3*4", expr(_))
       val Parsed.Success(21, _) = parse("((1+1*2)+(3*4*5))/3", expr(_))
       val Parsed.Failure(expected, failIndex, extra) = parse("1+1*", expr(_))
-      val longAggMsg = extra.trace().longreportParseMsg
+      val longAggMsg = extra.trace().longAggregateMsg
       assert(
         failIndex == 4,
         longAggMsg ==
@@ -50,7 +50,7 @@ object MathTests extends TestSuite{
         val index = failure.index
 
         assert(
-          expectedTrace.trim == trace.longreportParseMsg.trim,
+          expectedTrace.trim == trace.longAggregateMsg.trim,
           expectedTerminalTrace.trim == trace.longTerminalsMsg.trim,
           expectedShortTrace.trim == failure.msg
         )

@@ -25,7 +25,7 @@ object TestUtil {
         val parsedTerminals = trace.terminalAggregateString
         val parsedAggregate = trace.groupAggregateString
         val parsedFound = input.slice(f.index, f.index + 10)
-        val stack = trace.longreportParseMsg
+        val stack = trace.longAggregateMsg
 
         assert({
           implicitly(input)

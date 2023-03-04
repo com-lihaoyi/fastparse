@@ -75,7 +75,7 @@ object Parsed{
         Failure.formatMsg(extra.input, extra.stack ++ List(label -> index), index)
       } else throw new Exception(
         "`.longMsg` requires the parser to be run with `verboseFailures = true`, " +
-        "or to be called via `.trace().longMsg` or `.trace().longreportParseMsg`"
+        "or to be called via `.trace().longMsg` or `.trace().longAggregateMsg`"
       )
     }
 
@@ -218,6 +218,6 @@ object Parsed{
     /**
       * A version of [[reportParseMsg]] that includes the parse stack
       */
-    def longreportParseMsg = Failure.formatMsg(input, stack ++ Seq(groupAggregateString -> index), index)
+    def longAggregateMsg = Failure.formatMsg(input, stack ++ Seq(groupAggregateString -> index), index)
   }
 }

@@ -7,6 +7,6 @@ object Main {
     def hello[$: P] = P( "hello" )
     def combined[$: P] = P( (iam | hello).? ~ ("cow" | "world") )
     val Parsed.Failure(_, _, extra) = parse("lol", combined(_))
-    println(extra.trace().longreportParseMsg)
+    println(extra.trace().longAggregateMsg)
   }
 }
