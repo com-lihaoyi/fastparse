@@ -27,19 +27,26 @@ object MacroRepImpls {
     ctx0: Expr[ParsingRun[_]])(using quotes: Quotes): Expr[ParsingRun[V]] = {
     import quotes.reflect.*
 
-    def getInlineExpansionValue(t: Term): Option[Int] = {
+    def getInlineExpansionValue[T](t: Term): Term = {
       t match{
         case Inlined(a, b, c) => getInlineExpansionValue(c)
-        case _ => t.asExprOf[Int].value
+        case Typed(a, b) => getInlineExpansionValue(a)
+        case _ => t
       }
     }
 
-    val staticMin0 = getInlineExpansionValue(min.asTerm)
-    val staticMax0 = getInlineExpansionValue(max.asTerm)
-    val staticExactly0 = getInlineExpansionValue(exactly.asTerm)
+    val staticMin0 = getInlineExpansionValue[Int](min.asTerm).asExprOf[Int]
+    val staticMax0 = getInlineExpansionValue[Int](max.asTerm).asExprOf[Int]
+    val staticExactly0 = getInlineExpansionValue[Int](exactly.asTerm).asExprOf[Int]
 
-    val staticActualMin = staticMin0.zip(staticExactly0).map{(m, e) => if (e == -1) m else e}
-    val staticActualMax = staticMax0.zip(staticExactly0).map{(m, e) => if (e == -1) m else e}
+    val staticActualMin = staticExactly0 match{
+      case '{-1} => staticMin0.value
+      case _ => staticExactly0.value
+    }
+    val staticActualMax = staticExactly0 match{
+      case '{-1} => staticMax0.value
+      case _ => staticExactly0.value
+    }
 
     '{
       val ctx = $ctx0
@@ -120,7 +127,7 @@ object MacroRepImpls {
                       consumeWhitespace('{false})('{
                         ctx.cut = false
                         ${
-                          sep match {
+                          getInlineExpansionValue(sep.asTerm).asExpr match {
                             case '{ null } =>
                               '{
                                 rec(beforeSepIndex, nextCount, false, outerCut | postCut, null, parsedAgg)
@@ -130,8 +137,7 @@ object MacroRepImpls {
                                 val sep1 = $sep
                                 val sepCut = ctx.cut
                                 val endCut = outerCut | postCut | sepCut
-                                if (sep1 == null) rec(beforeSepIndex, nextCount, false, endCut, null, parsedAgg)
-                                else if (ctx.isSuccess) {
+                                if (ctx.isSuccess) {
                                   ${
                                     consumeWhitespace('{sepCut})('{
                                       rec(beforeSepIndex, nextCount, sepCut, endCut, ctx.shortParserMsg, parsedAgg)
