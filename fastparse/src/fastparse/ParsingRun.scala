@@ -266,23 +266,11 @@ final class ParsingRun[+T](val input: ParserInput,
     )
   }
 
-  def logStuff(s: String) = {
-    println()
-//    println("  " * logDepth + s + " reportParseMsg0 " + index)
-//    println("  " * logDepth + s + " isSuccess " + isSuccess)
-//    println("  " * logDepth + s + " shortParserMsg " + shortParserMsg.value())
-//    println("  " * logDepth + s + " failureGroups " + failureGroups.value())
-    println()
-  }
   def reportParseMsg0(startIndex: Int,
                       newShortParserMsg: Msgs,
                       newFailureGroups: Msgs,
                       forceAggregate: Boolean,
                       setShortMsg: Boolean): Unit = {
-    //    println("  " * logDepth + s + "newShortParserMsg " + newShortParserMsg.value())
-    //    println("  " * logDepth + s + "newFailureGroups " + newFailureGroups.value())
-    //    println("  " * logDepth + s + "forceAggregate " + forceAggregate)
-    //    println("  " * logDepth + s + "setShortMsg " + setShortMsg)
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = newShortParserMsg
 
     shortParserMsg = if (setShortMsg) newShortParserMsg else Msgs.empty
