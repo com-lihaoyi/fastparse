@@ -190,7 +190,7 @@ object MacroInlineImpls {
 
                 if (ctx1.verboseFailures) ctx1.aggregateMsg(
                   preLhsIndex,
-                  _root_.fastparse.internal.Util.joinBinOp(lhsMsg, rhsMsg),
+                  Util.joinBinOp(lhsMsg, rhsMsg),
                   rhsAggregate ::: lhsAggregate,
                   // We override the failureGroupAggregate to avoid building an `a ~ b`
                   // aggregate msg in the specific case where the LHS parser fails to
@@ -208,7 +208,7 @@ object MacroInlineImpls {
                 if (ws.asTerm.tpe =:= TypeRepr.of[fastparse.NoWhitespace.noWhitespaceImplicit.type]) rhsSnippet
                 else {
                   '{
-                    _root_.fastparse.internal.Util.consumeWhitespace($ws, ctx1)
+                    Util.consumeWhitespace($ws, ctx1)
                     if (ctx1.isSuccess) $rhsSnippet
                     else ctx1
                   }
@@ -217,7 +217,7 @@ object MacroInlineImpls {
             guardedRhs
           }
         }
-      }.asInstanceOf[_root_.fastparse.ParsingRun[R]]
+      }.asInstanceOf[ParsingRun[R]]
     }
   }
 
