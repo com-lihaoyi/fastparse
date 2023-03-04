@@ -160,11 +160,15 @@ final class ParsingRun[+T](val input: ParserInput,
   // `failureGroupAggregate` would be wasteful.
   //
   // These is an edge case where there is no given failure that occurs exactly at
-  // `traceIndex` e.g. parsing "ax" with P( ("a" ~ "b") ~ "c" | "a" ~/ "d" ), the
-  // final failure `index` and thus `traceIndex` is at offset 1, and we would like
-  // to receive the aggregation ("b" | "d"). But ("a" ~ "b")
-  // passes from offsets 0-2, "c" fails at offset 2 and ("a" ~ "b") ~ "c" fails
-  // from offset 0-2. In such a case, we truncate the `shortParserMsg` at
+  // `traceIndex` e.g.
+  //
+  // - Parsing "ax" with P( ("a" ~ "b") ~ "c" | "a" ~/ "d" )
+  // - The final failure `index` and thus `traceIndex` is at offset 1
+  // - We would like to receive the aggregation ("b" | "d")
+  // - But ("a" ~ "b") passes from offsets 0-2, "c" fails at offset 2 and ("a" ~ "b") ~ "c" fails
+  //   from offset 0-2.
+  //
+  // In such a case, we truncate the `shortParserMsg` at
   // `traceIndex` to only include the portion we're interested in (which directly
   // follows the failure). This then gets aggregated nicely to form the error
   // message from-point-of-failure.
@@ -174,12 +178,14 @@ final class ParsingRun[+T](val input: ParserInput,
   // val inner = P( "a" ~ "b" )
   // P( inner ~ "c" | "a" ~/ "d" )
   //
-  // Here, we find that the `inner` parser starts before the `traceIndex` and
-  // fails at `traceIndex`, but we want our aggregation to continue being
-  // ("b" | "d"), rather than (inner | "d"). Thus, for opaque compound parsers
-  // like `inner` which do not expose their internals, we use the `forceAggregate`
-  // to force it to expose it's internals when it's range covers the `traceIndex`
-  // but it isn't an exact match
+  // - Here, we find that the `inner` parser starts before the `traceIndex` and
+  //   fails at `traceIndex`,
+  // - But we want our aggregation to continue being ("b" | "d"), rather than
+  //   (inner | "d").
+  //
+  // Thus, for opaque compound parsers like `inner` which do not expose their
+  // internals, we use `forceAggregate` to force it to expose it's internals
+  // when it's range covers the `traceIndex` but it isn't an exact match
 
   /**
    * Called by non-terminal parsers after completion, success or failure
