@@ -12,14 +12,16 @@ object FailureTests extends TestSuite{
                     terminals: String = null,
                     parser: P[_] => P[_]) = {
       val f @ Parsed.Failure(failureString, index, extra) = parse(input, parser(_))
-
+      println("x" * 150)
       val trace = f.trace(true)
+      println("index " + index)
+      println("trace.index " + trace.index)
 
       val terminals1 = Option(terminals).getOrElse(expected)
       val groupAggregateString = trace.groupAggregateString
       assert(
-        trace.failure.label == label,
         groupAggregateString == expected,
+        trace.failure.label == label,
         trace.terminalAggregateString == terminals1
       )
     }
@@ -265,6 +267,19 @@ object FailureTests extends TestSuite{
           def prep[$: P] = P("p".rep(sep = space))
           def all[$: P] = P(prep ~ AnyChar ~ "i" ~ "a")
           all(_)
+        }
+      )
+      test("bug") - checkOffset(
+        input = "pt x_",
+        expected = """("y" | end-of-input)""",
+        label = "\"a\"",
+        terminals = "\"a\"",
+        parser = {
+          def c[$: P] = P( "x".repX(1, "y") ).log
+          def d[$: P] = P( "p" ).log
+          def b[$: P] = P( (d ~ "t").repX(1, " ") ).log
+          def a[$: P] = P( b ~ " " ~ c ~ End ).log
+          a(_)
         }
       )
     }

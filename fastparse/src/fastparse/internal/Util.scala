@@ -11,7 +11,7 @@ object Util {
     case xs => xs.mkString("(", " | ", ")")
   }
   def joinBinOp(lhs: Msgs, rhs: Msgs): Msgs = Msgs(
-    Lazy(
+    new Lazy(
       () =>
         if (lhs.value().isEmpty) rhs.value()
         else if (rhs.value().isEmpty) lhs.value()
