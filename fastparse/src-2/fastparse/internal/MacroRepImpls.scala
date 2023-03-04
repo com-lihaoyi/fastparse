@@ -82,7 +82,7 @@ object MacroRepImpls{
                 if ($ctx1.cut) $ctx1.asInstanceOf[_root_.fastparse.P[${c.weakTypeOf[V]}]]
                 else $endSnippet
 
-              if ($ctx1.verboseFailures) _root_.fastparse.internal.Util.aggregateMsgInRep(
+              if ($ctx1.verboseFailures) _root_.fastparse.internal.Util.reportParseMsgInRep(
                 $startIndex,
                 ${min.getOrElse(q"0")},
                 $ctx1,

@@ -105,7 +105,7 @@ object MacroRepImpls {
               val res =
                 if (postCut) ctx.asInstanceOf[ParsingRun[V]]
                 else end(startIndex, startIndex, count, outerCut | postCut)
-              if (verboseFailures) Util.aggregateMsgInRep(startIndex, actualMin, ctx, sepMsg, parsedMsg, lastAgg, precut)
+              if (verboseFailures) Util.reportParseMsgInRep(startIndex, actualMin, ctx, sepMsg, parsedMsg, lastAgg, precut)
               res
             } else {
               val beforeSepIndex = ctx.index
@@ -119,7 +119,7 @@ object MacroRepImpls {
                 '{
                   if ($checkMax2) {
                     val res = end(beforeSepIndex, beforeSepIndex, nextCount, outerCut | postCut)
-                    if (verboseFailures) ctx.setMsg(startIndex, () => parsedMsg.render + ".rep" + (if (actualMin == 0) "" else s"(${actualMin})"))
+                    if (verboseFailures) ctx.reportTerminalParseMsg(startIndex, () => parsedMsg.render + ".rep" + (if (actualMin == 0) "" else s"(${actualMin})"))
                     res
                   }
                   else {
@@ -149,7 +149,7 @@ object MacroRepImpls {
                                     if (sepCut) ctx.augmentFailure(beforeSepIndex, endCut)
                                     else end(beforeSepIndex, beforeSepIndex, nextCount, endCut)
 
-                                  if (verboseFailures) Util.aggregateMsgPostSep(startIndex, actualMin, ctx, parsedMsg, parsedAgg)
+                                  if (verboseFailures) Util.reportParseMsgPostSep(startIndex, actualMin, ctx, parsedMsg, parsedAgg)
                                   res
                                 }
                               }

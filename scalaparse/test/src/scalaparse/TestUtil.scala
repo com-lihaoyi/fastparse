@@ -25,18 +25,29 @@ object TestUtil {
         val parsedTerminals = trace.terminalAggregateString
         val parsedAggregate = trace.groupAggregateString
         val parsedFound = input.slice(f.index, f.index + 10)
-        val stack = trace.longAggregateMsg
+        val stack = trace.longreportParseMsg
 
-        assert(
-        { implicitly(input)
+        assert({
+          implicitly(input)
           implicitly(stack)
           implicitly(index)
           implicitly(parsedFound)
-          (aggregate == null || aggregate.trim == parsedAggregate.trim) &&
-          (terminals == null || terminals.trim == parsedTerminals.trim) &&
+          (aggregate == null || aggregate.trim == parsedAggregate.trim)
+        })
+        assert({
+          implicitly(input)
+          implicitly(stack)
+          implicitly(index)
+          implicitly(parsedFound)
+          (terminals == null || terminals.trim == parsedTerminals.trim)
+        })
+        assert({
+          implicitly(input)
+          implicitly(stack)
+          implicitly(index)
+          implicitly(parsedFound)
           parsedFound.startsWith(found)
-        }
-        )
+        })
 
         line.value
       case _: Parsed.Success[_] =>

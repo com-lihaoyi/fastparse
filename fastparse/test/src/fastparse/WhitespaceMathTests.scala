@@ -42,7 +42,7 @@ object WhitespaceMathTests extends TestSuite{
     test("fail"){
       def check(input: String, expectedTrace: String) = {
         val failure =  parse(input, expr(_)).asInstanceOf[Parsed.Failure]
-        val actualTrace = failure.trace().longAggregateMsg
+        val actualTrace = failure.trace().longreportParseMsg
         assert(expectedTrace.trim == actualTrace.trim)
       }
       test - check(

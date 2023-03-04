@@ -43,7 +43,7 @@ object FailureTests extends TestSuite{
         |}
       """.stripMargin,
       aggregate = """(NamedType | Refinement)""",
-      terminals = """(chars-while(IdCharacter, 1) | [_] | [ \t] | "/*" | "//" | "(" | "-" | "." | [0-9] | "0x" | "true" | "false" | "`" | char-pred(UpperChar) | char-pred(LowerChar) | var-id | chars-while(OpCharNotSlash, 1) | "/" | operator | plain-id | id | filter | "\"\"\"" | "\"" | "'" | "null" | "this" | "super" | "_" | "{")""",
+      terminals = """(chars-while(IdCharacter, 1) | [_] | [ \t] | "/*" | "//" | "\n" | "\r\n" | "(" | "-" | "." | [0-9] | "0x" | "true" | "false" | "`" | char-pred(UpperChar) | char-pred(LowerChar) | var-id | chars-while(OpCharNotSlash, 1) | "/" | operator | plain-id | id | filter | "\"\"\"" | "\"" | "'" | "null" | "this" | "super" | "_" | "{")""",
       found = ")"
     )
     test - checkNeg(

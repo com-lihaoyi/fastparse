@@ -6,14 +6,18 @@ import scala.annotation.{switch, tailrec}
 import scala.collection.mutable.ArrayBuffer
 
 object Util {
-  def parenthize(fs: Seq[Lazy[String]]) = fs.reverseIterator.map(_()).toSeq.distinct match{
+  def parenthize(fs: Lazy[List[String]]) = fs().reverseIterator.toSeq.distinct match{
     case Seq(x) => x
     case xs => xs.mkString("(", " | ", ")")
   }
-  def joinBinOp(lhs: Msgs, rhs: Msgs) =
-    if (lhs.value.isEmpty) rhs
-    else if (rhs.value.isEmpty) lhs
-    else Msgs(new Lazy(() => lhs.render + " ~ " + rhs.render) :: Nil)
+  def joinBinOp(lhs: Msgs, rhs: Msgs): Msgs = {
+    () =>
+      if (lhs.value().isEmpty) rhs.render
+      else if (rhs.value().isEmpty) lhs.render
+      else lhs.render + " ~ " + rhs.render
+  }
+
+
 
   def consumeWhitespace[V](whitespace: fastparse.Whitespace, ctx: ParsingRun[Any]) = {
     val oldCapturing = ctx.noDropBuffer // completely disallow dropBuffer
@@ -100,15 +104,15 @@ object Util {
   }
 
 
-  def aggregateMsgPostSep[V](startIndex: Int,
+  def reportParseMsgPostSep[V](startIndex: Int,
                              min: Int,
                              ctx: ParsingRun[Any],
                              parsedMsg: Msgs,
                              lastAgg: Msgs) = {
-    aggregateMsgInRep(startIndex, min, ctx, null, parsedMsg, lastAgg, true)
+    reportParseMsgInRep(startIndex, min, ctx, null, parsedMsg, lastAgg, true)
   }
 
-  def aggregateMsgInRep[V](startIndex: Int,
+  def reportParseMsgInRep[V](startIndex: Int,
                            min: Int,
                            ctx: ParsingRun[Any],
                            sepMsg: Msgs,
@@ -123,7 +127,7 @@ object Util {
       if (sepMsg == null || precut) ctx.failureGroupAggregate
       else Util.joinBinOp(sepMsg, parsedMsg)
 
-    ctx.aggregateMsg(
+    ctx.reportParseMsg(
       startIndex,
       () => parsedMsg.render + ".rep" + (if (min == 0) "" else s"(${min})"),
       if (lastAgg == null) newAgg
@@ -179,14 +183,18 @@ final class CompactTrieNode(source: TrieNode){
   val word = source.word
 }
 object Msgs{
-  val empty = Msgs(Nil)
+  val empty = Msgs(new Lazy(() => Nil))
   implicit def fromFunction(msgToSet: () => String): Msgs = {
-    Msgs(new Lazy(msgToSet) :: Nil)
+    Msgs(new Lazy(() => msgToSet() :: Nil))
+  }
+  implicit def fromListFunction(msgsToSet: () => List[String]): Msgs = {
+    Msgs(new Lazy(msgsToSet))
   }
 }
-case class Msgs(value: List[Lazy[String]]){
-  def :::(other: Msgs) = Msgs(other.value ::: value)
-  def ::(other: Lazy[String]) = Msgs(other :: value)
+
+case class Msgs(value: Lazy[List[String]]){
+  def :::(other: Msgs) = Msgs(new Lazy(() => other.value() ::: value()))
+  def ::(other: Lazy[String]) = Msgs(new Lazy(() => other() :: value()))
   override def toString = render
   def render = Util.parenthize(value)
 }

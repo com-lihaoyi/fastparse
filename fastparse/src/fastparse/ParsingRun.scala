@@ -11,12 +11,12 @@ import fastparse.internal.{Instrument, Lazy, Msgs, Util}
   * There are a few patterns that let us program with these mutable variables
   * in a sort-of-pure-functional way:
   *
-  test - If a parser that wishes to ignore changes to a field within their child
+  * - If a parser that wishes to ignore changes to a field within their child
   *   parsers, a common pattern is to save the value of the field before the
   *   wrapped parser runs, and then re-set the field. e.g. this can be used to
   *   backtrack [[index]] after a lookahead parser finishes
   *
-  test - If a parser wants to read the value of the field "returned" by multiple
+  * - If a parser wants to read the value of the field "returned" by multiple
   *   child parsers, make sure to read the field into a local variable after
   *   each child parser is complete to make sure the value you want from an
   *   earlier child isn't stomped over by a later child
@@ -136,7 +136,7 @@ final class ParsingRun[+T](val input: ParserInput,
   //   the parser trying to do when it failed"
   //
   // The implementation of `failureTerminalAggregate` is straightforward: we
-  // simply call `aggregateTerminal` in every terminal parser, which collects
+  // simply call `reportTerminalParseMsg` in every terminal parser, which collects
   // all the messages in a big list and returns it. The implementation of
   // `failureGroupAggregate` is more interesting, since we need to figure out
   // what are the "high level" parsers that we need to list. We use the
@@ -181,11 +181,14 @@ final class ParsingRun[+T](val input: ParserInput,
   // to force it to expose it's internals when it's range covers the `traceIndex`
   // but it isn't an exact match
 
-  def aggregateMsg(startIndex: Int,
-                   msgToSet: Msgs,
-                   msgToAggregate: Msgs,
-                   forceAggregate: Boolean = false,
-                   setShortMsg: Boolean = true): Unit = {
+  /**
+   * Called by non-terminal parsers after completion, success or failure
+   */
+  def reportParseMsg(startIndex: Int,
+                     msgToSet: Msgs,
+                     msgToAggregate: Msgs,
+                     forceAggregate: Boolean = false,
+                     setShortMsg: Boolean = true): Unit = {
 
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = msgToSet
 
@@ -199,13 +202,16 @@ final class ParsingRun[+T](val input: ParserInput,
       else msgToAggregate
   }
 
-  def aggregateTerminal(startIndex: Int, f: Msgs): Unit = {
-    if (!isSuccess && index == traceIndex) failureTerminalAggregate :::= f
-    setMsg(startIndex, f)
-  }
-
-  def setMsg(startIndex: Int, msgToSet: Msgs): Unit = {
-    aggregateMsg(
+  /**
+   * Called by any terminal parser; these are the smallest parsers that a user
+   * may care about, e.g. individual strings or characters, and will be stored
+   * in the `failureTerminalAggregate` in case a user wants to know what could
+   * have been placed at the failure point to let the parse progress
+   */
+  def reportTerminalParseMsg(startIndex: Int,
+                             msgToSet: Msgs): Unit = {
+    if (!isSuccess && index == traceIndex) failureTerminalAggregate :::= msgToSet
+    reportParseMsg(
       startIndex,
       msgToSet,
       Msgs.empty,

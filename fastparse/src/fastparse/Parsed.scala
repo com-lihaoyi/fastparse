@@ -75,7 +75,7 @@ object Parsed{
         Failure.formatMsg(extra.input, extra.stack ++ List(label -> index), index)
       } else throw new Exception(
         "`.longMsg` requires the parser to be run with `verboseFailures = true`, " +
-        "or to be called via `.trace().longMsg` or `.trace().longAggregateMsg`"
+        "or to be called via `.trace().longMsg` or `.trace().longreportParseMsg`"
       )
     }
 
@@ -180,12 +180,12 @@ object Parsed{
     def groupAggregateString = groups.render
 
     @deprecated("Use .msg instead")
-    def trace = aggregateMsg
+    def trace = reportParseMsg
     /**
       * Displays the short failure message excluding the parse stack. This shows
       * the last parser which failed causing the parse to fail. Note that this
       * does not include other parsers which may have failed earlier; see [[terminalsMsg]]
-      * and [[aggregateMsg]] for more detailed errors
+      * and [[reportParseMsg]] for more detailed errors
       */
     def msg = failure.msg
     /**
@@ -203,7 +203,7 @@ object Parsed{
       * at the failure index. This gives you a good high-level overview of what
       * the parser expected, at the cost
       */
-    def aggregateMsg = Failure.formatMsg(input, List(groupAggregateString -> index), index)
+    def reportParseMsg = Failure.formatMsg(input, List(groupAggregateString -> index), index)
 
     /**
       * A version of [[msg]] that includes the parse stack
@@ -216,8 +216,8 @@ object Parsed{
     def longTerminalsMsg = Failure.formatMsg(input, stack ++ Seq(terminalAggregateString -> index), index)
 
     /**
-      * A version of [[aggregateMsg]] that includes the parse stack
+      * A version of [[reportParseMsg]] that includes the parse stack
       */
-    def longAggregateMsg = Failure.formatMsg(input, stack ++ Seq(groupAggregateString -> index), index)
+    def longreportParseMsg = Failure.formatMsg(input, stack ++ Seq(groupAggregateString -> index), index)
   }
 }
