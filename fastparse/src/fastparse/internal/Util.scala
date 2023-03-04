@@ -105,16 +105,7 @@ object Util {
                              ctx: ParsingRun[Any],
                              parsedMsg: Msgs,
                              lastAgg: Msgs) = {
-    ctx.aggregateMsg(
-      startIndex,
-      () => parsedMsg.render + ".rep" + (if (min == 0) "" else s"(${min})"),
-      // When we fail on a sep, we collect the failure aggregate of the last
-      // non-sep rep body together with the failure aggregate of the sep, since
-      // the last non-sep rep body continuing is one of the valid ways of
-      // continuing the parse
-      ctx.failureGroupAggregate ::: lastAgg
-
-    )
+    aggregateMsgInRep(startIndex, min, ctx, null, parsedMsg, lastAgg, true)
   }
 
   def aggregateMsgInRep[V](startIndex: Int,
@@ -124,25 +115,20 @@ object Util {
                            parsedMsg: Msgs,
                            lastAgg: Msgs,
                            precut: Boolean) = {
-    if (sepMsg == null || precut) {
-      ctx.aggregateMsg(
-        startIndex,
-        () => parsedMsg.render + ".rep" + (if (min == 0) "" else s"(${min})"),
-        if (lastAgg == null) ctx.failureGroupAggregate
-        else ctx.failureGroupAggregate ::: lastAgg
-      )
-    } else {
-      ctx.aggregateMsg(
-        startIndex,
-        () => parsedMsg.render + ".rep" + (if (min == 0) "" else s"(${min})"),
-        // When we fail on a rep body, we collect both the concatenated
-        // sep and failure aggregate  of the rep body that we tried (because
-        // we backtrack past the sep on failure) as well as the failure
-        // aggregate of the previous rep, which we could have continued
-        if (lastAgg == null) Util.joinBinOp(sepMsg, parsedMsg)
-        else Util.joinBinOp(sepMsg, parsedMsg) ::: lastAgg
-      )
-    }
+    // When we fail on a rep body, we collect both the concatenated
+    // sep and failure aggregate  of the rep body that we tried (because
+    // we backtrack past the sep on failure) as well as the failure
+    // aggregate of the previous rep, which we could have continued
+    val newAgg =
+      if (sepMsg == null || precut) ctx.failureGroupAggregate
+      else Util.joinBinOp(sepMsg, parsedMsg)
+
+    ctx.aggregateMsg(
+      startIndex,
+      () => parsedMsg.render + ".rep" + (if (min == 0) "" else s"(${min})"),
+      if (lastAgg == null) newAgg
+      else newAgg ::: lastAgg
+    )
   }
 }
 
