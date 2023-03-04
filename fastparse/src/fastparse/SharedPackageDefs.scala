@@ -107,7 +107,7 @@ trait SharedPackageDefs {
     if (ctx.verboseFailures) {
       ctx.failureGroups = Msgs.empty
       ctx.reportTerminalParseMsg(startPos,
-        if (msg.value().isEmpty) Msgs.empty
+        if (msg.value.isEmpty) Msgs.empty
         else () => msg match{
           case Seq(x) => s"&(${msg.render})"
           case xs =>

@@ -223,7 +223,7 @@ final class ParsingRun[+T](val input: ParserInput,
    * parsers that have either succeeded past the traceIndex, or failed and
    * potentially backtracked.
    */
-  def shouldSetShortMsg = failureGroups.value().nonEmpty
+  def shouldSetShortMsg = failureGroups.value.nonEmpty
 
   def reportParseMsg(startIndex: Int,
                      newShortParserMsg: Msgs,
@@ -235,7 +235,7 @@ final class ParsingRun[+T](val input: ParserInput,
                      newShortParserMsg: Msgs,
                      newFailureGroups: Msgs,
                      forceAggregate: Boolean): Unit = {
-    reportParseMsg0(startIndex, newShortParserMsg, newFailureGroups, forceAggregate, newFailureGroups.value().nonEmpty)
+    reportParseMsg0(startIndex, newShortParserMsg, newFailureGroups, forceAggregate, newFailureGroups.value.nonEmpty)
   }
 
   /**
@@ -268,10 +268,10 @@ final class ParsingRun[+T](val input: ParserInput,
 
   def logStuff(s: String) = {
     println()
-    println("  " * logDepth + s + " reportParseMsg0 " + index)
-    println("  " * logDepth + s + " isSuccess " + isSuccess)
-    println("  " * logDepth + s + " shortParserMsg " + shortParserMsg.value())
-    println("  " * logDepth + s + " failureGroups " + failureGroups.value())
+//    println("  " * logDepth + s + " reportParseMsg0 " + index)
+//    println("  " * logDepth + s + " isSuccess " + isSuccess)
+//    println("  " * logDepth + s + " shortParserMsg " + shortParserMsg.value())
+//    println("  " * logDepth + s + " failureGroups " + failureGroups.value())
     println()
   }
   def reportParseMsg0(startIndex: Int,

@@ -6,18 +6,15 @@ import scala.annotation.{switch, tailrec}
 import scala.collection.mutable.ArrayBuffer
 
 object Util {
-  def parenthize(fs: Lazy[List[String]]) = fs().reverseIterator.toSeq.distinct match{
+  def parenthize(fs: List[Lazy[String]]) = fs.reverseIterator.map(_()).toSeq.distinct match{
     case Seq(x) => x
     case xs => xs.mkString("(", " | ", ")")
   }
-  def joinBinOp(lhs: Msgs, rhs: Msgs): Msgs = Msgs(
-    new Lazy(
-      () =>
-        if (lhs.value().isEmpty) rhs.value()
-        else if (rhs.value().isEmpty) lhs.value()
-        else List(lhs.render + " ~ " + rhs.render)
-    )
-  )
+  def joinBinOp(lhs: Msgs, rhs: Msgs): Msgs = {
+    if (lhs.value.isEmpty) rhs
+    else if (rhs.value.isEmpty) lhs
+    else Msgs.fromFunction(() => lhs.render + " ~ " + rhs.render)
+  }
 
   def consumeWhitespace[V](whitespace: fastparse.Whitespace, ctx: ParsingRun[Any]) = {
     val oldCapturing = ctx.noDropBuffer // completely disallow dropBuffer
@@ -194,18 +191,18 @@ final class CompactTrieNode(source: TrieNode){
   val word = source.word
 }
 object Msgs{
-  val empty = Msgs(new Lazy(() => Nil))
+  val empty = Msgs(Nil)
   implicit def fromFunction(msgToSet: () => String): Msgs = {
-    Msgs(new Lazy(() => msgToSet() :: Nil))
+    Msgs(new Lazy(() => msgToSet()):: Nil)
   }
-  implicit def fromListFunction(msgsToSet: () => List[String]): Msgs = {
-    Msgs(new Lazy(msgsToSet))
+  implicit def fromStrings(msgsToSet: List[String]): Msgs = {
+    Msgs(msgsToSet.map(s => new Lazy(() => s)))
   }
 }
 
-case class Msgs(value: Lazy[List[String]]){
-  def :::(other: Msgs) = Msgs(new Lazy(() => other.value() ::: value()))
-  def ::(other: Lazy[String]) = Msgs(new Lazy(() => other() :: value()))
+case class Msgs(value: List[Lazy[String]]){
+  def :::(other: Msgs) = Msgs(other.value ::: value)
+  def ::(other: Lazy[String]) = Msgs(other :: value)
   override def toString = render
   def render = Util.parenthize(value)
 }

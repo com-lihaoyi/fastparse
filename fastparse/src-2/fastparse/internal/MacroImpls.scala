@@ -362,7 +362,7 @@ object MacroImpls {
         val res =
           if ($output != -1) $ctx1.freshSuccessUnit(index = $output)
           else $ctx1.freshFailure()
-        if ($ctx1.verboseFailures) $ctx1.reportTerminalParseMsg($index, () => $bracketed)
+        if ($ctx1.verboseFailures) $ctx1.reportTerminalParseMsg($index, $bracketed)
         res
       }
     """

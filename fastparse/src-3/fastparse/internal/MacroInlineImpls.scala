@@ -544,7 +544,7 @@ object MacroInlineImpls {
             else ctx1.freshFailure()
           if (ctx1.verboseFailures) ctx1.reportTerminalParseMsg(
             index,
-            () => ${ Expr(literals.map(Util.literalize(_)).toList) }
+            Msgs.fromStrings(${ Expr(literals.map(Util.literalize(_)).toList) })
           )
           res
       }
