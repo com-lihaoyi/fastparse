@@ -285,7 +285,7 @@ object SharedPackageDefs{
     if (ctx.verboseFailures) {
       ctx.failureTerminals = startTerminals
       ctx.failureGroups = Msgs.empty
-      ctx.reportParseMsg(startPos, () => "!" + msg.render, Msgs.empty)
+      ctx.reportTerminalParseMsg(startPos, Msgs.empty)
     }
     res.cut = startCut
     res

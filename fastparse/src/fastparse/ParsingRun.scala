@@ -223,19 +223,17 @@ final class ParsingRun[+T](val input: ParserInput,
    * parsers that have either succeeded past the traceIndex, or failed and
    * potentially backtracked.
    */
-  def shouldSetShortMsg = failureGroups.value.nonEmpty
-
   def reportParseMsg(startIndex: Int,
                      newShortParserMsg: Msgs,
                      forceAggregate: Boolean): Unit = {
-    reportParseMsg0(startIndex, newShortParserMsg, failureGroups, forceAggregate, shouldSetShortMsg)
+    reportParseMsg0(startIndex, newShortParserMsg, failureGroups, forceAggregate, failureGroups.value.nonEmpty)
   }
 
   def reportParseMsg(startIndex: Int,
                      newShortParserMsg: Msgs,
                      newFailureGroups: Msgs,
                      forceAggregate: Boolean): Unit = {
-    reportParseMsg0(startIndex, newShortParserMsg, newFailureGroups, forceAggregate, newFailureGroups.value.nonEmpty)
+    reportParseMsg0(startIndex, newShortParserMsg, newFailureGroups, forceAggregate, true)
   }
 
   /**
