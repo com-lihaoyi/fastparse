@@ -196,13 +196,11 @@ final class ParsingRun[+T](val input: ParserInput,
                    msgToSet: Msgs,
                    msgToAggregate: Msgs,
                    forceAggregate: Boolean,
-                   setShortMsgOnlyIfBeyondTraceIndex: Boolean = false): Unit = {
+                   setShortMsg: Boolean = true): Unit = {
 
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = msgToSet
 
-    shortParserMsg =
-      if (!setShortMsgOnlyIfBeyondTraceIndex || startIndex >= traceIndex)  msgToSet
-      else  Msgs.empty
+    shortParserMsg = if (setShortMsg) msgToSet else Msgs.empty
 
     // There are two cases when aggregating: either we stomp over the entire
     // existing aggregation with `msgToSet`, or we preserve it (with possible
@@ -228,7 +226,7 @@ final class ParsingRun[+T](val input: ParserInput,
       msgToSet,
       Msgs.empty,
       false,
-      true
+      startIndex >= traceIndex
     )
   }
 
