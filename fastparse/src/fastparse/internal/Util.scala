@@ -180,6 +180,9 @@ final class CompactTrieNode(source: TrieNode){
 }
 object Msgs{
   val empty = Msgs(Nil)
+  implicit def fromFunction(msgToSet: () => String): Msgs = {
+    Msgs(new Lazy(msgToSet) :: Nil)
+  }
 }
 case class Msgs(value: List[Lazy[String]]){
   def :::(other: Msgs) = Msgs(other.value ::: value)

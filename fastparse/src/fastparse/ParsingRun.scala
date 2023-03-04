@@ -182,20 +182,9 @@ final class ParsingRun[+T](val input: ParserInput,
   // but it isn't an exact match
 
   def aggregateMsg(startIndex: Int,
-                   msgToSet: () => String,
-                   msgToAggregate: Msgs): Unit = {
-    aggregateMsg(startIndex, Msgs(new Lazy(msgToSet) :: Nil), msgToAggregate)
-  }
-
-  def aggregateMsg(startIndex: Int,
-                   msgToSet: Msgs,
-                   msgToAggregate: Msgs): Unit = {
-    aggregateMsg(startIndex, msgToSet, msgToAggregate, false)
-  }
-  def aggregateMsg(startIndex: Int,
                    msgToSet: Msgs,
                    msgToAggregate: Msgs,
-                   forceAggregate: Boolean,
+                   forceAggregate: Boolean = false,
                    setShortMsg: Boolean = true): Unit = {
 
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = msgToSet
@@ -210,14 +199,9 @@ final class ParsingRun[+T](val input: ParserInput,
       else msgToAggregate
   }
 
-  def aggregateTerminal(startIndex: Int, f: () => String): Unit = {
-    val f2 = new Lazy(f)
-    if (!isSuccess && index == traceIndex) failureTerminalAggregate ::= f2
-    setMsg(startIndex, Msgs(f2 :: Nil))
-  }
-
-  def setMsg(startIndex: Int, f: () => String): Unit = {
-    setMsg(startIndex, Msgs(new Lazy(f) :: Nil))
+  def aggregateTerminal(startIndex: Int, f: Msgs): Unit = {
+    if (!isSuccess && index == traceIndex) failureTerminalAggregate :::= f
+    setMsg(startIndex, f)
   }
 
   def setMsg(startIndex: Int, msgToSet: Msgs): Unit = {
