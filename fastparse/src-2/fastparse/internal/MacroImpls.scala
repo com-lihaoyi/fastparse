@@ -55,7 +55,7 @@ object MacroImpls {
             ctx0.reportParseMsg(
               startIndex,
               () => name.splice.value,
-              startIndex < ctx0.traceIndex
+              forceAggregate = startIndex < ctx0.traceIndex
             )
             if (!ctx0.isSuccess){
               ctx0.failureStack = (name.splice.value -> startIndex) :: ctx0.failureStack

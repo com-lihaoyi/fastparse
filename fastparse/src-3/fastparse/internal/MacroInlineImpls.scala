@@ -106,8 +106,7 @@ object MacroInlineImpls {
       ctx0.reportParseMsg(
         startIndex,
         () => name.value,
-        
-        startIndex < ctx0.traceIndex
+        forceAggregate = startIndex < ctx0.traceIndex
       )
       if (!ctx0.isSuccess) {
         ctx0.failureStack = (name.value -> startIndex) :: ctx0.failureStack
