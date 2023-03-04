@@ -136,7 +136,7 @@ final class ParsingRun[+T](val input: ParserInput,
   //   the parser trying to do when it failed"
   //
   // The implementation of `failureTerminalAggregate` is straightforward: we
-  // simply call `aggregateTerminal` in every terminal parser, which collects
+  // simply call `setMsg` in every terminal parser, which collects
   // all the messages in a big list and returns it. The implementation of
   // `failureGroupAggregate` is more interesting, since we need to figure out
   // what are the "high level" parsers that we need to list. We use the
@@ -208,23 +208,13 @@ final class ParsingRun[+T](val input: ParserInput,
     else failureGroupAggregate = msgToAggregate
   }
 
-  def aggregateTerminal(startIndex: Int, f: () => String): Unit = {
-    val f2 = new Lazy(f)
-    if (!isSuccess){
-      if (index == traceIndex) failureTerminalAggregate ::= f2
-      if (lastFailureMsg == null) lastFailureMsg = Msgs(f2 :: Nil)
-    }
-
-    shortParserMsg = if (startIndex >= traceIndex) Msgs(f2 :: Nil) else Msgs.empty
-    failureGroupAggregate = if (checkAggregate(startIndex)) shortParserMsg else Msgs.empty
-  }
-
   def setMsg(startIndex: Int, f: () => String): Unit = {
     setMsg(startIndex, Msgs(new Lazy(f) :: Nil))
   }
 
   def setMsg(startIndex: Int, f: Msgs): Unit = {
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = f
+    if (!isSuccess && index == traceIndex) failureTerminalAggregate ::= f.value.head
     shortParserMsg = if (startIndex >= traceIndex) f else Msgs.empty
     failureGroupAggregate = if (checkAggregate(startIndex)) shortParserMsg else Msgs.empty
   }
