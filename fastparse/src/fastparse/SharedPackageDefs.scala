@@ -110,9 +110,7 @@ trait SharedPackageDefs {
         if (msg.value.isEmpty) Msgs.empty
         else () => msg match{
           case Seq(x) => s"&(${msg.render})"
-          case xs =>
-            new Exception().printStackTrace()
-            s"&${msg.render}"
+          case xs => s"&${msg.render}"
         }
       )
     }

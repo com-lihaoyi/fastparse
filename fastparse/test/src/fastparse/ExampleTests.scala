@@ -50,7 +50,7 @@ object ExampleTests extends TestSuite{
           trace.longMsg == """Expected parseA:1:1 / "c":1:1, found "d""""
         )
 
-        // reportParseMsg and longAggregateMsg record all parsers
+        // aggregateMsg and longAggregateMsg record all parsers
         // failing at the position, "a" | "b" | "c",
 
 

@@ -12,10 +12,7 @@ object FailureTests extends TestSuite{
                     terminals: String = null,
                     parser: P[_] => P[_]) = {
       val f @ Parsed.Failure(failureString, index, extra) = parse(input, parser(_))
-      println("x" * 150)
       val trace = f.trace(true)
-      println("index " + index)
-      println("trace.index " + trace.index)
 
       val terminals1 = Option(terminals).getOrElse(expected)
       val groupAggregateString = trace.groupAggregateString

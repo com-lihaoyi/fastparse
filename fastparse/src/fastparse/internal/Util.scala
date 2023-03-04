@@ -106,7 +106,6 @@ object Util {
                             ctx: ParsingRun[Any],
                             parsedMsg: Msgs,
                             lastAgg: Msgs) = {
-//    println("reportParseMsgPostSep")
     reportParseMsgInRep(startIndex, min, ctx, null, parsedMsg, lastAgg, true)
   }
 
@@ -117,14 +116,6 @@ object Util {
                           parsedMsg: Msgs,
                           lastAgg: Msgs,
                           precut: Boolean) = {
-//    println("reportParseMsgInRep")
-//    println(s"startIndex $startIndex")
-//    println(s"min $min")
-//    println(s"sepMsg ${sepMsg.value()}")
-//    println(s"parsedMsg ${parsedMsg.value()}")
-//    println(s"lastAgg ${lastAgg.value()}")
-//    println(s"precut $precut")
-//    println(s"ctx.failureGroups ${ctx.failureGroups.value()}")
 
     // When we fail on a rep body, we collect both the concatenated
     // sep and failure aggregate  of the rep body that we tried (because
@@ -133,8 +124,7 @@ object Util {
     val newAgg =
       if (sepMsg == null || precut) ctx.failureGroups
       else Util.joinBinOp(sepMsg, parsedMsg)
-//    println(s"newAgg ${newAgg.value()}")
-//    println(s"newAgg ::: lastAgg ${(newAgg ::: lastAgg).value()}")
+
     ctx.reportParseMsg(
       startIndex,
       () => parsedMsg.render + ".rep" + (if (min == 0) "" else s"(${min})"),
