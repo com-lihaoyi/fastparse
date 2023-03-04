@@ -201,7 +201,7 @@ object MacroInlineImpls {
               }
             }
 
-            val guardedRhs = whitespace match {
+            whitespace match {
               case null => rhsSnippet
               case ws =>
                 if (ws.asTerm.tpe =:= TypeRepr.of[fastparse.NoWhitespace.noWhitespaceImplicit.type]) rhsSnippet
@@ -213,7 +213,6 @@ object MacroInlineImpls {
                   }
                 }
             }
-            guardedRhs
           }
         }
       }.asInstanceOf[ParsingRun[R]]

@@ -180,7 +180,7 @@ object Parsed{
     def groupAggregateString = groups.render
 
     @deprecated("Use .msg instead")
-    def trace = reportParseMsg
+    def trace = aggregateMsg
     /**
       * Displays the short failure message excluding the parse stack. This shows
       * the last parser which failed causing the parse to fail. Note that this
@@ -203,7 +203,7 @@ object Parsed{
       * at the failure index. This gives you a good high-level overview of what
       * the parser expected, at the cost
       */
-    def reportParseMsg = Failure.formatMsg(input, List(groupAggregateString -> index), index)
+    def aggregateMsg = Failure.formatMsg(input, List(groupAggregateString -> index), index)
 
     /**
       * A version of [[msg]] that includes the parse stack

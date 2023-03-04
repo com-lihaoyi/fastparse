@@ -55,7 +55,7 @@ object ExampleTests extends TestSuite{
 
 
         assert(
-          trace.reportParseMsg == """Expected (parseEither | "c"):1:1, found "d"""",
+          trace.aggregateMsg == """Expected (parseEither | "c"):1:1, found "d"""",
           trace.longAggregateMsg == """Expected parseA:1:1 / (parseEither | "c"):1:1, found "d""""
         )
       }

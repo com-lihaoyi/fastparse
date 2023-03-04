@@ -10,14 +10,14 @@ object Util {
     case Seq(x) => x
     case xs => xs.mkString("(", " | ", ")")
   }
-  def joinBinOp(lhs: Msgs, rhs: Msgs): Msgs = {
-    () =>
-      if (lhs.value().isEmpty) rhs.render
-      else if (rhs.value().isEmpty) lhs.render
-      else lhs.render + " ~ " + rhs.render
-  }
-
-
+  def joinBinOp(lhs: Msgs, rhs: Msgs): Msgs = Msgs(
+    Lazy(
+      () =>
+        if (lhs.value().isEmpty) rhs.value()
+        else if (rhs.value().isEmpty) lhs.value()
+        else List(lhs.render + " ~ " + rhs.render)
+    )
+  )
 
   def consumeWhitespace[V](whitespace: fastparse.Whitespace, ctx: ParsingRun[Any]) = {
     val oldCapturing = ctx.noDropBuffer // completely disallow dropBuffer
@@ -109,6 +109,7 @@ object Util {
                             ctx: ParsingRun[Any],
                             parsedMsg: Msgs,
                             lastAgg: Msgs) = {
+//    println("reportParseMsgPostSep")
     reportParseMsgInRep(startIndex, min, ctx, null, parsedMsg, lastAgg, true)
   }
 
@@ -119,6 +120,15 @@ object Util {
                           parsedMsg: Msgs,
                           lastAgg: Msgs,
                           precut: Boolean) = {
+//    println("reportParseMsgInRep")
+//    println(s"startIndex $startIndex")
+//    println(s"min $min")
+//    println(s"sepMsg ${sepMsg.value()}")
+//    println(s"parsedMsg ${parsedMsg.value()}")
+//    println(s"lastAgg ${lastAgg.value()}")
+//    println(s"precut $precut")
+//    println(s"ctx.failureGroups ${ctx.failureGroups.value()}")
+
     // When we fail on a rep body, we collect both the concatenated
     // sep and failure aggregate  of the rep body that we tried (because
     // we backtrack past the sep on failure) as well as the failure
@@ -126,7 +136,8 @@ object Util {
     val newAgg =
       if (sepMsg == null || precut) ctx.failureGroups
       else Util.joinBinOp(sepMsg, parsedMsg)
-
+//    println(s"newAgg ${newAgg.value()}")
+//    println(s"newAgg ::: lastAgg ${(newAgg ::: lastAgg).value()}")
     ctx.reportParseMsg(
       startIndex,
       () => parsedMsg.render + ".rep" + (if (min == 0) "" else s"(${min})"),

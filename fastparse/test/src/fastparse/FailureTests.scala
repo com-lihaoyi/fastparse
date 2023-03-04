@@ -244,7 +244,17 @@ object FailureTests extends TestSuite{
           multiple(_)
         }
       )
-
+      test("repSeparatorsBeforeTraceIndexDontPolluteFailureGroups") - checkOffset(
+        input = "p ii",
+        expected = "\"a\"",
+        label = "\"a\"",
+        terminals = "\"a\"",
+        parser = {
+          def space[$:P] = P( " "  )
+          def items[$: P]: P[Unit] = P( "p".rep(sep = " ").log("p.rep") ~ space ~ "i" ~ "a" )
+          items(_)
+        }
+      )
     }
 
     test("offset"){
