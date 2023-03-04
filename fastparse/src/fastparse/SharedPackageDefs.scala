@@ -82,7 +82,7 @@ trait SharedPackageDefs {
     val res =
       if (Util.startsWithIgnoreCase(ctx.input, s, ctx.index)) ctx.freshSuccessUnit(ctx.index + s.length)
       else ctx.freshFailure().asInstanceOf[P[Unit]]
-    if (ctx.verboseFailures) ctx.reportTerminalParseMsg(startIndex, () => Util.literalize(s))
+    if (ctx.verboseFailures) ctx.reportTerminalMsg(startIndex, () => Util.literalize(s))
     res
   }
 
@@ -106,7 +106,7 @@ trait SharedPackageDefs {
       else ctx.asInstanceOf[P[Unit]]
     if (ctx.verboseFailures) {
       ctx.failureGroups = Msgs.empty
-      ctx.reportTerminalParseMsg(startPos,
+      ctx.reportTerminalMsg(startPos,
         if (msg.value.isEmpty) Msgs.empty
         else () => msg match{
           case Seq(x) => s"&(${msg.render})"
@@ -127,7 +127,7 @@ trait SharedPackageDefs {
     val res =
       if (!ctx.input.isReachable(startIndex)) ctx.freshSuccessUnit()
       else ctx.freshFailure().asInstanceOf[P[Unit]]
-    if (ctx.verboseFailures) ctx.reportTerminalParseMsg(startIndex, () => "end-of-input")
+    if (ctx.verboseFailures) ctx.reportTerminalMsg(startIndex, () => "end-of-input")
     res
 
   }
@@ -139,7 +139,7 @@ trait SharedPackageDefs {
     val res =
       if (startIndex == 0) ctx.freshSuccessUnit()
       else ctx.freshFailure().asInstanceOf[P[Unit]]
-    if (ctx.verboseFailures) ctx.reportTerminalParseMsg(startIndex, () => "start-of-input")
+    if (ctx.verboseFailures) ctx.reportTerminalMsg(startIndex, () => "start-of-input")
     res
   }
 
@@ -168,7 +168,7 @@ trait SharedPackageDefs {
     */
   def Pass(implicit ctx: P[_]): P[Unit] = {
     val res = ctx.freshSuccessUnit()
-    if (ctx.verboseFailures) ctx.reportTerminalParseMsg(ctx.index, Msgs.empty)
+    if (ctx.verboseFailures) ctx.reportTerminalMsg(ctx.index, Msgs.empty)
     res
   }
 
@@ -178,7 +178,7 @@ trait SharedPackageDefs {
     */
   def Pass[T](v: T)(implicit ctx: P[_]): P[T] = {
     val res = ctx.freshSuccess(v)
-    if (ctx.verboseFailures) ctx.reportTerminalParseMsg(ctx.index, () => "Pass")
+    if (ctx.verboseFailures) ctx.reportTerminalMsg(ctx.index, () => "Pass")
     res
   }
 
@@ -187,7 +187,7 @@ trait SharedPackageDefs {
     */
   def Fail(implicit ctx: P[_]): P[Nothing] = {
     val res = ctx.freshFailure()
-    if (ctx.verboseFailures) ctx.reportTerminalParseMsg(ctx.index, () => "fail")
+    if (ctx.verboseFailures) ctx.reportTerminalMsg(ctx.index, () => "fail")
     res
   }
 
@@ -199,7 +199,7 @@ trait SharedPackageDefs {
     */
   def Index(implicit ctx: P[_]): P[Int] = {
     val res = ctx.freshSuccess(ctx.index)
-    if (ctx.verboseFailures) ctx.reportTerminalParseMsg(ctx.index, () => "Index")
+    if (ctx.verboseFailures) ctx.reportTerminalMsg(ctx.index, () => "Index")
     res
   }
 
@@ -212,7 +212,7 @@ trait SharedPackageDefs {
     val res =
       if (!ctx.input.isReachable(ctx.index)) ctx.freshFailure().asInstanceOf[P[Unit]]
       else ctx.freshSuccessUnit(ctx.index + 1)
-    if (ctx.verboseFailures) ctx.reportTerminalParseMsg(startIndex, () => "any-char")
+    if (ctx.verboseFailures) ctx.reportTerminalMsg(startIndex, () => "any-char")
     res
   }
 
@@ -228,7 +228,7 @@ trait SharedPackageDefs {
     val res =
       if (!ctx.input.isReachable(ctx.index)) ctx.freshFailure().asInstanceOf[P[Char]]
       else ctx.freshSuccess(ctx.input(ctx.index), ctx.index + 1)
-    if (ctx.verboseFailures) ctx.reportTerminalParseMsg(startIndex, () => "any-char")
+    if (ctx.verboseFailures) ctx.reportTerminalMsg(startIndex, () => "any-char")
     res
   }
 
@@ -263,7 +263,7 @@ object SharedPackageDefs{
       if (res.isSuccess) ctx.freshSuccess(ctx.successValue)
       else ctx.freshFailure(oldIndex)
 
-    if (ctx.verboseFailures) ctx.reportTerminalParseMsg(oldIndex, () => msg)
+    if (ctx.verboseFailures) ctx.reportTerminalMsg(oldIndex, () => msg)
 
     res2.asInstanceOf[P[T]]
   }
@@ -285,7 +285,7 @@ object SharedPackageDefs{
     if (ctx.verboseFailures) {
       ctx.failureTerminals = startTerminals
       ctx.failureGroups = Msgs.empty
-      ctx.reportTerminalParseMsg(startPos, Msgs.empty)
+      ctx.reportTerminalMsg(startPos, Msgs.empty)
     }
     res.cut = startCut
     res

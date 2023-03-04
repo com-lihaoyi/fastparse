@@ -129,7 +129,7 @@ object MacroRepImpls {
                 '{
                   if ($checkMax2) {
                     val res = end(beforeSepIndex, beforeSepIndex, nextCount, outerCut | postCut)
-                    if (verboseFailures) ctx.reportTerminalParseMsg(startIndex, () => parsedMsg.render + ".rep" + (if (actualMin == 0) "" else s"(${actualMin})"))
+                    if (verboseFailures) ctx.reportTerminalMsg(startIndex, () => parsedMsg.render + ".rep" + (if (actualMin == 0) "" else s"(${actualMin})"))
                     res
                   }
                   else {

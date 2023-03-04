@@ -136,7 +136,7 @@ final class ParsingRun[+T](val input: ParserInput,
   //   the parser trying to do when it failed"
   //
   // The implementation of `failureTerminals` is straightforward: we
-  // simply call `reportTerminalParseMsg` in every terminal parser, which collects
+  // simply call `reportTerminalMsg` in every terminal parser, which collects
   // all the messages in a big list and returns it. The implementation of
   // `failureGroups` is more interesting, since we need to figure out
   // what are the "high level" parsers that we need to list. We use the
@@ -250,8 +250,8 @@ final class ParsingRun[+T](val input: ParserInput,
    * a user wants to know what could have been placed at the failure point to
    * let the parse progress
    */
-  def reportTerminalParseMsg(startIndex: Int,
-                             newShortParserMsg: Msgs): Unit = {
+  def reportTerminalMsg(startIndex: Int,
+                        newShortParserMsg: Msgs): Unit = {
     // We only care about terminal parsers which failed exactly at the traceIndex
     if (!isSuccess && index == traceIndex) failureTerminals :::= newShortParserMsg
 

@@ -27,7 +27,7 @@ object MacroInlineImpls {
                   } else {
                     ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
                   }
-                if (ctx1.verboseFailures) ctx1.reportTerminalParseMsg(index, () => $literalized)
+                if (ctx1.verboseFailures) ctx1.reportTerminalMsg(index, () => $literalized)
                 res
             }
 
@@ -51,7 +51,7 @@ object MacroInlineImpls {
                     ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
                   }
                 if (ctx1.verboseFailures) {
-                  ctx1.reportTerminalParseMsg(index, () => $literalized)
+                  ctx1.reportTerminalMsg(index, () => $literalized)
                 }
                 res
 
@@ -67,7 +67,7 @@ object MacroInlineImpls {
               val res =
                 if (Util.startsWith(ctx1.input, s1, index)) ctx1.freshSuccessUnit(index + s1.length)
                 else ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
-              if (ctx1.verboseFailures) ctx1.reportTerminalParseMsg(index, () => Util.literalize(s1))
+              if (ctx1.verboseFailures) ctx1.reportTerminalMsg(index, () => Util.literalize(s1))
               res
           }
         }
@@ -83,7 +83,7 @@ object MacroInlineImpls {
       else if (f(ctx1.successValue.asInstanceOf[T])) ctx1.asInstanceOf[ParsingRun[T]]
       else ctx1.freshFailure().asInstanceOf[ParsingRun[T]]
 
-    if (ctx1.verboseFailures) ctx1.reportTerminalParseMsg(startIndex, () => "filter")
+    if (ctx1.verboseFailures) ctx1.reportTerminalMsg(startIndex, () => "filter")
     res
   }
 
@@ -401,7 +401,7 @@ object MacroInlineImpls {
               case true  => ctx1.freshSuccessUnit(index + 1)
               case false => ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
             }
-          if (ctx1.verboseFailures) ctx1.reportTerminalParseMsg(index, () => $bracketed)
+          if (ctx1.verboseFailures) ctx1.reportTerminalMsg(index, () => $bracketed)
           res
       }
     }
@@ -424,7 +424,7 @@ object MacroInlineImpls {
       } else {
         ctx0.freshSuccessUnit(ctx0.index + 1)
       }
-    if (ctx0.verboseFailures) ctx0.reportTerminalParseMsg(startIndex, () => s"char-pred(${p0})")
+    if (ctx0.verboseFailures) ctx0.reportTerminalMsg(startIndex, () => s"char-pred(${p0})")
     res
   }
 
@@ -452,7 +452,7 @@ object MacroInlineImpls {
             if (index >= goal) ctx1.freshSuccessUnit(index = index)
             else ctx1.freshFailure()
 
-          if (ctx1.verboseFailures) ctx1.reportTerminalParseMsg(start, () => $bracketed)
+          if (ctx1.verboseFailures) ctx1.reportTerminalMsg(start, () => $bracketed)
           res
       }
     }
@@ -467,7 +467,7 @@ object MacroInlineImpls {
     val res =
       if (index >= goal) ctx0.freshSuccessUnit(index = index)
       else ctx0.freshFailure()
-    if (ctx0.verboseFailures) ctx0.reportTerminalParseMsg(start, () => s"chars-while($p0, $min)")
+    if (ctx0.verboseFailures) ctx0.reportTerminalMsg(start, () => s"chars-while($p0, $min)")
     res
   }
 
@@ -542,7 +542,7 @@ object MacroInlineImpls {
           val res =
             if (output != -1) ctx1.freshSuccessUnit(output)
             else ctx1.freshFailure()
-          if (ctx1.verboseFailures) ctx1.reportTerminalParseMsg(
+          if (ctx1.verboseFailures) ctx1.reportTerminalMsg(
             index,
             Msgs.fromStrings(${ Expr(literals.map(Util.literalize(_)).toList) })
           )

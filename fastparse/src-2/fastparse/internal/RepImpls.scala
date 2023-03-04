@@ -49,7 +49,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
           val nextCount = count + 1
           if (nextCount == actualMax) {
             val res = end(beforeSepIndex, beforeSepIndex, nextCount, outerCut | postCut)
-            if (verboseFailures) ctx.reportTerminalParseMsg(startIndex, () => parsedMsg.render + ".repX" + (if(min == 0) "" else s"($min)"))
+            if (verboseFailures) ctx.reportTerminalMsg(startIndex, () => parsedMsg.render + ".repX" + (if(min == 0) "" else s"($min)"))
             res
           }
           else {
@@ -171,7 +171,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
           val nextCount = count + 1
           if (nextCount == actualMax) {
             val res = end(beforeSepIndex, beforeSepIndex, nextCount, outerCut | postCut)
-            if (verboseFailures) ctx.reportTerminalParseMsg(startIndex, () => parsedMsg.render + ".rep" + (if(min == 0) "" else s"($min)"))
+            if (verboseFailures) ctx.reportTerminalMsg(startIndex, () => parsedMsg.render + ".rep" + (if(min == 0) "" else s"($min)"))
             res
           }
           else if (!consumeWhitespace(whitespace, ctx, false)) ctx.asInstanceOf[ParsingRun[Nothing]]

@@ -29,7 +29,7 @@ object MacroImpls {
           else if (f.splice(ctx1.successValue.asInstanceOf[T])) ctx1.asInstanceOf[ParsingRun[T]]
           else ctx1.freshFailure().asInstanceOf[ParsingRun[T]]
 
-        if (ctx1.verboseFailures) ctx1.reportTerminalParseMsg(startIndex, () => "filter")
+        if (ctx1.verboseFailures) ctx1.reportTerminalMsg(startIndex, () => "filter")
         res
       }
     }
@@ -88,7 +88,7 @@ object MacroImpls {
                 }else{
                   ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
                 }
-              if (ctx1.verboseFailures) ctx1.reportTerminalParseMsg(index, () => literalized.splice)
+              if (ctx1.verboseFailures) ctx1.reportTerminalMsg(index, () => literalized.splice)
               res
             }
 
@@ -118,7 +118,7 @@ object MacroImpls {
                   ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
                 }
               if (ctx1.verboseFailures) {
-                ctx1.reportTerminalParseMsg(index, () => literalized.splice)
+                ctx1.reportTerminalMsg(index, () => literalized.splice)
               }
               res
 
@@ -133,7 +133,7 @@ object MacroImpls {
             val res =
               if (Util.startsWith(ctx1.input, s1, index)) ctx1.freshSuccessUnit(index + s1.length)
               else ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
-            if (ctx1.verboseFailures) ctx1.reportTerminalParseMsg(index, () => Util.literalize(s1))
+            if (ctx1.verboseFailures) ctx1.reportTerminalMsg(index, () => Util.literalize(s1))
             res
           }
         }
@@ -362,7 +362,7 @@ object MacroImpls {
         val res =
           if ($output != -1) $ctx1.freshSuccessUnit(index = $output)
           else $ctx1.freshFailure()
-        if ($ctx1.verboseFailures) $ctx1.reportTerminalParseMsg($index, $bracketed)
+        if ($ctx1.verboseFailures) $ctx1.reportTerminalMsg($index, $bracketed)
         res
       }
     """
@@ -428,7 +428,7 @@ object MacroImpls {
             case true => ctx1.freshSuccessUnit(index + 1)
             case false => ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
           }
-        if (ctx1.verboseFailures) ctx1.reportTerminalParseMsg(index, () => bracketed.splice)
+        if (ctx1.verboseFailures) ctx1.reportTerminalMsg(index, () => bracketed.splice)
         res
       }
     }
@@ -569,7 +569,7 @@ object MacroImpls {
             else {
               ctx0.freshSuccessUnit(ctx0.index + 1)
             }
-          if (ctx0.verboseFailures) ctx0.reportTerminalParseMsg(startIndex, () => s"char-pred(${p0})")
+          if (ctx0.verboseFailures) ctx0.reportTerminalMsg(startIndex, () => s"char-pred(${p0})")
           res
         }
       }
@@ -612,7 +612,7 @@ object MacroImpls {
           if ($index >= $goal) $ctx1.freshSuccessUnit(index = $index)
           else $ctx1.freshFailure()
 
-        if ($ctx1.verboseFailures) $ctx1.reportTerminalParseMsg($start, () => $bracketed)
+        if ($ctx1.verboseFailures) $ctx1.reportTerminalMsg($start, () => $bracketed)
         res
       }
     """
@@ -640,7 +640,7 @@ object MacroImpls {
           val res =
             if (index >= goal) ctx0.freshSuccessUnit(index = index)
             else ctx0.freshFailure()
-          if (ctx0.verboseFailures) ctx0.reportTerminalParseMsg(start, () => s"chars-while($p0, ${min.splice})")
+          if (ctx0.verboseFailures) ctx0.reportTerminalMsg(start, () => s"chars-while($p0, ${min.splice})")
           res
         }
       }
