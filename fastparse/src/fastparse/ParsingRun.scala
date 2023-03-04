@@ -195,16 +195,20 @@ final class ParsingRun[+T](val input: ParserInput,
   def aggregateMsg(startIndex: Int,
                    msgToSet: Msgs,
                    msgToAggregate: Msgs,
-                   forceAggregate: Boolean): Unit = {
+                   forceAggregate: Boolean,
+                   setShortMsgOnlyIfBeyondTraceIndex: Boolean = false): Unit = {
 
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = msgToSet
-    shortParserMsg = msgToSet
+
+    shortParserMsg =
+      if (!setShortMsgOnlyIfBeyondTraceIndex || startIndex >= traceIndex)  msgToSet
+      else  Msgs.empty
 
     // There are two cases when aggregating: either we stomp over the entire
     // existing aggregation with `msgToSet`, or we preserve it (with possible
     // additions) with `msgToAggregate`.
     failureGroupAggregate =
-      if (checkAggregate(startIndex) && !forceAggregate) msgToSet
+      if (checkAggregate(startIndex) && !forceAggregate) shortParserMsg
       else msgToAggregate
   }
 
@@ -218,13 +222,14 @@ final class ParsingRun[+T](val input: ParserInput,
     setMsg(startIndex, Msgs(new Lazy(f) :: Nil))
   }
 
-  def setMsg(startIndex: Int, f: Msgs): Unit = {
-    if (!isSuccess && lastFailureMsg == null) lastFailureMsg = f
-
-    shortParserMsg = if (startIndex >= traceIndex) f else Msgs.empty
-    failureGroupAggregate =
-      if (checkAggregate(startIndex)) shortParserMsg
-      else Msgs.empty
+  def setMsg(startIndex: Int, msgToSet: Msgs): Unit = {
+    aggregateMsg(
+      startIndex,
+      msgToSet,
+      Msgs.empty,
+      false,
+      true
+    )
   }
 
   /**
