@@ -447,7 +447,7 @@ object FailureTests extends TestSuite{
         |  var = 2
         |}
       """.stripMargin,
-      aggregate = """(Semis ~ TmplStat | Binding | InfixPattern | VarId)""",
+      aggregate = """(Binding | InfixPattern | VarId)""",
       terminals = null,
       found = "= 2"
     )
@@ -519,7 +519,7 @@ object FailureTests extends TestSuite{
         |package omg
         |;
       """.stripMargin,
-      aggregate = """(Semis ~ TopStat | "{")""",
+      aggregate = """("." | "{")""",
       terminals = null,
       found = ";"
     )

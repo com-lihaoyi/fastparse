@@ -123,10 +123,6 @@ object Util {
     // sep and failure aggregate  of the rep body that we tried (because
     // we backtrack past the sep on failure) as well as the failure
     // aggregate of the previous rep, which we could have continued
-    println("reportParseMsgInRep")
-    println("sepMsg " + sepMsg)
-    println("precut " + precut)
-    println("parsedMsg " + parsedMsg)
     val newAgg =
       if (sepMsg == null || precut) ctx.failureGroups
       else Util.joinBinOp(sepMsg, parsedMsg)
