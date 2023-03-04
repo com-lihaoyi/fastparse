@@ -179,7 +179,7 @@ object FailureTests extends TestSuite{
         |import org.parboiled2 _
         |
       """.stripMargin,
-      aggregate = """(Semis ~ `package` | "." | "," | end-of-input)""",
+      aggregate = """(`package` | "." | "," | end-of-input)""",
       terminals = null,
       found = "_"
     )
