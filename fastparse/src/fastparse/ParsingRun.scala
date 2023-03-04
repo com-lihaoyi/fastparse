@@ -183,12 +183,36 @@ final class ParsingRun[+T](val input: ParserInput,
 
   /**
    * Called by non-terminal parsers after completion, success or failure
+   *
+   * This needs to be called for both successful and failed parsers, as we need
+   * to record the msg of a successful parse in case it forms part of a larger
+   * failed parse later.
+   *
+   * For example:
+   *
+   * - Using "a" ~ ("b" ~ "c" | "d") to parse "abe"
+   * - We report that the the parser ("b" ~ "c" | "d") failed at index 1
+   * - That msg contains the msg of the parse "b" even though it was successful
    */
   def reportParseMsg(startIndex: Int,
                      msgToSet: Msgs,
+                     msgToAggregate: Msgs): Unit = {
+
+    reportParseMsg(startIndex, msgToSet, msgToAggregate, false)
+  }
+
+  def reportParseMsg(startIndex: Int,
+                     msgToSet: Msgs,
                      msgToAggregate: Msgs,
-                     forceAggregate: Boolean = false,
-                     setShortMsg: Boolean = true): Unit = {
+                     forceAggregate: Boolean): Unit = {
+    reportParseMsg0(startIndex, msgToSet, msgToAggregate, forceAggregate, true)
+  }
+
+  def reportParseMsg0(startIndex: Int,
+                     msgToSet: Msgs,
+                     msgToAggregate: Msgs,
+                     forceAggregate: Boolean,
+                     setShortMsg: Boolean): Unit = {
 
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = msgToSet
 
@@ -210,8 +234,10 @@ final class ParsingRun[+T](val input: ParserInput,
    */
   def reportTerminalParseMsg(startIndex: Int,
                              msgToSet: Msgs): Unit = {
+    // We only care about terminal parsers which failed exactly at the traceIndex
     if (!isSuccess && index == traceIndex) failureTerminalAggregate :::= msgToSet
-    reportParseMsg(
+
+    reportParseMsg0(
       startIndex,
       msgToSet,
       Msgs.empty,
