@@ -199,9 +199,9 @@ final class ParsingRun[+T](val input: ParserInput,
    * - Using "a" ~ ("b" ~ "c" | "d") to parse "abe"
    * - We report that the the parser ("b" ~ "c" | "d") failed at index 1
    * - That msg contains the msg of the parse "b" even though it was successful
-   * 
-   * Overloaded to minimize the amount of callsite bytecode, since we do a ton 
-   * of inlining in Fastparse, and large amounts of bytecode inlined in a method 
+   *
+   * Overloaded to minimize the amount of callsite bytecode, since we do a ton
+   * of inlining in Fastparse, and large amounts of bytecode inlined in a method
    * can cause JVM performance problems (e.g. JIT compilation may get disabled)
    */
   def reportParseMsg(startIndex: Int,
@@ -229,24 +229,6 @@ final class ParsingRun[+T](val input: ParserInput,
     reportParseMsg0(startIndex, newShortParserMsg, newFailureGroups, forceAggregate, true)
   }
 
-  def reportParseMsg0(startIndex: Int,
-                      newShortParserMsg: Msgs,
-                      newFailureGroups: Msgs,
-                      forceAggregate: Boolean,
-                      setShortMsg: Boolean): Unit = {
-
-    if (!isSuccess && lastFailureMsg == null) lastFailureMsg = newShortParserMsg
-
-    shortParserMsg = if (setShortMsg) newShortParserMsg else Msgs.empty
-
-    // There are two cases when aggregating: either we stomp over the entire
-    // existing aggregation with `msgToSet`, or we preserve it (with possible
-    // additions) with `msgToAggregate`.
-    failureGroups =
-      if (checkAggregate(startIndex) && !forceAggregate) shortParserMsg
-      else newFailureGroups
-  }
-
   /**
    * Called by any terminal parser; these are the smallest parsers that a user
    * may care about, e.g. individual strings or characters, and will be stored
@@ -267,10 +249,29 @@ final class ParsingRun[+T](val input: ParserInput,
     )
   }
 
+  def reportParseMsg0(startIndex: Int,
+                      newShortParserMsg: Msgs,
+                      newFailureGroups: Msgs,
+                      forceAggregate: Boolean,
+                      setShortMsg: Boolean): Unit = {
+
+    if (!isSuccess && lastFailureMsg == null) lastFailureMsg = newShortParserMsg
+
+    shortParserMsg = if (setShortMsg) newShortParserMsg else Msgs.empty
+
+    // There are two cases when aggregating: either we stomp over the entire
+    // existing `failureGroups` with `newShortParserMsg`, or we preserve it
+    // (with possible additions) with `newFailureGroups`.
+    failureGroups =
+      if (forceAggregate) newFailureGroups
+      else if (discardNewFailureGroups(startIndex)) shortParserMsg
+      else newFailureGroups
+  }
+
   /**
     * Conditions under which we want to aggregate the given parse
     */
-  def checkAggregate(startIndex: Int) = {
+  def discardNewFailureGroups(startIndex: Int) = {
     // We only aggregate if we are not currently past a cut; if we are past a
     // cut, there is no further backtracking and so the error aggregate that has
     // occurred will be the final aggregate shown to the user
