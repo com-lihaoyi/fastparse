@@ -149,7 +149,7 @@ object Parsed{
       assert(!p.isSuccess)
       TracedFailure(
         p.failureTerminals,
-        p.lastFailureMsg ::: p.failureGroups,
+        p.failureGroups,
         Parsed.fromParsingRun(p).asInstanceOf[Failure]
       )
     }

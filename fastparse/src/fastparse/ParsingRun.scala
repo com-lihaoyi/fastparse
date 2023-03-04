@@ -223,7 +223,7 @@ final class ParsingRun[+T](val input: ParserInput,
    * parsers that have either succeeded past the traceIndex, or failed and
    * potentially backtracked.
    */
-  def shouldSetShortMsg = !isSuccess || index >= traceIndex
+  def shouldSetShortMsg = failureGroups.value().nonEmpty
 
   def reportParseMsg(startIndex: Int,
                      newShortParserMsg: Msgs,
@@ -235,7 +235,7 @@ final class ParsingRun[+T](val input: ParserInput,
                      newShortParserMsg: Msgs,
                      newFailureGroups: Msgs,
                      forceAggregate: Boolean): Unit = {
-    reportParseMsg0(startIndex, newShortParserMsg, newFailureGroups, forceAggregate, shouldSetShortMsg)
+    reportParseMsg0(startIndex, newShortParserMsg, newFailureGroups, forceAggregate, newFailureGroups.value().nonEmpty)
   }
 
   /**
@@ -259,28 +259,30 @@ final class ParsingRun[+T](val input: ParserInput,
 
     reportParseMsg0(
       startIndex,
-      newShortParserMsg,
-      Msgs.empty,
+      if (startIndex >= traceIndex) newShortParserMsg else Msgs.empty,
+      if (startIndex >= traceIndex) newShortParserMsg else Msgs.empty,
       false,
       startIndex >= traceIndex
     )
   }
 
+  def logStuff(s: String) = {
+    println()
+    println("  " * logDepth + s + " reportParseMsg0 " + index)
+    println("  " * logDepth + s + " isSuccess " + isSuccess)
+    println("  " * logDepth + s + " shortParserMsg " + shortParserMsg.value())
+    println("  " * logDepth + s + " failureGroups " + failureGroups.value())
+    println()
+  }
   def reportParseMsg0(startIndex: Int,
                       newShortParserMsg: Msgs,
                       newFailureGroups: Msgs,
                       forceAggregate: Boolean,
                       setShortMsg: Boolean): Unit = {
-    println()
-    println("  " * logDepth + "reportParseMsg0 " + startIndex)
-    println("  " * logDepth + "isSuccess " + isSuccess)
-    println("  " * logDepth + "newShortParserMsg " + newShortParserMsg.value())
-    println("  " * logDepth + "newFailureGroups " + newFailureGroups.value())
-    println("  " * logDepth + "forceAggregate " + forceAggregate)
-    println("  " * logDepth + "setShortMsg " + setShortMsg)
-    println("  " * logDepth + "shortParserMsg " + shortParserMsg.value())
-    println("  " * logDepth + "failureGroups " + failureGroups.value())
-    println()
+    //    println("  " * logDepth + s + "newShortParserMsg " + newShortParserMsg.value())
+    //    println("  " * logDepth + s + "newFailureGroups " + newFailureGroups.value())
+    //    println("  " * logDepth + s + "forceAggregate " + forceAggregate)
+    //    println("  " * logDepth + s + "setShortMsg " + setShortMsg)
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = newShortParserMsg
 
     shortParserMsg = if (setShortMsg) newShortParserMsg else Msgs.empty

@@ -187,16 +187,20 @@ object MacroInlineImpls {
                     )
                   }
 
-                if (ctx1.verboseFailures) ctx1.reportParseMsg(
-                  preLhsIndex,
-                  Util.joinBinOp(lhsMsg, rhsMsg),
-                  rhsAggregate ::: lhsAggregate,
-                  // We override the failureGroups to avoid building an `a ~ b`
-                  // aggregate msg in the specific case where the LHS parser fails to
-                  // make any progress past `startIndex`. This finds cases like `a.? ~ b`
-                  // or `a.rep ~ b` and lets use flatten them out into `a | b`
-                  forceAggregate = preRhsIndex == ctx1.traceIndex
-                )
+                if (ctx1.verboseFailures) {
+//                  println("rhsAggregate " + rhsAggregate)
+//                  println("lhsAggregate " + lhsAggregate)
+                  ctx1.reportParseMsg(
+                    preLhsIndex,
+                    Util.joinBinOp(lhsMsg, rhsMsg),
+                    rhsAggregate ::: lhsAggregate,
+                    // We override the failureGroups to avoid building an `a ~ b`
+                    // aggregate msg in the specific case where the LHS parser fails to
+                    // make any progress past `startIndex`. This finds cases like `a.? ~ b`
+                    // or `a.rep ~ b` and lets use flatten them out into `a | b`
+                    forceAggregate = preRhsIndex == ctx1.traceIndex
+                  )
+                }
                 res
               }
             }
@@ -316,8 +320,9 @@ object MacroInlineImpls {
       val endCut = rhsCut | oldCut
       if (!ctx5.isSuccess && !rhsCut) ctx5.freshFailure(startPos)
       ctx5.cut = endCut
-      if (verboseFailures)
-        ctx5.reportParseMsg(startPos, rhsMsg ::: lhsMsg, ctx5.failureGroups ::: lhsAggregate)
+      if (verboseFailures) {
+        ctx5.reportParseMsg(startPos, rhsMsg ::: lhsMsg, ctx5.failureGroups  ::: lhsAggregate)
+      }
       ctx5.asInstanceOf[ParsingRun[V]]
     }
   }

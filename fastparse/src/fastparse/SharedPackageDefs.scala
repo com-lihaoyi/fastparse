@@ -106,10 +106,13 @@ trait SharedPackageDefs {
       else ctx.asInstanceOf[P[Unit]]
     if (ctx.verboseFailures) {
       ctx.failureGroups = Msgs.empty
-      ctx.reportTerminalParseMsg(startPos, () =>
-        msg match{
+      ctx.reportTerminalParseMsg(startPos,
+        if (msg.value().isEmpty) Msgs.empty
+        else () => msg match{
           case Seq(x) => s"&(${msg.render})"
-          case xs => s"&${msg.render}"
+          case xs =>
+            new Exception().printStackTrace()
+            s"&${msg.render}"
         }
       )
     }
@@ -167,7 +170,7 @@ trait SharedPackageDefs {
     */
   def Pass(implicit ctx: P[_]): P[Unit] = {
     val res = ctx.freshSuccessUnit()
-    if (ctx.verboseFailures) ctx.reportTerminalParseMsg(ctx.index, () => "Pass")
+    if (ctx.verboseFailures) ctx.reportTerminalParseMsg(ctx.index, Msgs.empty)
     res
   }
 
@@ -211,7 +214,7 @@ trait SharedPackageDefs {
     val res =
       if (!ctx.input.isReachable(ctx.index)) ctx.freshFailure().asInstanceOf[P[Unit]]
       else ctx.freshSuccessUnit(ctx.index + 1)
-    if (ctx.verboseFailures) ctx.reportTerminalParseMsg(startIndex, () => "any-character")
+    if (ctx.verboseFailures) ctx.reportTerminalParseMsg(startIndex, () => "any-char")
     res
   }
 
@@ -227,7 +230,7 @@ trait SharedPackageDefs {
     val res =
       if (!ctx.input.isReachable(ctx.index)) ctx.freshFailure().asInstanceOf[P[Char]]
       else ctx.freshSuccess(ctx.input(ctx.index), ctx.index + 1)
-    if (ctx.verboseFailures) ctx.reportTerminalParseMsg(startIndex, () => "any-character")
+    if (ctx.verboseFailures) ctx.reportTerminalParseMsg(startIndex, () => "any-char")
     res
   }
 

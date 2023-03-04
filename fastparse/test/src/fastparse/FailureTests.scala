@@ -19,10 +19,12 @@ object FailureTests extends TestSuite{
 
       val terminals1 = Option(terminals).getOrElse(expected)
       val groupAggregateString = trace.groupAggregateString
+      val traceLabel = trace.failure.label
+      val traceTerminalAggregateString = trace.terminalAggregateString
       assert(
         groupAggregateString == expected,
-        trace.failure.label == label,
-        trace.terminalAggregateString == terminals1
+        traceLabel == label,
+        traceTerminalAggregateString == terminals1
       )
     }
 
@@ -269,11 +271,11 @@ object FailureTests extends TestSuite{
           all(_)
         }
       )
-      test("bug") - checkOffset(
+      test("repSeparatorsBeforeTraceIndexDontPolluteFailureGroups3") - checkOffset(
         input = "pt x_",
         expected = """("y" | end-of-input)""",
-        label = "\"a\"",
-        terminals = "\"a\"",
+        label = "end-of-input",
+        terminals = """("y" | end-of-input)""",
         parser = {
           def c[$: P] = P( "x".repX(1, "y") ).log
           def d[$: P] = P( "p" ).log
