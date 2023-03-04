@@ -82,7 +82,7 @@ trait SharedPackageDefs {
     val res =
       if (Util.startsWithIgnoreCase(ctx.input, s, ctx.index)) ctx.freshSuccessUnit(ctx.index + s.length)
       else ctx.freshFailure().asInstanceOf[P[Unit]]
-    if (ctx.verboseFailures) ctx.setMsg(startIndex, () => Util.literalize(s))
+    if (ctx.verboseFailures) ctx.aggregateTerminal(startIndex, () => Util.literalize(s))
     res
   }
 
@@ -126,7 +126,7 @@ trait SharedPackageDefs {
     val res =
       if (!ctx.input.isReachable(startIndex)) ctx.freshSuccessUnit()
       else ctx.freshFailure().asInstanceOf[P[Unit]]
-    if (ctx.verboseFailures) ctx.setMsg(startIndex, () => "end-of-input")
+    if (ctx.verboseFailures) ctx.aggregateTerminal(startIndex, () => "end-of-input")
     res
 
   }
@@ -138,7 +138,7 @@ trait SharedPackageDefs {
     val res =
       if (startIndex == 0) ctx.freshSuccessUnit()
       else ctx.freshFailure().asInstanceOf[P[Unit]]
-    if (ctx.verboseFailures) ctx.setMsg(startIndex, () => "start-of-input")
+    if (ctx.verboseFailures) ctx.aggregateTerminal(startIndex, () => "start-of-input")
     res
   }
 
@@ -211,7 +211,7 @@ trait SharedPackageDefs {
     val res =
       if (!ctx.input.isReachable(ctx.index)) ctx.freshFailure().asInstanceOf[P[Unit]]
       else ctx.freshSuccessUnit(ctx.index + 1)
-    if (ctx.verboseFailures) ctx.setMsg(startIndex, () => "any-character")
+    if (ctx.verboseFailures) ctx.aggregateTerminal(startIndex, () => "any-character")
     res
   }
 
@@ -227,7 +227,7 @@ trait SharedPackageDefs {
     val res =
       if (!ctx.input.isReachable(ctx.index)) ctx.freshFailure().asInstanceOf[P[Char]]
       else ctx.freshSuccess(ctx.input(ctx.index), ctx.index + 1)
-    if (ctx.verboseFailures) ctx.setMsg(startIndex, () => "any-character")
+    if (ctx.verboseFailures) ctx.aggregateTerminal(startIndex, () => "any-character")
     res
   }
 
@@ -262,7 +262,7 @@ object SharedPackageDefs{
       if (res.isSuccess) ctx.freshSuccess(ctx.successValue)
       else ctx.freshFailure(oldIndex)
 
-    if (ctx.verboseFailures) ctx.setMsg(oldIndex, () => msg)
+    if (ctx.verboseFailures) ctx.aggregateTerminal(oldIndex, () => msg)
 
     res2.asInstanceOf[P[T]]
   }

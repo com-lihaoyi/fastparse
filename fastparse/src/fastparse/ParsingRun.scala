@@ -136,7 +136,7 @@ final class ParsingRun[+T](val input: ParserInput,
   //   the parser trying to do when it failed"
   //
   // The implementation of `failureTerminalAggregate` is straightforward: we
-  // simply call `setMsg` in every terminal parser, which collects
+  // simply call `aggregateTerminal` in every terminal parser, which collects
   // all the messages in a big list and returns it. The implementation of
   // `failureGroupAggregate` is more interesting, since we need to figure out
   // what are the "high level" parsers that we need to list. We use the
@@ -198,14 +198,20 @@ final class ParsingRun[+T](val input: ParserInput,
                    forceAggregate: Boolean): Unit = {
 
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = msgToSet
-
     shortParserMsg = msgToSet
 
     // There are two cases when aggregating: either we stomp over the entire
     // existing aggregation with `msgToSet`, or we preserve it (with possible
     // additions) with `msgToAggregate`.
-    if (checkAggregate(startIndex) && !forceAggregate) failureGroupAggregate = msgToSet
-    else failureGroupAggregate = msgToAggregate
+    failureGroupAggregate =
+      if (checkAggregate(startIndex) && !forceAggregate) msgToSet
+      else msgToAggregate
+  }
+
+  def aggregateTerminal(startIndex: Int, f: () => String): Unit = {
+    val f2 = new Lazy(f)
+    if (!isSuccess && index == traceIndex) failureTerminalAggregate ::= f2
+    setMsg(startIndex, Msgs(f2 :: Nil))
   }
 
   def setMsg(startIndex: Int, f: () => String): Unit = {
@@ -214,9 +220,11 @@ final class ParsingRun[+T](val input: ParserInput,
 
   def setMsg(startIndex: Int, f: Msgs): Unit = {
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = f
-    if (!isSuccess && index == traceIndex) failureTerminalAggregate ::= f.value.head
+
     shortParserMsg = if (startIndex >= traceIndex) f else Msgs.empty
-    failureGroupAggregate = if (checkAggregate(startIndex)) shortParserMsg else Msgs.empty
+    failureGroupAggregate =
+      if (checkAggregate(startIndex)) shortParserMsg
+      else Msgs.empty
   }
 
   /**
