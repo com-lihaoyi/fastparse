@@ -199,37 +199,52 @@ final class ParsingRun[+T](val input: ParserInput,
    * - Using "a" ~ ("b" ~ "c" | "d") to parse "abe"
    * - We report that the the parser ("b" ~ "c" | "d") failed at index 1
    * - That msg contains the msg of the parse "b" even though it was successful
+   * 
+   * Overloaded to minimize the amount of callsite bytecode, since we do a ton 
+   * of inlining in Fastparse, and large amounts of bytecode inlined in a method 
+   * can cause JVM performance problems (e.g. JIT compilation may get disabled)
    */
   def reportParseMsg(startIndex: Int,
-                     msgToSet: Msgs,
-                     msgToAggregate: Msgs): Unit = {
+                     newShortParserMsg: Msgs): Unit = {
 
-    reportParseMsg(startIndex, msgToSet, msgToAggregate, false)
+    reportParseMsg(startIndex, newShortParserMsg, failureGroups)
+  }
+  def reportParseMsg(startIndex: Int,
+                     newShortParserMsg: Msgs,
+                     newFailureGroups: Msgs): Unit = {
+
+    reportParseMsg(startIndex, newShortParserMsg, newFailureGroups, false)
   }
 
   def reportParseMsg(startIndex: Int,
-                     msgToSet: Msgs,
-                     msgToAggregate: Msgs,
+                     newShortParserMsg: Msgs,
                      forceAggregate: Boolean): Unit = {
-    reportParseMsg0(startIndex, msgToSet, msgToAggregate, forceAggregate, true)
+    reportParseMsg0(startIndex, newShortParserMsg, failureGroups, forceAggregate, true)
+  }
+
+  def reportParseMsg(startIndex: Int,
+                     newShortParserMsg: Msgs,
+                     newFailureGroups: Msgs,
+                     forceAggregate: Boolean): Unit = {
+    reportParseMsg0(startIndex, newShortParserMsg, newFailureGroups, forceAggregate, true)
   }
 
   def reportParseMsg0(startIndex: Int,
-                      msgToSet: Msgs,
-                      msgToAggregate: Msgs,
+                      newShortParserMsg: Msgs,
+                      newFailureGroups: Msgs,
                       forceAggregate: Boolean,
                       setShortMsg: Boolean): Unit = {
 
-    if (!isSuccess && lastFailureMsg == null) lastFailureMsg = msgToSet
+    if (!isSuccess && lastFailureMsg == null) lastFailureMsg = newShortParserMsg
 
-    shortParserMsg = if (setShortMsg) msgToSet else Msgs.empty
+    shortParserMsg = if (setShortMsg) newShortParserMsg else Msgs.empty
 
     // There are two cases when aggregating: either we stomp over the entire
     // existing aggregation with `msgToSet`, or we preserve it (with possible
     // additions) with `msgToAggregate`.
     failureGroups =
       if (checkAggregate(startIndex) && !forceAggregate) shortParserMsg
-      else msgToAggregate
+      else newFailureGroups
   }
 
   /**
@@ -239,13 +254,13 @@ final class ParsingRun[+T](val input: ParserInput,
    * have been placed at the failure point to let the parse progress
    */
   def reportTerminalParseMsg(startIndex: Int,
-                             msgToSet: Msgs): Unit = {
+                             newShortParserMsg: Msgs): Unit = {
     // We only care about terminal parsers which failed exactly at the traceIndex
-    if (!isSuccess && index == traceIndex) failureTerminals :::= msgToSet
+    if (!isSuccess && index == traceIndex) failureTerminals :::= newShortParserMsg
 
     reportParseMsg0(
       startIndex,
-      msgToSet,
+      newShortParserMsg,
       Msgs.empty,
       false,
       startIndex >= traceIndex

@@ -55,7 +55,6 @@ object MacroImpls {
             ctx0.reportParseMsg(
               startIndex,
               () => name.splice.value,
-              ctx0.failureGroups,
               startIndex < ctx0.traceIndex
             )
             if (!ctx0.isSuccess){
@@ -242,7 +241,7 @@ object MacroImpls {
           val verboseFailures = ctx5.verboseFailures
 
           ctx5.index = startPos
-          if (verboseFailures) ctx5.reportParseMsg(startPos, lhsMsg, lhsAggregate)
+          if (verboseFailures) ctx5.reportParseMsg(startPos, lhsMsg)
 
           ctx5.cut = false
           other.splice
@@ -693,9 +692,8 @@ object MacroImpls {
 
           if (ctx1.verboseFailures) {
             val msg = ctx1.shortParserMsg
-            val agg = ctx1.failureGroups
             if (!postSuccess){
-              ctx1.reportParseMsg(startPos, () => msg.render + ".?", agg)
+              ctx1.reportParseMsg(startPos, () => msg.render + ".?")
             }
           }
           res

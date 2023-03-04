@@ -126,6 +126,16 @@ object FailureTests extends TestSuite{
         assert(trace2.groupAggregateString == """("," ~ parseB | "c")""")
         f2.index
       }
+      test("repTooFew"){
+        def parseB[$: P] = P( "a" | "b" )
+        def parseA[$: P] = P( parseB.rep(5) )
+        val f1 @ Parsed.Failure(_, _, _) = parse("abab", parseA(_))
+
+        val trace = f1.trace()
+
+        assert(trace.groupAggregateString == """("a" | "b")""")
+        assert(trace.terminalAggregateString == """("a" | "b")""")
+      }
 
       test("sepCut"){
         def parseB[$: P] = P( "a" | "b" | "c" )
