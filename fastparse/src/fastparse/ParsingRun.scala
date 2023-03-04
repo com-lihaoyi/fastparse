@@ -223,7 +223,7 @@ final class ParsingRun[+T](val input: ParserInput,
    * parsers that have either succeeded past the traceIndex, or failed and
    * potentially backtracked.
    */
-  def shouldSetShortMsg = true//!isSuccess || index >= traceIndex
+  def shouldSetShortMsg = !isSuccess || index >= traceIndex
 
   def reportParseMsg(startIndex: Int,
                      newShortParserMsg: Msgs,
