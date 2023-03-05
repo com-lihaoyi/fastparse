@@ -227,6 +227,9 @@ final class ParsingRun[+T](val input: ParserInput,
                       newFailureGroups: Msgs,
                       forceAggregate: Boolean,
                       setShortMsg: Boolean): Unit = {
+    // `lastFailureMsg` ends up being set by the first parser to report a
+    // failure, while returning from the last parser to call `.freshFailure()
+    // (which nulls it out)
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = newShortParserMsg
 
     shortParserMsg = if (setShortMsg) newShortParserMsg else Msgs.empty

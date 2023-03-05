@@ -104,7 +104,7 @@
             follows the failure). This then gets aggregated nicely to form the error
             message from-point-of-failure.
         @p
-            A follow-on edge case is parsing "ax" with
+            A follow-on edge case is parsing @hl.scala{"ax"} with
         @hl.scala
             val inner = P( "a" ~ "b" )
             P( inner ~ "c" | "a" ~/ "d" )
