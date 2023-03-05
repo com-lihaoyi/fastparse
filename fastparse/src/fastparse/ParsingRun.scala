@@ -140,16 +140,16 @@ final class ParsingRun[+T](val input: ParserInput,
    * of inlining in Fastparse, and large amounts of bytecode inlined in a method
    * can cause JVM performance problems (e.g. JIT compilation may get disabled)
    */
-  def reportParseMsg(startIndex: Int,
-                     newShortParserMsg: Msgs): Unit = {
+  def reportAggregateMsg(startIndex: Int,
+                         newShortParserMsg: Msgs): Unit = {
 
-    reportParseMsg(startIndex, newShortParserMsg, failureAggregates)
+    reportAggregateMsg(startIndex, newShortParserMsg, failureAggregates)
   }
-  def reportParseMsg(startIndex: Int,
-                     newShortParserMsg: Msgs,
-                     newFailureGroups: Msgs): Unit = {
+  def reportAggregateMsg(startIndex: Int,
+                         newShortParserMsg: Msgs,
+                         newFailureGroups: Msgs): Unit = {
 
-    reportParseMsg(startIndex, newShortParserMsg, newFailureGroups, false)
+    reportAggregateMsg(startIndex, newShortParserMsg, newFailureGroups, false)
   }
 
   /**
@@ -159,16 +159,16 @@ final class ParsingRun[+T](val input: ParserInput,
    * parsers that have either succeeded past the traceIndex, or failed and
    * potentially backtracked.
    */
-  def reportParseMsg(startIndex: Int,
-                     newShortParserMsg: Msgs,
-                     forceAggregate: Boolean): Unit = {
+  def reportAggregateMsg(startIndex: Int,
+                         newShortParserMsg: Msgs,
+                         forceAggregate: Boolean): Unit = {
     reportParseMsg0(startIndex, newShortParserMsg, failureAggregates, forceAggregate, failureAggregates.value.nonEmpty)
   }
 
-  def reportParseMsg(startIndex: Int,
-                     newShortParserMsg: Msgs,
-                     newFailureGroups: Msgs,
-                     forceAggregate: Boolean): Unit = {
+  def reportAggregateMsg(startIndex: Int,
+                         newShortParserMsg: Msgs,
+                         newFailureGroups: Msgs,
+                         forceAggregate: Boolean): Unit = {
     reportParseMsg0(startIndex, newShortParserMsg, newFailureGroups, forceAggregate, true)
   }
 

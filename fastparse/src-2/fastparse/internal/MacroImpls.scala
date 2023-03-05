@@ -52,7 +52,7 @@ object MacroImpls {
             ctx1.instrument.afterParse(name.splice.value, ctx0.index, ctx0.isSuccess)
           }
           if (ctx0.verboseFailures) {
-            ctx0.reportParseMsg(
+            ctx0.reportAggregateMsg(
               startIndex,
               () => name.splice.value,
               forceAggregate = startIndex < ctx0.traceIndex
@@ -241,7 +241,7 @@ object MacroImpls {
           val verboseFailures = ctx5.verboseFailures
 
           ctx5.index = startPos
-          if (verboseFailures) ctx5.reportParseMsg(startPos, lhsMsg)
+          if (verboseFailures) ctx5.reportAggregateMsg(startPos, lhsMsg)
 
           ctx5.cut = false
           other.splice
@@ -250,7 +250,7 @@ object MacroImpls {
           val endCut = rhsCut | oldCut
           if (!ctx5.isSuccess && !rhsCut) ctx5.freshFailure(startPos)
           ctx5.cut = endCut
-          if (verboseFailures) ctx5.reportParseMsg(startPos, rhsMsg ::: lhsMsg, ctx5.failureAggregates ::: lhsAggregate)
+          if (verboseFailures) ctx5.reportAggregateMsg(startPos, rhsMsg ::: lhsMsg, ctx5.failureAggregates ::: lhsAggregate)
           ctx5.asInstanceOf[ParsingRun[V]]
         }
       }
@@ -487,7 +487,7 @@ object MacroImpls {
             )
           }
 
-        if ($ctx1.verboseFailures) $ctx1.reportParseMsg(
+        if ($ctx1.verboseFailures) $ctx1.reportAggregateMsg(
           $preLhsIndex,
           _root_.fastparse.internal.Util.joinBinOp($lhsMsg, $rhsMsg),
           $rhsAggregate ::: $lhsAggregate,
@@ -693,7 +693,7 @@ object MacroImpls {
           if (ctx1.verboseFailures) {
             val msg = ctx1.shortParserMsg
             if (!postSuccess){
-              ctx1.reportParseMsg(startPos, () => msg.render + ".?")
+              ctx1.reportAggregateMsg(startPos, () => msg.render + ".?")
             }
           }
           res

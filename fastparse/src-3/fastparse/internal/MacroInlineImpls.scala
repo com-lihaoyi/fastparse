@@ -103,7 +103,7 @@ object MacroInlineImpls {
       ctx1.instrument.afterParse(name.value, ctx0.index, ctx0.isSuccess)
     }
     if (ctx0.verboseFailures) {
-      ctx0.reportParseMsg(
+      ctx0.reportAggregateMsg(
         startIndex,
         () => name.value,
         forceAggregate = startIndex < ctx0.traceIndex
@@ -190,7 +190,7 @@ object MacroInlineImpls {
                 if (ctx1.verboseFailures) {
 //                  println("rhsAggregate " + rhsAggregate)
 //                  println("lhsAggregate " + lhsAggregate)
-                  ctx1.reportParseMsg(
+                  ctx1.reportAggregateMsg(
                     preLhsIndex,
                     Util.joinBinOp(lhsMsg, rhsMsg),
                     rhsAggregate ::: lhsAggregate,
@@ -248,7 +248,7 @@ object MacroInlineImpls {
     if (ctx1.verboseFailures) {
       val msg = ctx1.shortParserMsg
       if (!postSuccess) {
-        ctx1.reportParseMsg(startPos, () => msg.render + ".?")
+        ctx1.reportAggregateMsg(startPos, () => msg.render + ".?")
       }
     }
     res
@@ -311,7 +311,7 @@ object MacroInlineImpls {
       val verboseFailures = ctx5.verboseFailures
 
       ctx5.index = startPos
-      if (verboseFailures) ctx5.reportParseMsg(startPos, lhsMsg)
+      if (verboseFailures) ctx5.reportAggregateMsg(startPos, lhsMsg)
 
       ctx5.cut = false
       other
@@ -321,7 +321,7 @@ object MacroInlineImpls {
       if (!ctx5.isSuccess && !rhsCut) ctx5.freshFailure(startPos)
       ctx5.cut = endCut
       if (verboseFailures) {
-        ctx5.reportParseMsg(startPos, rhsMsg ::: lhsMsg, ctx5.failureAggregates  ::: lhsAggregate)
+        ctx5.reportAggregateMsg(startPos, rhsMsg ::: lhsMsg, ctx5.failureAggregates  ::: lhsAggregate)
       }
       ctx5.asInstanceOf[ParsingRun[V]]
     }

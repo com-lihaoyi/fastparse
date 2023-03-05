@@ -125,7 +125,7 @@ object Util {
       if (sepMsg == null || precut) ctx.failureAggregates
       else Util.joinBinOp(sepMsg, parsedMsg)
 
-    ctx.reportParseMsg(
+    ctx.reportAggregateMsg(
       startIndex,
       () => parsedMsg.render + ".rep" + (if (min == 0) "" else s"(${min})"),
       if (lastAgg == null) newAgg
