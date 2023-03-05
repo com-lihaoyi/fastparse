@@ -38,7 +38,7 @@ object FailureTests extends TestSuite{
       test("either") - check{
         def parseB[$: P] = P( "a" | "b" )
         def parseA[$: P] = P( (parseB | "") ~ "c" )
-        parse0A(_)
+        parseA(_)
       }
       test("option") - check{
         def parseB[$: P] = P( "a" | "b" )
@@ -434,7 +434,7 @@ object FailureTests extends TestSuite{
       import NoWhitespace._
       // In the case where one branch fails further in than `traceIndex`, we
       // collect the partial aggregation from that branch in the
-      // `failureAggregates` but ignore that branch's downstream failure in
+      // `aggregateParserMsgs` but ignore that branch's downstream failure in
       // `failureTerminalsAggregate`
 
       def check(parser: P[_] => P[_]) = checkOffset(

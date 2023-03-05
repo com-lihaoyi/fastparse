@@ -122,7 +122,7 @@ object Util {
     // we backtrack past the sep on failure) as well as the failure
     // aggregate of the previous rep, which we could have continued
     val newAgg =
-      if (sepMsg == null || precut) ctx.failureAggregates
+      if (sepMsg == null || precut) ctx.aggregateParserMsgs
       else Util.joinBinOp(sepMsg, parsedMsg)
 
     ctx.reportAggregateMsg(

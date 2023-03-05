@@ -148,8 +148,8 @@ object Parsed{
     def fromParsingRun[T](p: ParsingRun[T]) = {
       assert(!p.isSuccess)
       TracedFailure(
-        p.failureTerminals,
-        p.failureAggregates,
+        p.terminalParserMsgs,
+        p.aggregateParserMsgs,
         Parsed.fromParsingRun(p).asInstanceOf[Failure]
       )
     }

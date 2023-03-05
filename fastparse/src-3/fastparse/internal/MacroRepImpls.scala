@@ -98,7 +98,7 @@ object MacroRepImpls {
           else {
             $parse0
             val parsedMsg = ctx.shortParserMsg
-            val parsedAgg = ctx.failureAggregates
+            val parsedAgg = ctx.aggregateParserMsgs
             val postCut = ctx.cut
             val verboseFailures = ctx.verboseFailures
             if (!ctx.isSuccess) {

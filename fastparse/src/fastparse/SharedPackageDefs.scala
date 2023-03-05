@@ -54,8 +54,8 @@ trait SharedPackageDefs {
     originalParser = parser,
     traceIndex = traceIndex,
     instrument = instrument,
-    failureTerminals = Msgs.empty,
-    failureAggregates = Msgs.empty,
+    terminalParserMsgs = Msgs.empty,
+    aggregateParserMsgs = Msgs.empty,
     shortParserMsg = Msgs.empty,
     lastFailureMsg = null,
     failureStack = List.empty,
@@ -105,7 +105,7 @@ trait SharedPackageDefs {
       if (ctx.isSuccess) ctx.freshSuccessUnit(startPos)
       else ctx.asInstanceOf[P[Unit]]
     if (ctx.verboseFailures) {
-      ctx.failureAggregates = Msgs.empty
+      ctx.aggregateParserMsgs = Msgs.empty
       ctx.reportTerminalMsg(startPos,
         if (msg.value.isEmpty) Msgs.empty
         else () => msg match{
@@ -145,7 +145,7 @@ trait SharedPackageDefs {
 
   /**
     * Wraps a parser and ensures that none of the parsers within it leave
-    * failure traces in failureTerminals, though unlike [[ByNameOps.opaque]]
+    * failure traces in terminalParserMsgs, though unlike [[ByNameOps.opaque]]
     * if there is a failure *within* the wrapped parser the failure's location
     * and error message will still be shown
     *
@@ -157,7 +157,7 @@ trait SharedPackageDefs {
 
     val res = p
     if (ctx.verboseFailures) {
-      ctx.failureAggregates = Msgs.empty
+      ctx.aggregateParserMsgs = Msgs.empty
       ctx.shortParserMsg = Msgs.empty
     }
     res
@@ -273,7 +273,7 @@ object SharedPackageDefs{
     val startCut = ctx.cut
     val oldNoCut = ctx.noDropBuffer
     ctx.noDropBuffer = true
-    val startTerminals = ctx.failureTerminals
+    val startTerminals = ctx.terminalParserMsgs
     parse0()
     ctx.noDropBuffer = oldNoCut
     val msg = ctx.shortParserMsg
@@ -283,8 +283,8 @@ object SharedPackageDefs{
       else ctx.freshSuccessUnit(startPos)
 
     if (ctx.verboseFailures) {
-      ctx.failureTerminals = startTerminals
-      ctx.failureAggregates = Msgs.empty
+      ctx.terminalParserMsgs = startTerminals
+      ctx.aggregateParserMsgs = Msgs.empty
       ctx.reportTerminalMsg(startPos, Msgs.empty)
     }
     res.cut = startCut

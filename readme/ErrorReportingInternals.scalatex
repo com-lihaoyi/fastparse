@@ -20,28 +20,28 @@
         levels will treat this as follows:
     @ul
         @li
-          @code{failureTerminals} lists all the lowest-level terminal parsers which are
+          @code{terminalParserMsgs} lists all the lowest-level terminal parsers which are
           tried at the given @code{traceIndex}, i.e. the character class @code{[0-9]} and the
           token @hl.scala{"("}. This is useful to answer the question "what token/char can I
           put at the error position to make my parse continue". The implementation
-          of @code{failureTerminals} is straightforward: we simply call
+          of @code{terminalParserMsgs} is straightforward: we simply call
           @code{reportTerminalMsg} in every terminal parser, which collects all the
           messages in a big list and returns it.
         @li
-          @code{failureAggregates} lists all high-level parsers which are tried at the given
+          @code{aggregateParserMsgs} lists all high-level parsers which are tried at the given
           @code{traceIndex}, i.e. the named parsers @code{num} and @code{plus}. This is useful to
           answer the question "What construct was the parser trying to do when it
           failed"
     @p
-        The implementation of @code{failureAggregates} is more interesting, since we need
+        The implementation of @code{aggregateParserMsgs} is more interesting, since we need
         to define what "high level" parsers means, which is non-obvious.
 
-    @sect{Definition of failureAggregates}
+    @sect{Definition of aggregateParserMsgs}
         @p
-            Fastparse uses the following definition for @code{failureAggregates}:
+            Fastparse uses the following definition for @code{aggregateParserMsgs}:
         @ul
             @li
-             @code{failureAggregates} should contain the parsers highest in the call stack,
+             @code{aggregateParserMsgs} should contain the parsers highest in the call stack,
               whose failure isn't immediately fatal to the parse (due to them being in
               @code{|}, @code{.rep}, @code{?}, or other "backtrackable" operators, but
               not past a @code{cut})
@@ -49,7 +49,7 @@
             This is a useful definition because we already have the @code{failureStack}
             containing all (named) parsers whose failure *is* immediately fatal to the
             parse, both those at @code{traceIndex} and those earlier in the input. Thus
-            there is no need to duplicate showing any of them in the @code{failureAggregates},
+            there is no need to duplicate showing any of them in the @code{aggregateParserMsgs},
             and we can instead go "one level deeper" to find the highest-level parsers
             within the deepest parser of the @code{failureStack} and show those instead.
             Thus, in the combined @code{longAggregateMsg}, the failure stack shows us
@@ -57,32 +57,32 @@
             @code{traceIndex}, while the longAggregateMsg tells us what are the
             highest-level parsers FastParse was trying to parse at @code{traceIndex} before
             it finally failed.
-    @sect{Implementation of failureAggregates}
+    @sect{Implementation of aggregateParserMsgs}
         @p
-            To collect the @code{failureAggregates}, We use the following algorithm:
+            To collect the @code{aggregateParserMsgs}, We use the following algorithm:
         @ul
             @li
               When a parse which started at the given @code{traceIndex} fails without a cut:
-              Over-write @code{failureAggregates} with it's @code{shortParserMsg}
+              Over-write @code{aggregateParserMsgs} with it's @code{shortParserMsg}
 
             @li
                 Otherwise:
 
                 @ul
                     @li
-                        If we are a terminal parser, we set our @code{failureAggregates} to Nil
+                        If we are a terminal parser, we set our @code{aggregateParserMsgs} to Nil
                     @li
-                        If we are a compound parser, we simply sum up the @code{failureAggregates}
+                        If we are a compound parser, we simply sum up the @code{aggregateParserMsgs}
                         of all our constituent parts
         @p
             As mentioned earlier, the point of this is to provide the highest-level parsers which
             failed at the @code{traceIndex}, but are not already part of the @code{failureStack}.
             non-highest-level parsers do successfully write their message to
-            @code{failureAggregates}, but they are subsequently over-written by the higher
+            @code{aggregateParserMsgs}, but they are subsequently over-written by the higher
             level parsers, until it reaches the point where @code{cut == true}, indicating
             that any further higher-level parsers will be in @code{failureStack} and using
             their message to stomp over the existing parse-failure-messages in
-            @code{failureAggregates} would be wasteful.
+            @code{aggregateParserMsgs} would be wasteful.
     @sect{Edge Cases}
         @p
             These is an edge case where there is no given failure that occurs exactly at
