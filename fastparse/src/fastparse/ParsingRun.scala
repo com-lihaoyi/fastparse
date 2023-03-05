@@ -287,7 +287,6 @@ final class ParsingRun[+T](val input: ParserInput,
 
   def freshFailure(): ParsingRun[Nothing] = {
     if (verboseFailures){
-      println("freshFailure()")
       lastFailureMsg = null
       failureStack = Nil
     }
@@ -297,7 +296,6 @@ final class ParsingRun[+T](val input: ParserInput,
 
   def freshFailure(startPos: Int): ParsingRun[Nothing] = {
     if (verboseFailures) {
-      println(s"freshFailure($startPos)")
       lastFailureMsg = null
       failureStack = Nil
     }
