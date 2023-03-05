@@ -27,27 +27,16 @@ object TestUtil {
         val parsedFound = input.slice(f.index, f.index + 10)
         val stack = trace.longAggregateMsg
 
-        assert({
-          implicitly(input)
+        assert(
+        { implicitly(input)
           implicitly(stack)
           implicitly(index)
           implicitly(parsedFound)
-          (aggregate == null || aggregate.trim == parsedAggregate.trim)
-        })
-        assert({
-          implicitly(input)
-          implicitly(stack)
-          implicitly(index)
-          implicitly(parsedFound)
-          (terminals == null || terminals.trim == parsedTerminals.trim)
-        })
-        assert({
-          implicitly(input)
-          implicitly(stack)
-          implicitly(index)
-          implicitly(parsedFound)
+          (aggregate == null || aggregate.trim == parsedAggregate.trim) &&
+          (terminals == null || terminals.trim == parsedTerminals.trim) &&
           parsedFound.startsWith(found)
-        })
+        }
+        )
 
         line.value
       case _: Parsed.Success[_] =>
