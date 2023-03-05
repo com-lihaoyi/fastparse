@@ -1,5 +1,6 @@
 @import Main._
-@sect{Error Reporting}
+@val tests = wd/'fastparse/'test/'src/'fastparse
+@sect{Error Reporting Internals}
     @p
         This section goes into detail of how the FastParse error reporting
         algorithm works. In general, it should "just work" when you call
@@ -8,9 +9,9 @@
         is worth documenting in detail
 
     @p
-        Fastparse provides two levels of error reporting that get enabled when
-        calling @code{.trace()}. For the following explanations, consider an example
-        failed parse of a simplified arithmetic parser:
+        The two levels of error reporting that are most interesting are
+        @code{.longAggregateMsg} and @code{.longTerminalsMsg}. Consider a failed
+        parse of an example simplified arithmetic parser:
 
     @hl.ref(tests/"ExampleTests.scala", Seq("\"errorHandlingExplanation\"", ""))
 
@@ -21,7 +22,7 @@
         @li
           @code{failureTerminals} lists all the lowest-level terminal parsers which are
           tried at the given @code{traceIndex}, i.e. the character class @code{[0-9]} and the
-          token "(". This is useful to answer the question "what token/char can I
+          token @hl.scala{"("}. This is useful to answer the question "what token/char can I
           put at the error position to make my parse continue". The implementation
           of @code{failureTerminals} is straightforward: we simply call
           @code{reportTerminalMsg} in every terminal parser, which collects all the
@@ -44,7 +45,7 @@
     @p
         This is a useful definition because we already have the @code{failureStack}
         containing all (named) parsers whose failure *is* immediately fatal to the
-        parse, both those at @code{traceIndex} and those earlier in the input. This
+        parse, both those at @code{traceIndex} and those earlier in the input. Thus
         there is no need to duplicate showing any of them in the @code{failureAggregates},
         and we can instead go "one level deeper" to find the highest-level parsers
         within the deepest parser of the @code{failureStack} and show those instead.
@@ -70,7 +71,7 @@
                     If we are a compound parser, we simply sum up the @code{failureAggregates}
                     of all our constituent parts
     @p
-        The point of this heuristic is to provide the highest-level parsers which
+        As mentioned earlier, the point of this is to provide the highest-level parsers which
         failed at the @code{traceIndex}, but are not already part of the @code{failureStack}.
         non-highest-level parsers do successfully write their message to
         @code{failureAggregates}, but they are subsequently over-written by the higher

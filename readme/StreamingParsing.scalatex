@@ -1,5 +1,6 @@
 @import Main._
 @val tests = wd/'fastparse/'test/'src/'fastparse
+@val tests212plus = wd/'fastparse/'test/"src-2.12+"/'fastparse
 @val main = wd/'fastparse/'src/'fastparse
 
 @sect{Streaming Parsing}
@@ -9,7 +10,7 @@
         @hl.scala{Iterator[String]} or @hl.scala{java.io.InputStream} instead
         of a @code{String} to the @hl.scala{fastparse.parse} method.
 
-    @hl.ref(tests/"IteratorTests.scala", Seq("\"basic\"", ""))
+    @hl.ref(tests212plus/"IteratorTests.scala", Seq("\"basic\"", ""))
 
     @p
         Streaming parsing still needs to buffer input in-memory: in particular,
