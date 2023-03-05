@@ -31,15 +31,14 @@ object FailureTests extends TestSuite{
 
         assert(
           trace.groupAggregateString == """(parseB | "c")""",
-          trace.terminalAggregateString == """("a" | "b" | "c" | "x")"""
+          trace.terminalAggregateString == """("a" | "b" | "c")"""
         )
       }
 
       test("either") - check{
         def parseB[$: P] = P( "a" | "b" )
         def parseA[$: P] = P( (parseB | "") ~ "c" )
-        def parse0[$: P] = P( ("" ~/ parseA).? ~ "x" )
-        parse0(_)
+        parse0A(_)
       }
       test("option") - check{
         def parseB[$: P] = P( "a" | "b" )

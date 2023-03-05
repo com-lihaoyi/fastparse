@@ -169,10 +169,20 @@ final class ParsingRun[+T](val input: ParserInput,
       newFailureGroups,
       forceAggregate,
       // We only want to set the shortMsg for most parsers if they could have
-      // potentially extended passed the [[traceIndex]], since that is the point at
-      // which all error reporting in Fastparse is focused. That means we want
-      // parsers that have either succeeded past the traceIndex, or failed and
-      // potentially backtracked.
+      // potentially extended passed the [[traceIndex]], since that is the point
+      // at which all error reporting in Fastparse is focused.
+      //
+      // We determine that by only setting `shortParserMsg` if `newFailureGroups`
+      // is not empty. This works because:
+      //
+      // - Terminal parsers which report parse messages via `reportTerminalMsg`
+      //   only have `setShortMsg=true` if `startIndex >= traceIndex`
+      //
+      // - Any aggregate parsers that build on top of them will thus only have
+      //   `setShortMsg=true` if all of their sub-parsers' `startIndex >= traceIndex`
+      //
+      // - The same applies to aggregate parsers building on top of other
+      //   aggregate parsers, and thus we can be confident that
       newFailureGroups.value.nonEmpty
     )
   }
