@@ -187,20 +187,16 @@ object MacroInlineImpls {
                     )
                   }
 
-                if (ctx1.verboseFailures) {
-//                  println("rhsAggregate " + rhsAggregate)
-//                  println("lhsAggregate " + lhsAggregate)
-                  ctx1.reportAggregateMsg(
-                    preLhsIndex,
-                    Util.joinBinOp(lhsMsg, rhsMsg),
-                    rhsAggregate ::: lhsAggregate,
-                    // We override the failureAggregates to avoid building an `a ~ b`
-                    // aggregate msg in the specific case where the LHS parser fails to
-                    // make any progress past `startIndex`. This finds cases like `a.? ~ b`
-                    // or `a.rep ~ b` and lets use flatten them out into `a | b`
-                    forceAggregate = preRhsIndex == ctx1.traceIndex
-                  )
-                }
+                if (ctx1.verboseFailures) ctx1.reportAggregateMsg(
+                  preLhsIndex,
+                  Util.joinBinOp(lhsMsg, rhsMsg),
+                  rhsAggregate ::: lhsAggregate,
+                  // We override the failureAggregates to avoid building an `a ~ b`
+                  // aggregate msg in the specific case where the LHS parser fails to
+                  // make any progress past `startIndex`. This finds cases like `a.? ~ b`
+                  // or `a.rep ~ b` and lets use flatten them out into `a | b`
+                  forceAggregate = preRhsIndex == ctx1.traceIndex
+                )
                 res
               }
             }
