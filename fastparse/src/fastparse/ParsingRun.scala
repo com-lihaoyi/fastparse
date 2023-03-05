@@ -152,24 +152,29 @@ final class ParsingRun[+T](val input: ParserInput,
     reportAggregateMsg(startIndex, newShortParserMsg, newFailureGroups, false)
   }
 
-  /**
-   * We only want to set the shortMsg for most parsers if they could have
-   * potentially extended passed the [[traceIndex]], since that is the point at
-   * which all error reporting in Fastparse is focused. That means we want
-   * parsers that have either succeeded past the traceIndex, or failed and
-   * potentially backtracked.
-   */
   def reportAggregateMsg(startIndex: Int,
                          newShortParserMsg: Msgs,
                          forceAggregate: Boolean): Unit = {
-    reportParseMsg0(startIndex, newShortParserMsg, failureAggregates, forceAggregate, failureAggregates.value.nonEmpty)
+    reportAggregateMsg(startIndex, newShortParserMsg, failureAggregates, forceAggregate)
   }
 
   def reportAggregateMsg(startIndex: Int,
                          newShortParserMsg: Msgs,
                          newFailureGroups: Msgs,
                          forceAggregate: Boolean): Unit = {
-    reportParseMsg0(startIndex, newShortParserMsg, newFailureGroups, forceAggregate, true)
+
+    reportParseMsg0(
+      startIndex,
+      newShortParserMsg,
+      newFailureGroups,
+      forceAggregate,
+      // We only want to set the shortMsg for most parsers if they could have
+      // potentially extended passed the [[traceIndex]], since that is the point at
+      // which all error reporting in Fastparse is focused. That means we want
+      // parsers that have either succeeded past the traceIndex, or failed and
+      // potentially backtracked.
+      newFailureGroups.value.nonEmpty
+    )
   }
 
   /**
