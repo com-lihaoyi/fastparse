@@ -58,7 +58,7 @@ trait Literals { l =>
     def Null[$: P] = Key.W("null")
 
     def OctalEscape[$: P] = P( Digit ~ Digit.? ~ Digit.? )
-    def Escape[$: P] = P( "\\" ~/ (CharIn("""btnfr'\\"]""") | OctalEscape | UnicodeEscape ) ).log
+    def Escape[$: P] = P( "\\" ~/ (CharIn("""btnfr'\\"]""") | OctalEscape | UnicodeEscape ) )
 
     // Note that symbols can take on the same values as keywords!
     def Symbol[$: P] = P( Identifiers.PlainId | Identifiers.Keywords )
@@ -93,7 +93,6 @@ trait Literals { l =>
         def NonStringEnd = P( !CharIn("\n\"") ~ AnyChar )
         P( (StringChars | Interp | LiteralSlash | Escape | NonStringEnd ).rep )
       }
-
       def String[$: P] = {
         P {
           Id.filter(_ => interp.isDefined) ~ (
@@ -104,10 +103,11 @@ trait Literals { l =>
           "\"" ~/ NoInterp.SingleChars(false) ~ "\""
         }
       }
-    }
 
+    }
     def NoInterp[$: P] = new InterpCtx(None)
     def Pat[$: P] = new InterpCtx(Some(() => l.Pattern))
     def Expr[$: P] = new InterpCtx(Some(() => Block))
+
   }
 }
