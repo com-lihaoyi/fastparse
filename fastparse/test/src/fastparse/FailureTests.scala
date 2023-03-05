@@ -31,11 +31,9 @@ object FailureTests extends TestSuite{
         val f @ Parsed.Failure(failureString, index, extra) = parse("d", parser(_))
         val trace = f.trace(true)
 
-        val groupAggregateString = trace.groupAggregateString
-        println("trace.longMsg " + trace.longAggregateMsg)
         assert(
-          groupAggregateString == """(parseB | "c")"""
-//          trace.terminalAggregateString == """("a" | "b" | "c" | "x")"""
+          trace.groupAggregateString == """(parseB | "c")""",
+          trace.terminalAggregateString == """("a" | "b" | "c" | "x")"""
         )
       }
 
