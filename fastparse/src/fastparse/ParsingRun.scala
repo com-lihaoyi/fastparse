@@ -236,14 +236,14 @@ final class ParsingRun[+T](val input: ParserInput,
     // (with possible additions) with `newFailureGroups`.
     aggregateParserMsgs =
       if (forceAggregate) newFailureGroups
-      else if (discardNewFailureGroups(startIndex)) shortParserMsg
+      else if (shouldAggregate(startIndex)) shortParserMsg
       else newFailureGroups
   }
 
   /**
     * Conditions under which we want to aggregate the given parse
     */
-  def discardNewFailureGroups(startIndex: Int) = {
+  def shouldAggregate(startIndex: Int) = {
     // We only aggregate if we are not currently past a cut; if we are past a
     // cut, there is no further backtracking and so the error aggregate that has
     // occurred will be the final aggregate shown to the user
