@@ -147,9 +147,9 @@ final class ParsingRun[+T](val input: ParserInput,
   }
   def reportAggregateMsg(startIndex: Int,
                          newShortParserMsg: Msgs,
-                         newFailureGroups: Msgs): Unit = {
+                         newAggregateMsgs: Msgs): Unit = {
 
-    reportAggregateMsg(startIndex, newShortParserMsg, newFailureGroups, false)
+    reportAggregateMsg(startIndex, newShortParserMsg, newAggregateMsgs, false)
   }
 
   def reportAggregateMsg(startIndex: Int,
@@ -160,37 +160,15 @@ final class ParsingRun[+T](val input: ParserInput,
 
   def reportAggregateMsg(startIndex: Int,
                          newShortParserMsg: Msgs,
-                         newFailureGroups: Msgs,
+                         newAggregateMsgs: Msgs,
                          forceAggregate: Boolean): Unit = {
 
     reportParseMsg0(
       startIndex,
       newShortParserMsg,
-      newFailureGroups,
+      newAggregateMsgs,
       forceAggregate,
-      // We only want to set the shortMsg for most parsers if they could have
-      // potentially extended passed the [[traceIndex]], since that is the point
-      // at which all error reporting in Fastparse is focused.
-      //
-      // We determine that by only setting `shortParserMsg` if `newFailureGroups`
-      // is not empty. This works because:
-      //
-      // - Terminal parsers which report parse messages via `reportTerminalMsg`
-      //   only have `setShortMsg=true` if `startIndex >= traceIndex`
-      //
-      // - Any aggregate parsers that build on top of them will thus only have
-      //   `setShortMsg=true` if all of their sub-parsers' `startIndex >= traceIndex`
-      //
-      // - The same applies to aggregate parsers building on top of other
-      //   aggregate parsers
-      //
-      // - Thus we can be confident that all our parsers only have `setShortMsg=true
-      //   if their `startIndex >= traceIndex`
-      //
-      // - The only exception to this is some parsers which use `forceAggregate=true`
-      //   when only some of their sub-parsers' `startIndex >= traceIndex`, such
-      //   that those sub-parsers can be propagated up as `aggregateParserMsgs`
-      newFailureGroups.value.nonEmpty
+      newAggregateMsgs.value.nonEmpty
     )
   }
 
@@ -224,7 +202,7 @@ final class ParsingRun[+T](val input: ParserInput,
 
   def reportParseMsg0(startIndex: Int,
                       newShortParserMsg: Msgs,
-                      newFailureGroups: Msgs,
+                      newAggregateMsgs: Msgs,
                       forceAggregate: Boolean,
                       setShortMsg: Boolean): Unit = {
     // `lastFailureMsg` ends up being set by the first parser to report a
@@ -232,15 +210,26 @@ final class ParsingRun[+T](val input: ParserInput,
     // (which nulls it out)
     if (!isSuccess && lastFailureMsg == null) lastFailureMsg = newShortParserMsg
 
+    // We only set the `shortParserMsg` for some parsers. These include:
+    //
+    // - Terminal parsers which have `startIndex >= traceIndex`
+    //
+    // - Aggregate parsers which have non-empty `newAggregateMsgs`, indicating
+    //   that they have either child terminal parsers with `startIndex >= traceIndex`
+    //   or they have child aggregate parsers with non-empty `newAggregateMsgs`
+    //
+    // This lets us skip setting `shortParserMsg` for all parsers, terminal or
+    // aggregate, which run and terminate fully before `traceIndex`, and thus
+    // would be of no interest to a user debugging parse failures at `traceIndex`
     shortParserMsg = if (setShortMsg) newShortParserMsg else Msgs.empty
 
     // There are two cases when aggregating: either we stomp over the entire
     // existing `aggregateParserMsgs` with `newShortParserMsg`, or we preserve it
-    // (with possible additions) with `newFailureGroups`.
+    // (with possible additions) with `newAggregateMsgs`.
     aggregateParserMsgs =
-      if (forceAggregate) newFailureGroups
+      if (forceAggregate) newAggregateMsgs
       else if (shouldAggregate(startIndex)) shortParserMsg
-      else newFailureGroups
+      else newAggregateMsgs
   }
 
   /**
