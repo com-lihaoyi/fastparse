@@ -12,16 +12,14 @@ object FailureTests extends TestSuite{
                     terminals: String = null,
                     parser: P[_] => P[_]) = {
       val f @ Parsed.Failure(failureString, index, extra) = parse(input, parser(_))
+
       val trace = f.trace(true)
 
       val terminals1 = Option(terminals).getOrElse(expected)
-      val groupAggregateString = trace.groupAggregateString
-      val traceLabel = trace.failure.label
-      val traceTerminalAggregateString = trace.terminalAggregateString
       assert(
-        groupAggregateString == expected,
-        traceLabel == label,
-        traceTerminalAggregateString == terminals1
+        trace.groupAggregateString == expected,
+        trace.label == label,
+        trace.terminalAggregateString == terminals1
       )
     }
 
