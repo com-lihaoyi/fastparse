@@ -39,5 +39,7 @@
 
     @FastParseInternals()
 
+    @ErrorReporting()
+
     @Changelog()
 

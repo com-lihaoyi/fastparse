@@ -34,7 +34,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
         val verboseFailures = ctx.verboseFailures
         parse0()
         val parsedMsg = ctx.shortParserMsg
-        val parsedAgg = ctx.failureGroups
+        val parsedAgg = ctx.failureAggregates
         val postCut = ctx.cut
         if (!ctx.isSuccess) {
           val res =
@@ -95,7 +95,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
       ctx.cut = precut | (count < min && outerCut)
       parse0()
       val parsedMsg = ctx.shortParserMsg
-      val parsedAgg = ctx.failureGroups
+      val parsedAgg = ctx.failureAggregates
       val postCut = ctx.cut
       val verboseFailures = ctx.verboseFailures
       if (!ctx.isSuccess) {
@@ -156,7 +156,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
       else {
         parse0()
         val parsedMsg = ctx.shortParserMsg
-        val parsedAgg = ctx.failureGroups
+        val parsedAgg = ctx.failureAggregates
         val postCut = ctx.cut
         val verboseFailures = ctx.verboseFailures
         if (!ctx.isSuccess) {
@@ -224,7 +224,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
       ctx.cut = precut | (count < min && outerCut)
       parse0()
       val parsedMsg = ctx.shortParserMsg
-      val parsedAgg = ctx.failureGroups
+      val parsedAgg = ctx.failureAggregates
       val postCut = ctx.cut
       val verboseFailures = ctx.verboseFailures
       if (!ctx.isSuccess){

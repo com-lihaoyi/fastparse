@@ -149,7 +149,7 @@ object Parsed{
       assert(!p.isSuccess)
       TracedFailure(
         p.failureTerminals,
-        p.failureGroups,
+        p.failureAggregates,
         Parsed.fromParsingRun(p).asInstanceOf[Failure]
       )
     }
@@ -216,7 +216,7 @@ object Parsed{
     def longTerminalsMsg = Failure.formatMsg(input, stack ++ Seq(terminalAggregateString -> index), index)
 
     /**
-      * A version of [[reportParseMsg]] that includes the parse stack
+      * A version of [[aggregateMsg]] that includes the parse stack
       */
     def longAggregateMsg = Failure.formatMsg(input, stack ++ Seq(groupAggregateString -> index), index)
   }

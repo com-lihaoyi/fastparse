@@ -109,7 +109,7 @@ final class ParsingRun[+T](val input: ParserInput,
                            val instrument: Instrument,
                            // Mutable vars below:
                            var failureTerminals: Msgs,
-                           var failureGroups: Msgs,
+                           var failureAggregates: Msgs,
                            var shortParserMsg: Msgs,
                            var lastFailureMsg: Msgs,
                            var failureStack: List[(String, Int)],
@@ -122,70 +122,6 @@ final class ParsingRun[+T](val input: ParserInput,
                            var noDropBuffer: Boolean,
                            val misc: collection.mutable.Map[Any, Any]){
 
-  // HOW ERROR AGGREGATION WORKS:
-  //
-  // Fastparse provides two levels of error aggregation that get enabled when
-  // calling `.trace()`: `failureTerminals`, and `failureGroups`:
-  //
-  // - `failureTerminals` lists all low-level terminal parsers which are
-  //   tried at the given `traceIndex`. This is useful to answer the question
-  //   "what can I put at the error position to make my parse continue"
-  //
-  // - `failureGroups` lists all high-level parsers which are tried at
-  //   the given `traceIndex`. This is useful to answer the question "What was
-  //   the parser trying to do when it failed"
-  //
-  // The implementation of `failureTerminals` is straightforward: we
-  // simply call `reportTerminalMsg` in every terminal parser, which collects
-  // all the messages in a big list and returns it. The implementation of
-  // `failureGroups` is more interesting, since we need to figure out
-  // what are the "high level" parsers that we need to list. We use the
-  // following algorithm:
-  //
-  // - When a parse which started at the given `traceIndex` fails without a cut
-  //   - Over-write `failureGroups` with it's `shortParserMsg`
-  //
-  // - Otherwise:
-  //   - If we are a terminal parser, we set our `failureGroups` to Nil
-  //   - If we are a compound parser, we simply sum up the `failureGroups`
-  //     of all our constituent parts
-  //
-  // The point of this heuristic is to provide the highest-level parsers which
-  // failed at the `traceIndex`, but are not already part of the `failureStack`.
-  // non-highest-level parsers do successfully write their message to
-  // `failureGroups`, but they are subsequently over-written by the higher
-  // level parsers, until it reaches the point where `cut == true`, indicating
-  // that any further higher-level parsers will be in `failureStack` and using
-  // their message to stomp over the existing parse-failure-messages in
-  // `failureGroups` would be wasteful.
-  //
-  // These is an edge case where there is no given failure that occurs exactly at
-  // `traceIndex` e.g.
-  //
-  // - Parsing "ax" with P( ("a" ~ "b") ~ "c" | "a" ~/ "d" )
-  // - The final failure `index` and thus `traceIndex` is at offset 1
-  // - We would like to receive the aggregation ("b" | "d")
-  // - But ("a" ~ "b") passes from offsets 0-2, "c" fails at offset 2 and ("a" ~ "b") ~ "c" fails
-  //   from offset 0-2.
-  //
-  // In such a case, we truncate the `shortParserMsg` at
-  // `traceIndex` to only include the portion we're interested in (which directly
-  // follows the failure). This then gets aggregated nicely to form the error
-  // message from-point-of-failure.
-  //
-  // A follow-on edge case is parsing "ax" with
-  //
-  // val inner = P( "a" ~ "b" )
-  // P( inner ~ "c" | "a" ~/ "d" )
-  //
-  // - Here, we find that the `inner` parser starts before the `traceIndex` and
-  //   fails at `traceIndex`,
-  // - But we want our aggregation to continue being ("b" | "d"), rather than
-  //   (inner | "d").
-  //
-  // Thus, for opaque compound parsers like `inner` which do not expose their
-  // internals, we use `forceAggregate` to force it to expose it's internals
-  // when it's range covers the `traceIndex` but it isn't an exact match
 
   /**
    * Called by non-terminal parsers after completion, success or failure
@@ -207,7 +143,7 @@ final class ParsingRun[+T](val input: ParserInput,
   def reportParseMsg(startIndex: Int,
                      newShortParserMsg: Msgs): Unit = {
 
-    reportParseMsg(startIndex, newShortParserMsg, failureGroups)
+    reportParseMsg(startIndex, newShortParserMsg, failureAggregates)
   }
   def reportParseMsg(startIndex: Int,
                      newShortParserMsg: Msgs,
@@ -226,7 +162,7 @@ final class ParsingRun[+T](val input: ParserInput,
   def reportParseMsg(startIndex: Int,
                      newShortParserMsg: Msgs,
                      forceAggregate: Boolean): Unit = {
-    reportParseMsg0(startIndex, newShortParserMsg, failureGroups, forceAggregate, failureGroups.value.nonEmpty)
+    reportParseMsg0(startIndex, newShortParserMsg, failureAggregates, forceAggregate, failureAggregates.value.nonEmpty)
   }
 
   def reportParseMsg(startIndex: Int,
@@ -274,9 +210,9 @@ final class ParsingRun[+T](val input: ParserInput,
     shortParserMsg = if (setShortMsg) newShortParserMsg else Msgs.empty
 
     // There are two cases when aggregating: either we stomp over the entire
-    // existing `failureGroups` with `newShortParserMsg`, or we preserve it
+    // existing `failureAggregates` with `newShortParserMsg`, or we preserve it
     // (with possible additions) with `newFailureGroups`.
-    failureGroups =
+    failureAggregates =
       if (forceAggregate) newFailureGroups
       else if (discardNewFailureGroups(startIndex)) shortParserMsg
       else newFailureGroups
@@ -351,6 +287,7 @@ final class ParsingRun[+T](val input: ParserInput,
 
   def freshFailure(): ParsingRun[Nothing] = {
     if (verboseFailures){
+      println("freshFailure()")
       lastFailureMsg = null
       failureStack = Nil
     }
@@ -360,6 +297,7 @@ final class ParsingRun[+T](val input: ParserInput,
 
   def freshFailure(startPos: Int): ParsingRun[Nothing] = {
     if (verboseFailures) {
+      println(s"freshFailure($startPos)")
       lastFailureMsg = null
       failureStack = Nil
     }

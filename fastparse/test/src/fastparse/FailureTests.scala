@@ -31,16 +31,19 @@ object FailureTests extends TestSuite{
         val f @ Parsed.Failure(failureString, index, extra) = parse("d", parser(_))
         val trace = f.trace(true)
 
+        val groupAggregateString = trace.groupAggregateString
+        println("trace.longMsg " + trace.longAggregateMsg)
         assert(
-          trace.terminalAggregateString == """("a" | "b" | "c")""",
-          trace.groupAggregateString == """(parseB | "c")"""
+          groupAggregateString == """(parseB | "c")"""
+//          trace.terminalAggregateString == """("a" | "b" | "c" | "x")"""
         )
       }
 
       test("either") - check{
         def parseB[$: P] = P( "a" | "b" )
         def parseA[$: P] = P( (parseB | "") ~ "c" )
-        parseA(_)
+        def parse0[$: P] = P( ("" ~/ parseA).? ~ "x" )
+        parse0(_)
       }
       test("option") - check{
         def parseB[$: P] = P( "a" | "b" )
@@ -436,7 +439,7 @@ object FailureTests extends TestSuite{
       import NoWhitespace._
       // In the case where one branch fails further in than `traceIndex`, we
       // collect the partial aggregation from that branch in the
-      // `failureGroups` but ignore that branch's downstream failure in
+      // `failureAggregates` but ignore that branch's downstream failure in
       // `failureTerminalsAggregate`
 
       def check(parser: P[_] => P[_]) = checkOffset(

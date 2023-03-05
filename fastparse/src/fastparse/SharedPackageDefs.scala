@@ -55,7 +55,7 @@ trait SharedPackageDefs {
     traceIndex = traceIndex,
     instrument = instrument,
     failureTerminals = Msgs.empty,
-    failureGroups = Msgs.empty,
+    failureAggregates = Msgs.empty,
     shortParserMsg = Msgs.empty,
     lastFailureMsg = null,
     failureStack = List.empty,
@@ -105,7 +105,7 @@ trait SharedPackageDefs {
       if (ctx.isSuccess) ctx.freshSuccessUnit(startPos)
       else ctx.asInstanceOf[P[Unit]]
     if (ctx.verboseFailures) {
-      ctx.failureGroups = Msgs.empty
+      ctx.failureAggregates = Msgs.empty
       ctx.reportTerminalMsg(startPos,
         if (msg.value.isEmpty) Msgs.empty
         else () => msg match{
@@ -157,7 +157,7 @@ trait SharedPackageDefs {
 
     val res = p
     if (ctx.verboseFailures) {
-      ctx.failureGroups = Msgs.empty
+      ctx.failureAggregates = Msgs.empty
       ctx.shortParserMsg = Msgs.empty
     }
     res
@@ -284,7 +284,7 @@ object SharedPackageDefs{
 
     if (ctx.verboseFailures) {
       ctx.failureTerminals = startTerminals
-      ctx.failureGroups = Msgs.empty
+      ctx.failureAggregates = Msgs.empty
       ctx.reportTerminalMsg(startPos, Msgs.empty)
     }
     res.cut = startCut

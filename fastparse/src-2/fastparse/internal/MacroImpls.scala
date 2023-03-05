@@ -231,7 +231,7 @@ object MacroImpls {
 
         lhs0.splice
         val lhsMsg = ctx5.shortParserMsg
-        val lhsAggregate = ctx5.failureGroups
+        val lhsAggregate = ctx5.failureAggregates
         if (ctx5.isSuccess) {
           ctx5.cut |= oldCut
           ctx5.asInstanceOf[ParsingRun[V]]
@@ -250,7 +250,7 @@ object MacroImpls {
           val endCut = rhsCut | oldCut
           if (!ctx5.isSuccess && !rhsCut) ctx5.freshFailure(startPos)
           ctx5.cut = endCut
-          if (verboseFailures) ctx5.reportParseMsg(startPos, rhsMsg ::: lhsMsg, ctx5.failureGroups ::: lhsAggregate)
+          if (verboseFailures) ctx5.reportParseMsg(startPos, rhsMsg ::: lhsMsg, ctx5.failureAggregates ::: lhsAggregate)
           ctx5.asInstanceOf[ParsingRun[V]]
         }
       }
@@ -465,7 +465,7 @@ object MacroImpls {
       else {
         val $preRhsIndex = $ctx1.index
         $rhs
-        val $rhsAggregate = $ctx1.failureGroups
+        val $rhsAggregate = $ctx1.failureAggregates
         val $rhsMsg = $ctx1.shortParserMsg
         val $res =
           if (!$ctx1.isSuccess) {
@@ -491,7 +491,7 @@ object MacroImpls {
           $preLhsIndex,
           _root_.fastparse.internal.Util.joinBinOp($lhsMsg, $rhsMsg),
           $rhsAggregate ::: $lhsAggregate,
-          // We override the failureGroups to avoid building an `a ~ b`
+          // We override the failureAggregates to avoid building an `a ~ b`
           // aggregate msg in the specific case where the LHS parser fails to
           // make any progress past `startIndex`. This finds cases like `a.? ~ b`
           // or `a.rep ~ b` and lets use flatten them out into `a | b`
@@ -521,7 +521,7 @@ object MacroImpls {
           if (!$ctx1.isSuccess) $ctx1
           else {
             val $postLhsIndex = $ctx1.index
-            val $lhsAggregate = $ctx1.failureGroups
+            val $lhsAggregate = $ctx1.failureAggregates
             val $lhsMsg = $ctx1.shortParserMsg
             $setCut
 

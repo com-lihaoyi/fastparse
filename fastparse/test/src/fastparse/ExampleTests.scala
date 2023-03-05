@@ -551,5 +551,24 @@ object ExampleTests extends TestSuite{
       check("oR", "Parsed: Or")
       check("IllegalBooleanOperation", "Cannot parse IllegalBooleanOperation as an AndOr")
     }
+    test("errorHandlingExplanation") {
+      import fastparse._, NoWhitespace._
+      def num[$: P] = P(CharIn("0-9")).log
+      def sum[$: P] = P("(" ~/ expr ~ "+" ~/ expr ~ ")").log
+      def expr[$: P]: P[_] = P(num | sum).log
+
+      val Parsed.Failure(_, _, extra) = fastparse.parse("(1?2)", expr(_))
+      val trace = extra.trace()
+      assert(
+        trace.longTerminalsMsg ==
+          """Expected expr:1:1 / sum:1:1 / expr:1:4 / ([0-9] | "("):1:4, found "?""""
+      )
+      assert(
+        trace.longAggregateMsg ==
+          """Expected expr:1:1 / sum:1:1 / expr:1:4 / (num | sum):1:4, found "?""""
+      )
+
+    }
   }
+
 }
