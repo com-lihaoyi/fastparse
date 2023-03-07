@@ -163,7 +163,7 @@ package object fastparse extends fastparse.SharedPackageDefs {
 
   end extension
 
-  extension [T](parse0: => P[T])
+  extension [T](inline parse0: => P[T])
 
     /** Repeat operator; runs the LHS parser at least `min` to at most `max`
       * times separated by the given whitespace (in implicit scope) and
@@ -235,7 +235,7 @@ package object fastparse extends fastparse.SharedPackageDefs {
      * parsers end up in the failure traces or failure stack to be displayed
      * to the user.
      */
-    def opaque(msg: String)(implicit ctx: P[Any]): P[T] = SharedPackageDefs.opaque(() => parse0, msg)
+    inline def opaque(msg: String)(implicit ctx: P[Any]): P[T] = SharedPackageDefs.opaque(() => parse0, msg)
 
     /**
      * Negative lookahead operator: succeeds if the wrapped parser fails and
