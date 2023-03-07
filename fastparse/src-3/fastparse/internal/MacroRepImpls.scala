@@ -148,9 +148,10 @@ object MacroRepImpls {
                                 val sepCut = ctx.cut
                                 val endCut = outerCut | postCut | sepCut
                                 if (ctx.isSuccess) {
+                                  val postSepMsg = ctx.shortParserMsg
                                   ${
                                     consumeWhitespace('{sepCut})('{
-                                      rec(beforeSepIndex, nextCount, sepCut, endCut, ctx.shortParserMsg, parsedAgg)
+                                      rec(beforeSepIndex, nextCount, sepCut, endCut, postSepMsg, parsedAgg)
                                     })
                                   }
                                 }

@@ -182,9 +182,10 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
             val endCut = outerCut | postCut | sepCut
             if (sep1 == null) rec(beforeSepIndex, nextCount, false, endCut, null, parsedAgg)
             else if (ctx.isSuccess) {
+              val sepMsg = ctx.shortParserMsg
               if (!consumeWhitespace(whitespace, ctx, sepCut)) ctx.asInstanceOf[ParsingRun[Nothing]]
               else {
-                rec(beforeSepIndex, nextCount, sepCut, endCut, ctx.shortParserMsg, parsedAgg)
+                rec(beforeSepIndex, nextCount, sepCut, endCut, sepMsg, parsedAgg)
               }
             }
             else {
@@ -245,9 +246,10 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
           val endCut = outerCut | postCut | sepCut
           if (sep1 == null) rec(beforeSepIndex, nextCount, false, endCut, null, parsedAgg)
           else if (ctx.isSuccess) {
+            val sepMsg = ctx.shortParserMsg
             if (!consumeWhitespace(whitespace, ctx, sepCut)) ctx.asInstanceOf[ParsingRun[Nothing]]
             else {
-              rec(beforeSepIndex, nextCount, sepCut, endCut, ctx.shortParserMsg, parsedAgg)
+              rec(beforeSepIndex, nextCount, sepCut, endCut, sepMsg, parsedAgg)
             }
           }
           else {

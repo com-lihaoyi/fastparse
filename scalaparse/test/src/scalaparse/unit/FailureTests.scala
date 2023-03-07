@@ -220,7 +220,7 @@ object FailureTests extends TestSuite{
         |}
         |
       """.stripMargin,
-      aggregate = """("." | WL ~ TypeArgs | ArgList | `_` | InfixSuffix | PostFix | "=>" | `=` | MatchAscriptionSuffix | "}")""",
+      aggregate = """("." | TypeArgs | ArgList | `_` | InfixSuffix | PostFix | "=>" | `=` | MatchAscriptionSuffix | "}")""",
       terminals = null,
       found = ")"
     )
@@ -807,7 +807,7 @@ object FailureTests extends TestSuite{
     s"""
        |object X{(2,)}
       """.stripMargin,
-    aggregate = """(FloatSuffix | "L" | "l" | WL ~ "." | WL ~ TypeArgs | ArgList | `_` | InfixSuffix | PostFix | "=>" | `=` | MatchAscriptionSuffix | "," ~ Expr | "," | ")")""",
+    aggregate = """(FloatSuffix | "L" | "l" | "." | TypeArgs | ArgList | `_` | InfixSuffix | PostFix | "=>" | `=` | MatchAscriptionSuffix | "," ~ Expr | "," | ")")""",
       terminals = null,
     found = ",)"
   )
@@ -943,7 +943,7 @@ object FailureTests extends TestSuite{
          |  for(i <- Nil if x: Int => bar) 1
          |}
        """.stripMargin,
-      aggregate = """(TQ | "\"" | "." | WL ~ "." | WL ~ TypeArgs | ArgList | `_` | InfixSuffix | PostFix | Enumerator | ")")""",
+      aggregate = """(TQ | "\"" | "." | TypeArgs | ArgList | `_` | InfixSuffix | PostFix | Enumerator | ")")""",
       terminals = null,
       found = ": Int"
     )

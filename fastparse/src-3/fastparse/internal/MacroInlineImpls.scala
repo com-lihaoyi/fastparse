@@ -104,7 +104,6 @@ object MacroInlineImpls {
     }
     if (ctx0.verboseFailures) {
       ctx0.reportAggregateMsg(
-        startIndex,
         () => name.value,
         forceAggregate = startIndex < ctx0.traceIndex
       )
@@ -188,7 +187,6 @@ object MacroInlineImpls {
                   }
 
                 if (ctx1.verboseFailures) ctx1.reportAggregateMsg(
-                  preLhsIndex,
                   Util.joinBinOp(lhsMsg, rhsMsg),
                   rhsAggregate ::: lhsAggregate,
                   // We override the aggregateParserMsgs to avoid building an `a ~ b`
@@ -244,7 +242,7 @@ object MacroInlineImpls {
     if (ctx1.verboseFailures) {
       val msg = ctx1.shortParserMsg
       if (!postSuccess) {
-        ctx1.reportAggregateMsg(startPos, () => msg.render + ".?")
+        ctx1.reportAggregateMsg(() => msg.render + ".?")
       }
     }
     res
@@ -307,7 +305,7 @@ object MacroInlineImpls {
       val verboseFailures = ctx5.verboseFailures
 
       ctx5.index = startPos
-      if (verboseFailures) ctx5.reportAggregateMsg(startPos, lhsMsg)
+      if (verboseFailures) ctx5.reportAggregateMsg(lhsMsg)
 
       ctx5.cut = false
       other
@@ -317,7 +315,7 @@ object MacroInlineImpls {
       if (!ctx5.isSuccess && !rhsCut) ctx5.freshFailure(startPos)
       ctx5.cut = endCut
       if (verboseFailures) {
-        ctx5.reportAggregateMsg(startPos, rhsMsg ::: lhsMsg, ctx5.aggregateParserMsgs  ::: lhsAggregate)
+        ctx5.reportAggregateMsg(rhsMsg ::: lhsMsg, ctx5.aggregateParserMsgs  ::: lhsAggregate)
       }
       ctx5.asInstanceOf[ParsingRun[V]]
     }

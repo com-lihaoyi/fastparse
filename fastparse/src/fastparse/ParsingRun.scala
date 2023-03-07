@@ -140,31 +140,26 @@ final class ParsingRun[+T](val input: ParserInput,
    * of inlining in Fastparse, and large amounts of bytecode inlined in a method
    * can cause JVM performance problems (e.g. JIT compilation may get disabled)
    */
-  def reportAggregateMsg(startIndex: Int,
-                         newShortParserMsg: Msgs): Unit = {
+  def reportAggregateMsg(newShortParserMsg: Msgs): Unit = {
 
-    reportAggregateMsg(startIndex, newShortParserMsg, aggregateParserMsgs)
+    reportAggregateMsg(newShortParserMsg, aggregateParserMsgs)
   }
-  def reportAggregateMsg(startIndex: Int,
-                         newShortParserMsg: Msgs,
+  def reportAggregateMsg(newShortParserMsg: Msgs,
                          newAggregateMsgs: Msgs): Unit = {
 
-    reportAggregateMsg(startIndex, newShortParserMsg, newAggregateMsgs, false)
+    reportAggregateMsg(newShortParserMsg, newAggregateMsgs, false)
   }
 
-  def reportAggregateMsg(startIndex: Int,
-                         newShortParserMsg: Msgs,
+  def reportAggregateMsg(newShortParserMsg: Msgs,
                          forceAggregate: Boolean): Unit = {
-    reportAggregateMsg(startIndex, newShortParserMsg, aggregateParserMsgs, forceAggregate)
+    reportAggregateMsg(newShortParserMsg, aggregateParserMsgs, forceAggregate)
   }
 
-  def reportAggregateMsg(startIndex: Int,
-                         newShortParserMsg: Msgs,
+  def reportAggregateMsg(newShortParserMsg: Msgs,
                          newAggregateMsgs: Msgs,
                          forceAggregate: Boolean): Unit = {
 
     reportParseMsg0(
-      startIndex,
       newShortParserMsg,
       newAggregateMsgs,
       forceAggregate,
@@ -186,13 +181,11 @@ final class ParsingRun[+T](val input: ParserInput,
    * a user wants to know what could have been placed at the failure point to
    * let the parse progress
    */
-  def reportTerminalMsg(startIndex: Int,
-                        newShortParserMsg: Msgs): Unit = {
+  def reportTerminalMsg(newShortParserMsg: Msgs): Unit = {
     // We only care about terminal parsers which failed exactly at the traceIndex
     if (!isSuccess && index == traceIndex) terminalParserMsgs :::= newShortParserMsg
 
     reportParseMsg0(
-      startIndex,
       if (startIndex >= traceIndex) newShortParserMsg else Msgs.empty,
       if (startIndex >= traceIndex) newShortParserMsg else Msgs.empty,
       false,
@@ -200,8 +193,7 @@ final class ParsingRun[+T](val input: ParserInput,
     )
   }
 
-  def reportParseMsg0(startIndex: Int,
-                      newShortParserMsg: Msgs,
+  def reportParseMsg0(newShortParserMsg: Msgs,
                       newAggregateMsgs: Msgs,
                       forceAggregate: Boolean,
                       setShortMsg: Boolean): Unit = {
@@ -228,28 +220,22 @@ final class ParsingRun[+T](val input: ParserInput,
     // (with possible additions) with `newAggregateMsgs`.
     aggregateParserMsgs =
       if (forceAggregate) newAggregateMsgs
-      else if (shouldAggregate(startIndex)) shortParserMsg
+      // We only replace the aggregate Msgs if:
+      //
+      // 1. We are not currently past a cut; if we are past a cut, there is no
+      //    further backtracking and so the error aggregate that has occurred
+      //    will be the final aggregate shown to the user
+      //
+      // 2. Only replace in case of failures
+      //
+      // 3. Only stomp over the given aggregation with shortParserMsg if the
+      //    current parser has failed and the final parse `index` (after any
+      //    backtracking) is still at-or-greater-than the `traceIndex`. That
+      //    ensures that any parsers which started/ended before the point of
+      //    failure are not shown, since they are irrelevant
+      else if (!cut && !isSuccess && traceIndex <= index) shortParserMsg
       else newAggregateMsgs
   }
-
-  /**
-    * Conditions under which we want to aggregate the given parse
-    */
-  def shouldAggregate(startIndex: Int) = {
-    // We only aggregate if we are not currently past a cut; if we are past a
-    // cut, there is no further backtracking and so the error aggregate that has
-    // occurred will be the final aggregate shown to the user
-    !cut &&
-    // Only aggregate failures
-    !isSuccess &&
-    // We only stomp over the given aggregation with shortParserMsg if the range
-    // of the failed parse surrounds `traceIndex`. For parses that occur
-    // completely before or after the `traceIndex`, the actual parse doesn't
-    // contribute anything to the aggregation.
-    startIndex <= traceIndex &&
-    traceIndex <= index
-  }
-
 
   // Use telescoping methods rather than default arguments to try and minimize
   // the amount of bytecode generated at the callsite.
