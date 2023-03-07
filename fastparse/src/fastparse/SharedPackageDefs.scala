@@ -154,7 +154,7 @@ trait SharedPackageDefs {
   /**
     * No-op parser that always fails, consuming zero characters
     */
-  def Fail(implicit ctx: P[_]): P[Nothing] = Fail("fail", ctx.verboseFailures)
+  def Fail(implicit ctx: P[_]): P[Nothing] = Fail("fail")
 
   /**
    * No-op parser with a custom error message that always fails, consuming zero characters
