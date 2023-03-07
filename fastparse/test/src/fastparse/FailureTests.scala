@@ -301,6 +301,9 @@ object FailureTests extends TestSuite{
             parse(_)
           }
         )
+        // Commented out for now, until we can figure out a better story
+        // around the error reporting of negative lookaheads
+
 //        test("negative") - checkOffset(
 //          input = "5",
 //          expected = """![0-6]""",

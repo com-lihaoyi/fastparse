@@ -274,8 +274,14 @@ object SharedPackageDefs{
       else ctx.freshSuccessUnit(startPos)
 
     if (ctx.verboseFailures) {
+      // Unlike most other data on `ctx`, `terminalParserMsgs` is normally
+      // append-only. Thus when we're inside the unary_! expression, it
+      // continually appends to `terminalParserMsgs` sub-parsers that could
+      // have succeeded within it, but are irrelevant to the user because
+      // we *want* the contents of the unary_! to fail! Thus, we reset
+      // `terminalParserMsgs` once we exit the unary_!, to ensure these do not
+      // end up in error messages
       ctx.terminalParserMsgs = startTerminals
-      ctx.aggregateParserMsgs = Msgs.empty
       ctx.reportTerminalMsg(startPos, Msgs.empty)
     }
     res.cut = startCut
