@@ -229,8 +229,8 @@ object MacroImpls {
         val startPos = ctx5.index
 
         lhs0.splice
-        val lhsMsg = ctx5.shortParserMsg
-        val lhsAggregate = ctx5.aggregateParserMsgs
+        val lhsMsg = ctx5.shortMsg
+        val lhsAggregate = ctx5.aggregateMsgs
         if (ctx5.isSuccess) {
           ctx5.cut |= oldCut
           ctx5.asInstanceOf[ParsingRun[V]]
@@ -244,12 +244,12 @@ object MacroImpls {
 
           ctx5.cut = false
           other.splice
-          val rhsMsg = ctx5.shortParserMsg
+          val rhsMsg = ctx5.shortMsg
           val rhsCut = ctx5.cut
           val endCut = rhsCut | oldCut
           if (!ctx5.isSuccess && !rhsCut) ctx5.freshFailure(startPos)
           ctx5.cut = endCut
-          if (verboseFailures) ctx5.reportAggregateMsg(rhsMsg ::: lhsMsg, ctx5.aggregateParserMsgs ::: lhsAggregate)
+          if (verboseFailures) ctx5.reportAggregateMsg(rhsMsg ::: lhsMsg, ctx5.aggregateMsgs ::: lhsAggregate)
           ctx5.asInstanceOf[ParsingRun[V]]
         }
       }
@@ -464,8 +464,8 @@ object MacroImpls {
       else {
         val $preRhsIndex = $ctx1.index
         $rhs
-        val $rhsAggregate = $ctx1.aggregateParserMsgs
-        val $rhsMsg = $ctx1.shortParserMsg
+        val $rhsAggregate = $ctx1.aggregateMsgs
+        val $rhsMsg = $ctx1.shortMsg
         val $res =
           if (!$ctx1.isSuccess) {
             $setCut
@@ -489,7 +489,7 @@ object MacroImpls {
         if ($ctx1.verboseFailures) $ctx1.reportAggregateMsg(
           _root_.fastparse.internal.Util.joinBinOp($lhsMsg, $rhsMsg),
           $rhsAggregate ::: $lhsAggregate,
-          // We override the aggregateParserMsgs to avoid building an `a ~ b`
+          // We override the aggregateMsgs to avoid building an `a ~ b`
           // aggregate msg in the specific case where the LHS parser fails to
           // make any progress past `startIndex`. This finds cases like `a.? ~ b`
           // or `a.rep ~ b` and lets use flatten them out into `a | b`
@@ -519,8 +519,8 @@ object MacroImpls {
           if (!$ctx1.isSuccess) $ctx1
           else {
             val $postLhsIndex = $ctx1.index
-            val $lhsAggregate = $ctx1.aggregateParserMsgs
-            val $lhsMsg = $ctx1.shortParserMsg
+            val $lhsAggregate = $ctx1.aggregateMsgs
+            val $lhsMsg = $ctx1.shortMsg
             $setCut
 
             if ($postLhsIndex > $preLhsIndex && $ctx1.checkForDrop()) $input.dropBuffer($postLhsIndex)
@@ -689,7 +689,7 @@ object MacroImpls {
             }
 
           if (ctx1.verboseFailures) {
-            val msg = ctx1.shortParserMsg
+            val msg = ctx1.shortMsg
             if (!postSuccess){
               ctx1.reportAggregateMsg(() => msg.render + ".?")
             }

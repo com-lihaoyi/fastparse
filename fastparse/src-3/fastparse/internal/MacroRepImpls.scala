@@ -97,8 +97,8 @@ object MacroRepImpls {
           if ($checkMax0) ctx.freshSuccess(repeater.result(acc), startIndex)
           else {
             $parse0
-            val parsedMsg = ctx.shortParserMsg
-            val parsedAgg = ctx.aggregateParserMsgs
+            val parsedMsg = ctx.shortMsg
+            val parsedAgg = ctx.aggregateMsgs
             val postCut = ctx.cut
             val verboseFailures = ctx.verboseFailures
             if (!ctx.isSuccess) {
@@ -148,7 +148,7 @@ object MacroRepImpls {
                                 val sepCut = ctx.cut
                                 val endCut = outerCut | postCut | sepCut
                                 if (ctx.isSuccess) {
-                                  val postSepMsg = ctx.shortParserMsg
+                                  val postSepMsg = ctx.shortMsg
                                   ${
                                     consumeWhitespace('{sepCut})('{
                                       rec(beforeSepIndex, nextCount, sepCut, endCut, postSepMsg, parsedAgg)

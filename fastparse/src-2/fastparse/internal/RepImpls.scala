@@ -33,8 +33,8 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
       else {
         val verboseFailures = ctx.verboseFailures
         parse0()
-        val parsedMsg = ctx.shortParserMsg
-        val parsedAgg = ctx.aggregateParserMsgs
+        val parsedMsg = ctx.shortMsg
+        val parsedAgg = ctx.aggregateMsgs
         val postCut = ctx.cut
         if (!ctx.isSuccess) {
           val res =
@@ -59,7 +59,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
             val endCut = outerCut | postCut | sepCut
             if (sep1 == null) rec(beforeSepIndex, nextCount, false, endCut, null, parsedAgg)
             else {
-              if (ctx.isSuccess) rec(beforeSepIndex, nextCount, sepCut, endCut, ctx.shortParserMsg, parsedAgg)
+              if (ctx.isSuccess) rec(beforeSepIndex, nextCount, sepCut, endCut, ctx.shortMsg, parsedAgg)
               else {
                 val res =
                   if (sepCut) ctx.augmentFailure(beforeSepIndex, endCut)
@@ -94,8 +94,8 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
                      lastAgg: Msgs): ParsingRun[V] = {
       ctx.cut = precut | (count < min && outerCut)
       parse0()
-      val parsedMsg = ctx.shortParserMsg
-      val parsedAgg = ctx.aggregateParserMsgs
+      val parsedMsg = ctx.shortMsg
+      val parsedAgg = ctx.aggregateMsgs
       val postCut = ctx.cut
       val verboseFailures = ctx.verboseFailures
       if (!ctx.isSuccess) {
@@ -114,7 +114,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
         val endCut = outerCut | postCut | sepCut
         if (sep1 == null) rec(beforeSepIndex, nextCount, false, endCut, null, parsedAgg)
         else {
-          if (ctx.isSuccess) rec(beforeSepIndex, nextCount, sepCut, endCut, ctx.shortParserMsg, parsedAgg)
+          if (ctx.isSuccess) rec(beforeSepIndex, nextCount, sepCut, endCut, ctx.shortMsg, parsedAgg)
           else {
             val res =
               if (sepCut) ctx.augmentFailure(beforeSepIndex, endCut)
@@ -155,8 +155,8 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
       if (count == 0 && actualMax == 0) ctx.freshSuccess(repeater.result(acc), startIndex)
       else {
         parse0()
-        val parsedMsg = ctx.shortParserMsg
-        val parsedAgg = ctx.aggregateParserMsgs
+        val parsedMsg = ctx.shortMsg
+        val parsedAgg = ctx.aggregateMsgs
         val postCut = ctx.cut
         val verboseFailures = ctx.verboseFailures
         if (!ctx.isSuccess) {
@@ -182,7 +182,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
             val endCut = outerCut | postCut | sepCut
             if (sep1 == null) rec(beforeSepIndex, nextCount, false, endCut, null, parsedAgg)
             else if (ctx.isSuccess) {
-              val sepMsg = ctx.shortParserMsg
+              val sepMsg = ctx.shortMsg
               if (!consumeWhitespace(whitespace, ctx, sepCut)) ctx.asInstanceOf[ParsingRun[Nothing]]
               else {
                 rec(beforeSepIndex, nextCount, sepCut, endCut, sepMsg, parsedAgg)
@@ -224,8 +224,8 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
 
       ctx.cut = precut | (count < min && outerCut)
       parse0()
-      val parsedMsg = ctx.shortParserMsg
-      val parsedAgg = ctx.aggregateParserMsgs
+      val parsedMsg = ctx.shortMsg
+      val parsedAgg = ctx.aggregateMsgs
       val postCut = ctx.cut
       val verboseFailures = ctx.verboseFailures
       if (!ctx.isSuccess){
@@ -246,7 +246,7 @@ class RepImpls[T](val parse0: () => ParsingRun[T]) extends AnyVal{
           val endCut = outerCut | postCut | sepCut
           if (sep1 == null) rec(beforeSepIndex, nextCount, false, endCut, null, parsedAgg)
           else if (ctx.isSuccess) {
-            val sepMsg = ctx.shortParserMsg
+            val sepMsg = ctx.shortMsg
             if (!consumeWhitespace(whitespace, ctx, sepCut)) ctx.asInstanceOf[ParsingRun[Nothing]]
             else {
               rec(beforeSepIndex, nextCount, sepCut, endCut, sepMsg, parsedAgg)

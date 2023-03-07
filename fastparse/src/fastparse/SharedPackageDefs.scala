@@ -54,9 +54,9 @@ trait SharedPackageDefs {
     originalParser = parser,
     traceIndex = traceIndex,
     instrument = instrument,
-    terminalParserMsgs = Msgs.empty,
-    aggregateParserMsgs = Msgs.empty,
-    shortParserMsg = Msgs.empty,
+    terminalMsgs = Msgs.empty,
+    aggregateMsgs = Msgs.empty,
+    shortMsg = Msgs.empty,
     lastFailureMsg = null,
     failureStack = List.empty,
     isSuccess = true,
@@ -114,7 +114,7 @@ trait SharedPackageDefs {
 
   /**
     * Wraps a parser and ensures that none of the parsers within it leave
-    * failure traces in terminalParserMsgs, though unlike [[ByNameOps.opaque]]
+    * failure traces in terminalMsgs, though unlike [[ByNameOps.opaque]]
     * if there is a failure *within* the wrapped parser the failure's location
     * and error message will still be shown
     *
@@ -126,8 +126,8 @@ trait SharedPackageDefs {
 
     val res = p
     if (ctx.verboseFailures) {
-      ctx.aggregateParserMsgs = Msgs.empty
-      ctx.shortParserMsg = Msgs.empty
+      ctx.aggregateMsgs = Msgs.empty
+      ctx.shortMsg = Msgs.empty
     }
     res
   }

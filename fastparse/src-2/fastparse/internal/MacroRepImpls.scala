@@ -74,8 +74,8 @@ object MacroRepImpls{
             $ctx1.cut = $minCut
             ${c.prefix}.parse0()
 
-            val $parsedMsg = $ctx1.shortParserMsg
-            val $parsedAgg = $ctx1.aggregateParserMsgs
+            val $parsedMsg = $ctx1.shortMsg
+            val $parsedAgg = $ctx1.aggregateMsgs
             $originalCut |= $ctx1.cut
             if (!$ctx1.isSuccess) {
               val res =

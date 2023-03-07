@@ -35,10 +35,10 @@ import fastparse.internal.{Instrument, Lazy, Msgs, Util}
   *                         it with tracing enabled.
   * @param traceIndex       The index we wish to trace if tracing is enabled, else
   *                         -1. Used to find failure messages to aggregate into
-  *                         `terminalParserMsgs`
+  *                         `terminalMsgs`
   * @param instrument       Callbacks that can be injected before/after every
   *                         `P(...)` parser.
-  * @param terminalParserMsgs When tracing is enabled, this collects up all the
+  * @param terminalMsgs When tracing is enabled, this collects up all the
   *                         upper-most failures that happen at [[traceIndex]]
   *                         (in [[Lazy]] wrappers) so they can be shown to the
   *                         user at end-of-parse as suggestions for what could
@@ -48,9 +48,9 @@ import fastparse.internal.{Instrument, Lazy, Msgs, Util}
   *                         or `!a` which may fail at [[traceIndex]] even
   *                         without any of their wrapped terminal parsers
   *                         failing there, it makes use of the
-  *                         [[shortParserMsg]] as the string representation of
+  *                         [[shortMsg]] as the string representation of
   *                         the composite parser.
-  * @param shortParserMsg   When tracing is enabled, this contains string
+  * @param shortMsg   When tracing is enabled, this contains string
   *                         representation of the last parser to run. Since
   *                         parsers aren't really objects, we piece together
   *                         the string in the parser body and return store it
@@ -108,9 +108,9 @@ final class ParsingRun[+T](val input: ParserInput,
                            val traceIndex: Int,
                            val instrument: Instrument,
                            // Mutable vars below:
-                           var terminalParserMsgs: Msgs,
-                           var aggregateParserMsgs: Msgs,
-                           var shortParserMsg: Msgs,
+                           var terminalMsgs: Msgs,
+                           var aggregateMsgs: Msgs,
+                           var shortMsg: Msgs,
                            var lastFailureMsg: Msgs,
                            var failureStack: List[(String, Int)],
                            var isSuccess: Boolean,
@@ -140,27 +140,27 @@ final class ParsingRun[+T](val input: ParserInput,
    * of inlining in Fastparse, and large amounts of bytecode inlined in a method
    * can cause JVM performance problems (e.g. JIT compilation may get disabled)
    */
-  def reportAggregateMsg(newShortParserMsg: Msgs): Unit = {
+  def reportAggregateMsg(newshortMsg: Msgs): Unit = {
 
-    reportAggregateMsg(newShortParserMsg, aggregateParserMsgs)
+    reportAggregateMsg(newshortMsg, aggregateMsgs)
   }
-  def reportAggregateMsg(newShortParserMsg: Msgs,
+  def reportAggregateMsg(newshortMsg: Msgs,
                          newAggregateMsgs: Msgs): Unit = {
 
-    reportAggregateMsg(newShortParserMsg, newAggregateMsgs, false)
+    reportAggregateMsg(newshortMsg, newAggregateMsgs, false)
   }
 
-  def reportAggregateMsg(newShortParserMsg: Msgs,
+  def reportAggregateMsg(newshortMsg: Msgs,
                          forceAggregate: Boolean): Unit = {
-    reportAggregateMsg(newShortParserMsg, aggregateParserMsgs, forceAggregate)
+    reportAggregateMsg(newshortMsg, aggregateMsgs, forceAggregate)
   }
 
-  def reportAggregateMsg(newShortParserMsg: Msgs,
+  def reportAggregateMsg(newshortMsg: Msgs,
                          newAggregateMsgs: Msgs,
                          forceAggregate: Boolean): Unit = {
 
     reportParseMsg0(
-      newShortParserMsg,
+      newshortMsg,
       newAggregateMsgs,
       forceAggregate,
       newAggregateMsgs.value.nonEmpty
@@ -177,32 +177,32 @@ final class ParsingRun[+T](val input: ParserInput,
    * - Parsers like `.opaque`, where sub-failures are intentionally hidden and
    *   not shown to the user
    *
-   * These "terminal" failures will be stored in the `terminalParserMsgs` in case
+   * These "terminal" failures will be stored in the `terminalMsgs` in case
    * a user wants to know what could have been placed at the failure point to
    * let the parse progress
    */
-  def reportTerminalMsg(startIndex: Int, newShortParserMsg: Msgs): Unit = {
+  def reportTerminalMsg(startIndex: Int, newshortMsg: Msgs): Unit = {
     // We only care about terminal parsers which failed exactly at the traceIndex
-    if (!isSuccess && index == traceIndex) terminalParserMsgs :::= newShortParserMsg
+    if (!isSuccess && index == traceIndex) terminalMsgs :::= newshortMsg
 
     reportParseMsg0(
-      if (startIndex >= traceIndex) newShortParserMsg else Msgs.empty,
-      if (startIndex >= traceIndex) newShortParserMsg else Msgs.empty,
+      if (startIndex >= traceIndex) newshortMsg else Msgs.empty,
+      if (startIndex >= traceIndex) newshortMsg else Msgs.empty,
       false,
       startIndex >= traceIndex
     )
   }
 
-  def reportParseMsg0(newShortParserMsg: Msgs,
+  def reportParseMsg0(newshortMsg: Msgs,
                       newAggregateMsgs: Msgs,
                       forceAggregate: Boolean,
                       setShortMsg: Boolean): Unit = {
     // `lastFailureMsg` ends up being set by the first parser to report a
     // failure, while returning from the last parser to call `.freshFailure()
     // (which nulls it out)
-    if (!isSuccess && lastFailureMsg == null) lastFailureMsg = newShortParserMsg
+    if (!isSuccess && lastFailureMsg == null) lastFailureMsg = newshortMsg
 
-    // We only set the `shortParserMsg` for some parsers. These include:
+    // We only set the `shortMsg` for some parsers. These include:
     //
     // - Terminal parsers which have `startIndex >= traceIndex`
     //
@@ -210,15 +210,15 @@ final class ParsingRun[+T](val input: ParserInput,
     //   that they have either child terminal parsers with `startIndex >= traceIndex`
     //   or they have child aggregate parsers with non-empty `newAggregateMsgs`
     //
-    // This lets us skip setting `shortParserMsg` for all parsers, terminal or
+    // This lets us skip setting `shortMsg` for all parsers, terminal or
     // aggregate, which run and terminate fully before `traceIndex`, and thus
     // would be of no interest to a user debugging parse failures at `traceIndex`
-    shortParserMsg = if (setShortMsg) newShortParserMsg else Msgs.empty
+    shortMsg = if (setShortMsg) newshortMsg else Msgs.empty
 
     // There are two cases when aggregating: either we stomp over the entire
-    // existing `aggregateParserMsgs` with `newShortParserMsg`, or we preserve it
+    // existing `aggregateMsgs` with `newshortMsg`, or we preserve it
     // (with possible additions) with `newAggregateMsgs`.
-    aggregateParserMsgs =
+    aggregateMsgs =
       if (forceAggregate) newAggregateMsgs
       // We only replace the aggregate Msgs if:
       //
@@ -228,12 +228,12 @@ final class ParsingRun[+T](val input: ParserInput,
       //
       // 2. Only replace in case of failures
       //
-      // 3. Only stomp over the given aggregation with shortParserMsg if the
+      // 3. Only stomp over the given aggregation with shortMsg if the
       //    current parser has failed and the final parse `index` (after any
       //    backtracking) is still at-or-greater-than the `traceIndex`. That
       //    ensures that any parsers which started/ended before the point of
       //    failure are not shown, since they are irrelevant
-      else if (!cut && !isSuccess && traceIndex <= index) shortParserMsg
+      else if (!cut && !isSuccess && traceIndex <= index) shortMsg
       else newAggregateMsgs
   }
 

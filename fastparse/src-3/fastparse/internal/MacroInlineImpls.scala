@@ -147,8 +147,8 @@ object MacroInlineImpls {
         if (!ctx1.isSuccess) ctx1
         else {
           val postLhsIndex = ctx1.index
-          val lhsAggregate = ctx1.aggregateParserMsgs
-          val lhsMsg       = ctx1.shortParserMsg
+          val lhsAggregate = ctx1.aggregateMsgs
+          val lhsMsg       = ctx1.shortMsg
           ${ setCut('{ ctx1 }) }
 
           if (postLhsIndex > preLhsIndex && ctx1.checkForDrop()) input.dropBuffer(postLhsIndex)
@@ -161,8 +161,8 @@ object MacroInlineImpls {
               else {
                 val preRhsIndex = ctx1.index
                 $rhs
-                val rhsAggregate = ctx1.aggregateParserMsgs
-                val rhsMsg       = ctx1.shortParserMsg
+                val rhsAggregate = ctx1.aggregateMsgs
+                val rhsMsg       = ctx1.shortMsg
                 val res =
                   if (!ctx1.isSuccess) {
                     ${ setCut('{ ctx1 }) }
@@ -189,7 +189,7 @@ object MacroInlineImpls {
                 if (ctx1.verboseFailures) ctx1.reportAggregateMsg(
                   Util.joinBinOp(lhsMsg, rhsMsg),
                   rhsAggregate ::: lhsAggregate,
-                  // We override the aggregateParserMsgs to avoid building an `a ~ b`
+                  // We override the aggregateMsgs to avoid building an `a ~ b`
                   // aggregate msg in the specific case where the LHS parser fails to
                   // make any progress past `startIndex`. This finds cases like `a.? ~ b`
                   // or `a.rep ~ b` and lets use flatten them out into `a | b`
@@ -240,7 +240,7 @@ object MacroInlineImpls {
       }
 
     if (ctx1.verboseFailures) {
-      val msg = ctx1.shortParserMsg
+      val msg = ctx1.shortMsg
       if (!postSuccess) {
         ctx1.reportAggregateMsg(() => msg.render + ".?")
       }
@@ -295,8 +295,8 @@ object MacroInlineImpls {
     val startPos = ctx5.index
 
     lhs0
-    val lhsMsg       = ctx5.shortParserMsg
-    val lhsAggregate = ctx5.aggregateParserMsgs
+    val lhsMsg       = ctx5.shortMsg
+    val lhsAggregate = ctx5.aggregateMsgs
     if (ctx5.isSuccess) {
       ctx5.cut |= oldCut
       ctx5.asInstanceOf[ParsingRun[V]]
@@ -309,13 +309,13 @@ object MacroInlineImpls {
 
       ctx5.cut = false
       other
-      val rhsMsg = ctx5.shortParserMsg
+      val rhsMsg = ctx5.shortMsg
       val rhsCut = ctx5.cut
       val endCut = rhsCut | oldCut
       if (!ctx5.isSuccess && !rhsCut) ctx5.freshFailure(startPos)
       ctx5.cut = endCut
       if (verboseFailures) {
-        ctx5.reportAggregateMsg(rhsMsg ::: lhsMsg, ctx5.aggregateParserMsgs  ::: lhsAggregate)
+        ctx5.reportAggregateMsg(rhsMsg ::: lhsMsg, ctx5.aggregateMsgs  ::: lhsAggregate)
       }
       ctx5.asInstanceOf[ParsingRun[V]]
     }
