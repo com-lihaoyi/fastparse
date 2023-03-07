@@ -6,14 +6,15 @@ import scala.annotation.{switch, tailrec}
 import scala.collection.mutable.ArrayBuffer
 
 object Util {
-  def parenthize(fs: Seq[Lazy[String]]) = fs.reverseIterator.map(_()).toSeq.distinct match{
+  def parenthize(fs: List[Lazy[String]]) = fs.reverseIterator.map(_()).toSeq.distinct match{
     case Seq(x) => x
     case xs => xs.mkString("(", " | ", ")")
   }
-  def joinBinOp(lhs: Msgs, rhs: Msgs) =
+  def joinBinOp(lhs: Msgs, rhs: Msgs): Msgs = {
     if (lhs.value.isEmpty) rhs
     else if (rhs.value.isEmpty) lhs
-    else Msgs(new Lazy(() => lhs.render + " ~ " + rhs.render) :: Nil)
+    else Msgs.fromFunction(() => lhs.render + " ~ " + rhs.render)
+  }
 
   def consumeWhitespace[V](whitespace: fastparse.Whitespace, ctx: ParsingRun[Any]) = {
     val oldCapturing = ctx.noDropBuffer // completely disallow dropBuffer
@@ -100,49 +101,35 @@ object Util {
   }
 
 
-  def aggregateMsgPostSep[V](startIndex: Int,
-                             min: Int,
-                             ctx: ParsingRun[Any],
-                             parsedMsg: Msgs,
-                             lastAgg: Msgs) = {
-    ctx.aggregateMsg(
-      startIndex,
-      () => parsedMsg.render + ".rep" + (if (min == 0) "" else s"(${min})"),
-      // When we fail on a sep, we collect the failure aggregate of the last
-      // non-sep rep body together with the failure aggregate of the sep, since
-      // the last non-sep rep body continuing is one of the valid ways of
-      // continuing the parse
-      ctx.failureGroupAggregate ::: lastAgg
-
-    )
+  def reportParseMsgPostSep(startIndex: Int,
+                            min: Int,
+                            ctx: ParsingRun[Any],
+                            parsedMsg: Msgs,
+                            lastAgg: Msgs) = {
+    reportParseMsgInRep(startIndex, min, ctx, null, parsedMsg, lastAgg, true)
   }
 
-  def aggregateMsgInRep[V](startIndex: Int,
-                           min: Int,
-                           ctx: ParsingRun[Any],
-                           sepMsg: Msgs,
-                           parsedMsg: Msgs,
-                           lastAgg: Msgs,
-                           precut: Boolean) = {
-    if (sepMsg == null || precut) {
-      ctx.aggregateMsg(
-        startIndex,
-        () => parsedMsg.render + ".rep" + (if (min == 0) "" else s"(${min})"),
-        if (lastAgg == null) ctx.failureGroupAggregate
-        else ctx.failureGroupAggregate ::: lastAgg
-      )
-    } else {
-      ctx.aggregateMsg(
-        startIndex,
-        () => parsedMsg.render + ".rep" + (if (min == 0) "" else s"(${min})"),
-        // When we fail on a rep body, we collect both the concatenated
-        // sep and failure aggregate  of the rep body that we tried (because
-        // we backtrack past the sep on failure) as well as the failure
-        // aggregate of the previous rep, which we could have continued
-        if (lastAgg == null) Util.joinBinOp(sepMsg, parsedMsg)
-        else Util.joinBinOp(sepMsg, parsedMsg) ::: lastAgg
-      )
-    }
+  def reportParseMsgInRep(startIndex: Int,
+                          min: Int,
+                          ctx: ParsingRun[Any],
+                          sepMsg: Msgs,
+                          parsedMsg: Msgs,
+                          lastAgg: Msgs,
+                          precut: Boolean) = {
+
+    // When we fail on a rep body, we collect both the concatenated
+    // sep and failure aggregate  of the rep body that we tried (because
+    // we backtrack past the sep on failure) as well as the failure
+    // aggregate of the previous rep, which we could have continued
+    val newAgg =
+      if (sepMsg == null || precut) ctx.aggregateMsgs
+      else Util.joinBinOp(sepMsg, parsedMsg)
+
+    ctx.reportAggregateMsg(
+      () => parsedMsg.render + ".rep" + (if (min == 0) "" else s"(${min})"),
+      if (lastAgg == null) newAgg
+      else newAgg ::: lastAgg
+    )
   }
 }
 
@@ -194,7 +181,14 @@ final class CompactTrieNode(source: TrieNode){
 }
 object Msgs{
   val empty = Msgs(Nil)
+  implicit def fromFunction(msgToSet: () => String): Msgs = {
+    Msgs(new Lazy(() => msgToSet()):: Nil)
+  }
+  implicit def fromStrings(msgsToSet: List[String]): Msgs = {
+    Msgs(msgsToSet.map(s => new Lazy(() => s)))
+  }
 }
+
 case class Msgs(value: List[Lazy[String]]){
   def :::(other: Msgs) = Msgs(other.value ::: value)
   def ::(other: Lazy[String]) = Msgs(other :: value)
