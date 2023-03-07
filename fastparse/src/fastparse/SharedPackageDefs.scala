@@ -189,9 +189,9 @@ trait SharedPackageDefs {
   /**
    * No-op parser with a custom error message that always fails, consuming zero characters
    */
-  def Fail(msg: String, verboseFailure: Boolean = true)(implicit ctx: P[_]): P[Nothing] = {
+  def Fail(msg: String)(implicit ctx: P[_]): P[Nothing] = {
     val res = ctx.freshFailure()
-    if (verboseFailure) ctx.setMsg(ctx.index, () => msg)
+    if (ctx.verboseFailure) ctx.reportTerminalMsg(ctx.index, () => msg)
     res
   }
   /**
