@@ -129,6 +129,10 @@ object ExampleTests extends TestSuite{
       test("passfail"){
         val Parsed.Success((), 0) = parse("asdad", Pass(_))
         val Parsed.Failure(_, 0, _) = parse("asdad", Fail(_))
+
+        def failWithLabel[$: P] = P( Fail("custom fail msg") )
+        val Parsed.Failure(_, 0, extra) = parse("asdad", failWithLabel(_))
+        assert(extra.trace().longMsg == """Expected failWithLabel:1:1 / fail:1:1, found "asdad"""")
       }
 
       test("index"){

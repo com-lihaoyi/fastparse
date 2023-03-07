@@ -154,12 +154,16 @@ trait SharedPackageDefs {
   /**
     * No-op parser that always fails, consuming zero characters
     */
-  def Fail(implicit ctx: P[_]): P[Nothing] = {
+  def Fail(implicit ctx: P[_]): P[Nothing] = Fail("fail")
+
+  /**
+   * No-op parser with a custom error message that always fails, consuming zero characters
+   */
+  def Fail(msg: String)(implicit ctx: P[_]): P[Nothing] = {
     val res = ctx.freshFailure()
     if (ctx.verboseFailures) ctx.reportTerminalMsg(ctx.index, () => "fail")
     res
   }
-
   /**
     * Parser that always succeeds and returns the current index into the parsed
     * input. Useful for e.g. capturing source locations so when downstream

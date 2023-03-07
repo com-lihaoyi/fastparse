@@ -3,8 +3,10 @@ target/
 out/
 .DS_STORE
 *.iml
-.idea/
+.idea
+.coursier
 .bloop/
 .metals/
+project/metals.sbt
 .vscode/
 .bsp/
