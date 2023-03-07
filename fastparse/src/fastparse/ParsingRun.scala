@@ -181,7 +181,7 @@ final class ParsingRun[+T](val input: ParserInput,
    * a user wants to know what could have been placed at the failure point to
    * let the parse progress
    */
-  def reportTerminalMsg(newShortParserMsg: Msgs): Unit = {
+  def reportTerminalMsg(startIndex: Int, newShortParserMsg: Msgs): Unit = {
     // We only care about terminal parsers which failed exactly at the traceIndex
     if (!isSuccess && index == traceIndex) terminalParserMsgs :::= newShortParserMsg
 
