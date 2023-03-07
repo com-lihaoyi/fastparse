@@ -279,6 +279,28 @@ object FailureTests extends TestSuite{
           a(_)
         }
       )
+      test("repNotEnoughForMin") - {
+        test("afterBody") - checkOffset(
+          input = "0 1 2 3 4 5 6 7",
+          expected = """" """",
+          label = """" """",
+          terminals = """" """",
+          parser = {
+            def parse[$: P] = P( CharIn("0-9").rep(10, " ") ~ End )
+            parse(_)
+          }
+        )
+        test("afterSep") - checkOffset(
+          input = "0 1 2 3 4 ",
+          expected = """[0-9]""",
+          label = """[0-9]""",
+          terminals = """[0-9]""",
+          parser = {
+            def parse[$: P] = P( CharIn("0-9").rep(10, " ") ~ End )
+            parse(_)
+          }
+        )
+      }
 
       test("lookahead") {
         // We do not bother showing the enclosing `&()` for positive lookahead
