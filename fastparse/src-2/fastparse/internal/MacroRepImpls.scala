@@ -75,20 +75,23 @@ object MacroRepImpls{
             ${c.prefix}.parse0()
 
             val $parsedMsg = $ctx1.shortParserMsg
-            val $parsedAgg = $ctx1.failureGroupAggregate
+            val $parsedAgg = $ctx1.aggregateParserMsgs
             $originalCut |= $ctx1.cut
             if (!$ctx1.isSuccess) {
               val res =
                 if ($ctx1.cut) $ctx1.asInstanceOf[_root_.fastparse.P[${c.weakTypeOf[V]}]]
                 else $endSnippet
-              if ($ctx1.verboseFailures) {
-                $ctx1.aggregateMsg(
-                  $startIndex,
-                  () => $parsedMsg.render + s".rep" + $aggregateSnippet,
-                  if ($lastAgg == null) $ctx1.failureGroupAggregate
-                  else $ctx1.failureGroupAggregate ::: $lastAgg
-                )
-              }
+
+              if ($ctx1.verboseFailures) _root_.fastparse.internal.Util.reportParseMsgInRep(
+                $startIndex,
+                ${min.getOrElse(q"0")},
+                $ctx1,
+                _root_.fastparse.internal.Msgs.empty,
+                $parsedMsg,
+                $lastAgg,
+                true
+              )
+
               res
             }else {
               val $beforeSepIndex = $ctx1.index

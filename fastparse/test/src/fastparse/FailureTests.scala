@@ -17,8 +17,8 @@ object FailureTests extends TestSuite{
 
       val terminals1 = Option(terminals).getOrElse(expected)
       assert(
-        trace.failure.label == label,
         trace.groupAggregateString == expected,
+        trace.label == label,
         trace.terminalAggregateString == terminals1
       )
     }
@@ -30,8 +30,8 @@ object FailureTests extends TestSuite{
         val trace = f.trace(true)
 
         assert(
-          trace.terminalAggregateString == """("a" | "b" | "c")""",
-          trace.groupAggregateString == """(parseB | "c")"""
+          trace.groupAggregateString == """(parseB | "c")""",
+          trace.terminalAggregateString == """("a" | "b" | "c")"""
         )
       }
 
@@ -126,6 +126,16 @@ object FailureTests extends TestSuite{
         assert(trace2.groupAggregateString == """("," ~ parseB | "c")""")
         f2.index
       }
+      test("repTooFew"){
+        def parseB[$: P] = P( "a" | "b" )
+        def parseA[$: P] = P( parseB.rep(5) )
+        val f1 @ Parsed.Failure(_, _, _) = parse("abab", parseA(_))
+
+        val trace = f1.trace()
+
+        assert(trace.groupAggregateString == """("a" | "b")""")
+        assert(trace.terminalAggregateString == """("a" | "b")""")
+      }
 
       test("sepCut"){
         def parseB[$: P] = P( "a" | "b" | "c" )
@@ -209,6 +219,148 @@ object FailureTests extends TestSuite{
           parseA(_)
         }
       )
+      test("repSeparatorIsNotIncludedInFailureMsgWhenCut") - checkOffset(
+        input = "ab aa",
+        expected = "\"b\"",
+        label = "\"b\"",
+        terminals = "\"b\"",
+        parser = {
+          def space[$: P] = P(" ")
+          def token[$: P] = P("a" ~/ "b")
+          def multiple[$: P] = P(token.rep(1, space))
+          multiple(_)
+        }
+      )
+      test("repSeparatorIsNotIncludedInFailureMsgWhenCutX") - checkOffset(
+        input = "ab aa",
+        expected = "\"b\"",
+        label = "\"b\"",
+        terminals = "\"b\"",
+        parser = {
+          def space[$: P] = P(" ")
+          def token[$: P] = P("a" ~/ "b")
+          def multiple[$: P] = P(token.repX(1, space))
+          multiple(_)
+        }
+      )
+      test("repSeparatorsBeforeTraceIndexDontPolluteFailureGroups") - checkOffset(
+        input = "p ii",
+        expected = "\"a\"",
+        label = "\"a\"",
+        terminals = "\"a\"",
+        parser = {
+          def space[$:P] = P( " "  )
+          def items[$: P]: P[Unit] = P( "p".rep(sep = " ") ~ space ~ "i" ~ "a" )
+          items(_)
+        }
+      )
+      test("repSeparatorsBeforeTraceIndexDontPolluteFailureGroups2") - checkOffset(
+        input = "p ii",
+        expected = "\"a\"",
+        label = "\"a\"",
+        terminals = "\"a\"",
+        parser = {
+          def space[$: P] = P(" ")
+          def prep[$: P] = P("p".rep(sep = space))
+          def all[$: P] = P(prep ~ AnyChar ~ "i" ~ "a")
+          all(_)
+        }
+      )
+      test("repSeparatorsBeforeTraceIndexDontPolluteFailureGroups3") - checkOffset(
+        input = "pt x_",
+        expected = """("y" | end-of-input)""",
+        label = "end-of-input",
+        terminals = """("y" | end-of-input)""",
+        parser = {
+          def c[$: P] = P( "x".repX(1, "y") )
+          def d[$: P] = P( "p" )
+          def b[$: P] = P( (d ~ "t").repX(1, " ") )
+          def a[$: P] = P( b ~ " " ~ c ~ End )
+          a(_)
+        }
+      )
+      test("repNotEnoughForMin") - {
+        test("afterBody") - checkOffset(
+          input = "0 1 2 3 4 5 6 7",
+          expected = """" """",
+          label = """" """",
+          terminals = """" """",
+          parser = {
+            def parse[$: P] = P( CharIn("0-9").rep(10, " ") ~ End )
+            parse(_)
+          }
+        )
+        test("afterSep") - checkOffset(
+          input = "0 1 2 3 4 ",
+          expected = """[0-9]""",
+          label = """[0-9]""",
+          terminals = """[0-9]""",
+          parser = {
+            def parse[$: P] = P( CharIn("0-9").rep(10, " ") ~ End )
+            parse(_)
+          }
+        )
+      }
+
+      test("lookahead") {
+        // We do not bother showing the enclosing `&()` for positive lookahead
+        // parsers. That is because to a user debugging the parser, it doesn't
+        // matter: whether the parser is `&(foo)` or `foo`, they still need to
+        // put the same input at `traceIndex` to make the parse succeed
+        //
+        // Furthermore, for both positive and negative lookahead which are
+        // typically used in a `&(lhs) ~ rhs` or `!lhs ~ rhs`, we cannot show
+        // the `rhs` even if we wanted to! The parse will already have failed
+        // when parsing the `lhs`, and so there is no opportunity to gather
+        // the `rhs`'s parse messages for display.
+        test("positive") - checkOffset(
+          input = "7",
+          expected = """[0-6]""",
+          label = "[0-6]",
+          terminals = """[0-6]""",
+          parser = {
+            def parse[$: P] = P( &(CharIn("0-6")) ~ CharIn("4-9") ~ End )
+            parse(_)
+          }
+        )
+        // Commented out for now, until we can figure out a better story
+        // around the error reporting of negative lookaheads
+
+//        test("negative") - checkOffset(
+//          input = "5",
+//          expected = """![0-6]""",
+//          label = "![0-6]",
+//          terminals = """![0-6]""",
+//          parser = {
+//            def parse[$: P] = P( !CharIn("0-6") ~ CharIn("4-9") ~ End)
+//            parse(_)
+//          }
+//        )
+//        test("negative2") - checkOffset(
+//          input = "5",
+//          expected = """!([0-4] | [5-9])""",
+//          label = "!([0-4] | [5-9])",
+//          terminals = """!([0-4] | [5-9])""",
+//          parser = {
+//            // Make sure that the failure if `[0-4]` inside the `!(...)` block
+//            // does not end up in our reported terminals. The parser *wants*
+//            // the wrapped parser to fail, and giving hints to make its
+//            // sub-parsers succeed is counter-productive!
+//            def parse[$: P] = P( !(CharIn("0-4") | CharIn("5-9")) ~ End)
+//            parse(_)
+//          }
+//        )
+        test("negative3") - checkOffset(
+          input = "9",
+          expected = """[4-8]""",
+          label = "[4-8]",
+          terminals = """[4-8]""",
+          parser = {
+            def parse[$: P] = P( !CharIn("0-6").log("lhs") ~ CharIn("4-8").log("rhs") ~ End ).log
+            parse(_)
+          }
+        )
+      }
     }
 
     test("offset"){
@@ -364,7 +516,7 @@ object FailureTests extends TestSuite{
       import NoWhitespace._
       // In the case where one branch fails further in than `traceIndex`, we
       // collect the partial aggregation from that branch in the
-      // `failureGroupAggregate` but ignore that branch's downstream failure in
+      // `aggregateParserMsgs` but ignore that branch's downstream failure in
       // `failureTerminalsAggregate`
 
       def check(parser: P[_] => P[_]) = checkOffset(
@@ -393,6 +545,7 @@ object FailureTests extends TestSuite{
       test("repXLeft") -   check{ implicit c => (("a" ~ "b") ~ "c").repX ~ "a" ~/ "d" }
       test("repSep") -     check{ implicit c => ("a" ~ ("b" ~ "c")).rep(sep = Pass) ~ "a" ~/ "d" }
       test("repSepLeft") - check{ implicit c => (("a" ~ "b") ~ "c").rep(sep = Pass) ~ "a" ~/ "d" }
+
     }
 
     test("whitespace"){

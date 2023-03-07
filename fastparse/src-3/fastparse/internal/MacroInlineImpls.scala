@@ -27,7 +27,7 @@ object MacroInlineImpls {
                   } else {
                     ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
                   }
-                if (ctx1.verboseFailures) ctx1.aggregateTerminal(index, () => $literalized)
+                if (ctx1.verboseFailures) ctx1.reportTerminalMsg(index, () => $literalized)
                 res
             }
 
@@ -51,7 +51,7 @@ object MacroInlineImpls {
                     ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
                   }
                 if (ctx1.verboseFailures) {
-                  ctx1.aggregateTerminal(index, () => $literalized)
+                  ctx1.reportTerminalMsg(index, () => $literalized)
                 }
                 res
 
@@ -67,7 +67,7 @@ object MacroInlineImpls {
               val res =
                 if (Util.startsWith(ctx1.input, s1, index)) ctx1.freshSuccessUnit(index + s1.length)
                 else ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
-              if (ctx1.verboseFailures) ctx1.aggregateTerminal(index, () => Util.literalize(s1))
+              if (ctx1.verboseFailures) ctx1.reportTerminalMsg(index, () => Util.literalize(s1))
               res
           }
         }
@@ -83,7 +83,7 @@ object MacroInlineImpls {
       else if (f(ctx1.successValue.asInstanceOf[T])) ctx1.asInstanceOf[ParsingRun[T]]
       else ctx1.freshFailure().asInstanceOf[ParsingRun[T]]
 
-    if (ctx1.verboseFailures) ctx1.aggregateTerminal(startIndex, () => "filter")
+    if (ctx1.verboseFailures) ctx1.reportTerminalMsg(startIndex, () => "filter")
     res
   }
 
@@ -103,11 +103,9 @@ object MacroInlineImpls {
       ctx1.instrument.afterParse(name.value, ctx0.index, ctx0.isSuccess)
     }
     if (ctx0.verboseFailures) {
-      ctx0.aggregateMsg(
-        startIndex,
-        Msgs(new Lazy(() => name.value) :: Nil),
-        ctx0.failureGroupAggregate,
-        startIndex < ctx0.traceIndex
+      ctx0.reportAggregateMsg(
+        () => name.value,
+        forceAggregate = startIndex < ctx0.traceIndex
       )
       if (!ctx0.isSuccess) {
         ctx0.failureStack = (name.value -> startIndex) :: ctx0.failureStack
@@ -149,7 +147,7 @@ object MacroInlineImpls {
         if (!ctx1.isSuccess) ctx1
         else {
           val postLhsIndex = ctx1.index
-          val lhsAggregate = ctx1.failureGroupAggregate
+          val lhsAggregate = ctx1.aggregateParserMsgs
           val lhsMsg       = ctx1.shortParserMsg
           ${ setCut('{ ctx1 }) }
 
@@ -163,7 +161,7 @@ object MacroInlineImpls {
               else {
                 val preRhsIndex = ctx1.index
                 $rhs
-                val rhsAggregate = ctx1.failureGroupAggregate
+                val rhsAggregate = ctx1.aggregateParserMsgs
                 val rhsMsg       = ctx1.shortParserMsg
                 val res =
                   if (!ctx1.isSuccess) {
@@ -188,11 +186,10 @@ object MacroInlineImpls {
                     )
                   }
 
-                if (ctx1.verboseFailures) ctx1.aggregateMsg(
-                  preLhsIndex,
-                  _root_.fastparse.internal.Util.joinBinOp(lhsMsg, rhsMsg),
+                if (ctx1.verboseFailures) ctx1.reportAggregateMsg(
+                  Util.joinBinOp(lhsMsg, rhsMsg),
                   rhsAggregate ::: lhsAggregate,
-                  // We override the failureGroupAggregate to avoid building an `a ~ b`
+                  // We override the aggregateParserMsgs to avoid building an `a ~ b`
                   // aggregate msg in the specific case where the LHS parser fails to
                   // make any progress past `startIndex`. This finds cases like `a.? ~ b`
                   // or `a.rep ~ b` and lets use flatten them out into `a | b`
@@ -202,22 +199,21 @@ object MacroInlineImpls {
               }
             }
 
-            val guardedRhs = whitespace match {
+            whitespace match {
               case null => rhsSnippet
               case ws =>
                 if (ws.asTerm.tpe =:= TypeRepr.of[fastparse.NoWhitespace.noWhitespaceImplicit.type]) rhsSnippet
                 else {
                   '{
-                    _root_.fastparse.internal.Util.consumeWhitespace($ws, ctx1)
+                    Util.consumeWhitespace($ws, ctx1)
                     if (ctx1.isSuccess) $rhsSnippet
                     else ctx1
                   }
                 }
             }
-            guardedRhs
           }
         }
-      }.asInstanceOf[_root_.fastparse.ParsingRun[R]]
+      }.asInstanceOf[ParsingRun[R]]
     }
   }
 
@@ -245,9 +241,8 @@ object MacroInlineImpls {
 
     if (ctx1.verboseFailures) {
       val msg = ctx1.shortParserMsg
-      val agg = ctx1.failureGroupAggregate
       if (!postSuccess) {
-        ctx1.aggregateMsg(startPos, () => msg.render + ".?", agg)
+        ctx1.reportAggregateMsg(() => msg.render + ".?")
       }
     }
     res
@@ -301,7 +296,7 @@ object MacroInlineImpls {
 
     lhs0
     val lhsMsg       = ctx5.shortParserMsg
-    val lhsAggregate = ctx5.failureGroupAggregate
+    val lhsAggregate = ctx5.aggregateParserMsgs
     if (ctx5.isSuccess) {
       ctx5.cut |= oldCut
       ctx5.asInstanceOf[ParsingRun[V]]
@@ -310,7 +305,7 @@ object MacroInlineImpls {
       val verboseFailures = ctx5.verboseFailures
 
       ctx5.index = startPos
-      if (verboseFailures) ctx5.aggregateMsg(startPos, lhsMsg, lhsAggregate)
+      if (verboseFailures) ctx5.reportAggregateMsg(lhsMsg)
 
       ctx5.cut = false
       other
@@ -319,8 +314,9 @@ object MacroInlineImpls {
       val endCut = rhsCut | oldCut
       if (!ctx5.isSuccess && !rhsCut) ctx5.freshFailure(startPos)
       ctx5.cut = endCut
-      if (verboseFailures)
-        ctx5.aggregateMsg(startPos, rhsMsg ::: lhsMsg, ctx5.failureGroupAggregate ::: lhsAggregate)
+      if (verboseFailures) {
+        ctx5.reportAggregateMsg(rhsMsg ::: lhsMsg, ctx5.aggregateParserMsgs  ::: lhsAggregate)
+      }
       ctx5.asInstanceOf[ParsingRun[V]]
     }
   }
@@ -399,7 +395,7 @@ object MacroInlineImpls {
               case true  => ctx1.freshSuccessUnit(index + 1)
               case false => ctx1.freshFailure().asInstanceOf[ParsingRun[Unit]]
             }
-          if (ctx1.verboseFailures) ctx1.aggregateTerminal(index, () => $bracketed)
+          if (ctx1.verboseFailures) ctx1.reportTerminalMsg(index, () => $bracketed)
           res
       }
     }
@@ -422,7 +418,7 @@ object MacroInlineImpls {
       } else {
         ctx0.freshSuccessUnit(ctx0.index + 1)
       }
-    if (ctx0.verboseFailures) ctx0.aggregateTerminal(startIndex, () => s"char-pred(${p0})")
+    if (ctx0.verboseFailures) ctx0.reportTerminalMsg(startIndex, () => s"char-pred(${p0})")
     res
   }
 
@@ -450,7 +446,7 @@ object MacroInlineImpls {
             if (index >= goal) ctx1.freshSuccessUnit(index = index)
             else ctx1.freshFailure()
 
-          if (ctx1.verboseFailures) ctx1.aggregateTerminal(start, () => $bracketed)
+          if (ctx1.verboseFailures) ctx1.reportTerminalMsg(start, () => $bracketed)
           res
       }
     }
@@ -465,7 +461,7 @@ object MacroInlineImpls {
     val res =
       if (index >= goal) ctx0.freshSuccessUnit(index = index)
       else ctx0.freshFailure()
-    if (ctx0.verboseFailures) ctx0.aggregateTerminal(start, () => s"chars-while($p0, $min)")
+    if (ctx0.verboseFailures) ctx0.reportTerminalMsg(start, () => s"chars-while($p0, $min)")
     res
   }
 
@@ -540,12 +536,9 @@ object MacroInlineImpls {
           val res =
             if (output != -1) ctx1.freshSuccessUnit(output)
             else ctx1.freshFailure()
-          if (ctx1.verboseFailures) ctx1.setMsg(
+          if (ctx1.verboseFailures) ctx1.reportTerminalMsg(
             index,
-            () =>
-              ${
-                Expr("StringIn(" + literals.map(Util.literalize(_)).mkString(", ") + ")")
-              }
+            Msgs.fromStrings(${ Expr(literals.map(Util.literalize(_)).toList) })
           )
           res
       }

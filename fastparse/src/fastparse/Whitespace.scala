@@ -4,7 +4,7 @@ import fastparse._
 import fastparse.internal.Util
 
 import scala.annotation.{Annotation, switch, tailrec}
-
+import fastparse.internal.Msgs
 
 trait Whitespace{
   def apply(ctx: ParsingRun[_]): ParsingRun[Unit]
@@ -32,6 +32,7 @@ object SingleLineWhitespace {
         input.isReachable(index) &&
         (input(index) match{ case ' ' | '\t' => true case _ => false})
       ) index += 1
+      if (ctx.verboseFailures) ctx.reportTerminalMsg(index, Msgs.empty)
       ctx.freshSuccessUnit(index = index)
     }
   }
@@ -50,6 +51,7 @@ object MultiLineWhitespace {
         input.isReachable(index) &&
           (input(index) match{ case ' ' | '\t' | '\r' | '\n' => true case _ => false})
       ) index += 1
+      if (ctx.verboseFailures) ctx.reportTerminalMsg(index, Msgs.empty)
       ctx.freshSuccessUnit(index = index)
     }
   }
@@ -64,7 +66,10 @@ object ScriptWhitespace{
     def apply(ctx: ParsingRun[_]) = {
       val input = ctx.input
       @tailrec def rec(current: Int, state: Int): ParsingRun[Unit] = {
-        if (!input.isReachable(current)) ctx.freshSuccessUnit(current)
+        if (!input.isReachable(current)) {
+          if (ctx.verboseFailures) ctx.reportTerminalMsg(current, Msgs.empty)
+          ctx.freshSuccessUnit(current)
+        }
         else {
           val currentChar = input(current)
           (state: @switch) match{
@@ -72,7 +77,9 @@ object ScriptWhitespace{
               (currentChar: @switch) match{
                 case ' ' | '\t' | '\n' | '\r' => rec(current + 1, state)
                 case '#' => rec(current + 1, state = 1)
-                case _ => ctx.freshSuccessUnit(current)
+                case _ =>
+                  if (ctx.verboseFailures) ctx.reportTerminalMsg(current, Msgs.empty)
+                  ctx.freshSuccessUnit(current)
               }
             case 1 => rec(current + 1, state = if (currentChar == '\n') 0 else state)
           }
@@ -92,15 +99,20 @@ object JavaWhitespace{
   implicit object whitespace extends Whitespace {
     def apply(ctx: ParsingRun[_]) = {
       val input = ctx.input
-      val startIndex = ctx.index
       @tailrec def rec(current: Int, state: Int): ParsingRun[Unit] = {
         if (!input.isReachable(current)) {
-          if (state == 0 || state == 1) ctx.freshSuccessUnit(current)
-          else if(state == 2)  ctx.freshSuccessUnit(current - 1)
+          if (state == 0 || state == 1) {
+            if (ctx.verboseFailures) ctx.reportTerminalMsg(current, Msgs.empty)
+            ctx.freshSuccessUnit(current)
+          }
+          else if(state == 2) {
+            if (ctx.verboseFailures) ctx.reportTerminalMsg(current, Msgs.empty)
+            ctx.freshSuccessUnit(current - 1)
+          }
           else {
             ctx.cut = true
             val res = ctx.freshFailure(current)
-            if (ctx.verboseFailures) ctx.aggregateTerminal(startIndex, () => Util.literalize("*/"))
+            if (ctx.verboseFailures) ctx.reportTerminalMsg(current, () => Util.literalize("*/"))
             res
           }
         } else {
@@ -110,14 +122,18 @@ object JavaWhitespace{
               (currentChar: @switch) match{
                 case ' ' | '\t' | '\n' | '\r' => rec(current + 1, state)
                 case '/' => rec(current + 1, state = 2)
-                case _ => ctx.freshSuccessUnit(current)
+                case _ =>
+                  if (ctx.verboseFailures) ctx.reportTerminalMsg(current, Msgs.empty)
+                  ctx.freshSuccessUnit(current)
               }
             case 1 => rec(current + 1, state = if (currentChar == '\n') 0 else state)
             case 2 =>
               (currentChar: @switch) match{
                 case '/' => rec(current + 1, state = 1)
                 case '*' => rec(current + 1, state = 3)
-                case _ => ctx.freshSuccessUnit(current - 1)
+                case _ =>
+                  if (ctx.verboseFailures) ctx.reportTerminalMsg(current, Msgs.empty)
+                  ctx.freshSuccessUnit(current - 1)
               }
             case 3 => rec(current + 1, state = if (currentChar == '*') 4 else state)
             case 4 =>
@@ -144,16 +160,21 @@ object JsonnetWhitespace{
   implicit object whitespace extends Whitespace {
     def apply(ctx: ParsingRun[_]) = {
       val input = ctx.input
-      val startIndex = ctx.index
       @tailrec def rec(current: Int, state: Int): ParsingRun[Unit] = {
         if (!input.isReachable(current)) {
-          if (state == 0 || state == 1) ctx.freshSuccessUnit(current)
-          else if(state == 2)  ctx.freshSuccessUnit(current - 1)
+          if (state == 0 || state == 1) {
+            if (ctx.verboseFailures) ctx.reportTerminalMsg(current, Msgs.empty)
+            ctx.freshSuccessUnit(current)
+          }
+          else if(state == 2)  {
+            if (ctx.verboseFailures) ctx.reportTerminalMsg(current, Msgs.empty)
+            ctx.freshSuccessUnit(current - 1)
+          }
           else {
             ctx.cut = true
             val res = ctx.freshFailure(current)
 
-            if (ctx.verboseFailures) ctx.aggregateTerminal(startIndex, () => Util.literalize("*/"))
+            if (ctx.verboseFailures) ctx.reportTerminalMsg(current, () => Util.literalize("*/"))
             res
           }
         } else {
@@ -164,14 +185,18 @@ object JsonnetWhitespace{
                 case ' ' | '\t' | '\n' | '\r' => rec(current + 1, state)
                 case '#' => rec(current + 1, state = 1)
                 case '/' => rec(current + 1, state = 2)
-                case _ => ctx.freshSuccessUnit(current)
+                case _ =>
+                  if (ctx.verboseFailures) ctx.reportTerminalMsg(current, Msgs.empty)
+                  ctx.freshSuccessUnit(current)
               }
             case 1 => rec(current + 1, state = if (currentChar == '\n') 0 else state)
             case 2 =>
               (currentChar: @switch) match{
                 case '/' => rec(current + 1, state = 1)
                 case '*' => rec(current + 1, state = 3)
-                case _ => ctx.freshSuccessUnit(current - 1)
+                case _ =>
+                  if (ctx.verboseFailures) ctx.reportTerminalMsg(current, Msgs.empty)
+                  ctx.freshSuccessUnit(current - 1)
               }
             case 3 => rec(current + 1, state = if (currentChar == '*') 4 else state)
             case 4 =>
@@ -197,15 +222,20 @@ object ScalaWhitespace {
   implicit object whitespace extends Whitespace {
     def apply(ctx: ParsingRun[_]) = {
       val input = ctx.input
-      val startIndex = ctx.index
       @tailrec def rec(current: Int, state: Int, nesting: Int): ParsingRun[Unit] = {
         if (!input.isReachable(current)) {
-          if (state == 0 || state == 1) ctx.freshSuccessUnit(current)
-          else if(state == 2 && nesting == 0) ctx.freshSuccessUnit(current - 1)
+          if (state == 0 || state == 1) {
+            if (ctx.verboseFailures) ctx.reportTerminalMsg(current, Msgs.empty)
+            ctx.freshSuccessUnit(current)
+          }
+          else if(state == 2 && nesting == 0) {
+            if (ctx.verboseFailures) ctx.reportTerminalMsg(current, Msgs.empty)
+            ctx.freshSuccessUnit(current - 1)
+          }
           else {
             ctx.cut = true
             val res = ctx.freshFailure(current)
-            if (ctx.verboseFailures) ctx.aggregateTerminal(startIndex, () => Util.literalize("*/"))
+            if (ctx.verboseFailures) ctx.reportTerminalMsg(current, () => Util.literalize("*/"))
             res
           }
         } else {
@@ -215,7 +245,9 @@ object ScalaWhitespace {
               (currentChar: @switch) match{
                 case ' ' | '\t' | '\n' | '\r' => rec(current + 1, state, 0)
                 case '/' => rec(current + 1, state = 2, 0)
-                case _ => ctx.freshSuccessUnit(current)
+                case _ =>
+                  if (ctx.verboseFailures) ctx.reportTerminalMsg(current, Msgs.empty)
+                  ctx.freshSuccessUnit(current)
               }
             case 1 => rec(current + 1, state = if (currentChar == '\n') 0 else state, 0)
             case 2 =>
@@ -225,7 +257,10 @@ object ScalaWhitespace {
                   else rec(current + 1, state = 2, nesting)
                 case '*' => rec(current + 1, state = 3, nesting + 1)
                 case _ =>
-                  if (nesting == 0) ctx.freshSuccessUnit(current - 1)
+                  if (nesting == 0) {
+                    if (ctx.verboseFailures) ctx.reportTerminalMsg(current, Msgs.empty)
+                    ctx.freshSuccessUnit(current - 1)
+                  }
                   else rec(current + 1, state = 3, nesting)
               }
             case 3 =>

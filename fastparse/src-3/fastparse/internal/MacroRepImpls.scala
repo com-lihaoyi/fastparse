@@ -27,19 +27,26 @@ object MacroRepImpls {
     ctx0: Expr[ParsingRun[_]])(using quotes: Quotes): Expr[ParsingRun[V]] = {
     import quotes.reflect.*
 
-    def getInlineExpansionValue(t: Term): Option[Int] = {
+    def getInlineExpansionValue[T](t: Term): Term = {
       t match{
         case Inlined(a, b, c) => getInlineExpansionValue(c)
-        case _ => t.asExprOf[Int].value
+        case Typed(a, b) => getInlineExpansionValue(a)
+        case _ => t
       }
     }
 
-    val staticMin0 = getInlineExpansionValue(min.asTerm)
-    val staticMax0 = getInlineExpansionValue(max.asTerm)
-    val staticExactly0 = getInlineExpansionValue(exactly.asTerm)
+    val staticMin0 = getInlineExpansionValue[Int](min.asTerm).asExprOf[Int]
+    val staticMax0 = getInlineExpansionValue[Int](max.asTerm).asExprOf[Int]
+    val staticExactly0 = getInlineExpansionValue[Int](exactly.asTerm).asExprOf[Int]
 
-    val staticActualMin = staticMin0.zip(staticExactly0).map{(m, e) => if (e == -1) m else e}
-    val staticActualMax = staticMax0.zip(staticExactly0).map{(m, e) => if (e == -1) m else e}
+    val staticActualMin = staticExactly0 match{
+      case '{-1} => staticMin0.value
+      case _ => staticExactly0.value
+    }
+    val staticActualMax = staticExactly0 match{
+      case '{-1} => staticMax0.value
+      case _ => staticExactly0.value
+    }
 
     '{
       val ctx = $ctx0
@@ -91,14 +98,24 @@ object MacroRepImpls {
           else {
             $parse0
             val parsedMsg = ctx.shortParserMsg
-            val parsedAgg = ctx.failureGroupAggregate
+            val parsedAgg = ctx.aggregateParserMsgs
             val postCut = ctx.cut
             val verboseFailures = ctx.verboseFailures
             if (!ctx.isSuccess) {
               val res =
                 if (postCut) ctx.asInstanceOf[ParsingRun[V]]
                 else end(startIndex, startIndex, count, outerCut | postCut)
-              if (verboseFailures) Util.aggregateMsgInRep(startIndex, actualMin, ctx, sepMsg, parsedMsg, lastAgg, precut)
+              if (verboseFailures) {
+                Util.reportParseMsgInRep(
+                  startIndex,
+                  actualMin,
+                  ctx,
+                  sepMsg,
+                  parsedMsg,
+                  lastAgg,
+                  precut || postCut
+                )
+              }
               res
             } else {
               val beforeSepIndex = ctx.index
@@ -112,7 +129,7 @@ object MacroRepImpls {
                 '{
                   if ($checkMax2) {
                     val res = end(beforeSepIndex, beforeSepIndex, nextCount, outerCut | postCut)
-                    if (verboseFailures) ctx.setMsg(startIndex, () => parsedMsg.render + ".rep" + (if (actualMin == 0) "" else s"(${actualMin})"))
+                    if (verboseFailures) ctx.reportTerminalMsg(startIndex, () => parsedMsg.render + ".rep" + (if (actualMin == 0) "" else s"(${actualMin})"))
                     res
                   }
                   else {
@@ -120,7 +137,7 @@ object MacroRepImpls {
                       consumeWhitespace('{false})('{
                         ctx.cut = false
                         ${
-                          sep match {
+                          getInlineExpansionValue(sep.asTerm).asExpr match {
                             case '{ null } =>
                               '{
                                 rec(beforeSepIndex, nextCount, false, outerCut | postCut, null, parsedAgg)
@@ -130,11 +147,11 @@ object MacroRepImpls {
                                 val sep1 = $sep
                                 val sepCut = ctx.cut
                                 val endCut = outerCut | postCut | sepCut
-                                if (sep1 == null) rec(beforeSepIndex, nextCount, false, endCut, null, parsedAgg)
-                                else if (ctx.isSuccess) {
+                                if (ctx.isSuccess) {
+                                  val postSepMsg = ctx.shortParserMsg
                                   ${
                                     consumeWhitespace('{sepCut})('{
-                                      rec(beforeSepIndex, nextCount, sepCut, endCut, ctx.shortParserMsg, parsedAgg)
+                                      rec(beforeSepIndex, nextCount, sepCut, endCut, postSepMsg, parsedAgg)
                                     })
                                   }
                                 }
@@ -143,7 +160,7 @@ object MacroRepImpls {
                                     if (sepCut) ctx.augmentFailure(beforeSepIndex, endCut)
                                     else end(beforeSepIndex, beforeSepIndex, nextCount, endCut)
 
-                                  if (verboseFailures) Util.aggregateMsgPostSep(startIndex, actualMin, ctx, parsedMsg, parsedAgg)
+                                  if (verboseFailures) Util.reportParseMsgPostSep(startIndex, actualMin, ctx, parsedMsg, parsedAgg)
                                   res
                                 }
                               }

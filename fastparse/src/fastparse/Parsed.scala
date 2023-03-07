@@ -148,8 +148,8 @@ object Parsed{
     def fromParsingRun[T](p: ParsingRun[T]) = {
       assert(!p.isSuccess)
       TracedFailure(
-        p.failureTerminalAggregate,
-        p.lastFailureMsg ::: p.failureGroupAggregate,
+        p.terminalParserMsgs,
+        p.aggregateParserMsgs,
         Parsed.fromParsingRun(p).asInstanceOf[Failure]
       )
     }
@@ -185,7 +185,7 @@ object Parsed{
       * Displays the short failure message excluding the parse stack. This shows
       * the last parser which failed causing the parse to fail. Note that this
       * does not include other parsers which may have failed earlier; see [[terminalsMsg]]
-      * and [[aggregateMsg]] for more detailed errors
+      * and [[reportParseMsg]] for more detailed errors
       */
     def msg = failure.msg
     /**

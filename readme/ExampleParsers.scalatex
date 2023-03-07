@@ -1,5 +1,6 @@
 @import Main._
 @val tests = wd/'fastparse/'test/'src/'fastparse
+@val tests212plus = wd/'fastparse/'test/"src-2.12+"/'fastparse
 @val main = wd/'fastparse/'src/'fastparse
 
 @sect{Example Parsers}
@@ -76,7 +77,7 @@
             You can also define your own custom whitespace consumer, if none of
             bundled ones fit your needs:
 
-        @hl.ref(tests/"CustomWhitespaceMathTests.scala", "implicit val whitespace", "val tests")
+        @hl.ref(tests212plus/"CustomWhitespaceMathTests.scala", "implicit object whitespace", "val tests")
 
 
 
