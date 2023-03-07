@@ -15,6 +15,13 @@
             @li
                 Dependency bumps: @code{com.lihaoyi::geny:1.0.0}, @code{com.lihaoyi::sourcecode:0.3.0}
             @li
+                @code{Fail} parser now takes an optional message
+                @lnk("#244", "https://github.com/lihaoyi/fastparse/issues/244")))
+            @li
+                Significant overhaul of @code{aggregateMsg}/@code{longAggregateMsg}
+                implementation, with code cleanup and bugfixes
+                (@lnk("#276", "https://github.com/lihaoyi/fastparse/issues/276")))
+            @li
                 Note that this is a binary incompatible change from Fastparse 2.x.
 
 
