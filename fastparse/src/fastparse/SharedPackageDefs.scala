@@ -104,16 +104,7 @@ trait SharedPackageDefs {
     val res =
       if (ctx.isSuccess) ctx.freshSuccessUnit(startPos)
       else ctx.asInstanceOf[P[Unit]]
-    if (ctx.verboseFailures) {
-      ctx.aggregateParserMsgs = Msgs.empty
-      ctx.reportTerminalMsg(startPos,
-        if (msg.value.isEmpty) Msgs.empty
-        else () => msg match{
-          case Seq(x) => s"&(${msg.render})"
-          case xs => s"&${msg.render}"
-        }
-      )
-    }
+
     res.cut = startCut
     res
   }

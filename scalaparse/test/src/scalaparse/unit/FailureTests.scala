@@ -93,7 +93,7 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      aggregate = """("=>" | `:` | "." | TypeArgs | ArgList | `_` | Id | `=` | MatchAscriptionSuffix | &"}")""",
+      aggregate = """("=>" | `:` | "." | TypeArgs | ArgList | `_` | Id | `=` | MatchAscriptionSuffix | "}")""",
       terminals = null,
       found ="1\n"
     )
@@ -529,7 +529,7 @@ object FailureTests extends TestSuite{
         |  { a: L = }
         |}
       """.stripMargin,
-      aggregate = """("." | TypeArgs | `#` | Annot | `with` | { | `*` | Id | "=>" | BlockLambda | BlockStat | &"}")""",
+      aggregate = """("." | TypeArgs | `#` | Annot | `with` | { | `*` | Id | "=>" | BlockLambda | BlockStat | "}")""",
       terminals = null,
       found = "= }"
     )
@@ -669,7 +669,7 @@ object FailureTests extends TestSuite{
         |  }
         |}
       """.stripMargin,
-      aggregate = """(BlockLambda | BlockStat | &"}")""",
+      aggregate = """(BlockLambda | BlockStat | "}")""",
       terminals = null,
       found = "case for"
     )
@@ -978,7 +978,7 @@ object FailureTests extends TestSuite{
         |    val x = 1
         |    ;
         |    """.stripMargin,
-      aggregate = """(BlockLambda | BlockStat | &"}")""",
+      aggregate = """(BlockLambda | BlockStat | "}")""",
       terminals = null,
       found = ""
     )

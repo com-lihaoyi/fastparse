@@ -272,13 +272,70 @@ object FailureTests extends TestSuite{
         label = "end-of-input",
         terminals = """("y" | end-of-input)""",
         parser = {
-          def c[$: P] = P( "x".repX(1, "y") ).log
-          def d[$: P] = P( "p" ).log
-          def b[$: P] = P( (d ~ "t").repX(1, " ") ).log
-          def a[$: P] = P( b ~ " " ~ c ~ End ).log
+          def c[$: P] = P( "x".repX(1, "y") )
+          def d[$: P] = P( "p" )
+          def b[$: P] = P( (d ~ "t").repX(1, " ") )
+          def a[$: P] = P( b ~ " " ~ c ~ End )
           a(_)
         }
       )
+
+      test("lookahead") {
+        // We do not bother showing the enclosing `&()` for positive lookahead
+        // parsers. That is because to a user debugging the parser, it doesn't
+        // matter: whether the parser is `&(foo)` or `foo`, they still need to
+        // put the same input at `traceIndex` to make the parse succeed
+        //
+        // Furthermore, for both positive and negative lookahead which are
+        // typically used in a `&(lhs) ~ rhs` or `!lhs ~ rhs`, we cannot show
+        // the `rhs` even if we wanted to! The parse will already have failed
+        // when parsing the `lhs`, and so there is no opportunity to gather
+        // the `rhs`'s parse messages for display.
+        test("positive") - checkOffset(
+          input = "7",
+          expected = """[0-6]""",
+          label = "[0-6]",
+          terminals = """[0-6]""",
+          parser = {
+            def parse[$: P] = P( &(CharIn("0-6")) ~ CharIn("4-9") ~ End )
+            parse(_)
+          }
+        )
+//        test("negative") - checkOffset(
+//          input = "5",
+//          expected = """![0-6]""",
+//          label = "![0-6]",
+//          terminals = """![0-6]""",
+//          parser = {
+//            def parse[$: P] = P( !CharIn("0-6") ~ CharIn("4-9") ~ End)
+//            parse(_)
+//          }
+//        )
+//        test("negative2") - checkOffset(
+//          input = "5",
+//          expected = """!([0-4] | [5-9])""",
+//          label = "!([0-4] | [5-9])",
+//          terminals = """!([0-4] | [5-9])""",
+//          parser = {
+//            // Make sure that the failure if `[0-4]` inside the `!(...)` block
+//            // does not end up in our reported terminals. The parser *wants*
+//            // the wrapped parser to fail, and giving hints to make its
+//            // sub-parsers succeed is counter-productive!
+//            def parse[$: P] = P( !(CharIn("0-4") | CharIn("5-9")) ~ End)
+//            parse(_)
+//          }
+//        )
+        test("negative3") - checkOffset(
+          input = "9",
+          expected = """[4-8]""",
+          label = "[4-8]",
+          terminals = """[4-8]""",
+          parser = {
+            def parse[$: P] = P( !CharIn("0-6").log("lhs") ~ CharIn("4-8").log("rhs") ~ End ).log
+            parse(_)
+          }
+        )
+      }
     }
 
     test("offset"){
