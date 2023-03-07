@@ -163,7 +163,7 @@ package object fastparse extends fastparse.SharedPackageDefs {
 
   end extension
 
-  extension [T](parse0: => P[T])
+  extension [T](inline parse0: => P[T])
 
     /** Repeat operator; runs the LHS parser at least `min` to at most `max`
       * times separated by the given whitespace (in implicit scope) and
@@ -235,15 +235,63 @@ package object fastparse extends fastparse.SharedPackageDefs {
      * parsers end up in the failure traces or failure stack to be displayed
      * to the user.
      */
-    def opaque(msg: String)(implicit ctx: P[Any]): P[T] = SharedPackageDefs.opaque(() => parse0, msg)
+    inline def opaque(msg: String)(implicit ctx: P[Any]): P[T] = SharedPackageDefs.opaque(() => parse0, msg)
 
     /**
      * Negative lookahead operator: succeeds if the wrapped parser fails and
      * fails if the wrapped parser succeeds. In all cases, it ends up
      * consuming zero characters.
      */
-    def unary_!(implicit ctx: P[Any]): P[Unit] = SharedPackageDefs.unary_!(() => parse0)
+    inline def unary_!(implicit ctx: P[Any]): P[Unit] = {
 
+      val startPos = ctx.index
+      val startCut = ctx.cut
+      val oldNoCut = ctx.noDropBuffer
+      ctx.noDropBuffer = true
+      val startTerminals = ctx.terminalMsgs
+      parse0
+      ctx.noDropBuffer = oldNoCut
+
+      val res =
+        if (ctx.isSuccess) ctx.freshFailure(startPos)
+        else ctx.freshSuccessUnit(startPos)
+
+      if (ctx.verboseFailures) {
+        // Unlike most other data on `ctx`, `terminalMsgs` is normally
+        // append-only. Thus when we're inside the unary_! expression, it
+        // continually appends to `terminalMsgs` sub-parsers that could
+        // have succeeded within it, but are irrelevant to the user because
+        // we *want* the contents of the unary_! to fail! Thus, we reset
+        // `terminalMsgs` once we exit the unary_!, to ensure these do not
+        // end up in error messages
+        ctx.terminalMsgs = startTerminals
+        ctx.reportTerminalMsg(startPos, Msgs.empty)
+      }
+      res.cut = startCut
+      res
+    }
+
+  /**
+   * Positive lookahead operator: succeeds if the wrapped parser succeeds and
+   * fails if the wrapped parser fails, but in all cases consumes zero
+   * characters.
+   */
+  inline def &(inline parse: => P[_])(implicit ctx: P[_]): P[Unit] = {
+
+    val startPos = ctx.index
+    val startCut = ctx.cut
+    val oldNoCut = ctx.noDropBuffer
+    ctx.noDropBuffer = true
+    parse
+    ctx.noDropBuffer = oldNoCut
+
+    val res =
+      if (ctx.isSuccess) ctx.freshSuccessUnit(startPos)
+      else ctx.asInstanceOf[P[Unit]]
+
+    res.cut = startCut
+    res
+  }
 
   /** Provides logging-related [[LogByNameOps]] implicits on [[String]]. */
   implicit def LogOpsStr(parse0: String)(implicit ctx: P[Any]): fastparse.LogByNameOps[Unit] = LogByNameOps(parse0)

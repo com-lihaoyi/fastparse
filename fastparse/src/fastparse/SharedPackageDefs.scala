@@ -54,9 +54,9 @@ trait SharedPackageDefs {
     originalParser = parser,
     traceIndex = traceIndex,
     instrument = instrument,
-    failureTerminalAggregate = Msgs.empty,
-    failureGroupAggregate = Msgs.empty,
-    shortParserMsg = Msgs.empty,
+    terminalMsgs = Msgs.empty,
+    aggregateMsgs = Msgs.empty,
+    shortMsg = Msgs.empty,
     lastFailureMsg = null,
     failureStack = List.empty,
     isSuccess = true,
@@ -82,40 +82,10 @@ trait SharedPackageDefs {
     val res =
       if (Util.startsWithIgnoreCase(ctx.input, s, ctx.index)) ctx.freshSuccessUnit(ctx.index + s.length)
       else ctx.freshFailure().asInstanceOf[P[Unit]]
-    if (ctx.verboseFailures) ctx.aggregateTerminal(startIndex, () => Util.literalize(s))
+    if (ctx.verboseFailures) ctx.reportTerminalMsg(startIndex, () => Util.literalize(s))
     res
   }
 
-  /**
-    * Positive lookahead operator: succeeds if the wrapped parser succeeds and
-    * fails if the wrapped parser fails, but in all cases consumes zero
-    * characters.
-    */
-  def &(parse: => P[_])(implicit ctx: P[_]): P[Unit] = {
-
-    val startPos = ctx.index
-    val startCut = ctx.cut
-    val oldNoCut = ctx.noDropBuffer
-    ctx.noDropBuffer = true
-    parse
-    ctx.noDropBuffer = oldNoCut
-    val msg = ctx.shortParserMsg
-
-    val res =
-      if (ctx.isSuccess) ctx.freshSuccessUnit(startPos)
-      else ctx.asInstanceOf[P[Unit]]
-    if (ctx.verboseFailures) {
-      ctx.failureGroupAggregate = Msgs.empty
-      ctx.setMsg(startPos, () =>
-        msg match{
-          case Seq(x) => s"&(${msg.render})"
-          case xs => s"&${msg.render}"
-        }
-      )
-    }
-    res.cut = startCut
-    res
-  }
 
   /**
     * Parser that is only successful at the end of the input. Useful to ensure
@@ -126,7 +96,7 @@ trait SharedPackageDefs {
     val res =
       if (!ctx.input.isReachable(startIndex)) ctx.freshSuccessUnit()
       else ctx.freshFailure().asInstanceOf[P[Unit]]
-    if (ctx.verboseFailures) ctx.aggregateTerminal(startIndex, () => "end-of-input")
+    if (ctx.verboseFailures) ctx.reportTerminalMsg(startIndex, () => "end-of-input")
     res
 
   }
@@ -138,13 +108,13 @@ trait SharedPackageDefs {
     val res =
       if (startIndex == 0) ctx.freshSuccessUnit()
       else ctx.freshFailure().asInstanceOf[P[Unit]]
-    if (ctx.verboseFailures) ctx.aggregateTerminal(startIndex, () => "start-of-input")
+    if (ctx.verboseFailures) ctx.reportTerminalMsg(startIndex, () => "start-of-input")
     res
   }
 
   /**
     * Wraps a parser and ensures that none of the parsers within it leave
-    * failure traces in failureTerminalAggregate, though unlike [[ByNameOps.opaque]]
+    * failure traces in terminalMsgs, though unlike [[ByNameOps.opaque]]
     * if there is a failure *within* the wrapped parser the failure's location
     * and error message will still be shown
     *
@@ -156,8 +126,8 @@ trait SharedPackageDefs {
 
     val res = p
     if (ctx.verboseFailures) {
-      ctx.failureGroupAggregate = Msgs.empty
-      ctx.shortParserMsg = Msgs.empty
+      ctx.aggregateMsgs = Msgs.empty
+      ctx.shortMsg = Msgs.empty
     }
     res
   }
@@ -167,7 +137,7 @@ trait SharedPackageDefs {
     */
   def Pass(implicit ctx: P[_]): P[Unit] = {
     val res = ctx.freshSuccessUnit()
-    if (ctx.verboseFailures) ctx.setMsg(ctx.index, () => "Pass")
+    if (ctx.verboseFailures) ctx.reportTerminalMsg(ctx.index, Msgs.empty)
     res
   }
 
@@ -177,7 +147,7 @@ trait SharedPackageDefs {
     */
   def Pass[T](v: T)(implicit ctx: P[_]): P[T] = {
     val res = ctx.freshSuccess(v)
-    if (ctx.verboseFailures) ctx.setMsg(ctx.index, () => "Pass")
+    if (ctx.verboseFailures) ctx.reportTerminalMsg(ctx.index, () => "Pass")
     res
   }
 
@@ -191,7 +161,7 @@ trait SharedPackageDefs {
    */
   def Fail(msg: String)(implicit ctx: P[_]): P[Nothing] = {
     val res = ctx.freshFailure()
-    if (ctx.verboseFailure) ctx.reportTerminalMsg(ctx.index, () => msg)
+    if (ctx.verboseFailures) ctx.reportTerminalMsg(ctx.index, () => "fail")
     res
   }
   /**
@@ -202,7 +172,7 @@ trait SharedPackageDefs {
     */
   def Index(implicit ctx: P[_]): P[Int] = {
     val res = ctx.freshSuccess(ctx.index)
-    if (ctx.verboseFailures) ctx.setMsg(ctx.index, () => "Index")
+    if (ctx.verboseFailures) ctx.reportTerminalMsg(ctx.index, () => "Index")
     res
   }
 
@@ -215,7 +185,7 @@ trait SharedPackageDefs {
     val res =
       if (!ctx.input.isReachable(ctx.index)) ctx.freshFailure().asInstanceOf[P[Unit]]
       else ctx.freshSuccessUnit(ctx.index + 1)
-    if (ctx.verboseFailures) ctx.aggregateTerminal(startIndex, () => "any-character")
+    if (ctx.verboseFailures) ctx.reportTerminalMsg(startIndex, () => "any-char")
     res
   }
 
@@ -231,7 +201,7 @@ trait SharedPackageDefs {
     val res =
       if (!ctx.input.isReachable(ctx.index)) ctx.freshFailure().asInstanceOf[P[Char]]
       else ctx.freshSuccess(ctx.input(ctx.index), ctx.index + 1)
-    if (ctx.verboseFailures) ctx.aggregateTerminal(startIndex, () => "any-character")
+    if (ctx.verboseFailures) ctx.reportTerminalMsg(startIndex, () => "any-char")
     res
   }
 
@@ -266,34 +236,10 @@ object SharedPackageDefs{
       if (res.isSuccess) ctx.freshSuccess(ctx.successValue)
       else ctx.freshFailure(oldIndex)
 
-    if (ctx.verboseFailures) ctx.aggregateTerminal(oldIndex, () => msg)
+    if (ctx.verboseFailures) ctx.reportTerminalMsg(oldIndex, () => msg)
 
     res2.asInstanceOf[P[T]]
   }
-
-  def unary_!(parse0: () => P[_])(implicit ctx: P[Any]): P[Unit] = {
-    val startPos = ctx.index
-    val startCut = ctx.cut
-    val oldNoCut = ctx.noDropBuffer
-    ctx.noDropBuffer = true
-    val startTerminals = ctx.failureTerminalAggregate
-    parse0()
-    ctx.noDropBuffer = oldNoCut
-    val msg = ctx.shortParserMsg
-
-    val res =
-      if (ctx.isSuccess) ctx.freshFailure(startPos)
-      else ctx.freshSuccessUnit(startPos)
-
-    if (ctx.verboseFailures) {
-      ctx.failureTerminalAggregate = startTerminals
-      ctx.failureGroupAggregate = Msgs.empty
-      ctx.setMsg(startPos, () => "!" + msg.render)
-    }
-    res.cut = startCut
-    res
-  }
-
 
   /** Wraps a parser to log when it succeeds and fails, and at what index.
    * Useful for seeing what is going on within your parser. Nicely indents

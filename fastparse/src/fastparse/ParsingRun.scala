@@ -11,12 +11,12 @@ import fastparse.internal.{Instrument, Lazy, Msgs, Util}
   * There are a few patterns that let us program with these mutable variables
   * in a sort-of-pure-functional way:
   *
-  test - If a parser that wishes to ignore changes to a field within their child
+  * - If a parser that wishes to ignore changes to a field within their child
   *   parsers, a common pattern is to save the value of the field before the
   *   wrapped parser runs, and then re-set the field. e.g. this can be used to
   *   backtrack [[index]] after a lookahead parser finishes
   *
-  test - If a parser wants to read the value of the field "returned" by multiple
+  * - If a parser wants to read the value of the field "returned" by multiple
   *   child parsers, make sure to read the field into a local variable after
   *   each child parser is complete to make sure the value you want from an
   *   earlier child isn't stomped over by a later child
@@ -35,10 +35,10 @@ import fastparse.internal.{Instrument, Lazy, Msgs, Util}
   *                         it with tracing enabled.
   * @param traceIndex       The index we wish to trace if tracing is enabled, else
   *                         -1. Used to find failure messages to aggregate into
-  *                         `failureTerminalAggregate`
+  *                         `terminalMsgs`
   * @param instrument       Callbacks that can be injected before/after every
   *                         `P(...)` parser.
-  * @param failureTerminalAggregate When tracing is enabled, this collects up all the
+  * @param terminalMsgs When tracing is enabled, this collects up all the
   *                         upper-most failures that happen at [[traceIndex]]
   *                         (in [[Lazy]] wrappers) so they can be shown to the
   *                         user at end-of-parse as suggestions for what could
@@ -48,9 +48,9 @@ import fastparse.internal.{Instrument, Lazy, Msgs, Util}
   *                         or `!a` which may fail at [[traceIndex]] even
   *                         without any of their wrapped terminal parsers
   *                         failing there, it makes use of the
-  *                         [[shortParserMsg]] as the string representation of
+  *                         [[shortMsg]] as the string representation of
   *                         the composite parser.
-  * @param shortParserMsg   When tracing is enabled, this contains string
+  * @param shortMsg   When tracing is enabled, this contains string
   *                         representation of the last parser to run. Since
   *                         parsers aren't really objects, we piece together
   *                         the string in the parser body and return store it
@@ -108,9 +108,9 @@ final class ParsingRun[+T](val input: ParserInput,
                            val traceIndex: Int,
                            val instrument: Instrument,
                            // Mutable vars below:
-                           var failureTerminalAggregate: Msgs,
-                           var failureGroupAggregate: Msgs,
-                           var shortParserMsg: Msgs,
+                           var terminalMsgs: Msgs,
+                           var aggregateMsgs: Msgs,
+                           var shortMsg: Msgs,
                            var lastFailureMsg: Msgs,
                            var failureStack: List[(String, Int)],
                            var isSuccess: Boolean,
@@ -122,131 +122,120 @@ final class ParsingRun[+T](val input: ParserInput,
                            var noDropBuffer: Boolean,
                            val misc: collection.mutable.Map[Any, Any]){
 
-  // HOW ERROR AGGREGATION WORKS:
-  //
-  // Fastparse provides two levels of error aggregation that get enabled when
-  // calling `.trace()`: `failureTerminalAggregate`, and `failureGroupAggregate`:
-  //
-  // - `failureTerminalAggregate` lists all low-level terminal parsers which are
-  //   tried at the given `traceIndex`. This is useful to answer the question
-  //   "what can I put at the error position to make my parse continue"
-  //
-  // - `failureGroupAggregate` lists all high-level parsers which are tried at
-  //   the given `traceIndex`. This is useful to answer the question "What was
-  //   the parser trying to do when it failed"
-  //
-  // The implementation of `failureTerminalAggregate` is straightforward: we
-  // simply call `aggregateTerminal` in every terminal parser, which collects
-  // all the messages in a big list and returns it. The implementation of
-  // `failureGroupAggregate` is more interesting, since we need to figure out
-  // what are the "high level" parsers that we need to list. We use the
-  // following algorithm:
-  //
-  // - When a parse which started at the given `traceIndex` fails without a cut
-  //   - Over-write `failureGroupAggregate` with it's `shortParserMsg`
-  //
-  // - Otherwise:
-  //   - If we are a terminal parser, we set our `failureGroupAggregate` to Nil
-  //   - If we are a compound parser, we simply sum up the `failureGroupAggregate`
-  //     of all our constituent parts
-  //
-  // The point of this heuristic is to provide the highest-level parsers which
-  // failed at the `traceIndex`, but are not already part of the `failureStack`.
-  // non-highest-level parsers do successfully write their message to
-  // `failureGroupAggregate`, but they are subsequently over-written by the higher
-  // level parsers, until it reaches the point where `cut == true`, indicating
-  // that any further higher-level parsers will be in `failureStack` and using
-  // their message to stomp over the existing parse-failure-messages in
-  // `failureGroupAggregate` would be wasteful.
-  //
-  // These is an edge case where there is no given failure that occurs exactly at
-  // `traceIndex` e.g. parsing "ax" with P( ("a" ~ "b") ~ "c" | "a" ~/ "d" ), the
-  // final failure `index` and thus `traceIndex` is at offset 1, and we would like
-  // to receive the aggregation ("b" | "d"). But ("a" ~ "b")
-  // passes from offsets 0-2, "c" fails at offset 2 and ("a" ~ "b") ~ "c" fails
-  // from offset 0-2. In such a case, we truncate the `shortParserMsg` at
-  // `traceIndex` to only include the portion we're interested in (which directly
-  // follows the failure). This then gets aggregated nicely to form the error
-  // message from-point-of-failure.
-  //
-  // A follow-on edge case is parsing "ax" with
-  //
-  // val inner = P( "a" ~ "b" )
-  // P( inner ~ "c" | "a" ~/ "d" )
-  //
-  // Here, we find that the `inner` parser starts before the `traceIndex` and
-  // fails at `traceIndex`, but we want our aggregation to continue being
-  // ("b" | "d"), rather than (inner | "d"). Thus, for opaque compound parsers
-  // like `inner` which do not expose their internals, we use the `forceAggregate`
-  // to force it to expose it's internals when it's range covers the `traceIndex`
-  // but it isn't an exact match
 
-  def aggregateMsg(startIndex: Int,
-                   msgToSet: () => String,
-                   msgToAggregate: Msgs): Unit = {
-    aggregateMsg(startIndex, Msgs(new Lazy(msgToSet) :: Nil), msgToAggregate)
+  /**
+   * Called by non-terminal parsers after completion, success or failure
+   *
+   * This needs to be called for both successful and failed parsers, as we need
+   * to record the msg of a successful parse in case it forms part of a larger
+   * failed parse later.
+   *
+   * For example:
+   *
+   * - Using "a" ~ ("b" ~ "c" | "d") to parse "abe"
+   * - We report that the the parser ("b" ~ "c" | "d") failed at index 1
+   * - That msg contains the msg of the parse "b" even though it was successful
+   *
+   * Overloaded to minimize the amount of callsite bytecode, since we do a ton
+   * of inlining in Fastparse, and large amounts of bytecode inlined in a method
+   * can cause JVM performance problems (e.g. JIT compilation may get disabled)
+   */
+  def reportAggregateMsg(newshortMsg: Msgs): Unit = {
+
+    reportAggregateMsg(newshortMsg, aggregateMsgs)
+  }
+  def reportAggregateMsg(newshortMsg: Msgs,
+                         newAggregateMsgs: Msgs): Unit = {
+
+    reportAggregateMsg(newshortMsg, newAggregateMsgs, false)
   }
 
-  def aggregateMsg(startIndex: Int,
-                   msgToSet: Msgs,
-                   msgToAggregate: Msgs): Unit = {
-    aggregateMsg(startIndex, msgToSet, msgToAggregate, false)
-  }
-  def aggregateMsg(startIndex: Int,
-                   msgToSet: Msgs,
-                   msgToAggregate: Msgs,
-                   forceAggregate: Boolean): Unit = {
-
-    if (!isSuccess && lastFailureMsg == null) lastFailureMsg = msgToSet
-
-    shortParserMsg = msgToSet
-
-    // There are two cases when aggregating: either we stomp over the entire
-    // existing aggregation with `msgToSet`, or we preserve it (with possible
-    // additions) with `msgToAggregate`.
-    if (checkAggregate(startIndex) && !forceAggregate) failureGroupAggregate = msgToSet
-    else failureGroupAggregate = msgToAggregate
+  def reportAggregateMsg(newshortMsg: Msgs,
+                         forceAggregate: Boolean): Unit = {
+    reportAggregateMsg(newshortMsg, aggregateMsgs, forceAggregate)
   }
 
-  def aggregateTerminal(startIndex: Int, f: () => String): Unit = {
-    val f2 = new Lazy(f)
-    if (!isSuccess){
-      if (index == traceIndex) failureTerminalAggregate ::= f2
-      if (lastFailureMsg == null) lastFailureMsg = Msgs(f2 :: Nil)
-    }
+  def reportAggregateMsg(newshortMsg: Msgs,
+                         newAggregateMsgs: Msgs,
+                         forceAggregate: Boolean): Unit = {
 
-    shortParserMsg = if (startIndex >= traceIndex) Msgs(f2 :: Nil) else Msgs.empty
-    failureGroupAggregate = if (checkAggregate(startIndex)) shortParserMsg else Msgs.empty
-  }
-
-  def setMsg(startIndex: Int, f: () => String): Unit = {
-    setMsg(startIndex, Msgs(new Lazy(f) :: Nil))
-  }
-
-  def setMsg(startIndex: Int, f: Msgs): Unit = {
-    if (!isSuccess && lastFailureMsg == null) lastFailureMsg = f
-    shortParserMsg = if (startIndex >= traceIndex) f else Msgs.empty
-    failureGroupAggregate = if (checkAggregate(startIndex)) shortParserMsg else Msgs.empty
+    reportParseMsg0(
+      newshortMsg,
+      newAggregateMsgs,
+      forceAggregate,
+      newAggregateMsgs.value.nonEmpty
+    )
   }
 
   /**
-    * Conditions under which we want to aggregate the given parse
-    */
-  def checkAggregate(startIndex: Int) = {
-    // We only aggregate if we are not currently past a cut; if we are past a
-    // cut, there is no further backtracking and so the error aggregate that has
-    // occurred will be the final aggregate shown to the user
-    !cut &&
-    // Only aggregate failures
-    !isSuccess &&
-    // We only stomp over the given aggregation with shortParserMsg if the range
-    // of the failed parse surrounds `traceIndex`. For parses that occur
-    // completely before or after the `traceIndex`, the actual parse doesn't
-    // contribute anything to the aggregation.
-    startIndex <= traceIndex &&
-    traceIndex <= index
+   * Called by any terminal parser; these are parsers for which displaying
+   * sub-failures does not make sense these include:
+   *
+   * - Individual strings or characters
+   * - Parsers like negation `!p` or `.filter` where the entire parser failing
+   *   is not caused by sub-failure
+   * - Parsers like `.opaque`, where sub-failures are intentionally hidden and
+   *   not shown to the user
+   *
+   * These "terminal" failures will be stored in the `terminalMsgs` in case
+   * a user wants to know what could have been placed at the failure point to
+   * let the parse progress
+   */
+  def reportTerminalMsg(startIndex: Int, newshortMsg: Msgs): Unit = {
+    // We only care about terminal parsers which failed exactly at the traceIndex
+    if (!isSuccess && index == traceIndex) terminalMsgs :::= newshortMsg
+
+    reportParseMsg0(
+      if (startIndex >= traceIndex) newshortMsg else Msgs.empty,
+      if (startIndex >= traceIndex) newshortMsg else Msgs.empty,
+      false,
+      startIndex >= traceIndex
+    )
   }
 
+  def reportParseMsg0(newshortMsg: Msgs,
+                      newAggregateMsgs: Msgs,
+                      forceAggregate: Boolean,
+                      setShortMsg: Boolean): Unit = {
+    // `lastFailureMsg` ends up being set by the first parser to report a
+    // failure, while returning from the last parser to call `.freshFailure()
+    // (which nulls it out)
+    if (!isSuccess && lastFailureMsg == null) lastFailureMsg = newshortMsg
+
+    // We only set the `shortMsg` for some parsers. These include:
+    //
+    // - Terminal parsers which have `startIndex >= traceIndex`
+    //
+    // - Aggregate parsers which have non-empty `newAggregateMsgs`, indicating
+    //   that they have either child terminal parsers with `startIndex >= traceIndex`
+    //   or they have child aggregate parsers with non-empty `newAggregateMsgs`
+    //
+    // This lets us skip setting `shortMsg` for all parsers, terminal or
+    // aggregate, which run and terminate fully before `traceIndex`, and thus
+    // would be of no interest to a user debugging parse failures at `traceIndex`
+    shortMsg = if (setShortMsg) newshortMsg else Msgs.empty
+
+    // There are two cases when aggregating: either we stomp over the entire
+    // existing `aggregateMsgs` with `newshortMsg`, or we preserve it
+    // (with possible additions) with `newAggregateMsgs`.
+    aggregateMsgs =
+      if (forceAggregate) newAggregateMsgs
+      // We only replace the aggregate Msgs if:
+      //
+      // 1. We are not currently past a cut; if we are past a cut, there is no
+      //    further backtracking and so the error aggregate that has occurred
+      //    will be the final aggregate shown to the user
+      //
+      // 2. Only replace in case of failures
+      //
+      // 3. Only stomp over the given aggregation with shortMsg if the
+      //    current parser has failed and the final parse `index` (after any
+      //    backtracking) is still at-or-greater-than the `traceIndex`. That
+      //    ensures that any parsers which started/ended before the point of
+      //    failure are not shown, since they are irrelevant
+      else if (!cut && !isSuccess && traceIndex <= index) shortMsg
+      else newAggregateMsgs
+  }
 
   // Use telescoping methods rather than default arguments to try and minimize
   // the amount of bytecode generated at the callsite.
