@@ -243,6 +243,14 @@ object ParsingTests extends TestSuite{
       checkWhitespaceFlatMap()
       checkNonWhitespaceFlatMap()
     }
+    test("opaqueTerminals"){
+      def Test[$: P] = P("A".opaque("a") ~/ "B".opaque("b") ~/ End)
+      val trace = fastparse.parse("AAB", Test(_)).asInstanceOf[Parsed.Failure].trace()
+
+      assert(trace.longAggregateMsg == """Expected Test:1:1 / b:1:2, found "AB"""")
+      assert(trace.longMsg == """Expected Test:1:1 / b:1:2, found "AB"""")
+      assert(trace.longTerminalsMsg == """Expected Test:1:1 / b:1:2, found "AB"""")
+    }
   }
 
   def checkWhitespaceFlatMap() = {
