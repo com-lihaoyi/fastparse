@@ -229,14 +229,17 @@ object SharedPackageDefs{
 
   def opaque[T](parse0: () => P[T], msg: String)(implicit ctx: P[Any]): P[T] = {
     val oldIndex = ctx.index
-
+    val startTerminals = ctx.terminalMsgs
     val res = parse0()
 
     val res2 =
       if (res.isSuccess) ctx.freshSuccess(ctx.successValue)
       else ctx.freshFailure(oldIndex)
 
-    if (ctx.verboseFailures) ctx.reportTerminalMsg(oldIndex, () => msg)
+    if (ctx.verboseFailures) {
+      ctx.terminalMsgs = startTerminals
+      ctx.reportTerminalMsg(oldIndex, () => msg)
+    }
 
     res2.asInstanceOf[P[T]]
   }
