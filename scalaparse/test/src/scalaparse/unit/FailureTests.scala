@@ -9,7 +9,7 @@ object FailureTests extends TestSuite{
     test - checkNeg(
       "package package",
       aggregate = """(QualId | PkgBlock | PkgObj)""",
-      terminals = """("`" | var-id | chars-while(OpCharNotSlash, 1) | "/" | operator | plain-id | id | "case" | "object")""",
+      terminals = """(id | "case" | "object")""",
       found = "package"
     )
 
@@ -19,7 +19,7 @@ object FailureTests extends TestSuite{
         |import import
       """.stripMargin,
       aggregate = """(ThisPath | IdPath)""",
-      terminals = """("this" | "super" | "`" | var-id | chars-while(OpCharNotSlash, 1) | "/" | operator | plain-id | id)""",
+      terminals = """("this" | "super" | id)""",
       found = "import"
     )
 
@@ -34,7 +34,7 @@ object FailureTests extends TestSuite{
         |}
       """.stripMargin,
       aggregate = """(Id | Generator | Assign)""",
-      terminals = """("`" | char-pred(UpperChar) | char-pred(LowerChar) | var-id | chars-while(OpCharNotSlash, 1) | "/" | operator | plain-id | id | "<-" | "←" | "=")""",
+      terminals = """ (id | "<-" | "=")""",
       found = "} yield x"
     )
     test - checkNeg(
@@ -43,7 +43,7 @@ object FailureTests extends TestSuite{
         |}
       """.stripMargin,
       aggregate = """(NamedType | Refinement)""",
-      terminals = """(chars-while(IdCharacter, 1) | [_] | [ \t] | "/*" | "//" | "\n" | "\r\n" | "(" | "-" | "." | [0-9] | "0x" | "true" | "false" | "`" | char-pred(UpperChar) | char-pred(LowerChar) | var-id | chars-while(OpCharNotSlash, 1) | "/" | operator | plain-id | id | filter | "\"\"\"" | "\"" | "'" | "null" | "this" | "super" | "_" | "{")""",
+      terminals = """([ \t] | "/*" | "//" | "\n" | "\r\n" | "(" | "-" | "." | [0-9] | "0x" | "true" | "false" | id | filter | "\"\"\"" | "\"" | "'" | "null" | "this" | "super" | "_" | "{")""",
       found = ")"
     )
     test - checkNeg(
