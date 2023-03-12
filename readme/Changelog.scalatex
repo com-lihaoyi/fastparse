@@ -20,9 +20,15 @@
             @li
                 Significant overhaul of @code{aggregateMsg}/@code{longAggregateMsg}
                 implementation, with code cleanup and bugfixes
-                (@lnk("#276", "https://github.com/lihaoyi/fastparse/issues/276")))
+                (@lnk("#276", "https://github.com/lihaoyi/fastparse/issues/276"))).
+                A lot of internal-facing method call were modified or renamed, but
+                this is not expected to require changes in user code.
             @li
                 Note that this is a binary incompatible change from Fastparse 2.x.
+                It is largely source compatible, except for users who are defining
+                custom whitespace implementations which would need to replace their
+                @hl.scala{implicit val whitespace} with
+                @hl.scala{implicit object whitespace extends Whitespace}
 
 
     @sect{2.3.1}
