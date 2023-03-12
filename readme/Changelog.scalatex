@@ -1,6 +1,40 @@
 @import Main._
 @sect{Change Log}
 
+    @sect{3.0.0}
+        @ul
+            @li
+                Scala 3.x support, starting from 3.2.2 @lnk("#271", "https://github.com/lihaoyi/fastparse/issues/271")).
+                All functionality works in Scala 3.0.0, though performance may vary slightly due
+                to differences in the implementation.
+            @li
+                Make whitespace handling a proper @code{fastparse.Whitespace} trait,
+                rather than a function type (@lnk("#272", "https://github.com/lihaoyi/fastparse/issues/272"))),
+                to avoid problems with parse failures being silently discarded
+                (@lnk("#261", "https://github.com/lihaoyi/fastparse/issues/261")))
+            @li
+                Dependency bumps: @code{com.lihaoyi::geny:1.0.0}, @code{com.lihaoyi::sourcecode:0.3.0}
+            @li
+                @code{Fail} parser now takes an optional message
+                @lnk("#244", "https://github.com/lihaoyi/fastparse/issues/244")))
+            @li
+                Significant overhaul of @code{aggregateMsg}/@code{longAggregateMsg}
+                implementation, with code cleanup and bugfixes
+                (@lnk("#276", "https://github.com/lihaoyi/fastparse/issues/276"))).
+                A lot of internal-facing method call were modified or renamed, but
+                this is not expected to require changes in user code.
+            @li
+                Note that this is a binary incompatible change from Fastparse 2.x.
+                It is largely source compatible, except for users who are defining
+                custom whitespace implementations which would need to replace their
+                @hl.scala{implicit val whitespace} with
+                @hl.scala{implicit object whitespace extends Whitespace}
+
+
+    @sect{2.3.1}
+        @ul
+            @li
+                Support for Scala-Native 0.4.0
     @sect{2.2.2}
         @ul
             @li
