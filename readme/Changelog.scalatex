@@ -1,6 +1,12 @@
 @import Main._
 @sect{Change Log}
 
+    @sect{master}
+        @ul
+            @li
+                Fix handling of terminal parser error reporting in @code{.opaque} calls
+                @lnk("#278", "https://github.com/lihaoyi/fastparse/issues/278")
+
     @sect{3.0.0}
         @ul
             @li
