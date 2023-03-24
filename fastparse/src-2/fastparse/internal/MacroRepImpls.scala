@@ -51,7 +51,10 @@ object MacroRepImpls{
       case None => q"$rec($beforeSepIndex, $count + 1, $parsedAgg)"
       case Some(ws) =>
         q"""
-        if ($ws ne _root_.fastparse.NoWhitespace.noWhitespaceImplicit) {
+
+        @fastparse.NoWarn.nowarn
+        val isNotNoWhitespace = $ws ne _root_.fastparse.NoWhitespace.noWhitespaceImplicit
+        if (isNotNoWhitespace) {
            _root_.fastparse.internal.Util.consumeWhitespace($ws, $ctx1)
         }
         if (!$ctx1.isSuccess && $ctx1.cut) $ctx1.asInstanceOf[_root_.fastparse.ParsingRun[scala.Nothing]]

@@ -3,7 +3,7 @@ import fastparse.internal.{Instrument, Logger}
 
 import language.experimental.macros
 
-package object fastparse extends fastparse.SharedPackageDefs {
+package object fastparse extends fastparse.SharedPackageDefs with fastparse.VersionSpecific {
   /**
     * Delimits a named parser. This name will appear in the parser failure
     * messages and stack traces, and by default is taken from the name of the
