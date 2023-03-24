@@ -42,5 +42,56 @@ object UtilTests extends TestSuite {
       )
       assert(pretties == expected)
     }
+
+    test("unix"){
+      val txt = Array(
+        "def myScalaVersion = \"2.13.2\"\n",
+        "\n",
+        "//hello\n",
+        "println(doesntExis})"
+      ).mkString
+
+      val lineStarts = fastparse.internal.Util.lineNumberLookup(txt).toList
+
+      assert(lineStarts == List(0, 30, 31, 39))
+    }
+
+    test("carriageReturnOnly") {
+      val txt = Array(
+        "def myScalaVersion = \"2.13.2\"\r",
+        "\r",
+        "//hello\r",
+        "println(doesntExis})"
+      ).mkString
+
+      val lineStarts = fastparse.internal.Util.lineNumberLookup(txt).toList
+
+      assert(lineStarts == List(0, 30, 31, 39))
+    }
+
+    test("windows"){
+      val txt = Array(
+        "def myScalaVersion = \"2.13.2\"\r\n",
+        "\r\n",
+        "//hello\r\n",
+        "println(doesntExis})"
+      ).mkString
+
+      val lineStarts = fastparse.internal.Util.lineNumberLookup(txt).toList
+
+      assert(lineStarts == List(0, 31, 33, 42))
+    }
+    test("reverseWindows"){
+      val txt = Array(
+        "def myScalaVersion = \"2.13.2\"\n\r",
+        "\n\r",
+        "//hello\n\r",
+        "println(doesntExis})"
+      ).mkString
+
+      val lineStarts = fastparse.internal.Util.lineNumberLookup(txt).toList
+
+      assert(lineStarts == List(0, 31, 33, 42))
+    }
   }
 }

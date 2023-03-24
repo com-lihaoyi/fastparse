@@ -47,30 +47,55 @@ object Util {
     rec(0)
   }
   def lineNumberLookup(data: String): Array[Int] = {
-    val lineStarts = new ArrayBuffer[Int]()
+    val lineStarts = ArrayBuffer[Int](0)
     var i = 0
     var col = 1
-    var cr = false
-    var prev: Character = null
+    // Stores:
+    // - \n if we just saw a \n
+    // - \r if we just saw a \r
+    // - -1 if we just saw both a \n and \r
+    // - 0 if we just saw a normal character
+    var state: Int = 0
     while (i < data.length){
       val char = data(i)
       if (char == '\r') {
-        if (prev != '\n' && col == 1) lineStarts.append(i)
-        col = 1
-        cr = true
+        if (state == '\r' || state == -1) {
+          lineStarts.append(i)
+          state = char
+        }else if (state == '\n') {
+          col += 1
+          state = -1
+        }else{
+          col = 1
+          state = char
+        }
       }else if (char == '\n') {
-        if (prev != '\r' && col == 1) lineStarts.append(i)
-        col = 1
-        cr = false
+        if (state == '\n' || state == -1){
+          lineStarts.append(i)
+          state = char
+        } else if (state == '\r') {
+          col += 1
+          state = -1
+        }else{
+          col = 1
+          state = char
+        }
       }else{
-        if (col == 1) lineStarts.append(i)
-        col += 1
-        cr = false
+        if (state == '\r' || state == '\n' || state == -1){
+          lineStarts.append(i)
+          state = 0
+          col = 1
+        }else {
+          state = 0
+          col += 1
+        }
       }
-      prev = char
       i += 1
     }
-    if (col == 1) lineStarts.append(i)
+
+    if (state == '\r' || state == '\n' || state == -1) {
+      lineStarts.append(i)
+    }
 
     lineStarts.toArray
   }
