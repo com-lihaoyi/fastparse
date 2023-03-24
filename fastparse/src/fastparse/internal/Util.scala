@@ -50,46 +50,22 @@ object Util {
     val lineStarts = ArrayBuffer[Int](0)
     var i = 0
     var col = 1
-    // Stores:
-    // - \n if we just saw a \n
-    // - \r if we just saw a \r
-    // - -1 if we just saw both a \n and \r
-    // - 0 if we just saw a normal character
+    // Stores the previous char we saw, or -1 if we just saw a \r\n or \n\r pair
     var state: Int = 0
     while (i < data.length){
       val char = data(i)
-      if (char == '\r') {
-        if (state == '\r' || state == -1) {
-          lineStarts.append(i)
-          state = char
-        }else if (state == '\n') {
-          col += 1
-          state = -1
-        }else{
-          col = 1
-          state = char
-        }
-      }else if (char == '\n') {
-        if (state == '\n' || state == -1){
-          lineStarts.append(i)
-          state = char
-        } else if (state == '\r') {
-          col += 1
-          state = -1
-        }else{
-          col = 1
-          state = char
-        }
+      if (char == '\r' && state == '\n' || char == '\n' && state == '\r'){
+        col += 1
+        state = -1
+      } else if (state == '\r' || state == '\n' || state == -1) {
+        lineStarts.append(i)
+        col = 1
+        state = char
       }else{
-        if (state == '\r' || state == '\n' || state == -1){
-          lineStarts.append(i)
-          state = 0
-          col = 1
-        }else {
-          state = 0
-          col += 1
-        }
+        col += 1
+        state = char
       }
+
       i += 1
     }
 
