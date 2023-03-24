@@ -2,7 +2,7 @@ import fastparse.internal.{Instrument, Logger, *}
 
 import language.experimental.macros
 
-package object fastparse extends fastparse.SharedPackageDefs with fastparse.VersionSpecific{
+package object fastparse extends fastparse.SharedPackageDefs {
 
   /**
    * Shorthand alias for [[ParsingRun]]; this is both the parameter-to and the

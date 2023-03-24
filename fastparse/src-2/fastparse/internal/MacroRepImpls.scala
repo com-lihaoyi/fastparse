@@ -52,7 +52,7 @@ object MacroRepImpls{
       case Some(ws) =>
         q"""
 
-        @fastparse.NoWarn.nowarn
+        @fastparse.internal.NoWarn.nowarn
         val isNotNoWhitespace = $ws ne _root_.fastparse.NoWhitespace.noWhitespaceImplicit
         if (isNotNoWhitespace) {
            _root_.fastparse.internal.Util.consumeWhitespace($ws, $ctx1)

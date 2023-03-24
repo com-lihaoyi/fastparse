@@ -7,7 +7,7 @@ import fastparse.internal.Logger
   * Demonstrates simultaneously parsing and
   * evaluating simple arithmetic expressions
   */
-@fastparse.NoWarn.nowarn("msg=comparing values of types Unit and Unit using `==` will always yield true")
+@fastparse.internal.NoWarn.nowarn("msg=comparing values of types Unit and Unit using `==` will always yield true")
 object ExampleTests extends TestSuite{
   import fastparse.NoWhitespace._
   val tests = Tests{
