@@ -27,11 +27,18 @@ object ProjectTests extends TestSuite {
     TestUtil.checkPrinting(css, tag = name)
   }
 
-  val tests = this {
-    Seq("mkdir", "-p", "out/repos").!
+  @fastparse.NoWarn.nowarn("msg=method copyArrayToImmutableIndexedSeq in class LowPriorityImplicits2 is deprecated")
+  val tests = Tests {
 
-    "twbs/bootstrap/raw/2c2ac3356425e192f7537227508c809a14aa5850/dist/css/bootstrap.css" - checkCss()
-    "twbs/bootstrap/raw/2c2ac3356425e192f7537227508c809a14aa5850/dist/css/bootstrap.min.css" - checkCss()
+
+    test("twbs/bootstrap/raw/2c2ac3356425e192f7537227508c809a14aa5850/dist/css/bootstrap.css") - {
+      Seq("mkdir", "-p", "out/repos").!
+      checkCss()
+    }
+    test("twbs/bootstrap/raw/2c2ac3356425e192f7537227508c809a14aa5850/dist/css/bootstrap.min.css") - {
+      Seq("mkdir", "-p", "out/repos").!
+      checkCss()
+    }
 //    "primer/primer/raw/2c2ac3356425e192f7537227508c809a14aa5850/css/primer.css" - checkCss()
   }
 }
