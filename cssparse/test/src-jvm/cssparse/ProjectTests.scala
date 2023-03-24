@@ -27,7 +27,6 @@ object ProjectTests extends TestSuite {
     TestUtil.checkPrinting(css, tag = name)
   }
 
-  @fastparse.internal.NoWarn.nowarn("msg=method copyArrayToImmutableIndexedSeq in class LowPriorityImplicits2 is deprecated")
   val tests = Tests {
 
 

@@ -9,7 +9,6 @@ import fastparse._
  * Load external Python code and force feed it through the parser
  * to find out where it blows up
  */
-@fastparse.internal.NoWarn.nowarn("msg=deprecated")
 object ProjectTests extends TestSuite{
 
   def check(commitHash: String,

@@ -229,7 +229,7 @@ trait CommonTestModule extends ScalaModule with TestModule.Utest{
     ivy"com.lihaoyi::utest::0.8.1",
   )
   override def scalacOptions = super.scalacOptions() ++
-    (if (scalaVersion() == scala213) Seq("-Xfatal-warnings", "-deprecation") else Nil)
+    (if (scalaVersion() == scala213) Seq("-Xfatal-warnings", "-Wconf:cat=feature:s,cat=deprecation:s") else Nil)
 
   def sources = T.sources {
     super.sources().flatMap { p => Seq(p, PathRef(p.path / os.up / s"${p.path.last}-$platformSegment")) }
