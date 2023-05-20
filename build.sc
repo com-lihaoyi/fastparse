@@ -155,10 +155,6 @@ trait ExampleParseJvmModule extends CommonCrossModule{
     def ivyDeps = super.ivyDeps() ++ Agg(
       ivy"net.sourceforge.cssparser:cssparser:0.9.18",
     ) ++ (if (isScala3(crossScalaVersion)) Agg.empty[Dep] else Agg(ivy"org.scala-lang:scala-compiler:$crossScalaVersion"))
-
-    def sources = T.sources{
-      super.sources().flatMap(p => Seq(p, PathRef(p.path / os.up / s"${p.path.last}-jvm")))
-    }
   }
 }
 
@@ -170,12 +166,6 @@ trait ExampleParseNativeModule extends CommonCrossModule with ScalaNativeModule{
 }
 
 trait CommonCrossModule extends CrossScalaModule with PublishModule with PlatformScalaModule{
-
-  def platformSegment = millModuleSegments
-    .value
-    .collect { case l: mill.define.Segment.Label => l.value }
-    .last
-
   def publishVersion = VcsVersion.vcsState().format()
 
   def pomSettings = PomSettings(
@@ -196,7 +186,6 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule with Platfor
 
   def sources = T.sources {
     super.sources() ++
-    Seq(PathRef(millSourcePath / s"src-$platformSegment")) ++
     (if (scalaVersion() == scala211) Seq() else Seq(PathRef(millSourcePath / "src-2.12+")))
   }
 }
