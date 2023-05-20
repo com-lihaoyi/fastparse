@@ -155,6 +155,10 @@ trait ExampleParseJvmModule extends CommonCrossModule{
     def ivyDeps = super.ivyDeps() ++ Agg(
       ivy"net.sourceforge.cssparser:cssparser:0.9.18",
     ) ++ (if (isScala3(crossScalaVersion)) Agg.empty[Dep] else Agg(ivy"org.scala-lang:scala-compiler:$crossScalaVersion"))
+
+    def sources = T.sources{
+      super.sources().flatMap(p => Seq(p, PathRef(p.path / os.up / s"${p.path.last}-jvm")))
+    }
   }
 }
 
