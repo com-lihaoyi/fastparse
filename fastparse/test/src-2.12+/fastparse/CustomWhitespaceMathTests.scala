@@ -8,7 +8,8 @@ import utest._
  */
 object CustomWhitespaceMathTests extends TestSuite{
   implicit object whitespace extends Whitespace{
-    def apply(implicit ctx: P[_]): P[Unit] = {
+    def apply(ctx: fastparse.ParsingRun[_]): P[Unit] = {
+      implicit val ctx0 = ctx
       CharsWhileIn(" \t", 0)
     }
   }
