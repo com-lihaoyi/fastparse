@@ -7,8 +7,8 @@ import mill.api.Result
 import mill.modules.Jvm.createJar
 
 import mill.scalalib.api.ZincWorkerUtil.isScala3
-import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.3.1-6-e80da7`
-import $ivy.`com.github.lolgab::mill-mima::0.0.20`
+import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.3.1-8-37c08a`
+import $ivy.`com.github.lolgab::mill-mima::0.0.21`
 
 import de.tobiasroeser.mill.vcs.version.VcsVersion
 import com.github.lolgab.mill.mima._
@@ -158,7 +158,9 @@ trait ExampleParseJvmModule extends CommonCrossModule{
   object test extends Tests with CommonTestModule{
     def ivyDeps = super.ivyDeps() ++ Agg(
       ivy"net.sourceforge.cssparser:cssparser:0.9.18",
-    ) ++ (if (isScala3(crossScalaVersion)) Agg.empty[Dep] else Agg(ivy"org.scala-lang:scala-compiler:$crossScalaVersion"))
+    ) ++ Agg.when(!isScala3(crossScalaVersion))(
+      ivy"org.scala-lang:scala-compiler:$crossScalaVersion"
+    )
   }
 }
 
@@ -190,7 +192,7 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule with Platfor
 
   def sources = T.sources {
     super.sources() ++
-    (if (scalaVersion() == scala211) Seq() else Seq(PathRef(millSourcePath / "src-2.12+")))
+    Agg.when(scalaVersion() != scala211)(PathRef(millSourcePath / "src-2.12+"))
   }
 }
 
@@ -199,7 +201,10 @@ trait CommonTestModule extends ScalaModule with TestModule.Utest{
 
   override def scalacOptions =
     super.scalacOptions() ++
-    (if (scalaVersion() == scala213) Seq("-Xfatal-warnings", "-Wconf:cat=feature:s,cat=deprecation:s") else Nil)
+    Agg.when(scalaVersion() == scala213)(
+      "-Xfatal-warnings",
+      "-Wconf:cat=feature:s,cat=deprecation:s"
+    )
 }
 
 object perftests extends Module{
