@@ -7,8 +7,8 @@ import mill.api.Result
 import mill.modules.Jvm.createJar
 
 import mill.scalalib.api.ZincWorkerUtil.isScala3
-import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.3.1-8-37c08a`
-import $ivy.`com.github.lolgab::mill-mima::0.0.21`
+import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.3.1-14-7e2bd2`
+import $ivy.`com.github.lolgab::mill-mima::0.0.22`
 
 import de.tobiasroeser.mill.vcs.version.VcsVersion
 import com.github.lolgab.mill.mima._
@@ -24,7 +24,7 @@ val crossVersions = Seq(scala31, scala213, scala212, scala211)
 object fastparse extends Module{
   object jvm extends Cross[fastparseJvmModule](crossVersions)
   trait fastparseJvmModule extends FastparseModule{
-    object test extends Tests with CommonTestModule
+    object test extends ScalaModuleTests with CommonTestModule
   }
 
   object js extends Cross[fastparseJsModule](crossVersions)
@@ -42,14 +42,14 @@ object fastparse extends Module{
 
     override def scalacOptions = super.scalacOptions() ++ sourceMapOptions()
 
-    object test extends Tests with CommonTestModule
+    object test extends ScalaJSModuleTests with CommonTestModule
   }
 
   object native extends Cross[fastparseNativeModule](crossVersions)
   trait fastparseNativeModule extends FastparseModule with ScalaNativeModule {
     def scalaNativeVersion = scalaNative04
 
-    object test extends Tests with CommonTestModule
+    object test extends ScalaNativeModuleTests with CommonTestModule
   }
 }
 
@@ -149,13 +149,13 @@ trait ExampleParseJsModule extends CommonCrossModule with ScalaJSModule{
   def moduleDeps = Seq(fastparse.js())
   def scalaJSVersion = scalaJS1
 
-  object test extends Tests with CommonTestModule
+  object test extends ScalaJSModuleTests with CommonTestModule
 }
 
 trait ExampleParseJvmModule extends CommonCrossModule{
   def moduleDeps = Seq(fastparse.jvm())
 
-  object test extends Tests with CommonTestModule{
+  object test extends ScalaModuleTests with CommonTestModule{
     def ivyDeps = super.ivyDeps() ++ Agg(
       ivy"net.sourceforge.cssparser:cssparser:0.9.18",
     ) ++ Agg.when(!isScala3(crossScalaVersion))(
@@ -168,7 +168,7 @@ trait ExampleParseNativeModule extends CommonCrossModule with ScalaNativeModule{
   def scalaNativeVersion = scalaNative04
   def moduleDeps = Seq(fastparse.native())
 
-  object test extends Tests with CommonTestModule
+  object test extends ScalaNativeModuleTests with CommonTestModule
 }
 
 trait CommonCrossModule extends CrossScalaModule with PublishModule with PlatformScalaModule{
