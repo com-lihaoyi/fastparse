@@ -13,12 +13,12 @@ import de.tobiasroeser.mill.vcs.version.VcsVersion
 import $ivy.`com.github.lolgab::mill-mima::0.0.13`
 import com.github.lolgab.mill.mima._
 
-val scala31 = "3.3.0"
+val scala31 = "3.2.2"
 val scala213 = "2.13.10"
 val scala212 = "2.12.17"
 val scala211 = "2.11.12"
 val scalaJS1 = "1.12.0"
-val scalaNative04 = "0.4.14"
+val scalaNative04 = "0.4.9"
 val crossVersions = Seq(scala31, scala213, scala212, scala211)
 val crossJsVersions = Seq(scala31 -> scalaJS1, scala213 -> scalaJS1, scala212 -> scalaJS1, scala211 -> scalaJS1)
 val crossNativeVersions = Seq(scala31 -> scalaNative04, scala213 -> scalaNative04, scala212 -> scalaNative04, scala211 -> scalaNative04)
