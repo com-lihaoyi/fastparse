@@ -48,9 +48,6 @@ jobs:
         with:
           java-version: "8"
           distribution: "temurin"
-      - uses: actions/setup-python@v2
-        with:
-          python-version: '2.7'
       - name: Run tests
         run: |
           echo '-XX:MaxRAMPercentage=95.0' >> .mill-jvm-opts

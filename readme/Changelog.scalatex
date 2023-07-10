@@ -1,6 +1,11 @@
 @import Main._
 @sect{Change Log}
 
+    @sect{3.0.2}
+        @ul
+            @li
+                Release Scala-Native/Scala-3 version
+                @lnk("#288", "https://github.com/lihaoyi/fastparse/issues/288")
     @sect{3.0.1}
         @ul
             @li
