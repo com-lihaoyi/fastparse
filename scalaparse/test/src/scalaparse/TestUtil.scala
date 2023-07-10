@@ -68,7 +68,7 @@ object TestUtil {
 
   def check[T](input: String, tag: String = "", skipIterator: Boolean = false) = {
     println("Checking...\n" )
-    println(input)
+//    println(input)
     check0(input, input.length, tag)
     if (!skipIterator) {
       for(chunkSize <- Seq(1, 5, 18, 67, 260, 1029)) {
