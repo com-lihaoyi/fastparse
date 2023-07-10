@@ -65,15 +65,17 @@ object ProjectTests extends TestSuite{
 
   }
   val tests = Tests {
-    "dropbox/changes" - check("37e23c3141b75e4785cf398d015e3dbca41bdd56")
-    "django/django" - check(
-      "399a8db33b14a1f707912ac48a185fb0a1204913",
-      ignored = Seq("tests/i18n/test_compilation.py")
-    )
-    "mitsuhiko/flask" - check("9291ead32e2fc8b13cef825186c968944e9ff344")
-    "zulip/zulip" - check("b5c107ed27b337ed833ebe9c754889bf078d743e")
-    "ansible/ansible"- check("02cd88169764232fd63c776456178fe61d3a214a")
-    "kennethreitz/requests" - check("9713289e741960249c94fcb1686746f80e2f20b5")
+    // Disabled since Github Actions dropped support for Python 2.7
+
+//    "dropbox/changes" - check("37e23c3141b75e4785cf398d015e3dbca41bdd56")
+//    "django/django" - check(
+//      "399a8db33b14a1f707912ac48a185fb0a1204913",
+//      ignored = Seq("tests/i18n/test_compilation.py")
+//    )
+//    "mitsuhiko/flask" - check("9291ead32e2fc8b13cef825186c968944e9ff344")
+//    "zulip/zulip" - check("b5c107ed27b337ed833ebe9c754889bf078d743e")
+//    "ansible/ansible"- check("02cd88169764232fd63c776456178fe61d3a214a")
+//    "kennethreitz/requests" - check("9713289e741960249c94fcb1686746f80e2f20b5")
 
 //    test("test"){
 //      val txt = new String(Files.readAllBytes(Paths.get("out/repos/ansible/lib/ansible/modules/cloud/cloudstack/cs_instance.py")))
