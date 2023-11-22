@@ -19,7 +19,7 @@ val scala213 = "2.13.12"
 val scala212 = "2.12.18"
 val scala211 = "2.11.12"
 val scalaJS1 = "1.12.0"
-val scalaNative04 = "0.4.9"
+val scalaNative04 = "0.4.16"
 val crossVersions = Seq(scala33, scala32, scala213, scala212, scala211)
 
 object fastparse extends Module{
