@@ -15,11 +15,11 @@ import com.github.lolgab.mill.mima._
 
 val scala33 = "3.3.1"
 val scala32 = "3.2.2"
-val scala213 = "2.13.12"
-val scala212 = "2.12.18"
+val scala213 = "2.13.10"
+val scala212 = "2.12.17"
 val scala211 = "2.11.12"
 val scalaJS1 = "1.12.0"
-val scalaNative04 = "0.4.16"
+val scalaNative04 = "0.4.9"
 val crossVersions = Seq(scala33, scala32, scala213, scala212, scala211)
 
 object fastparse extends Module{
@@ -221,11 +221,7 @@ object perftests extends Module{
 
   object benchScala33 extends PerfTestModule {
     def scalaVersion0 = scala33
-
-    def sources = T.sources {
-      bench2.sources()
-    }
-
+    def sources = T.sources { bench2.sources() }
     def moduleDeps = Seq(
       scalaparse.jvm(scala33).test,
       pythonparse.jvm(scala33).test,
