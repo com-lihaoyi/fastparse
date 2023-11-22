@@ -13,13 +13,14 @@ import $ivy.`com.github.lolgab::mill-mima::0.0.23`
 import de.tobiasroeser.mill.vcs.version.VcsVersion
 import com.github.lolgab.mill.mima._
 
-val scala31 = "3.2.2"
-val scala213 = "2.13.10"
-val scala212 = "2.12.17"
+val scala33 = "3.3.1"
+val scala32 = "3.2.2"
+val scala213 = "2.13.12"
+val scala212 = "2.12.18"
 val scala211 = "2.11.12"
 val scalaJS1 = "1.12.0"
 val scalaNative04 = "0.4.9"
-val crossVersions = Seq(scala31, scala213, scala212, scala211)
+val crossVersions = Seq(scala33, scala32, scala213, scala212, scala211)
 
 object fastparse extends Module{
   object jvm extends Cross[fastparseJvmModule](crossVersions)
@@ -218,14 +219,29 @@ object perftests extends Module{
     )
   }
 
-  object benchScala3 extends PerfTestModule {
-    def scalaVersion0 = scala31
+  object benchScala33 extends PerfTestModule {
+    def scalaVersion0 = scala33
+
+    def sources = T.sources {
+      bench2.sources()
+    }
+
+    def moduleDeps = Seq(
+      scalaparse.jvm(scala33).test,
+      pythonparse.jvm(scala33).test,
+      cssparse.jvm(scala33).test,
+      fastparse.jvm(scala33).test,
+    )
+  }
+
+  object benchScala32 extends PerfTestModule {
+    def scalaVersion0 = scala32
     def sources = T.sources{ bench2.sources() }
     def moduleDeps = Seq(
-      scalaparse.jvm(scala31).test,
-      pythonparse.jvm(scala31).test,
-      cssparse.jvm(scala31).test,
-      fastparse.jvm(scala31).test,
+      scalaparse.jvm(scala32).test,
+      pythonparse.jvm(scala32).test,
+      cssparse.jvm(scala32).test,
+      fastparse.jvm(scala32).test,
     )
   }
 

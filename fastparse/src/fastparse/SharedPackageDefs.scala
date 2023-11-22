@@ -161,7 +161,7 @@ trait SharedPackageDefs {
    */
   def Fail(msg: String)(implicit ctx: P[_]): P[Nothing] = {
     val res = ctx.freshFailure()
-    if (ctx.verboseFailures) ctx.reportTerminalMsg(ctx.index, () => "fail")
+    if (ctx.verboseFailures) ctx.reportTerminalMsg(ctx.index, () => msg)
     res
   }
   /**
