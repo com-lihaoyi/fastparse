@@ -21,6 +21,7 @@ val scala211 = "2.11.12"
 val scalaJS1 = "1.12.0"
 val scalaNative04 = "0.4.9"
 val crossVersions = Seq(scala33, scala32, scala213, scala212, scala211)
+val scalaNativeCrossVersions = crossVersions.filterNot(v => v == scala32 || v == scala33  )
 
 object fastparse extends Module{
   object jvm extends Cross[fastparseJvmModule](crossVersions)
@@ -46,7 +47,8 @@ object fastparse extends Module{
     object test extends ScalaJSModuleTests with CommonTestModule
   }
 
-  object native extends Cross[fastparseNativeModule](crossVersions)
+
+  object native extends Cross[fastparseNativeModule](scalaNativeCrossVersions)
   trait fastparseNativeModule extends FastparseModule with ScalaNativeModule {
     def scalaNativeVersion = scalaNative04
 
@@ -120,7 +122,7 @@ object scalaparse extends Module{
   object jvm extends Cross[ScalaParseJvmModule](crossVersions)
   trait ScalaParseJvmModule extends ExampleParseJvmModule
 
-  object native extends Cross[ScalaParseNativeModule](crossVersions)
+  object native extends Cross[ScalaParseNativeModule]()
   trait ScalaParseNativeModule extends ExampleParseNativeModule
 }
 
@@ -131,7 +133,8 @@ object cssparse extends Module{
   object jvm extends Cross[CssParseJvmModule](crossVersions)
   trait CssParseJvmModule extends ExampleParseJvmModule
 
-  object native extends Cross[CssParseNativeModule](crossVersions)
+  object native extends Cross[CssParseNativeModule](scalaNativeCrossVersions)
+
   trait CssParseNativeModule extends ExampleParseNativeModule
 }
 
@@ -142,7 +145,7 @@ object pythonparse extends Module{
   object jvm extends Cross[PythonParseJvmModule](crossVersions)
   trait PythonParseJvmModule extends ExampleParseJvmModule
 
-  object native extends Cross[PythonParseNativeModule](crossVersions)
+  object native extends Cross[PythonParseNativeModule](scalaNativeCrossVersions)
   trait PythonParseNativeModule extends ExampleParseNativeModule
 }
 
