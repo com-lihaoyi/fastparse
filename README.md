@@ -46,18 +46,20 @@ compiled to Scala.js. These all live in `demo/`.
 Common Commands
 ---------------
 
-- `mill -w fastparse.jvm[2.12.10].test` runs the main testsuite. If you're
+Note: you should use mill 0.11 or later.
+
+- `mill -w "fastparse.jvm[2.12.10].test"` runs the main testsuite. If you're
   hacking on FastParse, this is often where you want to go
 
 - You can run the other suites via `fastparse.js`, `scalaparse.jvm`, etc. if you
   wish, but I typically don't and leave that to CI unless I'm actively working
   on the sub-project
 
-- You can use `mill -w fastparse.jvm[_].test` to run it under different Scala
+- You can use `mill -w "fastparse.jvm[_].test"` to run it under different Scala
   versions, but again I usually don't bother
 
 - `mill __.test.test` is the aggregate test-all command, but is pretty slow. You
-  can use `mill __.jvm[2.12.10].test` to run all tests only under JVM/Scala-2.12,
+  can use `mill "__.jvm[2.12.17].test"` to run all tests only under JVM/Scala-2.12,
   which is much faster and catches most issues
 
 - `mill demo.fullOpt && sbt readme/run` builds the documentation site, which can

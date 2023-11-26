@@ -133,7 +133,7 @@ object ExampleTests extends TestSuite{
 
         def failWithLabel[$: P] = P( Fail("custom fail msg") )
         val Parsed.Failure(_, 0, extra) = parse("asdad", failWithLabel(_))
-        assert(extra.trace().longMsg == """Expected failWithLabel:1:1 / fail:1:1, found "asdad"""")
+        assert(extra.trace().longMsg == """Expected failWithLabel:1:1 / custom fail msg:1:1, found "asdad"""")
       }
 
       test("index"){

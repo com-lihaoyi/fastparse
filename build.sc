@@ -13,18 +13,20 @@ import $ivy.`com.github.lolgab::mill-mima::0.0.23`
 import de.tobiasroeser.mill.vcs.version.VcsVersion
 import com.github.lolgab.mill.mima._
 
-val scala31 = "3.2.2"
+val scala33 = "3.3.1"
+val scala32 = "3.2.2"
 val scala213 = "2.13.10"
 val scala212 = "2.12.17"
 val scala211 = "2.11.12"
 val scalaJS1 = "1.12.0"
 val scalaNative04 = "0.4.9"
-val crossVersions = Seq(scala31, scala213, scala212, scala211)
+val crossVersions = Seq(scala33, scala32, scala213, scala212, scala211)
+val scalaNativeCrossVersions = crossVersions.filterNot(v => v == scala32 || v == scala33  )
 
 object fastparse extends Module{
   object jvm extends Cross[fastparseJvmModule](crossVersions)
   trait fastparseJvmModule extends FastparseModule{
-    object test extends ScalaModuleTests with CommonTestModule
+    object test extends ScalaTests with CommonTestModule
   }
 
   object js extends Cross[fastparseJsModule](crossVersions)
@@ -42,14 +44,15 @@ object fastparse extends Module{
 
     override def scalacOptions = super.scalacOptions() ++ sourceMapOptions()
 
-    object test extends ScalaJSModuleTests with CommonTestModule
+    object test extends ScalaJSTests with CommonTestModule
   }
 
-  object native extends Cross[fastparseNativeModule](crossVersions)
+
+  object native extends Cross[fastparseNativeModule](scalaNativeCrossVersions)
   trait fastparseNativeModule extends FastparseModule with ScalaNativeModule {
     def scalaNativeVersion = scalaNative04
 
-    object test extends ScalaNativeModuleTests with CommonTestModule
+    object test extends ScalaNativeTests with CommonTestModule
   }
 }
 
@@ -119,7 +122,7 @@ object scalaparse extends Module{
   object jvm extends Cross[ScalaParseJvmModule](crossVersions)
   trait ScalaParseJvmModule extends ExampleParseJvmModule
 
-  object native extends Cross[ScalaParseNativeModule](crossVersions)
+  object native extends Cross[ScalaParseNativeModule](scalaNativeCrossVersions)
   trait ScalaParseNativeModule extends ExampleParseNativeModule
 }
 
@@ -130,7 +133,8 @@ object cssparse extends Module{
   object jvm extends Cross[CssParseJvmModule](crossVersions)
   trait CssParseJvmModule extends ExampleParseJvmModule
 
-  object native extends Cross[CssParseNativeModule](crossVersions)
+  object native extends Cross[CssParseNativeModule](scalaNativeCrossVersions)
+
   trait CssParseNativeModule extends ExampleParseNativeModule
 }
 
@@ -141,7 +145,7 @@ object pythonparse extends Module{
   object jvm extends Cross[PythonParseJvmModule](crossVersions)
   trait PythonParseJvmModule extends ExampleParseJvmModule
 
-  object native extends Cross[PythonParseNativeModule](crossVersions)
+  object native extends Cross[PythonParseNativeModule](scalaNativeCrossVersions)
   trait PythonParseNativeModule extends ExampleParseNativeModule
 }
 
@@ -149,13 +153,13 @@ trait ExampleParseJsModule extends CommonCrossModule with ScalaJSModule{
   def moduleDeps = Seq(fastparse.js())
   def scalaJSVersion = scalaJS1
 
-  object test extends ScalaJSModuleTests with CommonTestModule
+  object test extends ScalaJSTests with CommonTestModule
 }
 
 trait ExampleParseJvmModule extends CommonCrossModule{
   def moduleDeps = Seq(fastparse.jvm())
 
-  object test extends ScalaModuleTests with CommonTestModule{
+  object test extends ScalaTests with CommonTestModule{
     def ivyDeps = super.ivyDeps() ++ Agg(
       ivy"net.sourceforge.cssparser:cssparser:0.9.18",
     ) ++ Agg.when(!isScala3(crossScalaVersion))(
@@ -168,7 +172,7 @@ trait ExampleParseNativeModule extends CommonCrossModule with ScalaNativeModule{
   def scalaNativeVersion = scalaNative04
   def moduleDeps = Seq(fastparse.native())
 
-  object test extends ScalaNativeModuleTests with CommonTestModule
+  object test extends ScalaNativeTests with CommonTestModule
 }
 
 trait CommonCrossModule extends CrossScalaModule with PublishModule with PlatformScalaModule{
@@ -218,14 +222,25 @@ object perftests extends Module{
     )
   }
 
-  object benchScala3 extends PerfTestModule {
-    def scalaVersion0 = scala31
+  object benchScala33 extends PerfTestModule {
+    def scalaVersion0 = scala33
+    def sources = T.sources { bench2.sources() }
+    def moduleDeps = Seq(
+      scalaparse.jvm(scala33).test,
+      pythonparse.jvm(scala33).test,
+      cssparse.jvm(scala33).test,
+      fastparse.jvm(scala33).test,
+    )
+  }
+
+  object benchScala32 extends PerfTestModule {
+    def scalaVersion0 = scala32
     def sources = T.sources{ bench2.sources() }
     def moduleDeps = Seq(
-      scalaparse.jvm(scala31).test,
-      pythonparse.jvm(scala31).test,
-      cssparse.jvm(scala31).test,
-      fastparse.jvm(scala31).test,
+      scalaparse.jvm(scala32).test,
+      pythonparse.jvm(scala32).test,
+      cssparse.jvm(scala32).test,
+      fastparse.jvm(scala32).test,
     )
   }
 
