@@ -1,6 +1,15 @@
 @import Main._
 @sect{Change Log}
 
+    @sect{3.1.0}
+        @ul
+            @li
+                Support for Scala-Native 0.5.0
+            @li
+                Dropped support for Scala 3.x versions before 3.3.1
+            @li
+                Dropped support for Scala 2.x versions before 2.12.x
+
     @sect{3.0.2}
         @ul
             @li

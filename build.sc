@@ -13,15 +13,12 @@ import $ivy.`com.github.lolgab::mill-mima::0.0.23`
 import de.tobiasroeser.mill.vcs.version.VcsVersion
 import com.github.lolgab.mill.mima._
 
-val scala33 = "3.3.1"
-val scala32 = "3.2.2"
+val scala3 = "3.3.1"
 val scala213 = "2.13.10"
 val scala212 = "2.12.17"
-val scala211 = "2.11.12"
 val scalaJS1 = "1.12.0"
-val scalaNative04 = "0.4.9"
-val crossVersions = Seq(scala33, scala32, scala213, scala212, scala211)
-val scalaNativeCrossVersions = crossVersions.filterNot(v => v == scala32 || v == scala33  )
+val scalaNative04 = "0.5.0"
+val crossVersions = Seq(scala3, scala213, scala212)
 
 object fastparse extends Module{
   object jvm extends Cross[fastparseJvmModule](crossVersions)
@@ -48,7 +45,7 @@ object fastparse extends Module{
   }
 
 
-  object native extends Cross[fastparseNativeModule](scalaNativeCrossVersions)
+  object native extends Cross[fastparseNativeModule](crossVersions)
   trait fastparseNativeModule extends FastparseModule with ScalaNativeModule {
     def scalaNativeVersion = scalaNative04
 
@@ -58,8 +55,8 @@ object fastparse extends Module{
 
 trait FastparseModule extends CommonCrossModule with Mima{
   def ivyDeps = Agg(
-    ivy"com.lihaoyi::sourcecode::0.3.0",
-    ivy"com.lihaoyi::geny::1.0.0"
+    ivy"com.lihaoyi::sourcecode::0.4.0",
+    ivy"com.lihaoyi::geny::1.1.0"
   )
 
   def compileIvyDeps =
@@ -99,6 +96,10 @@ trait FastparseModule extends CommonCrossModule with Mima{
     Seq(PathRef(file))
   }
 
+  def mimaReportBinaryIssues() =
+    if (this.isInstanceOf[ScalaNativeModule] || this.isInstanceOf[ScalaJSModule]) T.command()
+    else super.mimaReportBinaryIssues()
+
   def mimaPreviousVersions = Seq(
     VcsVersion
       .vcsState()
@@ -122,7 +123,7 @@ object scalaparse extends Module{
   object jvm extends Cross[ScalaParseJvmModule](crossVersions)
   trait ScalaParseJvmModule extends ExampleParseJvmModule
 
-  object native extends Cross[ScalaParseNativeModule](scalaNativeCrossVersions)
+  object native extends Cross[ScalaParseNativeModule](crossVersions)
   trait ScalaParseNativeModule extends ExampleParseNativeModule
 }
 
@@ -133,7 +134,7 @@ object cssparse extends Module{
   object jvm extends Cross[CssParseJvmModule](crossVersions)
   trait CssParseJvmModule extends ExampleParseJvmModule
 
-  object native extends Cross[CssParseNativeModule](scalaNativeCrossVersions)
+  object native extends Cross[CssParseNativeModule](crossVersions)
 
   trait CssParseNativeModule extends ExampleParseNativeModule
 }
@@ -145,7 +146,7 @@ object pythonparse extends Module{
   object jvm extends Cross[PythonParseJvmModule](crossVersions)
   trait PythonParseJvmModule extends ExampleParseJvmModule
 
-  object native extends Cross[PythonParseNativeModule](scalaNativeCrossVersions)
+  object native extends Cross[PythonParseNativeModule](crossVersions)
   trait PythonParseNativeModule extends ExampleParseNativeModule
 }
 
@@ -196,12 +197,12 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule with Platfor
 
   def sources = T.sources {
     super.sources() ++
-    Agg.when(scalaVersion() != scala211)(PathRef(millSourcePath / "src-2.12+"))
+    Agg(PathRef(millSourcePath / "src-2.12+"))
   }
 }
 
 trait CommonTestModule extends ScalaModule with TestModule.Utest{
-  def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.8.1")
+  def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.8.3")
 
   override def scalacOptions =
     super.scalacOptions() ++
@@ -223,26 +224,16 @@ object perftests extends Module{
   }
 
   object benchScala33 extends PerfTestModule {
-    def scalaVersion0 = scala33
+    def scalaVersion0 = scala3
     def sources = T.sources { bench2.sources() }
     def moduleDeps = Seq(
-      scalaparse.jvm(scala33).test,
-      pythonparse.jvm(scala33).test,
-      cssparse.jvm(scala33).test,
-      fastparse.jvm(scala33).test,
+      scalaparse.jvm(scala3).test,
+      pythonparse.jvm(scala3).test,
+      cssparse.jvm(scala3).test,
+      fastparse.jvm(scala3).test,
     )
   }
 
-  object benchScala32 extends PerfTestModule {
-    def scalaVersion0 = scala32
-    def sources = T.sources{ bench2.sources() }
-    def moduleDeps = Seq(
-      scalaparse.jvm(scala32).test,
-      pythonparse.jvm(scala32).test,
-      cssparse.jvm(scala32).test,
-      fastparse.jvm(scala32).test,
-    )
-  }
 
   object compare extends PerfTestModule {
     def scalaVersion0 = scala212
@@ -275,7 +266,7 @@ object perftests extends Module{
         fastparse.jvm(scalaVersion0).test.resources()
     }
 
-    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.8.1")
+    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.8.3")
   }
 }
 
