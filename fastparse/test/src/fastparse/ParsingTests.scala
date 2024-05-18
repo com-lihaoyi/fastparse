@@ -5,7 +5,7 @@ import utest._
 object ParsingTests extends TestSuite{
 
 
-  import Parsed.{Success, Failure}
+  import Parsed.Success
 
   def check[T](parser: P[_] => P[T], input: (String, Int), rhs: Parsed[T]) = {
     val (str, index) = input
@@ -105,7 +105,6 @@ object ParsingTests extends TestSuite{
     }
     test("fail"){
       import fastparse._
-      import NoWhitespace._
       def fail1[T: P] = Fail.!
       val wat = "Shouldn't success"
       val Parsed.Failure(_, _, _) = parse(wat, fail1(_))
