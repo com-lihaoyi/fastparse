@@ -16,7 +16,7 @@ import com.github.lolgab.mill.mima._
 val scala3 = "3.3.3"
 val scala213 = "2.13.14"
 val scala212 = "2.12.19"
-val scalaJS1 = "1.12.0"
+val scalaJS1 = "1.16.0"
 val scalaNative04 = "0.5.0"
 val crossVersions = Seq(scala3, scala213, scala212)
 
