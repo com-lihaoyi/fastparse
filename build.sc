@@ -208,6 +208,7 @@ trait CommonTestModule extends ScalaModule with TestModule.Utest{
     super.scalacOptions() ++
     Agg.when(scalaVersion() == scala213)(
       "-Xfatal-warnings",
+      "-Xlint:unused",
       "-Wconf:cat=feature:s,cat=deprecation:s"
     )
 }
