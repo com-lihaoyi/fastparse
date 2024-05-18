@@ -1,5 +1,5 @@
 package fastparse.internal
 
 object NoWarn{
-  class nowarn(msg: String = "")
+  type nowarn = scala.annotation.nowarn
 }
