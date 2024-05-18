@@ -5,7 +5,7 @@ lazy val readme = scalatex.ScalatexReadme(
   source = "Readme",
   autoResources = List("out.js", "JProfiler.png")
 ).settings(
-  (resources in Compile) += baseDirectory.value/".."/"out"/"demo"/"fullOpt.dest"/"out.js",
+  (Compile / resources) += baseDirectory.value/".."/"out"/"demo"/"fullOpt.dest"/"out.js",
   scalaVersion := "2.12.18"
 )
 
