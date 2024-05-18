@@ -1,7 +1,7 @@
 import fastparse.internal._
-import fastparse.internal.{Instrument, Logger}
 
-import language.experimental.macros
+import scala.language.experimental.macros
+import scala.language.implicitConversions
 
 package object fastparse extends fastparse.SharedPackageDefs {
   /**

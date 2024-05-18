@@ -1,10 +1,9 @@
 package fastparse
 
 import fastparse._
-import fastparse.internal.Util
+import fastparse.internal.{Msgs, Util}
 
-import scala.annotation.{Annotation, switch, tailrec}
-import fastparse.internal.Msgs
+import scala.annotation.{switch, tailrec}
 
 trait Whitespace{
   def apply(ctx: ParsingRun[_]): ParsingRun[Unit]
