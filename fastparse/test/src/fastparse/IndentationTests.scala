@@ -2,7 +2,6 @@ package test.fastparse
 
 import utest._
 import fastparse._
-import fastparse.internal.Util
 
 /**
   * Same as MathTests, but demonstrating the use of whitespace

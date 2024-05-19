@@ -3,15 +3,17 @@ package test.fastparse
 
 import fastparse.Implicits
 
+import scala.annotation.nowarn
+
 /**
   * Make sure the type-level logic does the right thing. Doesn't
   * actually need to execute; compiling is enough!
   */
 object TypeTests {
   class P[T]{
-    def ~[V, R](other: P[V])(implicit sum: Implicits.Sequencer[T, V, R]): P[R] = new P[R]
-    def rep[R](implicit rep: Implicits.Repeater[T, R]): P[R] = new P[R]
-    def ?[R](implicit rep: Implicits.Optioner[T, R]): P[R] = new P[R]
+    def ~[V, R](other: P[V])(implicit @nowarn("msg=never used") sum: Implicits.Sequencer[T, V, R]): P[R] = new P[R]
+    def rep[R](implicit @nowarn("msg=never used") rep: Implicits.Repeater[T, R]): P[R] = new P[R]
+    def ?[R](implicit @nowarn("msg=never used") rep: Implicits.Optioner[T, R]): P[R] = new P[R]
   }
 
   def P[T] = new P[T]

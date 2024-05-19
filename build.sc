@@ -13,11 +13,11 @@ import $ivy.`com.github.lolgab::mill-mima::0.0.23`
 import de.tobiasroeser.mill.vcs.version.VcsVersion
 import com.github.lolgab.mill.mima._
 
-val scala3 = "3.3.1"
-val scala213 = "2.13.10"
-val scala212 = "2.12.17"
-val scalaJS1 = "1.12.0"
-val scalaNative04 = "0.5.0"
+val scala3 = "3.3.3"
+val scala213 = "2.13.14"
+val scala212 = "2.12.19"
+val scalaJS1 = "1.16.0"
+val scalaNative05 = "0.5.1"
 val crossVersions = Seq(scala3, scala213, scala212)
 
 object fastparse extends Module{
@@ -47,7 +47,7 @@ object fastparse extends Module{
 
   object native extends Cross[fastparseNativeModule](crossVersions)
   trait fastparseNativeModule extends FastparseModule with ScalaNativeModule {
-    def scalaNativeVersion = scalaNative04
+    def scalaNativeVersion = scalaNative05
 
     object test extends ScalaNativeTests with CommonTestModule
   }
@@ -112,7 +112,7 @@ trait FastparseModule extends CommonCrossModule with Mima{
     else super.mimaPreviousArtifacts()
 
   def mimaBinaryIssueFilters = super.mimaBinaryIssueFilters() ++ Seq(
-    ProblemFilter.exclude[IncompatibleResultTypeProblem]("fastparse.Parsed#Failure.unapply")
+    ProblemFilter.exclude[IncompatibleResultTypeProblem]("fastparse.Parsed#Failure.unapply"),
   )
 }
 
@@ -170,7 +170,7 @@ trait ExampleParseJvmModule extends CommonCrossModule{
 }
 
 trait ExampleParseNativeModule extends CommonCrossModule with ScalaNativeModule{
-  def scalaNativeVersion = scalaNative04
+  def scalaNativeVersion = scalaNative05
   def moduleDeps = Seq(fastparse.native())
 
   object test extends ScalaNativeTests with CommonTestModule
@@ -208,6 +208,7 @@ trait CommonTestModule extends ScalaModule with TestModule.Utest{
     super.scalacOptions() ++
     Agg.when(scalaVersion() == scala213)(
       "-Xfatal-warnings",
+      "-Xlint:unused",
       "-Wconf:cat=feature:s,cat=deprecation:s"
     )
 }

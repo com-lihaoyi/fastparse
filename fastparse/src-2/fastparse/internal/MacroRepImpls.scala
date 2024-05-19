@@ -31,7 +31,7 @@ object MacroRepImpls{
     val parsedMsg = TermName(c.freshName("parsedMsg"))
     val lastAgg = TermName(c.freshName("lastAgg"))
     val parsedAgg = TermName(c.freshName("parsedAgg"))
-    val ((endSnippet, aggregateSnippet), minCut) = min match{
+    val ((endSnippet, _), minCut) = min match{
       case None =>
         q"""
           $ctx1.freshSuccess($repeater1.result($acc), $startIndex, $originalCut)
@@ -47,22 +47,25 @@ object MacroRepImpls{
         q"""$originalCut && ($count < $min1)"""
     }
 
-    val wsSnippet = whitespace match{
-      case None => q"$rec($beforeSepIndex, $count + 1, $parsedAgg)"
-      case Some(ws) =>
-        q"""
-
-        @fastparse.internal.NoWarn.nowarn
-        val isNotNoWhitespace = $ws ne _root_.fastparse.NoWhitespace.noWhitespaceImplicit
-        if (isNotNoWhitespace) {
-           _root_.fastparse.internal.Util.consumeWhitespace($ws, $ctx1)
-        }
+    val rhsSnippet =
+      q"""
         if (!$ctx1.isSuccess && $ctx1.cut) $ctx1.asInstanceOf[_root_.fastparse.ParsingRun[scala.Nothing]]
-        else{
+        else {
           $ctx1.cut = false
           $rec($beforeSepIndex, $count + 1, $parsedAgg)
         }
-        """
+       """
+
+    val wsSnippet = whitespace match{
+      case None => q"$rec($beforeSepIndex, $count + 1, $parsedAgg)"
+      case Some(ws) =>
+        if (ws.tpe =:= typeOf[fastparse.NoWhitespace.noWhitespaceImplicit.type])
+          rhsSnippet
+        else
+          q"""
+           _root_.fastparse.internal.Util.consumeWhitespace($ws, $ctx1)
+           $rhsSnippet
+          """
     }
 
     q"""

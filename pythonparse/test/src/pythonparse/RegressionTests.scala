@@ -1,12 +1,10 @@
 package pythonparse
 import utest._
-import fastparse._
 
 object RegressionTests extends TestSuite{
   import Ast.expr._
   import Ast.stmt._
   import Ast.expr_context._
-  import Ast.cmpop._
   import Ast.operator._
   import Ast.unaryop._
   import Ast._

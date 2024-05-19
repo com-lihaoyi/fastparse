@@ -1,7 +1,6 @@
 package scalaparse.unit
 
-import scalaparse.{TestUtil, Scala}
-import fastparse._
+import scalaparse.TestUtil
 import utest._
 import TestUtil._
 object SuccessTests extends TestSuite{
@@ -1305,7 +1304,6 @@ object SuccessTests extends TestSuite{
     val d1 = "dca5"
     val d2 = "20ac"
     val d3 = "d83c"
-    val d4 = "dca5"
     test - check(
       s"""object U{
         |  Seq(

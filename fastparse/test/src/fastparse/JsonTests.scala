@@ -2,7 +2,6 @@
 package test.fastparse
 
 import fastparse._
-import fastparse._
 import utest._
 
 object Js {

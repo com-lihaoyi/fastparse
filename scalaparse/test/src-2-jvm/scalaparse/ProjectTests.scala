@@ -1,13 +1,11 @@
 package scalaparse
 
 import java.io.File
-import java.nio.file.{Files, Path, Paths}
-
-
-
+import java.nio.file.{Files, Paths}
 import concurrent.ExecutionContext.Implicits.global
 import utest._
 
+import scala.annotation.nowarn
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
@@ -16,7 +14,8 @@ object ProjectTests extends TestSuite{
   println("running")
   def tests = this{
 
-    def checkDir(path: String, filter: String => Boolean = _ => true) = {
+    @nowarn
+    def checkDir(path: String, filter: String => Boolean = _ => true): Unit = {
       println("Checking Dir " + path)
       def listFiles(s: File): Seq[String] = {
         val (dirs, files) = Option(s.listFiles).getOrElse(Array[File]()).partition(_.isDirectory)
@@ -53,7 +52,6 @@ object ProjectTests extends TestSuite{
 
       if (scala.util.Properties.javaVersion.startsWith("1.8")) {
         val repo = "https://github.com/" + testPath.value.last
-        import sys.process._
         val name = repo.split("/").last
         println("CLONING?")
         val path = Paths.get("out", "repos", name)

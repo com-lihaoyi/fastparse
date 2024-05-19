@@ -13,7 +13,7 @@ object ExampleTests extends TestSuite{
   val tests = Tests{
     test("basic"){
       test("simple"){
-        import fastparse._, NoWhitespace._
+        import fastparse._
         def parseA[$: P] = P("a")
 
         val Parsed.Success(value, successIndex) = parse("a", parseA(_))
@@ -243,6 +243,7 @@ object ExampleTests extends TestSuite{
         def even[$: P] = P( digits.filter(_ % 2 == 0) )
         val Parsed.Success(12, _) = parse("12", even(_))
         val failure = parse("123", even(_)).asInstanceOf[Parsed.Failure]
+        assert(!failure.isSuccess)
       }
       test("opaque"){
         def digit[$: P] = CharIn("0-9")
