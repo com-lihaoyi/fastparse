@@ -112,7 +112,7 @@ trait FastparseModule extends CommonCrossModule with Mima{
     else super.mimaPreviousArtifacts()
 
   def mimaBinaryIssueFilters = super.mimaBinaryIssueFilters() ++ Seq(
-    ProblemFilter.exclude[IncompatibleResultTypeProblem]("fastparse.Parsed#Failure.unapply")
+    ProblemFilter.exclude[IncompatibleResultTypeProblem]("fastparse.Parsed#Failure.unapply"),
   )
 }
 

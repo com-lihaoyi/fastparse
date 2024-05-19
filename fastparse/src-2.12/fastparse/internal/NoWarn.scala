@@ -1,5 +1,6 @@
 package fastparse.internal
 
 object NoWarn{
-  type nowarn = scala.annotation.nowarn
+  @deprecated("Use scala.annotation.nowarn instead", "3.1.1")
+  class nowarn(msg: String = "")
 }
