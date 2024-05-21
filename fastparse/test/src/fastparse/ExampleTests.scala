@@ -3,11 +3,13 @@ package test.fastparse
 import utest._
 import fastparse._
 import fastparse.internal.Logger
+
+import scala.annotation.nowarn
 /**
   * Demonstrates simultaneously parsing and
   * evaluating simple arithmetic expressions
   */
-@fastparse.internal.NoWarn.nowarn("msg=comparing values of types Unit and Unit using `==` will always yield true")
+@nowarn("msg=comparing values of types Unit and Unit using `==` will always yield true")
 object ExampleTests extends TestSuite{
   import fastparse.NoWhitespace._
   val tests = Tests{
@@ -17,6 +19,7 @@ object ExampleTests extends TestSuite{
         def parseA[$: P] = P("a")
 
         val Parsed.Success(value, successIndex) = parse("a", parseA(_))
+
         assert(value == (), successIndex == 1)
 
         val f @ Parsed.Failure(label, index, extra) = parse("b", parseA(_))

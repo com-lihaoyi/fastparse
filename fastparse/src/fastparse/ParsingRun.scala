@@ -1,6 +1,6 @@
 package fastparse
 
-import fastparse.internal.{Instrument, Lazy, Msgs, Util}
+import fastparse.internal.{Instrument, Msgs}
 
 /**
   * Models an in-progress parsing run; contains all the mutable state that may
@@ -40,7 +40,7 @@ import fastparse.internal.{Instrument, Lazy, Msgs, Util}
   *                         `P(...)` parser.
   * @param terminalMsgs When tracing is enabled, this collects up all the
   *                         upper-most failures that happen at [[traceIndex]]
-  *                         (in [[Lazy]] wrappers) so they can be shown to the
+  *                         (in [[fastparse.internal.Lazy]] wrappers) so they can be shown to the
   *                         user at end-of-parse as suggestions for what could
   *                         make the parse succeed. For terminal parsers like
   *                         [[LiteralStr]], it just aggregate's the string
@@ -60,7 +60,7 @@ import fastparse.internal.{Instrument, Lazy, Msgs, Util}
   *                         we only aggregate the portion of the parser msg
   *                         that takes place after `traceIndex`
   * @param failureStack     The stack of named `P(...)` parsers in effect when
-  *                         the failure occured; only constructed when tracing
+  *                         the failure occurred; only constructed when tracing
   *                         is enabled via `traceIndex != -1`
   * @param isSuccess        Whether or not the parse is currently successful
   * @param logDepth         How many nested `.log` calls are currently surrounding us.
@@ -316,7 +316,7 @@ final class ParsingRun[+T](val input: ParserInput,
     this.asInstanceOf[ParsingRun[Nothing]]
   }
 
-  def checkForDrop() = !noDropBuffer && cut
+  def checkForDrop(): Boolean = !noDropBuffer && cut
 }
 
 object ParsingRun{

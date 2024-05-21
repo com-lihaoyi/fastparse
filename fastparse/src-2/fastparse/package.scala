@@ -284,7 +284,6 @@ package object fastparse extends fastparse.SharedPackageDefs {
       val startTerminals = ctx.terminalMsgs
       parse0()
       ctx.noDropBuffer = oldNoCut
-      val msg = ctx.shortMsg
 
       val res =
         if (ctx.isSuccess) ctx.freshFailure(startPos)
@@ -320,7 +319,6 @@ package object fastparse extends fastparse.SharedPackageDefs {
     ctx.noDropBuffer = true
     parse
     ctx.noDropBuffer = oldNoCut
-    val msg = ctx.shortMsg
 
     val res =
       if (ctx.isSuccess) ctx.freshSuccessUnit(startPos)

@@ -1,7 +1,6 @@
 package fastparse.internal
 
 import scala.reflect.macros.blackbox.Context
-import language.experimental.macros
 
 /**
   * Implementations of the various `.rep`/`.repX` overloads. The most common
@@ -115,7 +114,6 @@ object MacroRepImpls{
   def repXMacro1[T: c.WeakTypeTag, V: c.WeakTypeTag](c: Context)
                                                     (repeater: c.Tree,
                                                      ctx: c.Tree): c.Tree = {
-    import c.universe._
     MacroRepImpls.repXMacro0[T, V](c)(None, None)(repeater, ctx)
   }
 
@@ -123,7 +121,6 @@ object MacroRepImpls{
                                                     (min: c.Tree)
                                                     (repeater: c.Tree,
                                                      ctx: c.Tree): c.Tree = {
-    import c.universe._
     MacroRepImpls.repXMacro0[T, V](c)(None, Some(min))(repeater, ctx)
   }
 
@@ -131,7 +128,6 @@ object MacroRepImpls{
                                                       (repeater: c.Tree,
                                                        whitespace: c.Tree,
                                                        ctx: c.Tree): c.Tree = {
-    import c.universe._
     MacroRepImpls.repXMacro0[T, V](c)(Some(whitespace), None)(repeater, ctx)
   }
 
@@ -140,7 +136,6 @@ object MacroRepImpls{
                                                       (repeater: c.Tree,
                                                        whitespace: c.Tree,
                                                        ctx: c.Tree): c.Tree = {
-    import c.universe._
     MacroRepImpls.repXMacro0[T, V](c)(Some(whitespace), Some(min))(repeater, ctx)
   }
 }

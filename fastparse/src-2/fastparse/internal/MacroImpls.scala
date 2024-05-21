@@ -2,7 +2,6 @@ package fastparse.internal
 
 import fastparse.{EagerOps, Implicits, ParserInput, ParsingRun}
 
-import scala.annotation.tailrec
 import scala.reflect.macros.blackbox.Context
 
 /**

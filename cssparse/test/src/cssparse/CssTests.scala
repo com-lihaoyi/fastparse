@@ -22,7 +22,7 @@ object CssTests extends TestSuite {
             |
           """.stripMargin,
           CssRulesParser.ruleList(_)
-        )
+        ) : @unchecked
 
         assert(
           value1 ==
@@ -54,7 +54,7 @@ object CssTests extends TestSuite {
             |      -ms-text-size-adjust: 100%;
             |}
             |
-          """.stripMargin, CssRulesParser.ruleList(_))
+          """.stripMargin, CssRulesParser.ruleList(_)) : @unchecked
 
         assert(
           value2 ==
@@ -81,7 +81,7 @@ object CssTests extends TestSuite {
             |          box-shadow: none !important;
             |        }
             |
-          """.stripMargin, CssRulesParser.ruleList(_))
+          """.stripMargin, CssRulesParser.ruleList(_)) : @unchecked
 
         val expected = RuleList(Seq(
           QualifiedRule(
@@ -108,7 +108,7 @@ object CssTests extends TestSuite {
             |          background-color: #31b0d5;
             |  }
             |
-          """.stripMargin, CssRulesParser.ruleList(_))
+          """.stripMargin, CssRulesParser.ruleList(_)) : @unchecked
 
         assert(
           value4 ==
@@ -128,7 +128,7 @@ object CssTests extends TestSuite {
       }
 
       test("test5"){
-        val Parsed.Success(value5, index5) = parse(
+        val Parsed.Success(value5, _) = parse(
           """
             |
             |   [hidden],
@@ -136,7 +136,7 @@ object CssTests extends TestSuite {
             |     display: none;
             |   }
             |
-          """.stripMargin, CssRulesParser.ruleList(_))
+          """.stripMargin, CssRulesParser.ruleList(_)) : @unchecked
 
         assert(value5 == RuleList(Seq(
           QualifiedRule(
@@ -148,7 +148,7 @@ object CssTests extends TestSuite {
       }
 
       test("test6"){
-        val Parsed.Success(value6, index6) = parse(
+        val Parsed.Success(value6, _) = parse(
           """
             |
             |@media (min-width: 768px) {
@@ -157,7 +157,7 @@ object CssTests extends TestSuite {
             |          }
             |        }
             |
-          """.stripMargin, CssRulesParser.ruleList(_))
+          """.stripMargin, CssRulesParser.ruleList(_)) : @unchecked
 
         assert(value6 == RuleList(Seq(
           AtRule("media", Seq(
@@ -170,7 +170,7 @@ object CssTests extends TestSuite {
       }
 
       test("test7"){
-        val Parsed.Success(value7, index7) = parse(
+        val Parsed.Success(value7, _) = parse(
           """|
              |@rule {
              |        unicode-range: U+26;                 /* single codepoint */
@@ -179,7 +179,7 @@ object CssTests extends TestSuite {
              |        unicode-range: U+4??;                /* wildcard range */
              |        unicode-range: U+0025-00FF, U+4??;
              |}
-          """.stripMargin, CssRulesParser.ruleList(_))
+          """.stripMargin, CssRulesParser.ruleList(_)) : @unchecked
         assert(value7 == RuleList(Seq(
           AtRule("rule", Seq(), Some(Left(
             DeclarationList(Seq(
@@ -202,7 +202,7 @@ object CssTests extends TestSuite {
             |  /* test comment */
             |}
             |
-          """.stripMargin, CssRulesParser.ruleList(_))
+          """.stripMargin, CssRulesParser.ruleList(_)) : @unchecked
 
         assert(
           value2 ==
