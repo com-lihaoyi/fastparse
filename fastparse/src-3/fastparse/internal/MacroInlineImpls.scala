@@ -345,7 +345,7 @@ object MacroInlineImpls {
             output.append(Left(s(i)))
           case '-' =>
             i += 1
-            val Left(last) = output.remove(output.length - 1)
+            val Left(last) = output.remove(output.length - 1) : @unchecked
             output.append(Right((last, s(i))))
           case c => output.append(Left(c))
         }

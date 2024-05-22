@@ -96,6 +96,14 @@ trait FastparseModule extends CommonCrossModule with Mima{
     Seq(PathRef(file))
   }
 
+  override def scalacOptions =
+    super.scalacOptions() ++
+      Agg.when(scalaVersion() != scala3)(
+        "-Xfatal-warnings",
+        "-Xlint:unused",
+        "-Wconf:cat=feature:s,cat=deprecation:s"
+      )
+
   def mimaReportBinaryIssues() =
     if (this.isInstanceOf[ScalaNativeModule] || this.isInstanceOf[ScalaJSModule]) T.command()
     else super.mimaReportBinaryIssues()
@@ -206,7 +214,7 @@ trait CommonTestModule extends ScalaModule with TestModule.Utest{
 
   override def scalacOptions =
     super.scalacOptions() ++
-    Agg.when(scalaVersion() == scala213)(
+    Agg.when(scalaVersion() != scala3)(
       "-Xfatal-warnings",
       "-Xlint:unused",
       "-Wconf:cat=feature:s,cat=deprecation:s"

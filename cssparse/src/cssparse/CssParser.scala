@@ -141,6 +141,7 @@ object CssRulesParser {
         case (ident, Some((token, Ast.StringToken(string)))) => (ident, Some(token), Some(string))
         case (ident, Some((token, Ast.IdentToken(string)))) => (ident, Some(token), Some(string))
         case (ident, None) => (ident, None, None)
+        case _ => throw new IllegalArgumentException("Should not happen.")
       })
     }
   }
@@ -204,8 +205,9 @@ object CssRulesParser {
   def atRule[$: P] = P( complexAtRule | declAtRule | (simpleAtRule ~ ";") )
 
   def qualifiedRule[$: P] = P( ((selector ~ ws) | (!"{" ~ componentValue).rep) ~ "{" ~ declarationList ~ ws ~ "}" ).map{
-    case (values: Seq[Option[Ast.ComponentValue]], block) => Ast.QualifiedRule(Right(values.flatten), block)
+    case (values: Seq[Option[Ast.ComponentValue]] @unchecked, block) => Ast.QualifiedRule(Right(values.flatten), block)
     case (selector: Ast.Selector, block) => Ast.QualifiedRule(Left(selector), block)
+    case _ => throw new IllegalArgumentException("Should not happen.")
   }
 
   def ruleList[$: P]: P[Ast.RuleList] = P( (whitespaceToken | atRule | qualifiedRule).rep ).map{

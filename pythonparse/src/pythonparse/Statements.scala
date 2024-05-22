@@ -136,7 +136,7 @@ class Statements(indent: Int){
     def lastElse = P( (space_indents ~~ kw("else") ~/ ":" ~~ suite).? )
     P( firstIf ~~ elifs ~~ lastElse ).map{
       case (test, body, elifs, orelse) =>
-        val (init :+ last) = (test, body) +: elifs
+        val (init :+ last) = (test, body) +: elifs : @unchecked
         val (last_test, last_body) = last
         init.foldRight(Ast.stmt.If(last_test, last_body, orelse.toSeq.flatten)){
           case ((test, body), rhs) => Ast.stmt.If(test, body, Seq(rhs))
