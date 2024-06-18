@@ -20,7 +20,7 @@
   )
 )
 
-@sect("FastParse 3.1.0", "Fast to write, Fast running Parsers in Scala")
+@sect("FastParse 3.1.1", "Fast to write, Fast running Parsers in Scala")
     @GettingStarted()
 
     @WritingParsers()

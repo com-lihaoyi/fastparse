@@ -50,12 +50,12 @@
         To begin using FastParse, add the following to your build config
 
     @hl.scala
-        "com.lihaoyi" %% "fastparse" % "3.1.0" // SBT
-        ivy"com.lihaoyi::fastparse:3.1.0" // Mill
+        "com.lihaoyi" %% "fastparse" % "3.1.1" // SBT
+        ivy"com.lihaoyi::fastparse:3.1.1" // Mill
 
     @p
         To use with Scala.js, you'll need
     @hl.scala
-        "com.lihaoyi" %%% "fastparse" % "3.1.0" // SBT
-        ivy"com.lihaoyi::fastparse::3.1.0" // Mill
+        "com.lihaoyi" %%% "fastparse" % "3.1.1" // SBT
+        ivy"com.lihaoyi::fastparse::3.1.1" // Mill
 
