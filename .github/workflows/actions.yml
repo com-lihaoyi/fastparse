@@ -106,3 +106,5 @@ jobs:
               --release true \
               --signed true
           fi
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
