@@ -21,6 +21,10 @@ library, check out the following blog post:
 
 - [Easy Parsing with Parser Combinators](http://www.lihaoyi.com/post/EasyParsingwithParserCombinators.html)
 
+The following post gives a good overview of the design of FastParse:
+
+- [Fastparse 2: Even Faster Scala Parser Combinators](https://www.lihaoyi.com/post/Fastparse2EvenFasterScalaParserCombinators.html)
+
 This readme contains some developer docs, if you intend on working on the
 fastparse repo, not just using it as a library.
 
