@@ -1,3 +1,4 @@
+package build
 import mill._
 import scalalib._
 import scalajslib._
