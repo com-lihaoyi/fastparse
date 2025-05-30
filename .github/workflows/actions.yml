@@ -21,8 +21,7 @@ jobs:
           java-version: "11"
           distribution: "temurin"
       - name: Run tests
-        run: |
-          ./mill -i __.js.__.test
+        run: ./mill -i __.js.__.test
   test-native:
     runs-on: ubuntu-22.04
     steps:
@@ -33,8 +32,7 @@ jobs:
           java-version: "11"
           distribution: "temurin"
       - name: Run tests
-        run: |
-          ./mill -i __.native.__.test
+        run: ./mill -i __.native.__.test
   test-jvm:
     runs-on: ubuntu-22.04
     steps:
@@ -45,8 +43,7 @@ jobs:
           java-version: "11"
           distribution: "temurin"
       - name: Run tests
-        run: |
-          ./mill -i __.jvm.__.test
+        run: ./mill -i __.jvm.__.test
   check-binary-compatibility:
     runs-on: ubuntu-22.04
     steps:
