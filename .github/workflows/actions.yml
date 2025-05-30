@@ -18,7 +18,7 @@ jobs:
       - uses: coursier/cache-action@v6
       - uses: actions/setup-java@v3
         with:
-          java-version: "8"
+          java-version: "11"
           distribution: "temurin"
       - name: Run tests
         run: |
@@ -32,7 +32,7 @@ jobs:
       - uses: coursier/cache-action@v6
       - uses: actions/setup-java@v3
         with:
-          java-version: "8"
+          java-version: "11"
           distribution: "temurin"
       - name: Run tests
         run: |
@@ -46,7 +46,7 @@ jobs:
       - uses: coursier/cache-action@v6
       - uses: actions/setup-java@v3
         with:
-          java-version: "8"
+          java-version: "11"
           distribution: "temurin"
       - name: Run tests
         run: |
@@ -62,7 +62,7 @@ jobs:
       - uses: coursier/cache-action@v6
       - uses: actions/setup-java@v3
         with:
-          java-version: "8"
+          java-version: "11"
           distribution: "temurin"
       - name: Check Binary Compatibility
         run: ./mill -i --disable-ticker __.mimaReportBinaryIssues
@@ -101,4 +101,3 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: ${{ github.ref }}
           draft: false
-                     
