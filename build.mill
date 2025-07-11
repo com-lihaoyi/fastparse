@@ -1,7 +1,7 @@
-//| mill-version: 1.0.0-RC1-24-d74b52
+//| mill-version: 1.0.0
 //| mill-jvm-opts: ["-XX:NonProfiledCodeHeapSize=500m", "-XX:ReservedCodeCacheSize=1000m"]
 //| mvnDeps:
-//| - com.github.lolgab::mill-mima_mill1.0.0-RC1:0.2.0-M1
+//| - com.github.lolgab::mill-mima_mill1:0.2.0
 package build
 import mill._
 import scalalib._
@@ -11,9 +11,9 @@ import publish._
 import mill.api.Result
 import mill.util.Jvm.createJar
 
-import mill.scalalib.api.JvmWorkerUtil.isScala3
+import mill.javalib.api.JvmWorkerUtil.isScala3
 
-import mill.main.VcsVersion
+import mill.util.VcsVersion
 import com.github.lolgab.mill.mima._
 
 val scala3 = "3.3.3"
@@ -38,7 +38,7 @@ object fastparse extends Module{
         case tag if vcsState.commitsSinceLastTag == 0 =>
           val baseUrl = pomSettings().url.replace("github.com", "raw.githubusercontent.com")
           val sourcesOptionName = if(isScala3(crossScalaVersion)) "-scalajs-mapSourceURI" else "-P:scalajs:mapSourceURI"
-          s"$sourcesOptionName:${Task.workspace.toIO.toURI}->$baseUrl/$tag/"
+          s"$sourcesOptionName:${mill.api.BuildCtx.workspaceRoot.toIO.toURI}->$baseUrl/$tag/"
       }
     }
 
