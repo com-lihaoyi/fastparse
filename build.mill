@@ -1,3 +1,7 @@
+//| mill-version: 1.0.0
+//| mill-jvm-opts: ["-XX:NonProfiledCodeHeapSize=500m", "-XX:ReservedCodeCacheSize=1000m"]
+//| mvnDeps:
+//| - com.github.lolgab::mill-mima_mill1:0.2.0
 package build
 import mill._
 import scalalib._
@@ -5,13 +9,11 @@ import scalajslib._
 import scalanativelib._
 import publish._
 import mill.api.Result
-import mill.modules.Jvm.createJar
+import mill.util.Jvm.createJar
 
-import mill.scalalib.api.ZincWorkerUtil.isScala3
-import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.4.0`
-import $ivy.`com.github.lolgab::mill-mima::0.0.23`
+import mill.javalib.api.JvmWorkerUtil.isScala3
 
-import de.tobiasroeser.mill.vcs.version.VcsVersion
+import mill.util.VcsVersion
 import com.github.lolgab.mill.mima._
 
 val scala3 = "3.3.3"
@@ -30,13 +32,13 @@ object fastparse extends Module{
   object js extends Cross[fastparseJsModule](crossVersions)
   trait fastparseJsModule extends FastparseModule with ScalaJSModule {
     def scalaJSVersion = scalaJS1
-    private def sourceMapOptions = T.task {
+    private def sourceMapOptions = Task.Anon {
       val vcsState = VcsVersion.vcsState()
       vcsState.lastTag.collect {
         case tag if vcsState.commitsSinceLastTag == 0 =>
           val baseUrl = pomSettings().url.replace("github.com", "raw.githubusercontent.com")
           val sourcesOptionName = if(isScala3(crossScalaVersion)) "-scalajs-mapSourceURI" else "-P:scalajs:mapSourceURI"
-          s"$sourcesOptionName:${T.workspace.toIO.toURI}->$baseUrl/$tag/"
+          s"$sourcesOptionName:${mill.api.BuildCtx.workspaceRoot.toIO.toURI}->$baseUrl/$tag/"
       }
     }
 
@@ -55,17 +57,17 @@ object fastparse extends Module{
 }
 
 trait FastparseModule extends CommonCrossModule with Mima{
-  def ivyDeps = Agg(
-    ivy"com.lihaoyi::sourcecode::0.4.0",
-    ivy"com.lihaoyi::geny::1.1.0"
+  def mvnDeps = Seq(
+    mvn"com.lihaoyi::sourcecode::0.4.0",
+    mvn"com.lihaoyi::geny::1.1.0"
   )
 
-  def compileIvyDeps =
-    if(isScala3(crossScalaVersion)) Agg.empty[Dep]
-    else Agg(ivy"org.scala-lang:scala-reflect:$crossScalaVersion")
+  def compileMvnDeps =
+    if(isScala3(crossScalaVersion)) Seq.empty[Dep]
+    else Seq(mvn"org.scala-lang:scala-reflect:$crossScalaVersion")
 
-  def generatedSources = T{
-    val dir = T.ctx().dest
+  def generatedSources = Task {
+    val dir = Task.ctx().dest
     val file = dir/"fastparse"/"SequencerGen.scala"
     // Only go up to 21, because adding the last element makes it 22
     val tuples = (2 to 21).map{ i =>
@@ -99,14 +101,14 @@ trait FastparseModule extends CommonCrossModule with Mima{
 
   override def scalacOptions =
     super.scalacOptions() ++
-      Agg.when(scalaVersion() != scala3)(
+      Seq(
         "-Xfatal-warnings",
         "-Xlint:unused",
         "-Wconf:cat=feature:s,cat=deprecation:s"
-      )
+      ).filter(_ => scalaVersion() != scala3)
 
   def mimaReportBinaryIssues() =
-    if (this.isInstanceOf[ScalaNativeModule] || this.isInstanceOf[ScalaJSModule]) T.command()
+    if (this.isInstanceOf[ScalaNativeModule] || this.isInstanceOf[ScalaJSModule]) Task.Command {}
     else super.mimaReportBinaryIssues()
 
   def mimaPreviousVersions = Seq(
@@ -117,7 +119,7 @@ trait FastparseModule extends CommonCrossModule with Mima{
   )
 
   def mimaPreviousArtifacts =
-    if (isScala3(crossScalaVersion)) Agg.empty[Dep]
+    if (isScala3(crossScalaVersion)) Seq.empty[Dep]
     else super.mimaPreviousArtifacts()
 
   def mimaBinaryIssueFilters = super.mimaBinaryIssueFilters() ++ Seq(
@@ -170,10 +172,10 @@ trait ExampleParseJvmModule extends CommonCrossModule{
   def moduleDeps = Seq(fastparse.jvm())
 
   object test extends ScalaTests with CommonTestModule{
-    def ivyDeps = super.ivyDeps() ++ Agg(
-      ivy"net.sourceforge.cssparser:cssparser:0.9.18",
-    ) ++ Agg.when(!isScala3(crossScalaVersion))(
-      ivy"org.scala-lang:scala-compiler:$crossScalaVersion"
+    def mvnDeps = super.mvnDeps() ++ Seq(
+      mvn"net.sourceforge.cssparser:cssparser:0.9.18",
+    ) ++ Option.when(!isScala3(crossScalaVersion))(
+      mvn"org.scala-lang:scala-compiler:$crossScalaVersion"
     )
   }
 }
@@ -202,24 +204,22 @@ trait CommonCrossModule extends CrossScalaModule with PublishModule with Platfor
     )
   )
 
-  def scalaDocPluginClasspath = T{ Agg[PathRef]() }
+  def scalaDocPluginClasspath = Task { Seq[PathRef]() }
 
-  def sources = T.sources {
-    super.sources() ++
-    Agg(PathRef(millSourcePath / "src-2.12+"))
-  }
+  def newSources = Task.Sources("src-2.12+")
+  def sources = Task { super.sources() ++ newSources() }
 }
 
-trait CommonTestModule extends ScalaModule with TestModule.Utest{
-  def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.8.3")
+trait CommonTestModule extends ScalaModule with TestModule.Utest {
+  def mvnDeps = Seq(mvn"com.lihaoyi::utest::0.8.3")
 
   override def scalacOptions =
     super.scalacOptions() ++
-    Agg.when(scalaVersion() != scala3)(
+    Seq(
       "-Xfatal-warnings",
       "-Xlint:unused",
       "-Wconf:cat=feature:s,cat=deprecation:s"
-    )
+    ).filter(_ => scalaVersion() != scala3)
 }
 
 object perftests extends Module{
@@ -235,7 +235,7 @@ object perftests extends Module{
 
   object benchScala33 extends PerfTestModule {
     def scalaVersion0 = scala3
-    def sources = T.sources { bench2.sources() }
+    def sources = Task { bench2.sources() }
     def moduleDeps = Seq(
       scalaparse.jvm(scala3).test,
       pythonparse.jvm(scala3).test,
@@ -253,30 +253,30 @@ object perftests extends Module{
       pythonparse.jvm(scala212).test
     )
 
-    def ivyDeps = super.ivyDeps() ++ Agg(
-      ivy"org.json4s::json4s-ast:3.6.0",
-      ivy"org.json4s::json4s-native:3.6.0",
-      ivy"org.json4s::json4s-jackson:3.6.0",
-      ivy"io.circe::circe-parser:0.9.1",
-      ivy"io.argonaut::argonaut:6.2",
-      ivy"com.typesafe.play::play-json:2.6.9",
-      ivy"com.fasterxml.jackson.core:jackson-databind:2.9.4",
-      ivy"com.lihaoyi::ujson:1.1.0",
-      ivy"org.scala-lang.modules::scala-parser-combinators:1.1.1",
-      ivy"org.python:jython:2.7.1b3"
+    def mvnDeps = super.mvnDeps() ++ Seq(
+      mvn"org.json4s::json4s-ast:3.6.0",
+      mvn"org.json4s::json4s-native:3.6.0",
+      mvn"org.json4s::json4s-jackson:3.6.0",
+      mvn"io.circe::circe-parser:0.9.1",
+      mvn"io.argonaut::argonaut:6.2",
+      mvn"com.typesafe.play::play-json:2.6.9",
+      mvn"com.fasterxml.jackson.core:jackson-databind:2.9.4",
+      mvn"com.lihaoyi::ujson:1.1.0",
+      mvn"org.scala-lang.modules::scala-parser-combinators:1.1.1",
+      mvn"org.python:jython:2.7.1b3"
     )
   }
 
-  trait PerfTestModule extends ScalaModule with TestModule.Utest{
+  trait PerfTestModule extends ScalaModule with TestModule.Utest {
     def scalaVersion0: String
     def scalaVersion = scalaVersion0
     def scalacOptions = Seq("-opt:l:method")
-    def resources = T.sources{
-      Seq(PathRef(perftests.millSourcePath / "resources")) ++
-        fastparse.jvm(scalaVersion0).test.resources()
+    def newResources = Task.Sources(perftests.moduleDir / "resources")
+    def resources = Task {
+      newResources() ++ fastparse.jvm(scalaVersion0).test.resources()
     }
 
-    def ivyDeps = Agg(ivy"com.lihaoyi::utest::0.8.3")
+    def mvnDeps = Seq(mvn"com.lihaoyi::utest::0.8.3")
   }
 }
 
@@ -290,8 +290,8 @@ object demo extends ScalaJSModule{
     fastparse.js(scala213).test,
   )
 
-  def ivyDeps = Agg(
-    ivy"org.scala-js::scalajs-dom::0.9.8",
-    ivy"com.lihaoyi::scalatags::0.9.3"
+  def mvnDeps = Seq(
+    mvn"org.scala-js::scalajs-dom::0.9.8",
+    mvn"com.lihaoyi::scalatags::0.9.3"
   )
 }
