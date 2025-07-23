@@ -103,6 +103,12 @@ package object fastparse extends fastparse.SharedPackageDefs {
               (implicit ctx: P[Any]): P[T] = macro MacroImpls.filterMacro[T]
 
     /**
+     * Used by for-comprehensions.
+     */
+    def withFilter(f: T => Boolean)
+                  (implicit ctx: P[Any]): P[T] = macro MacroImpls.filterMacro[T]
+
+    /**
       * Transforms the result of this parser using the given partial function,
       * failing the parse if the partial function is not defined on the result
       * of the current parser. This is eqivalent to
