@@ -11,6 +11,10 @@
 
         @p
             Such a parser returns a @hl.scala{Parsed.Success} if the input matches the string, and otherwise returns a @hl.scala{Parsed.Failure}.
+
+        @p
+            @b{Note}: if using Scala 3.5 or later, calls to the @code{parse} function should include the keyword @code{using}, e.g. @code{parse("a", parseA(using _))}.
+
         @p
             As you can see, by default the @hl.scala{Parsed.Success} contains
             a @hl.scala{(): Unit}, unless you use @sect.ref{Capture} or
