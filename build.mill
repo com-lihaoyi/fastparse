@@ -1,4 +1,5 @@
-//| mill-version: 1.0.0
+//| mill-version: 1.1.0-RC1
+//| mill-jvm-version: 11
 //| mill-jvm-opts: ["-XX:NonProfiledCodeHeapSize=500m", "-XX:ReservedCodeCacheSize=1000m"]
 //| mvnDeps:
 //| - com.github.lolgab::mill-mima_mill1:0.2.0
