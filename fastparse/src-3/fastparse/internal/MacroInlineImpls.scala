@@ -287,8 +287,8 @@ object MacroInlineImpls {
     }
   }
 
-  inline def eitherInline[T, V >: T](inline lhs0: ParsingRun[T])(inline other: ParsingRun[V])(ctx5: ParsingRun[Any])
-      : ParsingRun[V] = {
+  inline def eitherInline[T, V](inline lhs0: ParsingRun[T])(inline other: ParsingRun[V])(ctx5: ParsingRun[Any])
+      : ParsingRun[V | T] = {
 
     val oldCut = ctx5.cut
     ctx5.cut = false
@@ -299,8 +299,8 @@ object MacroInlineImpls {
     val lhsAggregate = ctx5.aggregateMsgs
     if (ctx5.isSuccess) {
       ctx5.cut |= oldCut
-      ctx5.asInstanceOf[ParsingRun[V]]
-    } else if (ctx5.cut) ctx5.asInstanceOf[ParsingRun[V]]
+      ctx5.asInstanceOf[ParsingRun[V | T]]
+    } else if (ctx5.cut) ctx5.asInstanceOf[ParsingRun[V | T]]
     else {
       val verboseFailures = ctx5.verboseFailures
 
@@ -317,7 +317,7 @@ object MacroInlineImpls {
       if (verboseFailures) {
         ctx5.reportAggregateMsg(rhsMsg ::: lhsMsg, ctx5.aggregateMsgs  ::: lhsAggregate)
       }
-      ctx5.asInstanceOf[ParsingRun[V]]
+      ctx5.asInstanceOf[ParsingRun[V | T]]
     }
   }
 

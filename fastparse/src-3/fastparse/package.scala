@@ -42,7 +42,7 @@ package object fastparse extends fastparse.SharedPackageDefs {
       * fails it backtracks and tries to pass the right-hand-side. Can be
       * chained more than once to parse larger numbers of alternatives.
       */
-    inline def |[V >: T](inline other: P[V])(using ctx: P[Any]): P[V] =
+    inline def |[V](inline other: P[V])(using ctx: P[Any]): P[V | T] =
       MacroInlineImpls.eitherInline[T, V](parse0)(other)(ctx)
 
     /** Plain cut operator. Runs the parser, and if it succeeds, backtracking
