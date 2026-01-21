@@ -38,6 +38,12 @@ package object fastparse extends fastparse.SharedPackageDefs {
     inline def filter(f: T => Boolean)(using ctx: P[Any]): P[T] =
       MacroInlineImpls.filterInline[T](parse0)(f)(ctx)
 
+    /**
+     * Used by for-comprehensions.
+     */
+    inline def withFilter(f: T => Boolean)(using ctx: P[Any]): P[T] = 
+      MacroInlineImpls.filterInline[T](parse0)(f)(ctx)
+
     /** Either-or operator: tries to parse the left-hand-side, and if that
       * fails it backtracks and tries to pass the right-hand-side. Can be
       * chained more than once to parse larger numbers of alternatives.
