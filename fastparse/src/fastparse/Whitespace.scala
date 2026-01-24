@@ -59,8 +59,8 @@ object MultiLineWhitespace {
   * Whitespace syntax that supports # line-comments, as in the case in
   * programming languages such as Bash, Ruby, or Python
   */
-object ScriptWhitespace{
-  implicit object whitespace extends Whitespace {
+object ScriptWhitespace {
+  def custom(delim: Char): Whitespace = new Whitespace {
     def apply(ctx: ParsingRun[_]) = {
       val input = ctx.input
       @tailrec def rec(current: Int, state: Int): ParsingRun[Unit] = {
@@ -74,10 +74,12 @@ object ScriptWhitespace{
             case 0 =>
               (currentChar: @switch) match{
                 case ' ' | '\t' | '\n' | '\r' => rec(current + 1, state)
-                case '#' => rec(current + 1, state = 1)
                 case _ =>
-                  if (ctx.verboseFailures) ctx.reportTerminalMsg(current, Msgs.empty)
-                  ctx.freshSuccessUnit(current)
+                  if (currentChar == delim) rec(current + 1, state = 1)
+                  else {
+                    if (ctx.verboseFailures) ctx.reportTerminalMsg(current, Msgs.empty)
+                    ctx.freshSuccessUnit(current)
+                  }
               }
             case 1 => rec(current + 1, state = if (currentChar == '\n') 0 else state)
           }
@@ -86,6 +88,7 @@ object ScriptWhitespace{
       rec(current = ctx.index, state = 0)
     }
   }
+  implicit val whitespace: Whitespace = custom('#')
 }
 
 /**
