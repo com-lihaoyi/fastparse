@@ -108,7 +108,7 @@ object MacroInlineImpls {
         forceAggregate = startIndex < ctx0.traceIndex
       )
       if (!ctx0.isSuccess) {
-        ctx0.failureStack = (name.value -> startIndex) :: ctx0.failureStack
+        ctx0.failureStack = (name.value, startIndex) :: ctx0.failureStack
       }
     }
     ctx0
